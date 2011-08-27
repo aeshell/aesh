@@ -1,0 +1,84 @@
+/*
+ * JBoss, Home of Professional Open Source
+ * Copyright 2010, Red Hat Middleware LLC, and individual contributors
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.jboss.jreadline.console;
+
+import org.jboss.jreadline.edit.EditMode;
+import org.jboss.jreadline.edit.EmacsEditMode;
+import org.jboss.jreadline.edit.PasteManager;
+import org.jboss.jreadline.terminal.POSIXTerminal;
+import org.jboss.jreadline.terminal.Terminal;
+import org.jboss.jreadline.undo.UndoManager;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+/**
+ * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
+ */
+public class Reader {
+
+    private final static int TAB_WIDTH = 4;
+    private String prompt;
+
+    private InputStream inStream;
+    private OutputStream outStream;
+    private Buffer buffer;
+    private Terminal terminal;
+
+    private UndoManager undoManager;
+    private PasteManager pasteManager;
+    private EditMode editMode;
+
+
+    public Reader(InputStream in, OutputStream out)  {
+        this(in, out, null);
+    }
+
+    public Reader(InputStream in, OutputStream out, Terminal terminal) {
+        if(terminal == null)
+            setTerminal(initTerminal());
+
+        editMode = new EmacsEditMode();
+        undoManager = new UndoManager();
+        pasteManager = new PasteManager();
+
+    }
+
+
+
+    private Terminal initTerminal() {
+        return new POSIXTerminal();
+    }
+
+    private void setTerminal(Terminal terminal) {
+        this.terminal = terminal;
+    }
+
+
+    private void setInStream(InputStream is) {
+        inStream = is;
+    }
+
+    private void setOutStream(OutputStream os) {
+        outStream = os;
+    }
+
+    private void flushOut() throws IOException {
+        outStream.flush();
+    }
+}

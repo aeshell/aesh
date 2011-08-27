@@ -1,0 +1,18 @@
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.6
+version = '0.1'
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'JReadline', 'Implementation-Version': version
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+}
