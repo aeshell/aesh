@@ -86,16 +86,16 @@ public class BufferTest extends TestCase {
         Buffer buffer = new Buffer();
 
         char[] expected = new char[] {(char) 27, '[', 'J'};
-        assertEquals(new String(expected), new String(buffer.printAnsi("J")));
+        assertEquals(new String(expected), new String(Buffer.printAnsi("J")));
 
         expected = new char[] {(char) 27, '[', 'J','p'};
-        assertEquals(new String(expected), new String(buffer.printAnsi("Jp")));
+        assertEquals(new String(expected), new String(Buffer.printAnsi("Jp")));
 
         expected = new char[] {(char) 27, '[', ' ',' ',' ',' '};
-        assertEquals(new String(expected), new String(buffer.printAnsi("\t")));
+        assertEquals(new String(expected), new String(Buffer.printAnsi("\t")));
 
         expected = new char[] {(char) 27, '[', ' ',' ',' ',' ','B'};
-        assertEquals(new String(expected), new String(buffer.printAnsi("\tB")));
+        assertEquals(new String(expected), new String(Buffer.printAnsi("\tB")));
 
     }
 

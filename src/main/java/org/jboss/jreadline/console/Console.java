@@ -26,20 +26,16 @@ import org.jboss.jreadline.undo.UndoAction;
 import org.jboss.jreadline.undo.UndoManager;
 
 import java.io.*;
-import java.util.Arrays;
 
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class Console {
 
-    private final static int TAB_WIDTH = 4;
-
     private InputStream inStream;
     private Writer outStream;
     private Buffer buffer;
     private Terminal terminal;
-    private java.io.Reader reader;
 
     private UndoManager undoManager;
     private PasteManager pasteManager;
@@ -49,9 +45,8 @@ public class Console {
 
     public Console() throws IOException {
         this(new FileInputStream(FileDescriptor.in),
-                new PrintWriter(
-                        new OutputStreamWriter(System.out,
-                                System.getProperty("jline.terminal.WindowsTerminal.output.encoding", System.getProperty("file.encoding")))));
+             new PrintWriter( new OutputStreamWriter(System.out)));
+
     }
 
     public Console(InputStream in, Writer out)  {
@@ -72,8 +67,6 @@ public class Console {
 
     }
 
-
-
     private Terminal initTerminal() {
         Terminal t = new POSIXTerminal();
         t.init();
@@ -86,32 +79,9 @@ public class Console {
 
     private void setInStream(InputStream is) {
         inStream = is;
-        /*
-        inStream = new FilterInputStream(is) {
-            @Override
-            public int read(byte[] b, int off, int len) throws IOException {
-                if (b == null) {
-                    throw new NullPointerException();
-                } else if (off < 0 || len < 0 || len > b.length - off) {
-                    throw new IndexOutOfBoundsException();
-                } else if (len == 0) {
-                    return 0;
-                }
-
-                int c = read();
-                if (c == -1) {
-                    return -1;
-                }
-                b[off] = (byte)c;
-                return 1;
-            }
-        };
-        this.reader = new InputStreamReader( inStream);
-        */
     }
 
     private void setOutWriter(Writer out) {
-        //outStream = new OutputStreamWriter(out);
         outStream = out;
     }
 
@@ -152,7 +122,7 @@ public class Console {
                     }
                 }
                 */
-                writeChar(c, true);
+                writeChar(c);
             }
             // For search movement is used a bit differently.
             // It only triggers what kind of search action thats performed
@@ -252,14 +222,9 @@ public class Console {
             else if(action == Action.NEWLINE) {
                 // clear the undo stack for each new line
                 clearUndoStack();
-                moveToEnd();
+                //moveToEnd();
                 printNewline(); // output newline
-                String outBuffer = finishBuffer();
-                //if(!matchInternalCommand(outBuffer))
-                    return outBuffer;
-                //else {
-                //    drawLine();
-                //}
+                return buffer.getLine().toString();
             }
             else if(action == Action.UNDO) {
                 //undo();
@@ -283,7 +248,7 @@ public class Console {
 
     }
 
-   private void writeChar(int c, boolean b) throws IOException {
+   private void writeChar(int c) throws IOException {
        buffer.write((char) c);
        outStream.write(c);
 
@@ -300,7 +265,7 @@ public class Console {
     private boolean performAction(EditAction action) throws IOException {
         action.doAction(buffer.getLine());
         if(action.getAction() == Action.MOVE) {
-            moveInternal((action.getEnd() - action.getStart()));
+            moveCursor((action.getEnd() - action.getStart()));
             return true;
         }
         else if(action.getAction() == Action.DELETE ||
@@ -311,7 +276,7 @@ public class Console {
             if(action.getEnd() > action.getStart()) {
                 // only if start != cursor we need to move it
                 if(action.getStart() != buffer.getCursor()) {
-                    moveInternal(action.getStart()-buffer.getCursor());
+                    moveCursor(action.getStart() - buffer.getCursor());
                 }
                 addToPaste(buffer.getLine().substring(action.getStart(), action.getEnd()));
                 buffer.getLine().delete(action.getStart(), action.getEnd());
@@ -319,10 +284,9 @@ public class Console {
             else {
                 addToPaste(buffer.getLine().substring(action.getEnd(), action.getStart()));
                 buffer.getLine().delete(action.getEnd(), action.getStart());
-                moveInternal((action.getEnd()-action.getStart()));
+                moveCursor((action.getEnd() - action.getStart()));
             }
-            //drawBuffer(1);
-            redrawLine();
+            redrawLineFromCursor();
         }
         else if(action.getAction() == Action.YANK) {
             if(action.getEnd() > action.getStart()) {
@@ -336,7 +300,7 @@ public class Console {
         return true;
     }
 
-               /**
+    /**
      * Add current text and cursor position to the undo stack
      *
      * @throws IOException if getCursorPosition() fails
@@ -371,12 +335,10 @@ public class Console {
         addActionToUndoStack();
         if(before || buffer.getCursor() >= buffer.getLine().length()) {
             buffer.getLine().insert(buffer.getCursor(), pasteBuffer);
-            //drawBuffer(1);
             redrawLine();
         }
         else {
             buffer.getLine().insert(buffer.getCursor() + 1, pasteBuffer);
-            //drawBuffer(1);
             redrawLine();
             //move cursor one char
             moveCursor(1);
@@ -384,65 +346,14 @@ public class Console {
         return true;
     }
 
-         /**
-     * Move the cursor <i>where</i> characters, without checking the current
-     * buffer.
-     *
-     * @param where the number of characters to move to the right or left.
-     * @throws java.io.IOException stream
-     */
-    private void moveInternal(final int where) throws IOException {
+    public final void moveCursor(final int where) throws IOException {
         outStream.write(buffer.move(where));
-        // debug ("move cursor " + where + " ("
-        // + buf.getCursor() + " => " + (buf.getCursor() + where) + ")");
-        /*
-        buffer.setCursor(buffer.getCursor() + where);
-
-        if (where < 0) {
-            back(Math.abs(where));
-        } else {
-            int width = terminal.getWidth();
-            int cursor = buffer.getCursor();
-            int oldLine = (cursor - where) / width;
-            int newLine = cursor / width;
-            if (newLine > oldLine) {
-                printANSISequence((newLine - oldLine) + "B");
-            }
-            printANSISequence(1 +(cursor % width) + "G");
-        }
-        */
         flushOut();
-    }
-
-
-    public final int moveCursor(final int num) throws IOException {
-        outStream.write(buffer.move(num));
-        return num;
-    }
-
-    public final void drawLine() throws IOException {
-        /*
-        if (prompt != null) {
-            printString(prompt);
-        }
-        */
-
-        /*
-        printCharacters(buffer.getLine().toString().toCharArray());
-
-        if (buffer.length() != buffer.getCursor()) {// not at end of line
-            back(buffer.length() - buffer.getCursor() - 1); // sync
-        }
-        */
     }
 
     private void redrawLineFromCursor() throws IOException {
-        if(buffer.getCursor() == buffer.length())
-            return;
 
-        //System.out.println("position:"+position+", cursor:"+buffer.getCursor());
         outStream.write(Buffer.printAnsi("s")); //save cursor
-        flushOut();
         outStream.write(Buffer.printAnsi("0J")); // clear line from position
         flushOut();
 
@@ -453,12 +364,12 @@ public class Console {
     }
 
     private void redrawLine() throws IOException {
-        //outStream.write('\r');
-        //outStream.write(Buffer.printAnsi(buffer.getPrompt().length()+"G"));
+
         outStream.write(Buffer.printAnsi("s")); //save cursor
         //move cursor to 0. - need to do this to clear the entire line
         outStream.write(Buffer.printAnsi("0G"));
         outStream.write(Buffer.printAnsi("2K")); // clear line
+        flushOut();
 
         outStream.write(buffer.getPrompt());
         outStream.write(buffer.getLineFrom(0));
@@ -468,157 +379,14 @@ public class Console {
         flushOut();
     }
 
-           /**
-     * Redraw the rest of the buffer from the cursor onwards. This is necessary
-     * for inserting text into the buffer.
-     */
-           /*
-    private void drawBuffer(final int clear) throws IOException {
-        // debug ("drawBuffer: " + clear);
-        if (buffer.getCursor() == buffer.length() && clear == 0) {
-            return;
-        }
-        char[] chars = buffer.getLine().substring(buffer.getCursor()).toCharArray();
-        //if (mask != null) {
-        //    Arrays.fill(chars, mask);
-        //}
-
-        printCharacters(chars);
-        if(clear > 0)
-               Buffer.printAnsi("J");
-
-            if (chars.length > 0) {
-                // don't ask, it seems to work
-                back(Math.max(chars.length - 1, 1));
-            }
-
-        flushOut();
-    }
-    */
-
-    private boolean moveToEnd() throws IOException {
-        return moveCursor(buffer.length() - buffer.getCursor()) > 0;
-    }
-
     /**
-     * Output a platform-dependant newline.
+     * Insert a newline
+     *
      * @throws java.io.IOException stream
      */
-    public final void printNewline() throws IOException {
-        //outStream.write(Buffer.printAnsi(CR));
+    private void printNewline() throws IOException {
         outStream.write(CR);
         flushOut();
     }
-
-       /**
-     * Clear the buffer and add its contents to the history.
-     *
-     * @return the former contents of the buffer.
-     */
-    final String finishBuffer() {
-        String str = buffer.getLine().toString();
-
-        // we only add it to the history if the buffer is not empty
-        // and if mask is null, since having a mask typically means
-        // the string was a password. We clear the mask after this call
-        /*
-        if (str.length() > 0) {
-            if (mask == null) {
-                history.addToHistory(str);
-            } else {
-                mask = null;
-            }
-        }
-        */
-
-        //history.moveToEnd();
-        //buffer.clear();
-
-        return str;
-    }
-
-   private void drawBuffer(final int clear) throws IOException {
-        // debug ("drawBuffer: " + clear);
-        if (buffer.getCursor() == buffer.length() && clear == 0) {
-            return;
-        }
-        char[] chars = buffer.getLine().substring(buffer.getCursor()).toCharArray();
-
-        printCharacters(chars);
-        clearAhead(clear);
-
-       if (chars.length > 0) {
-           // don't ask, it seems to work
-           back(Math.max(chars.length - 1, 1));
-       }
-
-       flushOut();
-    }
-
-        private void printCharacters(final char[] c) throws IOException {
-        int len = 0;
-        for (char aC : c) {
-            if (aC == '\t')
-                len += TAB_WIDTH;
-            else
-                len++;
-        }
-
-        char cbuf[];
-        if (len == c.length) {
-            cbuf = c;
-        } else {
-            cbuf = new char[len];
-            int pos = 0;
-            for (char aC : c) {
-                if (aC == '\t') {
-                    Arrays.fill(cbuf, pos, pos + TAB_WIDTH, ' ');
-                    pos += TAB_WIDTH;
-                }
-                else {
-                    cbuf[pos] = aC;
-                    pos++;
-                }
-            }
-        }
-
-        outStream.write(cbuf);
-    }
-
-    private void clearAhead(final int num) throws IOException {
-        if (num == 0) {
-            return;
-        }
-
-        printANSISequence("J");
-
-    }
-
-    private void printANSISequence(String sequence) throws IOException {
-        outStream.write(27);
-        outStream.write('[');
-        outStream.write(sequence);
-        flushOut();
-    }
-
-    private void back(final int num) throws IOException {
-        if (num == 0) return;
-
-        int width = terminal.getWidth();
-        int cursor = buffer.getCursor();
-        // debug("back: " + cursor + " + " + num + " on " + width);
-        int currRow = (cursor + num) / width;
-        int newRow = cursor / width;
-        int newCol = cursor % width + 1;
-        // debug("    old row: " + currRow + " new row: " + newRow);
-        if (newRow < currRow) {
-            printANSISequence((currRow - newRow) + "A");
-        }
-        printANSISequence(newCol + "G");
-        flushOut();
-    }
-
-
-
 
 }
