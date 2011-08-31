@@ -19,6 +19,7 @@ package org.jboss.jreadline.console;
 import org.jboss.jreadline.edit.EditMode;
 import org.jboss.jreadline.edit.EmacsEditMode;
 import org.jboss.jreadline.edit.PasteManager;
+import org.jboss.jreadline.edit.ViEditMode;
 import org.jboss.jreadline.edit.actions.*;
 import org.jboss.jreadline.terminal.POSIXTerminal;
 import org.jboss.jreadline.terminal.Terminal;
@@ -57,7 +58,7 @@ public class Console {
         if(terminal == null)
             setTerminal(initTerminal());
 
-        editMode = new EmacsEditMode();
+        editMode = new ViEditMode();
         undoManager = new UndoManager();
         pasteManager = new PasteManager();
         buffer = new Buffer(null);
@@ -205,7 +206,7 @@ public class Console {
             }
             else if(action == Action.CASE) {
                 addActionToUndoStack();
-                //changeCase();
+                changeCase();
             }
             else if(action == Action.COMPLETE) {
                 //complete();
@@ -227,7 +228,7 @@ public class Console {
                 return buffer.getLine().toString();
             }
             else if(action == Action.UNDO) {
-                //undo();
+                undo();
             }
             else if(action == Action.PASTE_FROM_CLIPBOARD) {
                 addActionToUndoStack();
@@ -389,4 +390,39 @@ public class Console {
         flushOut();
     }
 
+      /**
+     * Switch case if the character is a letter
+     *
+     * @throws java.io.IOException stream
+     */
+    private void changeCase() throws IOException {
+        if(buffer.changeCase()) {
+           moveCursor(1);
+            redrawLine();
+        }
+    }
+
+    /**
+     * Perform an undo
+     *
+     * @return true if nothing fails
+     * @throws IOException if redraw fails
+     */
+    private boolean undo() throws IOException {
+        UndoAction ua = undoManager.getNext();
+        if(ua != null) {
+            buffer.clear();
+            buffer.write(ua.getBuffer());
+            redrawLine();
+            //move the cursor to the saved position
+            outStream.write(Buffer.printAnsi((ua.getCursorPosition()+buffer.getPrompt().length()+1)+"G"));
+            flushOut();
+            //sync terminal cursor with jreadline
+            buffer.setCursor(ua.getCursorPosition());
+
+            return true;
+        }
+        else
+            return false;
+    }
 }

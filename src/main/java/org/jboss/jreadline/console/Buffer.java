@@ -65,7 +65,7 @@ public class Buffer {
         return prompt;
     }
 
-    private void setCursor(int cursor) {
+    protected void setCursor(int cursor) {
         this.cursor = cursor ;
     }
 
@@ -177,4 +177,26 @@ public class Buffer {
         cursor += str.length();
     }
 
+    protected void clear() {
+        line = new StringBuilder();
+    }
+
+    /**
+     * Switch case if the current character is a letter.
+     *
+     * @return false if the character is not a letter, else true
+     */
+    protected boolean changeCase() {
+        char c = getLine().charAt(getCursor());
+        if(Character.isLetter(c)) {
+            if(Character.isLowerCase(c))
+                getLine().setCharAt(getCursor(), Character.toUpperCase(c));
+            else
+                getLine().setCharAt(getCursor(), Character.toLowerCase(c));
+
+            return true;
+        }
+        else
+            return false;
+    }
 }
