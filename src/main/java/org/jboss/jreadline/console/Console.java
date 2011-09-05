@@ -19,8 +19,9 @@ package org.jboss.jreadline.console;
 import org.jboss.jreadline.edit.EditMode;
 import org.jboss.jreadline.edit.EmacsEditMode;
 import org.jboss.jreadline.edit.PasteManager;
-import org.jboss.jreadline.edit.ViEditMode;
 import org.jboss.jreadline.edit.actions.*;
+import org.jboss.jreadline.history.History;
+import org.jboss.jreadline.history.InMemoryHistory;
 import org.jboss.jreadline.terminal.POSIXTerminal;
 import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.undo.UndoAction;
@@ -41,6 +42,9 @@ public class Console {
     private UndoManager undoManager;
     private PasteManager pasteManager;
     private EditMode editMode;
+    private History history;
+
+    private Action prevAction = Action.EDIT;
 
     private static final String CR = System.getProperty("line.separator");
 
@@ -55,27 +59,32 @@ public class Console {
     }
 
     public Console(InputStream in, Writer out, Terminal terminal) {
-        if(terminal == null)
-            setTerminal(initTerminal());
+        this(in, out, terminal, null);
+    }
 
-        editMode = new ViEditMode();
+    public Console(InputStream in, Writer out, Terminal terminal, EditMode mode) {
+        if(terminal == null)
+            setTerminal(new POSIXTerminal());
+        else
+            setTerminal(terminal);
+
+        if(mode == null)
+            editMode = new EmacsEditMode();
+        else
+            editMode = mode;
+
         undoManager = new UndoManager();
         pasteManager = new PasteManager();
         buffer = new Buffer(null);
+        history = new InMemoryHistory();
 
         setInStream(in);
         setOutWriter(out);
-
     }
 
-    private Terminal initTerminal() {
-        Terminal t = new POSIXTerminal();
-        t.init();
-        return t;
-    }
-
-    private void setTerminal(Terminal terminal) {
-        this.terminal = terminal;
+    private void setTerminal(Terminal term) {
+        terminal = term;
+        terminal.init();
     }
 
     private void setInStream(InputStream is) {
@@ -107,6 +116,7 @@ public class Console {
             Operation operation = editMode.parseInput(c);
 
             Action action = operation.getAction();
+            //System.out.println("new action:"+action);
 
             if (action == Action.EDIT) {
                 /*
@@ -215,14 +225,16 @@ public class Console {
                 //deleteCurrentCharacter();
             }
             else if(action == Action.HISTORY) {
-                //if(operation.getMovement() == Movement.NEXT)
-                    //moveHistory(true);
-                //else if(operation.getMovement() == Movement.PREV)
-                    //moveHistory(false);
+                if(operation.getMovement() == Movement.NEXT)
+                    getHistory(true);
+                else if(operation.getMovement() == Movement.PREV)
+                    getHistory(false);
             }
             else if(action == Action.NEWLINE) {
                 // clear the undo stack for each new line
                 clearUndoStack();
+                addToHistory(buffer.getLine());
+                prevAction = Action.NEWLINE;
                 //moveToEnd();
                 printNewline(); // output newline
                 return buffer.getLine().toString();
@@ -244,12 +256,46 @@ public class Console {
                 //atm do nothing
             }
 
+            if(action == Action.HISTORY)
+                prevAction = action;
+
             flushOut();
         }
 
     }
 
-   private void writeChar(int c) throws IOException {
+    private void getHistory(boolean first) throws IOException {
+        // first add current line to history
+        if(prevAction == Action.NEWLINE) {
+            history.setCurrent(buffer.getLine());
+        }
+        //get next
+        if(first) {
+            StringBuilder next = history.getNextFetch();
+            if(next != null) {
+                buffer.setLine(next);
+                moveCursor(buffer.length()-buffer.getCursor());
+                redrawLine();
+            }
+        }
+        // get previous
+        else {
+           StringBuilder prev = history.getPreviousFetch();
+            if(prev != null) {
+                buffer.setLine(prev);
+                //buffer.setCursor(buffer.length());
+                moveCursor(buffer.length()-buffer.getCursor());
+                redrawLine();
+            }
+        }
+        prevAction = Action.HISTORY;
+    }
+
+    private void addToHistory(StringBuilder line) {
+        history.push(new StringBuilder(line));
+    }
+
+    private void writeChar(int c) throws IOException {
        buffer.write((char) c);
        outStream.write(c);
 
@@ -415,7 +461,7 @@ public class Console {
             buffer.write(ua.getBuffer());
             redrawLine();
             //move the cursor to the saved position
-            outStream.write(Buffer.printAnsi((ua.getCursorPosition()+buffer.getPrompt().length()+1)+"G"));
+            outStream.write(Buffer.printAnsi((ua.getCursorPosition() + buffer.getPrompt().length() + 1) + "G"));
             flushOut();
             //sync terminal cursor with jreadline
             buffer.setCursor(ua.getCursorPosition());

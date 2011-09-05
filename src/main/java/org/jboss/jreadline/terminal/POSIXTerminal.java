@@ -84,7 +84,7 @@ public class POSIXTerminal implements Terminal {
         catch (IOException ioe) {
             System.err.println("TTY failed with: " + ioe.getMessage());
         } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
 
         // at exit, restore the original tty configuration (for JDK 1.3+)
@@ -93,6 +93,7 @@ public class POSIXTerminal implements Terminal {
                 try {
                     restoreTerminal();
                 } catch (Exception e) {
+                    e.printStackTrace();
                     //ignored
                 }
             }

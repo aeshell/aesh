@@ -53,6 +53,10 @@ public class Buffer {
         return line.length();
     }
 
+    protected int totalLength() {
+        return line.length() + prompt.length();
+    }
+
     protected int getCursor() {
         return cursor;
     }
@@ -158,6 +162,10 @@ public class Buffer {
 
     public StringBuilder getLine() {
         return line;
+    }
+
+    protected void setLine(StringBuilder line) {
+        this.line = line;
     }
 
     public void write(char c) {
