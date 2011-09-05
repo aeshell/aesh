@@ -45,7 +45,11 @@ public abstract class JReadlineTestCase extends TestCase {
             else
                 break;
         }
-        console = null;
+        try {
+            console.reset();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         assertEquals(expected, in);
     }
@@ -64,8 +68,11 @@ public abstract class JReadlineTestCase extends TestCase {
             else
                 break;
         }
-        console = null;
-
+        try {
+            console.reset();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertEquals(expected, in);
     }
 }

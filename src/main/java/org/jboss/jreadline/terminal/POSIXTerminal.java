@@ -52,6 +52,7 @@ public class POSIXTerminal implements Terminal {
     private String ttyProps;
     private long ttyPropsLastFetched;
     private boolean backspaceDeleteSwitched = false;
+    private boolean hasBeenReseted = false;
     private static String sttyCommand = System.getProperty("jline.sttyCommand", "stty");
 
 
@@ -91,7 +92,7 @@ public class POSIXTerminal implements Terminal {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void start() {
                 try {
-                    restoreTerminal();
+                    reset();
                 } catch (Exception e) {
                     e.printStackTrace();
                     //ignored
@@ -121,8 +122,8 @@ public class POSIXTerminal implements Terminal {
 
         // handle unicode characters, thanks for a patch from amyi@inf.ed.ac.uk
         if (c > 128) {
-          // handle unicode characters longer than 2 bytes,
-          // thanks to Marc.Herbert@continuent.com
+            // handle unicode characters longer than 2 bytes,
+            // thanks to Marc.Herbert@continuent.com
             //replayStream.setInput(c, in);
 //            replayReader = new InputStreamReader(replayStream, encoding);
             //c = replayReader.read();
@@ -165,10 +166,13 @@ public class POSIXTerminal implements Terminal {
         return echoEnabled;
     }
 
-    private void restoreTerminal() throws Exception {
-        if (ttyConfig != null) {
-            stty(ttyConfig);
-            ttyConfig = null;
+    public void reset() throws Exception {
+        if(!hasBeenReseted) {
+            if (ttyConfig != null) {
+                stty(ttyConfig);
+                ttyConfig = null;
+                hasBeenReseted = true;
+            }
         }
     }
 
@@ -200,12 +204,12 @@ public class POSIXTerminal implements Terminal {
         return -1;
     }
 
-       /**
+    /**
      *  Execute the stty command with the specified arguments
      *  against the current active terminal.
      */
     protected static String stty(final String args)
-                        throws IOException, InterruptedException {
+            throws IOException, InterruptedException {
         return exec("stty " + args + " < /dev/tty").trim();
     }
 
@@ -214,12 +218,12 @@ public class POSIXTerminal implements Terminal {
      *  (both stdout and stderr).
      */
     private static String exec(final String cmd)
-                        throws IOException, InterruptedException {
+            throws IOException, InterruptedException {
         return exec(new String[] {
-                        "sh",
-                        "-c",
-                        cmd
-                    });
+                "sh",
+                "-c",
+                cmd
+        });
     }
 
     /**
@@ -227,7 +231,7 @@ public class POSIXTerminal implements Terminal {
      *  (both stdout and stderr).
      */
     private static String exec(final String[] cmd)
-                        throws IOException, InterruptedException {
+            throws IOException, InterruptedException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
         Process p = Runtime.getRuntime().exec(cmd);
@@ -237,30 +241,29 @@ public class POSIXTerminal implements Terminal {
         OutputStream out = null;
 
         try {
-	        in = p.getInputStream();
+            in = p.getInputStream();
 
-	        while ((c = in.read()) != -1) {
-	            bout.write(c);
-	        }
+            while ((c = in.read()) != -1) {
+                bout.write(c);
+            }
 
-	        err = p.getErrorStream();
+            err = p.getErrorStream();
 
-	        while ((c = err.read()) != -1) {
-	            bout.write(c);
-	        }
+            while ((c = err.read()) != -1) {
+                bout.write(c);
+            }
 
-	        out = p.getOutputStream();
+            out = p.getOutputStream();
 
-	        p.waitFor();
-	    } finally {
-		    try {in.close();} catch (Exception e) {}
-		    try {err.close();} catch (Exception e) {}
-		    try {out.close();} catch (Exception e) {}
-	    }
+            p.waitFor();
+        }
+        finally {
+            try {in.close();} catch (Exception e) {}
+            try {err.close();} catch (Exception e) {}
+            try {out.close();} catch (Exception e) {}
+        }
 
-        String result = new String(bout.toByteArray());
-
-        return result;
+        return new String(bout.toByteArray());
     }
 
 

@@ -34,5 +34,7 @@ public interface Terminal {
 
     boolean isEchoEnabled();
 
+    void reset() throws Exception;
+
 
 }

@@ -99,6 +99,10 @@ public class Console {
         outStream.flush();
     }
 
+    public void reset() throws Exception {
+        terminal.reset();
+    }
+
     public String read(String prompt) throws IOException {
 
         buffer.reset(prompt);
