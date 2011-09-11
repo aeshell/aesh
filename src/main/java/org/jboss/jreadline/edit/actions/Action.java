@@ -38,5 +38,6 @@ public enum Action {
     CASE,
     EXIT,
     ABORT,
+    CHANGE_EDITMODE,
     NO_ACTION;
 }

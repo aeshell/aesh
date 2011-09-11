@@ -76,7 +76,8 @@ public class POSIXTerminal implements Terminal {
             //checkBackspace();
 
             // set the console to be character-buffered instead of line-buffered
-            stty("-icanon min 1");
+            // -ixon will give access to ctrl-s/ctrl-q
+            stty("-ixon -icanon min 1");
 
             // disable character echoing
             stty("-echo");

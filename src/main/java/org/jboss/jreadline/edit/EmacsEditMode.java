@@ -24,6 +24,9 @@ import org.jboss.jreadline.edit.actions.Operation;
  * TODO:
  * - add support for different os key values (mainly windows)
  *
+ * Trying to follow the gnu readline impl found here:
+ * http://cnswww.cns.cwru.edu/php/chet/readline/readline.html
+ *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class EmacsEditMode implements EditMode {
@@ -45,20 +48,27 @@ public class EmacsEditMode implements EditMode {
     private final static short CTRL_N = 14;
     private final static short CTRL_P = 16;
     private final static short CTRL_R = 18;
+    private final static short CTRL_S = 19;
     private final static short CTRL_U = 21;
     private final static short CTRL_V = 22;
     private final static short CTRL_W = 23;
-    private final static short CTRL_X = 24; // prev word
+    private final static short CTRL_X = 24;
+    private final static short CTRL_Y = 25; // yank
     private final static short ESCAPE = 27;
+    private final static short CTRL__ = 31;
     private final static short ARROW_START = 91;
     private final static short LEFT = 68;
     private final static short RIGHT = 67;
     private final static short UP = 65;
     private final static short DOWN = 66;
     private final static short BACKSPACE = 127;
+    private final static short F = 102; // needed to handle M-f
+    private final static short B = 98; // needed to handle M-b
+    private final static short D = 100; // needed to handle M-d
 
     private boolean arrowStart = false;
     private boolean arrowPrefix = false;
+    private boolean ctrl_xState = false;
 
     private Action mode = Action.EDIT;
 
@@ -74,6 +84,9 @@ public class EmacsEditMode implements EditMode {
             }
             else if(input == CTRL_R) {
                 return new Operation(Movement.PREV_WORD, Action.SEARCH);
+            }
+            else if(input == CTRL_S) {
+                return new Operation(Movement.NEXT_WORD, Action.SEARCH);
             }
             else if(input == BACKSPACE) {
                 return new Operation(Movement.PREV_BIG_WORD, Action.SEARCH);
@@ -99,7 +112,7 @@ public class EmacsEditMode implements EditMode {
         else if(input == CTRL_B)
             return new Operation(Movement.PREV, Action.MOVE);
         else if(input == CTRL_D)
-            return new Operation(Movement.PREV, Action.EXIT);
+            return new Operation(Movement.NEXT, Action.DELETE);
         else if(input == CTRL_E)
             return new Operation(Movement.END, Action.MOVE);
         else if(input == CTRL_F)
@@ -111,33 +124,75 @@ public class EmacsEditMode implements EditMode {
         else if(input == CTRL_I)
             return new Operation(Movement.PREV, Action.COMPLETE);
         else if(input == CTRL_K)
-            return new Operation(Movement.ALL, Action.DELETE);
+            return new Operation(Movement.END, Action.DELETE);
         else if(input == CTRL_L)
             return new Operation(Movement.ALL, Action.DELETE); //TODO: should change to clear screen
         else if(input == CTRL_N)
             return new Operation(Movement.NEXT, Action.HISTORY);
         else if(input == CTRL_P)
             return new Operation(Movement.PREV, Action.HISTORY);
-        else if(input == CTRL_U)
-            return new Operation(Movement.BEGINNING, Action.DELETE);
+        else if(input == CTRL__)
+            return new Operation(Action.UNDO);
+
+        else if(input == CTRL_U) {
+            //only undo if C-x have been pressed first
+            if(ctrl_xState) {
+                ctrl_xState = false;
+                return new Operation(Action.UNDO);
+            }
+            else
+                return new Operation(Movement.BEGINNING, Action.DELETE);
+        }
         else if(input == CTRL_V)
             return new Operation(Movement.NEXT, Action.PASTE_FROM_CLIPBOARD);
+        // Kill from the cursor to the previous whitespace
         else if(input == CTRL_W)
-            return new Operation(Movement.PREV_WORD, Action.DELETE);
-        else if(input == CTRL_X)
-            return new Operation(Movement.PREV_WORD, Action.MOVE);
+            return new Operation(Movement.PREV_BIG_WORD, Action.DELETE);
+
+        //  Yank the most recently killed text back into the buffer at the cursor.
+        else if(input == CTRL_Y)
+            return new Operation(Movement.NEXT, Action.PASTE);
         else if(input == CR)
             return new Operation(Movement.BEGINNING, Action.MOVE);
         // search
         else if(input == CTRL_R) {
             mode = Action.SEARCH;
-
             return new Operation(Movement.PREV, Action.SEARCH);
+        }
+        else if(input == CTRL_S) {
+            mode = Action.SEARCH;
+            return new Operation(Movement.NEXT, Action.SEARCH);
+        }
+
+        //enter C-x state
+        else if(input == CTRL_X) {
+            ctrl_xState = true;
+            return new Operation(Action.NO_ACTION);
+        }
+
+        // handle meta keys
+        else if(input == F && arrowStart) {
+            arrowStart = false;
+            return new Operation(Movement.NEXT_WORD, Action.MOVE);
+        }
+        else if(input == B && arrowStart) {
+            arrowStart = false;
+            return new Operation(Movement.PREV_WORD, Action.MOVE);
+        }
+        else if(input == D && arrowStart) {
+            arrowStart = false;
+            return new Operation(Movement.NEXT_WORD, Action.DELETE);
         }
 
 
         // handle arrow keys
         else if(input == ESCAPE) {
+            // if we've already gotten a escape
+            if(arrowStart) {
+                arrowStart = false;
+                return new Operation(Action.NO_ACTION);
+            }
+            //new escape, set status as arrowStart
             if(!arrowPrefix && !arrowStart) {
                 arrowStart = true;
                 return new Operation(Action.NO_ACTION);

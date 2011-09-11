@@ -1,4 +1,4 @@
-/*
+  /*
  * JBoss, Home of Professional Open Source
  * Copyright 2010, Red Hat Middleware LLC, and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
@@ -20,28 +20,7 @@ package org.jboss.jreadline.history;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface History {
-
-    void push(StringBuilder entry);
-
-    StringBuilder find(StringBuilder search);
-
-    StringBuilder get(int index);
-
-    int size();
-
-    void setSearchDirection(SearchDirection direction);
-
-    SearchDirection getSearchDirection();
-
-    StringBuilder getNextFetch();
-
-    StringBuilder getPreviousFetch();
-
-    StringBuilder search(String search);
-
-    void setCurrent(StringBuilder line);
-
-    StringBuilder getCurrent();
-
+public enum SearchDirection {
+    REVERSE,
+    FORWARD;
 }

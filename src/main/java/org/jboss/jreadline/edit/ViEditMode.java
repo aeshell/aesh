@@ -46,6 +46,7 @@ public class ViEditMode implements EditMode {
     private static final short VI_SHIFT_I = 73;
     private static final short VI_TILDE = 126;
     private static final short VI_Y = 121;
+    private static final short CTRL_E = 5;
 
     //movement
     private static final short VI_H = 104;
@@ -272,6 +273,8 @@ public class ViEditMode implements EditMode {
             else
                 mode = Action.YANK;
         }
+        else if(c == CTRL_E)
+            return new Operation(Movement.PREV, Action.CHANGE_EDITMODE);
 
         return new Operation(Movement.BEGINNING, Action.NO_ACTION);
     }

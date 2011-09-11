@@ -19,9 +19,11 @@ package org.jboss.jreadline.console;
 import org.jboss.jreadline.edit.EditMode;
 import org.jboss.jreadline.edit.EmacsEditMode;
 import org.jboss.jreadline.edit.PasteManager;
+import org.jboss.jreadline.edit.ViEditMode;
 import org.jboss.jreadline.edit.actions.*;
 import org.jboss.jreadline.history.History;
 import org.jboss.jreadline.history.InMemoryHistory;
+import org.jboss.jreadline.history.SearchDirection;
 import org.jboss.jreadline.terminal.POSIXTerminal;
 import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.undo.UndoAction;
@@ -132,29 +134,40 @@ public class Console {
                 switch (operation.getMovement()) {
                     //init a previous search
                     case PREV:
+                        history.setSearchDirection(SearchDirection.REVERSE);
                         searchTerm = new StringBuilder(buffer.getLine());
                         if (searchTerm.length() > 0) {
-                            result = history.searchPrevious(searchTerm.toString());
+                            result = history.search(searchTerm.toString());
+                        }
+                        break;
+
+                    case NEXT:
+                        history.setSearchDirection(SearchDirection.FORWARD);
+                        searchTerm = new StringBuilder(buffer.getLine());
+                        if (searchTerm.length() > 0) {
+                            result = history.search(searchTerm.toString());
                         }
                         break;
 
                     case PREV_WORD:
-                        result = history.searchPrevious(searchTerm.toString());
+                        history.setSearchDirection(SearchDirection.REVERSE);
+                        result = history.search(searchTerm.toString());
+                        break;
 
+                    case NEXT_WORD:
+                        history.setSearchDirection(SearchDirection.FORWARD);
+                        result = history.search(searchTerm.toString());
                         break;
 
                     case PREV_BIG_WORD:
-
-                        if (searchTerm.length() > 0) {
+                        if (searchTerm.length() > 0)
                             searchTerm.deleteCharAt(searchTerm.length() - 1);
-                        }
-
                         break;
                     // new search input, append to search
                     case ALL:
                         searchTerm.appendCodePoint(c);
                         //check if the new searchTerm will find anything
-                        StringBuilder tmpResult = history.searchPrevious(searchTerm.toString());
+                        StringBuilder tmpResult = history.search(searchTerm.toString());
                         //
                         if(tmpResult == null) {
                             searchTerm.deleteCharAt(searchTerm.length()-1);
@@ -257,6 +270,12 @@ public class Console {
                     doPaste(0, true);
                 else
                     doPaste(0, false);
+            }
+            else if(action == Action.CHANGE_EDITMODE) {
+                if(operation.getMovement() == Movement.PREV)
+                    editMode = new EmacsEditMode();
+                else if(operation.getMovement() == Movement.NEXT)
+                    editMode = new ViEditMode();
             }
             else if(action == Action.NO_ACTION) {
                 //atm do nothing
@@ -438,7 +457,11 @@ public class Console {
         //cursor should be placed at the index of searchTerm
         int cursor = result.indexOf(searchTerm);
 
-        StringBuilder out = new StringBuilder("(reverse-i-search) `");
+        StringBuilder out = null;
+        if(history.getSearchDirection() == SearchDirection.REVERSE)
+            out = new StringBuilder("(reverse-i-search) `");
+        else
+            out = new StringBuilder("(forward-i-search) `");
         out.append(searchTerm).append("': ");
         cursor += out.length();
         out.append(result); //.append("\u001b[K");

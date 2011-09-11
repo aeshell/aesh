@@ -30,6 +30,7 @@ public class InMemoryHistory implements History {
     private int lastFetchedId = -1;
     private int lastSearchedId = 0;
     private StringBuilder current;
+    private SearchDirection searchDirection = SearchDirection.REVERSE;
 
     @Override
     public void push(StringBuilder entry) {
@@ -61,6 +62,16 @@ public class InMemoryHistory implements History {
    }
 
     @Override
+    public void setSearchDirection(SearchDirection direction) {
+        searchDirection = direction;
+    }
+
+    @Override
+    public SearchDirection getSearchDirection() {
+        return searchDirection;
+    }
+
+    @Override
     public StringBuilder getPreviousFetch() {
         if(size() < 1)
             return null;
@@ -73,7 +84,14 @@ public class InMemoryHistory implements History {
     }
 
     @Override
-    public StringBuilder searchNext(String search) {
+    public StringBuilder search(String search) {
+        if(searchDirection == SearchDirection.REVERSE)
+            return searchReverse(search);
+        else
+            return searchForward(search);
+    }
+
+    private StringBuilder searchForward(String search) {
         for(; lastSearchedId < size(); lastSearchedId++) {
             if(historyList.get(lastSearchedId).indexOf(search) != -1)
                 return get(lastSearchedId);
@@ -83,9 +101,8 @@ public class InMemoryHistory implements History {
         return null;
     }
 
-    @Override
-    public StringBuilder searchPrevious(String search) {
-        if(lastSearchedId < 1)
+    private StringBuilder searchReverse(String search) {
+        if(lastSearchedId < 1 || lastSearchedId >= size())
             lastSearchedId = size()-1;
 
         for(; lastSearchedId >= 0; lastSearchedId-- ) {
