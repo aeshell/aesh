@@ -28,12 +28,14 @@ public class InMemoryHistory implements History {
 
     private List<StringBuilder> historyList = new LinkedList<StringBuilder>();
     private int lastFetchedId = -1;
+    private int lastSearchedId = 0;
     private StringBuilder current;
 
     @Override
     public void push(StringBuilder entry) {
         historyList.add(0, entry);
         lastFetchedId = -1;
+        lastSearchedId = 0;
     }
 
     @Override
@@ -68,6 +70,29 @@ public class InMemoryHistory implements History {
         else {
             return get(lastFetchedId);
         }
+    }
+
+    @Override
+    public StringBuilder searchNext(String search) {
+        for(; lastSearchedId < size(); lastSearchedId++) {
+            if(historyList.get(lastSearchedId).indexOf(search) != -1)
+                return get(lastSearchedId);
+
+        }
+
+        return null;
+    }
+
+    @Override
+    public StringBuilder searchPrevious(String search) {
+        if(lastSearchedId < 1)
+            lastSearchedId = size()-1;
+
+        for(; lastSearchedId >= 0; lastSearchedId-- ) {
+            if(historyList.get(lastSearchedId).indexOf(search) != -1)
+                return get(lastSearchedId);
+        }
+        return null;
     }
 
     @Override

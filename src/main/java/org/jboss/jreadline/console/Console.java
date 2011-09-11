@@ -108,11 +108,12 @@ public class Console {
         buffer.reset(prompt);
         outStream.write(buffer.getPrompt());
         flushOut();
+        StringBuilder searchTerm = null;
+        StringBuilder result = null;
 
         while(true) {
 
             int c = terminal.read(inStream);
-            //int c = reader.read();
             //System.out.println("got int:"+c);
             if (c == -1) {
                 return null;
@@ -120,94 +121,95 @@ public class Console {
             Operation operation = editMode.parseInput(c);
 
             Action action = operation.getAction();
-            //System.out.println("new action:"+action);
 
             if (action == Action.EDIT) {
-                /*
-                if (c != 0) { // ignore null chars
-                    ActionListener tAction = triggeredActions.get(c);
-                    if (tAction != null) {
-                        tAction.actionPerformed(null);
-                    }
-                    else {
-                        if(!undoManager.isEmpty()) {
-                            addActionToUndoStack();
-                        }
-                        putChar(c, true);
-                    }
-                }
-                */
                 writeChar(c);
             }
             // For search movement is used a bit differently.
             // It only triggers what kind of search action thats performed
             else if(action == Action.SEARCH) {
-                /*
+
                 switch (operation.getMovement()) {
                     //init a previous search
                     case PREV:
-                        searchTerm = new StringBuffer(buf.getBuffer());
+                        searchTerm = new StringBuilder(buffer.getLine());
                         if (searchTerm.length() > 0) {
-                            searchIndex = history.searchBackwards(searchTerm.toString());
-                            if (searchIndex == -1) {
-                                beep();
-                            }
-                            printSearchStatus(searchTerm.toString(),
-                                    searchIndex > -1 ? history.getHistory(searchIndex) : "");
-                        } else {
-                            searchIndex = -1;
-                            printSearchStatus("", "");
+                            result = history.searchPrevious(searchTerm.toString());
                         }
                         break;
 
                     case PREV_WORD:
-                        if (searchIndex == -1) {
-                            searchIndex = history.searchBackwards(searchTerm.toString());
-                        } else {
-                            searchIndex = history.searchBackwards(searchTerm.toString(), searchIndex);
-                        }
+                        result = history.searchPrevious(searchTerm.toString());
+
                         break;
 
                     case PREV_BIG_WORD:
+
                         if (searchTerm.length() > 0) {
                             searchTerm.deleteCharAt(searchTerm.length() - 1);
-                            searchIndex = history.searchBackwards(searchTerm.toString());
                         }
+
                         break;
                     // new search input, append to search
                     case ALL:
                         searchTerm.appendCodePoint(c);
-                        searchIndex = history.searchBackwards(searchTerm.toString());
+                        //check if the new searchTerm will find anything
+                        StringBuilder tmpResult = history.searchPrevious(searchTerm.toString());
+                        //
+                        if(tmpResult == null) {
+                            searchTerm.deleteCharAt(searchTerm.length()-1);
+                        }
+                        else {
+                            result = new StringBuilder(tmpResult.toString());
+                        }
+                        //result = history.searchPrevious(searchTerm.toString());
                         break;
                     // pressed enter, ending the search
                     case END:
-                        // Set buffer and cursor position to the found string.
-                        if (searchIndex != -1) {
-                            history.setCurrentIndex(searchIndex);
-                            setBuffer(history.current());
-                            buf.setCursor(history.current().indexOf(searchTerm.toString()));
+                        // Set buffer to the found string.
+                        if (result != null) {
+                            buffer.setLine(new StringBuilder(result));
+                            result = null;
+                            redrawLine();
+                            printNewline();
+                            return buffer.getLine().toString();
                         }
+                        redrawLine();
+                        break;
+
+                    case NEXT_BIG_WORD:
+                        if(result != null) {
+                            buffer.setLine(new StringBuilder(result));
+                            result = null;
+                        }
+                        //redrawLine();
                         break;
                 }
                 // if we're still in search mode, print the search status
                 if (editMode.getCurrentAction() == Action.SEARCH) {
                     if (searchTerm.length() == 0) {
-                        printSearchStatus("", "");
+                        if(result != null)
+                            printSearch("", result.toString());
+                        else
+                            printSearch("", "");
                     }
                     else {
-                        if (searchIndex == -1) {
-                            beep();
+                        if (result == null) {
+                            //beep();
+                            //System.out.println("result");
                         }
                         else {
-                            printSearchStatus(searchTerm.toString(), history.getHistory(searchIndex));
+                            printSearch(searchTerm.toString(), result.toString());
                         }
                     }
                 }
                 // otherwise, restore the line
                 else {
-                    restoreLine();
+                    redrawLine();
+                    outStream.write(Buffer.printAnsi((buffer.getPrompt().length()+1)+"G"));
+                    flushOut();
                 }
-                */
+
 
             }
 
@@ -415,18 +417,33 @@ public class Console {
     }
 
     private void redrawLine() throws IOException {
+        drawLine(buffer.getPrompt()+buffer.getLine().toString());
+    }
 
+    private void drawLine(String line) throws IOException {
         outStream.write(Buffer.printAnsi("s")); //save cursor
         //move cursor to 0. - need to do this to clear the entire line
         outStream.write(Buffer.printAnsi("0G"));
         outStream.write(Buffer.printAnsi("2K")); // clear line
         flushOut();
 
-        outStream.write(buffer.getPrompt());
-        outStream.write(buffer.getLineFrom(0));
+        outStream.write(line);
 
         // move cursor to saved pos
         outStream.write(Buffer.printAnsi("u"));
+        flushOut();
+    }
+
+    private void printSearch(String searchTerm, String result) throws IOException {
+        //cursor should be placed at the index of searchTerm
+        int cursor = result.indexOf(searchTerm);
+
+        StringBuilder out = new StringBuilder("(reverse-i-search) `");
+        out.append(searchTerm).append("': ");
+        cursor += out.length();
+        out.append(result); //.append("\u001b[K");
+        drawLine(out.toString());
+        outStream.write(Buffer.printAnsi((cursor+1) + "G"));
         flushOut();
     }
 

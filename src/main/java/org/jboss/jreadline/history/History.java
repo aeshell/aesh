@@ -34,6 +34,10 @@ public interface History {
 
     StringBuilder getPreviousFetch();
 
+    StringBuilder searchNext(String search);
+
+    StringBuilder searchPrevious(String search);
+
     void setCurrent(StringBuilder line);
 
     StringBuilder getCurrent();
