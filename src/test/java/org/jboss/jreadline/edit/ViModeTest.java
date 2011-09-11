@@ -177,8 +177,6 @@ public class ViModeTest extends JReadlineTestCase {
 
     }
 
-
-    /* not yet implemented
     public void testSearch() throws IOException {
         TestBuffer b = new TestBuffer();
         b.append("asdf jkl").append(TestBuffer.ENTER);
@@ -190,5 +188,5 @@ public class ViModeTest extends JReadlineTestCase {
 
         b.append(PREV_SEARCH).append("ewsa").append(TestBuffer.ENTER);
     }
-    */
+
 }
