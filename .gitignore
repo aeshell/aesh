@@ -1,0 +1,18 @@
+# ignore eclipse files
+.project
+.classpath
+.settings
+.metadata
+
+# ignore IDEA files
+*.iml
+*.ipr
+*.iws
+.idea
+
+# ignore gradle build
+build
+.gradle
+
+# ignore vim tmp files
+*.swp
