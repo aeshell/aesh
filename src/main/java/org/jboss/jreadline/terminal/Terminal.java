@@ -24,9 +24,9 @@ import java.io.InputStream;
  */
 public interface Terminal {
 
-    void init();
+    void init(InputStream inputStream);
 
-    int read(InputStream is) throws IOException;
+    int read() throws IOException;
 
     int getHeight();
 

@@ -17,6 +17,8 @@
 package org.jboss.jreadline.terminal;
 
 
+import org.jboss.jreadline.console.reader.CharInputStreamReader;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,39 +31,18 @@ import java.util.StringTokenizer;
  */
 public class POSIXTerminal implements Terminal {
 
-    public static final short ARROW_START = 27;
-    public static final short ARROW_PREFIX = 91;
-    public static final short ARROW_LEFT = 68;
-    public static final short ARROW_RIGHT = 67;
-    public static final short ARROW_UP = 65;
-    public static final short ARROW_DOWN = 66;
-    public static final short O_PREFIX = 79;
-    public static final short HOME_CODE = 72;
-    public static final short END_CODE = 70;
-
-    public static final short DEL_THIRD = 51;
-    public static final short DEL_SECOND = 126;
-
-    private final static char DELETE = 127;
-    private final static char BACKSPACE = '\b';
-
     private int height = -1;
     private int width = -1;
     private boolean echoEnabled;
     private String ttyConfig;
     private String ttyProps;
     private long ttyPropsLastFetched;
-    private boolean backspaceDeleteSwitched = false;
     private boolean hasBeenReseted = false;
-    private static String sttyCommand = System.getProperty("jline.sttyCommand", "stty");
 
-
-    String encoding = System.getProperty("input.encoding", "UTF-8");
-    //ReplayPrefixOneCharInputStream replayStream = new ReplayPrefixOneCharInputStream(encoding);
-    //InputStreamReader replayReader;
+    private CharInputStreamReader reader;
 
     @Override
-    public void init() {
+    public void init(InputStream inputStream) {
         // save the initial tty configuration
         try {
             ttyConfig = stty("-g");
@@ -82,10 +63,14 @@ public class POSIXTerminal implements Terminal {
             // disable character echoing
             stty("-echo");
             echoEnabled = false;
+
+            //setting up reader
+            reader = new CharInputStreamReader(inputStream);
         }
         catch (IOException ioe) {
             System.err.println("TTY failed with: " + ioe.getMessage());
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e) {
             e.printStackTrace();
         }
 
@@ -94,44 +79,18 @@ public class POSIXTerminal implements Terminal {
             public void start() {
                 try {
                     reset();
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     e.printStackTrace();
-                    //ignored
                 }
             }
         });
 
     }
 
-    public int read(InputStream in) throws IOException {
-        int c = 0;
-
-        c = in.read();
-
-        /*
-        if (isBackspaceDeleteSwitched()) {
-            //TODO: this is just a temp fix since it will still fail for
-            // c-l, c-space
-
-                if (c == DELETE)
-                    c = BACKSPACE;
-                else if (c == BACKSPACE)
-                    c = DELETE;
-
-        }
-        */
-
-        // handle unicode characters, thanks for a patch from amyi@inf.ed.ac.uk
-        if (c > 128) {
-            // handle unicode characters longer than 2 bytes,
-            // thanks to Marc.Herbert@continuent.com
-            //replayStream.setInput(c, in);
-//            replayReader = new InputStreamReader(replayStream, encoding);
-            //c = replayReader.read();
-
-        }
-
-        return c;
+    @Override
+    public int read() throws IOException {
+        return reader.read();
     }
 
     @Override
@@ -195,7 +154,8 @@ public class POSIXTerminal implements Terminal {
                 int index = str.lastIndexOf(" ");
 
                 return Integer.parseInt(str.substring(index).trim());
-            } else if (str.endsWith(prop)) {
+            }
+            else if (str.endsWith(prop)) {
                 int index = str.indexOf(" ");
 
                 return Integer.parseInt(str.substring(0, index).trim());

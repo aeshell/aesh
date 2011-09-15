@@ -36,7 +36,6 @@ import java.io.*;
  */
 public class Console {
 
-    private InputStream inStream;
     private Writer outStream;
     private Buffer buffer;
     private Terminal terminal;
@@ -65,10 +64,11 @@ public class Console {
     }
 
     public Console(InputStream in, Writer out, Terminal terminal, EditMode mode) {
+        setOutWriter(out);
         if(terminal == null)
-            setTerminal(new POSIXTerminal());
+            setTerminal(new POSIXTerminal(), in);
         else
-            setTerminal(terminal);
+            setTerminal(terminal, in);
 
         if(mode == null)
             editMode = new EmacsEditMode();
@@ -80,17 +80,11 @@ public class Console {
         buffer = new Buffer(null);
         history = new InMemoryHistory();
 
-        setInStream(in);
-        setOutWriter(out);
     }
 
-    private void setTerminal(Terminal term) {
+    private void setTerminal(Terminal term, InputStream in) {
         terminal = term;
-        terminal.init();
-    }
-
-    private void setInStream(InputStream is) {
-        inStream = is;
+        terminal.init(in);
     }
 
     private void setOutWriter(Writer out) {
@@ -115,7 +109,7 @@ public class Console {
 
         while(true) {
 
-            int c = terminal.read(inStream);
+            int c = terminal.read();
             //System.out.println("got int:"+c);
             if (c == -1) {
                 return null;
