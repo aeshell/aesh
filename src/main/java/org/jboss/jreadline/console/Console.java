@@ -32,6 +32,9 @@ import org.jboss.jreadline.undo.UndoManager;
 import java.io.*;
 
 /**
+ * A console reader.
+ * Supports ansi terminals
+ *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class Console {
@@ -46,6 +49,8 @@ public class Console {
     private History history;
 
     private Action prevAction = Action.EDIT;
+
+    private boolean toConsole = false;
 
     private static final String CR = System.getProperty("line.separator");
 
@@ -102,14 +107,21 @@ public class Console {
     public void pushToConsole(String input) throws IOException {
         outStream.write(input);
         flushOut();
+        toConsole = true;
     }
 
     public void pushToConsole(char[] input) throws IOException {
         outStream.write(input);
         flushOut();
+        toConsole = true;
     }
 
     public String read(String prompt) throws IOException {
+        //make sure that we end the line if pushToConsole(..) have been used
+        if(toConsole) {
+            toConsole = false;
+            printNewline();
+        }
 
         buffer.reset(prompt);
         outStream.write(buffer.getPrompt());
