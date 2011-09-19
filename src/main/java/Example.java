@@ -17,8 +17,7 @@ public class Example {
 
         String line;
         while ((line = console.read("> ")) != null) {
-            System.out.println("======>\"" + line + "\"");
-            System.out.flush();
+            console.pushToConsole("======>\"" + line + "\n");
 
             if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
                 break;

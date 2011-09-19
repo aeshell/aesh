@@ -99,6 +99,16 @@ public class Console {
         terminal.reset();
     }
 
+    public void pushToConsole(String input) throws IOException {
+        outStream.write(input);
+        flushOut();
+    }
+
+    public void pushToConsole(char[] input) throws IOException {
+        outStream.write(input);
+        flushOut();
+    }
+
     public String read(String prompt) throws IOException {
 
         buffer.reset(prompt);
@@ -176,7 +186,6 @@ public class Console {
                         // Set buffer to the found string.
                         if (result != null) {
                             buffer.setLine(new StringBuilder(result));
-                            result = null;
                             redrawLine();
                             printNewline();
                             return buffer.getLine().toString();

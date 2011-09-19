@@ -102,10 +102,14 @@ public class Buffer {
      * @param out string
      * @return ansified string
      */
-    protected static char[] printAnsi(String out) {
+    public static char[] printAnsi(String out) {
+        return printAnsi(out.toCharArray());
+    }
+
+    public static char[] printAnsi(char[] out) {
         //calculate length of table:
         int length = 0;
-        for(char c : out.toCharArray()) {
+        for(char c : out) {
           if(c == '\t') {
               length += TAB;
           }
@@ -117,13 +121,13 @@ public class Buffer {
         ansi[0] = (char) 27;
         ansi[1] = '[';
         int counter = 0;
-        for(int i=0; i < out.length(); i++) {
-            if(out.charAt(i) == '\t') {
+        for(int i=0; i < out.length; i++) {
+            if(out[i] == '\t') {
                 Arrays.fill(ansi, counter+2, counter+2+TAB, ' ');
                 counter += TAB-1;
             }
             else
-                ansi[counter+2] = out.charAt(i);
+                ansi[counter+2] = out[i];
 
             counter++;
         }
