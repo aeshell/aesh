@@ -23,7 +23,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.StringTokenizer;
 
 /**
  *
@@ -37,7 +36,7 @@ public class POSIXTerminal implements Terminal {
     private String ttyConfig;
     private String ttyProps;
     private long ttyPropsLastFetched;
-    private boolean hasBeenReseted = false;
+    private boolean restored = false;
 
     private CharInputStreamReader reader;
 
@@ -127,11 +126,11 @@ public class POSIXTerminal implements Terminal {
     }
 
     public void reset() throws Exception {
-        if(!hasBeenReseted) {
+        if(!restored) {
             if (ttyConfig != null) {
                 stty(ttyConfig);
                 ttyConfig = null;
-                hasBeenReseted = true;
+                restored = true;
             }
         }
     }
@@ -146,9 +145,8 @@ public class POSIXTerminal implements Terminal {
         // speed 9600 baud; 24 rows; 140 columns;
         // and:
         // speed 38400 baud; rows = 49; columns = 111; ypixels = 0; xpixels = 0;
-        for (StringTokenizer tok = new StringTokenizer(ttyProps, ";\n");
-             tok.hasMoreTokens();) {
-            String str = tok.nextToken().trim();
+        for (String str : ttyProps.split(";")) {
+            str = str.trim();
 
             if (str.startsWith(prop)) {
                 int index = str.lastIndexOf(" ");
@@ -178,21 +176,15 @@ public class POSIXTerminal implements Terminal {
      *  Execute the specified command and return the output
      *  (both stdout and stderr).
      */
-    private static String exec(final String cmd)
-            throws IOException, InterruptedException {
-        return exec(new String[] {
-                "sh",
-                "-c",
-                cmd
-        });
+    private static String exec(final String cmd) throws IOException, InterruptedException {
+        return exec(new String[] { "sh", "-c", cmd });
     }
 
     /**
      *  Execute the specified command and return the output
      *  (both stdout and stderr).
      */
-    private static String exec(final String[] cmd)
-            throws IOException, InterruptedException {
+    private static String exec(final String[] cmd) throws IOException, InterruptedException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
         Process p = Runtime.getRuntime().exec(cmd);
@@ -219,13 +211,17 @@ public class POSIXTerminal implements Terminal {
             p.waitFor();
         }
         finally {
-            try {in.close();} catch (Exception e) {}
-            try {err.close();} catch (Exception e) {}
-            try {out.close();} catch (Exception e) {}
+            try {
+                in.close();
+                err.close();
+                out.close();
+            }
+            catch (Exception e) {
+               e.printStackTrace();
+            }
         }
 
         return new String(bout.toByteArray());
     }
-
 
 }
