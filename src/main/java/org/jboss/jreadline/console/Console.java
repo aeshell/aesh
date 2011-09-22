@@ -266,7 +266,7 @@ public class Console {
                 changeCase();
             }
             else if(action == Action.COMPLETE) {
-                //complete();
+                complete();
             }
             else if(action == Action.EXIT) {
                 //deleteCurrentCharacter();
@@ -544,7 +544,7 @@ public class Console {
             return false;
     }
 
-    private void complete() {
+    private void complete() throws IOException {
         if(completionList.size() < 1)
             return;
 
@@ -560,21 +560,45 @@ public class Console {
             return;
         // only one hit, do a completion
         else if(possibleCompletions.size() == 1)
-            doCompletion(possibleCompletions.get(0));
+            displayCompletion(possibleCompletions.get(0));
         // more than one hit...
         else {
-           //TODO: implement this
+            String startsWith = buffer.findStartsWith(possibleCompletions);
+            if(startsWith.length() > 0)
+                displayCompletion(startsWith);
+            else {
+                displayCompletions(possibleCompletions);
+            }
         }
 
     }
 
     /**
      * TODO: insert the completion into the buffer
+     * 1. go back a word
+     * 2. insert the word
      *
      * @param completion
+     * @throws java.io.IOException stream
      */
-    private void doCompletion(String completion) {
+    private void displayCompletion(String completion) throws IOException {
+        performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
+        buffer.write(completion);
+        outStream.write(completion);
+
+        redrawLineFromCursor();
+    }
+
+    private void displayCompletions(List<String> possibleCompletions) {
+        if(possibleCompletions.size() > 50) {
+            // display ask...
+        }
+        // display all
+        else {
+
+        }
 
     }
+
 
 }
