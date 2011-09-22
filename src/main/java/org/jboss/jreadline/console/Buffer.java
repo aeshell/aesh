@@ -17,6 +17,7 @@
 package org.jboss.jreadline.console;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -210,5 +211,23 @@ public class Buffer {
         }
         else
             return false;
+    }
+
+    protected String findStartsWith(List<String> completionList) {
+        StringBuilder builder = new StringBuilder();
+        for(String completion : completionList)
+            while(builder.length() < completion.length() &&
+                  startsWith(completion.substring(0, builder.length()+1), completionList))
+                builder.append(completion.charAt(builder.length()));
+
+        return builder.toString();
+    }
+
+    private boolean startsWith(String criteria, List<String> completionList) {
+        for(String completion : completionList)
+            if(!completion.startsWith(criteria))
+                return false;
+
+        return true;
     }
 }

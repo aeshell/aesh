@@ -2,6 +2,9 @@ package org.jboss.jreadline.console;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -97,6 +100,24 @@ public class BufferTest extends TestCase {
         expected = new char[] {(char) 27, '[', ' ',' ',' ',' ','B'};
         assertEquals(new String(expected), new String(Buffer.printAnsi("\tB")));
 
+    }
+
+    public void testFindStartsWith() {
+        Buffer buffer = new Buffer();
+        buffer.write("foo");
+        List<String> completionList = new ArrayList<String>(3);
+        completionList.add("foobar");
+        completionList.add("foobaz");
+        completionList.add("foobor");
+        completionList.add("foob");
+
+        assertEquals("foob", buffer.findStartsWith(completionList));
+
+        buffer.reset("");
+        completionList.clear();
+        completionList.add("foo");
+        completionList.add("bar");
+        assertEquals("", buffer.findStartsWith(completionList));
     }
 
 }

@@ -16,6 +16,7 @@
  */
 package org.jboss.jreadline.console;
 
+import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.edit.EditMode;
 import org.jboss.jreadline.edit.EmacsEditMode;
 import org.jboss.jreadline.edit.PasteManager;
@@ -30,6 +31,8 @@ import org.jboss.jreadline.undo.UndoAction;
 import org.jboss.jreadline.undo.UndoManager;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A console reader.
@@ -47,6 +50,7 @@ public class Console {
     private PasteManager pasteManager;
     private EditMode editMode;
     private History history;
+    private List<Completion> completionList;
 
     private Action prevAction = Action.EDIT;
 
@@ -85,6 +89,7 @@ public class Console {
         buffer = new Buffer(null);
         history = new InMemoryHistory();
 
+        completionList = new ArrayList<Completion>();
     }
 
     private void setTerminal(Terminal term, InputStream in) {
@@ -114,6 +119,14 @@ public class Console {
         outStream.write(input);
         flushOut();
         toConsole = true;
+    }
+
+    public void addCompletion(Completion completion) {
+        completionList.add(completion);
+    }
+
+    public void addCompletions(List<Completion> completionList) {
+        this.completionList.addAll(completionList);
     }
 
     public String read(String prompt) throws IOException {
@@ -530,4 +543,38 @@ public class Console {
         else
             return false;
     }
+
+    private void complete() {
+        if(completionList.size() < 1)
+            return;
+
+        List<String> possibleCompletions = new ArrayList<String>();
+        for(Completion completion : completionList) {
+            List<String> newCompletions = completion.complete(buffer.getLine().toString(), buffer.getCursor());
+            if(newCompletions != null)
+            possibleCompletions.addAll( newCompletions);
+        }
+
+        // not hits, just return (perhaps we should beep?)
+        if(possibleCompletions.size() < 1)
+            return;
+        // only one hit, do a completion
+        else if(possibleCompletions.size() == 1)
+            doCompletion(possibleCompletions.get(0));
+        // more than one hit...
+        else {
+           //TODO: implement this
+        }
+
+    }
+
+    /**
+     * TODO: insert the completion into the buffer
+     *
+     * @param completion
+     */
+    private void doCompletion(String completion) {
+
+    }
+
 }
