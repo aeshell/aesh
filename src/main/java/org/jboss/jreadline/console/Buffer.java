@@ -173,6 +173,10 @@ public class Buffer {
         this.line = line;
     }
 
+    public String getLineWithPrompt() {
+        return prompt + line;
+    }
+
     public void write(char c) {
         line.insert(cursor++, c);
     }

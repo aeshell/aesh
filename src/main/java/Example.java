@@ -23,10 +23,24 @@ public class Example {
             public List<String> complete(String line, int cursor) {
                 // very simple completor
                 List<String> commands = new ArrayList<String>();
-                if(line.length() < 1 || line.startsWith("f") || line.startsWith("fo"))
+                if(line.equals("fo")) {
                     commands.add("foo");
-
-                return commands;
+                    commands.add("foobaa");
+                    commands.add("foobar");
+                    commands.add("foobaxxxxxx");
+                    commands.add("foobbx");
+                    commands.add("foobcx");
+                    commands.add("foobdx");
+                }
+                else if(line.equals("fooba")) {
+                    commands.add("foobaa");
+                    commands.add("foobar");
+                    commands.add("foobaxxxxxx");
+                }
+                else if(line.equals("foobar")) {
+                    commands.add("foobar");
+                }
+                 return commands;
             }
         };
 
@@ -34,7 +48,7 @@ public class Example {
 
         String line;
         while ((line = console.read("> ")) != null) {
-            console.pushToConsole("======>\"" + line + "\n");
+            console.pushToConsole("======>\"" + line);
 
             if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
                 break;

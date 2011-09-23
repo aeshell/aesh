@@ -55,6 +55,7 @@ public class Console {
     private Action prevAction = Action.EDIT;
 
     private boolean toConsole = false;
+    private boolean displayCompletion = false;
 
     private static final String CR = System.getProperty("line.separator");
 
@@ -485,7 +486,7 @@ public class Console {
         //cursor should be placed at the index of searchTerm
         int cursor = result.indexOf(searchTerm);
 
-        StringBuilder out = null;
+        StringBuilder out;
         if(history.getSearchDirection() == SearchDirection.REVERSE)
             out = new StringBuilder("(reverse-i-search) `");
         else
@@ -560,45 +561,94 @@ public class Console {
             return;
         // only one hit, do a completion
         else if(possibleCompletions.size() == 1)
-            displayCompletion(possibleCompletions.get(0));
+            displayCompletion(possibleCompletions.get(0), true);
         // more than one hit...
         else {
             String startsWith = buffer.findStartsWith(possibleCompletions);
-            if(startsWith.length() > 0)
-                displayCompletion(startsWith);
+            //TODO: make sure this works
+            if(startsWith.length() > 0 && startsWith.length() > buffer.getCursor())
+                displayCompletion(startsWith, false);
+            // display all
+            // check size
             else {
-                displayCompletions(possibleCompletions);
+                if(possibleCompletions.size() > 50) {
+                    if(displayCompletion) {
+
+                    }
+                    else {
+                        //String displayText = "Display all "+possibleCompletions.size()+ " possibilities? (y or n)";
+                    }
+                }
+                // display all
+                else {
+                    displayCompletions(possibleCompletions);
+                }
             }
         }
 
     }
 
     /**
-     * TODO: insert the completion into the buffer
-     * 1. go back a word
-     * 2. insert the word
+     * TODO: should only append to the current position, not remove the whole word..
      *
-     * @param completion
+     * @param completion item
+     * @param appendSpace if its an actual complete
      * @throws java.io.IOException stream
      */
-    private void displayCompletion(String completion) throws IOException {
+    private void displayCompletion(String completion, boolean appendSpace) throws IOException {
         performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
         buffer.write(completion);
         outStream.write(completion);
-
-        redrawLineFromCursor();
+        //only append space if its an actual complete, not a partial
+        if(appendSpace) {
+            buffer.write(' ');
+            outStream.write(' ');
+        }
+        flushOut();
     }
 
-    private void displayCompletions(List<String> possibleCompletions) {
-        if(possibleCompletions.size() > 50) {
-            // display ask...
-        }
-        // display all
-        else {
+    /**
+     * Display all possible completions
+     *
+     * @param possibleCompletions all completion items
+     * @throws IOException stream
+     */
+    private void displayCompletions(List<String> possibleCompletions) throws IOException {
+        int maxLength = 0;
+        for(String completion : possibleCompletions)
+            if(completion.length() > maxLength)
+                maxLength = completion.length();
 
-        }
+        maxLength = maxLength +2; //adding two spaces for better readability
+        int numColumns = terminal.getWidth() / maxLength;
+        if(numColumns > possibleCompletions.size()) // we dont need more columns than items
+            numColumns = possibleCompletions.size();
+        int numRows = possibleCompletions.size() / numColumns;
 
+        // add a row if we cant display all the items
+        if(numRows * numColumns < possibleCompletions.size())
+            numRows++;
+
+        // build the completion listing
+        StringBuilder completionOutput = new StringBuilder();
+        for(int i=0; i < numRows; i++) {
+            for(int c=0; c < numColumns; c++) {
+                int fetch = i + (c * numRows);
+                if(fetch < possibleCompletions.size())
+                    completionOutput.append(padRight(maxLength, possibleCompletions.get(i + (c * numRows)))) ;
+                else
+                    break;
+            }
+            completionOutput.append(CR);
+        }
+        // print it
+        printNewline();
+        outStream.write(completionOutput.toString());
+        outStream.write(buffer.getLineWithPrompt());
     }
 
+    private static String padRight(int n, String s) {
+        return String.format("%1$-" + n + "s", s);
+    }
 
 }
