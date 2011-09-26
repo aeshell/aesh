@@ -16,6 +16,7 @@
  */
 package org.jboss.jreadline.console;
 
+import org.fusesource.jansi.AnsiConsole;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.edit.EditMode;
 import org.jboss.jreadline.edit.EmacsEditMode;
@@ -27,8 +28,12 @@ import org.jboss.jreadline.history.InMemoryHistory;
 import org.jboss.jreadline.history.SearchDirection;
 import org.jboss.jreadline.terminal.POSIXTerminal;
 import org.jboss.jreadline.terminal.Terminal;
+import org.jboss.jreadline.terminal.WindowsTerminal;
 import org.jboss.jreadline.undo.UndoAction;
 import org.jboss.jreadline.undo.UndoManager;
+
+import org.fusesource.jansi.AnsiOutputStream;
+import org.fusesource.jansi.WindowsAnsiOutputStream;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -60,23 +65,25 @@ public class Console {
     private static final String CR = System.getProperty("line.separator");
 
     public Console() throws IOException {
-        this(new FileInputStream(FileDescriptor.in),
-             new PrintWriter( new OutputStreamWriter(System.out)));
-
+        this(new FileInputStream(FileDescriptor.in), System.out);
     }
 
-    public Console(InputStream in, Writer out)  {
+    public Console(InputStream in, OutputStream out)  {
         this(in, out, null);
     }
 
-    public Console(InputStream in, Writer out, Terminal terminal) {
+    public Console(InputStream in, OutputStream out, Terminal terminal) {
         this(in, out, terminal, null);
     }
 
-    public Console(InputStream in, Writer out, Terminal terminal, EditMode mode) {
+    public Console(InputStream in, OutputStream out, Terminal terminal, EditMode mode) {
         setOutWriter(out);
-        if(terminal == null)
-            setTerminal(new POSIXTerminal(), in);
+        if(terminal == null) {
+            if(System.getProperty("os.name").startsWith("Windows"))
+                setTerminal(new WindowsTerminal(), in);
+            else
+                setTerminal(new POSIXTerminal(), in);
+        }
         else
             setTerminal(terminal, in);
 
@@ -98,8 +105,25 @@ public class Console {
         terminal.init(in);
     }
 
-    private void setOutWriter(Writer out) {
-        outStream = out;
+    private void setOutWriter(OutputStream out) {
+        if(System.getProperty("os.name").startsWith("Windows")) {
+            try {
+                AnsiConsole.systemInstall();
+         //outStream = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(out)));
+        //}
+
+                outStream = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(out)));
+            }
+            catch (Exception ioe) {
+                System.out.println("Failed because of: "+ioe.getMessage());
+                ioe.printStackTrace();
+                outStream = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(out)));
+            }
+        }
+
+        else
+
+            outStream = new PrintWriter( new OutputStreamWriter(out));
     }
 
     private void flushOut() throws IOException {
@@ -146,7 +170,7 @@ public class Console {
         while(true) {
 
             int c = terminal.read();
-            //System.out.println("got int:"+c);
+            System.out.println("got int:"+c);
             if (c == -1) {
                 return null;
             }

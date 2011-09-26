@@ -34,7 +34,7 @@ public abstract class JReadlineTestCase extends TestCase {
     public void assertEquals(String expected, TestBuffer buffer) throws IOException {
 
         Console console = new Console(new ByteArrayInputStream(buffer.getBytes()),
-                new PrintWriter( new OutputStreamWriter(new ByteArrayOutputStream())));
+                new ByteArrayOutputStream());
 
 
         String in = null;
@@ -57,7 +57,7 @@ public abstract class JReadlineTestCase extends TestCase {
     public void assertEqualsViMode(String expected, TestBuffer buffer) throws IOException {
 
         Console console = new Console(new ByteArrayInputStream(buffer.getBytes()),
-                new PrintWriter( new OutputStreamWriter(new ByteArrayOutputStream())),
+                (OutputStream) new ByteArrayOutputStream(),
                 null, new ViEditMode());
 
         String in = null;

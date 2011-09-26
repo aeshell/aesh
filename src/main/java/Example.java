@@ -1,5 +1,6 @@
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.Console;
+import org.jboss.jreadline.terminal.ANSIColors;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -47,6 +48,7 @@ public class Example {
         console.addCompletion(completer);
 
         String line;
+        //console.pushToConsole(ANSIColors.GREEN_TEXT());
         while ((line = console.read("> ")) != null) {
             console.pushToConsole("======>\"" + line);
 
