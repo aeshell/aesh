@@ -17,7 +17,6 @@
 package org.jboss.jreadline.edit;
 
 import org.jboss.jreadline.edit.actions.Action;
-import org.jboss.jreadline.edit.actions.Movement;
 import org.jboss.jreadline.edit.actions.Operation;
 
 /**
@@ -122,161 +121,225 @@ public class ViEditMode implements EditMode {
         if(mode == Action.SEARCH) {
             if(c == ENTER) {
                 mode = Action.EDIT;
-                return new Operation(Movement.END, Action.SEARCH);
+                return Operation.SEARCH_END;
             }
             else if(c == CTRL_R) {
-                return new Operation(Movement.PREV_WORD, Action.SEARCH);
+                return Operation.SEARCH_PREV_WORD;
             }
             else if(c == BACKSPACE) {
-                return new Operation(Movement.PREV_BIG_WORD, Action.SEARCH);
+                return Operation.SEARCH_DELETE;
             }
             else if(c == ESCAPE) {
                 mode = Action.EDIT;
-                return new Operation(Movement.NEXT_BIG_WORD, Action.SEARCH);
+                return Operation.SEARCH_EXIT;
             }
-
             // search input
             else {
-                return new Operation(Movement.ALL, Action.SEARCH);
+                return Operation.SEARCH_INPUT;
             }
         }
 
         else if(c == ENTER) {
             mode = Action.EDIT; //set to edit after a newline
-            return new Operation(Movement.PREV, Action.NEWLINE);
+            return Operation.NEW_LINE;
         }
         else if(c == BACKSPACE) {
           if(isInEditMode())
-              return new Operation(Movement.PREV, Action.DELETE);
+              return Operation.DELETE_PREV_CHAR;
             else
-              return new Operation(Movement.PREV, Action.NO_ACTION);
+              return Operation.NO_ACTION;
         }
         else if(c == TAB) {
             if(isInEditMode())
-                return new Operation(Movement.NEXT, Action.COMPLETE);
+                return Operation.COMPLETE;
             else
-                return new Operation(Movement.PREV, Action.NO_ACTION);
+                return Operation.NO_ACTION;
         }
         else if(c == ESCAPE) {
             switchEditMode();
             if(isInEditMode())
-                return new Operation(Movement.NEXT, Action.NO_ACTION);
+                return Operation.NO_ACTION;
             else
-                return new Operation(Movement.PREV, Action.MOVE);
+                return Operation.MOVE_PREV_CHAR;
         }
         else if (c == CTRL_R) {
             mode = Action.SEARCH;
-            return new Operation(Movement.PREV, Action.SEARCH);
+            return Operation.SEARCH_PREV;
         }
 
         if(!isInEditMode())
             return inCommandMode(c);
         else
-            return new Operation(Movement.NEXT, Action.EDIT);
+            return Operation.EDIT;
     }
 
     private Operation inCommandMode(int c) {
         //movement
-        if(c == VI_H)
-            return saveAction(new Operation(Movement.PREV, mode));
-        else if(c == VI_L || c == VI_SPACE)
-            return saveAction(new Operation(Movement.NEXT, mode));
-        else if(c == VI_J)
-            return saveAction(new Operation(Movement.NEXT, Action.HISTORY));
+        if(c == VI_H) {
+            if(mode == Action.MOVE)
+                return saveAction(Operation.MOVE_PREV_CHAR);
+            else if(mode == Action.DELETE)
+                return saveAction(Operation.DELETE_PREV_CHAR);
+            else if(mode == Action.CHANGE)
+                return saveAction(Operation.CHANGE_PREV_CHAR);
+            else
+                return saveAction(Operation.YANK_PREV_CHAR);
+        }
+        else if(c == VI_L || c == VI_SPACE) {
+            if(mode == Action.MOVE)
+                return saveAction(Operation.MOVE_NEXT_CHAR);
+            else if(mode == Action.DELETE)
+                return saveAction(Operation.DELETE_NEXT_CHAR);
+            else if(mode == Action.CHANGE)
+                return saveAction(Operation.CHANGE_NEXT_CHAR);
+            else
+                return saveAction(Operation.YANK_NEXT_CHAR);
+        }
+        else if(c == VI_J) {
+            return saveAction(Operation.HISTORY_NEXT);
+        }
         else if(c == VI_K)
-            return saveAction(new Operation(Movement.PREV, Action.HISTORY));
-        else if(c == VI_B)
-            return saveAction(new Operation(Movement.PREV_WORD, mode));
-        else if(c == VI_SHIFT_B)
-            return saveAction(new Operation(Movement.PREV_BIG_WORD, mode));
-        else if(c == VI_W)
-            return saveAction(new Operation(Movement.NEXT_WORD, mode));
-        else if(c == VI_SHIFT_W)
-            return saveAction(new Operation(Movement.NEXT_BIG_WORD, mode));
-        else if(c == VI_0)
-            return saveAction(new Operation(Movement.BEGINNING, mode));
-        else if(c == VI_$)
-            return saveAction(new Operation(Movement.END, mode));
+            return saveAction(Operation.HISTORY_PREV);
+        else if(c == VI_B) {
+            if(mode == Action.MOVE)
+                return saveAction(Operation.MOVE_PREV_WORD);
+            else if(mode == Action.DELETE)
+                return saveAction(Operation.DELETE_PREV_WORD);
+            else if(mode == Action.CHANGE)
+                return saveAction(Operation.CHANGE_PREV_WORD);
+            else
+                return saveAction(Operation.YANK_PREV_WORD);
+        }
+        else if(c == VI_SHIFT_B) {
+            if(mode == Action.MOVE)
+                return saveAction(Operation.MOVE_PREV_BIG_WORD);
+            else if(mode == Action.DELETE)
+                return saveAction(Operation.DELETE_PREV_BIG_WORD);
+            else if(mode == Action.CHANGE)
+                return saveAction(Operation.CHANGE_PREV_BIG_WORD);
+            else
+                return saveAction(Operation.YANK_PREV_BIG_WORD);
+        }
+        else if(c == VI_W) {
+            if(mode == Action.MOVE)
+                return saveAction(Operation.MOVE_NEXT_WORD);
+            else if(mode == Action.DELETE)
+                return saveAction(Operation.DELETE_NEXT_WORD);
+            else if(mode == Action.CHANGE)
+                return saveAction(Operation.CHANGE_NEXT_WORD);
+            else
+                return saveAction(Operation.YANK_NEXT_WORD);
+        }
+        else if(c == VI_SHIFT_W) {
+            if(mode == Action.MOVE)
+                return saveAction(Operation.MOVE_NEXT_BIG_WORD);
+            else if(mode == Action.DELETE)
+                return saveAction(Operation.DELETE_NEXT_BIG_WORD);
+            else if(mode == Action.CHANGE)
+                return saveAction(Operation.CHANGE_NEXT_BIG_WORD);
+            else
+                return saveAction(Operation.YANK_NEXT_BIG_WORD);
+        }
+        else if(c == VI_0) {
+            if(mode == Action.MOVE)
+                return saveAction(Operation.MOVE_BEGINNING);
+            else if(mode == Action.DELETE)
+                return saveAction(Operation.DELETE_BEGINNING);
+            else if(mode == Action.CHANGE)
+                return saveAction(Operation.CHANGE_BEGINNING);
+            else
+                return saveAction(Operation.YANK_BEGINNING);
+        }
+        else if(c == VI_$) {
+            if(mode == Action.MOVE)
+                return saveAction(Operation.MOVE_END);
+            else if(mode == Action.DELETE)
+                return saveAction(Operation.DELETE_END);
+            else if(mode == Action.CHANGE)
+                return saveAction(Operation.CHANGE_END);
+            else
+                return saveAction(Operation.YANK_END);
+        }
 
         //edit
         else if(c == VI_X) {
-            return saveAction(new Operation(Movement.NEXT, Action.DELETE));
+            return saveAction(Operation.DELETE_NEXT_CHAR);
         }
         // paste
         else if(c == VI_P)
-           return saveAction(new Operation(Movement.PREV, Action.PASTE));
+           return saveAction(Operation.PASTE_AFTER);
         else if(c == VI_SHIFT_P)
-            return saveAction(new Operation(Movement.NEXT, Action.PASTE));
+            return saveAction(Operation.PASTE_BEFORE);
         // replace
         else if(c == VI_S) {
             switchEditMode();
-            return saveAction(new Operation(Movement.NEXT, Action.DELETE));
+            return saveAction(Operation.DELETE_NEXT_CHAR);
         }
         else if(c == VI_SHIFT_S) {
             mode = Action.CHANGE;
-            return saveAction(new Operation(Movement.ALL, mode));
+            return saveAction(Operation.CHANGE_ALL);
         }
         // insert
         else if(c == VI_A) {
             switchEditMode();
-            return saveAction(new Operation(Movement.NEXT, Action.MOVE));
+            return saveAction(Operation.MOVE_NEXT_CHAR);
         }
         else if(c == VI_SHIFT_A) {
             switchEditMode();
-            return saveAction(new Operation(Movement.END, Action.MOVE));
+            return saveAction(Operation.MOVE_END);
         }
         else if(c == VI_I) {
             switchEditMode();
-            return saveAction(new Operation(Action.NO_ACTION));
+            return saveAction(Operation.NO_ACTION);
         }
         else if(c == VI_SHIFT_I) {
             switchEditMode();
-            return saveAction(new Operation(Movement.BEGINNING, Action.MOVE));
+            return saveAction(Operation.MOVE_BEGINNING);
         }
         //delete
         else if(c == VI_D) {
             //if we're already in delete-mode, delete the whole line
             if(isDeleteMode())
-                return saveAction(new Operation(Movement.ALL, Action.DELETE));
+                return saveAction(Operation.DELETE_ALL);
             else
                 mode = Action.DELETE;
         }
         else if(c == VI_SHIFT_D) {
             mode = Action.DELETE;
-            return saveAction(new Operation(Movement.END, Action.DELETE));
+            return saveAction(Operation.DELETE_END);
         }
         else if(c == VI_C) {
             mode = Action.CHANGE;
         }
         else if(c == VI_SHIFT_C) {
             mode = Action.CHANGE;
-            return saveAction(new Operation(Movement.END, Action.CHANGE));
+            return saveAction(Operation.CHANGE_END);
         }
         else if(c == VI_ENTER) {
             switchEditMode();
-            return new Operation(Action.NEWLINE);
+            return Operation.NEW_LINE;
         }
         else if(c == VI_PERIOD) {
             mode = previousMode;
             return previousAction;
         }
         else if(c == VI_U) {
-            return saveAction(new Operation(Action.UNDO));
+            return saveAction(Operation.UNDO);
         }
         else if(c == VI_TILDE) {
-            return saveAction(new Operation(Action.CASE));
+            return saveAction(Operation.CASE);
         }
         else if(c == VI_Y) {
             //if we're already in yank-mode, yank the whole line
             if(isYankMode())
-                return saveAction(new Operation(Movement.ALL, Action.YANK));
+                return saveAction(Operation.YANK_ALL);
             else
                 mode = Action.YANK;
         }
         else if(c == CTRL_E)
-            return new Operation(Movement.PREV, Action.CHANGE_EDITMODE);
+            return Operation.CHANGE_EDIT_MODE;
 
-        return new Operation(Movement.BEGINNING, Action.NO_ACTION);
+        return Operation.NO_ACTION;
     }
 
     @Override

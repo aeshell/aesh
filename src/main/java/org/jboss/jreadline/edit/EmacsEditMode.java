@@ -17,7 +17,6 @@
 package org.jboss.jreadline.edit;
 
 import org.jboss.jreadline.edit.actions.Action;
-import org.jboss.jreadline.edit.actions.Movement;
 import org.jboss.jreadline.edit.actions.Operation;
 
 /**
@@ -80,108 +79,107 @@ public class EmacsEditMode implements EditMode {
         if(mode == Action.SEARCH) {
             if(input == ENTER) {
                 mode = Action.EDIT;
-                return new Operation(Movement.END, Action.SEARCH);
+                return Operation.SEARCH_END;
             }
             else if(input == CTRL_R) {
-                return new Operation(Movement.PREV_WORD, Action.SEARCH);
+                return Operation.SEARCH_PREV_WORD;
             }
             else if(input == CTRL_S) {
-                return new Operation(Movement.NEXT_WORD, Action.SEARCH);
+                return Operation.SEARCH_NEXT_WORD;
             }
             else if(input == BACKSPACE) {
-                return new Operation(Movement.PREV_BIG_WORD, Action.SEARCH);
+                return Operation.SEARCH_DELETE;
             }
             else if(input == ESCAPE) {
                 mode = Action.EDIT;
-                return new Operation(Movement.NEXT_BIG_WORD, Action.SEARCH);
+                return Operation.SEARCH_EXIT;
             }
-
             // search input
             else {
-                return new Operation(Movement.ALL, Action.SEARCH);
+                return Operation.SEARCH_INPUT;
             }
         }
 
 
         if(input == ENTER)
-            return new Operation(Movement.PREV, Action.NEWLINE);
+            return Operation.NEW_LINE;
         else if(input == BACKSPACE)
-            return new Operation(Movement.PREV, Action.DELETE);
+            return Operation.DELETE_PREV_CHAR;
         if(input == CTRL_A)
-            return new Operation(Movement.BEGINNING, Action.MOVE);
+            return Operation.MOVE_BEGINNING;
         else if(input == CTRL_B)
-            return new Operation(Movement.PREV, Action.MOVE);
+            return Operation.MOVE_PREV_CHAR;
         else if(input == CTRL_D)
-            return new Operation(Movement.NEXT, Action.DELETE);
+            return Operation.DELETE_NEXT_CHAR;
         else if(input == CTRL_E)
-            return new Operation(Movement.END, Action.MOVE);
+            return Operation.MOVE_END;
         else if(input == CTRL_F)
-            return new Operation(Movement.NEXT, Action.MOVE);
+            return Operation.MOVE_NEXT_CHAR;
         else if(input == CTRL_G)
-            return new Operation(Movement.PREV, Action.ABORT);
+            return Operation.ABORT;
         else if(input == CTRL_H)
-            return new Operation(Movement.PREV, Action.DELETE);
+            return Operation.DELETE_PREV_CHAR;
         else if(input == CTRL_I)
-            return new Operation(Movement.PREV, Action.COMPLETE);
+            return Operation.COMPLETE;
         else if(input == CTRL_K)
-            return new Operation(Movement.END, Action.DELETE);
+            return Operation.DELETE_END;
         else if(input == CTRL_L)
-            return new Operation(Movement.ALL, Action.DELETE); //TODO: should change to clear screen
+            return Operation.DELETE_ALL; //TODO: should change to clear screen
         else if(input == CTRL_N)
-            return new Operation(Movement.NEXT, Action.HISTORY);
+            return Operation.HISTORY_NEXT;
         else if(input == CTRL_P)
-            return new Operation(Movement.PREV, Action.HISTORY);
+            return Operation.HISTORY_PREV;
         else if(input == CTRL__)
-            return new Operation(Action.UNDO);
+            return Operation.UNDO;
 
         else if(input == CTRL_U) {
             //only undo if C-x have been pressed first
             if(ctrl_xState) {
                 ctrl_xState = false;
-                return new Operation(Action.UNDO);
+                return Operation.UNDO;
             }
             else
-                return new Operation(Movement.BEGINNING, Action.DELETE);
+                return Operation.DELETE_BEGINNING;
         }
         else if(input == CTRL_V)
-            return new Operation(Movement.NEXT, Action.PASTE_FROM_CLIPBOARD);
+            return Operation.PASTE_FROM_CLIPBOARD;
         // Kill from the cursor to the previous whitespace
         else if(input == CTRL_W)
-            return new Operation(Movement.PREV_BIG_WORD, Action.DELETE);
+            return Operation.DELETE_PREV_BIG_WORD;
 
         //  Yank the most recently killed text back into the buffer at the cursor.
         else if(input == CTRL_Y)
-            return new Operation(Movement.NEXT, Action.PASTE);
+            return Operation.PASTE_BEFORE;
         else if(input == CR)
-            return new Operation(Movement.BEGINNING, Action.MOVE);
+            return Operation.MOVE_BEGINNING;
         // search
         else if(input == CTRL_R) {
             mode = Action.SEARCH;
-            return new Operation(Movement.PREV, Action.SEARCH);
+            return Operation.SEARCH_PREV;
         }
         else if(input == CTRL_S) {
             mode = Action.SEARCH;
-            return new Operation(Movement.NEXT, Action.SEARCH);
+            return Operation.SEARCH_NEXT_WORD;
         }
 
         //enter C-x state
         else if(input == CTRL_X) {
             ctrl_xState = true;
-            return new Operation(Action.NO_ACTION);
+            return Operation.NO_ACTION;
         }
 
         // handle meta keys
         else if(input == F && arrowStart) {
             arrowStart = false;
-            return new Operation(Movement.NEXT_WORD, Action.MOVE);
+            return Operation.MOVE_NEXT_WORD;
         }
         else if(input == B && arrowStart) {
             arrowStart = false;
-            return new Operation(Movement.PREV_WORD, Action.MOVE);
+            return Operation.MOVE_PREV_WORD;
         }
         else if(input == D && arrowStart) {
             arrowStart = false;
-            return new Operation(Movement.NEXT_WORD, Action.DELETE);
+            return Operation.DELETE_NEXT_WORD;
         }
 
 
@@ -190,48 +188,48 @@ public class EmacsEditMode implements EditMode {
             // if we've already gotten a escape
             if(arrowStart) {
                 arrowStart = false;
-                return new Operation(Action.NO_ACTION);
+                return Operation.NO_ACTION;
             }
             //new escape, set status as arrowStart
             if(!arrowPrefix && !arrowStart) {
                 arrowStart = true;
-                return new Operation(Action.NO_ACTION);
+                return Operation.NO_ACTION;
             }
         }
         else if(input == ARROW_START) {
             if(arrowStart) {
                 arrowPrefix = true;
-                return new Operation(Action.NO_ACTION);
+                return Operation.NO_ACTION;
             }
         }
         else if(input == UP) {
             if(arrowPrefix && arrowStart) {
                 arrowPrefix = arrowStart = false;
-                return new Operation(Movement.PREV, Action.HISTORY);
+                return Operation.HISTORY_PREV;
             }
         }
         else if(input == DOWN) {
             if(arrowPrefix && arrowStart) {
                 arrowPrefix = arrowStart = false;
-                return new Operation(Movement.NEXT, Action.HISTORY);
+                return Operation.HISTORY_NEXT;
             }
         }
         else if(input == LEFT) {
             if(arrowPrefix && arrowStart) {
                 arrowPrefix = arrowStart = false;
-                return new Operation(Movement.PREV, Action.MOVE);
+                return Operation.MOVE_PREV_CHAR;
             }
         }
         else if(input == RIGHT) {
             if(arrowPrefix && arrowStart) {
                 arrowPrefix = arrowStart = false;
-                return new Operation(Movement.NEXT, Action.MOVE);
+                return Operation.MOVE_NEXT_CHAR;
             }
         }
         //if we get down here, we can safely reset arrow status booleans
         arrowPrefix = arrowStart = false;
 
-        return new Operation(Action.EDIT);
+        return Operation.EDIT;
     }
 
     @Override
