@@ -18,6 +18,7 @@ package org.jboss.jreadline;
 
 import junit.framework.TestCase;
 import org.jboss.jreadline.console.Console;
+import org.jboss.jreadline.edit.KeyOperationManager;
 import org.jboss.jreadline.edit.ViEditMode;
 
 import java.io.*;
@@ -58,7 +59,7 @@ public abstract class JReadlineTestCase extends TestCase {
 
         Console console = new Console(new ByteArrayInputStream(buffer.getBytes()),
                 (OutputStream) new ByteArrayOutputStream(),
-                null, new ViEditMode());
+                null, new ViEditMode(KeyOperationManager.generatePOSIXViMode()));
 
         String in = null;
         while (true) {

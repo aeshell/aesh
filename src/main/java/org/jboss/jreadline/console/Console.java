@@ -16,12 +16,8 @@
  */
 package org.jboss.jreadline.console;
 
-import org.fusesource.jansi.AnsiConsole;
 import org.jboss.jreadline.complete.Completion;
-import org.jboss.jreadline.edit.EditMode;
-import org.jboss.jreadline.edit.EmacsEditMode;
-import org.jboss.jreadline.edit.PasteManager;
-import org.jboss.jreadline.edit.ViEditMode;
+import org.jboss.jreadline.edit.*;
 import org.jboss.jreadline.edit.actions.*;
 import org.jboss.jreadline.history.History;
 import org.jboss.jreadline.history.InMemoryHistory;
@@ -31,9 +27,6 @@ import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.terminal.WindowsTerminal;
 import org.jboss.jreadline.undo.UndoAction;
 import org.jboss.jreadline.undo.UndoManager;
-
-import org.fusesource.jansi.AnsiOutputStream;
-import org.fusesource.jansi.WindowsAnsiOutputStream;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -88,7 +81,8 @@ public class Console {
             setTerminal(terminal, in);
 
         if(mode == null)
-            editMode = new EmacsEditMode();
+            editMode = new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
+            //editMode = new ViEditMode(KeyOperationManager.generatePOSIXViMode());
         else
             editMode = mode;
 
@@ -106,23 +100,19 @@ public class Console {
     }
 
     private void setOutWriter(OutputStream out) {
+        /*
         if(System.getProperty("os.name").startsWith("Windows")) {
             try {
-                AnsiConsole.systemInstall();
-         //outStream = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(out)));
-        //}
-
+                //AnsiConsole.systemInstall();
                 outStream = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(out)));
             }
             catch (Exception ioe) {
-                System.out.println("Failed because of: "+ioe.getMessage());
                 ioe.printStackTrace();
                 outStream = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(out)));
             }
         }
-
         else
-
+        */
             outStream = new PrintWriter( new OutputStreamWriter(out));
     }
 
@@ -170,7 +160,7 @@ public class Console {
         while(true) {
 
             int c = terminal.read();
-            System.out.println("got int:"+c);
+            //System.out.println("got int:"+c);
             if (c == -1) {
                 return null;
             }
@@ -326,9 +316,9 @@ public class Console {
             }
             else if(action == Action.CHANGE_EDITMODE) {
                 if(operation.getMovement() == Movement.PREV)
-                    editMode = new EmacsEditMode();
+                    editMode = new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
                 else if(operation.getMovement() == Movement.NEXT)
-                    editMode = new ViEditMode();
+                    editMode = new ViEditMode(KeyOperationManager.generatePOSIXViMode());
             }
             else if(action == Action.NO_ACTION) {
                 //atm do nothing
@@ -411,7 +401,8 @@ public class Console {
                 buffer.getLine().delete(action.getEnd(), action.getStart());
                 moveCursor((action.getEnd() - action.getStart()));
             }
-            redrawLineFromCursor();
+            //redrawLineFromCursor();
+            redrawLine();
         }
         else if(action.getAction() == Action.YANK) {
             if(action.getEnd() > action.getStart()) {

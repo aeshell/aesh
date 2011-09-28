@@ -36,6 +36,12 @@ public enum Operation {
     EDIT(Action.EDIT),
     HISTORY_NEXT(Movement.NEXT, Action.HISTORY),
     HISTORY_PREV(Movement.PREV, Action.HISTORY),
+    PREV_CHAR(Movement.PREV, Action.NO_ACTION),
+    NEXT_CHAR(Movement.NEXT, Action.NO_ACTION),
+    NEXT_WORD(Movement.NEXT_WORD, Action.NO_ACTION),
+    PREV_WORD(Movement.PREV_WORD, Action.NO_ACTION),
+    NEXT_BIG_WORD(Movement.NEXT_BIG_WORD, Action.NO_ACTION),
+    PREV_BIG_WORD(Movement.PREV_BIG_WORD, Action.NO_ACTION),
     MOVE_PREV_CHAR(Movement.PREV, Action.MOVE),
     MOVE_NEXT_CHAR(Movement.NEXT, Action.MOVE),
     MOVE_PREV_WORD(Movement.PREV_WORD, Action.MOVE),
@@ -62,6 +68,7 @@ public enum Operation {
     CHANGE_BEGINNING(Movement.BEGINNING, Action.CHANGE),
     CHANGE_END(Movement.END, Action.CHANGE),
     CHANGE_ALL(Movement.ALL, Action.CHANGE),
+    CHANGE(Action.NO_ACTION),
     YANK_PREV_CHAR(Movement.PREV, Action.YANK),
     YANK_NEXT_CHAR(Movement.NEXT, Action.YANK),
     YANK_PREV_WORD(Movement.PREV_WORD, Action.YANK),
@@ -71,6 +78,11 @@ public enum Operation {
     YANK_BEGINNING(Movement.BEGINNING, Action.YANK),
     YANK_END(Movement.END, Action.YANK),
     YANK_ALL(Movement.ALL, Action.YANK),
+    BEGINNING(Movement.BEGINNING, Action.NO_ACTION), //used for '0' in vi mode
+    END(Movement.BEGINNING, Action.NO_ACTION),       // used for '$' in vi mode
+    INSERT(Action.NO_ACTION),                        // used for 'i' in vi mode
+    INSERT_BEGINNING(Action.NO_ACTION),              // used for 'I' in vi mode
+    ESCAPE(Action.NO_ACTION),                        // escape
 
     PASTE_BEFORE(Movement.NEXT, Action.PASTE),
     PASTE_AFTER(Movement.PREV, Action.PASTE),
@@ -78,6 +90,7 @@ public enum Operation {
     UNDO(Action.UNDO),
     CASE(Action.CASE),
     ABORT(Action.ABORT),
+    REPEAT(Action.NO_ACTION),
     CHANGE_EDIT_MODE(Movement.PREV, Action.CHANGE_EDITMODE);
 
     private Movement movement;

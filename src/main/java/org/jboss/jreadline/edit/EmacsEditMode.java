@@ -19,222 +19,111 @@ package org.jboss.jreadline.edit;
 import org.jboss.jreadline.edit.actions.Action;
 import org.jboss.jreadline.edit.actions.Operation;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 /**
- * TODO:
- * - add support for different os key values (mainly windows)
- *
  * Trying to follow the gnu readline impl found here:
  * http://cnswww.cns.cwru.edu/php/chet/readline/readline.html
+ *
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class EmacsEditMode implements EditMode {
 
-    private final static short CTRL_A = 1;
-    private final static short CTRL_B = 2;
-    //private final static short CTRL_C = 3;
-    private final static short CTRL_D = 4;
-    private final static short CTRL_E = 5;
-    private final static short CTRL_F = 6;
-    private final static short CTRL_G = 7;
-    private final static short CTRL_H = 8;
-    private final static short CTRL_I = 9;     //TAB
-    private static final short ENTER = 10;
-
-    private final static short CTRL_K = 11;
-    private final static short CTRL_L = 12;
-    private final static short CR = 13;
-    private final static short CTRL_N = 14;
-    private final static short CTRL_P = 16;
-    private final static short CTRL_R = 18;
-    private final static short CTRL_S = 19;
-    private final static short CTRL_U = 21;
-    private final static short CTRL_V = 22;
-    private final static short CTRL_W = 23;
-    private final static short CTRL_X = 24;
-    private final static short CTRL_Y = 25; // yank
-    private final static short ESCAPE = 27;
-    private final static short CTRL__ = 31;
-    private final static short ARROW_START = 91;
-    private final static short LEFT = 68;
-    private final static short RIGHT = 67;
-    private final static short UP = 65;
-    private final static short DOWN = 66;
-    private final static short BACKSPACE = 127;
-    private final static short F = 102; // needed to handle M-f
-    private final static short B = 98; // needed to handle M-b
-    private final static short D = 100; // needed to handle M-d
-
-    private boolean arrowStart = false;
-    private boolean arrowPrefix = false;
-    private boolean ctrl_xState = false;
-
     private Action mode = Action.EDIT;
+
+    private List<KeyOperation> operations;
+    private List<KeyOperation> currentOperations = new ArrayList<KeyOperation>();
+    private int operationLevel = 0;
+
+    public EmacsEditMode(List<KeyOperation> operations) {
+        this.operations = operations;
+    }
 
     @Override
     public Operation parseInput(int input) {
+        //if we're in the middle of parsing a sequence input
+        if(operationLevel > 0) {
+            Iterator<KeyOperation> operationIterator = currentOperations.iterator();
+            while(operationIterator.hasNext())
+                if(input != operationIterator.next().getKeyValues()[operationLevel])
+                    operationIterator.remove();
 
-        //if we're already in search mode
-        //TODO: Add support for arrow keys and escape
+        }
+        // parse a first sequence input
+        else {
+            for(KeyOperation ko : operations)
+                if(input == ko.getFirstValue())
+                    currentOperations.add(ko);
+        }
+
+        //search mode need special handling
         if(mode == Action.SEARCH) {
-            if(input == ENTER) {
+            if(currentOperations.size() == 1) {
+                if(currentOperations.get(0).getOperation() == Operation.NEW_LINE) {
+                    mode = Action.EDIT;
+                    currentOperations.clear();
+                    return Operation.SEARCH_END;
+                }
+                else if(currentOperations.get(0).getOperation() == Operation.SEARCH_PREV) {
+                    currentOperations.clear();
+                    return Operation.SEARCH_PREV_WORD;
+                }
+                else if(currentOperations.get(0).getOperation() == Operation.SEARCH_NEXT_WORD) {
+                    currentOperations.clear();
+                    return Operation.SEARCH_NEXT_WORD;
+                }
+                else if(currentOperations.get(0).getOperation() == Operation.DELETE_PREV_CHAR) {
+                    currentOperations.clear();
+                    return Operation.SEARCH_DELETE;
+                }
+            }
+            //if we got more than one we know that it started with esc
+            else if(currentOperations.size() > 1) {
                 mode = Action.EDIT;
-                return Operation.SEARCH_END;
-            }
-            else if(input == CTRL_R) {
-                return Operation.SEARCH_PREV_WORD;
-            }
-            else if(input == CTRL_S) {
-                return Operation.SEARCH_NEXT_WORD;
-            }
-            else if(input == BACKSPACE) {
-                return Operation.SEARCH_DELETE;
-            }
-            else if(input == ESCAPE) {
-                mode = Action.EDIT;
+                currentOperations.clear();
                 return Operation.SEARCH_EXIT;
             }
             // search input
             else {
+                currentOperations.clear();
                 return Operation.SEARCH_INPUT;
             }
-        }
+        } // end search mode
 
-
-        if(input == ENTER)
-            return Operation.NEW_LINE;
-        else if(input == BACKSPACE)
-            return Operation.DELETE_PREV_CHAR;
-        if(input == CTRL_A)
-            return Operation.MOVE_BEGINNING;
-        else if(input == CTRL_B)
-            return Operation.MOVE_PREV_CHAR;
-        else if(input == CTRL_D)
-            return Operation.DELETE_NEXT_CHAR;
-        else if(input == CTRL_E)
-            return Operation.MOVE_END;
-        else if(input == CTRL_F)
-            return Operation.MOVE_NEXT_CHAR;
-        else if(input == CTRL_G)
-            return Operation.ABORT;
-        else if(input == CTRL_H)
-            return Operation.DELETE_PREV_CHAR;
-        else if(input == CTRL_I)
-            return Operation.COMPLETE;
-        else if(input == CTRL_K)
-            return Operation.DELETE_END;
-        else if(input == CTRL_L)
-            return Operation.DELETE_ALL; //TODO: should change to clear screen
-        else if(input == CTRL_N)
-            return Operation.HISTORY_NEXT;
-        else if(input == CTRL_P)
-            return Operation.HISTORY_PREV;
-        else if(input == CTRL__)
-            return Operation.UNDO;
-
-        else if(input == CTRL_U) {
-            //only undo if C-x have been pressed first
-            if(ctrl_xState) {
-                ctrl_xState = false;
-                return Operation.UNDO;
+        // process if we have any hits...
+        if(currentOperations.isEmpty()) {
+            //if we've pressed meta-X, where X is not caught we just disable the output
+            if(operationLevel > 0) {
+                operationLevel = 0;
+                currentOperations.clear();
+                return Operation.NO_ACTION;
             }
             else
-                return Operation.DELETE_BEGINNING;
+                return Operation.EDIT;
         }
-        else if(input == CTRL_V)
-            return Operation.PASTE_FROM_CLIPBOARD;
-        // Kill from the cursor to the previous whitespace
-        else if(input == CTRL_W)
-            return Operation.DELETE_PREV_BIG_WORD;
+        else if(currentOperations.size() == 1) {
+            //System.out.println("Got Operation: "+matchingOperations.get(0).getOperation());
+            Operation currentOperation = currentOperations.get(0).getOperation();
+            if(currentOperation == Operation.SEARCH_PREV ||
+                    currentOperation == Operation.SEARCH_NEXT_WORD)
+                mode = Action.SEARCH;
 
-        //  Yank the most recently killed text back into the buffer at the cursor.
-        else if(input == CTRL_Y)
-            return Operation.PASTE_BEFORE;
-        else if(input == CR)
-            return Operation.MOVE_BEGINNING;
-        // search
-        else if(input == CTRL_R) {
-            mode = Action.SEARCH;
-            return Operation.SEARCH_PREV;
-        }
-        else if(input == CTRL_S) {
-            mode = Action.SEARCH;
-            return Operation.SEARCH_NEXT_WORD;
-        }
+            operationLevel = 0;
+            currentOperations.clear();
 
-        //enter C-x state
-        else if(input == CTRL_X) {
-            ctrl_xState = true;
+            return currentOperation;
+        }
+        else {
+            operationLevel++;
             return Operation.NO_ACTION;
         }
-
-        // handle meta keys
-        else if(input == F && arrowStart) {
-            arrowStart = false;
-            return Operation.MOVE_NEXT_WORD;
-        }
-        else if(input == B && arrowStart) {
-            arrowStart = false;
-            return Operation.MOVE_PREV_WORD;
-        }
-        else if(input == D && arrowStart) {
-            arrowStart = false;
-            return Operation.DELETE_NEXT_WORD;
-        }
-
-
-        // handle arrow keys
-        else if(input == ESCAPE) {
-            // if we've already gotten a escape
-            if(arrowStart) {
-                arrowStart = false;
-                return Operation.NO_ACTION;
-            }
-            //new escape, set status as arrowStart
-            if(!arrowPrefix && !arrowStart) {
-                arrowStart = true;
-                return Operation.NO_ACTION;
-            }
-        }
-        else if(input == ARROW_START) {
-            if(arrowStart) {
-                arrowPrefix = true;
-                return Operation.NO_ACTION;
-            }
-        }
-        else if(input == UP) {
-            if(arrowPrefix && arrowStart) {
-                arrowPrefix = arrowStart = false;
-                return Operation.HISTORY_PREV;
-            }
-        }
-        else if(input == DOWN) {
-            if(arrowPrefix && arrowStart) {
-                arrowPrefix = arrowStart = false;
-                return Operation.HISTORY_NEXT;
-            }
-        }
-        else if(input == LEFT) {
-            if(arrowPrefix && arrowStart) {
-                arrowPrefix = arrowStart = false;
-                return Operation.MOVE_PREV_CHAR;
-            }
-        }
-        else if(input == RIGHT) {
-            if(arrowPrefix && arrowStart) {
-                arrowPrefix = arrowStart = false;
-                return Operation.MOVE_NEXT_CHAR;
-            }
-        }
-        //if we get down here, we can safely reset arrow status booleans
-        arrowPrefix = arrowStart = false;
-
-        return Operation.EDIT;
     }
 
     @Override
     public Action getCurrentAction() {
         return mode;
     }
-
 }
