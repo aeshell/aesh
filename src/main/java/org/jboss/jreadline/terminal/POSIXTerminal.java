@@ -19,10 +19,7 @@ package org.jboss.jreadline.terminal;
 
 import org.jboss.jreadline.console.reader.CharInputStreamReader;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 /**
  *
@@ -39,9 +36,10 @@ public class POSIXTerminal implements Terminal {
     private boolean restored = false;
 
     private CharInputStreamReader reader;
+    private Writer writer;
 
     @Override
-    public void init(InputStream inputStream) {
+    public void init(InputStream inputStream, OutputStream outputStream) {
         // save the initial tty configuration
         try {
             ttyConfig = stty("-g");
@@ -85,11 +83,30 @@ public class POSIXTerminal implements Terminal {
             }
         });
 
+        writer = new PrintWriter( new OutputStreamWriter(outputStream));
     }
 
     @Override
     public int read() throws IOException {
         return reader.read();
+    }
+
+    @Override
+    public void write(String out) throws IOException {
+        writer.write(out);
+        writer.flush();
+    }
+
+    @Override
+    public void write(char[] out) throws IOException {
+        writer.write(out);
+        writer.flush();
+    }
+
+    @Override
+    public void write(char out) throws IOException {
+        writer.write(out);
+        writer.flush();
     }
 
     @Override

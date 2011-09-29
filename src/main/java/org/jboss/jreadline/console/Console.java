@@ -35,12 +35,12 @@ import java.util.List;
 /**
  * A console reader.
  * Supports ansi terminals
+ * TODO: Completion isnt done, need a config setup
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class Console {
 
-    private Writer outStream;
     private Buffer buffer;
     private Terminal terminal;
 
@@ -70,15 +70,14 @@ public class Console {
     }
 
     public Console(InputStream in, OutputStream out, Terminal terminal, EditMode mode) {
-        setOutWriter(out);
         if(terminal == null) {
             if(System.getProperty("os.name").startsWith("Windows"))
-                setTerminal(new WindowsTerminal(), in);
+                setTerminal(new WindowsTerminal(), in, out);
             else
-                setTerminal(new POSIXTerminal(), in);
+                setTerminal(new POSIXTerminal(), in, out);
         }
         else
-            setTerminal(terminal, in);
+            setTerminal(terminal, in, out);
 
         if(mode == null)
             editMode = new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
@@ -94,30 +93,9 @@ public class Console {
         completionList = new ArrayList<Completion>();
     }
 
-    private void setTerminal(Terminal term, InputStream in) {
+    private void setTerminal(Terminal term, InputStream in, OutputStream out) {
         terminal = term;
-        terminal.init(in);
-    }
-
-    private void setOutWriter(OutputStream out) {
-        /*
-        if(System.getProperty("os.name").startsWith("Windows")) {
-            try {
-                //AnsiConsole.systemInstall();
-                outStream = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(out)));
-            }
-            catch (Exception ioe) {
-                ioe.printStackTrace();
-                outStream = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(out)));
-            }
-        }
-        else
-        */
-            outStream = new PrintWriter( new OutputStreamWriter(out));
-    }
-
-    private void flushOut() throws IOException {
-        outStream.flush();
+        terminal.init(in, out);
     }
 
     public void reset() throws Exception {
@@ -125,14 +103,12 @@ public class Console {
     }
 
     public void pushToConsole(String input) throws IOException {
-        outStream.write(input);
-        flushOut();
+        terminal.write(input);
         toConsole = true;
     }
 
     public void pushToConsole(char[] input) throws IOException {
-        outStream.write(input);
-        flushOut();
+        terminal.write(input);
         toConsole = true;
     }
 
@@ -152,8 +128,7 @@ public class Console {
         }
 
         buffer.reset(prompt);
-        outStream.write(buffer.getPrompt());
-        flushOut();
+        terminal.write(buffer.getPrompt());
         StringBuilder searchTerm = null;
         StringBuilder result = null;
 
@@ -262,8 +237,7 @@ public class Console {
                 // otherwise, restore the line
                 else {
                     redrawLine();
-                    outStream.write(Buffer.printAnsi((buffer.getPrompt().length()+1)+"G"));
-                    flushOut();
+                    terminal.write(Buffer.printAnsi((buffer.getPrompt().length()+1)+"G"));
                 }
 
 
@@ -327,7 +301,6 @@ public class Console {
             if(action == Action.HISTORY)
                 prevAction = action;
 
-            flushOut();
         }
 
     }
@@ -365,7 +338,7 @@ public class Console {
 
     private void writeChar(int c) throws IOException {
        buffer.write((char) c);
-       outStream.write(c);
+       terminal.write((char) c);
 
        redrawLineFromCursor();
     }
@@ -467,20 +440,17 @@ public class Console {
     }
 
     public final void moveCursor(final int where) throws IOException {
-        outStream.write(buffer.move(where));
-        flushOut();
+        terminal.write(buffer.move(where));
     }
 
     private void redrawLineFromCursor() throws IOException {
 
-        outStream.write(Buffer.printAnsi("s")); //save cursor
-        outStream.write(Buffer.printAnsi("0J")); // clear line from position
-        flushOut();
+        terminal.write(Buffer.printAnsi("s")); //save cursor
+        terminal.write(Buffer.printAnsi("0J")); // clear line from position
 
-        outStream.write(buffer.getLineFrom(buffer.getCursor()));
+        terminal.write(buffer.getLineFrom(buffer.getCursor()));
         // move cursor to saved pos
-        outStream.write(Buffer.printAnsi("u"));
-        flushOut();
+        terminal.write(Buffer.printAnsi("u"));
     }
 
     private void redrawLine() throws IOException {
@@ -488,17 +458,15 @@ public class Console {
     }
 
     private void drawLine(String line) throws IOException {
-        outStream.write(Buffer.printAnsi("s")); //save cursor
+        terminal.write(Buffer.printAnsi("s")); //save cursor
         //move cursor to 0. - need to do this to clear the entire line
-        outStream.write(Buffer.printAnsi("0G"));
-        outStream.write(Buffer.printAnsi("2K")); // clear line
-        flushOut();
+        terminal.write(Buffer.printAnsi("0G"));
+        terminal.write(Buffer.printAnsi("2K")); // clear line
 
-        outStream.write(line);
+        terminal.write(line);
 
         // move cursor to saved pos
-        outStream.write(Buffer.printAnsi("u"));
-        flushOut();
+        terminal.write(Buffer.printAnsi("u"));
     }
 
     private void printSearch(String searchTerm, String result) throws IOException {
@@ -514,8 +482,7 @@ public class Console {
         cursor += out.length();
         out.append(result); //.append("\u001b[K");
         drawLine(out.toString());
-        outStream.write(Buffer.printAnsi((cursor+1) + "G"));
-        flushOut();
+        terminal.write(Buffer.printAnsi((cursor+1) + "G"));
     }
 
     /**
@@ -524,8 +491,7 @@ public class Console {
      * @throws java.io.IOException stream
      */
     private void printNewline() throws IOException {
-        outStream.write(CR);
-        flushOut();
+        terminal.write(CR);
     }
 
       /**
@@ -553,8 +519,7 @@ public class Console {
             buffer.write(ua.getBuffer());
             redrawLine();
             //move the cursor to the saved position
-            outStream.write(Buffer.printAnsi((ua.getCursorPosition() + buffer.getPrompt().length() + 1) + "G"));
-            flushOut();
+            terminal.write(Buffer.printAnsi((ua.getCursorPosition() + buffer.getPrompt().length() + 1) + "G"));
             //sync terminal cursor with jreadline
             buffer.setCursor(ua.getCursorPosition());
 
@@ -617,13 +582,12 @@ public class Console {
     private void displayCompletion(String completion, boolean appendSpace) throws IOException {
         performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
         buffer.write(completion);
-        outStream.write(completion);
+        terminal.write(completion);
         //only append space if its an actual complete, not a partial
         if(appendSpace) {
             buffer.write(' ');
-            outStream.write(' ');
+            terminal.write(' ');
         }
-        flushOut();
     }
 
     /**
@@ -662,8 +626,8 @@ public class Console {
         }
         // print it
         printNewline();
-        outStream.write(completionOutput.toString());
-        outStream.write(buffer.getLineWithPrompt());
+        terminal.write(completionOutput.toString());
+        terminal.write(buffer.getLineWithPrompt());
     }
 
     private static String padRight(int n, String s) {

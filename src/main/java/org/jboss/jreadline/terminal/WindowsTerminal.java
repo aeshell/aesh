@@ -16,12 +16,11 @@
  */
 package org.jboss.jreadline.terminal;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.fusesource.jansi.AnsiConsole;
+import org.fusesource.jansi.AnsiOutputStream;
+import org.fusesource.jansi.WindowsAnsiOutputStream;
 import org.fusesource.jansi.internal.WindowsSupport;
-import org.jboss.jreadline.console.reader.CharInputStreamReader;
+
+import java.io.*;
 
 /**
  *
@@ -29,20 +28,48 @@ import org.jboss.jreadline.console.reader.CharInputStreamReader;
  */
 public class WindowsTerminal implements Terminal {
 
-    private CharInputStreamReader reader;
+    //private CharInputStreamReader reader;
+    private Writer writer;
 
-    public void init(InputStream inputStream) {
+    @Override
+    public void init(InputStream inputStream, OutputStream outputStream) {
         if(inputStream == System.in) {
             System.out.println("Using System.in");
         }
 
         //setting up reader
-        reader = new CharInputStreamReader(inputStream);
+        //reader = new CharInputStreamReader(inputStream);
+        try {
+            //AnsiConsole.systemInstall();
+            writer = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(outputStream)));
+        }
+        catch (Exception ioe) {
+            writer = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(outputStream)));
+        }
+
     }
 
     public int read() throws IOException {
         //return reader.read();
         return WindowsSupport.readByte();
+    }
+
+    @Override
+    public void write(String out) throws IOException {
+        writer.write(out);
+        writer.flush();
+    }
+
+    @Override
+    public void write(char[] out) throws IOException {
+        writer.write(out);
+        writer.flush();
+    }
+
+    @Override
+    public void write(char out) throws IOException {
+        writer.write(out);
+        writer.flush();
     }
 
     public int getHeight() {

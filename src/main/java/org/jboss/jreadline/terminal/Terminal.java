@@ -18,15 +18,22 @@ package org.jboss.jreadline.terminal;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public interface Terminal {
 
-    void init(InputStream inputStream);
+    void init(InputStream inputStream, OutputStream outputStream);
 
     int read() throws IOException;
+
+    void write(String out) throws IOException;
+
+    void write(char[] out) throws IOException;
+
+    void write(char out) throws IOException;
 
     int getHeight();
 
