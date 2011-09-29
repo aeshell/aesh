@@ -1,6 +1,5 @@
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.Console;
-import org.jboss.jreadline.terminal.ANSIColors;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -50,7 +49,7 @@ public class Example {
         String line;
         //console.pushToConsole(ANSIColors.GREEN_TEXT());
         while ((line = console.read("> ")) != null) {
-            console.pushToConsole("======>\"" + line);
+            console.pushToConsole("======>\"" + line+"\"");
 
             if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
                 break;

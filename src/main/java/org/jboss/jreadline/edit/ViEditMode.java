@@ -28,48 +28,6 @@ import java.util.List;
  */
 public class ViEditMode implements EditMode {
 
-    private static final short ESCAPE = 27;
-    private static final short ENTER = 10;
-    private static final short BACKSPACE = 127;
-    private static final short TAB = 9;
-    private static final short VI_S = 115;
-    private static final short VI_SHIFT_S = 83;
-    private static final short VI_D = 100;
-    private static final short VI_SHIFT_D = 68;
-    private static final short VI_C = 99;
-    private static final short VI_SHIFT_C = 67;
-    private static final short VI_A = 97;
-    private static final short VI_SHIFT_A = 65;
-    private static final short VI_0 = 48;
-    private static final short VI_$ = 36;
-    private static final short VI_X = 120;
-    private static final short VI_P = 112;
-    private static final short VI_SHIFT_P = 80;
-    private static final short VI_I = 105;
-    private static final short VI_SHIFT_I = 73;
-    private static final short VI_TILDE = 126;
-    private static final short VI_Y = 121;
-    private static final short CTRL_E = 5;
-
-    //movement
-    private static final short VI_H = 104;
-    private static final short VI_J = 106;
-    private static final short VI_K = 107;
-    private static final short VI_L = 108;
-    private static final short VI_B = 98;
-    private static final short VI_SHIFT_B = 66;
-    private static final short VI_W = 119;
-    private static final short VI_SHIFT_W = 87;
-    private static final short VI_SPACE = 32;
-
-    public static final short VI_ENTER = 10;
-    private static final short VI_PERIOD = 46;
-    private static final short VI_U = 117;
-
-    //search
-    private static final short CTRL_R = 18;
-
-
     private Action mode;
     private Action previousMode;
 
@@ -234,7 +192,7 @@ public class ViEditMode implements EditMode {
 
 
             if(!isInEditMode())
-                return inCommandMode(c, operation);
+                return inCommandMode(operation);
             else
                 return Operation.EDIT;
         }
@@ -243,43 +201,9 @@ public class ViEditMode implements EditMode {
             return Operation.NO_ACTION;
         }
 
-        /*
-        else if(c == ENTER) {
-            mode = Action.EDIT; //set to edit after a newline
-            return Operation.NEW_LINE;
-        }
-        else if(c == BACKSPACE) {
-          if(isInEditMode())
-              return Operation.DELETE_PREV_CHAR;
-            else
-              return Operation.NO_ACTION;
-        }
-        else if(c == TAB) {
-            if(isInEditMode())
-                return Operation.COMPLETE;
-            else
-                return Operation.NO_ACTION;
-        }
-        else if(c == ESCAPE) {
-            switchEditMode();
-            if(isInEditMode())
-                return Operation.NO_ACTION;
-            else
-                return Operation.MOVE_PREV_CHAR;
-        }
-        else if (c == CTRL_R) {
-            mode = Action.SEARCH;
-            return Operation.SEARCH_PREV;
-        }
-
-        if(!isInEditMode())
-            return inCommandMode(c, operation);
-        else
-            return Operation.EDIT;
-        */
     }
 
-    private Operation inCommandMode(int c, Operation operation) {
+    private Operation inCommandMode(Operation operation) {
         //movement
         if(operation == Operation.PREV_CHAR) {
             if(mode == Action.MOVE)
@@ -448,8 +372,8 @@ public class ViEditMode implements EditMode {
             else
                 mode = Action.YANK;
         }
-        else if(c == CTRL_E)
-            return Operation.CHANGE_EDIT_MODE;
+        else if(operation == Operation.CHANGE_EDIT_MODE)
+            return operation;
 
         return Operation.NO_ACTION;
     }

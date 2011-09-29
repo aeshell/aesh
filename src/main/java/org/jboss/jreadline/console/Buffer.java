@@ -142,7 +142,7 @@ public class Buffer {
      * @param move, negative values for moving left,positive for right
      * @return adjusted movement
      */
-    protected final int moveCursor(final int move) {
+    private final int moveCursor(final int move) {
         // cant move to a negative value
         if(getCursor() == 0 && move <=0 )
             return 0;

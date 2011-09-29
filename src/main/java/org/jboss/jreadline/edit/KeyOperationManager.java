@@ -48,7 +48,7 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(23, Operation.DELETE_PREV_BIG_WORD));
         keys.add(new KeyOperation(24, Operation.NO_ACTION));
         keys.add(new KeyOperation(25, Operation.PASTE_BEFORE));
-        //keys.add(new KeyOperation(27, Operation.PASTE_BEFORE));
+
         keys.add(new KeyOperation(31, Operation.UNDO));
         keys.add(new KeyOperation(127, Operation.DELETE_PREV_CHAR));
 
@@ -110,7 +110,7 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(46, Operation.REPEAT)); //.
         //undo
         keys.add(new KeyOperation(117, Operation.UNDO)); //u
-
+        //backspace
         keys.add(new KeyOperation(127, Operation.DELETE_PREV_CHAR));
 
 
