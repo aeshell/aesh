@@ -55,7 +55,7 @@ public class Console {
     private boolean toConsole = false;
     private boolean displayCompletion = false;
 
-    private static final String CR = System.getProperty("line.separator");
+    private static final String CR = Config.getLineSeparator();
 
     public Console() throws IOException {
         this(new FileInputStream(FileDescriptor.in), System.out);
@@ -71,10 +71,11 @@ public class Console {
 
     public Console(InputStream in, OutputStream out, Terminal terminal, EditMode mode) {
         if(terminal == null) {
-            if(System.getProperty("os.name").startsWith("Windows"))
-                setTerminal(new WindowsTerminal(), in, out);
-            else
+            if(Config.isOSPOSIXCompatible()) {
                 setTerminal(new POSIXTerminal(), in, out);
+            }
+            else
+                setTerminal(new WindowsTerminal(), in, out);
         }
         else
             setTerminal(terminal, in, out);
