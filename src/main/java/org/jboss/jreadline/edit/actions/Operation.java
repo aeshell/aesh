@@ -91,6 +91,7 @@ public enum Operation {
     CASE(Action.CASE),
     ABORT(Action.ABORT),
     REPEAT(Action.NO_ACTION),
+    EXIT(Action.EXIT),
     CHANGE_EDIT_MODE(Movement.PREV, Action.CHANGE_EDITMODE);
 
     private Movement movement;

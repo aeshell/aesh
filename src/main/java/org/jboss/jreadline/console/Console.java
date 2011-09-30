@@ -80,9 +80,13 @@ public class Console {
         else
             setTerminal(terminal, in, out);
 
-        if(mode == null)
-            editMode = new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
+        if(mode == null) {
+            if(Config.isOSPOSIXCompatible())
+                editMode = new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
+            else
+                editMode = new EmacsEditMode(KeyOperationManager.generateWindowsEmacsMode());
             //editMode = new ViEditMode(KeyOperationManager.generatePOSIXViMode());
+        }
         else
             editMode = mode;
 
@@ -136,7 +140,7 @@ public class Console {
         while(true) {
 
             int c = terminal.read();
-            //System.out.println("got int:"+c);
+            System.out.println("got int:"+c);
             if (c == -1) {
                 return null;
             }
