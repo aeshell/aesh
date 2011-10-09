@@ -140,7 +140,7 @@ public class Console {
         while(true) {
 
             int c = terminal.read();
-            System.out.println("got int:"+c);
+            //System.out.println("got int:"+c);
             if (c == -1) {
                 return null;
             }

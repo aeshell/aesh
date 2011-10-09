@@ -22,6 +22,7 @@ import org.jboss.jreadline.console.reader.CharInputStreamReader;
 import java.io.*;
 
 /**
+ * Terminal that should work on most POSIX systems
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
@@ -46,12 +47,9 @@ public class POSIXTerminal implements Terminal {
 
             // sanity check
             if ((ttyConfig.length() == 0)
-                    || ((ttyConfig.indexOf("=") == -1)
-                    && (ttyConfig.indexOf(":") == -1))) {
+                    || ((!ttyConfig.contains("=")) && (!ttyConfig.contains(":")))) {
                 throw new RuntimeException("Unrecognized stty code: " + ttyConfig);
             }
-
-            //checkBackspace();
 
             // set the console to be character-buffered instead of line-buffered
             // -ixon will give access to ctrl-s/ctrl-q
@@ -86,29 +84,44 @@ public class POSIXTerminal implements Terminal {
         writer = new PrintWriter( new OutputStreamWriter(outputStream));
     }
 
+    /**
+     * @see org.jboss.jreadline.terminal.Terminal
+     */
     @Override
     public int read() throws IOException {
         return reader.read();
     }
 
+    /**
+     * @see org.jboss.jreadline.terminal.Terminal
+     */
     @Override
     public void write(String out) throws IOException {
         writer.write(out);
         writer.flush();
     }
 
+    /**
+     * @see org.jboss.jreadline.terminal.Terminal
+     */
     @Override
     public void write(char[] out) throws IOException {
         writer.write(out);
         writer.flush();
     }
 
+    /**
+     * @see org.jboss.jreadline.terminal.Terminal
+     */
     @Override
     public void write(char out) throws IOException {
         writer.write(out);
         writer.flush();
     }
 
+    /**
+     * @see org.jboss.jreadline.terminal.Terminal
+     */
     @Override
     public int getHeight() {
         if(height < 0) {
@@ -123,6 +136,9 @@ public class POSIXTerminal implements Terminal {
         return height;
     }
 
+    /**
+     * @see org.jboss.jreadline.terminal.Terminal
+     */
     @Override
     public int getWidth() {
         if(width < 0) {
@@ -137,11 +153,17 @@ public class POSIXTerminal implements Terminal {
         return width;
     }
 
+    /**
+     * @see org.jboss.jreadline.terminal.Terminal
+     */
     @Override
     public boolean isEchoEnabled() {
         return echoEnabled;
     }
 
+    /**
+     * @see org.jboss.jreadline.terminal.Terminal
+     */
     public void reset() throws Exception {
         if(!restored) {
             if (ttyConfig != null) {
@@ -161,7 +183,7 @@ public class POSIXTerminal implements Terminal {
         // need to be able handle both output formats:
         // speed 9600 baud; 24 rows; 140 columns;
         // and:
-        // speed 38400 baud; rows = 49; columns = 111; ypixels = 0; xpixels = 0;
+        // speed 38400 baud; rows = 49; columns = 111;
         for (String str : ttyProps.split(";")) {
             str = str.trim();
 
@@ -181,8 +203,12 @@ public class POSIXTerminal implements Terminal {
     }
 
     /**
-     *  Execute the stty command with the specified arguments
-     *  against the current active terminal.
+     * Run stty with arguments on the active terminal
+     *
+     * @param args arguments
+     * @return output
+     * @throws IOException stream
+     * @throws InterruptedException stream
      */
     protected static String stty(final String args)
             throws IOException, InterruptedException {
@@ -190,16 +216,24 @@ public class POSIXTerminal implements Terminal {
     }
 
     /**
-     *  Execute the specified command and return the output
-     *  (both stdout and stderr).
+     * Run a command and return the output
+     *
+     * @param cmd what to execute
+     * @return output
+     * @throws java.io.IOException stream
+     * @throws InterruptedException stream
      */
     private static String exec(final String cmd) throws IOException, InterruptedException {
         return exec(new String[] { "sh", "-c", cmd });
     }
 
     /**
-     *  Execute the specified command and return the output
-     *  (both stdout and stderr).
+     * Run a command and return the output
+     *
+     * @param cmd the command
+     * @return output
+     * @throws IOException stream
+     * @throws InterruptedException stream
      */
     private static String exec(final String[] cmd) throws IOException, InterruptedException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -229,9 +263,12 @@ public class POSIXTerminal implements Terminal {
         }
         finally {
             try {
-                in.close();
-                err.close();
-                out.close();
+                if(in != null)
+                    in.close();
+                if(err != null)
+                    err.close();
+                if(out != null)
+                    out.close();
             }
             catch (Exception e) {
                e.printStackTrace();

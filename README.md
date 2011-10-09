@@ -1,7 +1,7 @@
 JReadline
 =========
 
-JReadline is a Java library for handling console input. JReadline is a fork of jline with the goal of support most GNU Readline features.
+JReadline is a Java library for handling console input. JReadline is a fork of jline with the goal to support most GNU Readline features.
 
 Features:
 ---------
@@ -9,7 +9,8 @@ Features:
 * History
 * History search
 * Completion
-* Support for both Emacs and Vi editing mode
+* Emacs and Vi editing mode
+* Supports POSIX OS's and Windows
 
 How to build:
 -------------

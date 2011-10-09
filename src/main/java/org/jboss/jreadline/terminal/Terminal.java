@@ -21,26 +21,68 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
+ * Generic interface for Terminals
+ *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public interface Terminal {
 
+    /**
+     * Initialize the Terminal with which input/output stream it should use
+     *
+     * @param inputStream input
+     * @param outputStream output
+     */
     void init(InputStream inputStream, OutputStream outputStream);
 
+    /**
+     * Read from the input stream (char by char)
+     *
+     * @return whats read
+     * @throws IOException
+     */
     int read() throws IOException;
 
+    /**
+     * Write to the output stream
+     *
+     * @param out what goes into the stream
+     * @throws IOException stream
+     */
     void write(String out) throws IOException;
 
+    /**
+     * Write to the output stream
+     *
+     * @param out what goes into the stream
+     * @throws IOException stream
+     */
     void write(char[] out) throws IOException;
 
+    /**
+     * Write to the output stream
+     *
+     * @param out what goes into the stream
+     * @throws IOException stream
+     */
     void write(char out) throws IOException;
 
+    /**
+     * @return terminal height
+     */
     int getHeight();
 
+    /**
+     * @return terminal width
+     */
     int getWidth();
 
     boolean isEchoEnabled();
 
+    /**
+     * Set it back to normal when we exit
+     * @throws Exception stream/os
+     */
     void reset() throws Exception;
 
 
