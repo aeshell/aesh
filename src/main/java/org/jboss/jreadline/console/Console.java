@@ -83,9 +83,9 @@ public class Console {
         if(mode == null) {
             if(Config.isOSPOSIXCompatible())
                 editMode = new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
+                //editMode = new ViEditMode(KeyOperationManager.generatePOSIXViMode());
             else
                 editMode = new EmacsEditMode(KeyOperationManager.generateWindowsEmacsMode());
-            //editMode = new ViEditMode(KeyOperationManager.generatePOSIXViMode());
         }
         else
             editMode = mode;

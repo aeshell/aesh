@@ -58,15 +58,15 @@ public abstract class JReadlineTestCase extends TestCase {
 
     public void assertEqualsViMode(String expected, TestBuffer buffer) throws IOException {
 
-        Console console = null;
+        Console console;
         if(Config.isOSPOSIXCompatible())
         console = new Console(new ByteArrayInputStream(buffer.getBytes()),
-                (OutputStream) new ByteArrayOutputStream(),
-                null, new ViEditMode(KeyOperationManager.generatePOSIXViMode()));
+                new ByteArrayOutputStream(), null,
+                new ViEditMode(KeyOperationManager.generatePOSIXViMode()));
         else
             console = new Console(new ByteArrayInputStream(buffer.getBytes()),
-                    (OutputStream) new ByteArrayOutputStream(),
-                    null, new ViEditMode(KeyOperationManager.generateWindowsViMode()));
+                    new ByteArrayOutputStream(), null,
+                    new ViEditMode(KeyOperationManager.generateWindowsViMode()));
 
         String in = null;
         while (true) {

@@ -34,21 +34,21 @@ public class HistoryTest extends JReadlineTestCase {
         TestBuffer buffer = new TestBuffer();
 
         buffer.append("1234")
-                .append(TestBuffer.ENTER).append("567")
-                .append(TestBuffer.ENTER).append(TestBuffer.EMACS_UP)
-                .append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine()).append("567")
+                .append(TestBuffer.getNewLine()).append(TestBuffer.EMACS_HISTORY_PREV)
+                .append(TestBuffer.getNewLine());
 
         assertEquals("567", buffer);
 
 
         buffer = new TestBuffer();
         buffer.append("1234")
-                .append(TestBuffer.ENTER).append("567")
-                .append(TestBuffer.ENTER).append("89")
-                .append(TestBuffer.ENTER)
-                .append(TestBuffer.EMACS_UP)
-                .append(TestBuffer.EMACS_UP)
-                .append(TestBuffer.EMACS_UP).append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine()).append("567")
+                .append(TestBuffer.getNewLine()).append("89")
+                .append(TestBuffer.getNewLine())
+                .append(TestBuffer.EMACS_HISTORY_PREV)
+                .append(TestBuffer.EMACS_HISTORY_PREV)
+                .append(TestBuffer.EMACS_HISTORY_PREV).append(TestBuffer.getNewLine());
 
         assertEquals("1234", buffer);
 

@@ -16,6 +16,8 @@
  */
 package org.jboss.jreadline;
 
+import org.jboss.jreadline.console.Config;
+
 import java.io.ByteArrayOutputStream;
 
 /**
@@ -25,8 +27,7 @@ import java.io.ByteArrayOutputStream;
  */
 public class TestBuffer {
     public static final short ESCAPE = 27;
-    public static final short ENTER = 10;
-    public static final short EMACS_UP = 16;
+    public static final short EMACS_HISTORY_PREV = 16;
 
     private ByteArrayOutputStream outputStream;
 
@@ -53,6 +54,19 @@ public class TestBuffer {
     public TestBuffer append(int i) {
         outputStream.write(i);
         return this;
+    }
+
+    public TestBuffer append(int[] nums) {
+        for(int i : nums)
+            outputStream.write(i);
+        return this;
+    }
+
+    public static int getNewLine() {
+        if(Config.isOSPOSIXCompatible())
+            return 10;
+        else
+            return 13;
     }
 
 }

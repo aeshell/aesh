@@ -37,7 +37,7 @@ public class ViModeTest extends JReadlineTestCase {
 
         b.append(TestBuffer.ESCAPE) // esc
                 .append("x") // x
-                .append(TestBuffer.ENTER); // enter
+                .append(TestBuffer.getNewLine()); // enter
 
         assertEqualsViMode("123", b);
 
@@ -46,7 +46,7 @@ public class ViModeTest extends JReadlineTestCase {
                 .append("h") // h
                 .append("s") // s
                 .append("5")
-                .append(TestBuffer.ENTER); // enter
+                .append(TestBuffer.getNewLine()); // enter
         assertEqualsViMode("1254", b);
 
 
@@ -54,7 +54,7 @@ public class ViModeTest extends JReadlineTestCase {
         b.append(TestBuffer.ESCAPE) // esc
                 .append("0") // 0
                 .append("x") // x
-                .append(TestBuffer.ENTER); // enter
+                .append(TestBuffer.getNewLine()); // enter
 
         assertEqualsViMode("234", b);
 
@@ -65,7 +65,7 @@ public class ViModeTest extends JReadlineTestCase {
                 .append("l")
                 .append("a")
                 .append("5")
-                .append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine());
 
         assertEqualsViMode("2354", b);
     }
@@ -75,7 +75,7 @@ public class ViModeTest extends JReadlineTestCase {
         b.append(TestBuffer.ESCAPE)
                 .append("B")
                 .append("d").append("b") // db
-                .append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine());
         assertEqualsViMode("foo   barFoo-Bar.", b);
 
         b = new TestBuffer("foo   bar...  Foo-Bar.");
@@ -84,7 +84,7 @@ public class ViModeTest extends JReadlineTestCase {
                 .append("W")
                 .append("W")
                 .append("d").append("W")
-                .append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine());
         assertEqualsViMode("foo   bar...  ", b);
 
         b = new TestBuffer("foo   bar...   Foo-Bar.");
@@ -93,14 +93,14 @@ public class ViModeTest extends JReadlineTestCase {
                 .append("w")
                 .append("w")
                 .append("d").append("W")
-                .append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine());
         assertEqualsViMode("foo   barFoo-Bar.", b);
 
         b = new TestBuffer("foo   bar...   Foo-Bar.");
         b.append(TestBuffer.ESCAPE)
                 .append("B")
                 .append("d").append("B")
-                .append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine());
         assertEqualsViMode("foo   Foo-Bar.", b);
 
         b = new TestBuffer("foo   bar...   Foo-Bar.");
@@ -114,7 +114,7 @@ public class ViModeTest extends JReadlineTestCase {
                 .append("d").append("w") //dw
                 .append("x") // x
                 .append("d").append("B") //dB
-                .append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine());
         assertEqualsViMode("bar...   Foo-Bar.", b);
     }
 
@@ -129,7 +129,7 @@ public class ViModeTest extends JReadlineTestCase {
                 .append("W")
                 .append("d").append("w")
                 .append(".")
-                .append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine());
         assertEqualsViMode("/cd /home/bar; cd Desktop; ls ../", b);
 
         b = new TestBuffer("/cd /home/foo; ls; cd Desktop; ls ../");
@@ -140,7 +140,7 @@ public class ViModeTest extends JReadlineTestCase {
                 .append(".")
                 .append("B")
                 .append(".")
-                .append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine());
         assertEqualsViMode("/cd /home/foo; ls; cd ", b);
     }
 
@@ -157,7 +157,7 @@ public class ViModeTest extends JReadlineTestCase {
                 .append("w")
                 .append("c").append("w")
                 .append("search")
-                .append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine());
         assertEqualsViMode("apt-cache search Vim", b);
     }
 
@@ -172,21 +172,21 @@ public class ViModeTest extends JReadlineTestCase {
                 .append("yw") // add word to buffer
                 .append("$")
                 .append("p")
-                .append(TestBuffer.ENTER);
+                .append(TestBuffer.getNewLine());
         assertEqualsViMode("install apt-get vIMvIM", b);
 
     }
 
     public void testSearch() throws IOException {
         TestBuffer b = new TestBuffer();
-        b.append("asdf jkl").append(TestBuffer.ENTER);
-        b.append("footing").append(TestBuffer.ENTER);
+        b.append("asdf jkl").append(TestBuffer.getNewLine());
+        b.append("footing").append(TestBuffer.getNewLine());
         int PREV_SEARCH = 18;
-        b.append(PREV_SEARCH).append("a").append(TestBuffer.ENTER);
+        b.append(PREV_SEARCH).append("a").append(TestBuffer.getNewLine());
 
         assertEqualsViMode("asdf jkl", b);
 
-        b.append(PREV_SEARCH).append("ewsa").append(TestBuffer.ENTER);
+        b.append(PREV_SEARCH).append("ewsa").append(TestBuffer.getNewLine());
     }
 
 }

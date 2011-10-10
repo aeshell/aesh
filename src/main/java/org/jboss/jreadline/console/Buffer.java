@@ -74,19 +74,10 @@ public class Buffer {
         this.cursor = cursor ;
     }
 
-    protected char[] syncMove(int move) {
-        return move(move, true);
-    }
-
     protected char[] move(int move) {
-        return move(move, false);
-    }
-
-    private char[] move(int move, boolean keepCursorPosition) {
         move = moveCursor(move);
 
-        if(!keepCursorPosition)
-            setCursor(getCursor() + move);
+        setCursor(getCursor() + move);
 
         if(move < 0)
             return printAnsi(Math.abs(move)+"D");
