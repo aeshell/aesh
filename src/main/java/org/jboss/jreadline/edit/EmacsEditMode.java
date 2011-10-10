@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Trying to follow the gnu readline impl found here:
+ * Trying to follow the Emacs mode GNU Readline impl found here:
  * http://cnswww.cns.cwru.edu/php/chet/readline/readline.html
  *
  *

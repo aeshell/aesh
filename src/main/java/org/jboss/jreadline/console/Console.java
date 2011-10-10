@@ -379,10 +379,11 @@ public class Console {
                 buffer.getLine().delete(action.getEnd(), action.getStart());
                 moveCursor((action.getEnd() - action.getStart()));
             }
-            //delet
-            if(action.getAction() == Action.DELETE && buffer.getCursor() == buffer.length()) {
-                moveCursor(-1);
-            }
+            //TODO: fails for delete char
+            //delete word
+            //if(action.getAction() == Action.DELETE && buffer.getCursor() == buffer.length()) {
+            //    moveCursor(-1);
+            //}
             //redrawLineFromCursor();
             redrawLine();
         }

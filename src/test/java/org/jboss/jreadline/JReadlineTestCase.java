@@ -17,6 +17,7 @@
 package org.jboss.jreadline;
 
 import junit.framework.TestCase;
+import org.jboss.jreadline.console.Config;
 import org.jboss.jreadline.console.Console;
 import org.jboss.jreadline.edit.KeyOperationManager;
 import org.jboss.jreadline.edit.ViEditMode;
@@ -57,9 +58,15 @@ public abstract class JReadlineTestCase extends TestCase {
 
     public void assertEqualsViMode(String expected, TestBuffer buffer) throws IOException {
 
-        Console console = new Console(new ByteArrayInputStream(buffer.getBytes()),
+        Console console = null;
+        if(Config.isOSPOSIXCompatible())
+        console = new Console(new ByteArrayInputStream(buffer.getBytes()),
                 (OutputStream) new ByteArrayOutputStream(),
                 null, new ViEditMode(KeyOperationManager.generatePOSIXViMode()));
+        else
+            console = new Console(new ByteArrayInputStream(buffer.getBytes()),
+                    (OutputStream) new ByteArrayOutputStream(),
+                    null, new ViEditMode(KeyOperationManager.generateWindowsViMode()));
 
         String in = null;
         while (true) {

@@ -93,10 +93,25 @@ public class KeyOperationManager {
     }
 
     public static List<KeyOperation> generatePOSIXViMode() {
+        List<KeyOperation> keys = generateGenericViMode();
+        keys.add(new KeyOperation(10, Operation.NEW_LINE));
+
+        return keys;
+    }
+
+
+    public static List<KeyOperation> generateWindowsViMode() {
+        List<KeyOperation> keys = generateGenericViMode();
+        keys.add(new KeyOperation(13, Operation.NEW_LINE));
+
+        return keys;
+    }
+
+
+    private static List<KeyOperation> generateGenericViMode() {
         List<KeyOperation> keys = new ArrayList<KeyOperation>();
         keys.add(new KeyOperation(5, Operation.CHANGE_EDIT_MODE));
         keys.add(new KeyOperation(9, Operation.COMPLETE));
-        keys.add(new KeyOperation(10, Operation.NEW_LINE));
 
         //search
         keys.add(new KeyOperation(18, Operation.SEARCH_PREV));
@@ -139,9 +154,6 @@ public class KeyOperationManager {
         //backspace
         keys.add(new KeyOperation(127, Operation.DELETE_PREV_CHAR));
 
-
         return keys;
     }
-
-
 }
