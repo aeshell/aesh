@@ -382,4 +382,9 @@ public class ViEditMode implements EditMode {
     public Action getCurrentAction() {
         return mode;
     }
+
+    @Override
+    public Mode getMode() {
+        return Mode.VI;
+    }
 }

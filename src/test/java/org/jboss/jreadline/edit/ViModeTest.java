@@ -68,6 +68,16 @@ public class ViModeTest extends JReadlineTestCase {
                 .append(TestBuffer.getNewLine());
 
         assertEqualsViMode("2354", b);
+
+
+        b = new TestBuffer("1234");
+        b.append(TestBuffer.ESCAPE) // esc
+                .append("0")
+                .append("$")
+                .append("x")
+                .append(TestBuffer.getNewLine());
+
+        assertEqualsViMode("123", b);
     }
 
     public void testWordMovementAndEdit() throws Exception {

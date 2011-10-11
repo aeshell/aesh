@@ -81,9 +81,10 @@ public class Console {
             setTerminal(terminal, in, out);
 
         if(mode == null) {
-            if(Config.isOSPOSIXCompatible())
+            if(Config.isOSPOSIXCompatible()) {
                 editMode = new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
                 //editMode = new ViEditMode(KeyOperationManager.generatePOSIXViMode());
+            }
             else
                 editMode = new EmacsEditMode(KeyOperationManager.generateWindowsEmacsMode());
         }
@@ -361,8 +362,7 @@ public class Console {
             moveCursor((action.getEnd() - action.getStart()));
             return true;
         }
-        else if(action.getAction() == Action.DELETE ||
-                action.getAction() == Action.CHANGE) {
+        else if(action.getAction() == Action.DELETE || action.getAction() == Action.CHANGE) {
             //first trigger undo action
             addActionToUndoStack();
 
@@ -379,12 +379,6 @@ public class Console {
                 buffer.getLine().delete(action.getEnd(), action.getStart());
                 moveCursor((action.getEnd() - action.getStart()));
             }
-            //TODO: fails for delete char
-            //delete word
-            //if(action.getAction() == Action.DELETE && buffer.getCursor() == buffer.length()) {
-            //    moveCursor(-1);
-            //}
-            //redrawLineFromCursor();
             redrawLine();
         }
         else if(action.getAction() == Action.YANK) {
@@ -446,7 +440,14 @@ public class Console {
     }
 
     public final void moveCursor(final int where) throws IOException {
-        terminal.write(buffer.move(where));
+        if(editMode.getMode() == Mode.VI &&
+                (editMode.getCurrentAction() == Action.MOVE ||
+                        editMode.getCurrentAction() == Action.DELETE)) {
+
+            terminal.write(buffer.move(where, true));
+        }
+        else
+            terminal.write(buffer.move(where));
     }
 
     private void redrawLineFromCursor() throws IOException {

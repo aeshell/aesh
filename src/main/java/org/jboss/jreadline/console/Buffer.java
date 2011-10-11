@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
+ * A simple buffer to keep track of one line in the console
+ * and the cursor position.
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
@@ -35,12 +37,22 @@ public class Buffer {
         this(null);
     }
 
+    /**
+     * Instantiate a Buffer with given prompt
+     *
+     * @param promptText set prompt
+     */
     protected Buffer(String promptText) {
         if(promptText != null)
             prompt = promptText;
         line = new StringBuilder();
     }
 
+    /**
+     * Reset the buffer
+     *
+     * @param promptText set prompt
+     */
     protected void reset(String promptText) {
         if(promptText != null)
             prompt = promptText;
@@ -50,6 +62,9 @@ public class Buffer {
         line = new StringBuilder();
     }
 
+    /**
+     * @return length of the line without prompt
+     */
     protected int length() {
         return line.length();
     }
@@ -74,8 +89,20 @@ public class Buffer {
         this.cursor = cursor ;
     }
 
+    /**
+     * Move the cursor left if the param is negative,
+     * and right if its positive.
+     * Return ansi code to represent the move
+     *
+     * @param move where to move
+     * @return ansi string that represent the move
+     */
     protected char[] move(int move) {
-        move = moveCursor(move);
+        return move(move, false);
+    }
+
+    protected char[] move(int move, boolean viMode) {
+        move = moveCursor(move, viMode);
 
         setCursor(getCursor() + move);
 
@@ -98,6 +125,12 @@ public class Buffer {
         return printAnsi(out.toCharArray());
     }
 
+    /**
+     * Return a ansified string based on param
+     *
+     * @param out what will be ansified
+     * @return ansified string
+     */
     public static char[] printAnsi(char[] out) {
         //calculate length of table:
         int length = 0;
@@ -113,13 +146,12 @@ public class Buffer {
         ansi[0] = (char) 27;
         ansi[1] = '[';
         int counter = 0;
-        for(int i=0; i < out.length; i++) {
-            if(out[i] == '\t') {
-                Arrays.fill(ansi, counter+2, counter+2+TAB, ' ');
-                counter += TAB-1;
-            }
-            else
-                ansi[counter+2] = out[i];
+        for (char anOut : out) {
+            if (anOut == '\t') {
+                Arrays.fill(ansi, counter + 2, counter + 2 + TAB, ' ');
+                counter += TAB - 1;
+            } else
+                ansi[counter + 2] = anOut;
 
             counter++;
         }
@@ -130,20 +162,33 @@ public class Buffer {
     /**
      * Make sure that the cursor do not move ob (out of bounds)
      *
-     * @param move, negative values for moving left,positive for right
-     * @return adjusted movement
+     *
+     * @param viMode@return adjusted movement
      */
-    private final int moveCursor(final int move) {
+    private int moveCursor(final int move, boolean viMode) {
         // cant move to a negative value
         if(getCursor() == 0 && move <=0 )
             return 0;
         // cant move longer than the length of the line
-        if(getCursor() == line.length() && (move > 0))
-            return 0;
+        if(viMode) {
+            //System.out.println("getCursor() "+getCursor()+", line.length()-1:"+(line.length()-1));
+            if(getCursor() == line.length()-1 && (move > 0))
+                return 0;
+        }
+        else {
+            if(getCursor() == line.length() && (move > 0))
+                return 0;
+        }
 
         // dont move out of bounds
-        if(getCursor() + move > line.length())
-            return (line.length()-getCursor());
+        if(viMode) {
+            if(getCursor() + move > line.length()-1)
+                return (line.length()-1-getCursor());
+        }
+        else {
+            if(getCursor() + move > line.length())
+                return (line.length()-getCursor());
+        }
 
         if(getCursor() + move < 0)
             return -getCursor();
@@ -152,6 +197,12 @@ public class Buffer {
 
     }
 
+    /**
+     * Get line from given param
+     *
+     * @param position in line
+     * @return line from position
+     */
     protected char[] getLineFrom(int position) {
         return line.substring(position).toCharArray();
     }
@@ -164,14 +215,29 @@ public class Buffer {
         this.line = line;
     }
 
+    /**
+     * Get the complete line (including prompt)
+     *
+     * @return complete line
+     */
     public String getLineWithPrompt() {
         return prompt + line;
     }
 
+    /**
+     * Write a char to the line and update cursor accordingly
+     *
+     * @param c char
+     */
     public void write(char c) {
         line.insert(cursor++, c);
     }
 
+    /**
+     * Write a string to the line and update cursor accordingly
+     *
+     * @param str string
+     */
     public void write(final String str) {
         assert str != null;
 
@@ -208,6 +274,12 @@ public class Buffer {
             return false;
     }
 
+    /**
+     * Return the biggest common startsWith string
+     *
+     * @param completionList list to compare
+     * @return biggest common startsWith string
+     */
     protected String findStartsWith(List<String> completionList) {
         StringBuilder builder = new StringBuilder();
         for(String completion : completionList)

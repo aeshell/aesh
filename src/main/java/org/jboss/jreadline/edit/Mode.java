@@ -16,18 +16,9 @@
  */
 package org.jboss.jreadline.edit;
 
-import org.jboss.jreadline.edit.actions.Action;
-import org.jboss.jreadline.edit.actions.Operation;
-
 /**
- *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
-public interface EditMode {
-
-    Operation parseInput(int input);
-
-    Action getCurrentAction();
-
-    Mode getMode();
+public enum Mode {
+    VI,EMACS;
 }
