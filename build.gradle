@@ -3,7 +3,7 @@ apply plugin: 'java'
 apply plugin: 'idea'
 
 sourceCompatibility = 1.6
-version = '0.1'
+version = '0.8'
 jar {
     manifest {
         attributes 'Implementation-Title': 'JReadline', 'Implementation-Version': version
