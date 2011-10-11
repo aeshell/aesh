@@ -89,6 +89,8 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(24, Operation.NO_ACTION));
         keys.add(new KeyOperation(25, Operation.PASTE_BEFORE));
 
+        keys.add(new KeyOperation(new int[] {27,10}, Operation.CHANGE_EDIT_MODE)); //meta-ctrl-j
+
         return keys;
     }
 
@@ -110,8 +112,8 @@ public class KeyOperationManager {
 
     private static List<KeyOperation> generateGenericViMode() {
         List<KeyOperation> keys = new ArrayList<KeyOperation>();
-        keys.add(new KeyOperation(5, Operation.CHANGE_EDIT_MODE));
-        keys.add(new KeyOperation(9, Operation.COMPLETE));
+        keys.add(new KeyOperation(5, Operation.CHANGE_EDIT_MODE)); //ctrl-e
+        keys.add(new KeyOperation(9, Operation.COMPLETE)); //tab
 
         //search
         keys.add(new KeyOperation(18, Operation.SEARCH_PREV));

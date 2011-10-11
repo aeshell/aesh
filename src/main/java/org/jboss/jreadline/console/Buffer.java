@@ -162,8 +162,10 @@ public class Buffer {
     /**
      * Make sure that the cursor do not move ob (out of bounds)
      *
-     *
-     * @param viMode@return adjusted movement
+     * @param move left if its negative, right if its positive
+     * @param viMode if viMode we need other restrictions compared
+     * to emacs movement
+     * @return adjusted movement
      */
     private int moveCursor(final int move, boolean viMode) {
         // cant move to a negative value
@@ -171,7 +173,6 @@ public class Buffer {
             return 0;
         // cant move longer than the length of the line
         if(viMode) {
-            //System.out.println("getCursor() "+getCursor()+", line.length()-1:"+(line.length()-1));
             if(getCursor() == line.length()-1 && (move > 0))
                 return 0;
         }
@@ -194,7 +195,6 @@ public class Buffer {
             return -getCursor();
 
         return move;
-
     }
 
     /**

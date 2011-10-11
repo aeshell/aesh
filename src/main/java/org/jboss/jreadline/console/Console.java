@@ -295,20 +295,33 @@ public class Console {
                     doPaste(0, false);
             }
             else if(action == Action.CHANGE_EDITMODE) {
-                if(operation.getMovement() == Movement.PREV)
-                    editMode = new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
-                else if(operation.getMovement() == Movement.NEXT)
-                    editMode = new ViEditMode(KeyOperationManager.generatePOSIXViMode());
+                changeEditMode();
             }
             else if(action == Action.NO_ACTION) {
                 //atm do nothing
             }
 
+            //a hack to get history working
             if(action == Action.HISTORY)
                 prevAction = action;
 
         }
 
+    }
+
+    private void changeEditMode() {
+        if(editMode.getMode() == Mode.EMACS) {
+            if(Config.isOSPOSIXCompatible())
+                editMode = new ViEditMode(KeyOperationManager.generatePOSIXViMode());
+            else
+                editMode = new ViEditMode(KeyOperationManager.generateWindowsViMode());
+        }
+        else {
+            if(Config.isOSPOSIXCompatible())
+                editMode = new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
+            else
+                editMode = new EmacsEditMode(KeyOperationManager.generateWindowsEmacsMode());
+        }
     }
 
     private void getHistory(boolean first) throws IOException {
