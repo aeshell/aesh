@@ -23,13 +23,20 @@ package org.jboss.jreadline.console;
  */
 public class Config {
 
+    private static String separator = null;
+    private static boolean posixCompatible =
+            !(System.getProperty("os.name").startsWith("Windows") ||
+                    System.getProperty("os.name").startsWith("OS/2"));
+
     public static boolean isOSPOSIXCompatible() {
-        String osName = System.getProperty("os.name");
-        return !(osName.startsWith("Windows") || osName.startsWith("OS/2"));
+        return posixCompatible;
     }
 
     public static String getLineSeparator() {
-        return System.getProperty("line.separator");
+        if(separator == null)
+            separator = System.getProperty("line.separator");
+
+        return separator;
     }
 
     private void parseInputrc(String fileName) {
