@@ -1,6 +1,7 @@
 package org.jboss.jreadline.console;
 
 import junit.framework.TestCase;
+import org.jboss.jreadline.util.Parser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -111,13 +112,13 @@ public class BufferTest extends TestCase {
         completionList.add("foobor");
         completionList.add("foob");
 
-        assertEquals("foob", buffer.findStartsWith(completionList));
+        assertEquals("foob", Parser.findStartsWith(completionList));
 
         buffer.reset("");
         completionList.clear();
         completionList.add("foo");
         completionList.add("bar");
-        assertEquals("", buffer.findStartsWith(completionList));
+        assertEquals("", Parser.findStartsWith(completionList));
     }
 
 }

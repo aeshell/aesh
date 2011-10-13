@@ -27,6 +27,7 @@ import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.terminal.WindowsTerminal;
 import org.jboss.jreadline.undo.UndoAction;
 import org.jboss.jreadline.undo.UndoManager;
+import org.jboss.jreadline.util.Parser;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -54,8 +55,6 @@ public class Console {
 
     private boolean toConsole = false;
     private boolean displayCompletion = false;
-
-    private static final String CR = Config.getLineSeparator();
 
     public Console() throws IOException {
         this(new FileInputStream(FileDescriptor.in), System.out);
@@ -511,7 +510,7 @@ public class Console {
      * @throws java.io.IOException stream
      */
     private void printNewline() throws IOException {
-        terminal.write(CR);
+        terminal.write(Config.getLineSeparator());
     }
 
       /**
@@ -555,9 +554,9 @@ public class Console {
 
         List<String> possibleCompletions = new ArrayList<String>();
         for(Completion completion : completionList) {
-            List<String> newCompletions = completion.complete(buffer.getLine().toString(), buffer.getCursor());
+            List<String> newCompletions = completion.complete(buffer.getLine().toString().trim(), buffer.getCursor());
             if(newCompletions != null)
-            possibleCompletions.addAll( newCompletions);
+                possibleCompletions.addAll( newCompletions);
         }
 
         // not hits, just return (perhaps we should beep?)
@@ -568,13 +567,14 @@ public class Console {
             displayCompletion(possibleCompletions.get(0), true);
         // more than one hit...
         else {
-            String startsWith = buffer.findStartsWith(possibleCompletions);
+            String startsWith = Parser.findStartsWith(possibleCompletions);
             //TODO: make sure this works
             if(startsWith.length() > 0 && startsWith.length() > buffer.getCursor())
                 displayCompletion(startsWith, false);
             // display all
             // check size
             else {
+                //TODO: implement this
                 if(possibleCompletions.size() > 50) {
                     if(displayCompletion) {
 
@@ -593,16 +593,25 @@ public class Console {
     }
 
     /**
-     * TODO: should only append to the current position, not remove the whole word..
+     * Display the completion string in the terminal.
+     * If !completion.startsWith(buffer.getLine()) the completion will be added to the line,
+     * else it will replace whats at the buffer line.
      *
      * @param completion item
      * @param appendSpace if its an actual complete
      * @throws java.io.IOException stream
      */
     private void displayCompletion(String completion, boolean appendSpace) throws IOException {
-        performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
-        buffer.write(completion);
-        terminal.write(completion);
+        if(completion.startsWith(buffer.getLine().toString())) {
+            performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
+            buffer.write(completion);
+            terminal.write(completion);
+        }
+        else {
+            String rest = completion.substring( buffer.getLine().length());
+            buffer.write(rest);
+            terminal.write(rest);
+        }
         //only append space if its an actual complete, not a partial
         if(appendSpace) {
             buffer.write(' ');
@@ -613,45 +622,13 @@ public class Console {
     /**
      * Display all possible completions
      *
-     * @param possibleCompletions all completion items
+     * @param completions all completion items
      * @throws IOException stream
      */
-    private void displayCompletions(List<String> possibleCompletions) throws IOException {
-        int maxLength = 0;
-        for(String completion : possibleCompletions)
-            if(completion.length() > maxLength)
-                maxLength = completion.length();
-
-        maxLength = maxLength +2; //adding two spaces for better readability
-        int numColumns = terminal.getWidth() / maxLength;
-        if(numColumns > possibleCompletions.size()) // we dont need more columns than items
-            numColumns = possibleCompletions.size();
-        int numRows = possibleCompletions.size() / numColumns;
-
-        // add a row if we cant display all the items
-        if(numRows * numColumns < possibleCompletions.size())
-            numRows++;
-
-        // build the completion listing
-        StringBuilder completionOutput = new StringBuilder();
-        for(int i=0; i < numRows; i++) {
-            for(int c=0; c < numColumns; c++) {
-                int fetch = i + (c * numRows);
-                if(fetch < possibleCompletions.size())
-                    completionOutput.append(padRight(maxLength, possibleCompletions.get(i + (c * numRows)))) ;
-                else
-                    break;
-            }
-            completionOutput.append(CR);
-        }
-        // print it
+    private void displayCompletions(List<String> completions) throws IOException {
         printNewline();
-        terminal.write(completionOutput.toString());
+        terminal.write(Parser.formatCompletions(completions, terminal.getHeight(), terminal.getWidth()));
         terminal.write(buffer.getLineWithPrompt());
-    }
-
-    private static String padRight(int n, String s) {
-        return String.format("%1$-" + n + "s", s);
     }
 
 }
