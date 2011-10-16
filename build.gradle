@@ -1,9 +1,12 @@
 
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'maven'
+
+group = 'org.jboss.jreadline'
+version = '0.8-SNAPSHOT'
 
 sourceCompatibility = 1.6
-version = '0.8'
 jar {
     manifest {
         attributes 'Implementation-Title': 'JReadline', 'Implementation-Version': version
