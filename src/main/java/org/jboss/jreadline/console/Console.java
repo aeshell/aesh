@@ -554,8 +554,8 @@ public class Console {
 
         List<String> possibleCompletions = new ArrayList<String>();
         for(Completion completion : completionList) {
-            List<String> newCompletions = completion.complete(buffer.getLine().toString().trim(), buffer.getCursor());
-            if(newCompletions != null)
+            List<String> newCompletions = completion.complete(buffer.getLine().toString(), buffer.getCursor());
+            if(newCompletions != null && !newCompletions.isEmpty())
                 possibleCompletions.addAll( newCompletions);
         }
 
@@ -606,16 +606,17 @@ public class Console {
             performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
             buffer.write(completion);
             terminal.write(completion);
+
+            //only append space if its an actual complete, not a partial
+            if(appendSpace) {
+                buffer.write(' ');
+                terminal.write(' ');
+            }
         }
-        else {
-            String rest = completion.substring( buffer.getLine().length());
-            buffer.write(rest);
-            terminal.write(rest);
-        }
-        //only append space if its an actual complete, not a partial
-        if(appendSpace) {
-            buffer.write(' ');
-            terminal.write(' ');
+        else { //if(completion.length() >= buffer.getLine().length()){
+            //String rest = completion.substring( buffer.getLine().length());
+            buffer.write(completion);
+            terminal.write(completion);
         }
     }
 
