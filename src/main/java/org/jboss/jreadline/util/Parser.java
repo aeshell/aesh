@@ -96,4 +96,34 @@ public class Parser {
 
         return true;
     }
+
+    /**
+     * Return the word "connected" to cursor
+     * Note that cursor position starts at 0
+     *
+     * @param text to parse
+     * @param cursor position
+     * @return word connected to cursor
+     */
+    public static String findWordClosestToCursor(String text, int cursor) {
+        if(text.length() <= cursor+1) {
+            // return last word
+            if(text.substring(0, cursor).contains(" ")) {
+                if(text.lastIndexOf(" ") >= cursor) //cant use lastIndexOf
+                    return text.substring(text.substring(0, cursor).lastIndexOf(" ")).trim();
+                else
+                    return text.trim().substring(text.lastIndexOf(" ")).trim();
+            }
+            else
+                return text;
+        }
+        else {
+            String rest = text.substring(0, cursor+1);
+            //only if it contains a ' ' and its not at the end of the string
+            if(rest.trim().contains(" "))
+                return rest.substring(rest.lastIndexOf(" ")).trim();
+            else
+                return rest.trim();
+        }
+    }
 }
