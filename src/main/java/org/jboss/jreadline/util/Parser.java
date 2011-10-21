@@ -37,6 +37,10 @@ public class Parser {
      * @return formatted string to be outputted
      */
     public static String formatCompletions(List<String> completions, int termHeight, int termWidth) {
+        return formatCompletions((String[]) completions.toArray(), termHeight, termWidth);
+    }
+
+    public static String formatCompletions(String[] completions, int termHeight, int termWidth) {
         int maxLength = 0;
         for(String completion : completions)
             if(completion.length() > maxLength)
@@ -44,12 +48,12 @@ public class Parser {
 
         maxLength = maxLength +2; //adding two spaces for better readability
         int numColumns = termWidth / maxLength;
-        if(numColumns > completions.size()) // we dont need more columns than items
-            numColumns = completions.size();
-        int numRows = completions.size() / numColumns;
+        if(numColumns > completions.length) // we dont need more columns than items
+            numColumns = completions.length;
+        int numRows = completions.length / numColumns;
 
         // add a row if we cant display all the items
-        if(numRows * numColumns < completions.size())
+        if(numRows * numColumns < completions.length)
             numRows++;
 
         // build the completion listing
@@ -57,8 +61,8 @@ public class Parser {
         for(int i=0; i < numRows; i++) {
             for(int c=0; c < numColumns; c++) {
                 int fetch = i + (c * numRows);
-                if(fetch < completions.size())
-                    completionOutput.append(padRight(maxLength, completions.get(i + (c * numRows)))) ;
+                if(fetch < completions.length)
+                    completionOutput.append(padRight(maxLength, completions[(i + (c * numRows))])) ;
                 else
                     break;
             }
@@ -119,9 +123,12 @@ public class Parser {
         }
         else {
             String rest = text.substring(0, cursor+1);
+            if(cursor > 1 &&
+                    text.charAt(cursor) == ' ' && text.charAt(cursor-1) == ' ')
+                return "";
             //only if it contains a ' ' and its not at the end of the string
             if(rest.trim().contains(" "))
-                return rest.substring(rest.lastIndexOf(" ")).trim();
+                return rest.substring(rest.trim().lastIndexOf(" ")).trim();
             else
                 return rest.trim();
         }
