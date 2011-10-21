@@ -618,6 +618,8 @@ public class Console {
             buffer.write(completion);
             terminal.write(completion);
         }
+
+        redrawLineFromCursor();
     }
 
     /**
@@ -630,6 +632,14 @@ public class Console {
         printNewline();
         terminal.write(Parser.formatCompletions(completions, terminal.getHeight(), terminal.getWidth()));
         terminal.write(buffer.getLineWithPrompt());
+
+        //if we do a complete and the cursor is not at the end of the
+        //buffer we need to move it to the correct place
+        if(buffer.getCursor() != buffer.getLine().toString().length()) {
+            terminal.write(Buffer.printAnsi((
+                    Math.abs( buffer.getCursor()-
+                    buffer.getLine().toString().length())+"D")));
+        }
     }
 
 }
