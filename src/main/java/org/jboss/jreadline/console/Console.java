@@ -107,9 +107,19 @@ public class Console {
         terminal.reset();
     }
 
+    public int getTerminalHeight() {
+        return terminal.getHeight();
+    }
+
+    public int getTerminalWidth() {
+        return terminal.getWidth();
+    }
+
     public void pushToConsole(String input) throws IOException {
-        terminal.write(input);
-        toConsole = true;
+        if(input != null && input.length() > 0) {
+            terminal.write(input);
+            toConsole = true;
+        }
     }
 
     public void pushToConsole(char[] input) throws IOException {

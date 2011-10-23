@@ -18,6 +18,7 @@ package org.jboss.jreadline.util;
 
 import org.jboss.jreadline.console.Config;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -36,11 +37,11 @@ public class Parser {
      * @param termWidth max width
      * @return formatted string to be outputted
      */
-    public static String formatCompletions(List<String> completions, int termHeight, int termWidth) {
-        return formatCompletions((String[]) completions.toArray(), termHeight, termWidth);
+    public static String formatCompletions(String[] completions, int termHeight, int termWidth) {
+        return formatCompletions(Arrays.asList(completions), termHeight, termWidth);
     }
 
-    public static String formatCompletions(String[] completions, int termHeight, int termWidth) {
+    public static String formatCompletions(List<String> completions, int termHeight, int termWidth) {
         int maxLength = 0;
         for(String completion : completions)
             if(completion.length() > maxLength)
@@ -48,12 +49,12 @@ public class Parser {
 
         maxLength = maxLength +2; //adding two spaces for better readability
         int numColumns = termWidth / maxLength;
-        if(numColumns > completions.length) // we dont need more columns than items
-            numColumns = completions.length;
-        int numRows = completions.length / numColumns;
+        if(numColumns > completions.size()) // we dont need more columns than items
+            numColumns = completions.size();
+        int numRows = completions.size() / numColumns;
 
         // add a row if we cant display all the items
-        if(numRows * numColumns < completions.length)
+        if(numRows * numColumns < completions.size())
             numRows++;
 
         // build the completion listing
@@ -61,8 +62,8 @@ public class Parser {
         for(int i=0; i < numRows; i++) {
             for(int c=0; c < numColumns; c++) {
                 int fetch = i + (c * numRows);
-                if(fetch < completions.length)
-                    completionOutput.append(padRight(maxLength, completions[(i + (c * numRows))])) ;
+                if(fetch < completions.size())
+                    completionOutput.append(padRight(maxLength, completions.get(i + (c * numRows)))) ;
                 else
                     break;
             }
