@@ -55,6 +55,7 @@ public class Console {
 
     private boolean toConsole = false;
     private boolean displayCompletion = false;
+    private boolean askDisplayCompletion = false;
 
     public Console() throws IOException {
         this(new FileInputStream(FileDescriptor.in), System.out);
@@ -116,15 +117,13 @@ public class Console {
     }
 
     public void pushToConsole(String input) throws IOException {
-        if(input != null && input.length() > 0) {
+        if(input != null && input.length() > 0)
             terminal.write(input);
-            toConsole = true;
-        }
     }
 
     public void pushToConsole(char[] input) throws IOException {
+        if(input != null && input.length > 0)
         terminal.write(input);
-        toConsole = true;
     }
 
     public void addCompletion(Completion completion) {
@@ -136,12 +135,6 @@ public class Console {
     }
 
     public String read(String prompt) throws IOException {
-        //make sure that we end the line if pushToConsole(..) have been used
-        if(toConsole) {
-            toConsole = false;
-            printNewline();
-        }
-
         buffer.reset(prompt);
         terminal.write(buffer.getPrompt());
         StringBuilder searchTerm = null;
@@ -154,11 +147,31 @@ public class Console {
             if (c == -1) {
                 return null;
             }
+
+
             Operation operation = editMode.parseInput(c);
 
             Action action = operation.getAction();
 
-            if (action == Action.EDIT) {
+            if(askDisplayCompletion) {
+                askDisplayCompletion = false;
+                if('y' == (char) c) {
+                    displayCompletion = true;
+                    complete();
+                }
+                //do not display complete, but make sure that the previous line
+                // is restored correctly
+                else {
+                    terminal.write(Config.getLineSeparator());
+                    terminal.write(buffer.getLineWithPrompt());
+                    if(buffer.getCursor() != buffer.getLine().toString().length()) {
+                        terminal.write(Buffer.printAnsi((
+                                Math.abs( buffer.getCursor()-
+                                        buffer.getLine().toString().length())+"D")));
+                    }
+                }
+            }
+            else if (action == Action.EDIT) {
                 writeChar(c);
             }
             // For search movement is used a bit differently.
@@ -578,19 +591,20 @@ public class Console {
         // more than one hit...
         else {
             String startsWith = Parser.findStartsWith(possibleCompletions);
-            //TODO: make sure this works
             if(startsWith.length() > 0 && startsWith.length() > buffer.getCursor())
                 displayCompletion(startsWith, false);
             // display all
             // check size
             else {
                 //TODO: implement this
-                if(possibleCompletions.size() > 50) {
+                if(possibleCompletions.size() > 100) {
                     if(displayCompletion) {
-
+                        displayCompletions(possibleCompletions);
+                        displayCompletion = false;
                     }
                     else {
-                        //String displayText = "Display all "+possibleCompletions.size()+ " possibilities? (y or n)";
+                        askDisplayCompletion = true;
+                        terminal.write(Config.getLineSeparator()+"Display all "+possibleCompletions.size()+ " possibilities? (y or n)");
                     }
                 }
                 // display all
