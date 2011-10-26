@@ -36,7 +36,7 @@ import java.util.List;
 /**
  * A console reader.
  * Supports ansi terminals
- * TODO: Completion isnt done, need a config setup
+ * TODO: need a config setup
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
@@ -53,7 +53,6 @@ public class Console {
 
     private Action prevAction = Action.EDIT;
 
-    private boolean toConsole = false;
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
 
@@ -164,11 +163,7 @@ public class Console {
                 else {
                     terminal.write(Config.getLineSeparator());
                     terminal.write(buffer.getLineWithPrompt());
-                    if(buffer.getCursor() != buffer.getLine().toString().length()) {
-                        terminal.write(Buffer.printAnsi((
-                                Math.abs( buffer.getCursor()-
-                                        buffer.getLine().toString().length())+"D")));
-                    }
+                    syncCursor();
                 }
             }
             else if (action == Action.EDIT) {
@@ -596,7 +591,6 @@ public class Console {
             // display all
             // check size
             else {
-                //TODO: implement this
                 if(possibleCompletions.size() > 100) {
                     if(displayCompletion) {
                         displayCompletions(possibleCompletions);
@@ -613,7 +607,6 @@ public class Console {
                 }
             }
         }
-
     }
 
     /**
@@ -656,14 +649,16 @@ public class Console {
         printNewline();
         terminal.write(Parser.formatCompletions(completions, terminal.getHeight(), terminal.getWidth()));
         terminal.write(buffer.getLineWithPrompt());
-
         //if we do a complete and the cursor is not at the end of the
         //buffer we need to move it to the correct place
-        if(buffer.getCursor() != buffer.getLine().toString().length()) {
-            terminal.write(Buffer.printAnsi((
-                    Math.abs( buffer.getCursor()-
-                    buffer.getLine().toString().length())+"D")));
-        }
+        syncCursor();
     }
 
+    private void syncCursor() throws IOException {
+        if(buffer.getCursor() != buffer.getLine().toString().length())
+            terminal.write(Buffer.printAnsi((
+                    Math.abs( buffer.getCursor()-
+                            buffer.getLine().toString().length())+"D")));
+
+    }
 }
