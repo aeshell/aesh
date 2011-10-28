@@ -14,24 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.jreadline.complete;
-
-import java.util.List;
+package org.jboss.jreadline.command;
 
 /**
- * To enable auto completion, commands need to implement this interface.
+ * Common interface to integrate a command to JReadline
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
-public interface Completion {
+public interface Command {
 
     /**
-     * Return a list of possible completions based on the line and
-     * position of the cursor.
+     * Fast check if the current line matches a command
      *
-     * @param line the buffer line
-     * @param cursor position
-     * @return possible completions
+     * @param line command line
+     * @return true if it matches the current command
      */
-    List<String> complete(String line, int cursor);
+    boolean matchCommand(String line);
+
+    /**
+     * Execute command and return the output
+     *
+     * @param line command line
+     * @return output of command that will be pushed to console
+     */
+    String executeCommand(String line);
 }
