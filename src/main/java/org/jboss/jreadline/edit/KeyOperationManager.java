@@ -47,6 +47,12 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(new int[]{27,98}, Operation.MOVE_PREV_WORD));    //meta-b
         keys.add(new KeyOperation(new int[]{27,100}, Operation.DELETE_NEXT_WORD)); //meta-d
 
+        //pgup, pgdown, end, home
+        keys.add(new KeyOperation(new int[]{27,91,53,126}, Operation.NO_ACTION));   //pgup
+        keys.add(new KeyOperation(new int[]{27,91,54,126}, Operation.NO_ACTION));   //pgdown
+        keys.add(new KeyOperation(new int[]{27,79,72}, Operation.MOVE_BEGINNING));  //home
+        keys.add(new KeyOperation(new int[]{27,79,70}, Operation.MOVE_END));        //end
+
         return keys;
     }
 

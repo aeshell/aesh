@@ -49,7 +49,7 @@ public class Example {
         String line;
         //console.pushToConsole(ANSIColors.GREEN_TEXT());
         while ((line = console.read("> ")) != null) {
-            console.pushToConsole("======>\"" + line+"\"");
+            console.pushToConsole("======>\"" + line+"\"\n");
 
             if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
                 break;
