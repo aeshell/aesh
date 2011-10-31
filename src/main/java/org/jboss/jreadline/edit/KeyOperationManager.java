@@ -84,7 +84,7 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(8, Operation.DELETE_PREV_CHAR));
         keys.add(new KeyOperation(9, Operation.COMPLETE));
         keys.add(new KeyOperation(11, Operation.DELETE_END));
-        keys.add(new KeyOperation(12, Operation.DELETE_ALL));
+        keys.add(new KeyOperation(12, Operation.CLEAR));
         keys.add(new KeyOperation(14, Operation.HISTORY_NEXT));
         keys.add(new KeyOperation(16, Operation.HISTORY_PREV));
         keys.add(new KeyOperation(18, Operation.SEARCH_PREV));
@@ -92,9 +92,10 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(21, Operation.DELETE_BEGINNING));
         keys.add(new KeyOperation(22, Operation.PASTE_FROM_CLIPBOARD));
         keys.add(new KeyOperation(23, Operation.DELETE_PREV_BIG_WORD));
-        keys.add(new KeyOperation(24, Operation.NO_ACTION));
+        //keys.add(new KeyOperation(24, Operation.NO_ACTION)); ctrl-x
         keys.add(new KeyOperation(25, Operation.PASTE_BEFORE));
 
+        keys.add(new KeyOperation(new int[] {24,21}, Operation.UNDO)); //ctrl-x ctrl-u
         keys.add(new KeyOperation(new int[] {27,10}, Operation.CHANGE_EDIT_MODE)); //meta-ctrl-j
 
         return keys;

@@ -314,6 +314,9 @@ public class Console {
             else if(action == Action.CHANGE_EDITMODE) {
                 changeEditMode();
             }
+            else if(action == Action.CLEAR) {
+                clear();
+            }
             else if(action == Action.NO_ACTION) {
                 //atm do nothing
             }
@@ -660,5 +663,14 @@ public class Console {
                     Math.abs( buffer.getCursor()-
                             buffer.getLine().toString().length())+"D")));
 
+    }
+
+    private void clear() throws IOException {
+        //first clear console
+        terminal.write(Buffer.printAnsi("2J"));
+        //move cursor to correct position
+        terminal.write(Buffer.printAnsi("1;1H"));
+        //then write prompt
+        terminal.write(buffer.getLineWithPrompt());
     }
 }

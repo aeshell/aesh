@@ -34,6 +34,7 @@ public enum Operation {
     NO_ACTION(Movement.PREV, Action.NO_ACTION),
     COMPLETE(Movement.NEXT, Action.COMPLETE),
     EDIT(Action.EDIT),
+    CLEAR(Action.CLEAR),
     HISTORY_NEXT(Movement.NEXT, Action.HISTORY),
     HISTORY_PREV(Movement.PREV, Action.HISTORY),
     PREV_CHAR(Movement.PREV, Action.NO_ACTION),
