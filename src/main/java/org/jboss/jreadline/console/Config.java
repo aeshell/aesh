@@ -23,7 +23,8 @@ package org.jboss.jreadline.console;
  */
 public class Config {
 
-    private static String separator = null;
+    private static String lineSeparator = null;
+    private static String pathSeparator = null;
     private static boolean posixCompatible =
             !(System.getProperty("os.name").startsWith("Windows") ||
                     System.getProperty("os.name").startsWith("OS/2"));
@@ -33,10 +34,15 @@ public class Config {
     }
 
     public static String getLineSeparator() {
-        if(separator == null)
-            separator = System.getProperty("line.separator");
+        if(lineSeparator == null)
+            lineSeparator = System.getProperty("line.separator");
+        return lineSeparator;
+    }
 
-        return separator;
+    public static String getPathSeparator() {
+        if(pathSeparator == null)
+            pathSeparator = System.getProperty("file.separator");
+        return pathSeparator;
     }
 
     private void parseInputrc(String fileName) {
