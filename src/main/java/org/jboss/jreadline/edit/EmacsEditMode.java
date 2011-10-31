@@ -106,6 +106,11 @@ public class EmacsEditMode implements EditMode {
         }
         else if(currentOperations.size() == 1) {
             //System.out.println("Got Operation: "+matchingOperations.get(0).getOperation());
+            //need to check if this one operation have more keys
+            if(currentOperations.get(0).getKeyValues().length > operationLevel+1) {
+                operationLevel++;
+                return Operation.NO_ACTION;
+            }
             Operation currentOperation = currentOperations.get(0).getOperation();
             if(currentOperation == Operation.SEARCH_PREV ||
                     currentOperation == Operation.SEARCH_NEXT_WORD)
