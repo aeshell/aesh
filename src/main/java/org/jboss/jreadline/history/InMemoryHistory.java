@@ -16,7 +16,7 @@
 */
 package org.jboss.jreadline.history;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,16 +26,29 @@ import java.util.List;
  */
 public class InMemoryHistory implements History {
 
-    private List<StringBuilder> historyList = new LinkedList<StringBuilder>();
+    private List<StringBuilder> historyList;
     private int lastFetchedId = -1;
     private int lastSearchedId = 0;
     private StringBuilder current;
     private SearchDirection searchDirection = SearchDirection.REVERSE;
+    private int maxSize = 500;
+
+    public InMemoryHistory() {
+        historyList = new ArrayList<StringBuilder>();
+    }
+
+    public InMemoryHistory(int maxSize) {
+        this.maxSize = maxSize;
+        historyList = new ArrayList<StringBuilder>();
+    }
 
     @Override
     public void push(StringBuilder entry) {
-        historyList.add(0, entry);
-        lastFetchedId = -1;
+        if(historyList.size() >= maxSize) {
+            historyList.remove(0);
+        }
+        historyList.add(entry);
+        lastFetchedId = size();
         lastSearchedId = 0;
     }
 
@@ -76,10 +89,22 @@ public class InMemoryHistory implements History {
         if(size() < 1)
             return null;
 
+        if(lastFetchedId > 0)
+            return get(--lastFetchedId);
+        else {
+            return get(lastFetchedId);
+        }
+    }
+
+    @Override
+    public StringBuilder getNextFetch() {
+        if(size() < 1)
+            return null;
+
         if(lastFetchedId < size()-1)
             return get(++lastFetchedId);
         else {
-            return get(lastFetchedId);
+            return getCurrent();
         }
     }
 
@@ -91,21 +116,22 @@ public class InMemoryHistory implements History {
             return searchForward(search);
     }
 
-    private StringBuilder searchForward(String search) {
-        for(; lastSearchedId < size(); lastSearchedId++) {
+    private StringBuilder searchReverse(String search) {
+        if(lastSearchedId <= 0)
+            lastSearchedId = size()-1;
+
+        for(; lastSearchedId >= 0; lastSearchedId--)
             if(historyList.get(lastSearchedId).indexOf(search) != -1)
                 return get(lastSearchedId);
-
-        }
 
         return null;
     }
 
-    private StringBuilder searchReverse(String search) {
-        if(lastSearchedId < 1 || lastSearchedId >= size())
-            lastSearchedId = size()-1;
+    private StringBuilder searchForward(String search) {
+        if(lastSearchedId >= size())
+            lastSearchedId = 0;
 
-        for(; lastSearchedId >= 0; lastSearchedId-- ) {
+        for(; lastSearchedId < size(); lastSearchedId++ ) {
             if(historyList.get(lastSearchedId).indexOf(search) != -1)
                 return get(lastSearchedId);
         }
@@ -122,16 +148,5 @@ public class InMemoryHistory implements History {
         return current;
     }
 
-    @Override
-    public StringBuilder getNextFetch() {
-        if(size() < 1)
-            return null;
-
-        if(lastFetchedId > 0)
-            return get(--lastFetchedId);
-        else {
-            return getCurrent();
-        }
-    }
 
 }
