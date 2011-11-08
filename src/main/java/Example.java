@@ -13,7 +13,6 @@ public class Example {
 
     public static void main(String[] args) throws IOException {
 
-        //Console console = new Console(System.in, new OutputStreamWriter(System.out));
         Console console = new Console();
 
         PrintWriter out = new PrintWriter(System.out);
@@ -55,6 +54,6 @@ public class Example {
                 break;
             }
         }
-
     }
+
 }

@@ -57,38 +57,14 @@ public class Console {
     private boolean askDisplayCompletion = false;
 
     public Console() throws IOException {
-        this(new FileInputStream(FileDescriptor.in), System.out);
+        this(new Settings());
     }
 
-    public Console(InputStream in, OutputStream out)  {
-        this(in, out, null);
-    }
+    public Console(Settings settings) {
+        setTerminal(settings.getTerminal(),
+                settings.getInputStream(), settings.getOutputStream());
 
-    public Console(InputStream in, OutputStream out, Terminal terminal) {
-        this(in, out, terminal, null);
-    }
-
-    public Console(InputStream in, OutputStream out, Terminal terminal, EditMode mode) {
-        if(terminal == null) {
-            if(Config.isOSPOSIXCompatible()) {
-                setTerminal(new POSIXTerminal(), in, out);
-            }
-            else
-                setTerminal(new WindowsTerminal(), in, out);
-        }
-        else
-            setTerminal(terminal, in, out);
-
-        if(mode == null) {
-            if(Config.isOSPOSIXCompatible()) {
-                editMode = new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
-                //editMode = new ViEditMode(KeyOperationManager.generatePOSIXViMode());
-            }
-            else
-                editMode = new EmacsEditMode(KeyOperationManager.generateWindowsEmacsMode());
-        }
-        else
-            editMode = mode;
+        editMode = settings.getFullEditMode();
 
         undoManager = new UndoManager();
         pasteManager = new PasteManager();
@@ -146,7 +122,6 @@ public class Console {
             if (c == -1) {
                 return null;
             }
-
 
             Operation operation = editMode.parseInput(c);
 
