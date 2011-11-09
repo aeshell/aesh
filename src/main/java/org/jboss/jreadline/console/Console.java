@@ -19,12 +19,10 @@ package org.jboss.jreadline.console;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.edit.*;
 import org.jboss.jreadline.edit.actions.*;
+import org.jboss.jreadline.history.FileHistory;
 import org.jboss.jreadline.history.History;
-import org.jboss.jreadline.history.InMemoryHistory;
 import org.jboss.jreadline.history.SearchDirection;
-import org.jboss.jreadline.terminal.POSIXTerminal;
 import org.jboss.jreadline.terminal.Terminal;
-import org.jboss.jreadline.terminal.WindowsTerminal;
 import org.jboss.jreadline.undo.UndoAction;
 import org.jboss.jreadline.undo.UndoManager;
 import org.jboss.jreadline.util.Parser;
@@ -60,7 +58,7 @@ public class Console {
         this(new Settings());
     }
 
-    public Console(Settings settings) {
+    public Console(Settings settings) throws IOException {
         setTerminal(settings.getTerminal(),
                 settings.getInputStream(), settings.getOutputStream());
 
@@ -69,7 +67,8 @@ public class Console {
         undoManager = new UndoManager();
         pasteManager = new PasteManager();
         buffer = new Buffer(null);
-        history = new InMemoryHistory();
+        history = new FileHistory(settings.getHistoryFile().getAbsolutePath(),
+                settings.getHistorySize());
 
         completionList = new ArrayList<Completion>();
     }

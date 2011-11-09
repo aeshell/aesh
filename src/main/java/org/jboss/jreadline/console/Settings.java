@@ -32,7 +32,7 @@ public class Settings {
 
     private Mode editMode = Mode.EMACS;
     private File historyFile;
-    private long historySize = 500; //default is 500
+    private int historySize = 500; //default is 500
     private String bellStyle;
     private boolean ansiConsole;
     private InputStream inputStream;
@@ -89,15 +89,15 @@ public class Settings {
     }
 
     /**
-     * By default histyr size is 500
+     * By default history size is 500
      *
-     * @return
+     * @return size
      */
-    public long getHistorySize() {
+    public int getHistorySize() {
         return historySize;
     }
 
-    public void setHistorySize(long historySize) {
+    public void setHistorySize(int historySize) {
         this.historySize = historySize;
     }
 
@@ -126,7 +126,7 @@ public class Settings {
      * Possible to override the type of console
      * NOTE: atm jreadline will always presume it uses and ansi console
      *
-     * @param ansiConsole
+     * @param ansiConsole is it an ansi compatible console?
      */
     public void setAnsiConsole(boolean ansiConsole) {
         this.ansiConsole = ansiConsole;
