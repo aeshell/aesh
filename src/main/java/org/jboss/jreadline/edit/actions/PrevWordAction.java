@@ -26,7 +26,7 @@ public class PrevWordAction extends EditAction {
     }
 
     @Override
-    public void doAction(StringBuilder buffer) {
+    public void doAction(String buffer) {
         int cursor = getStart();
         //the cursor position in jline might be > the buffer
         if(cursor > buffer.length())

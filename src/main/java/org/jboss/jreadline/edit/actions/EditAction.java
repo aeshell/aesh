@@ -34,7 +34,7 @@ public abstract class EditAction {
      *
      * @param buffer console
      */
-    public abstract void doAction(StringBuilder buffer);
+    public abstract void doAction(String buffer);
 
     private void setAction(Action action) {
         this.action = action;

@@ -33,7 +33,7 @@ public class DeleteAction extends EditAction {
     }
 
     @Override
-    public void doAction(StringBuilder buffer) {
+    public void doAction(String buffer) {
         if(backspace) {
             if(getStart() == 0)
                 setEnd(0);

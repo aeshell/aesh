@@ -34,7 +34,7 @@ public class SimpleAction extends EditAction {
     }
 
     @Override
-    public void doAction(StringBuilder buffer) {
+    public void doAction(String buffer) {
         if(buffer.length() < getEnd())
             setEnd(buffer.length());
 

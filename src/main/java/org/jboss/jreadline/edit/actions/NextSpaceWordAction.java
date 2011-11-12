@@ -26,7 +26,7 @@ public class NextSpaceWordAction extends EditAction {
     }
 
     @Override
-    public void doAction(StringBuilder buffer) {
+    public void doAction(String buffer) {
         int cursor = getStart();
         //if cursor stand on a delimiter, move till its no more delimiters
         if(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
