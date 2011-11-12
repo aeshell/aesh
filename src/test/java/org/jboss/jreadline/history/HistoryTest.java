@@ -58,7 +58,7 @@ public class HistoryTest extends JReadlineTestCase {
         History history = new InMemoryHistory(20);
 
         for(int i=0; i < 25; i++)
-            history.push(new StringBuilder().append(i));
+            history.push(String.valueOf(i));
 
 
         assertEquals(20, history.size());

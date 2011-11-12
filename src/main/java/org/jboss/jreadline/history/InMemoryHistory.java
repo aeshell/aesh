@@ -26,24 +26,24 @@ import java.util.List;
  */
 public class InMemoryHistory implements History {
 
-    private List<StringBuilder> historyList;
+    private List<String> historyList;
     private int lastFetchedId = -1;
     private int lastSearchedId = 0;
-    private StringBuilder current;
+    private String current;
     private SearchDirection searchDirection = SearchDirection.REVERSE;
     private int maxSize = 500;
 
     public InMemoryHistory() {
-        historyList = new ArrayList<StringBuilder>();
+        historyList = new ArrayList<String>();
     }
 
     public InMemoryHistory(int maxSize) {
         this.maxSize = maxSize;
-        historyList = new ArrayList<StringBuilder>();
+        historyList = new ArrayList<String>();
     }
 
     @Override
-    public void push(StringBuilder entry) {
+    public void push(String entry) {
         if(historyList.size() >= maxSize) {
             historyList.remove(0);
         }
@@ -53,7 +53,7 @@ public class InMemoryHistory implements History {
     }
 
     @Override
-    public StringBuilder find(StringBuilder search) {
+    public String find(String search) {
         int index = historyList.indexOf(search);
         if(index >= 0) {
             return get(index);
@@ -64,9 +64,9 @@ public class InMemoryHistory implements History {
     }
 
     @Override
-    public StringBuilder get(int index) {
+    public String get(int index) {
         lastFetchedId = index;
-        return new StringBuilder(historyList.get(index));
+        return new String(historyList.get(index));
     }
 
    @Override
@@ -85,7 +85,7 @@ public class InMemoryHistory implements History {
     }
 
     @Override
-    public StringBuilder getPreviousFetch() {
+    public String getPreviousFetch() {
         if(size() < 1)
             return null;
 
@@ -97,7 +97,7 @@ public class InMemoryHistory implements History {
     }
 
     @Override
-    public StringBuilder getNextFetch() {
+    public String getNextFetch() {
         if(size() < 1)
             return null;
 
@@ -109,42 +109,42 @@ public class InMemoryHistory implements History {
     }
 
     @Override
-    public StringBuilder search(String search) {
+    public String search(String search) {
         if(searchDirection == SearchDirection.REVERSE)
             return searchReverse(search);
         else
             return searchForward(search);
     }
 
-    private StringBuilder searchReverse(String search) {
+    private String searchReverse(String search) {
         if(lastSearchedId <= 0)
             lastSearchedId = size()-1;
 
         for(; lastSearchedId >= 0; lastSearchedId--)
-            if(historyList.get(lastSearchedId).indexOf(search) != -1)
+            if(historyList.get(lastSearchedId).contains(search))
                 return get(lastSearchedId);
 
         return null;
     }
 
-    private StringBuilder searchForward(String search) {
+    private String searchForward(String search) {
         if(lastSearchedId >= size())
             lastSearchedId = 0;
 
         for(; lastSearchedId < size(); lastSearchedId++ ) {
-            if(historyList.get(lastSearchedId).indexOf(search) != -1)
+            if(historyList.get(lastSearchedId).contains(search))
                 return get(lastSearchedId);
         }
         return null;
     }
 
     @Override
-    public void setCurrent(StringBuilder line) {
+    public void setCurrent(String line) {
         this.current = line;
     }
 
     @Override
-    public StringBuilder getCurrent() {
+    public String getCurrent() {
         return current;
     }
 

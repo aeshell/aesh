@@ -47,7 +47,7 @@ public class FileHistory extends InMemoryHistory {
 
             String line;
             while((line = reader.readLine()) != null)
-                push(new StringBuilder(line));
+                push(line);
 
             reader.close();
         }
@@ -64,7 +64,7 @@ public class FileHistory extends InMemoryHistory {
         FileWriter fw = new FileWriter(historyFile);
 
         for(int i=0; i < size();i++)
-            fw.write(get(i).append(Config.getLineSeparator()).toString());
+            fw.write(get(i) + (Config.getLineSeparator()).toString());
 
         fw.flush();
         fw.close();

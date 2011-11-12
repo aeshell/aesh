@@ -22,11 +22,11 @@ package org.jboss.jreadline.history;
  */
 public interface History {
 
-    void push(StringBuilder entry);
+    void push(String entry);
 
-    StringBuilder find(StringBuilder search);
+    String find(String search);
 
-    StringBuilder get(int index);
+    String get(int index);
 
     int size();
 
@@ -34,14 +34,14 @@ public interface History {
 
     SearchDirection getSearchDirection();
 
-    StringBuilder getNextFetch();
+    String getNextFetch();
 
-    StringBuilder getPreviousFetch();
+    String getPreviousFetch();
 
-    StringBuilder search(String search);
+    String search(String search);
 
-    void setCurrent(StringBuilder line);
+    void setCurrent(String line);
 
-    StringBuilder getCurrent();
+    String getCurrent();
 
 }
