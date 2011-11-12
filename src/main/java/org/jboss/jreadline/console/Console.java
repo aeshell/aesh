@@ -112,7 +112,7 @@ public class Console {
         buffer.reset(prompt);
         terminal.write(buffer.getPrompt());
         StringBuilder searchTerm = null;
-        StringBuilder result = null;
+        String result = null;
 
         while(true) {
 
@@ -183,13 +183,13 @@ public class Console {
                     case ALL:
                         searchTerm.appendCodePoint(c);
                         //check if the new searchTerm will find anything
-                        StringBuilder tmpResult = history.search(searchTerm.toString());
+                        String tmpResult = history.search(searchTerm.toString());
                         //
                         if(tmpResult == null) {
                             searchTerm.deleteCharAt(searchTerm.length()-1);
                         }
                         else {
-                            result = new StringBuilder(tmpResult.toString());
+                            result = new String(tmpResult);
                         }
                         //result = history.searchPrevious(searchTerm.toString());
                         break;
@@ -197,17 +197,17 @@ public class Console {
                     case END:
                         // Set buffer to the found string.
                         if (result != null) {
-                            buffer.setLine(new StringBuilder(result));
+                            buffer.setLine(result);
                             redrawLine();
                             printNewline();
-                            return buffer.getLine().toString();
+                            return buffer.getLine();
                         }
                         redrawLine();
                         break;
 
                     case NEXT_BIG_WORD:
                         if(result != null) {
-                            buffer.setLine(new StringBuilder(result));
+                            buffer.setLine(result);
                             result = null;
                         }
                         //redrawLine();
@@ -325,7 +325,7 @@ public class Console {
         }
         //get next
         if(first) {
-            StringBuilder next = history.getNextFetch();
+            String next = history.getNextFetch();
             if(next != null) {
                 buffer.setLine(next);
                 moveCursor(buffer.length()-buffer.getCursor());
@@ -334,7 +334,7 @@ public class Console {
         }
         // get previous
         else {
-           StringBuilder prev = history.getPreviousFetch();
+           String prev = history.getPreviousFetch();
             if(prev != null) {
                 buffer.setLine(prev);
                 //buffer.setCursor(buffer.length());
@@ -345,8 +345,8 @@ public class Console {
         prevAction = Action.HISTORY;
     }
 
-    private void addToHistory(StringBuilder line) {
-        history.push(new StringBuilder(line));
+    private void addToHistory(String line) {
+        history.push(line);
     }
 
     private void writeChar(int c) throws IOException {
@@ -379,11 +379,11 @@ public class Console {
                     moveCursor(action.getStart() - buffer.getCursor());
                 }
                 addToPaste(buffer.getLine().substring(action.getStart(), action.getEnd()));
-                buffer.getLine().delete(action.getStart(), action.getEnd());
+                buffer.delete(action.getStart(), action.getEnd());
             }
             else {
                 addToPaste(buffer.getLine().substring(action.getEnd(), action.getStart()));
-                buffer.getLine().delete(action.getEnd(), action.getStart());
+                buffer.delete(action.getEnd(), action.getStart());
                 moveCursor((action.getEnd() - action.getStart()));
             }
             redrawLine();
@@ -434,11 +434,11 @@ public class Console {
 
         addActionToUndoStack();
         if(before || buffer.getCursor() >= buffer.getLine().length()) {
-            buffer.getLine().insert(buffer.getCursor(), pasteBuffer);
+            buffer.insert(buffer.getCursor(), pasteBuffer.toString());
             redrawLine();
         }
         else {
-            buffer.getLine().insert(buffer.getCursor() + 1, pasteBuffer);
+            buffer.insert(buffer.getCursor() + 1, pasteBuffer.toString());
             redrawLine();
             //move cursor one char
             moveCursor(1);
@@ -451,10 +451,10 @@ public class Console {
                 (editMode.getCurrentAction() == Action.MOVE ||
                         editMode.getCurrentAction() == Action.DELETE)) {
 
-            terminal.write(buffer.move(where, true));
+            terminal.write(buffer.move(where, getTerminalWidth(), true));
         }
         else
-            terminal.write(buffer.move(where));
+            terminal.write(buffer.move(where, getTerminalWidth()));
     }
 
     private void redrawLineFromCursor() throws IOException {
@@ -472,15 +472,65 @@ public class Console {
     }
 
     private void drawLine(String line) throws IOException {
-        terminal.write(Buffer.printAnsi("s")); //save cursor
-        //move cursor to 0. - need to do this to clear the entire line
-        terminal.write(Buffer.printAnsi("0G"));
-        terminal.write(Buffer.printAnsi("2K")); // clear line
+//        System.out.println("line: "+line+", size:"+line.length());
+//        System.out.println("terminal width:"+getTerminalWidth());
+        //need to clear more than one line
+        if(line.length() > getTerminalWidth() ||
+                (line.length()+buffer.getDelta() > getTerminalWidth())) {
+//            System.out.println("drawing MANY line");
+        int lineFromStart = 0;
+        if(buffer.getCursor() > 0)
+            lineFromStart = buffer.getCursor() / getTerminalWidth();
 
-        terminal.write(line);
+            int totalLines =
+                    ((line.length()+buffer.getDelta()) / getTerminalWidth()) + 1;
+            //if((1+totalLines) * getTerminalWidth() < line.length())
+            //    totalLines += 1;
+            //System.out.println("lineFromStart:"+lineFromStart+", totalLines:"+totalLines);
+            //System.out.println("delta: "+buffer.getDelta());
 
-        // move cursor to saved pos
-        terminal.write(Buffer.printAnsi("u"));
+            terminal.write(Buffer.printAnsi("s")); //save cursor
+
+            if(lineFromStart > 0)
+            for(int i=0; i<lineFromStart; i++)
+                terminal.write(Buffer.printAnsi("A")); //move to top
+
+            terminal.write(Buffer.printAnsi("0G"));
+            //terminal.write(Buffer.printAnsi("2K")); // clear line
+
+            //terminal.write(Buffer.printAnsi("0G")); //move cursor to 0
+
+            /*
+            for(int i=0; i < totalLines; i++) {
+                terminal.write(Buffer.printAnsi("B")); // move down
+                terminal.write(Buffer.printAnsi("2K")); // clear line
+            }
+            for(int i=0; i < totalLines; i++)
+                terminal.write(Buffer.printAnsi("A")); // move up
+                */
+
+            terminal.write(line);
+            for(int i=0; i< buffer.getDelta(); i++)
+                terminal.write(' ');
+
+            // move cursor to saved pos
+            terminal.write(Buffer.printAnsi("u"));
+
+        }
+        // only clear the current line
+        else {
+//            System.out.println("redrawing one line");
+            terminal.write(Buffer.printAnsi("s")); //save cursor
+            //move cursor to 0. - need to do this to clear the entire line
+            terminal.write(Buffer.printAnsi("0G"));
+            terminal.write(Buffer.printAnsi("2K")); // clear line
+
+            terminal.write(line);
+
+
+            // move cursor to saved pos
+            terminal.write(Buffer.printAnsi("u"));
+        }
     }
 
     private void printSearch(String searchTerm, String result) throws IOException {

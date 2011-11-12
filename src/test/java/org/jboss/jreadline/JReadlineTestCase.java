@@ -19,7 +19,9 @@ package org.jboss.jreadline;
 import junit.framework.TestCase;
 import org.jboss.jreadline.console.Config;
 import org.jboss.jreadline.console.Console;
+import org.jboss.jreadline.console.Settings;
 import org.jboss.jreadline.edit.KeyOperationManager;
+import org.jboss.jreadline.edit.Mode;
 import org.jboss.jreadline.edit.ViEditMode;
 
 import java.io.*;
@@ -35,8 +37,10 @@ public abstract class JReadlineTestCase extends TestCase {
 
     public void assertEquals(String expected, TestBuffer buffer) throws IOException {
 
-        Console console = new Console(new ByteArrayInputStream(buffer.getBytes()),
-                new ByteArrayOutputStream());
+        Settings settings = new Settings();
+        settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
+        settings.setOutputStream(new ByteArrayOutputStream());
+        Console console = new Console(settings);
 
 
         String in = null;
@@ -59,14 +63,12 @@ public abstract class JReadlineTestCase extends TestCase {
     public void assertEqualsViMode(String expected, TestBuffer buffer) throws IOException {
 
         Console console;
-        if(Config.isOSPOSIXCompatible())
-        console = new Console(new ByteArrayInputStream(buffer.getBytes()),
-                new ByteArrayOutputStream(), null,
-                new ViEditMode(KeyOperationManager.generatePOSIXViMode()));
-        else
-            console = new Console(new ByteArrayInputStream(buffer.getBytes()),
-                    new ByteArrayOutputStream(), null,
-                    new ViEditMode(KeyOperationManager.generateWindowsViMode()));
+        Settings settings = new Settings();
+        settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
+        settings.setOutputStream(new ByteArrayOutputStream());
+        settings.setEditMode(Mode.VI);
+
+        console = new Console(settings);
 
         String in = null;
         while (true) {
