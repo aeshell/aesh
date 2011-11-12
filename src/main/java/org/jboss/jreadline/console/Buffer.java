@@ -30,6 +30,7 @@ public class Buffer {
     private int cursor = 0;
     private StringBuilder line;
     private String prompt;
+    private int delta;
 
     private final static int TAB = 4;
 
@@ -45,7 +46,11 @@ public class Buffer {
     protected Buffer(String promptText) {
         if(promptText != null)
             prompt = promptText;
+        else
+            prompt = "";
+
         line = new StringBuilder();
+        delta = 0;
     }
 
     /**
@@ -60,6 +65,7 @@ public class Buffer {
           prompt = "";
         cursor = 0;
         line = new StringBuilder();
+        delta = 0;
     }
 
     /**
@@ -97,22 +103,52 @@ public class Buffer {
      * @param move where to move
      * @return ansi string that represent the move
      */
-    protected char[] move(int move) {
-        return move(move, false);
+    protected char[] move(int move, int termWidth) {
+        return move(move, termWidth, false);
     }
 
-    protected char[] move(int move, boolean viMode) {
+    protected char[] move(int move, int termWidth, boolean viMode) {
         move = moveCursor(move, viMode);
 
-        setCursor(getCursor() + move);
+        //System.out.println("cursorWithPrompt:"+getCursorWithPrompt());
+        //System.out.println("current row:"+(getCursorWithPrompt() / termWidth)+
+        //        "new row:"+((move + getCursorWithPrompt()) / termWidth));
+        //have we moved to another row?
+        if(getCursorWithPrompt() / termWidth !=
+                (move + getCursorWithPrompt()) / termWidth) {
+            // if row is > 0, we need to move row number of rows down, oposite for row < 0
+            int row = ((move + getCursorWithPrompt()) / termWidth) -
+                    (getCursorWithPrompt() / termWidth) ;
+            setCursor(getCursor() + move);
+            if(row > 0) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(printAnsi(row+"B")).append(printAnsi(getCursorWithPrompt() % termWidth+"G"));
+                return sb.toString().toCharArray();
+            }
+            //going up
+            else {
+                //check if we are on the "first" row:
+                if(getCursor() <= termWidth) {
+                }
+                StringBuilder sb = new StringBuilder();
+                sb.append(printAnsi(Math.abs(row)+"A")).append(printAnsi(getCursorWithPrompt() % termWidth+"G"));
+                return sb.toString().toCharArray();
+            }
+        }
 
-        if(move < 0)
-            return printAnsi(Math.abs(move)+"D");
+        //staying at the same row
+        else {
 
-        else if(move > 0)
-            return printAnsi(move+"C");
-        else
-            return new char[0];
+            setCursor(getCursor() + move);
+
+            if(move < 0)
+                return printAnsi(Math.abs(move)+"D");
+
+            else if(move > 0)
+                return printAnsi(move+"C");
+            else
+                return new char[0];
+        }
     }
 
     /**
@@ -207,12 +243,21 @@ public class Buffer {
         return line.substring(position).toCharArray();
     }
 
-    public StringBuilder getLine() {
-        return line;
+    public String getLine() {
+        return line.toString();
     }
 
-    protected void setLine(StringBuilder line) {
-        this.line = line;
+    protected void setLine(String line) {
+        this.line = new StringBuilder(line);
+    }
+
+    protected void delete(int start, int end) {
+        delta = end - start;
+        line.delete(start, end);
+    }
+
+    protected void insert(int start, String in) {
+        line.insert(start, in);
     }
 
     /**
@@ -231,6 +276,7 @@ public class Buffer {
      */
     public void write(char c) {
         line.insert(cursor++, c);
+        delta = 1;
     }
 
     /**
@@ -249,10 +295,16 @@ public class Buffer {
         }
 
         cursor += str.length();
+        delta = str.length();
     }
 
     protected void clear() {
         line = new StringBuilder();
+        delta = 0;
+    }
+
+    public int getDelta() {
+        return delta;
     }
 
     /**
@@ -264,9 +316,9 @@ public class Buffer {
         char c = getLine().charAt(getCursor());
         if(Character.isLetter(c)) {
             if(Character.isLowerCase(c))
-                getLine().setCharAt(getCursor(), Character.toUpperCase(c));
+                line.setCharAt(getCursor(), Character.toUpperCase(c));
             else
-                getLine().setCharAt(getCursor(), Character.toLowerCase(c));
+                line.setCharAt(getCursor(), Character.toLowerCase(c));
 
             return true;
         }

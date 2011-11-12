@@ -17,34 +17,34 @@ public class BufferTest extends TestCase {
         Buffer buffer = new Buffer(null);
         buffer.write(input);
 
-        char[] out = buffer.move(-1);
+        char[] out = buffer.move(-1, 80);
         char[] expected = new char[] {(char) 27,'[','1','D'};
         assertEquals(new String(expected), new String(out));
         assertEquals(6, buffer.getCursor());
 
-        out = buffer.move(1);
+        out = buffer.move(1, 80);
         expected = new char[] {(char) 27,'[','1','C'};
         assertEquals(new String(expected), new String(out));
         assertEquals(7, buffer.getCursor());
 
 
-        out = buffer.move(-5);
+        out = buffer.move(-5, 80);
         expected = new char[] {(char) 27,'[','5','D'};
         assertEquals(new String(expected), new String(out));
         assertEquals(2, buffer.getCursor());
 
-        out = buffer.move(-3);
+        out = buffer.move(-3, 80);
         expected = new char[] {(char) 27,'[','2','D'};
         assertEquals(new String(expected), new String(out));
         assertEquals(0, buffer.getCursor());
 
-        out = buffer.move(-3);
+        out = buffer.move(-3, 80);
         expected = new char[0];
         assertEquals(new String(expected), new String(out));
         assertEquals(0, buffer.getCursor());
 
 
-        out = buffer.move(10);
+        out = buffer.move(10, 80);
         expected = new char[] {(char) 27,'[','7','C'};
         assertEquals(new String(expected), new String(out));
         assertEquals(7, buffer.getCursor());
@@ -55,28 +55,28 @@ public class BufferTest extends TestCase {
         buffer.write(input);
         //buffer.setCursor(5);
 
-        out = buffer.move(-1);
+        out = buffer.move(-1, 80);
         expected = new char[] {(char) 27,'[','1','D'};
         assertEquals(new String(expected), new String(out));
         assertEquals(input.length()-1, buffer.getCursor());
         assertEquals(prompt.length()+input.length()-1, buffer.getCursorWithPrompt());
 
-        out = buffer.move(1);
+        out = buffer.move(1, 80);
         expected = new char[] {(char) 27,'[','1','C'};
         assertEquals(new String(expected), new String(out));
         assertEquals(7, buffer.getCursor());
 
-        out = buffer.move(-5);
+        out = buffer.move(-5, 80);
         expected = new char[] {(char) 27,'[','5','D'};
         assertEquals(new String(expected), new String(out));
         assertEquals(2, buffer.getCursor());
 
-        out = buffer.move(-6);
+        out = buffer.move(-6, 80);
         expected = new char[] {(char) 27,'[','2','D'};
         assertEquals(new String(expected), new String(out));
         assertEquals(0, buffer.getCursor());
 
-        out = buffer.move(10);
+        out = buffer.move(10, 80);
         expected = new char[] {(char) 27,'[','7','C'};
         assertEquals(new String(expected), new String(out));
         assertEquals(7, buffer.getCursor());
