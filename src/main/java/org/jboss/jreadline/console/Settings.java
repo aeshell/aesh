@@ -34,7 +34,7 @@ public class Settings {
     private File historyFile;
     private int historySize = 500; //default is 500
     private String bellStyle;
-    private boolean ansiConsole;
+    private boolean ansiConsole = true; //TODO: need to implement this correctly
     private InputStream inputStream;
     private OutputStream outputStream;
     private Terminal terminal;
