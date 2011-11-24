@@ -98,7 +98,7 @@ public class ViEditMode implements EditMode {
         }
 
         //search mode need special handling
-        if(mode == Action.SEARCH) {
+        if(mode == Action.SEARCH && currentOperations.size() > 0) {
                 if(currentOperations.get(0).getOperation() == Operation.NEW_LINE) {
                     mode = Action.EDIT;
                     currentOperations.clear();
@@ -190,7 +190,8 @@ public class ViEditMode implements EditMode {
                 mode = Action.SEARCH;
                 return Operation.SEARCH_PREV;
             }
-
+            else if(operation == Operation.CLEAR)
+                return Operation.CLEAR;
 
             if(!isInEditMode())
                 return inCommandMode(operation, workingMode);

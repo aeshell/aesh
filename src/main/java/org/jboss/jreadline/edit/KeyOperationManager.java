@@ -122,6 +122,7 @@ public class KeyOperationManager {
         List<KeyOperation> keys = new ArrayList<KeyOperation>();
         keys.add(new KeyOperation(5, Operation.CHANGE_EDIT_MODE)); //ctrl-e
         keys.add(new KeyOperation(9, Operation.COMPLETE)); //tab
+        keys.add(new KeyOperation(12, Operation.CLEAR)); //ctrl-l
 
         //search
         keys.add(new KeyOperation(18, Operation.SEARCH_PREV));
