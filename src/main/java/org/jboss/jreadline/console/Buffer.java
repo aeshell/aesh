@@ -62,7 +62,7 @@ public class Buffer {
         if(promptText != null)
             prompt = promptText;
         else
-          prompt = "";
+            prompt = "";
         cursor = 0;
         line = new StringBuilder();
         delta = 0;
@@ -76,7 +76,7 @@ public class Buffer {
     }
 
     protected int totalLength() {
-        return line.length() + prompt.length();
+        return line.length() + prompt.length()+1;
     }
 
     protected int getCursor() {
@@ -84,7 +84,7 @@ public class Buffer {
     }
 
     protected int getCursorWithPrompt() {
-        return cursor + prompt.length();
+        return cursor + prompt.length()+1;
     }
 
     protected String getPrompt() {
@@ -117,7 +117,7 @@ public class Buffer {
 
         int newRow = ((move + getCursorWithPrompt()) / (termWidth));
         if(newRow > 0 && ((move + getCursorWithPrompt()) % (termWidth) == 0))
-           newRow--;
+            newRow--;
 
         int row = newRow - currentRow;
 
@@ -139,12 +139,8 @@ public class Buffer {
             sb.append(printAnsi(Math.abs(row)+"A")).append(printAnsi(cursor+"G"));
             return sb.toString().toCharArray();
         }
-
         //staying at the same row
         else {
-
-            //setCursor(getCursor() + move);
-
             if(move < 0)
                 return printAnsi(Math.abs(move)+"D");
 
@@ -175,11 +171,11 @@ public class Buffer {
         //calculate length of table:
         int length = 0;
         for(char c : out) {
-          if(c == '\t') {
-              length += TAB;
-          }
-          else
-            length++;
+            if(c == '\t') {
+                length += TAB;
+            }
+            else
+                length++;
         }
 
         char[] ansi = new char[length+2];
@@ -341,7 +337,7 @@ public class Buffer {
         StringBuilder builder = new StringBuilder();
         for(String completion : completionList)
             while(builder.length() < completion.length() &&
-                  startsWith(completion.substring(0, builder.length()+1), completionList))
+                    startsWith(completion.substring(0, builder.length()+1), completionList))
                 builder.append(completion.charAt(builder.length()));
 
         return builder.toString();

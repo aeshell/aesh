@@ -59,7 +59,7 @@ public class BufferTest extends TestCase {
         expected = new char[] {(char) 27,'[','1','D'};
         assertEquals(new String(expected), new String(out));
         assertEquals(input.length()-1, buffer.getCursor());
-        assertEquals(prompt.length()+input.length()-1, buffer.getCursorWithPrompt());
+        assertEquals(prompt.length()+input.length(), buffer.getCursorWithPrompt());
 
         out = buffer.move(1, 80);
         expected = new char[] {(char) 27,'[','1','C'};
