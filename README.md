@@ -69,6 +69,7 @@ EMACS Mode
 VI Mode
 ----------
 In command mode: About every vi command is supported, here's a few:
+
 * Move back one char : h
 * Move forward one char : l
 * Delete the character left of cursor : X
