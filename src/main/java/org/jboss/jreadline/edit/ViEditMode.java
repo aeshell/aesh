@@ -158,6 +158,7 @@ public class ViEditMode implements EditMode {
 
         else if(currentOperations.size() == 1) {
             Operation operation = currentOperations.get(0).getOperation();
+            Action workingMode = currentOperations.get(0).getWorkingMode();
             operationLevel = 0;
             currentOperations.clear();
 
@@ -166,11 +167,11 @@ public class ViEditMode implements EditMode {
                 return Operation.NEW_LINE;
             }
 
-            else if(operation == Operation.DELETE_PREV_CHAR) {
+            else if(operation == Operation.DELETE_PREV_CHAR && workingMode == Action.NO_ACTION) {
                 if(isInEditMode())
                     return Operation.DELETE_PREV_CHAR;
                 else
-                    return Operation.NO_ACTION;
+                    return Operation.MOVE_PREV_CHAR;
             }
             else if(operation == Operation.COMPLETE) {
                 if(isInEditMode())
@@ -192,7 +193,7 @@ public class ViEditMode implements EditMode {
 
 
             if(!isInEditMode())
-                return inCommandMode(operation);
+                return inCommandMode(operation, workingMode);
             else
                 return Operation.EDIT;
         }
@@ -203,7 +204,7 @@ public class ViEditMode implements EditMode {
 
     }
 
-    private Operation inCommandMode(Operation operation) {
+    private Operation inCommandMode(Operation operation, Action workingMode) {
         //movement
         if(operation == Operation.PREV_CHAR) {
             if(mode == Action.MOVE)
@@ -295,6 +296,8 @@ public class ViEditMode implements EditMode {
         else if(operation == Operation.DELETE_NEXT_CHAR) {
             return saveAction(operation);
         }
+        else if(operation == Operation.DELETE_PREV_CHAR && workingMode == Action.COMMAND)
+            return saveAction(operation);
         // paste
         else if(operation == Operation.PASTE_AFTER)
            return saveAction(operation);

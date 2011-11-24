@@ -16,6 +16,7 @@
  */
 package org.jboss.jreadline.edit;
 
+import org.jboss.jreadline.edit.actions.Action;
 import org.jboss.jreadline.edit.actions.Operation;
 
 import java.util.ArrayList;
@@ -138,6 +139,7 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(48, Operation.BEGINNING)); //0
         keys.add(new KeyOperation(36, Operation.END)); //$
         keys.add(new KeyOperation(120, Operation.DELETE_NEXT_CHAR)); //x
+        keys.add(new KeyOperation(88, Operation.DELETE_PREV_CHAR, Action.COMMAND)); //X
         keys.add(new KeyOperation(112, Operation.PASTE_AFTER)); //p
         keys.add(new KeyOperation(80, Operation.PASTE_BEFORE)); //P
         keys.add(new KeyOperation(105, Operation.INSERT)); //i

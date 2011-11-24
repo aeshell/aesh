@@ -16,6 +16,7 @@
  */
 package org.jboss.jreadline.edit;
 
+import org.jboss.jreadline.edit.actions.Action;
 import org.jboss.jreadline.edit.actions.Operation;
 
 /**
@@ -25,16 +26,28 @@ public class KeyOperation {
 
     private int[] keyValues;
     private Operation operation;
+    private Action workingMode = Action.NO_ACTION;
 
     public KeyOperation(int value, Operation operation) {
         keyValues = new int[] {value};
         this.operation = operation;
-
     }
 
     public KeyOperation(int[] value, Operation operation) {
         keyValues = value;
         this.operation = operation;
+    }
+
+    public KeyOperation(int value, Operation operation, Action workingMode) {
+        keyValues = new int[] {value};
+        this.operation = operation;
+        this.workingMode = workingMode;
+    }
+
+    public KeyOperation(int[] value, Operation operation, Action  workingMode) {
+        keyValues = value;
+        this.operation = operation;
+        this.workingMode = workingMode;
     }
 
     public int[] getKeyValues() {
@@ -51,6 +64,10 @@ public class KeyOperation {
 
     public Operation getOperation() {
         return operation;
+    }
+
+    public Action getWorkingMode() {
+        return workingMode;
     }
 
     public boolean equals(Object o) {
