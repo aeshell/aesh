@@ -21,6 +21,7 @@ import java.util.List;
 
 /**
  * A simple in-memory history implementation
+ * By default max size is 500
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -31,25 +32,28 @@ public class InMemoryHistory implements History {
     private int lastSearchedId = 0;
     private String current;
     private SearchDirection searchDirection = SearchDirection.REVERSE;
-    private int maxSize = 500;
+    private int maxSize;
 
     public InMemoryHistory() {
-        historyList = new ArrayList<String>();
+        this(500);
     }
 
     public InMemoryHistory(int maxSize) {
         this.maxSize = maxSize;
         historyList = new ArrayList<String>();
+        current = "";
     }
 
     @Override
     public void push(String entry) {
-        if(historyList.size() >= maxSize) {
-            historyList.remove(0);
+        if(entry != null && entry.trim().length() > 0) {
+            if(historyList.size() >= maxSize)
+                historyList.remove(0);
+
+            historyList.add(entry);
+            lastFetchedId = size();
+            lastSearchedId = 0;
         }
-        historyList.add(entry);
-        lastFetchedId = size();
-        lastSearchedId = 0;
     }
 
     @Override
@@ -65,8 +69,8 @@ public class InMemoryHistory implements History {
 
     @Override
     public String get(int index) {
-        lastFetchedId = index;
-        return new String(historyList.get(index));
+        //lastFetchedId = index;
+        return historyList.get(index);
     }
 
    @Override
@@ -103,9 +107,12 @@ public class InMemoryHistory implements History {
 
         if(lastFetchedId < size()-1)
             return get(++lastFetchedId);
-        else {
+        else if(lastFetchedId == size()-1) {
+            lastFetchedId++;
             return getCurrent();
         }
+        else
+            return getCurrent();
     }
 
     @Override
@@ -147,6 +154,4 @@ public class InMemoryHistory implements History {
     public String getCurrent() {
         return current;
     }
-
-
 }
