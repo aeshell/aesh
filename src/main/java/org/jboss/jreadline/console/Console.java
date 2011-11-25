@@ -48,6 +48,7 @@ public class Console {
     private EditMode editMode;
     private History history;
     private List<Completion> completionList;
+    private Settings settings;
 
     private Action prevAction = Action.EDIT;
 
@@ -71,6 +72,7 @@ public class Console {
                 settings.getHistorySize());
 
         completionList = new ArrayList<Completion>();
+        this.settings = settings;
     }
 
     private void setTerminal(Terminal term, InputStream in, OutputStream out) {
@@ -111,7 +113,7 @@ public class Console {
     public String read(String prompt) throws IOException {
         buffer.reset(prompt);
         terminal.write(buffer.getPrompt());
-        StringBuilder searchTerm = null;
+        StringBuilder searchTerm = new StringBuilder();
         String result = null;
 
         while(true) {
@@ -167,12 +169,14 @@ public class Console {
 
                     case PREV_WORD:
                         history.setSearchDirection(SearchDirection.REVERSE);
-                        result = history.search(searchTerm.toString());
+                        if (searchTerm.length() > 0)
+                            result = history.search(searchTerm.toString());
                         break;
 
                     case NEXT_WORD:
                         history.setSearchDirection(SearchDirection.FORWARD);
-                        result = history.search(searchTerm.toString());
+                        if(searchTerm.length() > 0)
+                            result = history.search(searchTerm.toString());
                         break;
 
                     case PREV_BIG_WORD:
@@ -217,17 +221,16 @@ public class Console {
                 if (editMode.getCurrentAction() == Action.SEARCH) {
                     if (searchTerm.length() == 0) {
                         if(result != null)
-                            printSearch("", result.toString());
+                            printSearch("", result);
                         else
                             printSearch("", "");
                     }
                     else {
                         if (result == null) {
                             //beep();
-                            //System.out.println("result");
                         }
                         else {
-                            printSearch(searchTerm.toString(), result.toString());
+                            printSearch(searchTerm.toString(), result);
                         }
                     }
                 }
@@ -270,7 +273,7 @@ public class Console {
                 prevAction = Action.NEWLINE;
                 //moveToEnd();
                 printNewline(); // output newline
-                return buffer.getLine().toString();
+                return buffer.getLine();
             }
             else if(action == Action.UNDO) {
                 undo();
@@ -324,23 +327,33 @@ public class Console {
             history.setCurrent(buffer.getLine());
         }
         //get next
-        if(first) {
-            String next = history.getNextFetch();
-            if(next != null) {
-                buffer.setLine(next);
-                moveCursor(buffer.length()-buffer.getCursor());
-                redrawLine();
-            }
-        }
+        String fromHistory;
+        if(first)
+            fromHistory = history.getNextFetch();
         // get previous
-        else {
-           String prev = history.getPreviousFetch();
-            if(prev != null) {
-                buffer.setLine(prev);
-                //buffer.setCursor(buffer.length());
-                moveCursor(buffer.length()-buffer.getCursor());
-                redrawLine();
+        else
+           fromHistory = history.getPreviousFetch();
+
+        if(fromHistory != null) {
+            //must make sure that there are enough space for the
+            // line thats about to be injected
+            if(fromHistory.length() > getTerminalWidth() &&
+                    fromHistory.length() > buffer.getLine().length()) {
+                int currentRow = getCurrentRow();
+                //logger.info("Current row: "+currentRow);
+                if(currentRow > -1) {
+                    int cursorRow = buffer.getCursorWithPrompt() / getTerminalWidth();
+                    if(currentRow + (fromHistory.length() / getTerminalWidth()) - cursorRow >= getTerminalHeight()) {
+                        int numNewRows = currentRow + (fromHistory.length() / getTerminalWidth()) - cursorRow - getTerminalHeight();
+                        if(numNewRows > 0) {
+                            terminal.write(Buffer.printAnsi(numNewRows+"S"));
+                        }
+                    }
+                }
             }
+            buffer.setLine(fromHistory);
+            moveCursor(buffer.length()-buffer.getCursor());
+            redrawLine();
         }
         prevAction = Action.HISTORY;
     }
@@ -350,10 +363,37 @@ public class Console {
     }
 
     private void writeChar(int c) throws IOException {
-       buffer.write((char) c);
-       terminal.write((char) c);
+        buffer.write((char) c);
+        terminal.write((char) c);
 
-       redrawLineFromCursor();
+        // add a 'fake' new line when inserting at the edge of terminal
+        if(buffer.getCursorWithPrompt() > getTerminalWidth() &&
+                buffer.getCursorWithPrompt() % getTerminalWidth() == 1) {
+           terminal.write((char) 32);
+            terminal.write((char) 13);
+        }
+
+        // if we insert somewhere other than the end of the line we need to redraw from cursor
+        if(buffer.getCursor() < buffer.length()) {
+            //check if we just started a new line, if we did we need to make sure that we add one
+            if(buffer.totalLength() > getTerminalWidth() &&
+                    (buffer.totalLength()-1) % getTerminalWidth() == 1) {
+                int ansiCurrentRow = getCurrentRow();
+                int currentRow = (buffer.getCursorWithPrompt() / getTerminalWidth());
+                if(currentRow > 0 && buffer.getCursorWithPrompt() % getTerminalWidth() == 0)
+                    currentRow--;
+
+                int totalRows = buffer.totalLength() / getTerminalWidth();
+                if(totalRows > 0 && buffer.totalLength() % getTerminalWidth() == 0)
+                    totalRows--;
+
+                if(ansiCurrentRow+(totalRows-currentRow) > getTerminalHeight()) {
+                    terminal.write(Buffer.printAnsi("1S")); //adding a line
+                    terminal.write(Buffer.printAnsi("1A")); // moving up a line
+                }
+            }
+            redrawLine();
+        }
     }
 
     /**
@@ -406,7 +446,7 @@ public class Console {
      * @throws IOException if getCursorPosition() fails
      */
     private void addActionToUndoStack() throws IOException {
-        UndoAction ua = new UndoAction(buffer.getCursor(), buffer.getLine().toString());
+        UndoAction ua = new UndoAction(buffer.getCursor(), buffer.getLine());
         undoManager.addUndo(ua);
     }
 
@@ -453,8 +493,9 @@ public class Console {
 
             terminal.write(buffer.move(where, getTerminalWidth(), true));
         }
-        else
+        else {
             terminal.write(buffer.move(where, getTerminalWidth()));
+        }
     }
 
     private void redrawLineFromCursor() throws IOException {
@@ -468,58 +509,43 @@ public class Console {
     }
 
     private void redrawLine() throws IOException {
-        drawLine(buffer.getPrompt()+buffer.getLine().toString());
+        drawLine(buffer.getPrompt()+ buffer.getLine());
     }
 
     private void drawLine(String line) throws IOException {
-//        System.out.println("line: "+line+", size:"+line.length());
-//        System.out.println("terminal width:"+getTerminalWidth());
-        //need to clear more than one line
+       //need to clear more than one line
         if(line.length() > getTerminalWidth() ||
-                (line.length()+buffer.getDelta() > getTerminalWidth())) {
-//            System.out.println("drawing MANY line");
-        int lineFromStart = 0;
-        if(buffer.getCursor() > 0)
-            lineFromStart = buffer.getCursor() / getTerminalWidth();
+                (line.length() + Math.abs(buffer.getDelta()) > getTerminalWidth())) {
 
-            int totalLines =
-                    ((line.length()+buffer.getDelta()) / getTerminalWidth()) + 1;
-            //if((1+totalLines) * getTerminalWidth() < line.length())
-            //    totalLines += 1;
-            //System.out.println("lineFromStart:"+lineFromStart+", totalLines:"+totalLines);
-            //System.out.println("delta: "+buffer.getDelta());
+            int currentRow = 0;
+            if(buffer.getCursorWithPrompt() > 0)
+                currentRow = buffer.getCursorWithPrompt() / getTerminalWidth();
+            if(currentRow > 0 && buffer.getCursorWithPrompt() % getTerminalWidth() == 0)
+                currentRow--;
 
             terminal.write(Buffer.printAnsi("s")); //save cursor
 
-            if(lineFromStart > 0)
-            for(int i=0; i<lineFromStart; i++)
-                terminal.write(Buffer.printAnsi("A")); //move to top
+            if(currentRow > 0)
+                for(int i=0; i<currentRow; i++)
+                    terminal.write(Buffer.printAnsi("A")); //move to top
 
-            terminal.write(Buffer.printAnsi("0G"));
-            //terminal.write(Buffer.printAnsi("2K")); // clear line
-
-            //terminal.write(Buffer.printAnsi("0G")); //move cursor to 0
-
-            /*
-            for(int i=0; i < totalLines; i++) {
-                terminal.write(Buffer.printAnsi("B")); // move down
-                terminal.write(Buffer.printAnsi("2K")); // clear line
-            }
-            for(int i=0; i < totalLines; i++)
-                terminal.write(Buffer.printAnsi("A")); // move up
-                */
+            terminal.write(Buffer.printAnsi("0G")); //clear
 
             terminal.write(line);
-            for(int i=0; i< buffer.getDelta(); i++)
-                terminal.write(' ');
+            //if the current line.length < compared to previous we add spaces to the end
+            // to overwrite the old chars (wtb a better way of doing this)
+            if(buffer.getDelta() < 0) {
+                StringBuilder sb = new StringBuilder();
+                for(int i=0; i > buffer.getDelta(); i--)
+                    sb.append(' ');
+                terminal.write(sb.toString());
+            }
 
             // move cursor to saved pos
             terminal.write(Buffer.printAnsi("u"));
-
         }
         // only clear the current line
         else {
-//            System.out.println("redrawing one line");
             terminal.write(Buffer.printAnsi("s")); //save cursor
             //move cursor to 0. - need to do this to clear the entire line
             terminal.write(Buffer.printAnsi("0G"));
@@ -599,7 +625,7 @@ public class Console {
 
         List<String> possibleCompletions = new ArrayList<String>();
         for(Completion completion : completionList) {
-            List<String> newCompletions = completion.complete(buffer.getLine().toString(), buffer.getCursor());
+            List<String> newCompletions = completion.complete(buffer.getLine(), buffer.getCursor());
             if(newCompletions != null && !newCompletions.isEmpty())
                 possibleCompletions.addAll( newCompletions);
         }
@@ -646,7 +672,7 @@ public class Console {
      * @throws java.io.IOException stream
      */
     private void displayCompletion(String completion, boolean appendSpace) throws IOException {
-        if(completion.startsWith(buffer.getLine().toString())) {
+        if(completion.startsWith(buffer.getLine())) {
             performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
             buffer.write(completion);
             terminal.write(completion);
@@ -682,13 +708,72 @@ public class Console {
     }
 
     private void syncCursor() throws IOException {
-        if(buffer.getCursor() != buffer.getLine().toString().length())
+        if(buffer.getCursor() != buffer.getLine().length())
             terminal.write(Buffer.printAnsi((
                     Math.abs( buffer.getCursor()-
-                            buffer.getLine().toString().length())+"D")));
+                            buffer.getLine().length())+"D")));
 
     }
 
+    /**
+     * Return the row position if we use a ansi terminal
+     * Send a terminal: '<ESC>[6n'
+     * and we receive the position as: '<ESC>[n;mR'
+     * where n = current row and m = current column
+     *
+     * @return current row
+     */
+    private int getCurrentRow() {
+        if(settings.isAnsiConsole()) {
+            try {
+                terminal.write(Buffer.printAnsi("6n"));
+                StringBuilder builder = new StringBuilder(8);
+                int row;
+                while((row = settings.getInputStream().read()) > -1 && row != 'R') {
+                    //while((row = settings.getInputStream().read()) > -1 && row != 'R' && row != ';') {
+                    if (row != 27 && row != '[') {
+                        builder.append((char) row);
+                    }
+                }
+                //return Integer.parseInt(builder.toString());
+                return Integer.parseInt(builder.substring(0, builder.indexOf(";")));
+            }
+            catch (Exception e) {
+//                if(settings.isLogging())
+//                    logger.warning("Failed to find current row: "+e.getMessage());
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    private int getCurrentColumn() {
+        if(settings.isAnsiConsole()) {
+            try {
+                terminal.write(Buffer.printAnsi("6n"));
+                StringBuilder builder = new StringBuilder(8);
+                int row;
+                while((row = settings.getInputStream().read()) > -1 && row != 'R' ) {
+                    if (row != 27 && row != '[') {
+                        builder.append((char) row);
+                    }
+                }
+                return Integer.parseInt(builder.substring(builder.lastIndexOf(";") + 1, builder.length()));
+            }
+            catch (Exception e) {
+//                if(settings.isLogging())
+//                    logger.warning("Failed to find current row: "+e.getMessage());
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Clear a ansi terminal
+     *
+     * @throws IOException stream
+     */
     private void clear() throws IOException {
         //first clear console
         terminal.write(Buffer.printAnsi("2J"));

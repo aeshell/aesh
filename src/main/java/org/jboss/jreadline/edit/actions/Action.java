@@ -27,6 +27,7 @@ public enum Action {
     YANK,
     CHANGE,
     EDIT,
+    COMMAND,
     HISTORY,
     SEARCH,
     // MISC

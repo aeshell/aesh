@@ -30,7 +30,7 @@ public class Buffer {
     private int cursor = 0;
     private StringBuilder line;
     private String prompt;
-    private int delta;
+    private int delta; //need to keep track of a delta for ansi terminal
 
     private final static int TAB = 4;
 
@@ -62,7 +62,7 @@ public class Buffer {
         if(promptText != null)
             prompt = promptText;
         else
-          prompt = "";
+            prompt = "";
         cursor = 0;
         line = new StringBuilder();
         delta = 0;
@@ -76,7 +76,7 @@ public class Buffer {
     }
 
     protected int totalLength() {
-        return line.length() + prompt.length();
+        return line.length() + prompt.length()+1;
     }
 
     protected int getCursor() {
@@ -84,7 +84,7 @@ public class Buffer {
     }
 
     protected int getCursorWithPrompt() {
-        return cursor + prompt.length();
+        return cursor + prompt.length()+1;
     }
 
     protected String getPrompt() {
@@ -101,6 +101,7 @@ public class Buffer {
      * Return ansi code to represent the move
      *
      * @param move where to move
+     * @param termWidth terminal width
      * @return ansi string that represent the move
      */
     protected char[] move(int move, int termWidth) {
@@ -110,37 +111,36 @@ public class Buffer {
     protected char[] move(int move, int termWidth, boolean viMode) {
         move = moveCursor(move, viMode);
 
-        //System.out.println("cursorWithPrompt:"+getCursorWithPrompt());
-        //System.out.println("current row:"+(getCursorWithPrompt() / termWidth)+
-        //        "new row:"+((move + getCursorWithPrompt()) / termWidth));
-        //have we moved to another row?
-        if(getCursorWithPrompt() / termWidth !=
-                (move + getCursorWithPrompt()) / termWidth) {
-            // if row is > 0, we need to move row number of rows down, oposite for row < 0
-            int row = ((move + getCursorWithPrompt()) / termWidth) -
-                    (getCursorWithPrompt() / termWidth) ;
-            setCursor(getCursor() + move);
-            if(row > 0) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(printAnsi(row+"B")).append(printAnsi(getCursorWithPrompt() % termWidth+"G"));
-                return sb.toString().toCharArray();
-            }
-            //going up
-            else {
-                //check if we are on the "first" row:
-                if(getCursor() <= termWidth) {
-                }
-                StringBuilder sb = new StringBuilder();
-                sb.append(printAnsi(Math.abs(row)+"A")).append(printAnsi(getCursorWithPrompt() % termWidth+"G"));
-                return sb.toString().toCharArray();
-            }
-        }
+        int currentRow = (getCursorWithPrompt() / (termWidth));
+        if(currentRow > 0 && getCursorWithPrompt() % termWidth == 0)
+            currentRow--;
 
+        int newRow = ((move + getCursorWithPrompt()) / (termWidth));
+        if(newRow > 0 && ((move + getCursorWithPrompt()) % (termWidth) == 0))
+            newRow--;
+
+        int row = newRow - currentRow;
+
+        setCursor(getCursor() + move);
+        int cursor = getCursorWithPrompt() % termWidth;
+        if(cursor == 0 && getCursorWithPrompt() > 0)
+            cursor = termWidth;
+        if(row > 0) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(printAnsi(row+"B")).append(printAnsi(cursor+"G"));
+            return sb.toString().toCharArray();
+        }
+        //going up
+        else if (row < 0) {
+            //check if we are on the "first" row:
+            if(getCursor() <= termWidth) {
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append(printAnsi(Math.abs(row)+"A")).append(printAnsi(cursor+"G"));
+            return sb.toString().toCharArray();
+        }
         //staying at the same row
         else {
-
-            setCursor(getCursor() + move);
-
             if(move < 0)
                 return printAnsi(Math.abs(move)+"D");
 
@@ -171,11 +171,11 @@ public class Buffer {
         //calculate length of table:
         int length = 0;
         for(char c : out) {
-          if(c == '\t') {
-              length += TAB;
-          }
-          else
-            length++;
+            if(c == '\t') {
+                length += TAB;
+            }
+            else
+                length++;
         }
 
         char[] ansi = new char[length+2];
@@ -248,11 +248,12 @@ public class Buffer {
     }
 
     protected void setLine(String line) {
+        delta = line.length() - this.line.length();
         this.line = new StringBuilder(line);
     }
 
     protected void delete(int start, int end) {
-        delta = end - start;
+        delta = start - end;
         line.delete(start, end);
     }
 
@@ -336,7 +337,7 @@ public class Buffer {
         StringBuilder builder = new StringBuilder();
         for(String completion : completionList)
             while(builder.length() < completion.length() &&
-                  startsWith(completion.substring(0, builder.length()+1), completionList))
+                    startsWith(completion.substring(0, builder.length()+1), completionList))
                 builder.append(completion.charAt(builder.length()));
 
         return builder.toString();
