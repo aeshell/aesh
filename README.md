@@ -6,15 +6,15 @@ JReadline is a Java library for handling console input. JReadline is a fork of j
 Features:
 ---------
 * Line editing
-* History
-* History search
+* History (search, persistence)
 * Completion
 * Emacs and Vi editing mode
 * Supports POSIX OS's and Windows
+* Easy to configure (history file & buffer size, edit mode, streams, possible to override terminal impls, etc)
 
 How to build:
 -------------
-* JReadline uses Gradle (http://gradle.org) as its build tool.*
+* JReadline uses Gradle (http://gradle.org) as its build tool.
 
 To get going:
 -------------
@@ -27,7 +27,7 @@ public class Example {
 
         String line;
         while ((line = console.read("> ")) != null) {
-            console.pushToConsole("======>\"" + line);
+            console.pushToConsole("======>\"" +line+ "\n");
 
             if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
                 break;
