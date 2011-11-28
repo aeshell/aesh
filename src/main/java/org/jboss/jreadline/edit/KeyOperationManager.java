@@ -54,6 +54,8 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(new int[]{27,79,72}, Operation.MOVE_BEGINNING));  //home
         keys.add(new KeyOperation(new int[]{27,79,70}, Operation.MOVE_END));        //end
 
+        keys.add(new KeyOperation(new int[] {27,10}, Operation.CHANGE_EDIT_MODE)); //meta-ctrl-j
+
         return keys;
     }
 
@@ -68,8 +70,21 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(new int[]{224,77}, Operation.MOVE_NEXT_CHAR)); //arrow right
         keys.add(new KeyOperation(new int[]{224,75}, Operation.MOVE_PREV_CHAR)); //arrow left
 
+        //meta, alt gr on windows
+        keys.add(new KeyOperation(new int[]{0,33}, Operation.MOVE_NEXT_WORD));   //meta-f
+        keys.add(new KeyOperation(new int[]{0,48}, Operation.MOVE_PREV_WORD));    //meta-b
+        keys.add(new KeyOperation(new int[]{0,32}, Operation.DELETE_NEXT_WORD)); //meta-d
+
+        //pgup, pgdown, end, home
+        keys.add(new KeyOperation(new int[]{224,73}, Operation.NO_ACTION));   //pgup
+        keys.add(new KeyOperation(new int[]{224,81}, Operation.NO_ACTION));   //pgdown
+        keys.add(new KeyOperation(new int[]{224,71}, Operation.MOVE_BEGINNING));  //home
+        keys.add(new KeyOperation(new int[]{224,79}, Operation.MOVE_END));        //end
+
         //div
         keys.add(new KeyOperation(new int[]{224,83}, Operation.DELETE_NEXT_CHAR)); //delete
+
+        keys.add(new KeyOperation(new int[] {0,36}, Operation.CHANGE_EDIT_MODE)); //meta-ctrl-j
 
         return keys;
     }
@@ -97,7 +112,6 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(25, Operation.PASTE_BEFORE));
 
         keys.add(new KeyOperation(new int[] {24,21}, Operation.UNDO)); //ctrl-x ctrl-u
-        keys.add(new KeyOperation(new int[] {27,10}, Operation.CHANGE_EDIT_MODE)); //meta-ctrl-j
 
         return keys;
     }
