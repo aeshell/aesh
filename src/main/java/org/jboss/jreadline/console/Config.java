@@ -16,6 +16,11 @@
  */
 package org.jboss.jreadline.console;
 
+import java.io.*;
+import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * TODO: for posix systems, it should try to read .inputrc for edit mode
  *
@@ -23,8 +28,8 @@ package org.jboss.jreadline.console;
  */
 public class Config {
 
-    private static String lineSeparator = null;
-    private static String pathSeparator = null;
+    private static String lineSeparator = System.getProperty("line.separator");
+    private static String pathSeparator = System.getProperty("file.separator");
     private static boolean posixCompatible =
             !(System.getProperty("os.name").startsWith("Windows") ||
                     System.getProperty("os.name").startsWith("OS/2"));
@@ -34,18 +39,69 @@ public class Config {
     }
 
     public static String getLineSeparator() {
-        if(lineSeparator == null)
-            lineSeparator = System.getProperty("line.separator");
         return lineSeparator;
     }
 
     public static String getPathSeparator() {
-        if(pathSeparator == null)
-            pathSeparator = System.getProperty("file.separator");
         return pathSeparator;
     }
 
-    private void parseInputrc(String fileName) {
+    /**
+     * Must be able to parse:
+     * set variablename value
+     * keyname: function-name or macro
+     * "keyseq": function-name or macro
+     *
+     * Lines starting with # are comments
+     * Lines starting with $ are conditional init constructs
+     *
+     * @param fileName
+     */
+    protected void parseInputrc(String fileName, Settings settings) throws IOException {
+        if(!new File(fileName).isFile()) {
+            System.out.println("not a file");
+            return;
+        }
+
+        Pattern variable = Pattern.compile("^set\\s+(\\S+)\\s+(\\S+)$");
+        Pattern comment = Pattern.compile("^#");
+        Pattern keyName = Pattern.compile("^\\b:\\s+\\b");
+        Pattern keySeq = Pattern.compile("^\"keyseq:\\s+\\b");
+        Pattern startConstructs = Pattern.compile("^\\$if");
+        Pattern endConstructs = Pattern.compile("^\\$endif");
+
+
+        BufferedReader reader =
+                new BufferedReader( new FileReader(fileName));
+
+        String line;
+        boolean constructMode = false;
+        while( (line = reader.readLine()) != null) {
+            System.out.println("reading line:"+line);
+
+            if(startConstructs.matcher(line).matches()) {
+                constructMode = true;
+                continue;
+            }
+            else if(endConstructs.matcher(line).matches()) {
+                constructMode = false;
+                continue;
+            }
+
+            if(constructMode) {
+
+            }
+            else {
+                System.out.println("check if line matches variable");
+                Matcher variableMatcher = variable.matcher(line);
+                if(variableMatcher.matches()) {
+                    System.out.println("found variable: "+variableMatcher.group(1));
+                    System.out.println("value:"+variableMatcher.group(2));
+                }
+
+            }
+
+        }
 
     }
 }
