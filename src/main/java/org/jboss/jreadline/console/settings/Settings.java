@@ -35,7 +35,7 @@ public class Settings {
     private File historyFile;
     private int historySize = 500; //default is 500
     private String bellStyle;
-    private boolean ansiConsole = true; //TODO: need to implement this correctly
+    private boolean ansiConsole = true;
     private InputStream inputStream;
     private OutputStream outputStream;
     private Terminal terminal;
@@ -137,7 +137,6 @@ public class Settings {
 
     /**
      * Possible to override the type of console
-     * NOTE: atm jreadline will always presume it uses and ansi console
      *
      * @param ansiConsole is it an ansi compatible console?
      */

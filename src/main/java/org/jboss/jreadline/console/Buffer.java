@@ -16,6 +16,8 @@
  */
 package org.jboss.jreadline.console;
 
+import org.jboss.jreadline.console.settings.Settings;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -168,6 +170,8 @@ public class Buffer {
      * @return ansified string
      */
     public static char[] printAnsi(char[] out) {
+        if(!Settings.getInstance().isAnsiConsole())
+            return new char[] {};
         //calculate length of table:
         int length = 0;
         for(char c : out) {

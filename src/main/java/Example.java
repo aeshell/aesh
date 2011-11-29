@@ -1,5 +1,6 @@
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.Console;
+import org.jboss.jreadline.console.settings.Settings;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -13,6 +14,8 @@ public class Example {
 
     public static void main(String[] args) throws IOException {
 
+        //Settings.getInstance().setAnsiConsole(false);
+        Settings.getInstance().setReadInputrc(false);
         Console console = new Console();
 
         PrintWriter out = new PrintWriter(System.out);

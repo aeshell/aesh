@@ -56,14 +56,18 @@ public class WindowsTerminal implements Terminal {
 
     @Override
     public void write(String out) throws IOException {
-        writer.write(out);
-        writer.flush();
+        if(out != null && out.length() > 0) {
+            writer.write(out);
+            writer.flush();
+        }
     }
 
     @Override
     public void write(char[] out) throws IOException {
-        writer.write(out);
-        writer.flush();
+        if(out != null && out.length > 0) {
+            writer.write(out);
+            writer.flush();
+        }
     }
 
     @Override

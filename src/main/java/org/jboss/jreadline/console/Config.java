@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
 import static org.jboss.jreadline.console.settings.VariableSettings.*;
 
 /**
- * TODO: for posix systems, it should try to read .inputrc for edit mode
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
