@@ -1,3 +1,8 @@
-set testing true
 
 set editing-mode vi
+
+set bell-style visible
+
+set disable-completion true
+
+set history-size 300

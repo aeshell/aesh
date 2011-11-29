@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.jreadline.console;
+package org.jboss.jreadline.console.settings;
 
+import org.jboss.jreadline.console.Config;
 import org.jboss.jreadline.edit.*;
 import org.jboss.jreadline.terminal.POSIXTerminal;
 import org.jboss.jreadline.terminal.Terminal;
@@ -38,8 +39,20 @@ public class Settings {
     private InputStream inputStream;
     private OutputStream outputStream;
     private Terminal terminal;
+    private boolean readInputrc = true;
     private File inputrc;
+    private boolean isLogging = true;
+    private String logFile;
+    private boolean disableCompletion = true;
 
+    private static final Settings INSTANCE = new Settings();
+
+    private Settings() {
+    }
+
+    public static Settings getInstance() {
+        return INSTANCE;
+    }
     /**
      * Either EMACS or VI mode.
      * EMACS is default if not set
@@ -54,7 +67,7 @@ public class Settings {
         this.editMode = editMode;
     }
 
-    protected EditMode getFullEditMode() {
+    public EditMode getFullEditMode() {
         if(Config.isOSPOSIXCompatible()) {
             if(getEditMode() == Mode.EMACS)
                 return new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
@@ -197,10 +210,69 @@ public class Settings {
     }
 
     public File getInputrc() {
+        if(inputrc == null) {
+            inputrc = new File(System.getProperty("user.home")+Config.getPathSeparator()+".inputrc");
+        }
         return inputrc;
     }
 
     public void setInputrc(File inputrc) {
         this.inputrc = inputrc;
+    }
+
+    public boolean isLogging() {
+        return isLogging;
+    }
+
+    public void setLogging(boolean logging) {
+        isLogging = logging;
+    }
+
+    public boolean isDisableCompletion() {
+        return disableCompletion;
+    }
+
+    public void setDisableCompletion(boolean disableCompletion) {
+        this.disableCompletion = disableCompletion;
+    }
+
+    /**
+     * Get log file
+     *
+     * @return log file
+     */
+    public String getLogFile() {
+        if(logFile == null)
+            logFile = "jreadline.log";
+        return logFile;
+    }
+
+    /**
+     * Specify a log file
+     *
+     * @param logFile file
+     */
+    public void setLogFile(String logFile) {
+        this.logFile = logFile;
+    }
+
+    /**
+     * Should we read config from inputrc
+     * Set to true by default
+     *
+     * @return do we?
+     */
+    public boolean doReadInputrc() {
+        return readInputrc;
+    }
+
+    /**
+     * Specify if we should read config from inputrc
+     * Set to true by default
+     *
+     * @param readInputrc specify
+     */
+    public void setReadInputrc(boolean readInputrc) {
+        this.readInputrc = readInputrc;
     }
 }

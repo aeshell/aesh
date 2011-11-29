@@ -14,38 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.jreadline.console;
+package org.jboss.jreadline.util;
 
-import junit.framework.TestCase;
 import org.jboss.jreadline.console.settings.Settings;
-import org.jboss.jreadline.edit.Mode;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 /**
+ * butt ugly logger util, but its simple and gets the job done (hopefully not too dangerous)
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ConfigTest extends TestCase {
+public class LoggerUtil {
 
-    public ConfigTest(String name) {
-        super(name);
-    }
+    private static Handler logHandler;
 
+    /**
+     *
+     * @param name class
+     * @return logger
+     */
+    public static Logger getLogger(String name) {
+        if(logHandler == null)
+            try {
+                logHandler = new FileHandler(Settings.getInstance().getLogFile());
+                logHandler.setFormatter(new SimpleFormatter());
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
 
-    public void testParseInputrc() throws IOException {
-        Config config = new Config();
-        Settings settings = Settings.getInstance();
-        settings.setInputrc(new File("src/test/resources/inputrc1"));
+        Logger log =  Logger.getLogger(name);
+        log.setUseParentHandlers(false);
+        log.addHandler(logHandler);
 
-        config.parseInputrc(settings);
-
-        assertEquals(settings.getEditMode(), Mode.VI);
-
-        assertEquals(settings.getBellStyle(), "visible");
-
-        assertEquals(settings.getHistorySize(), 300);
-
-        assertEquals(settings.isDisableCompletion(), true);
+        return log;
     }
 }

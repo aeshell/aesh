@@ -17,12 +17,9 @@
 package org.jboss.jreadline;
 
 import junit.framework.TestCase;
-import org.jboss.jreadline.console.Config;
 import org.jboss.jreadline.console.Console;
-import org.jboss.jreadline.console.Settings;
-import org.jboss.jreadline.edit.KeyOperationManager;
+import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.Mode;
-import org.jboss.jreadline.edit.ViEditMode;
 
 import java.io.*;
 
@@ -37,9 +34,11 @@ public abstract class JReadlineTestCase extends TestCase {
 
     public void assertEquals(String expected, TestBuffer buffer) throws IOException {
 
-        Settings settings = new Settings();
+        Settings settings = Settings.getInstance();
+        settings.setReadInputrc(false);
         settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
         settings.setOutputStream(new ByteArrayOutputStream());
+        settings.setEditMode(Mode.EMACS);
         Console console = new Console(settings);
 
 
@@ -62,13 +61,13 @@ public abstract class JReadlineTestCase extends TestCase {
 
     public void assertEqualsViMode(String expected, TestBuffer buffer) throws IOException {
 
-        Console console;
-        Settings settings = new Settings();
+        Settings settings = Settings.getInstance();
+        settings.setReadInputrc(false);
         settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
         settings.setOutputStream(new ByteArrayOutputStream());
         settings.setEditMode(Mode.VI);
 
-        console = new Console(settings);
+        Console console = new Console(settings);
 
         String in = null;
         while (true) {
@@ -83,6 +82,7 @@ public abstract class JReadlineTestCase extends TestCase {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         assertEquals(expected, in);
     }
 }

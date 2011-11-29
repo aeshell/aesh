@@ -16,10 +16,14 @@
  */
 package org.jboss.jreadline.console;
 
+import org.jboss.jreadline.console.settings.Settings;
+import org.jboss.jreadline.edit.Mode;
+
 import java.io.*;
-import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.jboss.jreadline.console.settings.VariableSettings.*;
 
 /**
  * TODO: for posix systems, it should try to read .inputrc for edit mode
@@ -55,29 +59,32 @@ public class Config {
      * Lines starting with # are comments
      * Lines starting with $ are conditional init constructs
      *
-     * @param fileName
      */
-    protected void parseInputrc(String fileName, Settings settings) throws IOException {
-        if(!new File(fileName).isFile()) {
+    protected static void parseInputrc(Settings settings) throws IOException {
+        if(!settings.getInputrc().isFile()) {
             System.out.println("not a file");
             return;
         }
 
-        Pattern variable = Pattern.compile("^set\\s+(\\S+)\\s+(\\S+)$");
-        Pattern comment = Pattern.compile("^#");
-        Pattern keyName = Pattern.compile("^\\b:\\s+\\b");
-        Pattern keySeq = Pattern.compile("^\"keyseq:\\s+\\b");
+        Pattern variablePattern = Pattern.compile("^set\\s+(\\S+)\\s+(\\S+)$");
+        Pattern commentPattern = Pattern.compile("^#.*");
+        Pattern keyNamePattern = Pattern.compile("^\\b:\\s+\\b");
+        Pattern keySeqPattern = Pattern.compile("^\"keyseq:\\s+\\b");
         Pattern startConstructs = Pattern.compile("^\\$if");
         Pattern endConstructs = Pattern.compile("^\\$endif");
 
 
         BufferedReader reader =
-                new BufferedReader( new FileReader(fileName));
+                new BufferedReader( new FileReader(settings.getInputrc()));
 
         String line;
         boolean constructMode = false;
         while( (line = reader.readLine()) != null) {
-            System.out.println("reading line:"+line);
+            if(line.trim().length() < 1)
+                continue;
+            //first check if its a comment
+            if(commentPattern.matcher(line).matches())
+                continue;
 
             if(startConstructs.matcher(line).matches()) {
                 constructMode = true;
@@ -91,17 +98,51 @@ public class Config {
             if(constructMode) {
 
             }
+            //everything other than if/else
             else {
-                System.out.println("check if line matches variable");
-                Matcher variableMatcher = variable.matcher(line);
+                // variable settings
+                Matcher variableMatcher = variablePattern.matcher(line);
                 if(variableMatcher.matches()) {
-                    System.out.println("found variable: "+variableMatcher.group(1));
-                    System.out.println("value:"+variableMatcher.group(2));
+                    parseVariables(variableMatcher.group(1), variableMatcher.group(2), settings);
                 }
-
             }
 
         }
 
+    }
+
+    private static void parseVariables(String variable, String value, Settings settings) {
+        if (variable.equals(EDITING_MODE.getVariable())) {
+            if(EDITING_MODE.getValues().contains(value)) {
+                if(value.equals("vi"))
+                    settings.setEditMode(Mode.VI);
+                else
+                    settings.setEditMode(Mode.EMACS);
+            }
+            // should log some error
+            else
+                System.out.println("Value "+value+" not accepted for: "+variable+
+                        ", only: "+EDITING_MODE.getValues());
+
+        }
+        else if(variable.equals(BELL_STYLE.getVariable())) {
+            if(BELL_STYLE.getValues().contains(value))
+                settings.setBellStyle(value);
+            else
+                System.out.println("Value "+value+" not accepted for: "+variable+
+                        ", only: "+BELL_STYLE.getValues());
+        }
+        else if(variable.equals(HISTORY_SIZE.getVariable())) {
+            try {
+                settings.setHistorySize(Integer.parseInt(value));
+            }
+            catch (NumberFormatException nfe) {
+                //log exception here
+            }
+        }
+        else if(variable.equals(DISABLE_COMPLETION.getVariable())) {
+            if(DISABLE_COMPLETION.getValues().contains(value))
+                settings.setDisableCompletion(Boolean.parseBoolean(value));
+        }
     }
 }

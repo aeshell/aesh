@@ -17,6 +17,7 @@
 package org.jboss.jreadline.console;
 
 import org.jboss.jreadline.complete.Completion;
+import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.*;
 import org.jboss.jreadline.edit.actions.*;
 import org.jboss.jreadline.history.FileHistory;
@@ -25,11 +26,13 @@ import org.jboss.jreadline.history.SearchDirection;
 import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.undo.UndoAction;
 import org.jboss.jreadline.undo.UndoManager;
+import org.jboss.jreadline.util.LoggerUtil;
 import org.jboss.jreadline.util.Parser;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * A console reader.
@@ -55,11 +58,16 @@ public class Console {
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
 
+    private Logger logger;
+
     public Console() throws IOException {
-        this(new Settings());
+        this(Settings.getInstance());
     }
 
     public Console(Settings settings) throws IOException {
+        if(Settings.getInstance().doReadInputrc())
+            Config.parseInputrc(Settings.getInstance());
+
         setTerminal(settings.getTerminal(),
                 settings.getInputStream(), settings.getOutputStream());
 
@@ -73,6 +81,8 @@ public class Console {
 
         completionList = new ArrayList<Completion>();
         this.settings = settings;
+
+        logger = LoggerUtil.getLogger(getClass().getName());
     }
 
     private void setTerminal(Terminal term, InputStream in, OutputStream out) {
@@ -739,8 +749,8 @@ public class Console {
                 return Integer.parseInt(builder.substring(0, builder.indexOf(";")));
             }
             catch (Exception e) {
-//                if(settings.isLogging())
-//                    logger.warning("Failed to find current row: "+e.getMessage());
+                if(settings.isLogging())
+                    logger.warning("Failed to find current row with ansi code: "+e.getMessage());
                 return -1;
             }
         }
@@ -761,8 +771,8 @@ public class Console {
                 return Integer.parseInt(builder.substring(builder.lastIndexOf(";") + 1, builder.length()));
             }
             catch (Exception e) {
-//                if(settings.isLogging())
-//                    logger.warning("Failed to find current row: "+e.getMessage());
+                if(settings.isLogging())
+                    logger.warning("Failed to find current column with ansi code: "+e.getMessage());
                 return -1;
             }
         }
