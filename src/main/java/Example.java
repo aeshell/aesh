@@ -16,6 +16,8 @@ public class Example {
 
         //Settings.getInstance().setAnsiConsole(false);
         Settings.getInstance().setReadInputrc(false);
+        //Settings.getInstance().setHistoryDisabled(true);
+        //Settings.getInstance().setHistoryPersistent(false);
         Console console = new Console();
 
         PrintWriter out = new PrintWriter(System.out);

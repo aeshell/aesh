@@ -3,6 +3,6 @@ set editing-mode vi
 
 set bell-style visible
 
-set disable-completion true
+set disable-completion on
 
 set history-size 300

@@ -18,6 +18,7 @@ package org.jboss.jreadline.history;
 
 import org.jboss.jreadline.JReadlineTestCase;
 import org.jboss.jreadline.TestBuffer;
+import org.jboss.jreadline.console.settings.Settings;
 
 import java.io.IOException;
 
@@ -52,6 +53,17 @@ public class HistoryTest extends JReadlineTestCase {
 
         assertEquals("1234", buffer);
 
+        Settings.getInstance().setHistoryDisabled(true);
+
+        buffer = new TestBuffer();
+        buffer.append("1234")
+                .append(TestBuffer.getNewLine()).append("567")
+                .append(TestBuffer.getNewLine())
+                .append(TestBuffer.EMACS_HISTORY_PREV).append(TestBuffer.getNewLine());
+
+        assertEquals("", buffer);
+
+        Settings.getInstance().resetToDefaults();
     }
 
     public void testHistorySize() {
@@ -62,6 +74,6 @@ public class HistoryTest extends JReadlineTestCase {
 
 
         assertEquals(20, history.size());
-        assertEquals("24", history.getPreviousFetch().toString());
+        assertEquals("24", history.getPreviousFetch());
     }
 }

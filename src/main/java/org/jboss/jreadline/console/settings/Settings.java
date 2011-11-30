@@ -33,7 +33,9 @@ public class Settings {
 
     private Mode editMode = Mode.EMACS;
     private File historyFile;
-    private int historySize = 500; //default is 500
+    private int historySize = 500;
+    private boolean historyDisabled = false;
+    private boolean historyPersistent = true;
     private String bellStyle;
     private boolean ansiConsole = true;
     private InputStream inputStream;
@@ -43,7 +45,7 @@ public class Settings {
     private File inputrc;
     private boolean isLogging = true;
     private String logFile;
-    private boolean disableCompletion = true;
+    private boolean disableCompletion = false;
 
     private static final Settings INSTANCE = new Settings();
 
@@ -52,6 +54,22 @@ public class Settings {
 
     public static Settings getInstance() {
         return INSTANCE;
+    }
+
+    public void resetToDefaults() {
+        editMode = Mode.EMACS;
+        historyFile = null;
+        historySize = 500;
+        historyDisabled = false;
+        historyPersistent = true;
+        bellStyle = null;
+        ansiConsole = true;
+        inputStream = null;
+        outputStream = null;
+        terminal = null;
+        readInputrc = true;
+        logFile = null;
+        disableCompletion = false;
     }
     /**
      * Either EMACS or VI mode.
@@ -67,6 +85,11 @@ public class Settings {
         this.editMode = editMode;
     }
 
+    /**
+     * Get EditMode based on os and mode
+     *
+     * @return edit mode
+     */
     public EditMode getFullEditMode() {
         if(Config.isOSPOSIXCompatible()) {
             if(getEditMode() == Mode.EMACS)
@@ -103,6 +126,7 @@ public class Settings {
 
     /**
      * By default history size is 500
+     * If its set to -1 the size is unlimited (Integer.MAX_VALUE)
      *
      * @return size
      */
@@ -110,6 +134,12 @@ public class Settings {
         return historySize;
     }
 
+    /**
+     * By default history size is 500
+     * If its set to -1 the size is unlimited (Integer.MAX_VALUE)
+     *
+     * @param historySize size
+     */
     public void setHistorySize(int historySize) {
         this.historySize = historySize;
     }
@@ -208,6 +238,12 @@ public class Settings {
         this.terminal = terminal;
     }
 
+    /**
+     * Get the inputrc file, if not set it defaults to:
+     * System.getProperty("user.home")+Config.getPathSeparator()+".inputrc"
+     *
+     * @return inputrc
+     */
     public File getInputrc() {
         if(inputrc == null) {
             inputrc = new File(System.getProperty("user.home")+Config.getPathSeparator()+".inputrc");
@@ -219,18 +255,40 @@ public class Settings {
         this.inputrc = inputrc;
     }
 
+    /**
+     * Are we logging?
+     *
+     * @return logging
+     */
     public boolean isLogging() {
         return isLogging;
     }
 
+    /**
+     * Set logging, by default set to true
+     *
+     * @param logging do log
+     */
     public void setLogging(boolean logging) {
         isLogging = logging;
     }
 
+    /**
+     * Is completion disabled?
+     * Set to false by default
+     *
+     * @return dis completion
+     */
     public boolean isDisableCompletion() {
         return disableCompletion;
     }
 
+    /**
+     * Set to true do disable completion
+     * Set to false by default
+     *
+     * @param disableCompletion dis
+     */
     public void setDisableCompletion(boolean disableCompletion) {
         this.disableCompletion = disableCompletion;
     }
@@ -273,5 +331,45 @@ public class Settings {
      */
     public void setReadInputrc(boolean readInputrc) {
         this.readInputrc = readInputrc;
+    }
+
+    /**
+     * Is history disabled
+     * Set to true to disable history
+     *
+     * @return historyDisabled
+     */
+    public boolean isHistoryDisabled() {
+        return historyDisabled;
+    }
+
+    /**
+     * Is history disabled
+     * Set to true to disable history
+     *
+     * @param historyDisabled history
+     */
+    public void setHistoryDisabled(boolean historyDisabled) {
+        this.historyDisabled = historyDisabled;
+    }
+
+    /**
+     * Is the history list persisted to file.
+     * Set to true by default
+     *
+     * @return is history persistent
+     */
+    public boolean isHistoryPersistent() {
+        return historyPersistent;
+    }
+
+    /**
+     * Is the history list persisted to file.
+     * Set to true by default
+     *
+     * @param historyPersistent history
+     */
+    public void setHistoryPersistent(boolean historyPersistent) {
+        this.historyPersistent = historyPersistent;
     }
 }

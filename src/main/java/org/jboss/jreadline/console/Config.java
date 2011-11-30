@@ -18,8 +18,10 @@ package org.jboss.jreadline.console;
 
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.Mode;
+import org.jboss.jreadline.util.LoggerUtil;
 
 import java.io.*;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,6 +62,7 @@ public class Config {
      *
      */
     protected static void parseInputrc(Settings settings) throws IOException {
+        Logger logger = LoggerUtil.getLogger("Config");
         if(!settings.getInputrc().isFile()) {
             System.out.println("not a file");
             return;
@@ -111,6 +114,7 @@ public class Config {
     }
 
     private static void parseVariables(String variable, String value, Settings settings) {
+        Logger logger = LoggerUtil.getLogger("Config");
         if (variable.equals(EDITING_MODE.getVariable())) {
             if(EDITING_MODE.getValues().contains(value)) {
                 if(value.equals("vi"))
@@ -120,7 +124,7 @@ public class Config {
             }
             // should log some error
             else
-                System.out.println("Value "+value+" not accepted for: "+variable+
+                logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+EDITING_MODE.getValues());
 
         }
@@ -128,7 +132,7 @@ public class Config {
             if(BELL_STYLE.getValues().contains(value))
                 settings.setBellStyle(value);
             else
-                System.out.println("Value "+value+" not accepted for: "+variable+
+                logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+BELL_STYLE.getValues());
         }
         else if(variable.equals(HISTORY_SIZE.getVariable())) {
@@ -136,12 +140,20 @@ public class Config {
                 settings.setHistorySize(Integer.parseInt(value));
             }
             catch (NumberFormatException nfe) {
-                //log exception here
+                logger.warning("Value "+value+" not accepted for: "+variable+
+                        ", it must be an integer.");
             }
         }
         else if(variable.equals(DISABLE_COMPLETION.getVariable())) {
-            if(DISABLE_COMPLETION.getValues().contains(value))
-                settings.setDisableCompletion(Boolean.parseBoolean(value));
+            if(DISABLE_COMPLETION.getValues().contains(value)) {
+                if(value.equals("on"))
+                    settings.setDisableCompletion(true);
+                else
+                    settings.setDisableCompletion(false);
+            }
+            else
+                logger.warning("Value "+value+" not accepted for: "+variable+
+                        ", only: "+DISABLE_COMPLETION.getValues());
         }
     }
 }

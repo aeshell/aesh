@@ -22,6 +22,7 @@ import org.jboss.jreadline.edit.*;
 import org.jboss.jreadline.edit.actions.*;
 import org.jboss.jreadline.history.FileHistory;
 import org.jboss.jreadline.history.History;
+import org.jboss.jreadline.history.InMemoryHistory;
 import org.jboss.jreadline.history.SearchDirection;
 import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.undo.UndoAction;
@@ -76,8 +77,12 @@ public class Console {
         undoManager = new UndoManager();
         pasteManager = new PasteManager();
         buffer = new Buffer(null);
-        history = new FileHistory(settings.getHistoryFile().getAbsolutePath(),
-                settings.getHistorySize());
+        if(settings.isHistoryPersistent())
+            history = new FileHistory(settings.getHistoryFile().getAbsolutePath(),
+                    settings.getHistorySize());
+        else
+            history = new InMemoryHistory(settings.getHistorySize());
+
 
         completionList = new ArrayList<Completion>();
         this.settings = settings;
@@ -100,6 +105,10 @@ public class Console {
 
     public int getTerminalWidth() {
         return terminal.getWidth();
+    }
+
+    public History getHistory() {
+        return history;
     }
 
     public void pushToConsole(String input) throws IOException {
@@ -157,7 +166,7 @@ public class Console {
             }
             // For search movement is used a bit differently.
             // It only triggers what kind of search action thats performed
-            else if(action == Action.SEARCH) {
+            else if(action == Action.SEARCH && !settings.isHistoryDisabled()) {
 
                 switch (operation.getMovement()) {
                     //init a previous search
@@ -272,9 +281,9 @@ public class Console {
             }
             else if(action == Action.HISTORY) {
                 if(operation.getMovement() == Movement.NEXT)
-                    getHistory(true);
+                    getHistoryElement(true);
                 else if(operation.getMovement() == Movement.PREV)
-                    getHistory(false);
+                    getHistoryElement(false);
             }
             else if(action == Action.NEWLINE) {
                 // clear the undo stack for each new line
@@ -309,7 +318,7 @@ public class Console {
             }
 
             //a hack to get history working
-            if(action == Action.HISTORY)
+            if(action == Action.HISTORY && !settings.isHistoryDisabled())
                 prevAction = action;
 
         }
@@ -331,7 +340,9 @@ public class Console {
         }
     }
 
-    private void getHistory(boolean first) throws IOException {
+    private void getHistoryElement(boolean first) throws IOException {
+        if(settings.isHistoryDisabled())
+            return;
         // first add current line to history
         if(prevAction == Action.NEWLINE) {
             history.setCurrent(buffer.getLine());
@@ -369,7 +380,8 @@ public class Console {
     }
 
     private void addToHistory(String line) {
-        history.push(line);
+        if(!settings.isHistoryDisabled())
+            history.push(line);
     }
 
     private void writeChar(int c) throws IOException {
@@ -758,7 +770,7 @@ public class Console {
     }
 
     private int getCurrentColumn() {
-        if(settings.isAnsiConsole()) {
+        if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
             try {
                 terminal.write(Buffer.printAnsi("6n"));
                 StringBuilder builder = new StringBuilder(8);
@@ -784,7 +796,7 @@ public class Console {
      *
      * @throws IOException stream
      */
-    private void clear() throws IOException {
+    public void clear() throws IOException {
         //first clear console
         terminal.write(Buffer.printAnsi("2J"));
         //move cursor to correct position

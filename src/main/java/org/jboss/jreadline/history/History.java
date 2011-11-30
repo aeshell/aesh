@@ -16,6 +16,8 @@
  */
 package org.jboss.jreadline.history;
 
+import java.util.List;
+
 /**
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -43,5 +45,7 @@ public interface History {
     void setCurrent(String line);
 
     String getCurrent();
+
+    List<String> getAll();
 
 }

@@ -39,7 +39,10 @@ public class InMemoryHistory implements History {
     }
 
     public InMemoryHistory(int maxSize) {
-        this.maxSize = maxSize;
+        if(maxSize == -1)
+            this.maxSize = Integer.MAX_VALUE;
+        else
+            this.maxSize = maxSize;
         historyList = new ArrayList<String>();
         current = "";
     }
@@ -153,5 +156,10 @@ public class InMemoryHistory implements History {
     @Override
     public String getCurrent() {
         return current;
+    }
+
+    @Override
+    public List<String> getAll() {
+        return historyList;
     }
 }

@@ -36,6 +36,7 @@ public class ConfigTest extends TestCase {
     public void testParseInputrc() throws IOException {
         Config config = new Config();
         Settings settings = Settings.getInstance();
+        settings.resetToDefaults();
         settings.setInputrc(new File("src/test/resources/inputrc1"));
 
         config.parseInputrc(settings);
