@@ -162,4 +162,12 @@ public class InMemoryHistory implements History {
     public List<String> getAll() {
         return historyList;
     }
+
+    @Override
+    public void clear() {
+        lastFetchedId = -1;
+        lastSearchedId = 0;
+        historyList.clear();
+        current = "";
+    }
 }

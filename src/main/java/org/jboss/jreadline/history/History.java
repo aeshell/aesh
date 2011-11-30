@@ -48,4 +48,6 @@ public interface History {
 
     List<String> getAll();
 
+    void clear();
+
 }

@@ -64,6 +64,7 @@ public class HistoryTest extends JReadlineTestCase {
         assertEquals("", buffer);
 
         Settings.getInstance().resetToDefaults();
+
     }
 
     public void testHistorySize() {
@@ -75,5 +76,15 @@ public class HistoryTest extends JReadlineTestCase {
 
         assertEquals(20, history.size());
         assertEquals("24", history.getPreviousFetch());
+    }
+
+    public void testClear() {
+        History history = new InMemoryHistory(10);
+        history.push("1");
+        history.push("2");
+
+        assertEquals("2", history.getPreviousFetch());
+        history.clear();
+        assertEquals(null, history.getPreviousFetch());
     }
 }
