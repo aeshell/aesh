@@ -734,7 +734,7 @@ public class Console {
      * @return current row
      */
     private int getCurrentRow() {
-        if(settings.isAnsiConsole()) {
+        if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
             try {
                 terminal.write(Buffer.printAnsi("6n"));
                 StringBuilder builder = new StringBuilder(8);
