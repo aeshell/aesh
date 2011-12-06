@@ -19,6 +19,8 @@ package org.jboss.jreadline.edit;
 import org.jboss.jreadline.edit.actions.Action;
 import org.jboss.jreadline.edit.actions.Operation;
 
+import java.util.Arrays;
+
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
@@ -91,6 +93,10 @@ public class KeyOperation {
 
     public String toString() {
         return "Operation: "+operation;
+    }
+
+    public boolean equalValues(int[] values) {
+        return Arrays.equals(keyValues, values);
     }
 
 

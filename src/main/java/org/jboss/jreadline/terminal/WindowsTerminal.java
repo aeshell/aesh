@@ -28,7 +28,6 @@ import java.io.*;
  */
 public class WindowsTerminal implements Terminal {
 
-    //private CharInputStreamReader reader;
     private Writer writer;
 
     @Override
@@ -38,7 +37,6 @@ public class WindowsTerminal implements Terminal {
         }
 
         //setting up reader
-        //reader = new CharInputStreamReader(inputStream);
         try {
             //AnsiConsole.systemInstall();
             writer = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(outputStream)));
@@ -46,12 +44,12 @@ public class WindowsTerminal implements Terminal {
         catch (Exception ioe) {
             writer = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(outputStream)));
         }
-
     }
 
-    public int read() throws IOException {
+    @Override
+    public int[] read(boolean readAhead) throws IOException {
         //return reader.read();
-        return WindowsSupport.readByte();
+        return new int[] {WindowsSupport.readByte()};
     }
 
     @Override
@@ -76,20 +74,23 @@ public class WindowsTerminal implements Terminal {
         writer.flush();
     }
 
+    @Override
     public int getHeight() {
         return WindowsSupport.getWindowsTerminalHeight();
     }
 
+    @Override
     public int getWidth() {
         return WindowsSupport.getWindowsTerminalWidth();
     }
 
+    @Override
     public boolean isEchoEnabled() {
         return false;  
     }
 
-    public void reset() throws Exception {
-        
+    @Override
+    public void reset() throws IOException {
     }
 }
 

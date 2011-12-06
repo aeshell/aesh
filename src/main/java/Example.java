@@ -59,6 +59,11 @@ public class Example {
                 break;
             }
         }
+
+        try {
+            console.stop();
+        } catch (Exception e) {
+        }
     }
 
 }
