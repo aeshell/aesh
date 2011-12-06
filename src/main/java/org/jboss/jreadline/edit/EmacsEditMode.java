@@ -16,6 +16,7 @@
  */
 package org.jboss.jreadline.edit;
 
+import org.jboss.jreadline.console.Config;
 import org.jboss.jreadline.edit.actions.Action;
 import org.jboss.jreadline.edit.actions.Operation;
 
@@ -43,20 +44,33 @@ public class EmacsEditMode implements EditMode {
     }
 
     @Override
-    public Operation parseInput(int input) {
-        //if we're in the middle of parsing a sequence input
-        if(operationLevel > 0) {
-            Iterator<KeyOperation> operationIterator = currentOperations.iterator();
-            while(operationIterator.hasNext())
-                if(input != operationIterator.next().getKeyValues()[operationLevel])
-                    operationIterator.remove();
+    public Operation parseInput(int[] in) {
 
+        int input = in[0];
+        if(Config.isOSPOSIXCompatible() && in.length > 1) {
+            KeyOperation ko = KeyOperationManager.findOperation(operations, in);
+            if(ko != null) {
+                //clear current operations to make sure that everything works as expected
+                currentOperations.clear();
+                currentOperations.add(ko);
+            }
         }
-        // parse a first sequence input
         else {
-            for(KeyOperation ko : operations)
-                if(input == ko.getFirstValue())
-                    currentOperations.add(ko);
+            //if we're in the middle of parsing a sequence input
+            //currentOperations.add(KeyOperationManager.findOperation(operations, input));
+            if(operationLevel > 0) {
+                Iterator<KeyOperation> operationIterator = currentOperations.iterator();
+                while(operationIterator.hasNext())
+                    if(input != operationIterator.next().getKeyValues()[operationLevel])
+                        operationIterator.remove();
+
+            }
+            // parse a first sequence input
+            else {
+                for(KeyOperation ko : operations)
+                    if(input == ko.getFirstValue())
+                        currentOperations.add(ko);
+            }
         }
 
         //search mode need special handling
@@ -79,6 +93,11 @@ public class EmacsEditMode implements EditMode {
                     currentOperations.clear();
                     return Operation.SEARCH_DELETE;
                 }
+                // TODO: unhandled operation, should parse better
+                else {
+                    currentOperations.clear();
+                    return Operation.NO_ACTION;
+                }
             }
             //if we got more than one we know that it started with esc
             else if(currentOperations.size() > 1) {
@@ -92,38 +111,41 @@ public class EmacsEditMode implements EditMode {
                 return Operation.SEARCH_INPUT;
             }
         } // end search mode
+        else {
+            // process if we have any hits...
+            if(currentOperations.isEmpty()) {
+                //if we've pressed meta-X, where X is not caught we just disable the output
+                if(operationLevel > 0) {
+                    operationLevel = 0;
+                    currentOperations.clear();
+                    return Operation.NO_ACTION;
+                }
+                else
+                    return Operation.EDIT;
+            }
+            else if(currentOperations.size() == 1) {
+                //need to check if this one operation have more keys
+                int level = operationLevel+1;
+                if(in.length > level)
+                    level = in.length;
+                if(currentOperations.get(0).getKeyValues().length > level) {
+                    operationLevel++;
+                    return Operation.NO_ACTION;
+                }
+                Operation currentOperation = currentOperations.get(0).getOperation();
+                if(currentOperation == Operation.SEARCH_PREV ||
+                        currentOperation == Operation.SEARCH_NEXT_WORD)
+                    mode = Action.SEARCH;
 
-        // process if we have any hits...
-        if(currentOperations.isEmpty()) {
-            //if we've pressed meta-X, where X is not caught we just disable the output
-            if(operationLevel > 0) {
                 operationLevel = 0;
                 currentOperations.clear();
-                return Operation.NO_ACTION;
+
+                return currentOperation;
             }
-            else
-                return Operation.EDIT;
-        }
-        else if(currentOperations.size() == 1) {
-            //System.out.println("Got Operation: "+matchingOperations.get(0).getOperation());
-            //need to check if this one operation have more keys
-            if(currentOperations.get(0).getKeyValues().length > operationLevel+1) {
+            else {
                 operationLevel++;
                 return Operation.NO_ACTION;
             }
-            Operation currentOperation = currentOperations.get(0).getOperation();
-            if(currentOperation == Operation.SEARCH_PREV ||
-                    currentOperation == Operation.SEARCH_NEXT_WORD)
-                mode = Action.SEARCH;
-
-            operationLevel = 0;
-            currentOperations.clear();
-
-            return currentOperation;
-        }
-        else {
-            operationLevel++;
-            return Operation.NO_ACTION;
         }
     }
 

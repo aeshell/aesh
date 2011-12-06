@@ -39,6 +39,7 @@ public abstract class JReadlineTestCase extends TestCase {
         settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
         settings.setOutputStream(new ByteArrayOutputStream());
         settings.setEditMode(Mode.EMACS);
+        settings.setReadAhead(false);
         Console console = new Console(settings);
 
 
@@ -65,6 +66,7 @@ public abstract class JReadlineTestCase extends TestCase {
         settings.setReadInputrc(false);
         settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
         settings.setOutputStream(new ByteArrayOutputStream());
+        settings.setReadAhead(false);
         settings.setEditMode(Mode.VI);
 
         Console console = new Console(settings);

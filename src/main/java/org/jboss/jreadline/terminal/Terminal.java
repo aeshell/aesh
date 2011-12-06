@@ -41,7 +41,7 @@ public interface Terminal {
      * @return whats read
      * @throws IOException
      */
-    int read() throws IOException;
+    int[] read(boolean readAhead) throws IOException;
 
     /**
      * Write to the output stream
@@ -81,9 +81,10 @@ public interface Terminal {
 
     /**
      * Set it back to normal when we exit
-     * @throws Exception stream/os
+     *
+     * @throws java.io.IOException stream
      */
-    void reset() throws Exception;
+    void reset() throws IOException;
 
 
 }

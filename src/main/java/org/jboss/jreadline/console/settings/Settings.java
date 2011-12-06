@@ -17,6 +17,7 @@
 package org.jboss.jreadline.console.settings;
 
 import org.jboss.jreadline.console.Config;
+import org.jboss.jreadline.console.reader.ConsoleInputSession;
 import org.jboss.jreadline.edit.*;
 import org.jboss.jreadline.terminal.POSIXTerminal;
 import org.jboss.jreadline.terminal.Terminal;
@@ -46,6 +47,7 @@ public class Settings {
     private boolean isLogging = true;
     private String logFile;
     private boolean disableCompletion = false;
+    private boolean readAhead = true;
 
     private static final Settings INSTANCE = new Settings();
 
@@ -72,8 +74,8 @@ public class Settings {
         disableCompletion = false;
     }
     /**
-     * Either EMACS or VI mode.
-     * EMACS is default if not set
+     * Either Emacs or Vi mode.
+     * Emacs is default if not set
      *
      * @return editing mode
      */
@@ -175,15 +177,15 @@ public class Settings {
     }
 
     /**
-     * If not set, FileDescriptor.in will be used
+     * If not set, System.in will be used
      *
      * @return input
      */
     public InputStream getInputStream() {
-        if(inputStream == null)
-            return new FileInputStream(FileDescriptor.in);
-        else
-            return inputStream;
+        if(inputStream == null) {
+            inputStream = new ConsoleInputSession(System.in).getExternalInputStream();
+        }
+        return inputStream;
     }
 
     /**
@@ -371,5 +373,27 @@ public class Settings {
      */
     public void setHistoryPersistent(boolean historyPersistent) {
         this.historyPersistent = historyPersistent;
+    }
+
+    /**
+     * Read all bytes on buffer if its available
+     * Set to true by default
+     * WARNING: Do not set this to false if unsure
+     *
+     * @return readAhead
+     */
+    public boolean isReadAhead() {
+        return readAhead;
+    }
+
+    /**
+     * Read all bytes on buffer if its available
+     * Set to true by default
+     * WARNING: Do not set this to false if unsure
+     *
+     * @param readAhead read
+     */
+    public void setReadAhead(boolean readAhead) {
+        this.readAhead = readAhead;
     }
 }

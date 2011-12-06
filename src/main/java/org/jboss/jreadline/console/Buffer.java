@@ -222,6 +222,9 @@ public class Buffer {
         }
 
         // dont move out of bounds
+        if(getCursor() + move <= 0)
+            return -getCursor();
+
         if(viMode) {
             if(getCursor() + move > line.length()-1)
                 return (line.length()-1-getCursor());
@@ -230,9 +233,6 @@ public class Buffer {
             if(getCursor() + move > line.length())
                 return (line.length()-getCursor());
         }
-
-        if(getCursor() + move < 0)
-            return -getCursor();
 
         return move;
     }
