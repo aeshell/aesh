@@ -16,10 +16,10 @@
  */
 package org.jboss.jreadline.terminal;
 
-
-import org.jboss.jreadline.console.reader.CharInputStreamReader;
+import org.jboss.jreadline.util.LoggerUtil;
 
 import java.io.*;
+import java.util.logging.Logger;
 
 /**
  * Terminal that should work on most POSIX systems
@@ -36,8 +36,10 @@ public class POSIXTerminal implements Terminal {
     private long ttyPropsLastFetched;
     private boolean restored = false;
 
-    private CharInputStreamReader reader;
+    private InputStream input;
     private Writer writer;
+    
+    private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 
     @Override
     public void init(InputStream inputStream, OutputStream outputStream) {
@@ -59,8 +61,8 @@ public class POSIXTerminal implements Terminal {
             stty("-echo");
             echoEnabled = false;
 
-            //setting up reader
-            reader = new CharInputStreamReader(inputStream);
+            //setting up input
+            input = inputStream;
         }
         catch (IOException ioe) {
             System.err.println("TTY failed with: " + ioe.getMessage());
@@ -88,8 +90,19 @@ public class POSIXTerminal implements Terminal {
      * @see org.jboss.jreadline.terminal.Terminal
      */
     @Override
-    public int read() throws IOException {
-        return reader.read();
+    public int[] read(boolean readAhead) throws IOException {
+        int input = this.input.read();
+        int available = this.input.available();
+        if(available > 1 && readAhead) {
+            int[] in = new int[available];
+            in[0] = input;
+            for(int c=1; c < available; c++ )
+                in[c] = this.input.read();
+
+            return in;
+        }
+        else
+            return new int[] {input};
     }
 
     /**
@@ -132,7 +145,9 @@ public class POSIXTerminal implements Terminal {
             try {
                 height = getTerminalProperty("rows");
             }
-            catch (Exception e) { /*ignored */ }
+            catch (Exception e) { 
+                logger.severe("Failed to fetch terminal height: "+e.getMessage());
+            }
             if(height < 0)
                 height = 24;
         }
@@ -149,7 +164,9 @@ public class POSIXTerminal implements Terminal {
             try {
                 width = getTerminalProperty("columns");
             }
-            catch (Exception e) { /* ignored */ }
+            catch (Exception e) {
+                logger.severe("Failed to fetch terminal width: "+e.getMessage());
+            }
 
             if(width < 0)
                 width = 80;
@@ -168,12 +185,18 @@ public class POSIXTerminal implements Terminal {
     /**
      * @see org.jboss.jreadline.terminal.Terminal
      */
-    public void reset() throws Exception {
+    @Override
+    public void reset() throws IOException {
         if(!restored) {
             if (ttyConfig != null) {
-                stty(ttyConfig);
-                ttyConfig = null;
-                restored = true;
+                try {
+                    stty(ttyConfig);
+                    ttyConfig = null;
+                    restored = true;
+                }
+                catch (InterruptedException e) {
+                    logger.severe("Failed to reset terminal: "+e.getMessage());
+                }
             }
         }
     }
@@ -275,7 +298,7 @@ public class POSIXTerminal implements Terminal {
                     out.close();
             }
             catch (Exception e) {
-               e.printStackTrace();
+               logger.warning("Failed to close streams");
             }
         }
 

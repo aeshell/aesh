@@ -120,6 +120,12 @@ public class KeyOperationManager {
         List<KeyOperation> keys = generateGenericViMode();
         keys.add(new KeyOperation(10, Operation.NEW_LINE));
 
+        //movement
+        keys.add(new KeyOperation(new int[]{27,91,65}, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
+        keys.add(new KeyOperation(new int[]{27,91,66}, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
+        keys.add(new KeyOperation(new int[]{27,91,67}, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
+        keys.add(new KeyOperation(new int[]{27,91,68}, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+
         return keys;
     }
 
@@ -181,5 +187,14 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(127, Operation.DELETE_PREV_CHAR));
 
         return keys;
+    }
+    
+    public static KeyOperation findOperation(List<KeyOperation> operations, int[] input) {
+        for(KeyOperation operation : operations) {
+            if(operation.equalValues(input))
+                return operation;
+        }
+        return null;
+
     }
 }

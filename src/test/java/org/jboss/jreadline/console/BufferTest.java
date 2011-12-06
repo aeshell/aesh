@@ -80,6 +80,18 @@ public class BufferTest extends TestCase {
         expected = new char[] {(char) 27,'[','7','C'};
         assertEquals(new String(expected), new String(out));
         assertEquals(7, buffer.getCursor());
+        
+        buffer.reset(">");
+        buffer.write("foo");
+        buffer.move(-4, 80, true);
+
+        assertEquals(2, buffer.getCursorWithPrompt());
+
+        buffer.move(5, 80, true);
+        assertEquals(4, buffer.getCursorWithPrompt());
+
+        buffer.move(-4, 80, true);
+        assertEquals(2, buffer.getCursorWithPrompt());
     }
 
     public void testPrintAnsi() {

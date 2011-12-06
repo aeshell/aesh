@@ -25,7 +25,7 @@ import org.jboss.jreadline.edit.actions.Operation;
  */
 public interface EditMode {
 
-    Operation parseInput(int input);
+    Operation parseInput(int[] input);
 
     Action getCurrentAction();
 

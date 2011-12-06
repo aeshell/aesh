@@ -16,6 +16,7 @@
  */
 package org.jboss.jreadline.edit;
 
+import org.jboss.jreadline.console.Config;
 import org.jboss.jreadline.edit.actions.Action;
 import org.jboss.jreadline.edit.actions.Operation;
 
@@ -81,24 +82,36 @@ public class ViEditMode implements EditMode {
     }
 
     @Override
-    public Operation parseInput(int c) {
-         //if we're in the middle of parsing a sequence input
-        if(operationLevel > 0) {
-            Iterator<KeyOperation> operationIterator = currentOperations.iterator();
-            while(operationIterator.hasNext())
-                if(c != operationIterator.next().getKeyValues()[operationLevel])
-                    operationIterator.remove();
-
+    public Operation parseInput(int[] in) {
+        int input = in[0];
+        if(Config.isOSPOSIXCompatible() && in.length > 1) {
+            KeyOperation ko = KeyOperationManager.findOperation(operations, in);
+            if(ko != null) {
+                //clear current operations to make sure that everything works as expected
+                currentOperations.clear();
+                currentOperations.add(ko);
+            }
         }
-        // parse a first sequence input
         else {
-            for(KeyOperation ko : operations)
-                if(c == ko.getFirstValue())
-                    currentOperations.add(ko);
+            //if we're in the middle of parsing a sequence input
+            if(operationLevel > 0) {
+                Iterator<KeyOperation> operationIterator = currentOperations.iterator();
+                while(operationIterator.hasNext())
+                    if(input != operationIterator.next().getKeyValues()[operationLevel])
+                        operationIterator.remove();
+
+            }
+            // parse a first sequence input
+            else {
+                for(KeyOperation ko : operations)
+                    if(input == ko.getFirstValue() && ko.getKeyValues().length == in.length)
+                        currentOperations.add(ko);
+            }
         }
 
         //search mode need special handling
-        if(mode == Action.SEARCH && currentOperations.size() > 0) {
+        if(mode == Action.SEARCH) {
+            if(currentOperations.size() == 1) {
                 if(currentOperations.get(0).getOperation() == Operation.NEW_LINE) {
                     mode = Action.EDIT;
                     currentOperations.clear();
@@ -112,8 +125,20 @@ public class ViEditMode implements EditMode {
                     currentOperations.clear();
                     return Operation.SEARCH_DELETE;
                 }
-            //if we got more than one we know that it started with esc
+                //if we got more than one we know that it started with esc
                 else if(currentOperations.get(0).getOperation() == Operation.ESCAPE) {
+                    mode = Action.EDIT;
+                    currentOperations.clear();
+                    return Operation.SEARCH_EXIT;
+                }
+                // search input
+                else {
+                    currentOperations.clear();
+                    return Operation.SEARCH_INPUT;
+                }
+            }
+            //if we got more than one we know that it started with esc
+            else if(currentOperations.size() > 1) {
                 mode = Action.EDIT;
                 currentOperations.clear();
                 return Operation.SEARCH_EXIT;
@@ -125,29 +150,6 @@ public class ViEditMode implements EditMode {
             }
         } // end search mode
 
-        //if we're already in search mode
-        /*
-        if(mode == Action.SEARCH) {
-            if(c == ENTER) {
-                mode = Action.EDIT;
-                return Operation.SEARCH_END;
-            }
-            else if(c == CTRL_R) {
-                return Operation.SEARCH_PREV_WORD;
-            }
-            else if(c == BACKSPACE) {
-                return Operation.SEARCH_DELETE;
-            }
-            else if(c == ESCAPE) {
-                mode = Action.EDIT;
-                return Operation.SEARCH_EXIT;
-            }
-            // search input
-            else {
-                return Operation.SEARCH_INPUT;
-            }
-        }
-        */
 
         if(currentOperations.isEmpty()) {
             if(isInEditMode())
@@ -192,6 +194,16 @@ public class ViEditMode implements EditMode {
             }
             else if(operation == Operation.CLEAR)
                 return Operation.CLEAR;
+            //make sure that this only works for working more == Action.EDIT
+            else if(operation == Operation.MOVE_PREV_CHAR && workingMode.equals(Action.EDIT))
+                return Operation.MOVE_PREV_CHAR;
+            else if(operation == Operation.MOVE_NEXT_CHAR && workingMode.equals(Action.EDIT))
+                return Operation.MOVE_NEXT_CHAR;
+            else if(operation == Operation.HISTORY_PREV && workingMode.equals(Action.EDIT))
+                return operation;
+            else if(operation == Operation.HISTORY_NEXT && workingMode.equals(Action.EDIT))
+                return operation;
+
 
             if(!isInEditMode())
                 return inCommandMode(operation, workingMode);

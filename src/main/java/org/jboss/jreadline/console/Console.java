@@ -38,7 +38,6 @@ import java.util.logging.Logger;
 /**
  * A console reader.
  * Supports ansi terminals
- * TODO: need a config setup
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
@@ -59,7 +58,7 @@ public class Console {
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
 
-    private Logger logger;
+    private Logger logger = LoggerUtil.getLogger(getClass().getName());
 
     public Console() throws IOException {
         this(Settings.getInstance());
@@ -87,7 +86,6 @@ public class Console {
         completionList = new ArrayList<Completion>();
         this.settings = settings;
 
-        logger = LoggerUtil.getLogger(getClass().getName());
     }
 
     private void setTerminal(Terminal term, InputStream in, OutputStream out) {
@@ -129,6 +127,14 @@ public class Console {
         this.completionList.addAll(completionList);
     }
 
+    public void stop() throws IOException {
+        settings.getInputStream().close();
+        //setting it to null to prevent uncertain state
+        settings.setInputStream(null);
+        terminal.reset();
+        terminal = null;
+    }
+
     public String read(String prompt) throws IOException {
         buffer.reset(prompt);
         terminal.write(buffer.getPrompt());
@@ -137,19 +143,19 @@ public class Console {
 
         while(true) {
 
-            int c = terminal.read();
+            int[] in = terminal.read(settings.isReadAhead());
             //System.out.println("got int:"+c);
-            if (c == -1) {
+            if (in[0] == -1) {
                 return null;
             }
 
-            Operation operation = editMode.parseInput(c);
+            Operation operation = editMode.parseInput(in);
 
             Action action = operation.getAction();
 
             if(askDisplayCompletion) {
                 askDisplayCompletion = false;
-                if('y' == (char) c) {
+                if('y' == (char) in[0]) {
                     displayCompletion = true;
                     complete();
                 }
@@ -162,7 +168,7 @@ public class Console {
                 }
             }
             else if (action == Action.EDIT) {
-                writeChar(c);
+                writeChar(in[0]);
             }
             // For search movement is used a bit differently.
             // It only triggers what kind of search action thats performed
@@ -204,7 +210,7 @@ public class Console {
                         break;
                     // new search input, append to search
                     case ALL:
-                        searchTerm.appendCodePoint(c);
+                        searchTerm.appendCodePoint(in[0]);
                         //check if the new searchTerm will find anything
                         String tmpResult = history.search(searchTerm.toString());
                         //
@@ -361,7 +367,6 @@ public class Console {
             if(fromHistory.length() > getTerminalWidth() &&
                     fromHistory.length() > buffer.getLine().length()) {
                 int currentRow = getCurrentRow();
-                //logger.info("Current row: "+currentRow);
                 if(currentRow > -1) {
                     int cursorRow = buffer.getCursorWithPrompt() / getTerminalWidth();
                     if(currentRow + (fromHistory.length() / getTerminalWidth()) - cursorRow >= getTerminalHeight()) {
@@ -751,7 +756,8 @@ public class Console {
                 terminal.write(Buffer.printAnsi("6n"));
                 StringBuilder builder = new StringBuilder(8);
                 int row;
-                while((row = settings.getInputStream().read()) > -1 && row != 'R') {
+                while((row = terminal.read(false)[0]) > -1 && row != 'R') {
+                    //while((row = settings.getInputStream().read()) > -1 && row != 'R') {
                     //while((row = settings.getInputStream().read()) > -1 && row != 'R' && row != ';') {
                     if (row != 27 && row != '[') {
                         builder.append((char) row);
