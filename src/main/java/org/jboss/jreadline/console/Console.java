@@ -362,26 +362,55 @@ public class Console {
            fromHistory = history.getPreviousFetch();
 
         if(fromHistory != null) {
-            //must make sure that there are enough space for the
-            // line thats about to be injected
-            if(fromHistory.length() > getTerminalWidth() &&
-                    fromHistory.length() > buffer.getLine().length()) {
-                int currentRow = getCurrentRow();
-                if(currentRow > -1) {
-                    int cursorRow = buffer.getCursorWithPrompt() / getTerminalWidth();
-                    if(currentRow + (fromHistory.length() / getTerminalWidth()) - cursorRow >= getTerminalHeight()) {
-                        int numNewRows = currentRow + (fromHistory.length() / getTerminalWidth()) - cursorRow - getTerminalHeight();
-                        if(numNewRows > 0) {
-                            terminal.write(Buffer.printAnsi(numNewRows+"S"));
-                        }
-                    }
-                }
-            }
-            buffer.setLine(fromHistory);
+            setBufferLine(fromHistory);
             moveCursor(buffer.length()-buffer.getCursor());
             redrawLine();
         }
         prevAction = Action.HISTORY;
+    }
+    
+    private void setBufferLine(String newLine) throws IOException {
+        //must make sure that there are enough space for the
+        // line thats about to be injected
+        if((newLine.length()+buffer.getPrompt().length()) >= getTerminalWidth() &&
+                newLine.length() >= buffer.getLine().length()) {
+            int currentRow = getCurrentRow();
+            if(currentRow > -1) {
+                int cursorRow = buffer.getCursorWithPrompt() / getTerminalWidth();
+                if(currentRow + (newLine.length() / getTerminalWidth()) - cursorRow >= getTerminalHeight()) {
+                    int numNewRows = currentRow + (newLine.length() / getTerminalWidth()) - cursorRow - getTerminalHeight();
+                    //if the line is exactly equal to termWidth we need to add another row
+                    if((newLine.length()+buffer.getPrompt().length()) % getTerminalWidth() == 0)
+                        numNewRows++;
+                    if(numNewRows > 0) {
+                        int totalRows = newLine.length() / getTerminalWidth() +1;
+                        terminal.write(Buffer.printAnsi(numNewRows+"S"));
+                    }
+                }
+            }
+        }
+        buffer.setLine(newLine);
+    }
+    
+    public void insertBufferLine(String insert, int position) throws IOException {
+        if((insert.length()+buffer.totalLength()) >= getTerminalWidth()) { //&&
+                //(insert.length()+buffer.totalLength()) > buffer.getLine().length()) {
+            int currentRow = getCurrentRow();
+            if(currentRow > -1) {
+                int newLine = insert.length()+buffer.length();
+                int cursorRow = buffer.getCursorWithPrompt() / getTerminalWidth();
+                if(currentRow + (newLine / getTerminalWidth()) - cursorRow >= getTerminalHeight()) {
+                    int numNewRows = currentRow + (newLine / getTerminalWidth()) - cursorRow - getTerminalHeight();
+                    //if the line is exactly equal to termWidth we need to add another row
+                    if((insert.length()+buffer.totalLength()) % getTerminalWidth() == 0)
+                        numNewRows++;
+                    if(numNewRows > 0) {
+                        terminal.write(Buffer.printAnsi(numNewRows+"S"));
+                    }
+                }
+            }
+        }
+        buffer.insert(position, insert);
     }
 
     private void addToHistory(String line) {
@@ -501,11 +530,12 @@ public class Console {
 
         addActionToUndoStack();
         if(before || buffer.getCursor() >= buffer.getLine().length()) {
-            buffer.insert(buffer.getCursor(), pasteBuffer.toString());
+            insertBufferLine(pasteBuffer.toString(), buffer.getCursor());
             redrawLine();
         }
         else {
-            buffer.insert(buffer.getCursor() + 1, pasteBuffer.toString());
+            //buffer.insert(buffer.getCursor() + 1, pasteBuffer.toString());
+            insertBufferLine(pasteBuffer.toString(), buffer.getCursor()+1);
             redrawLine();
             //move cursor one char
             moveCursor(1);
@@ -541,8 +571,8 @@ public class Console {
 
     private void drawLine(String line) throws IOException {
        //need to clear more than one line
-        if(line.length() > getTerminalWidth() ||
-                (line.length() + Math.abs(buffer.getDelta()) > getTerminalWidth())) {
+        if((line.length()+buffer.getPrompt().length()) > getTerminalWidth() ||
+                (line.length()+buffer.getPrompt().length() + Math.abs(buffer.getDelta()) > getTerminalWidth())) {
 
             int currentRow = 0;
             if(buffer.getCursorWithPrompt() > 0)
@@ -629,21 +659,13 @@ public class Console {
      * @return true if nothing fails
      * @throws IOException if redraw fails
      */
-    private boolean undo() throws IOException {
+    private void undo() throws IOException {
         UndoAction ua = undoManager.getNext();
         if(ua != null) {
-            buffer.clear();
-            buffer.write(ua.getBuffer());
+            setBufferLine(ua.getBuffer());
             redrawLine();
-            //move the cursor to the saved position
-            terminal.write(Buffer.printAnsi((ua.getCursorPosition() + buffer.getPrompt().length() + 1) + "G"));
-            //sync terminal cursor with jreadline
-            buffer.setCursor(ua.getCursorPosition());
-
-            return true;
+            moveCursor(ua.getCursorPosition() - buffer.getCursor());
         }
-        else
-            return false;
     }
 
     private void complete() throws IOException {
