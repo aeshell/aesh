@@ -33,11 +33,12 @@ public class Buffer {
     private StringBuilder line;
     private String prompt;
     private int delta; //need to keep track of a delta for ansi terminal
+    private Character mask;
 
     private final static int TAB = 4;
 
     protected Buffer() {
-        this(null);
+        this(null, null);
     }
 
     /**
@@ -46,6 +47,10 @@ public class Buffer {
      * @param promptText set prompt
      */
     protected Buffer(String promptText) {
+        this(promptText, null);
+    }
+
+    protected Buffer(String promptText, Character mask) {
         if(promptText != null)
             prompt = promptText;
         else
@@ -53,6 +58,7 @@ public class Buffer {
 
         line = new StringBuilder();
         delta = 0;
+        this.mask = mask;
     }
 
     /**
@@ -61,6 +67,10 @@ public class Buffer {
      * @param promptText set prompt
      */
     protected void reset(String promptText) {
+        reset(promptText, null);
+    }
+
+    protected void reset(String promptText, Character mask) {
         if(promptText != null)
             prompt = promptText;
         else
@@ -68,6 +78,7 @@ public class Buffer {
         cursor = 0;
         line = new StringBuilder();
         delta = 0;
+        this.mask = mask;
     }
 
     /**
@@ -86,7 +97,7 @@ public class Buffer {
     }
 
     protected int getCursorWithPrompt() {
-        return cursor + prompt.length()+1;
+        return getCursor() + prompt.length()+1;
     }
 
     protected String getPrompt() {
@@ -248,6 +259,17 @@ public class Buffer {
     }
 
     public String getLine() {
+        if(mask == null)
+            return line.toString();
+        else {
+            if(line.length() > 0)
+                return String.format("%"+line.length()+"s", "").replace(' ', mask);
+            else
+                return "";
+        }
+    }
+    
+    public String getLineNoMask() {
         return line.toString();
     }
 
@@ -296,7 +318,7 @@ public class Buffer {
             line.append(str);
         }
         else {
-            line.insert(cursor, str);
+            line.insert(getCursor(), str);
         }
 
         cursor += str.length();

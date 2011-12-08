@@ -55,8 +55,27 @@ public class Example {
         while ((line = console.read("> ")) != null) {
             console.pushToConsole("======>\"" + line+"\"\n");
 
-            if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
+            if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit") ||
+                    line.equalsIgnoreCase("reset")) {
                 break;
+            }
+            if(line.equalsIgnoreCase("password")) {
+                line = console.read("password: ", Character.valueOf((char) 0));
+                console.pushToConsole("password typed:"+line+"\n");
+
+            }
+        }
+        if(line.equals("reset")) {
+            console.stop();
+            console = new Console();
+
+            while ((line = console.read("> ")) != null) {
+                console.pushToConsole("======>\"" + line+"\"\n");
+                if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit") ||
+                        line.equalsIgnoreCase("reset")) {
+                    break;
+                }
+
             }
         }
 

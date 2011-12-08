@@ -134,9 +134,13 @@ public class Console {
         terminal.reset();
         terminal = null;
     }
-
+    
     public String read(String prompt) throws IOException {
-        buffer.reset(prompt);
+        return read(prompt, null);
+    }
+
+    public String read(String prompt, Character mask) throws IOException {
+        buffer.reset(prompt, mask);
         terminal.write(buffer.getPrompt());
         StringBuilder searchTerm = new StringBuilder();
         String result = null;
@@ -168,7 +172,7 @@ public class Console {
                 }
             }
             else if (action == Action.EDIT) {
-                writeChar(in[0]);
+                writeChar(in[0], mask);
             }
             // For search movement is used a bit differently.
             // It only triggers what kind of search action thats performed
@@ -226,17 +230,17 @@ public class Console {
                     case END:
                         // Set buffer to the found string.
                         if (result != null) {
-                            buffer.setLine(result);
+                            setBufferLine(result);
                             redrawLine();
                             printNewline();
-                            return buffer.getLine();
+                            return buffer.getLineNoMask();
                         }
                         redrawLine();
                         break;
 
                     case NEXT_BIG_WORD:
                         if(result != null) {
-                            buffer.setLine(result);
+                            setBufferLine(result);
                             result = null;
                         }
                         //redrawLine();
@@ -294,11 +298,12 @@ public class Console {
             else if(action == Action.NEWLINE) {
                 // clear the undo stack for each new line
                 clearUndoStack();
-                addToHistory(buffer.getLine());
+                if(mask == null) // dont push to history if masking
+                    addToHistory(buffer.getLine());
                 prevAction = Action.NEWLINE;
                 //moveToEnd();
                 printNewline(); // output newline
-                return buffer.getLine();
+                return buffer.getLineNoMask();
             }
             else if(action == Action.UNDO) {
                 undo();
@@ -384,6 +389,8 @@ public class Console {
                         numNewRows++;
                     if(numNewRows > 0) {
                         int totalRows = newLine.length() / getTerminalWidth() +1;
+                        //logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
+                        //        ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
                         terminal.write(Buffer.printAnsi(numNewRows+"S"));
                     }
                 }
@@ -418,9 +425,18 @@ public class Console {
             history.push(line);
     }
 
-    private void writeChar(int c) throws IOException {
+    private void writeChar(int c, Character mask) throws IOException {
+
         buffer.write((char) c);
-        terminal.write((char) c);
+        if(mask != null) {
+            if(mask == 0)
+                terminal.write(' '); //TODO: fix this hack
+            else
+                terminal.write(mask);
+        }
+        else {
+            terminal.write((char) c);
+        }
 
         // add a 'fake' new line when inserting at the edge of terminal
         if(buffer.getCursorWithPrompt() > getTerminalWidth() &&
@@ -571,8 +587,8 @@ public class Console {
 
     private void drawLine(String line) throws IOException {
        //need to clear more than one line
-        if((line.length()+buffer.getPrompt().length()) > getTerminalWidth() ||
-                (line.length()+buffer.getPrompt().length() + Math.abs(buffer.getDelta()) > getTerminalWidth())) {
+        if(line.length() > getTerminalWidth() ||
+                (line.length()+ Math.abs(buffer.getDelta()) > getTerminalWidth())) {
 
             int currentRow = 0;
             if(buffer.getCursorWithPrompt() > 0)
@@ -628,8 +644,9 @@ public class Console {
         out.append(searchTerm).append("': ");
         cursor += out.length();
         out.append(result); //.append("\u001b[K");
-        drawLine(out.toString());
-        terminal.write(Buffer.printAnsi((cursor+1) + "G"));
+        setBufferLine(out.toString());
+        redrawLine();
+        //moveCursor(cursor+1);
     }
 
     /**
