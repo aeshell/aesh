@@ -8,6 +8,9 @@ Features:
 * Line editing
 * History (search, persistence)
 * Completion
+* Masking
+* Undo and Redo
+* Paste buffer
 * Emacs and Vi editing mode
 * Supports POSIX OS's and Windows
 * Easy to configure (history file & buffer size, edit mode, streams, possible to override terminal impls, etc)
