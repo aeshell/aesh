@@ -57,7 +57,7 @@ public class InMemoryHistory implements History {
                 if(historyList.size() >= maxSize)
                     historyList.remove(0);
             }
-            historyList.add(entry);
+            historyList.add(entry.trim());
             lastFetchedId = size();
             lastSearchedId = 0;
         }
