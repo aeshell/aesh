@@ -413,7 +413,7 @@ public class Console {
         buffer.setLine(newLine);
     }
     
-    public void insertBufferLine(String insert, int position) throws IOException {
+    private void insertBufferLine(String insert, int position) throws IOException {
         if((insert.length()+buffer.totalLength()) >= getTerminalWidth()) { //&&
                 //(insert.length()+buffer.totalLength()) > buffer.getLine().length()) {
             int currentRow = getCurrentRow();
