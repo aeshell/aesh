@@ -69,6 +69,13 @@ public class Console {
         reset(settings);
     }
 
+    /**
+     * Reset the Console with Settings
+     * Can only be called after stop()
+     *
+     * @param settings
+     * @throws IOException
+     */
     public void reset(Settings settings) throws IOException {
         if(running)
             throw new RuntimeException("Cant reset an already running Console, must stop if first!");
@@ -100,32 +107,70 @@ public class Console {
         terminal.init(in, out);
     }
 
+    /**
+     * Get the terminal height
+     *
+     * @return height
+     */
     public int getTerminalHeight() {
         return terminal.getHeight();
     }
 
+    /**
+     * Get the terminal width
+     *
+     * @return width
+     */
     public int getTerminalWidth() {
         return terminal.getWidth();
     }
 
+    /**
+     * Get the History object
+     *
+     * @return history
+     */
     public History getHistory() {
         return history;
     }
 
+    /**
+     * Push text to the console, note that this will not update the internal
+     * cursor position.
+     * 
+     * @param input text
+     * @throws IOException stream
+     */
     public void pushToConsole(String input) throws IOException {
         if(input != null && input.length() > 0)
             terminal.write(input);
     }
 
+    /**
+     * @see #pushToConsole(String)
+     *
+     * @param input
+     * @throws IOException
+     */
     public void pushToConsole(char[] input) throws IOException {
         if(input != null && input.length > 0)
         terminal.write(input);
     }
 
+    /**
+     * Add a Completion to the completion list
+     *
+     * @param completion comp
+     */
     public void addCompletion(Completion completion) {
         completionList.add(completion);
     }
 
+    /**
+     * Add a list of completions to the completion list
+     *
+     * @param completionList comps
+     */
     public void addCompletions(List<Completion> completionList) {
         this.completionList.addAll(completionList);
     }
@@ -134,7 +179,7 @@ public class Console {
      * Stop the Console, close streams, and reset terminals.
      * WARNING: After this is called the Console object must be reset
      * before its used.
-     * @throws IOException
+     * @throws IOException stream
      */
     public void stop() throws IOException {
         settings.getInputStream().close();
@@ -146,10 +191,29 @@ public class Console {
     }
 
 
+    /**
+     * Read from the input stream, perform action according to mapped
+     * operations/completions/etc
+     * Return the stream when a new line is found.
+     *
+     * @param prompt starting prompt
+     * @return input stream
+     * @throws IOException stream
+     */
     public String read(String prompt) throws IOException {
         return read(prompt, null);
     }
 
+    /**
+     * Read from the input stream, perform action according to mapped
+     * operations/completions/etc
+     * Return the stream when a new line is found.
+     *
+     * @param prompt starting prompt
+     * @param mask if set typed chars will be masked with this specified char
+     * @return input stream
+     * @throws IOException stream
+     */
     public String read(String prompt, Character mask) throws IOException {
         if(!running)
             throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
@@ -687,7 +751,6 @@ public class Console {
     /**
      * Perform an undo
      *
-     * @return true if nothing fails
      * @throws IOException if redraw fails
      */
     private void undo() throws IOException {
