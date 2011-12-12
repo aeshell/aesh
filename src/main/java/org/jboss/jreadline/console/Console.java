@@ -57,6 +57,7 @@ public class Console {
 
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
+    private boolean running = false;
 
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
 
@@ -65,7 +66,13 @@ public class Console {
     }
 
     public Console(Settings settings) throws IOException {
-        if(Settings.getInstance().doReadInputrc())
+        reset(settings);
+    }
+
+    public void reset(Settings settings) throws IOException {
+        if(running)
+            throw new RuntimeException("Cant reset an already running Console, must stop if first!");
+         if(Settings.getInstance().doReadInputrc())
             Config.parseInputrc(Settings.getInstance());
 
         setTerminal(settings.getTerminal(),
@@ -85,16 +92,12 @@ public class Console {
 
         completionList = new ArrayList<Completion>();
         this.settings = settings;
-
+        running = true;
     }
 
-    private void setTerminal(Terminal term, InputStream in, OutputStream out) {
+     private void setTerminal(Terminal term, InputStream in, OutputStream out) {
         terminal = term;
         terminal.init(in, out);
-    }
-
-    public void reset() throws Exception {
-        terminal.reset();
     }
 
     public int getTerminalHeight() {
@@ -127,19 +130,30 @@ public class Console {
         this.completionList.addAll(completionList);
     }
 
+    /**
+     * Stop the Console, close streams, and reset terminals.
+     * WARNING: After this is called the Console object must be reset
+     * before its used.
+     * @throws IOException
+     */
     public void stop() throws IOException {
         settings.getInputStream().close();
         //setting it to null to prevent uncertain state
         settings.setInputStream(null);
         terminal.reset();
         terminal = null;
+        running = false;
     }
-    
+
+
     public String read(String prompt) throws IOException {
         return read(prompt, null);
     }
 
     public String read(String prompt, Character mask) throws IOException {
+        if(!running)
+            throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
+
         buffer.reset(prompt, mask);
         terminal.write(buffer.getPrompt());
         StringBuilder searchTerm = new StringBuilder();

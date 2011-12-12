@@ -52,7 +52,7 @@ public abstract class JReadlineTestCase extends TestCase {
                 break;
         }
         try {
-            console.reset();
+            console.stop();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -80,7 +80,7 @@ public abstract class JReadlineTestCase extends TestCase {
                 break;
         }
         try {
-            console.reset();
+            console.stop();
         } catch (Exception e) {
             e.printStackTrace();
         }
