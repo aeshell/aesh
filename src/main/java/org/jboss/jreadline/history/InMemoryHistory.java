@@ -50,9 +50,13 @@ public class InMemoryHistory implements History {
     @Override
     public void push(String entry) {
         if(entry != null && entry.trim().length() > 0) {
-            if(historyList.size() >= maxSize)
-                historyList.remove(0);
-
+            if(historyList.contains(entry.trim())) {
+               historyList.remove(entry.trim());
+            }
+            else {
+                if(historyList.size() >= maxSize)
+                    historyList.remove(0);
+            }
             historyList.add(entry);
             lastFetchedId = size();
             lastSearchedId = 0;

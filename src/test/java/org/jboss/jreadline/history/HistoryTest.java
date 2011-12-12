@@ -87,4 +87,16 @@ public class HistoryTest extends JReadlineTestCase {
         history.clear();
         assertEquals(null, history.getPreviousFetch());
     }
+
+    public void testDupes() {
+        History history = new InMemoryHistory(10);
+        history.push("1");
+        history.push("2");
+        history.push("3");
+        history.push("1");
+        assertEquals("1", history.getPreviousFetch());
+        assertEquals("3", history.getPreviousFetch());
+        assertEquals("2", history.getPreviousFetch());
+        assertEquals("2", history.getPreviousFetch());
+    }
 }
