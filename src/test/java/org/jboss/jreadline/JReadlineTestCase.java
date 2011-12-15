@@ -17,6 +17,7 @@
 package org.jboss.jreadline;
 
 import junit.framework.TestCase;
+import org.jboss.jreadline.console.Config;
 import org.jboss.jreadline.console.Console;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.Mode;
@@ -40,6 +41,8 @@ public abstract class JReadlineTestCase extends TestCase {
         settings.setOutputStream(new ByteArrayOutputStream());
         settings.setEditMode(Mode.EMACS);
         settings.setReadAhead(false);
+        if(!Config.isOSPOSIXCompatible())
+            settings.setAnsiConsole(false);
         Console console = new Console(settings);
 
 
@@ -68,6 +71,8 @@ public abstract class JReadlineTestCase extends TestCase {
         settings.setOutputStream(new ByteArrayOutputStream());
         settings.setReadAhead(false);
         settings.setEditMode(Mode.VI);
+        if(!Config.isOSPOSIXCompatible())
+            settings.setAnsiConsole(false);
 
         Console console = new Console(settings);
 

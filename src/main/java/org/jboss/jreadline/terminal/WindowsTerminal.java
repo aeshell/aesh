@@ -19,6 +19,7 @@ package org.jboss.jreadline.terminal;
 import org.fusesource.jansi.AnsiOutputStream;
 import org.fusesource.jansi.WindowsAnsiOutputStream;
 import org.fusesource.jansi.internal.WindowsSupport;
+import org.jboss.jreadline.console.settings.Settings;
 
 import java.io.*;
 
@@ -29,6 +30,8 @@ import java.io.*;
 public class WindowsTerminal implements Terminal {
 
     private Writer writer;
+    private InputStream input;
+
 
     @Override
     public void init(InputStream inputStream, OutputStream outputStream) {
@@ -44,12 +47,28 @@ public class WindowsTerminal implements Terminal {
         catch (Exception ioe) {
             writer = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(outputStream)));
         }
+
+        this.input = inputStream;
     }
 
     @Override
     public int[] read(boolean readAhead) throws IOException {
-        //return reader.read();
-        return new int[] {WindowsSupport.readByte()};
+        if(Settings.getInstance().isAnsiConsole())
+            return new int[] {WindowsSupport.readByte()};
+        else {
+            int input = this.input.read();
+            int available = this.input.available();
+            if(available > 1 && readAhead) {
+                int[] in = new int[available];
+                in[0] = input;
+                for(int c=1; c < available; c++ )
+                    in[c] = this.input.read();
+
+                return in;
+            }
+            else
+                return new int[] {input};
+        }
     }
 
     @Override

@@ -183,7 +183,10 @@ public class Settings {
      */
     public InputStream getInputStream() {
         if(inputStream == null) {
-            inputStream = new ConsoleInputSession(System.in).getExternalInputStream();
+            if(Config.isOSPOSIXCompatible())
+                inputStream = new ConsoleInputSession(System.in).getExternalInputStream();
+            else
+                inputStream = System.in;
         }
         return inputStream;
     }
