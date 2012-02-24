@@ -101,5 +101,3 @@ In edit mode:
 * Search forward in the history for a particular string : C-s
 * Delete the character left of cursor : backspace
 
-Note that arrow keys are not working in vi mode atm.
- 
