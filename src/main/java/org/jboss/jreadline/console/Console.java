@@ -576,6 +576,9 @@ public class Console {
                 buffer.delete(action.getEnd(), action.getStart());
                 moveCursor((action.getEnd() - action.getStart()));
             }
+            if(editMode.getMode() == Mode.VI && buffer.getCursor() == buffer.length()) {
+                moveCursor(-1);
+            }
             redrawLine();
         }
         else if(action.getAction() == Action.YANK) {
