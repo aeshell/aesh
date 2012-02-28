@@ -34,34 +34,27 @@ public class ConsoleInputSession {
 
     private volatile boolean connected;
     
-    public ConsoleInputSession(InputStream consoleStream)
-    {
+    public ConsoleInputSession(InputStream consoleStream) {
         this.consoleStream = consoleStream;
         this.connected = true;
 
-        this.externalInputStream = new InputStream()
-        {
+        this.externalInputStream = new InputStream() {
             private String b;
             private int c;
 
             @Override
-            public int read() throws IOException
-            {
-                try
-                {
-                    if (b == null || c == b.length())
-                    {
+            public int read() throws IOException {
+                try {
+                    if (b == null || c == b.length()) {
                         b = blockingQueue.poll(365, TimeUnit.DAYS);
                         c = 0;
                     }
 
-                    if (b != null && !b.isEmpty())
-                    {
+                    if (b != null && !b.isEmpty()) {
                         return b.charAt(c++);
                     }
                 }
-                catch (InterruptedException e)
-                {
+                catch (InterruptedException e) {
                     //
                 }
                 return -1;
@@ -84,37 +77,28 @@ public class ConsoleInputSession {
         startReader();
     }
 
-    private void startReader()
-    {
-        Thread readerThread = new Thread()
-        {
+    private void startReader() {
+        Thread readerThread = new Thread() {
             @Override
-            public void run()
-            {
-                while (connected)
-                {
-                    try
-                    {
+            public void run() {
+                while (connected) {
+                    try {
                         byte[] bBuf = new byte[20];
                         int read = consoleStream.read(bBuf);
 
-                        if (read > 0)
-                        {
+                        if (read > 0) {
                             blockingQueue.put(new String(bBuf, 0, read));
                         }
 
                         Thread.sleep(10);
                     }
-                    catch (IOException e)
-                    {
-                        if (connected)
-                        {
+                    catch (IOException e) {
+                        if (connected) {
                             connected = false;
                             throw new RuntimeException("broken pipe");
                         }
                     }
-                    catch (InterruptedException e)
-                    {
+                    catch (InterruptedException e) {
                         //
                     }
                 }
@@ -124,19 +108,16 @@ public class ConsoleInputSession {
         readerThread.start();
     }
 
-    public void interruptPipe()
-    {
+    public void interruptPipe() {
         blockingQueue.offer("\n");
     }
 
-    public void stop()
-    {
+    public void stop() {
         connected = false;
         blockingQueue.offer("");
     }
 
-    public InputStream getExternalInputStream()
-    {
+    public InputStream getExternalInputStream() {
         return externalInputStream;
     }
 }
