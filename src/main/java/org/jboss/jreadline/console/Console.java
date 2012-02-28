@@ -724,10 +724,10 @@ public class Console {
             out = new StringBuilder("(forward-i-search) `");
         out.append(searchTerm).append("': ");
         cursor += out.length();
-        out.append(result); //.append("\u001b[K");
+        out.append(result);
         setBufferLine(out.toString());
+        moveCursor(-buffer.getCursor()+cursor);
         redrawLine();
-        //moveCursor(cursor+1);
     }
 
     /**
