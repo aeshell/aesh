@@ -20,6 +20,12 @@
     <name>JReadline</name>
     <description>A simple GNU Readline implementation</description>
 
+    <properties>
+        <!-- jboss-parent override -->
+        <maven.compiler.argument.target>1.6</maven.compiler.argument.target>
+        <maven.compiler.argument.source>1.6</maven.compiler.argument.source>
+    </properties>
+
     <scm>
         <connection>scm:git:git://github.com/stalep/jreadline.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/stalep/jreadline.git</developerConnection>
