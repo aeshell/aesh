@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-parent</artifactId>
-        <version>6-beta-2</version>
+        <version>8</version>
         <relativePath />
     </parent>
 
@@ -16,7 +16,7 @@
     <groupId>org.jboss.jreadline</groupId>
     <artifactId>jreadline</artifactId>
     <packaging>jar</packaging>
-    <version>0.9-SNAPSHOT</version>
+    <version>0.9</version>
     <name>JReadline</name>
     <description>A simple GNU Readline implementation</description>
 
@@ -38,7 +38,7 @@
         <dependency>
             <groupId>org.fusesource.jansi</groupId>
             <artifactId>jansi</artifactId>
-            <version>1.7</version>
+            <version>1.8</version>
         </dependency>
 
         <dependency>
