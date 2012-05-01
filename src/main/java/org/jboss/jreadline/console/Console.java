@@ -466,7 +466,7 @@ public class Console {
                     if((newLine.length()+buffer.getPrompt().length()) % getTerminalWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
-                        int totalRows = newLine.length() / getTerminalWidth() +1;
+                        //int totalRows = newLine.length() / getTerminalWidth() +1;
                         //logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
                         //        ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
                         terminal.write(Buffer.printAnsi(numNewRows+"S"));
@@ -576,8 +576,10 @@ public class Console {
                 buffer.delete(action.getEnd(), action.getStart());
                 moveCursor((action.getEnd() - action.getStart()));
             }
+
             if(editMode.getMode() == Mode.VI && buffer.getCursor() == buffer.length()) {
-                moveCursor(-1);
+                if(!((ViEditMode) editMode).isInEditMode())
+                    moveCursor(-1);
             }
             redrawLine();
         }
@@ -829,8 +831,7 @@ public class Console {
                 terminal.write(' ');
             }
         }
-        else { //if(completion.length() >= buffer.getLine().length()){
-            //String rest = completion.substring( buffer.getLine().length());
+        else {
             buffer.write(completion);
             terminal.write(completion);
         }
@@ -876,13 +877,10 @@ public class Console {
                 StringBuilder builder = new StringBuilder(8);
                 int row;
                 while((row = terminal.read(false)[0]) > -1 && row != 'R') {
-                    //while((row = settings.getInputStream().read()) > -1 && row != 'R') {
-                    //while((row = settings.getInputStream().read()) > -1 && row != 'R' && row != ';') {
                     if (row != 27 && row != '[') {
                         builder.append((char) row);
                     }
                 }
-                //return Integer.parseInt(builder.toString());
                 return Integer.parseInt(builder.substring(0, builder.indexOf(";")));
             }
             catch (Exception e) {

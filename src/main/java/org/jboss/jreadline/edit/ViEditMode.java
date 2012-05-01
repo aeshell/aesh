@@ -43,7 +43,7 @@ public class ViEditMode implements EditMode {
         this.operations = operations;
     }
 
-     private boolean isInEditMode() {
+     public boolean isInEditMode() {
         return (mode == Action.EDIT);
     }
 
