@@ -250,7 +250,7 @@ public class Console {
                 }
             }
             else if (action == Action.EDIT) {
-                writeChar(in[0], mask);
+                writeChars(in, mask);
             }
             // For search movement is used a bit differently.
             // It only triggers what kind of search action thats performed
@@ -501,6 +501,11 @@ public class Console {
     private void addToHistory(String line) {
         if(!settings.isHistoryDisabled())
             history.push(line);
+    }
+    
+    private void writeChars(int[] chars, Character mask) throws IOException {
+        for(int c : chars)
+            writeChar(c,mask);
     }
 
     private void writeChar(int c, Character mask) throws IOException {
