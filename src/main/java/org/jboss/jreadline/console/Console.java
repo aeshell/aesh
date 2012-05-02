@@ -808,7 +808,9 @@ public class Console {
             
             String startsWith = Parser.findStartsWith(completions);
 
-            if(startsWith.length() > 0 && possibleCompletions.get(0).getFormattedCompletion(startsWith).length() > 0) {
+            if(startsWith.length() > 0 &&
+                    startsWith.length() >  Parser.findWordClosestToCursor(buffer.getLine(), buffer.getCursor()).length() &&
+                    possibleCompletions.get(0).getFormattedCompletion(startsWith).length() > 0) {
                 displayCompletion(possibleCompletions.get(0).getFormattedCompletion(startsWith), false);
             }
             // display all
