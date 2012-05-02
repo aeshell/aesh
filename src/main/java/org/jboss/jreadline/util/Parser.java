@@ -42,6 +42,8 @@ public class Parser {
     }
 
     public static String formatCompletions(List<String> completions, int termHeight, int termWidth) {
+        if(completions.size() < 1)
+            return "";
         int maxLength = 0;
         for(String completion : completions)
             if(completion.length() > maxLength)
