@@ -26,12 +26,10 @@ import java.util.List;
 public interface Completion {
 
     /**
-     * Return a list of possible completions based on the line and
-     * position of the cursor.
+     * Populate the CompleteOperation object with possible
+     * completions + offset if needed
      *
-     * @param line the buffer line
-     * @param cursor position
-     * @return possible completions
+     * @param completeOperation operation
      */
-    List<String> complete(String line, int cursor);
+    void complete(CompleteOperation completeOperation);
 }

@@ -16,6 +16,7 @@
  */
 package org.jboss.jreadline.console;
 
+import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.*;
@@ -776,30 +777,46 @@ public class Console {
         if(completionList.size() < 1)
             return;
 
-        List<String> possibleCompletions = new ArrayList<String>();
+        
+        List<CompleteOperation> possibleCompletions = new ArrayList<CompleteOperation>();
+        //List<String> possibleCompletions = new ArrayList<String>();
         for(Completion completion : completionList) {
-            List<String> newCompletions = completion.complete(buffer.getLine(), buffer.getCursor());
-            if(newCompletions != null && !newCompletions.isEmpty())
-                possibleCompletions.addAll( newCompletions);
+            CompleteOperation co = new CompleteOperation(buffer.getLine(), buffer.getCursor());
+            completion.complete(co);
+            if(co.getCompletionCandidates() != null && co.getCompletionCandidates().size() > 0)
+                possibleCompletions.add(co);
+            //List<String> newCompletions = completion.complete(buffer.getLine(), buffer.getCursor());
+            //if(newCompletions != null && !newCompletions.isEmpty())
+            //    possibleCompletions.addAll( newCompletions);
         }
 
         // not hits, just return (perhaps we should beep?)
         if(possibleCompletions.size() < 1)
             return;
         // only one hit, do a completion
-        else if(possibleCompletions.size() == 1)
-            displayCompletion(possibleCompletions.get(0), true);
+        else if(possibleCompletions.size() == 1 && 
+                possibleCompletions.get(0).getCompletionCandidates().size() == 1) {
+            //some formatted completions might not be valid and shouldnt be displayed
+            if(possibleCompletions.get(0).getFormattedCompletionCandidates().size() == 1)
+                displayCompletion(possibleCompletions.get(0).getFormattedCompletionCandidates().get(0), true);
+        }
         // more than one hit...
         else {
-            String startsWith = Parser.findStartsWith(possibleCompletions);
-            if(startsWith.length() > 0 && startsWith.length() > buffer.getCursor())
-                displayCompletion(startsWith, false);
+            List<String> completions = new ArrayList<String>();
+            for(CompleteOperation co : possibleCompletions)
+                completions.addAll(co.getCompletionCandidates());
+            
+            String startsWith = Parser.findStartsWith(completions);
+
+            if(startsWith.length() > 0 && possibleCompletions.get(0).getFormattedCompletion(startsWith).length() > 0) {
+                displayCompletion(possibleCompletions.get(0).getFormattedCompletion(startsWith), false);
+            }
             // display all
             // check size
             else {
-                if(possibleCompletions.size() > 100) {
+                if(completions.size() > 100) {
                     if(displayCompletion) {
-                        displayCompletions(possibleCompletions);
+                        displayCompletions(completions);
                         displayCompletion = false;
                     }
                     else {
@@ -809,7 +826,7 @@ public class Console {
                 }
                 // display all
                 else {
-                    displayCompletions(possibleCompletions);
+                    displayCompletions(completions);
                 }
             }
         }
