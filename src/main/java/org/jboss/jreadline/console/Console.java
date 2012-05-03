@@ -773,6 +773,7 @@ public class Console {
         }
     }
 
+    //TODO: This is a mess...
     private void complete() throws IOException {
         if(completionList.size() < 1)
             return;
@@ -785,9 +786,6 @@ public class Console {
             completion.complete(co);
             if(co.getCompletionCandidates() != null && co.getCompletionCandidates().size() > 0)
                 possibleCompletions.add(co);
-            //List<String> newCompletions = completion.complete(buffer.getLine(), buffer.getCursor());
-            //if(newCompletions != null && !newCompletions.isEmpty())
-            //    possibleCompletions.addAll( newCompletions);
         }
 
         // not hits, just return (perhaps we should beep?)
@@ -797,25 +795,23 @@ public class Console {
         else if(possibleCompletions.size() == 1 && 
                 possibleCompletions.get(0).getCompletionCandidates().size() == 1) {
             //some formatted completions might not be valid and shouldnt be displayed
-            if(possibleCompletions.get(0).getFormattedCompletionCandidates().size() == 1)
-                displayCompletion(possibleCompletions.get(0).getFormattedCompletionCandidates().get(0), true);
+            displayCompletion(possibleCompletions.get(0).getCompletionCandidates().get(0),
+                    possibleCompletions.get(0).getFormattedCompletionCandidates().get(0), true);
         }
         // more than one hit...
         else {
-            List<String> completions = new ArrayList<String>();
-            for(CompleteOperation co : possibleCompletions)
-                completions.addAll(co.getCompletionCandidates());
-            
-            String startsWith = Parser.findStartsWith(completions);
 
-            if(startsWith.length() > 0 &&
-                    startsWith.length() >  Parser.findWordClosestToCursor(buffer.getLine(), buffer.getCursor()).length() &&
-                    possibleCompletions.get(0).getFormattedCompletion(startsWith).length() > 0) {
-                displayCompletion(possibleCompletions.get(0).getFormattedCompletion(startsWith), false);
-            }
-            // display all
-            // check size
+            String startsWith = Parser.findStartsWithOperation(possibleCompletions);
+
+            if(startsWith.length() > 0)
+                displayCompletion("", startsWith, false);
+                // display all
+                // check size
             else {
+                List<String> completions = new ArrayList<String>();
+                for(CompleteOperation co : possibleCompletions)
+                    completions.addAll(co.getCompletionCandidates());
+
                 if(completions.size() > 100) {
                     if(displayCompletion) {
                         displayCompletions(completions);
@@ -839,25 +835,26 @@ public class Console {
      * If !completion.startsWith(buffer.getLine()) the completion will be added to the line,
      * else it will replace whats at the buffer line.
      *
-     * @param completion item
+     * @param fullCompletion the while completion
+     * @param completion partial completion
      * @param appendSpace if its an actual complete
      * @throws java.io.IOException stream
      */
-    private void displayCompletion(String completion, boolean appendSpace) throws IOException {
+    private void displayCompletion(String fullCompletion, String completion, boolean appendSpace) throws IOException {
         if(completion.startsWith(buffer.getLine())) {
             performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
             buffer.write(completion);
             terminal.write(completion);
 
             //only append space if its an actual complete, not a partial
-            if(appendSpace) {
-                buffer.write(' ');
-                terminal.write(' ');
-            }
         }
         else {
             buffer.write(completion);
             terminal.write(completion);
+        }
+        if(appendSpace && fullCompletion.startsWith(buffer.getLine())) {
+            buffer.write(' ');
+            terminal.write(' ');
         }
 
         redrawLineFromCursor();

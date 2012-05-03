@@ -69,12 +69,14 @@ public class CompleteOperation {
     }
     
     public List<String> getFormattedCompletionCandidates() {
-        if(offset > 0 && offset < cursor) {
+        if(offset < cursor) {
             List<String> fixedCandidates = new ArrayList<String>(completionCandidates.size());
             int pos = cursor - offset;
             for(String c : completionCandidates) {
-                if(c.length() > pos)
+                if(c.length() >= pos)
                     fixedCandidates.add(c.substring(pos));
+                else
+                    fixedCandidates.add("");
             }
             return fixedCandidates;
         }
@@ -83,7 +85,7 @@ public class CompleteOperation {
     }
     
     public String getFormattedCompletion(String completion) {
-        if(offset > 0 && offset < cursor) {
+        if(offset < cursor) {
             int pos = cursor - offset;
             if(completion.length() > pos)
                 return completion.substring(pos);

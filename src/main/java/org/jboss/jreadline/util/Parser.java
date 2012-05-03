@@ -16,8 +16,10 @@
  */
 package org.jboss.jreadline.util;
 
+import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.console.Config;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -78,6 +80,18 @@ public class Parser {
 
     private static String padRight(int n, String s) {
         return String.format("%1$-" + n + "s", s);
+    }
+    
+    public static String findStartsWithOperation(List<CompleteOperation> coList) {
+        List<String> tmpList = new ArrayList<String>();
+        for(CompleteOperation co : coList) {
+            String s = findStartsWith(co.getFormattedCompletionCandidates());
+            if(s.length() > 0)
+                tmpList.add(s);
+            else
+                return "";
+        }
+        return findStartsWith(tmpList);
     }
 
     /**

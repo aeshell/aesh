@@ -1,3 +1,4 @@
+import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.Console;
 import org.jboss.jreadline.console.settings.Settings;
@@ -24,10 +25,10 @@ public class Example {
 
         Completion completer = new Completion() {
             @Override
-            public List<String> complete(String line, int cursor) {
+            public void complete(CompleteOperation co) {
                 // very simple completor
                 List<String> commands = new ArrayList<String>();
-                if(line.equals("fo")) {
+                if(co.getBuffer().equals("fo") || co.getBuffer().equals("foo")) {
                     commands.add("foo");
                     commands.add("foobaa");
                     commands.add("foobar");
@@ -36,15 +37,19 @@ public class Example {
                     commands.add("foobcx");
                     commands.add("foobdx");
                 }
-                else if(line.equals("fooba")) {
+                else if(co.getBuffer().equals("fooba")) {
                     commands.add("foobaa");
                     commands.add("foobar");
                     commands.add("foobaxxxxxx");
                 }
-                else if(line.equals("foobar")) {
+                else if(co.getBuffer().equals("foobar")) {
                     commands.add("foobar");
                 }
-                 return commands;
+                else if(co.getBuffer().equals("h")) {
+                    commands.add("history");
+                    commands.add("help");
+                }
+                 co.setCompletionCandidates(commands);
             }
         };
 
