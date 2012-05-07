@@ -168,6 +168,9 @@ public class KeyOperationManager {
         keys.add(new KeyOperation(126, Operation.CASE)); //~
         keys.add(new KeyOperation(121, Operation.YANK_ALL)); //y
 
+        //replace
+        keys.add(new KeyOperation(114, Operation.REPLACE)); //r
+
         //movement
         keys.add(new KeyOperation(104, Operation.PREV_CHAR)); //h
         keys.add(new KeyOperation(108, Operation.NEXT_CHAR)); //l

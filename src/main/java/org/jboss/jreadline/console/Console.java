@@ -227,7 +227,7 @@ public class Console {
         while(true) {
 
             int[] in = terminal.read(settings.isReadAhead());
-            //System.out.println("got int:"+c);
+            //System.out.println("got int:"+in[0]);
             if (in[0] == -1) {
                 return null;
             }
@@ -402,6 +402,9 @@ public class Console {
             }
             else if(action == Action.CLEAR) {
                 clear();
+            }
+            else if(action == Action.REPLACE) {
+                replace(in[0]);
             }
             else if(action == Action.NO_ACTION) {
                 //atm do nothing
@@ -881,6 +884,12 @@ public class Console {
                     Math.abs( buffer.getCursor()-
                             buffer.getLine().length())+"D")));
 
+    }
+
+    private void replace(int rChar) throws IOException {
+        addActionToUndoStack();
+        buffer.replaceChar((char) rChar);
+        redrawLine();
     }
 
     /**

@@ -352,6 +352,10 @@ public class Buffer {
         else
             return false;
     }
+    
+    protected void replaceChar(char rChar) {
+        line.setCharAt(getCursor(), rChar);
+    }
 
     /**
      * Return the biggest common startsWith string

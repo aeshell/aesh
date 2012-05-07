@@ -61,6 +61,10 @@ public class ViEditMode implements EditMode {
     private boolean isChangeMode() {
         return (mode == Action.CHANGE);
     }
+    
+    private boolean isInReplaceMode() {
+        return (mode == Action.REPLACE);
+    }
 
     private boolean isYankMode() {
         return (mode == Action.YANK);
@@ -84,6 +88,7 @@ public class ViEditMode implements EditMode {
     @Override
     public Operation parseInput(int[] in) {
         int input = in[0];
+
         if(Config.isOSPOSIXCompatible() && in.length > 1) {
             KeyOperation ko = KeyOperationManager.findOperation(operations, in);
             if(ko != null) {
@@ -149,6 +154,22 @@ public class ViEditMode implements EditMode {
                 return Operation.SEARCH_INPUT;
             }
         } // end search mode
+        
+        if(isInReplaceMode()) {
+            if(currentOperations.size() == 1 && 
+                    currentOperations.get(0).getOperation() == Operation.ESCAPE) {
+                operationLevel = 0;
+                currentOperations.clear();
+                mode = Action.MOVE;
+                return Operation.NO_ACTION;
+            }
+            else {
+                operationLevel = 0;
+                currentOperations.clear();
+                mode = Action.MOVE;
+                return saveAction(Operation.REPLACE);
+            }
+        }
 
 
         if(currentOperations.isEmpty()) {
@@ -168,7 +189,10 @@ public class ViEditMode implements EditMode {
                 mode = Action.EDIT; //set to edit after a newline
                 return Operation.NEW_LINE;
             }
-
+            else if(operation == Operation.REPLACE && !isInEditMode()) {
+                mode = Action.REPLACE;
+                return Operation.NO_ACTION;
+            }
             else if(operation == Operation.DELETE_PREV_CHAR && workingMode == Action.NO_ACTION) {
                 if(isInEditMode())
                     return Operation.DELETE_PREV_CHAR;

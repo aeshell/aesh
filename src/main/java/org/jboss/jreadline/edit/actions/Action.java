@@ -41,5 +41,6 @@ public enum Action {
     CLEAR,
     ABORT,
     CHANGE_EDITMODE,
-    NO_ACTION;
+    NO_ACTION,
+    REPLACE
 }
