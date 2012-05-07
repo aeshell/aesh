@@ -45,9 +45,19 @@ public class Example {
                 else if(co.getBuffer().equals("foobar")) {
                     commands.add("foobar");
                 }
+                else if(co.getBuffer().equals("bar")) {
+                    commands.add("bar/");
+                }
                 else if(co.getBuffer().equals("h")) {
-                    commands.add("history");
+                    commands.add("help.history");
                     commands.add("help");
+                }
+                else if(co.getBuffer().equals("help")) {
+                    commands.add("help.history");
+                    commands.add("help");
+                }
+                else if(co.getBuffer().equals("help.")) {
+                    commands.add("help.history");
                 }
                  co.setCompletionCandidates(commands);
             }
