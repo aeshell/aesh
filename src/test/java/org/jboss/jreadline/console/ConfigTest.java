@@ -34,12 +34,11 @@ public class ConfigTest extends TestCase {
 
 
     public void testParseInputrc() throws IOException {
-        Config config = new Config();
         Settings settings = Settings.getInstance();
         settings.resetToDefaults();
         settings.setInputrc(new File("src/test/resources/inputrc1"));
 
-        config.parseInputrc(settings);
+        Config.parseInputrc(settings);
 
         assertEquals(settings.getEditMode(), Mode.VI);
 
@@ -48,5 +47,14 @@ public class ConfigTest extends TestCase {
         assertEquals(settings.getHistorySize(), 300);
 
         assertEquals(settings.isDisableCompletion(), true);
+    }
+    
+    public void testParseProperties() throws IOException {
+        System.setProperty("jreadline.terminal", "org.jboss.jreadline.terminal.TestTerminal");
+
+        Config.readRuntimeProperties(Settings.getInstance());
+
+        assertEquals(Settings.getInstance().getTerminal().getClass().getName(), "org.jboss.jreadline.terminal.TestTerminal");
+                
     }
 }

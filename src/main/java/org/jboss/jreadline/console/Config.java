@@ -18,6 +18,7 @@ package org.jboss.jreadline.console;
 
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.Mode;
+import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.util.LoggerUtil;
 
 import java.io.*;
@@ -154,6 +155,22 @@ public class Config {
             else
                 logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+DISABLE_COMPLETION.getValues());
+        }
+    }
+    
+    protected static void readRuntimeProperties(Settings settings) {
+        try {
+            String term = System.getProperty("jreadline.terminal");
+            if(term != null && term.length() > 0) {
+                settings.setTerminal((Terminal) settings.getClass().getClassLoader().loadClass(term).newInstance());
+            }
+        }
+        catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
     }
 }

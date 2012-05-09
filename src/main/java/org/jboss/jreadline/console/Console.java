@@ -82,6 +82,9 @@ public class Console {
             throw new RuntimeException("Cant reset an already running Console, must stop if first!");
          if(Settings.getInstance().doReadInputrc())
             Config.parseInputrc(Settings.getInstance());
+        
+        logger.info("checking properties");
+        Config.readRuntimeProperties(Settings.getInstance());
 
         setTerminal(settings.getTerminal(),
                 settings.getInputStream(), settings.getOutputStream());
@@ -227,7 +230,7 @@ public class Console {
         while(true) {
 
             int[] in = terminal.read(settings.isReadAhead());
-            //System.out.println("got int:"+in[0]);
+            System.out.println("got int:"+in[0]);
             if (in[0] == -1) {
                 return null;
             }

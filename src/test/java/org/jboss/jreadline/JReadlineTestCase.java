@@ -21,6 +21,7 @@ import org.jboss.jreadline.console.Config;
 import org.jboss.jreadline.console.Console;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.Mode;
+import org.jboss.jreadline.terminal.TestTerminal;
 
 import java.io.*;
 
@@ -37,6 +38,7 @@ public abstract class JReadlineTestCase extends TestCase {
 
         Settings settings = Settings.getInstance();
         settings.setReadInputrc(false);
+        settings.setTerminal(new TestTerminal());
         settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
         settings.setOutputStream(new ByteArrayOutputStream());
         settings.setEditMode(Mode.EMACS);
