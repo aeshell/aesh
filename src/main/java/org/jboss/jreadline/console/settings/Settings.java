@@ -48,6 +48,7 @@ public class Settings {
     private String logFile;
     private boolean disableCompletion = false;
     private boolean readAhead = true;
+    private QuitHandler quitHandler;
 
     private static final Settings INSTANCE = new Settings();
 
@@ -72,6 +73,7 @@ public class Settings {
         readInputrc = true;
         logFile = null;
         disableCompletion = false;
+        quitHandler = null;
     }
     /**
      * Either Emacs or Vi mode.
@@ -227,12 +229,12 @@ public class Settings {
     public Terminal getTerminal() {
         if(terminal == null) {
             if(Config.isOSPOSIXCompatible())
-                return new POSIXTerminal();
+                terminal = new POSIXTerminal();
             else
-                return new WindowsTerminal();
+                terminal = new WindowsTerminal();
         }
-        else
-            return terminal;
+
+        return terminal;
     }
 
     /**
@@ -398,5 +400,14 @@ public class Settings {
      */
     public void setReadAhead(boolean readAhead) {
         this.readAhead = readAhead;
+    }
+
+    public void setQuitHandler(QuitHandler qh) {
+        quitHandler = qh;
+    }
+
+    public void quit() {
+        if(quitHandler != null)
+            quitHandler.quit();
     }
 }

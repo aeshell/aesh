@@ -71,18 +71,6 @@ public class POSIXTerminal implements Terminal {
             e.printStackTrace();
         }
 
-        // at exit, restore the original tty configuration (for JDK 1.3+)
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void start() {
-                try {
-                    reset();
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
         writer = new PrintWriter( new OutputStreamWriter(outputStream));
     }
 

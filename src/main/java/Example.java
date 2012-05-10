@@ -1,6 +1,7 @@
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.Console;
+import org.jboss.jreadline.console.settings.QuitHandler;
 import org.jboss.jreadline.console.settings.Settings;
 
 import java.io.IOException;
@@ -17,7 +18,7 @@ public class Example {
 
         //Settings.getInstance().setAnsiConsole(false);
         Settings.getInstance().setReadInputrc(false);
-        //Settings.getInstance().setHistoryDisabled(true);
+       //Settings.getInstance().setHistoryDisabled(true);
         //Settings.getInstance().setHistoryPersistent(false);
         Console console = new Console();
 
