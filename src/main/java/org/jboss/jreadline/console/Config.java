@@ -164,7 +164,62 @@ public class Config {
             if(term != null && term.length() > 0) {
                 settings.setTerminal((Terminal) settings.getClass().getClassLoader().loadClass(term).newInstance());
             }
-        }
+            String editMode = System.getProperty("jreadline.editmode");
+            if(editMode != null && editMode.length() > 0) {
+                if(editMode.equalsIgnoreCase("VI"))
+                    settings.setEditMode(Mode.VI);
+                else if(editMode.equalsIgnoreCase("EMACS"))
+                    settings.setEditMode(Mode.EMACS);
+            }
+            String readInputrc = System.getProperty("jreadline.readinputrc");
+            if(readInputrc != null && readInputrc.length() > 0)
+                if(readInputrc.equalsIgnoreCase("true") ||
+                        readInputrc.equalsIgnoreCase("false"))
+                    settings.setReadInputrc(Boolean.parseBoolean(readInputrc));
+
+            String inputrc = System.getProperty("jreadline.inputrc");
+            if(inputrc != null && inputrc.length() > 0)
+                if(new File(inputrc).isFile())
+                    settings.setInputrc(new File(inputrc));
+            
+            String historyFile = System.getProperty("jreadline.historyfile");
+            if(historyFile != null && historyFile.length() > 0)
+                if(new File(historyFile).isFile())
+                    settings.setInputrc(new File(historyFile));
+            
+            String historyPersistent = System.getProperty("jreadline.historypersistent");
+            if(historyPersistent != null && historyPersistent.length() > 0)
+                if(historyPersistent.equalsIgnoreCase("true") || 
+                        historyPersistent.equalsIgnoreCase("false"))
+                    settings.setHistoryPersistent(Boolean.parseBoolean(historyPersistent));
+            
+            String historyDisabled = System.getProperty("jreadline.historydisabled");
+            if(historyDisabled != null && historyDisabled.length() > 0)
+                if(historyDisabled.equalsIgnoreCase("true") ||
+                        historyDisabled.equalsIgnoreCase("false"))
+                    settings.setHistoryDisabled(Boolean.parseBoolean(historyDisabled));
+           
+            String historySize = System.getProperty("jreadline.historysize");
+            if(historySize != null && historySize.length() > 0)
+                settings.setHistorySize(Integer.parseInt(historySize));
+            
+            String doLogging = System.getProperty("jreadline.logging");
+            if(doLogging != null && doLogging.length() > 0)
+                if(doLogging.equalsIgnoreCase("true") ||
+                        doLogging.equalsIgnoreCase("false"))
+                    settings.setLogging(Boolean.parseBoolean(doLogging));
+            
+            String logFile = System.getProperty("jreadline.logfile");
+            if(logFile != null && logFile.length() > 0)
+                settings.setLogFile(logFile);
+
+            String disableCompletion = System.getProperty("jreadline.disablecompletion");
+            if(disableCompletion != null && disableCompletion.length() > 0)
+                if(disableCompletion.equalsIgnoreCase("true") ||
+                        disableCompletion.equalsIgnoreCase("false"))
+                    settings.setDisableCompletion(Boolean.parseBoolean(disableCompletion));
+
+          }
         catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (InstantiationException e) {

@@ -101,3 +101,16 @@ In edit mode:
 * Search forward in the history for a particular string : C-s
 * Delete the character left of cursor : backspace
 
+Supported runtime properties:
+-------------
+* jreadline.terminal : specify Terminal object
+* jreadline.editmode : specify either VI or EMACS edit mode
+* jreadline.readinputrc : specify if jreadline should read settings from inputrc
+* jreadline.inputrc : specify the inputrc file (must exist)
+* jreadline.historyfile : specify the history file (must exist)
+* jreadline.historypersistent : specify if jreadlin should persist history file on exit
+* jreadline.historydisabled : specify if history should be disabled
+* jreadline.historysize : speficy the maximum size of the history file
+* jreadline.logging : specify if logging should be enabled
+* jreadline.logfile : specify the log file
+* jreadline.disablecompletion : specify if completion should be disabled

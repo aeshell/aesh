@@ -69,6 +69,7 @@ public abstract class JReadlineTestCase extends TestCase {
 
         Settings settings = Settings.getInstance();
         settings.setReadInputrc(false);
+        settings.setTerminal(new TestTerminal());
         settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
         settings.setOutputStream(new ByteArrayOutputStream());
         settings.setReadAhead(false);
