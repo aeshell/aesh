@@ -48,13 +48,36 @@ public class ConfigTest extends TestCase {
 
         assertEquals(settings.isDisableCompletion(), true);
     }
-    
+
     public void testParseProperties() throws IOException {
         System.setProperty("jreadline.terminal", "org.jboss.jreadline.terminal.TestTerminal");
+        System.setProperty("jreadline.editmode", "vi");
+        System.setProperty("jreadline.historypersistent", "false");
+        System.setProperty("jreadline.historydisabled", "true");
+        System.setProperty("jreadline.historysize", "42");
+        System.setProperty("jreadline.logging", "false");
+        System.setProperty("jreadline.disablecompletion", "true");
 
         Config.readRuntimeProperties(Settings.getInstance());
 
         assertEquals(Settings.getInstance().getTerminal().getClass().getName(), "org.jboss.jreadline.terminal.TestTerminal");
                 
+        assertEquals(Settings.getInstance().getEditMode(), Mode.VI);
+
+        assertEquals(Settings.getInstance().isHistoryPersistent(), false);
+        assertEquals(Settings.getInstance().isHistoryDisabled(), true);
+        assertEquals(Settings.getInstance().getHistorySize(), 42);
+        assertEquals(Settings.getInstance().isLogging(), false);
+        assertEquals(Settings.getInstance().isDisableCompletion(), true);
+
+        System.setProperty("jreadline.terminal", "");
+        System.setProperty("jreadline.editmode", "");
+        System.setProperty("jreadline.historypersistent", "");
+        System.setProperty("jreadline.historydisabled", "");
+        System.setProperty("jreadline.historysize", "");
+        System.setProperty("jreadline.logging", "");
+        System.setProperty("jreadline.disablecompletion", "");
+
+        Settings.getInstance().resetToDefaults();
     }
 }

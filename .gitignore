@@ -3,6 +3,7 @@
 .classpath
 .settings
 .metadata
+target
 
 # ignore IDEA files
 *.iml
