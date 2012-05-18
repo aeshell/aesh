@@ -16,7 +16,7 @@
     <groupId>org.jboss.jreadline</groupId>
     <artifactId>jreadline</artifactId>
     <packaging>jar</packaging>
-    <version>0.13</version>
+    <version>0.14</version>
     <name>JReadline</name>
     <description>A simple GNU Readline implementation</description>
 
