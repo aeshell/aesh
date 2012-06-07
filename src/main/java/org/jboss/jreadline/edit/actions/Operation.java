@@ -24,6 +24,7 @@ package org.jboss.jreadline.edit.actions;
 public enum Operation {
 
     SEARCH_PREV(Movement.PREV, Action.SEARCH),
+    SEARCH_NEXT(Movement.NEXT, Action.SEARCH),
     SEARCH_END(Movement.END, Action.SEARCH),
     SEARCH_PREV_WORD(Movement.PREV_WORD, Action.SEARCH),
     SEARCH_NEXT_WORD(Movement.NEXT_WORD, Action.SEARCH),

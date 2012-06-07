@@ -92,7 +92,7 @@ public class KeyOperation {
     }
 
     public String toString() {
-        return "Operation: "+operation;
+        return "Operation: "+operation+", "+Arrays.toString(keyValues);
     }
 
     public boolean equalValues(int[] values) {
