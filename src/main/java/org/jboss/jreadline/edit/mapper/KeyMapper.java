@@ -27,39 +27,53 @@ import java.util.regex.Pattern;
 public class KeyMapper {
 
     private static Pattern quotePattern = Pattern.compile("^\"");
-    private static Pattern metaQuotePattern = Pattern.compile("^\\\\M-"); // "\M-
-    private static Pattern metaPattern = Pattern.compile("^M-"); // "M-
-    private static Pattern controlPattern = Pattern.compile("^C-"); // "M-
-    private static Pattern controlQuotePattern = Pattern.compile("^\\\\C-"); // "\C-
+    private static Pattern metaPattern = Pattern.compile("^(\\\\M|M|Meta)-"); // "M-
+    private static Pattern controlPattern = Pattern.compile("^(\\\\C|C|Control)-"); // "M-
 
     /**
-     * Parse lines that start with "
+     * Parse key mapping lines that start with "
      *
      * @param keys that need mapping
      * @param operation is is specified for
      * @return proper KeyOperation
      */
     public static KeyOperation mapQuoteKeys(String keys, Operation operation) {
-        return new KeyOperation(mapQuoteKeys(keys), operation);
+        return new KeyOperation(mapKeys(quotePattern.split(keys)[1]), operation);
     }
 
     /**
-     * Parse lines that start with "
+     * Parse key mapping lines that start with "
      *
      * @param keys that need mapping
-     * @param operation is is specified for
+     * @param operation it is specified for
      * @return proper KeyOperation
      */
     public static KeyOperation mapQuoteKeys(String keys, String operation) {
-        return new KeyOperation(mapQuoteKeys(keys), OperationMapper.mapToFunction(operation));
+        return new KeyOperation(mapKeys(quotePattern.split(keys)[1]),
+                OperationMapper.mapToFunction(operation));
     }
-    
+
+    /**
+     * Parse lines that contain mapping like: C-q, Control-q, M-a, Meta-a, Meta-Control-b....
+     * 
+     * @param keys that need mapping
+     * @param operation it is specified for
+     * @return proper KeyOperation
+     */
     public static KeyOperation mapKeys(String keys, Operation operation) {
         return new KeyOperation(mapKeys(keys), operation);
     }
-    
+
+    /**
+     * Parse lines that contain mapping like: C-q, Control-q, M-a, Meta-a, Meta-Control-b....
+     *
+     * @param keys that need mapping
+     * @param operation it is specified for
+     * @return proper KeyOperation
+     */
     public static KeyOperation mapKeys(String keys, String operation) {
-        return new KeyOperation(mapKeys(keys), OperationMapper.mapToFunction(operation));
+        return new KeyOperation(mapKeys(keys),
+                OperationMapper.mapToFunction(operation));
     }
     
     private static int[] mapKeys(String keys) {
@@ -97,43 +111,6 @@ public class KeyMapper {
         return mapRandomKeys(randomKeys, control, meta);
     }
     
-    private static int[] mapQuoteKeys(String keys) {
-        boolean meta = false;
-        boolean control = false;
-        String randomKeys = null;
-        String rest;
-        
-        rest = quotePattern.split(keys)[1];
-
-        //find control/meta
-        while(rest != null) {
-            if(metaQuotePattern.matcher(rest).find()) {
-                meta = true;
-                String[] split = metaQuotePattern.split(rest);
-                if(split.length > 1)
-                    rest = split[1];
-                else
-                    rest = null;
-                continue;
-            }
-
-            if(controlQuotePattern.matcher(rest).find()) {
-                control = true;
-                String[] split = controlQuotePattern.split(rest);
-                if(split.length > 1)
-                    rest = split[1];
-                else
-                    rest = null;
-                continue;
-            }
-
-            randomKeys = rest;
-            rest = null;
-        }
-        
-        return mapRandomKeys(randomKeys, control, meta);
-    }
-
     /**
      * Map all random keys after meta/control to its proper int value.
      * - yes its a bad method name....
