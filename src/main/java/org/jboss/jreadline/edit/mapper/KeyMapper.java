@@ -22,6 +22,13 @@ import org.jboss.jreadline.edit.actions.Operation;
 import java.util.regex.Pattern;
 
 /**
+ * Map key bindings to specified operation. Used when reading inputrc files.
+ * Created to map bindings like:
+ * "\M-[D":        backward-char
+ * Meta-Control-h:	backward-kill-word
+ * C-q: quoted-insert
+ * ... etc
+ *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class KeyMapper {
