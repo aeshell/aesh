@@ -65,7 +65,7 @@ public class Config {
     protected static void parseInputrc(Settings settings) throws IOException {
         Logger logger = LoggerUtil.getLogger("Config");
         if(!settings.getInputrc().isFile()) {
-            System.out.println("not a file");
+            logger.info("Error while parsing: "+settings.getInputrc().getAbsolutePath()+" couldn't find file.");
             return;
         }
 
