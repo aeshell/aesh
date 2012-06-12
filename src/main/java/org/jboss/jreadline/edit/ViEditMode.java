@@ -33,14 +33,14 @@ public class ViEditMode implements EditMode {
     private Action previousMode;
 
     private Operation previousAction;
-    private List<KeyOperation> operations;
+    private KeyOperationManager operationManager;
     private List<KeyOperation> currentOperations = new ArrayList<KeyOperation>();
     private int operationLevel = 0;
 
-    public ViEditMode(List<KeyOperation> operations) {
+    public ViEditMode(KeyOperationManager operations) {
         mode = Action.EDIT;
         previousMode = Action.EDIT;
-        this.operations = operations;
+        this.operationManager = operations;
     }
 
      public boolean isInEditMode() {
@@ -90,7 +90,7 @@ public class ViEditMode implements EditMode {
         int input = in[0];
 
         if(Config.isOSPOSIXCompatible() && in.length > 1) {
-            KeyOperation ko = KeyOperationManager.findOperation(operations, in);
+            KeyOperation ko = KeyOperationFactory.findOperation(operationManager.getOperations(), in);
             if(ko != null) {
                 //clear current operations to make sure that everything works as expected
                 currentOperations.clear();
@@ -108,7 +108,7 @@ public class ViEditMode implements EditMode {
             }
             // parse a first sequence input
             else {
-                for(KeyOperation ko : operations)
+                for(KeyOperation ko : operationManager.getOperations())
                     if(input == ko.getFirstValue() && ko.getKeyValues().length == in.length)
                         currentOperations.add(ko);
             }

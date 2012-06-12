@@ -42,6 +42,7 @@ public abstract class JReadlineTestCase extends TestCase {
         settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
         settings.setOutputStream(new ByteArrayOutputStream());
         settings.setEditMode(Mode.EMACS);
+        settings.resetEditMode();
         settings.setReadAhead(false);
         if(!Config.isOSPOSIXCompatible())
             settings.setAnsiConsole(false);
@@ -74,6 +75,7 @@ public abstract class JReadlineTestCase extends TestCase {
         settings.setOutputStream(new ByteArrayOutputStream());
         settings.setReadAhead(false);
         settings.setEditMode(Mode.VI);
+        settings.resetEditMode();
         if(!Config.isOSPOSIXCompatible())
             settings.setAnsiConsole(false);
 

@@ -18,6 +18,7 @@ package org.jboss.jreadline.console;
 
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.Mode;
+import org.jboss.jreadline.edit.mapper.KeyMapper;
 import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.util.LoggerUtil;
 
@@ -71,11 +72,14 @@ public class Config {
 
         Pattern variablePattern = Pattern.compile("^set\\s+(\\S+)\\s+(\\S+)$");
         Pattern commentPattern = Pattern.compile("^#.*");
-        Pattern keyNamePattern = Pattern.compile("^\\b:\\s+\\b");
+        //Pattern keyNamePattern = Pattern.compile("^\\b:\\s+\\b");
+        Pattern keyQuoteNamePattern = Pattern.compile("(^\\\"\\S+)(\\\":\\s+)(\\S+)");
+        Pattern keyNamePattern = Pattern.compile("(^\\S+)(:\\s+)(\\S+)");
         Pattern keySeqPattern = Pattern.compile("^\"keyseq:\\s+\\b");
         Pattern startConstructs = Pattern.compile("^\\$if");
         Pattern endConstructs = Pattern.compile("^\\$endif");
 
+        Pattern keyOperationPattern = Pattern.compile("(^\\\"\\\\M-\\[D:)(\\s+)(\\S+)");
 
         BufferedReader reader =
                 new BufferedReader( new FileReader(settings.getInputrc()));
@@ -107,6 +111,19 @@ public class Config {
                 Matcher variableMatcher = variablePattern.matcher(line);
                 if(variableMatcher.matches()) {
                     parseVariables(variableMatcher.group(1), variableMatcher.group(2), settings);
+                }
+                //TODO: currently the inputrc parser is posix only
+                if(Config.isOSPOSIXCompatible()) {
+                    Matcher keyQuoteMatcher = keyQuoteNamePattern.matcher(line);
+                    if(keyQuoteMatcher.matches()) {
+                        settings.getOperationManager().addOperation(
+                                KeyMapper.mapQuoteKeys(keyQuoteMatcher.group(1),
+                                        keyQuoteMatcher.group(3)));
+                    }
+                    Matcher keyMatcher = keyNamePattern.matcher(line);
+                    if(keyMatcher.matches()) {
+                        settings.getOperationManager().addOperation(KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
+                    }
                 }
             }
 

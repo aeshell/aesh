@@ -49,6 +49,7 @@ public class Settings {
     private boolean disableCompletion = false;
     private boolean readAhead = true;
     private QuitHandler quitHandler;
+    private KeyOperationManager operationManager = new KeyOperationManager();
 
     private static final Settings INSTANCE = new Settings();
 
@@ -74,6 +75,7 @@ public class Settings {
         logFile = null;
         disableCompletion = false;
         quitHandler = null;
+        operationManager.clear();
     }
     /**
      * Either Emacs or Vi mode.
@@ -97,17 +99,44 @@ public class Settings {
     public EditMode getFullEditMode() {
         if(Config.isOSPOSIXCompatible()) {
             if(getEditMode() == Mode.EMACS)
-                return new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
+                return new EmacsEditMode(getOperationManager());
             else
-                return new ViEditMode(KeyOperationManager.generatePOSIXViMode());
+                return new ViEditMode(getOperationManager());
         }
         else {
             if(getEditMode() == Mode.EMACS)
-                return new EmacsEditMode(KeyOperationManager.generateWindowsEmacsMode());
+                return new EmacsEditMode(getOperationManager());
             else
-                return new ViEditMode(KeyOperationManager.generateWindowsViMode());
+                return new ViEditMode(getOperationManager());
         }
     }
+
+    public void resetEditMode() {
+        operationManager.clear();
+    }
+
+    public KeyOperationManager getOperationManager() {
+        if(operationManager.getOperations().size() < 1) {
+            if(Config.isOSPOSIXCompatible()) {
+                if(getEditMode() == Mode.EMACS)
+                    operationManager.addOperations(KeyOperationFactory.generatePOSIXEmacsMode());
+                else
+                    operationManager.addOperations(KeyOperationFactory.generatePOSIXViMode());
+
+            }
+            else {
+                if(getEditMode() == Mode.EMACS)
+                    operationManager.addOperations(KeyOperationFactory.generateWindowsEmacsMode());
+                else
+                    operationManager.addOperations(KeyOperationFactory.generateWindowsViMode());
+            }
+        }
+        return operationManager;
+    }
+
+
+
+
 
     /**
      * If not set the history file will be:

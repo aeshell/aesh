@@ -35,12 +35,12 @@ public class EmacsEditMode implements EditMode {
 
     private Action mode = Action.EDIT;
 
-    private List<KeyOperation> operations;
+    private KeyOperationManager operationManager;
     private List<KeyOperation> currentOperations = new ArrayList<KeyOperation>();
     private int operationLevel = 0;
 
-    public EmacsEditMode(List<KeyOperation> operations) {
-        this.operations = operations;
+    public EmacsEditMode(KeyOperationManager operations) {
+        this.operationManager = operations;
     }
 
     @Override
@@ -48,7 +48,7 @@ public class EmacsEditMode implements EditMode {
 
         int input = in[0];
         if(Config.isOSPOSIXCompatible() && in.length > 1) {
-            KeyOperation ko = KeyOperationManager.findOperation(operations, in);
+            KeyOperation ko = KeyOperationFactory.findOperation(operationManager.getOperations(), in);
             if(ko != null) {
                 //clear current operations to make sure that everything works as expected
                 currentOperations.clear();
@@ -57,7 +57,7 @@ public class EmacsEditMode implements EditMode {
         }
         else {
             //if we're in the middle of parsing a sequence input
-            //currentOperations.add(KeyOperationManager.findOperation(operations, input));
+            //currentOperations.add(KeyOperationFactory.findOperation(operations, input));
             if(operationLevel > 0) {
                 Iterator<KeyOperation> operationIterator = currentOperations.iterator();
                 while(operationIterator.hasNext())
@@ -67,7 +67,7 @@ public class EmacsEditMode implements EditMode {
             }
             // parse a first sequence input
             else {
-                for(KeyOperation ko : operations)
+                for(KeyOperation ko : operationManager.getOperations())
                     if(input == ko.getFirstValue())
                         currentOperations.add(ko);
             }

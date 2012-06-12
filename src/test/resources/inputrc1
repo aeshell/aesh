@@ -6,3 +6,4 @@ set bell-style visible
 set disable-completion on
 
 set history-size 300
+

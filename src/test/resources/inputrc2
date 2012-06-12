@@ -1,0 +1,16 @@
+
+set editing-mode emacs
+
+set bell-style visible
+
+set disable-completion on
+
+set history-size 300
+
+"\M-[D":        forward-char
+
+"\M-[B":        previous-history
+
+Meta-Control-j: backward-char
+
+Control-a: forward-word

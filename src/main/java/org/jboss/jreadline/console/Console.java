@@ -243,7 +243,8 @@ public class Console {
         while(true) {
 
             int[] in = terminal.read(settings.isReadAhead());
-            //System.out.println("got int:"+in[0]);
+            //for(int i : in)
+            //    System.out.println("got int:"+i);
             if (in[0] == -1) {
                 return null;
             }
@@ -435,18 +436,28 @@ public class Console {
     }
 
     private void changeEditMode() {
+        if(editMode.getMode() == Mode.EMACS)
+            Settings.getInstance().setEditMode(Mode.VI);
+        else
+            Settings.getInstance().setEditMode(Mode.EMACS);
+
+        Settings.getInstance().resetEditMode();
+
+        editMode = Settings.getInstance().getFullEditMode();
+        /*
         if(editMode.getMode() == Mode.EMACS) {
             if(Config.isOSPOSIXCompatible())
-                editMode = new ViEditMode(KeyOperationManager.generatePOSIXViMode());
+                editMode = new ViEditMode(KeyOperationFactory.generatePOSIXViMode());
             else
-                editMode = new ViEditMode(KeyOperationManager.generateWindowsViMode());
+                editMode = new ViEditMode(KeyOperationFactory.generateWindowsViMode());
         }
         else {
             if(Config.isOSPOSIXCompatible())
-                editMode = new EmacsEditMode(KeyOperationManager.generatePOSIXEmacsMode());
+                editMode = new EmacsEditMode(KeyOperationFactory.generatePOSIXEmacsMode());
             else
-                editMode = new EmacsEditMode(KeyOperationManager.generateWindowsEmacsMode());
+                editMode = new EmacsEditMode(KeyOperationFactory.generateWindowsEmacsMode());
         }
+        */
     }
 
     private void getHistoryElement(boolean first) throws IOException {

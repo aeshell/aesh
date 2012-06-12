@@ -14,6 +14,7 @@ target
 # ignore gradle build
 build
 .gradle
+out
 
 # ignore vim tmp files
 *.swp

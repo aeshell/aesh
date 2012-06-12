@@ -18,7 +18,9 @@ package org.jboss.jreadline.console;
 
 import junit.framework.TestCase;
 import org.jboss.jreadline.console.settings.Settings;
+import org.jboss.jreadline.edit.KeyOperation;
 import org.jboss.jreadline.edit.Mode;
+import org.jboss.jreadline.edit.actions.Operation;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +49,27 @@ public class ConfigTest extends TestCase {
         assertEquals(settings.getHistorySize(), 300);
 
         assertEquals(settings.isDisableCompletion(), true);
+
+    }
+
+    public void testParseInputrc2() throws IOException {
+        Settings settings = Settings.getInstance();
+        settings.resetToDefaults();
+        settings.setInputrc(new File("src/test/resources/inputrc2"));
+
+        Config.parseInputrc(settings);
+
+        assertEquals(new KeyOperation(new int[]{27,91,68}, Operation.MOVE_NEXT_CHAR),
+                settings.getOperationManager().findOperation(new int[]{27,91,68}));
+
+        assertEquals(new KeyOperation(new int[]{27,91,66}, Operation.HISTORY_PREV),
+                settings.getOperationManager().findOperation(new int[]{27,91,66}));
+
+        assertEquals(new KeyOperation(new int[]{27,10}, Operation.MOVE_PREV_CHAR),
+                settings.getOperationManager().findOperation(new int[]{27,10}));
+
+        assertEquals(new KeyOperation(new int[]{1}, Operation.MOVE_NEXT_WORD),
+                settings.getOperationManager().findOperation(new int[]{1}));
     }
 
     public void testParseProperties() throws IOException {
