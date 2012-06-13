@@ -418,7 +418,7 @@ public class Console {
                 changeEditMode();
             }
             else if(action == Action.CLEAR) {
-                clear();
+                clear(true);
             }
             else if(action == Action.REPLACE) {
                 replace(in[0]);
@@ -977,11 +977,24 @@ public class Console {
      * @throws IOException stream
      */
     public void clear() throws IOException {
+       clear(false);
+    }
+
+    /**
+     * Clear an ansi terminal.
+     * Set includeBuffer to true if the current buffer should be
+     * printed again after clear.
+     *
+     * @param includeBuffer if true include the current buffer line
+     * @throws IOException stream
+     */
+    public void clear(boolean includeBuffer) throws IOException {
         //first clear console
         terminal.write(Buffer.printAnsi("2J"));
         //move cursor to correct position
         terminal.write(Buffer.printAnsi("1;1H"));
         //then write prompt
-        terminal.write(buffer.getLineWithPrompt());
+        if(includeBuffer)
+            terminal.write(buffer.getLineWithPrompt());
     }
 }

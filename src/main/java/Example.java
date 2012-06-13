@@ -80,6 +80,8 @@ public class Example {
                 console.pushToConsole("password typed:"+line+"\n");
 
             }
+            if(line.equals("clear"))
+                console.clear();
         }
         if(line.equals("reset")) {
             console.stop();
