@@ -415,7 +415,7 @@ public class Console {
                     doPaste(0, false);
             }
             else if(action == Action.CHANGE_EDITMODE) {
-                changeEditMode();
+                changeEditMode(operation.getMovement());
             }
             else if(action == Action.CLEAR) {
                 clear(true);
@@ -435,29 +435,22 @@ public class Console {
 
     }
 
-    private void changeEditMode() {
-        if(editMode.getMode() == Mode.EMACS)
+    /**
+     * If movement == PREV setting VI mode
+     * if movement == NEXT setting EMACS mode
+     *
+     * @param movement specifing vi/emacs mode
+     */
+    private void changeEditMode(Movement movement) {
+        if(editMode.getMode() == Mode.EMACS && movement == Movement.PREV) {
             Settings.getInstance().setEditMode(Mode.VI);
-        else
+            Settings.getInstance().resetEditMode();
+        }
+        else if(editMode.getMode() == Mode.VI && movement == Movement.NEXT) {
             Settings.getInstance().setEditMode(Mode.EMACS);
-
-        Settings.getInstance().resetEditMode();
-
+            Settings.getInstance().resetEditMode();
+        }
         editMode = Settings.getInstance().getFullEditMode();
-        /*
-        if(editMode.getMode() == Mode.EMACS) {
-            if(Config.isOSPOSIXCompatible())
-                editMode = new ViEditMode(KeyOperationFactory.generatePOSIXViMode());
-            else
-                editMode = new ViEditMode(KeyOperationFactory.generateWindowsViMode());
-        }
-        else {
-            if(Config.isOSPOSIXCompatible())
-                editMode = new EmacsEditMode(KeyOperationFactory.generatePOSIXEmacsMode());
-            else
-                editMode = new EmacsEditMode(KeyOperationFactory.generateWindowsEmacsMode());
-        }
-        */
     }
 
     private void getHistoryElement(boolean first) throws IOException {

@@ -412,7 +412,8 @@ public class ViEditMode implements EditMode {
             else
                 mode = Action.YANK;
         }
-        else if(operation == Operation.CHANGE_EDIT_MODE)
+        else if(operation == Operation.VI_EDIT_MODE || 
+                operation == Operation.EMACS_EDIT_MODE)
             return operation;
 
         return Operation.NO_ACTION;

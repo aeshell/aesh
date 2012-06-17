@@ -94,7 +94,8 @@ public enum Operation {
     ABORT(Action.ABORT),
     REPEAT(Action.NO_ACTION),
     EXIT(Action.EXIT),
-    CHANGE_EDIT_MODE(Movement.PREV, Action.CHANGE_EDITMODE), 
+    VI_EDIT_MODE(Movement.PREV, Action.CHANGE_EDITMODE),
+    EMACS_EDIT_MODE(Movement.NEXT, Action.CHANGE_EDITMODE),
     REPLACE(Movement.NEXT, Action.REPLACE);
 
     private Movement movement;

@@ -54,7 +54,7 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(new int[]{27,79,72}, Operation.MOVE_BEGINNING));  //home
         keys.add(new KeyOperation(new int[]{27,79,70}, Operation.MOVE_END));        //end
 
-        keys.add(new KeyOperation(new int[] {27,10}, Operation.CHANGE_EDIT_MODE)); //meta-ctrl-j
+        keys.add(new KeyOperation(new int[] {27,10}, Operation.VI_EDIT_MODE)); //meta-ctrl-j
 
         return keys;
     }
@@ -84,7 +84,7 @@ public class KeyOperationFactory {
         //div
         keys.add(new KeyOperation(new int[]{224,83}, Operation.DELETE_NEXT_CHAR)); //delete
 
-        keys.add(new KeyOperation(new int[] {0,36}, Operation.CHANGE_EDIT_MODE)); //meta-ctrl-j
+        keys.add(new KeyOperation(new int[] {0,36}, Operation.VI_EDIT_MODE)); //meta-ctrl-j
 
         return keys;
     }
@@ -140,7 +140,7 @@ public class KeyOperationFactory {
 
     private static List<KeyOperation> generateGenericViMode() {
         List<KeyOperation> keys = new ArrayList<KeyOperation>();
-        keys.add(new KeyOperation(5, Operation.CHANGE_EDIT_MODE)); //ctrl-e
+        keys.add(new KeyOperation(5, Operation.EMACS_EDIT_MODE)); //ctrl-e
         keys.add(new KeyOperation(9, Operation.COMPLETE)); //tab
         keys.add(new KeyOperation(12, Operation.CLEAR)); //ctrl-l
 

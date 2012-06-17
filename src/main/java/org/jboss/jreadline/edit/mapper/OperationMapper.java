@@ -79,7 +79,7 @@ public class OperationMapper {
         else if(function.equals("dump-variables"))
             return Operation.NO_ACTION; //TODO: need to add a proper Operation
         else if(function.equals("emacs-editing-mode"))
-            return Operation.CHANGE_EDIT_MODE; // TODO: need to add a proper Operation
+            return Operation.EMACS_EDIT_MODE;
         else if(function.equals("end-kbd-macro"))
             return Operation.NO_ACTION; // TODO: need to add a proper Operation
         else if(function.equals("end-of-history"))
@@ -171,7 +171,7 @@ public class OperationMapper {
         else if(function.equals("upcase-word"))
             return Operation.NO_ACTION; // TODO: need to add a proper Operation
         else if(function.equals("vi-editing-mode"))
-            return Operation.NO_ACTION; // TODO: need to add a proper Operation
+            return Operation.VI_EDIT_MODE;
         else if(function.equals("yank"))
             return Operation.PASTE_AFTER;
         else if(function.equals("yank-last-arg"))
