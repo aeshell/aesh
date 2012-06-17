@@ -335,8 +335,12 @@ public class Settings {
      * @return log file
      */
     public String getLogFile() {
-        if(logFile == null)
-            logFile = "jreadline.log";
+        if(logFile == null) {
+            if(Config.isOSPOSIXCompatible())
+                logFile = "/tmp/jreadline.log";
+            else
+                logFile = "jreadline.log";
+        }
         return logFile;
     }
 
