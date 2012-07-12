@@ -199,6 +199,13 @@ public class ViEditMode implements EditMode {
                 else
                     return Operation.MOVE_PREV_CHAR;
             }
+            else if(operation == Operation.DELETE_NEXT_CHAR && workingMode == Action.COMMAND) {
+                if(isInEditMode())
+                    return Operation.NO_ACTION;
+                else
+                    return saveAction(Operation.DELETE_NEXT_CHAR);
+
+            }
             else if(operation == Operation.COMPLETE) {
                 if(isInEditMode())
                     return Operation.COMPLETE;

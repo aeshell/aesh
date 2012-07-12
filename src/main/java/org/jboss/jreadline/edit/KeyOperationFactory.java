@@ -48,7 +48,8 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(new int[]{27,98}, Operation.MOVE_PREV_WORD));    //meta-b
         keys.add(new KeyOperation(new int[]{27,100}, Operation.DELETE_NEXT_WORD)); //meta-d
 
-        //pgup, pgdown, end, home
+        //pgup, pgdown, end, home, delete
+        keys.add(new KeyOperation(new int[]{27,91,51,126}, Operation.DELETE_NEXT_CHAR)); //Delete
         keys.add(new KeyOperation(new int[]{27,91,53,126}, Operation.NO_ACTION));   //pgup
         keys.add(new KeyOperation(new int[]{27,91,54,126}, Operation.NO_ACTION));   //pgdown
         keys.add(new KeyOperation(new int[]{27,79,72}, Operation.MOVE_BEGINNING));  //home
@@ -61,7 +62,8 @@ public class KeyOperationFactory {
 
     public static List<KeyOperation> generateWindowsEmacsMode() {
         List<KeyOperation> keys = generateGenericEmacsKeys();
-        keys.add(new KeyOperation(3, Operation.EXIT));
+        keys.add(new KeyOperation(3, Operation.EXIT)); //ctrl-c
+        keys.add(new KeyOperation(8, Operation.DELETE_PREV_CHAR)); // backspace
         keys.add(new KeyOperation(13, Operation.NEW_LINE));
 
         //movement
@@ -76,6 +78,7 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(new int[]{0,32}, Operation.DELETE_NEXT_WORD)); //meta-d
 
         //pgup, pgdown, end, home
+        keys.add(new KeyOperation(new int[]{224,83}, Operation.DELETE_NEXT_CHAR)); //Delete
         keys.add(new KeyOperation(new int[]{224,73}, Operation.NO_ACTION));   //pgup
         keys.add(new KeyOperation(new int[]{224,81}, Operation.NO_ACTION));   //pgdown
         keys.add(new KeyOperation(new int[]{224,71}, Operation.MOVE_BEGINNING));  //home
@@ -125,6 +128,7 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(new int[]{27,91,66}, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
         keys.add(new KeyOperation(new int[]{27,91,67}, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
         keys.add(new KeyOperation(new int[]{27,91,68}, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+        keys.add(new KeyOperation(new int[]{27,91,51,126}, Operation.DELETE_NEXT_CHAR, Action.COMMAND)); //Delete
 
         return keys;
     }
@@ -133,6 +137,7 @@ public class KeyOperationFactory {
     public static List<KeyOperation> generateWindowsViMode() {
         List<KeyOperation> keys = generateGenericViMode();
         keys.add(new KeyOperation(13, Operation.NEW_LINE));
+        keys.add(new KeyOperation(new int[]{224,83}, Operation.DELETE_NEXT_CHAR, Action.COMMAND)); //Delete
 
         return keys;
     }
