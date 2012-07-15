@@ -87,8 +87,8 @@ public class Console {
      * Reset the Console with Settings
      * Can only be called after stop()
      *
-     * @param settings
-     * @throws IOException
+     * @param settings with given settings
+     * @throws IOException stream
      */
     public void reset(Settings settings) throws IOException {
         if(running)
@@ -96,7 +96,7 @@ public class Console {
          if(Settings.getInstance().doReadInputrc())
             Config.parseInputrc(Settings.getInstance());
         
-        logger.info("checking properties");
+        //logger.info("checking properties");
         Config.readRuntimeProperties(Settings.getInstance());
 
         setTerminal(settings.getTerminal(),
@@ -166,8 +166,8 @@ public class Console {
     /**
      * @see #pushToConsole(String)
      *
-     * @param input
-     * @throws IOException
+     * @param input chars
+     * @throws IOException stream
      */
     public void pushToConsole(char[] input) throws IOException {
         if(input != null && input.length > 0)
@@ -326,18 +326,29 @@ public class Console {
                     case END:
                         // Set buffer to the found string.
                         if (result != null) {
+                            moveCursor(-buffer.getCursor());
                             setBufferLine(result);
                             redrawLine();
                             printNewline();
                             return buffer.getLineNoMask();
                         }
-                        redrawLine();
+                        else {
+                            moveCursor(-buffer.getCursor());
+                            setBufferLine("");
+                            redrawLine();
+                        }
                         break;
 
+                    //exiting search (with esc)
                     case NEXT_BIG_WORD:
                         if(result != null) {
+                            moveCursor(-buffer.getCursor());
                             setBufferLine(result);
                             result = null;
+                        }
+                        else {
+                            moveCursor(-buffer.getCursor());
+                            setBufferLine("");
                         }
                         //redrawLine();
                         break;
@@ -439,7 +450,7 @@ public class Console {
      * If movement == PREV setting VI mode
      * if movement == NEXT setting EMACS mode
      *
-     * @param movement specifing vi/emacs mode
+     * @param movement specifying vi/emacs mode
      */
     private void changeEditMode(Movement movement) {
         if(editMode.getMode() == Mode.EMACS && movement == Movement.PREV) {
@@ -470,7 +481,7 @@ public class Console {
 
         if(fromHistory != null) {
             setBufferLine(fromHistory);
-            moveCursor(buffer.length()-buffer.getCursor());
+            moveCursor(-buffer.getCursor());
             redrawLine();
         }
         prevAction = Action.HISTORY;
@@ -485,15 +496,16 @@ public class Console {
             if(currentRow > -1) {
                 int cursorRow = buffer.getCursorWithPrompt() / getTerminalWidth();
                 if(currentRow + (newLine.length() / getTerminalWidth()) - cursorRow >= getTerminalHeight()) {
-                    int numNewRows = currentRow + (newLine.length() / getTerminalWidth()) - cursorRow - getTerminalHeight();
+                    int numNewRows = currentRow + ((newLine.length()+buffer.getPrompt().length()) / getTerminalWidth()) - cursorRow - getTerminalHeight();
                     //if the line is exactly equal to termWidth we need to add another row
                     if((newLine.length()+buffer.getPrompt().length()) % getTerminalWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
-                        //int totalRows = newLine.length() / getTerminalWidth() +1;
+                        //int totalRows = (newLine.length()+buffer.getPrompt().length()) / getTerminalWidth() +1;
                         //logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
                         //        ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
-                        terminal.write(Buffer.printAnsi(numNewRows+"S"));
+                        terminal.write(Buffer.printAnsi(numNewRows + "S"));
+                        terminal.write(Buffer.printAnsi(numNewRows + "A"));
                     }
                 }
             }
@@ -506,7 +518,7 @@ public class Console {
                 //(insert.length()+buffer.totalLength()) > buffer.getLine().length()) {
             int currentRow = getCurrentRow();
             if(currentRow > -1) {
-                int newLine = insert.length()+buffer.length();
+                int newLine = insert.length()+buffer.totalLength();
                 int cursorRow = buffer.getCursorWithPrompt() / getTerminalWidth();
                 if(currentRow + (newLine / getTerminalWidth()) - cursorRow >= getTerminalHeight()) {
                     int numNewRows = currentRow + (newLine / getTerminalWidth()) - cursorRow - getTerminalHeight();
@@ -515,6 +527,7 @@ public class Console {
                         numNewRows++;
                     if(numNewRows > 0) {
                         terminal.write(Buffer.printAnsi(numNewRows+"S"));
+                        terminal.write(Buffer.printAnsi(numNewRows+"A"));
                     }
                 }
             }
@@ -662,7 +675,6 @@ public class Console {
             redrawLine();
         }
         else {
-            //buffer.insert(buffer.getCursor() + 1, pasteBuffer.toString());
             insertBufferLine(pasteBuffer.toString(), buffer.getCursor()+1);
             redrawLine();
             //move cursor one char
@@ -683,16 +695,6 @@ public class Console {
         }
     }
 
-    private void redrawLineFromCursor() throws IOException {
-
-        terminal.write(Buffer.printAnsi("s")); //save cursor
-        terminal.write(Buffer.printAnsi("0J")); // clear line from position
-
-        terminal.write(buffer.getLineFrom(buffer.getCursor()));
-        // move cursor to saved pos
-        terminal.write(Buffer.printAnsi("u"));
-    }
-
     private void redrawLine() throws IOException {
         drawLine(buffer.getPrompt()+ buffer.getLine());
     }
@@ -707,6 +709,11 @@ public class Console {
                 currentRow = buffer.getCursorWithPrompt() / getTerminalWidth();
             if(currentRow > 0 && buffer.getCursorWithPrompt() % getTerminalWidth() == 0)
                 currentRow--;
+            
+            //logger.info("actualRow:"+getCurrentRow()+", actualColumn:"+getCurrentColumn());
+            //logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
+            //+", width:"+getTerminalWidth()+", height:"+getTerminalHeight()+", delta:"+buffer.getDelta()
+            //+", buffer:"+buffer.getLine());
 
             terminal.write(Buffer.printAnsi("s")); //save cursor
 
@@ -756,9 +763,13 @@ public class Console {
         out.append(searchTerm).append("': ");
         cursor += out.length();
         out.append(result);
+        buffer.disablePrompt(true);
+        moveCursor(-buffer.getCursor());
+        terminal.write(Buffer.printAnsi("1G"));//move the cursor all the way to the start of the line
         setBufferLine(out.toString());
-        moveCursor(-buffer.getCursor()+cursor);
-        redrawLine();
+        moveCursor(cursor);
+        drawLine(buffer.getLine());
+        buffer.disablePrompt(false);
     }
 
     /**
@@ -767,6 +778,7 @@ public class Console {
      * @throws java.io.IOException stream
      */
     private void printNewline() throws IOException {
+        moveCursor(buffer.totalLength());
         terminal.write(Config.getLineSeparator());
     }
 
@@ -796,7 +808,15 @@ public class Console {
         }
     }
 
-    //TODO: This is a mess...
+    /**
+     * Display possible completions.
+     * 1. Find all possible completions
+     * 2. If we find only one, display it.
+     * 3. If we find more than one, display them,
+     *    but not more than 100 at once
+     *
+     * @throws IOException stream
+     */
     private void complete() throws IOException {
         if(completionList.size() < 1)
             return;
@@ -812,8 +832,9 @@ public class Console {
         }
 
         // not hits, just return (perhaps we should beep?)
-        if(possibleCompletions.size() < 1)
-            return;
+        if(possibleCompletions.size() < 1) {
+            //do nothing atm
+        }
         // only one hit, do a completion
         else if(possibleCompletions.size() == 1 && 
                 possibleCompletions.get(0).getCompletionCandidates().size() == 1) {
@@ -880,7 +901,7 @@ public class Console {
             terminal.write(' ');
         }
 
-        redrawLineFromCursor();
+        redrawLine();
     }
 
     /**
