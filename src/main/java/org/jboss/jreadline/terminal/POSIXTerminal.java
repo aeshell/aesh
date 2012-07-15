@@ -136,9 +136,10 @@ public class POSIXTerminal implements Terminal {
             catch (Exception e) { 
                 logger.severe("Failed to fetch terminal height: "+e.getMessage());
             }
-            if(height < 0)
-                height = 24;
         }
+        //cant use height < 0
+        if(height < 0)
+            height = 24;
 
         return height;
     }
@@ -155,10 +156,11 @@ public class POSIXTerminal implements Terminal {
             catch (Exception e) {
                 logger.severe("Failed to fetch terminal width: "+e.getMessage());
             }
-
-            if(width < 0)
-                width = 80;
         }
+        //cant use with < 0
+        if(width < 0)
+            width = 80;
+
         return width;
     }
 
