@@ -34,6 +34,7 @@ public class Buffer {
     private String prompt;
     private int delta; //need to keep track of a delta for ansi terminal
     private Character mask;
+    private boolean disablePrompt = false;
 
     private final static int TAB = 4;
 
@@ -89,7 +90,10 @@ public class Buffer {
     }
 
     protected int totalLength() {
-        return line.length() + prompt.length()+1;
+        if(disablePrompt)
+            return line.length()+1;
+        else
+            return line.length() + prompt.length()+1;
     }
 
     protected int getCursor() {
@@ -97,7 +101,10 @@ public class Buffer {
     }
 
     protected int getCursorWithPrompt() {
-        return getCursor() + prompt.length()+1;
+        if(disablePrompt)
+            return getCursor()+1;
+        else
+            return getCursor() + prompt.length()+1;
     }
 
     protected String getPrompt() {
@@ -106,6 +113,15 @@ public class Buffer {
 
     protected void setCursor(int cursor) {
         this.cursor = cursor ;
+    }
+
+    /**
+     * Need to disable prompt in calculations involving search.
+     *
+     * @param disable prompt or not
+     */
+    protected void disablePrompt(boolean disable) {
+        disablePrompt = disable;
     }
 
     /**
