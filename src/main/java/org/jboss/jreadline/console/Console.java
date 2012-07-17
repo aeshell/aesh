@@ -745,7 +745,6 @@ public class Console {
 
             terminal.write(line);
 
-
             // move cursor to saved pos
             terminal.write(Buffer.printAnsi("u"));
         }

@@ -60,6 +60,9 @@ public class Example {
                 else if(co.getBuffer().equals("help.")) {
                     commands.add("help.history");
                 }
+                else if(co.getBuffer().equals("deploy")) {
+                    commands.add("deploy /home/blabla/foo/bar/alkdfe/en/to/tre");
+                }
                  co.setCompletionCandidates(commands);
             }
         };
@@ -68,7 +71,7 @@ public class Example {
 
         String line;
         //console.pushToConsole(ANSIColors.GREEN_TEXT());
-        while ((line = console.read("> ")) != null) {
+        while ((line = console.read("[test@foo.bar]~> ")) != null) {
             console.pushToConsole("======>\"" + line+"\"\n");
 
             if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit") ||
