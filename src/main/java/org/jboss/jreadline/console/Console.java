@@ -243,8 +243,12 @@ public class Console {
         while(true) {
 
             int[] in = terminal.read(settings.isReadAhead());
-            //for(int i : in)
-            //    System.out.println("got int:"+i);
+            StringBuilder sb = new StringBuilder();
+            for(int i : in)
+                sb.append(i).append(",");
+            logger.info("Input is: "+sb.toString());
+
+
             if (in[0] == -1) {
                 return null;
             }
@@ -252,6 +256,8 @@ public class Console {
             Operation operation = editMode.parseInput(in);
 
             Action action = operation.getAction();
+
+            logger.info("Got operation: "+operation);
 
             if(askDisplayCompletion) {
                 askDisplayCompletion = false;
@@ -501,9 +507,9 @@ public class Console {
                     if((newLine.length()+buffer.getPrompt().length()) % getTerminalWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
-                        //int totalRows = (newLine.length()+buffer.getPrompt().length()) / getTerminalWidth() +1;
-                        //logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
-                        //        ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
+                        int totalRows = (newLine.length()+buffer.getPrompt().length()) / getTerminalWidth() +1;
+                        logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
+                                ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
                         terminal.write(Buffer.printAnsi(numNewRows + "S"));
                         terminal.write(Buffer.printAnsi(numNewRows + "A"));
                     }
@@ -710,10 +716,10 @@ public class Console {
             if(currentRow > 0 && buffer.getCursorWithPrompt() % getTerminalWidth() == 0)
                 currentRow--;
             
-            //logger.info("actualRow:"+getCurrentRow()+", actualColumn:"+getCurrentColumn());
-            //logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
-            //+", width:"+getTerminalWidth()+", height:"+getTerminalHeight()+", delta:"+buffer.getDelta()
-            //+", buffer:"+buffer.getLine());
+            logger.info("actualRow:"+getCurrentRow()+", actualColumn:"+getCurrentColumn());
+            logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
+            +", width:"+getTerminalWidth()+", height:"+getTerminalHeight()+", delta:"+buffer.getDelta()
+            +", buffer:"+buffer.getLine());
 
             terminal.write(Buffer.printAnsi("s")); //save cursor
 
