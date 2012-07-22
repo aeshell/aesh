@@ -16,8 +16,10 @@
  */
 package org.jboss.jreadline.console;
 
+import org.jboss.jreadline.command.ConsoleProcess;
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
+import org.jboss.jreadline.console.helper.Search;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.*;
 import org.jboss.jreadline.edit.actions.*;
@@ -53,8 +55,11 @@ public class Console {
     private History history;
     private List<Completion> completionList;
     private Settings settings;
+    private Search search;
 
     private Action prevAction = Action.EDIT;
+
+    private ConsoleProcess process;
 
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
@@ -207,6 +212,16 @@ public class Console {
         running = false;
     }
 
+    public void attachProcess(ConsoleProcess cp) {
+        process = cp;
+        process.attach(this);
+    }
+
+    public void detachProcess() throws IOException {
+        process = null;
+        printNewline();
+    }
+
 
     /**
      * Read from the input stream, perform action according to mapped
@@ -237,8 +252,7 @@ public class Console {
 
         buffer.reset(prompt, mask);
         terminal.write(buffer.getPrompt());
-        StringBuilder searchTerm = new StringBuilder();
-        String result = null;
+        search = null;
 
         while(true) {
 
@@ -248,202 +262,239 @@ public class Console {
             if (in[0] == -1) {
                 return null;
             }
-
             Operation operation = editMode.parseInput(in);
+            operation.setInput(in);
 
-            Action action = operation.getAction();
+            String result;
+            if(process != null)
+                result = process.processOperation(operation);
+            else
+                result = parseOperation(operation, mask);
 
-            if(askDisplayCompletion) {
-                askDisplayCompletion = false;
-                if('y' == (char) in[0]) {
-                    displayCompletion = true;
-                    complete();
-                }
-                //do not display complete, but make sure that the previous line
-                // is restored correctly
-                else {
-                    terminal.write(Config.getLineSeparator());
-                    terminal.write(buffer.getLineWithPrompt());
-                    syncCursor();
-                }
-            }
-            else if (action == Action.EDIT) {
-                writeChars(in, mask);
-            }
-            // For search movement is used a bit differently.
-            // It only triggers what kind of search action thats performed
-            else if(action == Action.SEARCH && !settings.isHistoryDisabled()) {
+            if(result != null)
+                return result;
+        }
+    }
 
-                switch (operation.getMovement()) {
-                    //init a previous search
-                    case PREV:
-                        history.setSearchDirection(SearchDirection.REVERSE);
-                        searchTerm = new StringBuilder(buffer.getLine());
-                        if (searchTerm.length() > 0) {
-                            result = history.search(searchTerm.toString());
-                        }
-                        break;
+    /**
+     * Parse the current operation
+     *
+     * @param operation operation
+     * @param mask if set typed chars will be masked with this specified char
+     * @return out
+     * @throws IOException stream
+     */
+    private String parseOperation(Operation operation, Character mask) throws IOException {
 
-                    case NEXT:
-                        history.setSearchDirection(SearchDirection.FORWARD);
-                        searchTerm = new StringBuilder(buffer.getLine());
-                        if (searchTerm.length() > 0) {
-                            result = history.search(searchTerm.toString());
-                        }
-                        break;
+        Action action = operation.getAction();
 
-                    case PREV_WORD:
-                        history.setSearchDirection(SearchDirection.REVERSE);
-                        if (searchTerm.length() > 0)
-                            result = history.search(searchTerm.toString());
-                        break;
-
-                    case NEXT_WORD:
-                        history.setSearchDirection(SearchDirection.FORWARD);
-                        if(searchTerm.length() > 0)
-                            result = history.search(searchTerm.toString());
-                        break;
-
-                    case PREV_BIG_WORD:
-                        if (searchTerm.length() > 0)
-                            searchTerm.deleteCharAt(searchTerm.length() - 1);
-                        break;
-                    // new search input, append to search
-                    case ALL:
-                        searchTerm.appendCodePoint(in[0]);
-                        //check if the new searchTerm will find anything
-                        String tmpResult = history.search(searchTerm.toString());
-                        //
-                        if(tmpResult == null) {
-                            searchTerm.deleteCharAt(searchTerm.length()-1);
-                        }
-                        else {
-                            result = new String(tmpResult);
-                        }
-                        //result = history.searchPrevious(searchTerm.toString());
-                        break;
-                    // pressed enter, ending the search
-                    case END:
-                        // Set buffer to the found string.
-                        if (result != null) {
-                            moveCursor(-buffer.getCursor());
-                            setBufferLine(result);
-                            redrawLine();
-                            printNewline();
-                            return buffer.getLineNoMask();
-                        }
-                        else {
-                            moveCursor(-buffer.getCursor());
-                            setBufferLine("");
-                            redrawLine();
-                        }
-                        break;
-
-                    //exiting search (with esc)
-                    case NEXT_BIG_WORD:
-                        if(result != null) {
-                            moveCursor(-buffer.getCursor());
-                            setBufferLine(result);
-                            result = null;
-                        }
-                        else {
-                            moveCursor(-buffer.getCursor());
-                            setBufferLine("");
-                        }
-                        //redrawLine();
-                        break;
-                }
-                // if we're still in search mode, print the search status
-                if (editMode.getCurrentAction() == Action.SEARCH) {
-                    if (searchTerm.length() == 0) {
-                        if(result != null)
-                            printSearch("", result);
-                        else
-                            printSearch("", "");
-                    }
-                    else {
-                        if (result == null) {
-                            //beep();
-                        }
-                        else {
-                            printSearch(searchTerm.toString(), result);
-                        }
-                    }
-                }
-                // otherwise, restore the line
-                else {
-                    redrawLine();
-                    terminal.write(Buffer.printAnsi((buffer.getPrompt().length()+1)+"G"));
-                }
-
-
-            }
-
-            else if(action == Action.MOVE || action == Action.DELETE ||
-                    action == Action.CHANGE || action == Action.YANK) {
-                performAction(EditActionManager.parseAction(operation, buffer.getCursor(), buffer.length()));
-            }
-            else if(action == Action.ABORT) {
-
-            }
-            else if(action == Action.CASE) {
-                addActionToUndoStack();
-                changeCase();
-            }
-            else if(action == Action.COMPLETE) {
+        if(askDisplayCompletion) {
+            askDisplayCompletion = false;
+            if('y' == (char) operation.getInput()[0]) {
+                displayCompletion = true;
                 complete();
             }
-            else if(action == Action.EXIT) {
-                //deleteCurrentCharacter();
+            //do not display complete, but make sure that the previous line
+            // is restored correctly
+            else {
+                terminal.write(Config.getLineSeparator());
+                terminal.write(buffer.getLineWithPrompt());
+                syncCursor();
             }
-            else if(action == Action.HISTORY) {
-                if(operation.getMovement() == Movement.NEXT)
-                    getHistoryElement(true);
-                else if(operation.getMovement() == Movement.PREV)
-                    getHistoryElement(false);
+        }
+        else if (action == Action.EDIT) {
+            writeChars(operation.getInput(), mask);
+        }
+        // For search movement is used a bit differently.
+        // It only triggers what kind of search action thats performed
+        else if(action == Action.SEARCH && !settings.isHistoryDisabled()) {
+            if(search == null)
+                search = new Search(operation, operation.getInput()[0]);
+            else {
+                search.setOperation(operation);
+                search.setInput(operation.getInput()[0]);
             }
-            else if(action == Action.NEWLINE) {
-                // clear the undo stack for each new line
-                clearUndoStack();
-                if(mask == null) // dont push to history if masking
-                    addToHistory(buffer.getLine());
-                prevAction = Action.NEWLINE;
-                //moveToEnd();
-                printNewline(); // output newline
-                return buffer.getLineNoMask();
-            }
-            else if(action == Action.UNDO) {
-                undo();
-            }
-            else if(action == Action.PASTE_FROM_CLIPBOARD) {
-                addActionToUndoStack();
-                //paste();
-            }
-            else if(action == Action.PASTE) {
-                if(operation.getMovement() == Movement.NEXT)
-                    doPaste(0, true);
-                else
-                    doPaste(0, false);
-            }
-            else if(action == Action.CHANGE_EDITMODE) {
-                changeEditMode(operation.getMovement());
-            }
-            else if(action == Action.CLEAR) {
-                clear(true);
-            }
-            else if(action == Action.REPLACE) {
-                replace(in[0]);
-            }
-            else if(action == Action.NO_ACTION) {
-                //atm do nothing
-            }
-
-            //a hack to get history working
-            if(action == Action.HISTORY && !settings.isHistoryDisabled())
-                prevAction = action;
+            doSearch(search);
+            if(search.isFinished())
+                return search.getResult();
+        }
+        else if(action == Action.MOVE || action == Action.DELETE ||
+                action == Action.CHANGE || action == Action.YANK) {
+            performAction(EditActionManager.parseAction(operation, buffer.getCursor(), buffer.length()));
+        }
+        else if(action == Action.ABORT) {
 
         }
+        else if(action == Action.CASE) {
+            addActionToUndoStack();
+            changeCase();
+        }
+        else if(action == Action.COMPLETE) {
+            complete();
+        }
+        else if(action == Action.EXIT) {
+            //deleteCurrentCharacter();
+        }
+        else if(action == Action.HISTORY) {
+            if(operation.getMovement() == Movement.NEXT)
+                getHistoryElement(true);
+            else if(operation.getMovement() == Movement.PREV)
+                getHistoryElement(false);
+        }
+        else if(action == Action.NEWLINE) {
+            // clear the undo stack for each new line
+            clearUndoStack();
+            if(mask == null) // dont push to history if masking
+                addToHistory(buffer.getLine());
+            prevAction = Action.NEWLINE;
+            //moveToEnd();
+            printNewline(); // output newline
+            return buffer.getLineNoMask();
+        }
+        else if(action == Action.UNDO) {
+            undo();
+        }
+        else if(action == Action.PASTE_FROM_CLIPBOARD) {
+            addActionToUndoStack();
+            //paste();
+        }
+        else if(action == Action.PASTE) {
+            if(operation.getMovement() == Movement.NEXT)
+                doPaste(0, true);
+            else
+                doPaste(0, false);
+        }
+        else if(action == Action.CHANGE_EDITMODE) {
+            changeEditMode(operation.getMovement());
+        }
+        else if(action == Action.CLEAR) {
+            clear(true);
+        }
+        else if(action == Action.REPLACE) {
+            replace(operation.getInput()[0]);
+        }
+        else if(action == Action.NO_ACTION) {
+            //atm do nothing
+        }
 
+        //a hack to get history working
+        if(action == Action.HISTORY && !settings.isHistoryDisabled())
+            prevAction = action;
+
+        return null;
+
+    }
+
+    /**
+     * Parse the Search object
+     *
+     * @param search search
+     * @throws IOException stream
+     */
+    private void doSearch(Search search) throws IOException {
+
+        switch (search.getOperation().getMovement()) {
+            //init a previous doSearch
+            case PREV:
+                history.setSearchDirection(SearchDirection.REVERSE);
+                search.setSearchTerm( new StringBuilder(buffer.getLine()));
+                if (search.getSearchTerm().length() > 0) {
+                    search.setResult( history.search(search.getSearchTerm().toString()));
+                }
+                break;
+
+            case NEXT:
+                history.setSearchDirection(SearchDirection.FORWARD);
+                search.setSearchTerm(new StringBuilder(buffer.getLine()));
+                if (search.getSearchTerm().length() > 0) {
+                    search.setResult( history.search(search.getSearchTerm().toString()));
+                }
+                break;
+
+            case PREV_WORD:
+                history.setSearchDirection(SearchDirection.REVERSE);
+                if (search.getSearchTerm().length() > 0)
+                    search.setResult( history.search(search.getSearchTerm().toString()));
+                break;
+
+            case NEXT_WORD:
+                history.setSearchDirection(SearchDirection.FORWARD);
+                if(search.getSearchTerm().length() > 0)
+                    search.setResult(history.search(search.getSearchTerm().toString()));
+                break;
+
+            case PREV_BIG_WORD:
+                if (search.getSearchTerm().length() > 0)
+                    search.getSearchTerm().deleteCharAt(search.getSearchTerm().length() - 1);
+                break;
+            // new doSearch input, append to doSearch
+            case ALL:
+                search.getSearchTerm().appendCodePoint(search.getInput());
+                //check if the new searchTerm will find anything
+                String tmpResult = history.search(search.getSearchTerm().toString());
+                if(tmpResult == null) {
+                    search.getSearchTerm().deleteCharAt(search.getSearchTerm().length()-1);
+                }
+                else {
+                    search.setResult(tmpResult);
+                }
+                break;
+            // pressed enter, ending the doSearch
+            case END:
+                // Set buffer to the found string.
+                if (search.getResult() != null) {
+                    moveCursor(-buffer.getCursor());
+                    setBufferLine(search.getResult());
+                    redrawLine();
+                    printNewline();
+                    search.setResult( buffer.getLineNoMask());
+                    search.setFinished(true);
+                    return;
+                }
+                else {
+                    moveCursor(-buffer.getCursor());
+                    setBufferLine("");
+                    redrawLine();
+                }
+                break;
+
+            //exiting doSearch (with esc)
+            case NEXT_BIG_WORD:
+                if(search.getResult() != null) {
+                    moveCursor(-buffer.getCursor());
+                    setBufferLine(search.getResult());
+                    search.setResult(null);
+                }
+                else {
+                    moveCursor(-buffer.getCursor());
+                    setBufferLine("");
+                }
+                //redrawLine();
+                break;
+        }
+        // if we're still in doSearch mode, print the doSearch status
+        if (editMode.getCurrentAction() == Action.SEARCH) {
+            if (search.getSearchTerm().length() == 0) {
+                if(search.getResult() != null)
+                    printSearch("", search.getResult());
+                else
+                    printSearch("", "");
+            }
+            else {
+                if (search.getResult() == null) {
+                    //beep();
+                }
+                else {
+                    printSearch(search.getSearchTerm().toString(),
+                            search.getResult());
+                }
+            }
+        }
+        // otherwise, restore the line
+        else {
+            redrawLine();
+            terminal.write(Buffer.printAnsi((buffer.getPrompt().length()+1)+"G"));
+        }
     }
 
     /**

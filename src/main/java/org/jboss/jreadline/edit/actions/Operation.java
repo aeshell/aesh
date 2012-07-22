@@ -17,7 +17,11 @@
 package org.jboss.jreadline.edit.actions;
 
 /**
- * An Operation is an Action and a Movement
+ * An Operation is a stream parsed by the current EditMode.
+ * An Operation exists of an Action and a Movement object.
+ * The parsed input is also available.
+ *
+ * Used for all input handling
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
@@ -100,6 +104,7 @@ public enum Operation {
 
     private Movement movement;
     private Action action;
+    private int[] input;
 
     Operation(Action action) {
         this.action = action;
@@ -116,5 +121,13 @@ public enum Operation {
 
     public Action getAction() {
         return action;
+    }
+
+    public void setInput(int[] input) {
+        this.input = input;
+    }
+
+    public int[] getInput() {
+        return input;
     }
 }
