@@ -1,9 +1,7 @@
-import org.jboss.jreadline.command.Command;
-import org.jboss.jreadline.command.ConsoleProcess;
+import org.jboss.jreadline.console.ConsoleProcess;
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.Console;
-import org.jboss.jreadline.console.settings.QuitHandler;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.actions.Operation;
 
@@ -23,28 +21,52 @@ public class Example {
         Settings.getInstance().setReadInputrc(false);
        //Settings.getInstance().setHistoryDisabled(true);
         //Settings.getInstance().setHistoryPersistent(false);
-        Console console = new Console();
+        Console exampleConsole = new Console();
 
         PrintWriter out = new PrintWriter(System.out);
 
         ConsoleProcess test = new ConsoleProcess() {
-            Console console;
 
             @Override
-            public void attach(Console console) {
-                this.console = console;
+            protected void afterAttach() throws IOException {
+				console.switchToAlternateScreenBuffer();
+				//console.pushToConsole("blablablablablabal");
+                readFromFile();
             }
 
             @Override
-            public void detach() {
+            protected void afterDetach() throws IOException {
+				console.switchToMainScreenBuffer();
+            }
+
+            private void readFromFile() throws IOException {
+                //console.clear();
+                console.pushToConsole("here should we present some text... press 'q' to quit");
+                /*
+                Path file = FileSystems.getDefault().getPath("/tmp", "README.md");
+                Charset charset = Charset.defaultCharset();
+                BufferedReader reader = Files.newBufferedReader(file, charset);
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    console.pushToConsole(line);
+                    console.pushToConsole(Config.getLineSeparator());
+                }
+                */
             }
 
             @Override
             public String processOperation(Operation operation) throws IOException {
-                console.pushToConsole("blablablablablabal");
-                if(operation.getInput()[0] == 'q')
-                    console.detachProcess();
-                return null;
+                //console.pushToConsole("blablablablablabal");
+                if(operation.getInput()[0] == 'q') {
+					detach();
+					return "";
+				}
+                else if(operation.getInput()[0] == 'a') {
+                    readFromFile();
+                    return null;
+                }
+				else
+					return null;
             }
         };
 
@@ -91,34 +113,35 @@ public class Example {
             }
         };
 
-        console.addCompletion(completer);
+        exampleConsole.addCompletion(completer);
 
         String line;
         //console.pushToConsole(ANSIColors.GREEN_TEXT());
-        while ((line = console.read("[test@foo.bar]~> ")) != null) {
-            console.pushToConsole("======>\"" + line+"\"\n");
+        while ((line = exampleConsole.read("[test@foo.bar]~> ")) != null) {
+            exampleConsole.pushToConsole("======>\"" + line + "\"\n");
 
             if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit") ||
                     line.equalsIgnoreCase("reset")) {
                 break;
             }
             if(line.equalsIgnoreCase("password")) {
-                line = console.read("password: ", Character.valueOf((char) 0));
-                console.pushToConsole("password typed:"+line+"\n");
+                line = exampleConsole.read("password: ", Character.valueOf((char) 0));
+                exampleConsole.pushToConsole("password typed:" + line + "\n");
 
             }
             if(line.equals("clear"))
-                console.clear();
+                exampleConsole.clear();
             if(line.equals("man")) {
-                console.attachProcess(test);
+                //exampleConsole.attachProcess(test);
+                test.attach(exampleConsole);
             }
         }
         if(line.equals("reset")) {
-            console.stop();
-            console = new Console();
+            exampleConsole.stop();
+            exampleConsole = new Console();
 
-            while ((line = console.read("> ")) != null) {
-                console.pushToConsole("======>\"" + line+"\"\n");
+            while ((line = exampleConsole.read("> ")) != null) {
+                exampleConsole.pushToConsole("======>\"" + line + "\"\n");
                 if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit") ||
                         line.equalsIgnoreCase("reset")) {
                     break;
@@ -128,7 +151,7 @@ public class Example {
         }
 
         try {
-            console.stop();
+            exampleConsole.stop();
         } catch (Exception e) {
         }
     }

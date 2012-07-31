@@ -16,7 +16,6 @@
  */
 package org.jboss.jreadline.console;
 
-import org.jboss.jreadline.command.ConsoleProcess;
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.helper.Search;
@@ -212,12 +211,22 @@ public class Console {
         running = false;
     }
 
-    public void attachProcess(ConsoleProcess cp) {
+    /**
+     * Used by ConsoleProcess to attach itself to the Console
+     *
+     * @param cp process
+     * @throws IOException stream
+     */
+    protected void attachProcess(ConsoleProcess cp) throws IOException {
         process = cp;
-        process.attach(this);
     }
 
-    public void detachProcess() throws IOException {
+    /**
+     * Remove the current running process from Console
+     *
+     * @throws IOException stream
+     */
+    private void detachProcess() throws IOException {
         process = null;
         printNewline();
     }
@@ -251,7 +260,8 @@ public class Console {
             throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
 
         buffer.reset(prompt, mask);
-        terminal.write(buffer.getPrompt());
+		if(process == null)
+			terminal.write(buffer.getPrompt());
         search = null;
 
         while(true) {
@@ -266,8 +276,11 @@ public class Console {
             operation.setInput(in);
 
             String result;
-            if(process != null)
+            if(process != null) {
                 result = process.processOperation(operation);
+				if(!process.isAttached())
+					detachProcess();
+			}
             else
                 result = parseOperation(operation, mask);
 
@@ -1061,4 +1074,24 @@ public class Console {
         if(includeBuffer)
             terminal.write(buffer.getLineWithPrompt());
     }
+
+    /**
+     * Signal the terminal to switch to the alternate screen buffer
+     * TODO: should use infocmp and parse its output to use the "correct" value
+     *
+     * @throws IOException stream
+     */
+	public void switchToAlternateScreenBuffer() throws IOException {
+		terminal.write( Buffer.printAnsi( "?1049h" ) );
+	}
+
+    /**
+     * Signal the terminal to switch to the main screen buffer
+     * TODO: should use infocmp and parse its output to use the "correct" value
+     *
+     * @throws IOException stream
+     */
+	public void switchToMainScreenBuffer() throws IOException {
+		terminal.write( Buffer.printAnsi( "?1049l" ) );
+	}
 }
