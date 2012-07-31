@@ -4,7 +4,7 @@ apply plugin: 'idea'
 apply plugin: 'maven'
 
 group = 'org.jboss.jreadline'
-version = '0.17'
+version = '0.18'
 
 sourceCompatibility = 1.6
 jar {
