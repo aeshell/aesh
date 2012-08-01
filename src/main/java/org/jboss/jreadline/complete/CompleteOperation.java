@@ -67,6 +67,10 @@ public class CompleteOperation {
     public void setCompletionCandidates(List<String> completionCandidates) {
         this.completionCandidates = completionCandidates;
     }
+
+    public void addCompletionCandidate(String completionCandidate) {
+        this.completionCandidates.add(completionCandidate);
+    }
     
     public List<String> getFormattedCompletionCandidates() {
         if(offset < cursor) {

@@ -25,7 +25,7 @@ public class Example {
 
         PrintWriter out = new PrintWriter(System.out);
 
-        ConsoleProcess test = new ConsoleProcess() {
+        ConsoleProcess test = new ConsoleProcess(exampleConsole) {
 
             @Override
             protected void afterAttach() throws IOException {
@@ -133,7 +133,7 @@ public class Example {
                 exampleConsole.clear();
             if(line.equals("man")) {
                 //exampleConsole.attachProcess(test);
-                test.attach(exampleConsole);
+                test.attach();
             }
         }
         if(line.equals("reset")) {

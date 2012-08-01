@@ -33,16 +33,18 @@ public abstract class ConsoleProcess {
 	boolean attached = false;
 	protected Console console = null;
 
+    public ConsoleProcess(Console console) {
+        this.console = console;
+    }
+
     /**
      * Called by creator of the process
      * Calls afterAttach()
      *
-     * @param console console
      * @throws IOException stream
      */
-    public final void attach(Console console) throws IOException {
+    public final void attach() throws IOException {
 		attached = true;
-		this.console = console;
         this.console.attachProcess(this);
         afterAttach();
 	}
