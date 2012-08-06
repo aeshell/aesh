@@ -21,19 +21,19 @@ import org.jboss.jreadline.edit.actions.Operation;
 import java.io.IOException;
 
 /**
- * A ConsoleProcess is the base of any "external" processes that will run
+ * A ConsoleCommand is the base of any "external" commands that will run
  * in the foreground of jreadline.
- * Call attach(..) to set a process in the foreground of jreadline.
+ * Call attach() to set a command in the foreground of jreadline.
  *
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public abstract class ConsoleProcess {
+public abstract class ConsoleCommand {
 
 	boolean attached = false;
 	protected Console console = null;
 
-    public ConsoleProcess(Console console) {
+    public ConsoleCommand(Console console) {
         this.console = console;
     }
 

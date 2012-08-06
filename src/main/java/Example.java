@@ -1,4 +1,4 @@
-import org.jboss.jreadline.console.ConsoleProcess;
+import org.jboss.jreadline.console.ConsoleCommand;
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.Console;
@@ -25,7 +25,7 @@ public class Example {
 
         PrintWriter out = new PrintWriter(System.out);
 
-        ConsoleProcess test = new ConsoleProcess(exampleConsole) {
+        ConsoleCommand test = new ConsoleCommand(exampleConsole) {
 
             @Override
             protected void afterAttach() throws IOException {

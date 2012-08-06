@@ -58,7 +58,7 @@ public class Console {
 
     private Action prevAction = Action.EDIT;
 
-    private ConsoleProcess process;
+    private ConsoleCommand command;
 
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
@@ -212,22 +212,22 @@ public class Console {
     }
 
     /**
-     * Used by ConsoleProcess to attach itself to the Console
+     * Used by ConsoleCommand to attach itself to the Console
      *
-     * @param cp process
+     * @param cc command
      * @throws IOException stream
      */
-    protected void attachProcess(ConsoleProcess cp) throws IOException {
-        process = cp;
+    protected void attachProcess(ConsoleCommand cc) throws IOException {
+        command = cc;
     }
 
     /**
-     * Remove the current running process from Console
+     * Remove the current running command from Console
      *
      * @throws IOException stream
      */
     private void detachProcess() throws IOException {
-        process = null;
+        command = null;
         printNewline();
     }
 
@@ -260,7 +260,7 @@ public class Console {
             throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
 
         buffer.reset(prompt, mask);
-		if(process == null)
+		if(command == null)
 			terminal.write(buffer.getPrompt());
         search = null;
 
@@ -276,9 +276,9 @@ public class Console {
             operation.setInput(in);
 
             String result;
-            if(process != null) {
-                result = process.processOperation(operation);
-				if(!process.isAttached())
+            if(command != null) {
+                result = command.processOperation(operation);
+				if(!command.isAttached())
 					detachProcess();
 			}
             else
