@@ -29,6 +29,7 @@ import org.jboss.jreadline.history.SearchDirection;
 import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.undo.UndoAction;
 import org.jboss.jreadline.undo.UndoManager;
+import org.jboss.jreadline.util.ANSI;
 import org.jboss.jreadline.util.LoggerUtil;
 import org.jboss.jreadline.util.Parser;
 
@@ -1075,23 +1076,4 @@ public class Console {
             terminal.write(buffer.getLineWithPrompt());
     }
 
-    /**
-     * Signal the terminal to switch to the alternate screen buffer
-     * TODO: should use infocmp and parse its output to use the "correct" value
-     *
-     * @throws IOException stream
-     */
-	public void switchToAlternateScreenBuffer() throws IOException {
-		terminal.write( Buffer.printAnsi( "?1049h" ) );
-	}
-
-    /**
-     * Signal the terminal to switch to the main screen buffer
-     * TODO: should use infocmp and parse its output to use the "correct" value
-     *
-     * @throws IOException stream
-     */
-	public void switchToMainScreenBuffer() throws IOException {
-		terminal.write( Buffer.printAnsi( "?1049l" ) );
-	}
 }

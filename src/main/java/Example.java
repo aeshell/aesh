@@ -4,6 +4,7 @@ import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.Console;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.actions.Operation;
+import org.jboss.jreadline.util.ANSI;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -29,14 +30,14 @@ public class Example {
 
             @Override
             protected void afterAttach() throws IOException {
-				console.switchToAlternateScreenBuffer();
+				console.pushToConsole(ANSI.getAlternateBufferScreen());
 				//console.pushToConsole("blablablablablabal");
                 readFromFile();
             }
 
             @Override
             protected void afterDetach() throws IOException {
-				console.switchToMainScreenBuffer();
+				console.pushToConsole(ANSI.getMainBufferScreen());
             }
 
             private void readFromFile() throws IOException {
@@ -116,7 +117,7 @@ public class Example {
         exampleConsole.addCompletion(completer);
 
         String line;
-        //console.pushToConsole(ANSIColors.GREEN_TEXT());
+        //console.pushToConsole(ANSI.GREEN_TEXT());
         while ((line = exampleConsole.read("[test@foo.bar]~> ")) != null) {
             exampleConsole.pushToConsole("======>\"" + line + "\"\n");
 

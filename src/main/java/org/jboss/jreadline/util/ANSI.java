@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.jreadline.terminal;
+package org.jboss.jreadline.util;
 
 import org.jboss.jreadline.console.Buffer;
 
 /**
+ * Utility class to provide ANSI codes for different operations
+ *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
-public class ANSIColors {
-
-    private static char[] RESET = {'0','m'};
+public class ANSI {
 
     private static char[] BLACK_TEXT = {'3','0','m'};
     private static char[] RED_TEXT = {'3','1','m'};
@@ -42,73 +42,89 @@ public class ANSIColors {
     private static char[] MAGENTA_BG = {'4','5','m'};
     private static char[] CYAN_BG = {'4','6','m'};
     private static char[] WHITE_BG = {'4','7','m'};
+    private static char[] ALTERNATE_BUFFER =  Buffer.printAnsi(new String("?1049h"));
+    private static char[] MAIN_BUFFER =  Buffer.printAnsi(new String("?1049l"));
+    private static char[] INVERT_BACKGROUND =  Buffer.printAnsi(new String("7m"));
+    private static char[] RESET = Buffer.printAnsi(new char[]{'0','m'});
 
-    public static final char[] BLACK_TEXT() {
+    public static char[] blackText() {
         return Buffer.printAnsi(BLACK_TEXT);
     }
 
-    public static final char[] RED_TEXT() {
+    public static char[] redText() {
         return Buffer.printAnsi(RED_TEXT);
     }
 
-    public static final char[] GREEN_TEXT() {
+    public static char[] greenText() {
         return Buffer.printAnsi(GREEN_TEXT);
     }
 
-    public static final char[] YELLOW_TEXT() {
+    public static char[] yellowText() {
         return Buffer.printAnsi(YELLOW_TEXT);
     }
 
-    public static final char[] BLUE_TEXT() {
+    public static char[] blueText() {
         return Buffer.printAnsi(BLUE_TEXT);
     }
 
-    public static final char[] MAGENTA_TEXT() {
+    public static char[] magentaText() {
         return Buffer.printAnsi(MAGENTA_TEXT);
     }
 
-    public static final char[] CYAN_TEXT() {
+    public static char[] cyanText() {
         return Buffer.printAnsi(CYAN_TEXT);
     }
 
-    public static final char[] WHITE_TEXT() {
+    public static char[] whiteText() {
         return Buffer.printAnsi(WHITE_TEXT);
     }
 
-    public static final char[] BLACK_BG() {
+    public static char[] blackBackground() {
         return Buffer.printAnsi(BLACK_BG);
     }
 
-    public static final char[] RED_BG() {
+    public static char[] redBackground() {
         return Buffer.printAnsi(RED_BG);
     }
 
-    public static final char[] GREEN_BG() {
+    public static char[] greenBackground() {
         return Buffer.printAnsi(GREEN_BG);
     }
 
-    public static final char[] YELLOW_BG() {
+    public static char[] yellowBackground() {
         return Buffer.printAnsi(YELLOW_BG);
     }
 
-    public static final char[] BLUE_BG() {
+    public static char[] blueBackground() {
         return Buffer.printAnsi(BLUE_BG);
     }
 
-    public static final char[] MAGENTA_BG() {
+    public static char[] magentaBackground() {
         return Buffer.printAnsi(MAGENTA_BG);
     }
 
-    public static final char[] CYAN_BG() {
+    public static char[] cyanBackground() {
         return Buffer.printAnsi(CYAN_BG);
     }
 
-    public static final char[] WHITE_BG() {
+    public static char[] whiteBackground() {
         return Buffer.printAnsi(WHITE_BG);
     }
 
-    public static final String RESET() {
-        return new String(Buffer.printAnsi(RESET));
+    public static char[] reset() {
+        return RESET;
+    }
+
+    public static char[] getAlternateBufferScreen() {
+       return ALTERNATE_BUFFER;
+    }
+
+    public static char[] getMainBufferScreen() {
+        return MAIN_BUFFER;
+    }
+
+    public static char[] getInvertedBackground() {
+        return INVERT_BACKGROUND;
     }
 
 }
