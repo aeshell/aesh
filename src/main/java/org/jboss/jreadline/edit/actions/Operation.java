@@ -89,6 +89,8 @@ public enum Operation {
     INSERT(Action.NO_ACTION),                        // used for 'i' in vi mode
     INSERT_BEGINNING(Action.NO_ACTION),              // used for 'I' in vi mode
     ESCAPE(Action.NO_ACTION),                        // escape
+    PGUP(Action.NO_ACTION),
+    PGDOWN(Action.NO_ACTION),
 
     PASTE_BEFORE(Movement.NEXT, Action.PASTE),
     PASTE_AFTER(Movement.PREV, Action.PASTE),

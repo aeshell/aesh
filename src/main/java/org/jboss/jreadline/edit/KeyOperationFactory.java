@@ -50,8 +50,8 @@ public class KeyOperationFactory {
 
         //pgup, pgdown, end, home, delete
         keys.add(new KeyOperation(new int[]{27,91,51,126}, Operation.DELETE_NEXT_CHAR)); //Delete
-        keys.add(new KeyOperation(new int[]{27,91,53,126}, Operation.NO_ACTION));   //pgup
-        keys.add(new KeyOperation(new int[]{27,91,54,126}, Operation.NO_ACTION));   //pgdown
+        keys.add(new KeyOperation(new int[]{27,91,53,126}, Operation.PGUP));   //pgup
+        keys.add(new KeyOperation(new int[]{27,91,54,126}, Operation.PGDOWN));   //pgdown
         keys.add(new KeyOperation(new int[]{27,79,72}, Operation.MOVE_BEGINNING));  //home
         keys.add(new KeyOperation(new int[]{27,79,70}, Operation.MOVE_END));        //end
 
@@ -79,8 +79,8 @@ public class KeyOperationFactory {
 
         //pgup, pgdown, end, home
         keys.add(new KeyOperation(new int[]{224,83}, Operation.DELETE_NEXT_CHAR)); //Delete
-        keys.add(new KeyOperation(new int[]{224,73}, Operation.NO_ACTION));   //pgup
-        keys.add(new KeyOperation(new int[]{224,81}, Operation.NO_ACTION));   //pgdown
+        keys.add(new KeyOperation(new int[]{224,73}, Operation.PGUP));   //pgup
+        keys.add(new KeyOperation(new int[]{224,81}, Operation.PGDOWN));   //pgdown
         keys.add(new KeyOperation(new int[]{224,71}, Operation.MOVE_BEGINNING));  //home
         keys.add(new KeyOperation(new int[]{224,79}, Operation.MOVE_END));        //end
 
@@ -130,6 +130,9 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(new int[]{27,91,68}, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
         keys.add(new KeyOperation(new int[]{27,91,51,126}, Operation.DELETE_NEXT_CHAR, Action.COMMAND)); //Delete
 
+        keys.add(new KeyOperation(new int[]{27,91,53,126}, Operation.PGUP));   //pgup
+        keys.add(new KeyOperation(new int[]{27,91,54,126}, Operation.PGDOWN));   //pgdown
+
         return keys;
     }
 
@@ -138,6 +141,9 @@ public class KeyOperationFactory {
         List<KeyOperation> keys = generateGenericViMode();
         keys.add(new KeyOperation(13, Operation.NEW_LINE));
         keys.add(new KeyOperation(new int[]{224,83}, Operation.DELETE_NEXT_CHAR, Action.COMMAND)); //Delete
+
+        keys.add(new KeyOperation(new int[]{224,73}, Operation.PGUP));   //pgup
+        keys.add(new KeyOperation(new int[]{224,81}, Operation.PGDOWN));   //pgdown
 
         return keys;
     }

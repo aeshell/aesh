@@ -927,7 +927,7 @@ public class Console {
                     }
                     else {
                         askDisplayCompletion = true;
-                        terminal.write(Config.getLineSeparator()+"Display all "+possibleCompletions.size()+ " possibilities? (y or n)");
+                        terminal.write(Config.getLineSeparator()+"Display all "+completions.size()+ " possibilities? (y or n)");
                     }
                 }
                 // display all
