@@ -546,7 +546,7 @@ public class Console {
 
         if(fromHistory != null) {
             setBufferLine(fromHistory);
-            moveCursor(-buffer.getCursor());
+            moveCursor(-buffer.getCursor()+buffer.length());
             redrawLine();
         }
         prevAction = Action.HISTORY;
