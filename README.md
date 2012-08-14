@@ -14,6 +14,8 @@ Features:
 * Emacs and Vi editing mode
 * Supports POSIX OS's and Windows
 * Easy to configure (history file & buffer size, edit mode, streams, possible to override terminal impls, etc)
+* Support standard out and standard error
+* Redirect
 
 How to build:
 -------------
@@ -28,11 +30,11 @@ public class Example {
 
         org.jboss.jreadline.console.Console console = new org.jboss.jreadline.console.Console();
 
-        String line;
+        org.jboss.jreadline.console.ConsoleOutput line;
         while ((line = console.read("> ")) != null) {
-            console.pushToConsole("======>\"" +line+ "\n");
+            console.pushToConsole("======>\"" +line.getBuffer()+ "\n");
 
-            if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
+            if (line.getBuffer().equalsIgnoreCase("quit") || line.getBuffer().equalsIgnoreCase("exit")) {
                 break;
             }
         }
