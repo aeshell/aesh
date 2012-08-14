@@ -29,7 +29,7 @@ import org.jboss.jreadline.history.SearchDirection;
 import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.undo.UndoAction;
 import org.jboss.jreadline.undo.UndoManager;
-import org.jboss.jreadline.util.ANSI;
+import org.jboss.jreadline.util.FileUtils;
 import org.jboss.jreadline.util.LoggerUtil;
 import org.jboss.jreadline.util.Parser;
 
@@ -64,6 +64,8 @@ public class Console {
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
     private boolean running = false;
+    private boolean redirection = false;
+    private StringBuilder redirectionBuffer;
 
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
 
@@ -105,7 +107,7 @@ public class Console {
         Config.readRuntimeProperties(Settings.getInstance());
 
         setTerminal(settings.getTerminal(),
-                settings.getInputStream(), settings.getOutputStream());
+                settings.getInputStream(), settings.getStdOut(), settings.getStdErr());
 
         editMode = settings.getFullEditMode();
 
@@ -120,13 +122,16 @@ public class Console {
 
 
         completionList = new ArrayList<Completion>();
+        completionList.add(new RedirectionCompletion());
+
+        redirectionBuffer = new StringBuilder();
         this.settings = settings;
         running = true;
     }
 
-     private void setTerminal(Terminal term, InputStream in, OutputStream out) {
+     private void setTerminal(Terminal term, InputStream in, OutputStream stdOut, OutputStream stdErr) {
         terminal = term;
-        terminal.init(in, out);
+        terminal.init(in, stdOut, stdErr);
     }
 
     /**
@@ -163,20 +168,43 @@ public class Console {
      * @param input text
      * @throws IOException stream
      */
-    public void pushToConsole(String input) throws IOException {
-        if(input != null && input.length() > 0)
-            terminal.write(input);
+    public void pushToStdOut(String input) throws IOException {
+        if(input != null && input.length() > 0) {
+            //if redirection enabled, put it into a buffer
+            if(redirection) {
+                redirectionBuffer.append(input);
+            }
+            else
+                terminal.writeToStdOut(input);
+        }
     }
 
     /**
-     * @see #pushToConsole(String)
+     * @see #pushToStdOut
      *
      * @param input chars
      * @throws IOException stream
      */
-    public void pushToConsole(char[] input) throws IOException {
-        if(input != null && input.length > 0)
-        terminal.write(input);
+    public void pushToStdOut(char[] input) throws IOException {
+        if(input != null && input.length > 0) {
+            //if redirection enabled, put it into a buffer
+            if(redirection)
+                redirectionBuffer.append(input);
+            else
+                terminal.writeToStdOut(input);
+        }
+    }
+
+    public void pushToStdErr(String input) throws IOException {
+        if(input != null && input.length() > 0) {
+            terminal.writeToStdErr(input);
+        }
+    }
+
+    public void pushToStdErr(char[] input) throws IOException {
+        if(input != null && input.length > 0) {
+            terminal.writeToStdErr(input);
+        }
     }
 
     /**
@@ -229,7 +257,7 @@ public class Console {
      */
     private void detachProcess() throws IOException {
         command = null;
-        printNewline();
+        terminal.writeToStdOut(buffer.getPrompt());
     }
 
 
@@ -242,7 +270,7 @@ public class Console {
      * @return input stream
      * @throws IOException stream
      */
-    public String read(String prompt) throws IOException {
+    public ConsoleOutput read(String prompt) throws IOException {
         return read(prompt, null);
     }
 
@@ -256,16 +284,24 @@ public class Console {
      * @return input stream
      * @throws IOException stream
      */
-    public String read(String prompt, Character mask) throws IOException {
+    public ConsoleOutput read(String prompt, Character mask) throws IOException {
         if(!running)
             throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
+        if(redirection) {
+            redirection = false;
+            persistRedirection(buffer.getLine());
+            redirectionBuffer = new StringBuilder();
+        }
 
         buffer.reset(prompt, mask);
 		if(command == null)
-			terminal.write(buffer.getPrompt());
+			terminal.writeToStdOut(buffer.getPrompt());
         search = null;
 
         while(true) {
+            if(command != null && !command.isAttached()) {
+                detachProcess();
+            }
 
             int[] in = terminal.read(settings.isReadAhead());
             //for(int i : in)
@@ -276,17 +312,14 @@ public class Console {
             Operation operation = editMode.parseInput(in);
             operation.setInput(in);
 
-            String result;
-            if(command != null) {
-                result = command.processOperation(operation);
-				if(!command.isAttached())
-					detachProcess();
-			}
+            String result = null;
+            if(command != null)
+                command.processOperation(operation);
             else
                 result = parseOperation(operation, mask);
 
             if(result != null)
-                return result;
+                return parseConsoleOutput(result);
         }
     }
 
@@ -311,8 +344,8 @@ public class Console {
             //do not display complete, but make sure that the previous line
             // is restored correctly
             else {
-                terminal.write(Config.getLineSeparator());
-                terminal.write(buffer.getLineWithPrompt());
+                terminal.writeToStdOut(Config.getLineSeparator());
+                terminal.writeToStdOut(buffer.getLineWithPrompt());
                 syncCursor();
             }
         }
@@ -507,7 +540,7 @@ public class Console {
         // otherwise, restore the line
         else {
             redrawLine();
-            terminal.write(Buffer.printAnsi((buffer.getPrompt().length()+1)+"G"));
+            terminal.writeToStdOut(Buffer.printAnsi((buffer.getPrompt().length() + 1) + "G"));
         }
     }
 
@@ -569,8 +602,8 @@ public class Console {
                         //int totalRows = (newLine.length()+buffer.getPrompt().length()) / getTerminalWidth() +1;
                         //logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
                         //        ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
-                        terminal.write(Buffer.printAnsi(numNewRows + "S"));
-                        terminal.write(Buffer.printAnsi(numNewRows + "A"));
+                        terminal.writeToStdOut(Buffer.printAnsi(numNewRows + "S"));
+                        terminal.writeToStdOut(Buffer.printAnsi(numNewRows + "A"));
                     }
                 }
             }
@@ -591,8 +624,8 @@ public class Console {
                     if((insert.length()+buffer.totalLength()) % getTerminalWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
-                        terminal.write(Buffer.printAnsi(numNewRows+"S"));
-                        terminal.write(Buffer.printAnsi(numNewRows+"A"));
+                        terminal.writeToStdOut(Buffer.printAnsi(numNewRows + "S"));
+                        terminal.writeToStdOut(Buffer.printAnsi(numNewRows + "A"));
                     }
                 }
             }
@@ -615,19 +648,19 @@ public class Console {
         buffer.write((char) c);
         if(mask != null) {
             if(mask == 0)
-                terminal.write(' '); //TODO: fix this hack
+                terminal.writeToStdOut(' '); //TODO: fix this hack
             else
-                terminal.write(mask);
+                terminal.writeToStdOut(mask);
         }
         else {
-            terminal.write((char) c);
+            terminal.writeToStdOut((char) c);
         }
 
         // add a 'fake' new line when inserting at the edge of terminal
         if(buffer.getCursorWithPrompt() > getTerminalWidth() &&
                 buffer.getCursorWithPrompt() % getTerminalWidth() == 1) {
-           terminal.write((char) 32);
-            terminal.write((char) 13);
+           terminal.writeToStdOut((char) 32);
+            terminal.writeToStdOut((char) 13);
         }
 
         // if we insert somewhere other than the end of the line we need to redraw from cursor
@@ -645,8 +678,8 @@ public class Console {
                     totalRows--;
 
                 if(ansiCurrentRow+(totalRows-currentRow) > getTerminalHeight()) {
-                    terminal.write(Buffer.printAnsi("1S")); //adding a line
-                    terminal.write(Buffer.printAnsi("1A")); // moving up a line
+                    terminal.writeToStdOut(Buffer.printAnsi("1S")); //adding a line
+                    terminal.writeToStdOut(Buffer.printAnsi("1A")); // moving up a line
                 }
             }
             redrawLine();
@@ -753,10 +786,10 @@ public class Console {
                 (editMode.getCurrentAction() == Action.MOVE ||
                         editMode.getCurrentAction() == Action.DELETE)) {
 
-            terminal.write(buffer.move(where, getTerminalWidth(), true));
+            terminal.writeToStdOut(buffer.move(where, getTerminalWidth(), true));
         }
         else {
-            terminal.write(buffer.move(where, getTerminalWidth()));
+            terminal.writeToStdOut(buffer.move(where, getTerminalWidth()));
         }
     }
 
@@ -780,38 +813,38 @@ public class Console {
             //+", width:"+getTerminalWidth()+", height:"+getTerminalHeight()+", delta:"+buffer.getDelta()
             //+", buffer:"+buffer.getLine());
 
-            terminal.write(Buffer.printAnsi("s")); //save cursor
+            terminal.writeToStdOut(Buffer.printAnsi("s")); //save cursor
 
             if(currentRow > 0)
                 for(int i=0; i<currentRow; i++)
-                    terminal.write(Buffer.printAnsi("A")); //move to top
+                    terminal.writeToStdOut(Buffer.printAnsi("A")); //move to top
 
-            terminal.write(Buffer.printAnsi("0G")); //clear
+            terminal.writeToStdOut(Buffer.printAnsi("0G")); //clear
 
-            terminal.write(line);
+            terminal.writeToStdOut(line);
             //if the current line.length < compared to previous we add spaces to the end
             // to overwrite the old chars (wtb a better way of doing this)
             if(buffer.getDelta() < 0) {
                 StringBuilder sb = new StringBuilder();
                 for(int i=0; i > buffer.getDelta(); i--)
                     sb.append(' ');
-                terminal.write(sb.toString());
+                terminal.writeToStdOut(sb.toString());
             }
 
             // move cursor to saved pos
-            terminal.write(Buffer.printAnsi("u"));
+            terminal.writeToStdOut(Buffer.printAnsi("u"));
         }
         // only clear the current line
         else {
-            terminal.write(Buffer.printAnsi("s")); //save cursor
+            terminal.writeToStdOut(Buffer.printAnsi("s")); //save cursor
             //move cursor to 0. - need to do this to clear the entire line
-            terminal.write(Buffer.printAnsi("0G"));
-            terminal.write(Buffer.printAnsi("2K")); // clear line
+            terminal.writeToStdOut(Buffer.printAnsi("0G"));
+            terminal.writeToStdOut(Buffer.printAnsi("2K")); // clear line
 
-            terminal.write(line);
+            terminal.writeToStdOut(line);
 
             // move cursor to saved pos
-            terminal.write(Buffer.printAnsi("u"));
+            terminal.writeToStdOut(Buffer.printAnsi("u"));
         }
     }
 
@@ -829,7 +862,7 @@ public class Console {
         out.append(result);
         buffer.disablePrompt(true);
         moveCursor(-buffer.getCursor());
-        terminal.write(Buffer.printAnsi("1G"));//move the cursor all the way to the start of the line
+        terminal.writeToStdOut(Buffer.printAnsi("1G"));//move the cursor all the way to the start of the line
         setBufferLine(out.toString());
         moveCursor(cursor);
         drawLine(buffer.getLine());
@@ -843,7 +876,7 @@ public class Console {
      */
     private void printNewline() throws IOException {
         moveCursor(buffer.totalLength());
-        terminal.write(Config.getLineSeparator());
+        terminal.writeToStdOut(Config.getLineSeparator());
     }
 
       /**
@@ -927,7 +960,7 @@ public class Console {
                     }
                     else {
                         askDisplayCompletion = true;
-                        terminal.write(Config.getLineSeparator()+"Display all "+completions.size()+ " possibilities? (y or n)");
+                        terminal.writeToStdOut(Config.getLineSeparator() + "Display all " + completions.size() + " possibilities? (y or n)");
                     }
                 }
                 // display all
@@ -952,17 +985,17 @@ public class Console {
         if(completion.startsWith(buffer.getLine())) {
             performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
             buffer.write(completion);
-            terminal.write(completion);
+            terminal.writeToStdOut(completion);
 
             //only append space if its an actual complete, not a partial
         }
         else {
             buffer.write(completion);
-            terminal.write(completion);
+            terminal.writeToStdOut(completion);
         }
         if(appendSpace && fullCompletion.startsWith(buffer.getLine())) {
             buffer.write(' ');
-            terminal.write(' ');
+            terminal.writeToStdOut(' ');
         }
 
         redrawLine();
@@ -976,8 +1009,8 @@ public class Console {
      */
     private void displayCompletions(List<String> completions) throws IOException {
         printNewline();
-        terminal.write(Parser.formatCompletions(completions, terminal.getHeight(), terminal.getWidth()));
-        terminal.write(buffer.getLineWithPrompt());
+        terminal.writeToStdOut(Parser.formatCompletions(completions, terminal.getHeight(), terminal.getWidth()));
+        terminal.writeToStdOut(buffer.getLineWithPrompt());
         //if we do a complete and the cursor is not at the end of the
         //buffer we need to move it to the correct place
         syncCursor();
@@ -985,9 +1018,9 @@ public class Console {
 
     private void syncCursor() throws IOException {
         if(buffer.getCursor() != buffer.getLine().length())
-            terminal.write(Buffer.printAnsi((
-                    Math.abs( buffer.getCursor()-
-                            buffer.getLine().length())+"D")));
+            terminal.writeToStdOut(Buffer.printAnsi((
+                    Math.abs(buffer.getCursor() -
+                            buffer.getLine().length()) + "D")));
 
     }
 
@@ -1008,7 +1041,7 @@ public class Console {
     private int getCurrentRow() {
         if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
             try {
-                terminal.write(Buffer.printAnsi("6n"));
+                terminal.writeToStdOut(Buffer.printAnsi("6n"));
                 StringBuilder builder = new StringBuilder(8);
                 int row;
                 while((row = terminal.read(false)[0]) > -1 && row != 'R') {
@@ -1030,7 +1063,7 @@ public class Console {
     private int getCurrentColumn() {
         if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
             try {
-                terminal.write(Buffer.printAnsi("6n"));
+                terminal.writeToStdOut(Buffer.printAnsi("6n"));
                 StringBuilder builder = new StringBuilder(8);
                 int row;
                 while((row = settings.getInputStream().read()) > -1 && row != 'R' ) {
@@ -1068,12 +1101,33 @@ public class Console {
      */
     public void clear(boolean includeBuffer) throws IOException {
         //first clear console
-        terminal.write(Buffer.printAnsi("2J"));
+        terminal.writeToStdOut(Buffer.printAnsi("2J"));
         //move cursor to correct position
-        terminal.write(Buffer.printAnsi("1;1H"));
-        //then write prompt
+        terminal.writeToStdOut(Buffer.printAnsi("1;1H"));
+        //then writeToStdOut prompt
         if(includeBuffer)
-            terminal.write(buffer.getLineWithPrompt());
+            terminal.writeToStdOut(buffer.getLineWithPrompt());
+    }
+
+    private ConsoleOutput parseConsoleOutput(String buffer) {
+        if(buffer.contains(">")) {
+            redirection = true;
+            this.buffer.setLine(buffer.substring(buffer.indexOf(">")+1, buffer.length()).trim());
+            return new ConsoleOutput(buffer.substring(0, buffer.indexOf(">")), true);
+        }
+        else {
+            return new ConsoleOutput(buffer, false);
+        }
+    }
+
+    private void persistRedirection(String fileName) throws IOException {
+        try {
+            FileUtils.saveFile(new File(fileName), redirectionBuffer.toString(), false);
+        }
+        catch (IOException e) {
+            pushToStdErr(e.getMessage());
+        }
+
     }
 
 }

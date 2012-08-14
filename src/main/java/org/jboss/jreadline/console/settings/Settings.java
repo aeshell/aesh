@@ -40,7 +40,8 @@ public class Settings {
     private String bellStyle;
     private boolean ansiConsole = true;
     private InputStream inputStream;
-    private OutputStream outputStream;
+    private OutputStream stdOut;
+    private OutputStream stdErr;
     private Terminal terminal;
     private boolean readInputrc = true;
     private File inputrc;
@@ -69,7 +70,8 @@ public class Settings {
         bellStyle = null;
         ansiConsole = true;
         inputStream = null;
-        outputStream = null;
+        stdOut = null;
+        stdErr = null;
         terminal = null;
         readInputrc = true;
         logFile = null;
@@ -235,20 +237,40 @@ public class Settings {
      * If not set System.out is used
      * @return out
      */
-    public OutputStream getOutputStream() {
-        if(outputStream == null)
+    public OutputStream getStdOut() {
+        if(stdOut == null)
             return System.out;
         else
-            return outputStream;
+            return stdOut;
     }
 
     /**
      * Set where output should go to
-     * @param outputStream output
+     * @param stdOut output
      */
-    public void setOutputStream(OutputStream outputStream) {
-        this.outputStream = outputStream;
+    public void setStdOut(OutputStream stdOut) {
+        this.stdOut = stdOut;
     }
+
+     /**
+     * If not set System.out is used
+     * @return out
+     */
+    public OutputStream getStdErr() {
+        if(stdErr == null)
+            return System.err;
+        else
+            return stdErr;
+    }
+
+    /**
+     * Set where output should go to
+     * @param stdErr output
+     */
+    public void setStdErr(OutputStream stdErr) {
+        this.stdErr = stdErr;
+    }
+
 
     /**
      * Use the specified terminal implementation

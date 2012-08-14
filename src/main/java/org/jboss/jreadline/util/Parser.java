@@ -136,7 +136,7 @@ public class Parser {
                     return text.trim().substring(text.lastIndexOf(" ")).trim();
             }
             else
-                return text;
+                return text.trim();
         }
         else {
             String rest = text.substring(0, cursor+1);
@@ -149,5 +149,20 @@ public class Parser {
             else
                 return rest.trim();
         }
+    }
+
+    public static String findWordClosestToCursorDividedByRedirectOrPipe(String text, int cursor) {
+        //1. find all occurrences of pipe/redirect.
+        //2. find position thats closest to cursor.
+        //3. return word closest to it
+        String[] splitText = text.split(">|\\|");
+        int length = 0;
+        for(String s : splitText) {
+            length += s.length()+1;
+            if(cursor <= length) {
+                return findWordClosestToCursor(s, cursor-(length-s.length()));
+            }
+        }
+        return "";
     }
 }

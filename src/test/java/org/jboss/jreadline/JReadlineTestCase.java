@@ -19,6 +19,7 @@ package org.jboss.jreadline;
 import junit.framework.TestCase;
 import org.jboss.jreadline.console.Config;
 import org.jboss.jreadline.console.Console;
+import org.jboss.jreadline.console.ConsoleOutput;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.Mode;
 import org.jboss.jreadline.terminal.TestTerminal;
@@ -40,7 +41,7 @@ public abstract class JReadlineTestCase extends TestCase {
         settings.setReadInputrc(false);
         settings.setTerminal(new TestTerminal());
         settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
-        settings.setOutputStream(new ByteArrayOutputStream());
+        settings.setStdOut(new ByteArrayOutputStream());
         settings.setEditMode(Mode.EMACS);
         settings.resetEditMode();
         settings.setReadAhead(false);
@@ -51,9 +52,9 @@ public abstract class JReadlineTestCase extends TestCase {
 
         String in = null;
         while (true) {
-            String tmp = console.read(null);
+            ConsoleOutput tmp = console.read(null);
             if(tmp != null)
-                in = tmp;
+                in = tmp.getBuffer();
             else
                 break;
         }
@@ -72,7 +73,7 @@ public abstract class JReadlineTestCase extends TestCase {
         settings.setReadInputrc(false);
         settings.setTerminal(new TestTerminal());
         settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
-        settings.setOutputStream(new ByteArrayOutputStream());
+        settings.setStdOut(new ByteArrayOutputStream());
         settings.setReadAhead(false);
         settings.setEditMode(Mode.VI);
         settings.resetEditMode();
@@ -83,9 +84,9 @@ public abstract class JReadlineTestCase extends TestCase {
 
         String in = null;
         while (true) {
-            String tmp = console.read(null);
+            ConsoleOutput tmp = console.read(null);
             if(tmp != null)
-                in = tmp;
+                in = tmp.getBuffer();
             else
                 break;
         }

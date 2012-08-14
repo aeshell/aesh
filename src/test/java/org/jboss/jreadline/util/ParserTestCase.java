@@ -44,4 +44,17 @@ public class ParserTestCase extends TestCase {
         assertEquals("", Parser.findWordClosestToCursor("ls  org/jboss/jreadlineshell/Shell.class", 3) );
     }
 
+    public void testFindWordClosestToCursorDividedByRedirectOrPipe() {
+        assertEquals("foo", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls > foo", 8));
+        assertEquals("foo", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls | foo", 8));
+        assertEquals("fo", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls > foo", 7));
+        assertEquals("fo", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls | foo", 7));
+        assertEquals("foo", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls > foo ", 9));
+        assertEquals("", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls > foo  ", 10));
+        assertEquals("", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls > ", 5));
+        assertEquals("", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls >  ", 6));
+        assertEquals("", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls > bla > ", 11));
+        assertEquals("", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls | bla > ", 11));
+    }
+
 }

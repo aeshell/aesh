@@ -29,12 +29,13 @@ import java.io.*;
  */
 public class WindowsTerminal implements Terminal {
 
-    private Writer writer;
+    private Writer stdOut;
+    private Writer stdErr;
     private InputStream input;
 
 
     @Override
-    public void init(InputStream inputStream, OutputStream outputStream) {
+    public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
         if(inputStream == System.in) {
             System.out.println("Using System.in");
         }
@@ -42,10 +43,12 @@ public class WindowsTerminal implements Terminal {
         //setting up reader
         try {
             //AnsiConsole.systemInstall();
-            writer = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(outputStream)));
+            this.stdOut = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(stdOut)));
+            this.stdErr = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(stdErr)));
         }
         catch (Exception ioe) {
-            writer = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(outputStream)));
+            this.stdOut = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(stdOut)));
+            this.stdErr = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(stdErr)));
         }
 
         this.input = inputStream;
@@ -72,25 +75,47 @@ public class WindowsTerminal implements Terminal {
     }
 
     @Override
-    public void write(String out) throws IOException {
+    public void writeToStdOut(String out) throws IOException {
         if(out != null && out.length() > 0) {
-            writer.write(out);
-            writer.flush();
+            stdOut.write(out);
+            stdOut.flush();
         }
     }
 
     @Override
-    public void write(char[] out) throws IOException {
+    public void writeToStdOut(char[] out) throws IOException {
         if(out != null && out.length > 0) {
-            writer.write(out);
-            writer.flush();
+            stdOut.write(out);
+            stdOut.flush();
         }
     }
 
     @Override
-    public void write(char out) throws IOException {
-        writer.write(out);
-        writer.flush();
+    public void writeToStdOut(char out) throws IOException {
+        stdOut.write(out);
+        stdOut.flush();
+    }
+
+    @Override
+    public void writeToStdErr(String err) throws IOException {
+        if(err != null && err.length() > 0) {
+            stdOut.write(err);
+            stdOut.flush();
+        }
+    }
+
+    @Override
+    public void writeToStdErr(char[] err) throws IOException {
+        if(err != null && err.length > 0) {
+            stdOut.write(err);
+            stdOut.flush();
+        }
+    }
+
+    @Override
+    public void writeToStdErr(char err) throws IOException {
+        stdOut.write(err);
+        stdOut.flush();
     }
 
     @Override

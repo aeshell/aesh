@@ -31,9 +31,10 @@ public interface Terminal {
      * Initialize the Terminal with which input/output stream it should use
      *
      * @param inputStream input
-     * @param outputStream output
+     * @param stdOut standard output
+     * @param stdErr error output
      */
-    void init(InputStream inputStream, OutputStream outputStream);
+    void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr);
 
     /**
      * Read from the input stream (char by char)
@@ -44,28 +45,52 @@ public interface Terminal {
     int[] read(boolean readAhead) throws IOException;
 
     /**
-     * Write to the output stream
+     * Write to the standard output stream
      *
      * @param out what goes into the stream
      * @throws IOException stream
      */
-    void write(String out) throws IOException;
+    void writeToStdOut(String out) throws IOException;
 
     /**
-     * Write to the output stream
+     * Write to the standard output stream
      *
      * @param out what goes into the stream
      * @throws IOException stream
      */
-    void write(char[] out) throws IOException;
+    void writeToStdOut(char[] out) throws IOException;
 
     /**
-     * Write to the output stream
+     * Write to the standard output stream
      *
      * @param out what goes into the stream
      * @throws IOException stream
      */
-    void write(char out) throws IOException;
+    void writeToStdOut(char out) throws IOException;
+
+    /**
+     * Write to the standard error stream
+     *
+     * @param err what goes into the stream
+     * @throws IOException stream
+     */
+    void writeToStdErr(String err) throws IOException;
+
+    /**
+     * Write to the standard error stream
+     *
+     * @param err what goes into the stream
+     * @throws IOException stream
+     */
+    void writeToStdErr(char[] err) throws IOException;
+
+    /**
+     * Write to the standard error stream
+     *
+     * @param err what goes into the stream
+     * @throws IOException stream
+     */
+    void writeToStdErr(char err) throws IOException;
 
     /**
      * @return terminal height

@@ -32,6 +32,7 @@ public abstract class ConsoleCommand {
 
 	boolean attached = false;
 	protected Console console = null;
+    boolean redirect = false;
 
     public ConsoleCommand(Console console) {
         this.console = console;
@@ -43,9 +44,10 @@ public abstract class ConsoleCommand {
      *
      * @throws IOException stream
      */
-    public final void attach() throws IOException {
+    public final void attach(ConsoleOutput output) throws IOException {
 		attached = true;
         this.console.attachProcess(this);
+        this.redirect = output.hasRedirectOrPipe();
         afterAttach();
 	}
 
@@ -68,6 +70,10 @@ public abstract class ConsoleCommand {
         afterDetach();
 	}
 
+    public final boolean hasRedirect() {
+        return redirect;
+    }
+
     /**
      * Called after attach(..) is called.
      *
@@ -86,8 +92,7 @@ public abstract class ConsoleCommand {
      * Called after every operation made by the user
      *
      * @param operation operation
-     * @return string
      * @throws IOException stream
      */
-    public abstract String processOperation(Operation operation) throws IOException;
+    public abstract void processOperation(Operation operation) throws IOException;
 }

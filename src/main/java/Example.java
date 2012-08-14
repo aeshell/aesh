@@ -2,6 +2,7 @@ import org.jboss.jreadline.console.ConsoleCommand;
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.Console;
+import org.jboss.jreadline.console.ConsoleOutput;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.actions.Operation;
 import org.jboss.jreadline.util.ANSI;
@@ -30,44 +31,40 @@ public class Example {
 
             @Override
             protected void afterAttach() throws IOException {
-				console.pushToConsole(ANSI.getAlternateBufferScreen());
-				//console.pushToConsole("blablablablablabal");
+                if(!hasRedirect()) {
+                    console.pushToStdOut(ANSI.getAlternateBufferScreen());
+                }
+				console.pushToStdOut("blablablablablabal");
                 readFromFile();
+
+                //detach after init if hasRedirect()
+                if(hasRedirect()) {
+                    detach();
+                }
             }
 
             @Override
             protected void afterDetach() throws IOException {
-				console.pushToConsole(ANSI.getMainBufferScreen());
+                if(!hasRedirect())
+                    console.pushToStdOut(ANSI.getMainBufferScreen());
             }
 
             private void readFromFile() throws IOException {
-                //console.clear();
-                console.pushToConsole("here should we present some text... press 'q' to quit");
-                /*
-                Path file = FileSystems.getDefault().getPath("/tmp", "README.md");
-                Charset charset = Charset.defaultCharset();
-                BufferedReader reader = Files.newBufferedReader(file, charset);
-                String line = null;
-                while ((line = reader.readLine()) != null) {
-                    console.pushToConsole(line);
-                    console.pushToConsole(Config.getLineSeparator());
-                }
-                */
+                console.pushToStdOut("here should we present some text... press 'q' to quit");
             }
 
             @Override
-            public String processOperation(Operation operation) throws IOException {
-                //console.pushToConsole("blablablablablabal");
+            public void processOperation(Operation operation) throws IOException {
+                //console.pushToStdOut("blablablablablabal");
                 if(operation.getInput()[0] == 'q') {
 					detach();
-					return "";
 				}
                 else if(operation.getInput()[0] == 'a') {
                     readFromFile();
-                    return null;
                 }
-				else
-					return null;
+				else {
+
+                }
             }
         };
 
@@ -85,29 +82,35 @@ public class Example {
                     commands.add("foobcx");
                     commands.add("foobdx");
                 }
-                else if(co.getBuffer().equals("fooba")) {
+                if(co.getBuffer().equals("--")) {
+                    commands.add("--help-");
+                }
+                if(co.getBuffer().startsWith("--help-") || co.getBuffer().startsWith("--help-m")) {
+                    commands.add("--help-me");
+                }
+                if(co.getBuffer().equals("fooba")) {
                     commands.add("foobaa");
                     commands.add("foobar");
                     commands.add("foobaxxxxxx");
                 }
-                else if(co.getBuffer().equals("foobar")) {
+                if(co.getBuffer().equals("foobar")) {
                     commands.add("foobar");
                 }
-                else if(co.getBuffer().equals("bar")) {
+                if(co.getBuffer().equals("bar")) {
                     commands.add("bar/");
                 }
-                else if(co.getBuffer().equals("h")) {
+                if(co.getBuffer().equals("h")) {
                     commands.add("help.history");
                     commands.add("help");
                 }
-                else if(co.getBuffer().equals("help")) {
+                if(co.getBuffer().equals("help")) {
                     commands.add("help.history");
                     commands.add("help");
                 }
-                else if(co.getBuffer().equals("help.")) {
+                if(co.getBuffer().equals("help.")) {
                     commands.add("help.history");
                 }
-                else if(co.getBuffer().equals("deploy")) {
+                if(co.getBuffer().equals("deploy")) {
                     commands.add("deploy /home/blabla/foo/bar/alkdfe/en/to/tre");
                 }
                  co.setCompletionCandidates(commands);
@@ -116,25 +119,29 @@ public class Example {
 
         exampleConsole.addCompletion(completer);
 
-        String line;
-        //console.pushToConsole(ANSI.GREEN_TEXT());
+        ConsoleOutput line;
+        //console.pushToStdOut(ANSI.GREEN_TEXT());
         while ((line = exampleConsole.read("[test@foo.bar]~> ")) != null) {
-            exampleConsole.pushToConsole("======>\"" + line + "\"\n");
+            exampleConsole.pushToStdOut("======>\"" + line.getBuffer() + "\"\n");
 
-            if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit") ||
-                    line.equalsIgnoreCase("reset")) {
+            if (line.getBuffer().equalsIgnoreCase("quit") || line.getBuffer().equalsIgnoreCase("exit") ||
+                    line.getBuffer().equalsIgnoreCase("reset")) {
                 break;
             }
-            if(line.equalsIgnoreCase("password")) {
+            if(line.getBuffer().equalsIgnoreCase("password")) {
                 line = exampleConsole.read("password: ", Character.valueOf((char) 0));
-                exampleConsole.pushToConsole("password typed:" + line + "\n");
+                exampleConsole.pushToStdOut("password typed:" + line + "\n");
 
             }
-            if(line.equals("clear"))
+            //test stdErr
+            if(line.getBuffer().startsWith("blah")) {
+                exampleConsole.pushToStdErr("blah. command not found.\n");
+            }
+            if(line.getBuffer().equals("clear"))
                 exampleConsole.clear();
-            if(line.equals("man")) {
+            if(line.getBuffer().startsWith("man")) {
                 //exampleConsole.attachProcess(test);
-                test.attach();
+                test.attach(line);
             }
         }
         if(line.equals("reset")) {
@@ -142,9 +149,9 @@ public class Example {
             exampleConsole = new Console();
 
             while ((line = exampleConsole.read("> ")) != null) {
-                exampleConsole.pushToConsole("======>\"" + line + "\"\n");
-                if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit") ||
-                        line.equalsIgnoreCase("reset")) {
+                exampleConsole.pushToStdOut("======>\"" + line + "\"\n");
+                if (line.getBuffer().equalsIgnoreCase("quit") || line.getBuffer().equalsIgnoreCase("exit") ||
+                        line.getBuffer().equalsIgnoreCase("reset")) {
                     break;
                 }
 

@@ -29,9 +29,9 @@ public class TestTerminal implements Terminal {
     private Writer writer;
 
     @Override
-    public void init(InputStream inputStream, OutputStream outputStream) {
+    public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
         input = inputStream;
-        writer = new PrintWriter(new OutputStreamWriter(outputStream));
+        writer = new PrintWriter(new OutputStreamWriter(stdOut));
     }
 
     @Override
@@ -51,7 +51,7 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
-    public void write(String out) throws IOException {
+    public void writeToStdOut(String out) throws IOException {
         if(out != null && out.length() > 0) {
             writer.write(out);
             writer.flush();
@@ -59,7 +59,7 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
-    public void write(char[] out) throws IOException {
+    public void writeToStdOut(char[] out) throws IOException {
         if(out != null && out.length > 0) {
             writer.write(out);
             writer.flush();
@@ -67,8 +67,30 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
-    public void write(char out) throws IOException {
+    public void writeToStdOut(char out) throws IOException {
         writer.write(out);
+        writer.flush();
+    }
+
+    @Override
+    public void writeToStdErr(String err) throws IOException {
+        if(err != null && err.length() > 0) {
+            writer.write(err);
+            writer.flush();
+        }
+    }
+
+    @Override
+    public void writeToStdErr(char[] err) throws IOException {
+        if(err != null && err.length > 0) {
+            writer.write(err);
+            writer.flush();
+        }
+    }
+
+    @Override
+    public void writeToStdErr(char err) throws IOException {
+        writer.write(err);
         writer.flush();
     }
 

@@ -373,27 +373,11 @@ public class Buffer {
         line.setCharAt(getCursor(), rChar);
     }
 
-    /**
-     * Return the biggest common startsWith string
-     *
-     * @param completionList list to compare
-     * @return biggest common startsWith string
-     */
-    protected String findStartsWith(List<String> completionList) {
-        StringBuilder builder = new StringBuilder();
-        for(String completion : completionList)
-            while(builder.length() < completion.length() &&
-                    startsWith(completion.substring(0, builder.length()+1), completionList))
-                builder.append(completion.charAt(builder.length()));
-
-        return builder.toString();
+    protected boolean containRedirection() {
+        return (line.indexOf(">") > -1 );
     }
 
-    private boolean startsWith(String criteria, List<String> completionList) {
-        for(String completion : completionList)
-            if(!completion.startsWith(criteria))
-                return false;
-
-        return true;
+    protected int getRedirectionPosition() {
+       return line.indexOf(">");
     }
 }

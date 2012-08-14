@@ -37,12 +37,13 @@ public class POSIXTerminal implements Terminal {
     private boolean restored = false;
 
     private InputStream input;
-    private Writer writer;
-    
+    private Writer stdOut;
+    private Writer stdErr;
+
     private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 
     @Override
-    public void init(InputStream inputStream, OutputStream outputStream) {
+    public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
         // save the initial tty configuration
         try {
             ttyConfig = stty("-g");
@@ -71,7 +72,8 @@ public class POSIXTerminal implements Terminal {
             e.printStackTrace();
         }
 
-        writer = new PrintWriter( new OutputStreamWriter(outputStream));
+        this.stdOut = new PrintWriter( new OutputStreamWriter(stdOut));
+        this.stdErr = new PrintWriter( new OutputStreamWriter(stdErr));
     }
 
     /**
@@ -97,10 +99,10 @@ public class POSIXTerminal implements Terminal {
      * @see org.jboss.jreadline.terminal.Terminal
      */
     @Override
-    public void write(String out) throws IOException {
+    public void writeToStdOut(String out) throws IOException {
         if(out != null && out.length() > 0) {
-            writer.write(out);
-            writer.flush();
+            stdOut.write(out);
+            stdOut.flush();
         }
     }
 
@@ -108,10 +110,10 @@ public class POSIXTerminal implements Terminal {
      * @see org.jboss.jreadline.terminal.Terminal
      */
     @Override
-    public void write(char[] out) throws IOException {
+    public void writeToStdOut(char[] out) throws IOException {
         if(out != null && out.length > 0) {
-            writer.write(out);
-            writer.flush();
+            stdOut.write(out);
+            stdOut.flush();
         }
     }
 
@@ -119,9 +121,40 @@ public class POSIXTerminal implements Terminal {
      * @see org.jboss.jreadline.terminal.Terminal
      */
     @Override
-    public void write(char out) throws IOException {
-        writer.write(out);
-        writer.flush();
+    public void writeToStdOut(char out) throws IOException {
+        stdOut.write(out);
+        stdOut.flush();
+    }
+
+    /**
+     * @see org.jboss.jreadline.terminal.Terminal
+     */
+    @Override
+    public void writeToStdErr(String err) throws IOException {
+        if(err != null && err.length() > 0) {
+            stdErr.write(err);
+            stdErr.flush();
+        }
+    }
+
+    /**
+     * @see org.jboss.jreadline.terminal.Terminal
+     */
+    @Override
+    public void writeToStdErr(char[] err) throws IOException {
+        if(err != null && err.length > 0) {
+            stdErr.write(err);
+            stdErr.flush();
+        }
+    }
+
+    /**
+     * @see org.jboss.jreadline.terminal.Terminal
+     */
+    @Override
+    public void writeToStdErr(char err) throws IOException {
+        stdErr.write(err);
+        stdErr.flush();
     }
 
     /**
