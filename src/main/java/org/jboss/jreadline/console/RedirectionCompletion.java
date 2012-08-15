@@ -39,9 +39,9 @@ public class RedirectionCompletion implements Completion {
             String word =
                     Parser.findWordClosestToCursorDividedByRedirectOrPipe(
                             completeOperation.getBuffer(), completeOperation.getCursor());
-            completeOperation.addCompletionCandidates(
-                    FileUtils.listMatchingDirectories(word,  new File(System.getProperty("user.dir"))));
             completeOperation.setOffset(completeOperation.getCursor());
+            FileUtils.listMatchingDirectories(completeOperation, word,
+                    new File(System.getProperty("user.dir")));
         }
     }
 }

@@ -16,6 +16,7 @@
  */
 package org.jboss.jreadline.util;
 
+import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.console.Config;
 
 import java.io.File;
@@ -43,7 +44,7 @@ public class FileUtils {
     public static final Pattern endsWithSlash =
             Pattern.compile(".*\\"+Config.getPathSeparator()+"$");
 
-    public static List<String> listMatchingDirectories(String possibleDir, File cwd) {
+    public static void listMatchingDirectories(CompleteOperation completion, String possibleDir, File cwd) {
         // that starts with possibleDir
         List<String> returnFiles = new ArrayList<String>();
         if (possibleDir.trim().isEmpty()) {
@@ -52,40 +53,43 @@ public class FileUtils {
                 if (file.startsWith(possibleDir))
                     returnFiles.add(file.substring(possibleDir.length()));
 
-            return returnFiles;
+            completion.addCompletionCandidates(returnFiles);
         }
         else if (!startsWithSlash.matcher(possibleDir).matches() &&
                 new File(cwd.getAbsolutePath() +
                         Config.getPathSeparator() +possibleDir).isDirectory()) {
             if(!endsWithSlash.matcher(possibleDir).matches()){
                 returnFiles.add("/");
-                return returnFiles;
+                completion.addCompletionCandidates(returnFiles);
             }
-            else
-                return listDirectory(new File(cwd.getAbsolutePath() +
+            else {
+                completion.addCompletionCandidates( listDirectory(new File(cwd.getAbsolutePath() +
                         Config.getPathSeparator()
-                        +possibleDir));
+                        +possibleDir)));
+            }
         }
         else if(new File(cwd.getAbsolutePath() +Config.getPathSeparator()+ possibleDir).isFile()) {
             returnFiles.add(" ");
-            return returnFiles;
+            completion.addCompletionCandidates(returnFiles);
         }
         //else if(possibleDir.startsWith(("/")) && new File(possibleDir).isFile()) {
         else if(startsWithSlash.matcher(possibleDir).matches() &&
                 new File(possibleDir).isFile()) {
             returnFiles.add(" ");
-            return returnFiles;
+            completion.addCompletionCandidates(returnFiles);
         }
         else {
             returnFiles = new ArrayList<String>();
             if(new File(possibleDir).isDirectory() &&
                     !endsWithSlash.matcher(possibleDir).matches()) {
                 returnFiles.add(Config.getPathSeparator());
-                return returnFiles;
+                completion.addCompletionCandidates(returnFiles);
+                return;
             }
             else if(new File(possibleDir).isDirectory() &&
                     !endsWithSlash.matcher(possibleDir).matches()) {
-                return listDirectory(new File(possibleDir));
+                completion.addCompletionCandidates( listDirectory(new File(possibleDir)));
+                return;
             }
 
             //1.list possibleDir.substring(pos
@@ -142,7 +146,10 @@ public class FileUtils {
                 }
             }
 
-            return returnFiles;
+            completion.addCompletionCandidates(returnFiles);
+            if(returnFiles.size() > 1 && rest != null && rest.length() > 0)
+                completion.setOffset(completion.getCursor()-rest.length());
+            return;
 
         }
     }
