@@ -32,7 +32,7 @@ public abstract class ConsoleCommand {
 
 	boolean attached = false;
 	protected Console console = null;
-    boolean redirect = false;
+    ConsoleOutput consoleOutput;
 
     public ConsoleCommand(Console console) {
         this.console = console;
@@ -47,7 +47,7 @@ public abstract class ConsoleCommand {
     public final void attach(ConsoleOutput output) throws IOException {
 		attached = true;
         this.console.attachProcess(this);
-        this.redirect = output.hasRedirectOrPipe();
+        this.consoleOutput = output;
         afterAttach();
 	}
 
@@ -71,7 +71,11 @@ public abstract class ConsoleCommand {
 	}
 
     public final boolean hasRedirect() {
-        return redirect;
+        return consoleOutput.hasRedirectOrPipe();
+    }
+
+    public final ConsoleOutput getConsoleOutput() {
+        return consoleOutput;
     }
 
     /**

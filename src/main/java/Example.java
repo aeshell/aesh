@@ -34,7 +34,7 @@ public class Example {
                 if(!hasRedirect()) {
                     console.pushToStdOut(ANSI.getAlternateBufferScreen());
                 }
-				console.pushToStdOut("blablablablablabal");
+
                 readFromFile();
 
                 //detach after init if hasRedirect()
@@ -50,6 +50,10 @@ public class Example {
             }
 
             private void readFromFile() throws IOException {
+                if(getConsoleOutput().getStdOut() != null &&
+                        getConsoleOutput().getStdOut().length() > 0) {
+                    console.pushToStdOut("FROM STDOUT: "+getConsoleOutput().getStdOut());
+                }
                 console.pushToStdOut("here should we present some text... press 'q' to quit");
             }
 

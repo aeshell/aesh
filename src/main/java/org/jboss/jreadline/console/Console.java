@@ -65,7 +65,9 @@ public class Console {
     private boolean askDisplayCompletion = false;
     private boolean running = false;
     private boolean redirection = false;
-    private StringBuilder redirectionBuffer;
+    private StringBuilder redirectPipeOutBuffer;
+    private StringBuilder redirectPipeErrBuffer;
+    private boolean pipeline = false;
 
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
 
@@ -124,7 +126,8 @@ public class Console {
         completionList = new ArrayList<Completion>();
         completionList.add(new RedirectionCompletion());
 
-        redirectionBuffer = new StringBuilder();
+        redirectPipeOutBuffer = new StringBuilder();
+        redirectPipeErrBuffer = new StringBuilder();
         this.settings = settings;
         running = true;
     }
@@ -171,8 +174,8 @@ public class Console {
     public void pushToStdOut(String input) throws IOException {
         if(input != null && input.length() > 0) {
             //if redirection enabled, put it into a buffer
-            if(redirection) {
-                redirectionBuffer.append(input);
+            if(redirection || pipeline) {
+                redirectPipeOutBuffer.append(input);
             }
             else
                 terminal.writeToStdOut(input);
@@ -188,8 +191,8 @@ public class Console {
     public void pushToStdOut(char[] input) throws IOException {
         if(input != null && input.length > 0) {
             //if redirection enabled, put it into a buffer
-            if(redirection)
-                redirectionBuffer.append(input);
+            if(redirection || pipeline)
+                redirectPipeOutBuffer.append(input);
             else
                 terminal.writeToStdOut(input);
         }
@@ -197,13 +200,19 @@ public class Console {
 
     public void pushToStdErr(String input) throws IOException {
         if(input != null && input.length() > 0) {
-            terminal.writeToStdErr(input);
+            if(redirection || pipeline)
+                redirectPipeErrBuffer.append(input);
+            else
+                terminal.writeToStdErr(input);
         }
     }
 
     public void pushToStdErr(char[] input) throws IOException {
         if(input != null && input.length > 0) {
-            terminal.writeToStdErr(input);
+            if(redirection || pipeline)
+                redirectPipeErrBuffer.append(input);
+            else
+                terminal.writeToStdErr(input);
         }
     }
 
@@ -290,7 +299,10 @@ public class Console {
         if(redirection) {
             redirection = false;
             persistRedirection(buffer.getLine());
-            redirectionBuffer = new StringBuilder();
+        }
+        if(pipeline) {
+            pipeline = false;
+            return parseConsoleOutput(buffer.getLine());
         }
 
         buffer.reset(prompt, mask);
@@ -1110,24 +1122,45 @@ public class Console {
     }
 
     private ConsoleOutput parseConsoleOutput(String buffer) {
+        ConsoleOutput output;
         if(buffer.contains(">")) {
             redirection = true;
             this.buffer.setLine(buffer.substring(buffer.indexOf(">")+1, buffer.length()).trim());
-            return new ConsoleOutput(buffer.substring(0, buffer.indexOf(">")), true);
+            output = new ConsoleOutput(buffer.substring(0, buffer.indexOf(">")),
+                    redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), true);
+        }
+        else if(buffer.contains("|")) {
+            pipeline = true;
+            this.buffer.setLine(buffer.substring(buffer.indexOf("|")+1, buffer.length()).trim());
+            output =  new ConsoleOutput(buffer.substring(0, buffer.indexOf("|")),
+                    redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), true);
         }
         else {
-            return new ConsoleOutput(buffer, false);
+            output = new ConsoleOutput(buffer,
+                    redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), false);
         }
+
+        if(redirectPipeOutBuffer.length() > 0)
+            redirectPipeOutBuffer = new StringBuilder();
+        if(redirectPipeErrBuffer.length() > 0)
+            redirectPipeErrBuffer = new StringBuilder();
+
+        return output;
     }
 
     private void persistRedirection(String fileName) throws IOException {
         try {
-            FileUtils.saveFile(new File(fileName), redirectionBuffer.toString(), false);
+            FileUtils.saveFile(new File(fileName), redirectPipeOutBuffer.toString(), false);
         }
         catch (IOException e) {
             pushToStdErr(e.getMessage());
         }
-
+        redirectPipeOutBuffer = new StringBuilder();
     }
+
+    //private ConsoleOutput parsePipeLine(String buffer) {
+    //    ConsoleOutput output = parseConsoleOutput(buffer);
+    //    return output;
+    //}
 
 }
