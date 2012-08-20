@@ -45,7 +45,9 @@ public class ANSI {
     private static char[] ALTERNATE_BUFFER =  Buffer.printAnsi(new String("?1049h"));
     private static char[] MAIN_BUFFER =  Buffer.printAnsi(new String("?1049l"));
     private static char[] INVERT_BACKGROUND =  Buffer.printAnsi(new String("7m"));
+    private static char[] NORMAL_BACKGROUND =  Buffer.printAnsi(new String("27m"));
     private static char[] RESET = Buffer.printAnsi(new char[]{'0','m'});
+    private static char[] BOLD = Buffer.printAnsi(new char[]{'1','m'});
 
     public static char[] blackText() {
         return Buffer.printAnsi(BLACK_TEXT);
@@ -125,6 +127,14 @@ public class ANSI {
 
     public static char[] getInvertedBackground() {
         return INVERT_BACKGROUND;
+    }
+
+    public static char[] getNormalBackground() {
+        return NORMAL_BACKGROUND;
+    }
+
+    public static char[] getBold() {
+        return BOLD;
     }
 
 }
