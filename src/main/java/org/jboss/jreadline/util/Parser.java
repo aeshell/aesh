@@ -22,6 +22,7 @@ import org.jboss.jreadline.console.Config;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * String/Parser util methods
@@ -31,34 +32,41 @@ import java.util.List;
 public class Parser {
 
 
+    private static final String spaceEscapedMatcher = "\\ ";
+    private static final String SPACE = " ";
+    private static final char SLASH = '\\';
+    private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
+    private static final Pattern spacePattern = Pattern.compile(" ");
+    private static final Pattern onlyEscapedSpacePattern = Pattern.compile("[(\\\\ )&&[^(\\s)]]");
+
     /**
      * Format completions so that they look similar to GNU Readline
      *
-     * @param completions to format
+     * @param displayList to format
      * @param termHeight max height
      * @param termWidth max width
      * @return formatted string to be outputted
      */
-    public static String formatCompletions(String[] completions, int termHeight, int termWidth) {
-        return formatCompletions(Arrays.asList(completions), termHeight, termWidth);
+    public static String formatDisplayList(String[] displayList, int termHeight, int termWidth) {
+        return formatDisplayList(Arrays.asList(displayList), termHeight, termWidth);
     }
 
-    public static String formatCompletions(List<String> completions, int termHeight, int termWidth) {
-        if(completions == null || completions.size() < 1)
+    public static String formatDisplayList(List<String> displayList, int termHeight, int termWidth) {
+        if(displayList == null || displayList.size() < 1)
             return "";
         int maxLength = 0;
-        for(String completion : completions)
+        for(String completion : displayList)
             if(completion.length() > maxLength)
                 maxLength = completion.length();
 
         maxLength = maxLength +2; //adding two spaces for better readability
         int numColumns = termWidth / maxLength;
-        if(numColumns > completions.size()) // we dont need more columns than items
-            numColumns = completions.size();
-        int numRows = completions.size() / numColumns;
+        if(numColumns > displayList.size()) // we dont need more columns than items
+            numColumns = displayList.size();
+        int numRows = displayList.size() / numColumns;
 
         // add a row if we cant display all the items
-        if(numRows * numColumns < completions.size())
+        if(numRows * numColumns < displayList.size())
             numRows++;
 
         // build the completion listing
@@ -66,8 +74,8 @@ public class Parser {
         for(int i=0; i < numRows; i++) {
             for(int c=0; c < numColumns; c++) {
                 int fetch = i + (c * numRows);
-                if(fetch < completions.size())
-                    completionOutput.append(padRight(maxLength, completions.get(i + (c * numRows)))) ;
+                if(fetch < displayList.size())
+                    completionOutput.append(padRight(maxLength, displayList.get(i + (c * numRows)))) ;
                 else
                     break;
             }
@@ -130,26 +138,106 @@ public class Parser {
         if(text.length() <= cursor+1) {
             // return last word
             if(text.substring(0, cursor).contains(" ")) {
-                if(text.lastIndexOf(" ") >= cursor) //cant use lastIndexOf
-                    return text.substring(text.substring(0, cursor).lastIndexOf(" ")).trim();
-                else
-                    return text.trim().substring(text.lastIndexOf(" ")).trim();
+                if(doWordContainEscapedSpace(text)) {
+                    if(doWordContainOnlyEscapedSpace(text))
+                        return switchEscapedSpacesToSpacesInWord(text);
+                    else {
+                        return switchEscapedSpacesToSpacesInWord(findEscapedSpaceWordCloseToEnd(text));
+                    }
+                }
+                else {
+                    if(text.lastIndexOf(" ") >= cursor) //cant use lastIndexOf
+                        return text.substring(text.substring(0, cursor).lastIndexOf(" ")).trim();
+                    else
+                        return text.trim().substring(text.lastIndexOf(" ")).trim();
+                }
             }
             else
                 return text.trim();
         }
         else {
             String rest = text.substring(0, cursor+1);
-            if(cursor > 1 &&
-                    text.charAt(cursor) == ' ' && text.charAt(cursor-1) == ' ')
-                return "";
-            //only if it contains a ' ' and its not at the end of the string
-            if(rest.trim().contains(" "))
-                return rest.substring(rest.trim().lastIndexOf(" ")).trim();
-            else
-                return rest.trim();
+            if(doWordContainOnlyEscapedSpace(rest)) {
+                if(cursor > 1 &&
+                        text.charAt(cursor) == ' ' && text.charAt(cursor-1) == ' ')
+                    return "";
+                else
+                    return switchEscapedSpacesToSpacesInWord(rest);
+            }
+            else {
+                if(cursor > 1 &&
+                        text.charAt(cursor) == ' ' && text.charAt(cursor-1) == ' ')
+                    return "";
+                //only if it contains a ' ' and its not at the end of the string
+                if(rest.trim().contains(" "))
+                    return rest.substring(rest.trim().lastIndexOf(" ")).trim();
+                else
+                    return rest.trim();
+            }
         }
     }
+
+    public static String findEscapedSpaceWordCloseToEnd(String text) {
+        int index;
+        String originalText = text;
+        while((index = text.lastIndexOf(SPACE)) > -1) {
+           if(index > 0 && text.charAt(index-1) == SLASH) {
+               text = text.substring(0,index-1);
+           }
+            else
+               return originalText.substring(index+1);
+        }
+        return originalText;
+    }
+
+    public static String findEscapedSpaceWordCloseToBeginning(String text) {
+        int index;
+        int totalIndex = 0;
+        String originalText = text;
+        while((index = text.indexOf(SPACE)) > -1) {
+            if(index > 0 && text.charAt(index-1) == SLASH) {
+                text = text.substring(index+1);
+                totalIndex += index+1;
+            }
+            else
+                return originalText.substring(0, totalIndex+index);
+        }
+        return originalText;
+    }
+
+    public static boolean doWordContainOnlyEscapedSpace(String word) {
+        return (findAllOccurrences(word, spaceEscapedMatcher) == findAllOccurrences(word, SPACE));
+    }
+
+    public static boolean doWordContainEscapedSpace(String word) {
+        return spaceEscapedPattern.matcher(word).find();
+    }
+
+    public static int findAllOccurrences(String word, String pattern) {
+        int count = 0;
+        while(word.contains(pattern)) {
+            count++;
+            word = word.substring(word.indexOf(pattern)+pattern.length());
+        }
+        return count;
+    }
+
+    public static List<String> switchEscapedSpacesToSpacesInList(List<String> list) {
+        List<String> newList = new ArrayList<String>(list.size());
+        for(String s : list)
+            newList.add(switchEscapedSpacesToSpacesInWord(s));
+        return newList;
+    }
+
+    public static String switchSpacesToEscapedSpacesInWord(String word) {
+        return spacePattern.matcher(word).replaceAll("\\\\ ");
+    }
+
+    public static String switchEscapedSpacesToSpacesInWord(String word) {
+        return spaceEscapedPattern.matcher(word).replaceAll(" ");
+    }
+
+
 
     public static String findWordClosestToCursorDividedByRedirectOrPipe(String text, int cursor) {
         //1. find all occurrences of pipe/redirect.

@@ -1021,7 +1021,7 @@ public class Console {
      */
     private void displayCompletions(List<String> completions) throws IOException {
         printNewline();
-        terminal.writeToStdOut(Parser.formatCompletions(completions, terminal.getHeight(), terminal.getWidth()));
+        terminal.writeToStdOut(Parser.formatDisplayList(completions, terminal.getHeight(), terminal.getWidth()));
         terminal.writeToStdOut(buffer.getLineWithPrompt());
         //if we do a complete and the cursor is not at the end of the
         //buffer we need to move it to the correct place
@@ -1150,7 +1150,7 @@ public class Console {
 
     private void persistRedirection(String fileName) throws IOException {
         try {
-            FileUtils.saveFile(new File(fileName), redirectPipeOutBuffer.toString(), false);
+            FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeOutBuffer.toString(), false);
         }
         catch (IOException e) {
             pushToStdErr(e.getMessage());

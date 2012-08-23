@@ -44,6 +44,28 @@ public class ParserTestCase extends TestCase {
         assertEquals("", Parser.findWordClosestToCursor("ls  org/jboss/jreadlineshell/Shell.class", 3) );
     }
 
+    public void testFindClosestWordWithEscapedSpaceToCursor() {
+        assertEquals("foo bar", Parser.findWordClosestToCursor("foo\\ bar", 7));
+        assertEquals("foo ba", Parser.findWordClosestToCursor("foo\\ bar", 6));
+        assertEquals("foo bar", Parser.findWordClosestToCursor("ls  foo\\ bar", 11) );
+    }
+
+    public void testFindEscapedSpaceWordCloseToEnd() {
+        assertEquals("ls\\ foo", Parser.findEscapedSpaceWordCloseToEnd(" ls\\ foo"));
+        assertEquals("foo\\ bar", Parser.findEscapedSpaceWordCloseToEnd("ls foo\\ bar"));
+        assertEquals("bar", Parser.findEscapedSpaceWordCloseToEnd("ls foo bar"));
+        assertEquals("ls\\ foo\\ bar", Parser.findEscapedSpaceWordCloseToEnd("ls\\ foo\\ bar"));
+        assertEquals("\\ ls\\ foo\\ bar", Parser.findEscapedSpaceWordCloseToEnd("\\ ls\\ foo\\ bar"));
+        assertEquals("ls\\ foo\\ bar", Parser.findEscapedSpaceWordCloseToEnd(" ls\\ foo\\ bar"));
+    }
+
+    public void testFindExcapedSpaceWordCloseToBeginning() {
+        assertEquals("ls\\ foo", Parser.findEscapedSpaceWordCloseToBeginning("ls\\ foo "));
+        assertEquals("ls", Parser.findEscapedSpaceWordCloseToBeginning("ls foo"));
+        assertEquals("ls\\ foo\\ bar", Parser.findEscapedSpaceWordCloseToBeginning("ls\\ foo\\ bar"));
+        assertEquals("", Parser.findEscapedSpaceWordCloseToBeginning(" ls\\ foo\\ bar"));
+    }
+
     public void testFindWordClosestToCursorDividedByRedirectOrPipe() {
         assertEquals("foo", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls > foo", 8));
         assertEquals("foo", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls | foo", 8));
@@ -55,6 +77,26 @@ public class ParserTestCase extends TestCase {
         assertEquals("", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls >  ", 6));
         assertEquals("", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls > bla > ", 11));
         assertEquals("", Parser.findWordClosestToCursorDividedByRedirectOrPipe("ls | bla > ", 11));
+    }
+
+    public void testFindEscapedSpaceWord() {
+        assertTrue(Parser.doWordContainOnlyEscapedSpace("foo\\ bar"));
+        assertTrue(Parser.doWordContainOnlyEscapedSpace("foo\\ bar\\ "));
+        assertTrue(Parser.doWordContainOnlyEscapedSpace("\\ foo\\ bar\\ "));
+        assertFalse(Parser.doWordContainOnlyEscapedSpace(" foo\\ bar\\ "));
+        assertFalse(Parser.doWordContainOnlyEscapedSpace("foo bar\\ "));
+        assertFalse(Parser.doWordContainOnlyEscapedSpace("foo bar"));
+    }
+
+    public void testChangeWordWithSpaces() {
+        assertEquals("foo bar", Parser.switchEscapedSpacesToSpacesInWord("foo\\ bar") );
+        assertEquals(" foo bar", Parser.switchEscapedSpacesToSpacesInWord("\\ foo\\ bar") );
+        assertEquals(" foo bar ", Parser.switchEscapedSpacesToSpacesInWord("\\ foo\\ bar\\ ") );
+        assertEquals(" foo bar", Parser.switchEscapedSpacesToSpacesInWord("\\ foo bar") );
+
+        assertEquals("foo\\ bar", Parser.switchSpacesToEscapedSpacesInWord("foo bar"));
+        assertEquals("\\ foo\\ bar", Parser.switchSpacesToEscapedSpacesInWord(" foo bar"));
+        assertEquals("\\ foo\\ bar\\ ", Parser.switchSpacesToEscapedSpacesInWord(" foo bar "));
     }
 
 }

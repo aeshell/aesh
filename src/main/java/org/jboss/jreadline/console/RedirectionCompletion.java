@@ -42,6 +42,9 @@ public class RedirectionCompletion implements Completion {
             completeOperation.setOffset(completeOperation.getCursor());
             FileUtils.listMatchingDirectories(completeOperation, word,
                     new File(System.getProperty("user.dir")));
+            //if we only have one complete candidate, leave the escaped space be
+            if(completeOperation.getCompletionCandidates().size() > 1)
+                completeOperation.removeEscapedSpacesFromCompletionCandidates();
         }
     }
 }

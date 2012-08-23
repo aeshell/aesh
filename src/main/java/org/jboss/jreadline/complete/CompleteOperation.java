@@ -16,6 +16,8 @@
  */
 package org.jboss.jreadline.complete;
 
+import org.jboss.jreadline.util.Parser;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,7 +77,11 @@ public class CompleteOperation {
     public void addCompletionCandidates(List<String> completionCandidates) {
         this.completionCandidates.addAll(completionCandidates);
     }
-    
+
+    public void removeEscapedSpacesFromCompletionCandidates() {
+        setCompletionCandidates(Parser.switchEscapedSpacesToSpacesInList(getCompletionCandidates()));
+    }
+
     public List<String> getFormattedCompletionCandidates() {
         if(offset < cursor) {
             List<String> fixedCandidates = new ArrayList<String>(completionCandidates.size());

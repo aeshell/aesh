@@ -51,7 +51,7 @@ public class FileUtils {
             List<String> allFiles = listDirectory(cwd);
             for (String file : allFiles)
                 if (file.startsWith(possibleDir))
-                    returnFiles.add(file.substring(possibleDir.length()));
+                    returnFiles.add(Parser.switchSpacesToEscapedSpacesInWord( file.substring(possibleDir.length())));
 
             completion.addCompletionCandidates(returnFiles);
         }
@@ -64,8 +64,7 @@ public class FileUtils {
             }
             else {
                 completion.addCompletionCandidates( listDirectory(new File(cwd.getAbsolutePath() +
-                        Config.getPathSeparator()
-                        +possibleDir)));
+                        Config.getPathSeparator() +possibleDir)));
             }
         }
         else if(new File(cwd.getAbsolutePath() +Config.getPathSeparator()+ possibleDir).isFile()) {
@@ -106,8 +105,6 @@ public class FileUtils {
                     rest = possibleDir;
                 }
             }
-            //System.out.println("rest:"+rest);
-            //System.out.println("lastDir:"+lastDir);
 
             List<String> allFiles;
             if(startsWithSlash.matcher(possibleDir).matches())
@@ -124,25 +121,25 @@ public class FileUtils {
                 for (String file : allFiles)
                     if (file.startsWith(rest))
                         //returnFiles.add(file);
-                        returnFiles.add(file.substring(rest.length()));
+                        returnFiles.add(Parser.switchSpacesToEscapedSpacesInWord( file.substring(rest.length())));
             }
             else {
                 for(String file : allFiles)
-                    returnFiles.add(file);
+                    returnFiles.add(Parser.switchSpacesToEscapedSpacesInWord(file));
             }
 
             if(returnFiles.size() > 1) {
                 String startsWith = Parser.findStartsWith(returnFiles);
                 if(startsWith != null && startsWith.length() > 0) {
                     returnFiles.clear();
-                    returnFiles.add(startsWith);
+                    returnFiles.add(Parser.switchSpacesToEscapedSpacesInWord( startsWith));
                 }
                 //need to list complete filenames
                 else {
                     returnFiles.clear();
                     for (String file : allFiles)
                         if (file.startsWith(rest))
-                            returnFiles.add(file);
+                            returnFiles.add(Parser.switchSpacesToEscapedSpacesInWord( file));
                 }
             }
 
