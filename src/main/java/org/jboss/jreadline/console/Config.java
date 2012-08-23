@@ -202,7 +202,7 @@ public class Config {
             String historyFile = System.getProperty("jreadline.historyfile");
             if(historyFile != null && historyFile.length() > 0)
                 if(new File(historyFile).isFile())
-                    settings.setInputrc(new File(historyFile));
+                    settings.setHistoryFile(new File(historyFile));
             
             String historyPersistent = System.getProperty("jreadline.historypersistent");
             if(historyPersistent != null && historyPersistent.length() > 0)
