@@ -19,6 +19,7 @@ package org.jboss.jreadline.console;
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.helper.Search;
+import org.jboss.jreadline.console.redirection.RedirectionCompletion;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.*;
 import org.jboss.jreadline.edit.actions.*;
