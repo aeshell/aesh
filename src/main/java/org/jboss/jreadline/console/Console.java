@@ -79,7 +79,6 @@ public class Console {
     public Console(Settings settings) throws IOException {
         reset(settings);
         
-        // at exit, restore the original tty configuration (for JDK 1.3+)
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void start() {
                 try {
@@ -106,7 +105,6 @@ public class Console {
          if(Settings.getInstance().doReadInputrc())
             Config.parseInputrc(Settings.getInstance());
         
-        //logger.info("checking properties");
         Config.readRuntimeProperties(Settings.getInstance());
 
         setTerminal(settings.getTerminal(),

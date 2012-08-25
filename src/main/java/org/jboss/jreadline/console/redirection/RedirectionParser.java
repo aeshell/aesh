@@ -18,6 +18,7 @@ package org.jboss.jreadline.console.redirection;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -25,71 +26,68 @@ import java.util.regex.Pattern;
  */
 public class RedirectionParser {
 
-    private static Pattern simpleRedirectPattern = Pattern.compile("<|>|\\|");
-    private static Pattern overwriteOutAndErrPattern = Pattern.compile("2>&1");
+    private static Pattern redirectionPattern = Pattern.compile("(2>&1)|(2>>)|(>>)|(>)|(<)|(\\|)|(\\|&)(2>)");
 
-    public static RedirectionOperation findNextRedirection(String buffer) {
-        String command = buffer.trim();
-        if(command.startsWith(Redirection.OVERWRITE_OUT_AND_ERR.getControlOperator()))
-            return new RedirectionOperation(Redirection.OVERWRITE_OUT_AND_ERR,
-                    findTextBeforeNextRedirection(buffer.substring(Redirection.OVERWRITE_OUT_AND_ERR.getControlOperator().length())));
-        else if(command.startsWith(Redirection.APPEND_ERR.getControlOperator()))
-            return new RedirectionOperation(Redirection.APPEND_ERR,
-                    findTextBeforeNextRedirection(buffer.substring(Redirection.APPEND_ERR.getControlOperator().length())));
-        else if(command.startsWith(Redirection.OVERWRITE_ERR.getControlOperator()))
-            return new RedirectionOperation(Redirection.OVERWRITE_ERR,
-                    findTextBeforeNextRedirection(buffer.substring(Redirection.OVERWRITE_ERR.getControlOperator().length())));
-        else if(command.startsWith(Redirection.APPEND_OUT.getControlOperator()))
-            return new RedirectionOperation(Redirection.APPEND_OUT,
-                    findTextBeforeNextRedirection(buffer.substring(Redirection.APPEND_OUT.getControlOperator().length())));
-        else if(command.startsWith(Redirection.OVERWRITE_IN.getControlOperator()))
-            return new RedirectionOperation(Redirection.OVERWRITE_IN,
-                    findTextBeforeNextRedirection(buffer.substring(Redirection.OVERWRITE_IN.getControlOperator().length())));
-        else if(command.startsWith(Redirection.OVERWRITE_OUT.getControlOperator()))
-            return new RedirectionOperation(Redirection.OVERWRITE_OUT,
-                    findTextBeforeNextRedirection(buffer.substring(Redirection.OVERWRITE_OUT.getControlOperator().length())));
-        else if(command.startsWith(Redirection.PIPE_OUT_AND_ERR.getControlOperator()))
-            return new RedirectionOperation(Redirection.PIPE_OUT_AND_ERR,
-                    findTextBeforeNextRedirection(buffer.substring(Redirection.PIPE_OUT_AND_ERR.getControlOperator().length())));
-        else if(command.startsWith(Redirection.PIPE.getControlOperator()))
-            return new RedirectionOperation(Redirection.PIPE,
-                    findTextBeforeNextRedirection(buffer.substring(Redirection.PIPE.getControlOperator().length())));
-        else
-            return new RedirectionOperation(Redirection.FIRST,
-                    buffer.substring(Redirection.PIPE.getControlOperator().length()));
-    }
+    public static List<RedirectionOperation> matchAllRedirections(String buffer) {
+        Matcher matcher = redirectionPattern.matcher(buffer);
+        List<RedirectionOperation> reOpList = new ArrayList<RedirectionOperation>();
 
-    private static String findTextBeforeNextRedirection(String buffer) {
-        int redirectPos = buffer.indexOf("<|>|\\|");
-        if(redirectPos > 0)
-            return buffer.substring(0, buffer.substring(0, redirectPos).indexOf(' '));
-        else
-            return buffer;
-    }
-
-    public static List<RedirectionOperation> parseBuffer(String buffer) {
-
-        List<RedirectionOperation> redirectOps = new ArrayList<RedirectionOperation>();
-
-        //first find the first pipe/redirect and put everything before that in the first op
-        int bufferPos = -1;
-        if((bufferPos = buffer.indexOf("<|>|\\|")) > -1) {
-            int spacePos = buffer.substring(0, bufferPos).indexOf(" ");
-            if(spacePos > -1) {
-                redirectOps.add(new RedirectionOperation(Redirection.FIRST, buffer.substring(0, spacePos)));
-                buffer = buffer.substring(spacePos);
+        while(matcher.find()) {
+            if(matcher.group(1) != null) {
+                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_OUT_AND_ERR,
+                        buffer.substring(0, matcher.start(1))));
+                buffer = buffer.substring(matcher.end(1));
+                matcher = redirectionPattern.matcher(buffer);
             }
-            else
-                return redirectOps;
-        }
-        else {
-            return redirectOps;
-        }
+            else if(matcher.group(2) != null) {
+                reOpList.add( new RedirectionOperation(Redirection.APPEND_ERR,
+                        buffer.substring(0, matcher.start(2))));
+                buffer = buffer.substring(matcher.end(2));
+                matcher = redirectionPattern.matcher(buffer);
+            }
+            else if(matcher.group(3) != null) {
+                reOpList.add( new RedirectionOperation(Redirection.APPEND_OUT,
+                        buffer.substring(0, matcher.start(3))));
+                buffer = buffer.substring(matcher.end(3));
+                matcher = redirectionPattern.matcher(buffer);
+            }
+            else if(matcher.group(4) != null) {
+                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_OUT,
+                        buffer.substring(0, matcher.start(4))));
+                buffer = buffer.substring(matcher.end(4));
+                matcher = redirectionPattern.matcher(buffer);
+            }
+            else if(matcher.group(5) != null) {
+                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_IN,
+                        buffer.substring(0, matcher.start(5))));
+                buffer = buffer.substring(matcher.end(5));
+                matcher = redirectionPattern.matcher(buffer);
+            }
+            else if(matcher.group(6) != null) {
+                reOpList.add( new RedirectionOperation(Redirection.PIPE,
+                        buffer.substring(0, matcher.start(6))));
+                buffer = buffer.substring(matcher.end(6));
+                matcher = redirectionPattern.matcher(buffer);
+            }
+            else if(matcher.group(7) != null) {
+                reOpList.add( new RedirectionOperation(Redirection.PIPE_OUT_AND_ERR,
+                        buffer.substring(0, matcher.start(7))));
+                buffer = buffer.substring(matcher.end(7));
+                matcher = redirectionPattern.matcher(buffer);
+            }
+            else if(matcher.group(8) != null) {
+                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_ERR,
+                        buffer.substring(0, matcher.start(8))));
+                buffer = buffer.substring(matcher.end(8));
+                matcher = redirectionPattern.matcher(buffer);
+            }
 
-        return redirectOps;
-    }
+        }
+        if(reOpList.size() == 0)
+            reOpList.add(new RedirectionOperation( Redirection.NONE, buffer));
+        if(buffer.trim().length() > 0)
+            reOpList.add(new RedirectionOperation(Redirection.NONE, buffer));
 
-    public static boolean matchesRedirectionOperation(String buffer) {
-        return simpleRedirectPattern.matcher(buffer).find();
+        return reOpList;
     }
 }

@@ -20,24 +20,13 @@ package org.jboss.jreadline.console.redirection;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public enum Redirection {
-    PIPE("|"),
-    PIPE_OUT_AND_ERR("|&"),
-    OVERWRITE_OUT(">"),
-    APPEND_OUT(">>"),
-    OVERWRITE_IN("<"),
-    OVERWRITE_ERR("2>"),
-    APPEND_ERR("2>>"),
-    OVERWRITE_OUT_AND_ERR("2>&1"),
-    FIRST("");
-
-    private String controlOperator;
-
-    Redirection(String co) {
-        this.controlOperator = co;
-    }
-
-    public String getControlOperator() {
-        return controlOperator;
-    }
-
+    PIPE,
+    PIPE_OUT_AND_ERR,
+    OVERWRITE_OUT,
+    APPEND_OUT,
+    OVERWRITE_IN,
+    OVERWRITE_ERR,
+    APPEND_ERR,
+    OVERWRITE_OUT_AND_ERR,
+    NONE
 }
