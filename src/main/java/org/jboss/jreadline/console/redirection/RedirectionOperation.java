@@ -21,7 +21,6 @@ package org.jboss.jreadline.console.redirection;
  */
 public class RedirectionOperation {
 
-    private String operation;
     private Redirection redirection;
     private String buffer;
 
@@ -29,10 +28,6 @@ public class RedirectionOperation {
     public RedirectionOperation(Redirection redirection, String buffer) {
         this.redirection = redirection;
         this.buffer = buffer;
-    }
-
-    public String getOperation() {
-        return operation;
     }
 
     public String getBuffer() {
@@ -59,4 +54,10 @@ public class RedirectionOperation {
     public int hashCode() {
         return 129384;
     }
+
+    @Override
+    public String toString() {
+        return "Redirection: "+getRedirection()+", Buffer: "+buffer;
+    }
+
 }

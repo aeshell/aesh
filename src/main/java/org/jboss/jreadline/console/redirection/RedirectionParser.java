@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  */
 public class RedirectionParser {
 
-    private static Pattern redirectionPattern = Pattern.compile("(2>&1)|(2>>)|(>>)|(>)|(<)|(\\|)|(\\|&)(2>)");
+    private static Pattern redirectionPattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)|(\\|&)|(\\|)");
 
     public static List<RedirectionOperation> matchAllRedirections(String buffer) {
         Matcher matcher = redirectionPattern.matcher(buffer);
@@ -46,25 +46,25 @@ public class RedirectionParser {
                 matcher = redirectionPattern.matcher(buffer);
             }
             else if(matcher.group(3) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.APPEND_OUT,
+                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_ERR,
                         buffer.substring(0, matcher.start(3))));
                 buffer = buffer.substring(matcher.end(3));
                 matcher = redirectionPattern.matcher(buffer);
             }
             else if(matcher.group(4) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_OUT,
+                reOpList.add( new RedirectionOperation(Redirection.APPEND_OUT,
                         buffer.substring(0, matcher.start(4))));
                 buffer = buffer.substring(matcher.end(4));
                 matcher = redirectionPattern.matcher(buffer);
             }
             else if(matcher.group(5) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_IN,
+                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_OUT,
                         buffer.substring(0, matcher.start(5))));
                 buffer = buffer.substring(matcher.end(5));
                 matcher = redirectionPattern.matcher(buffer);
             }
             else if(matcher.group(6) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.PIPE,
+                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_IN,
                         buffer.substring(0, matcher.start(6))));
                 buffer = buffer.substring(matcher.end(6));
                 matcher = redirectionPattern.matcher(buffer);
@@ -76,7 +76,7 @@ public class RedirectionParser {
                 matcher = redirectionPattern.matcher(buffer);
             }
             else if(matcher.group(8) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_ERR,
+                reOpList.add( new RedirectionOperation(Redirection.PIPE,
                         buffer.substring(0, matcher.start(8))));
                 buffer = buffer.substring(matcher.end(8));
                 matcher = redirectionPattern.matcher(buffer);

@@ -31,21 +31,21 @@ public class Example {
 
             @Override
             protected void afterAttach() throws IOException {
-                if(!hasRedirect()) {
+                if(!hasRedirectOut()) {
                     console.pushToStdOut(ANSI.getAlternateBufferScreen());
                 }
 
                 readFromFile();
 
-                //detach after init if hasRedirect()
-                if(hasRedirect()) {
+                //detach after init if hasRedirectOut()
+                if(hasRedirectOut()) {
                     detach();
                 }
             }
 
             @Override
             protected void afterDetach() throws IOException {
-                if(!hasRedirect())
+                if(!hasRedirectOut())
                     console.pushToStdOut(ANSI.getMainBufferScreen());
             }
 

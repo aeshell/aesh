@@ -28,5 +28,15 @@ public enum Redirection {
     OVERWRITE_ERR,
     APPEND_ERR,
     OVERWRITE_OUT_AND_ERR,
-    NONE
+    NONE;
+
+    public static boolean isRedirectionOut(Redirection r) {
+        return (r == PIPE || r == PIPE_OUT_AND_ERR || r == OVERWRITE_OUT
+                || r == OVERWRITE_OUT_AND_ERR || r == APPEND_OUT);
+    }
+
+    public static boolean isRedirectionErr(Redirection r) {
+        return (r == PIPE_OUT_AND_ERR || r == OVERWRITE_ERR
+                || r == OVERWRITE_OUT_AND_ERR || r == APPEND_ERR);
+    }
 }

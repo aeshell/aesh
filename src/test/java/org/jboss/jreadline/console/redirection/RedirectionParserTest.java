@@ -18,6 +18,8 @@ package org.jboss.jreadline.console.redirection;
 
 import junit.framework.TestCase;
 
+import java.util.List;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -41,9 +43,19 @@ public class RedirectionParserTest extends TestCase {
         assertEquals(new RedirectionOperation(Redirection.OVERWRITE_OUT_AND_ERR, " foo.txt "),
                 RedirectionParser.matchAllRedirections("bas > foo.txt 2>&1 ").get(1));
 
-         assertEquals(new RedirectionOperation(Redirection.PIPE, "bas "),
-                RedirectionParser.matchAllRedirections("bas | foo.txt 2>&1 ").get(0));
+        List<RedirectionOperation> ops =
+                RedirectionParser.matchAllRedirections("bas | foo.txt 2>&1 foo");
 
+        assertEquals(new RedirectionOperation(Redirection.PIPE, "bas "), ops.get(0));
+        assertEquals(new RedirectionOperation(Redirection.OVERWRITE_OUT_AND_ERR, " foo.txt "), ops.get(1));
+        assertEquals(new RedirectionOperation(Redirection.NONE, " foo"), ops.get(2));
 
+        ops = RedirectionParser.matchAllRedirections("bas | foo");
+        assertEquals(new RedirectionOperation(Redirection.PIPE, "bas "), ops.get(0));
+        assertEquals(new RedirectionOperation(Redirection.NONE, " foo"), ops.get(1));
+
+        ops = RedirectionParser.matchAllRedirections("bas 2> foo");
+        assertEquals(new RedirectionOperation(Redirection.OVERWRITE_ERR, "bas "), ops.get(0));
+        assertEquals(new RedirectionOperation(Redirection.NONE, " foo"), ops.get(1));
     }
 }

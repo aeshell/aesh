@@ -16,6 +16,8 @@
  */
 package org.jboss.jreadline.console;
 
+import org.jboss.jreadline.console.redirection.Redirection;
+
 /**
  * Value object returned by Console when newline is pressed
  * If the command is part of a pipeline sequence the stdOut and stdErr is populated accordingly
@@ -25,18 +27,18 @@ package org.jboss.jreadline.console;
 public class ConsoleOutput {
 
     private String buffer;
-    private boolean redirectOrPipe;
+    private Redirection redirection;
     private String stdOut;
     private String stdErr;
 
-    public ConsoleOutput(String buffer, boolean redirectOrPipe) {
+    public ConsoleOutput(String buffer, Redirection redirection) {
         this.buffer = buffer;
-        this.redirectOrPipe = redirectOrPipe;
+        this.redirection = redirection;
     }
 
-    public ConsoleOutput(String buffer, String stdOut, String stdErr, boolean redirectOrPipe) {
+    public ConsoleOutput(String buffer, String stdOut, String stdErr, Redirection redirection) {
         this.buffer = buffer;
-        this.redirectOrPipe = redirectOrPipe;
+        this.redirection = redirection;
         this.stdOut = stdOut;
         this.stdErr = stdErr;
     }
@@ -45,8 +47,8 @@ public class ConsoleOutput {
         return buffer;
     }
 
-    public boolean hasRedirectOrPipe() {
-        return redirectOrPipe;
+    public Redirection getRedirection() {
+        return redirection;
     }
 
     public String getStdOut() {

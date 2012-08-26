@@ -19,7 +19,10 @@ package org.jboss.jreadline.console;
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.helper.Search;
+import org.jboss.jreadline.console.redirection.Redirection;
 import org.jboss.jreadline.console.redirection.RedirectionCompletion;
+import org.jboss.jreadline.console.redirection.RedirectionOperation;
+import org.jboss.jreadline.console.redirection.RedirectionParser;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.*;
 import org.jboss.jreadline.edit.actions.*;
@@ -69,6 +72,8 @@ public class Console {
     private StringBuilder redirectPipeOutBuffer;
     private StringBuilder redirectPipeErrBuffer;
     private boolean pipeline = false;
+    private List<RedirectionOperation> operations;
+    private RedirectionOperation currentOperation;
 
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
 
@@ -125,6 +130,9 @@ public class Console {
         completionList = new ArrayList<Completion>();
         completionList.add(new RedirectionCompletion());
 
+        operations = new ArrayList<RedirectionOperation>();
+        currentOperation = null;
+
         redirectPipeOutBuffer = new StringBuilder();
         redirectPipeErrBuffer = new StringBuilder();
         this.settings = settings;
@@ -173,9 +181,9 @@ public class Console {
     public void pushToStdOut(String input) throws IOException {
         if(input != null && input.length() > 0) {
             //if redirection enabled, put it into a buffer
-            if(redirection || pipeline) {
+            if(currentOperation != null &&
+                    Redirection.isRedirectionOut(currentOperation.getRedirection()))
                 redirectPipeOutBuffer.append(input);
-            }
             else
                 terminal.writeToStdOut(input);
         }
@@ -190,7 +198,8 @@ public class Console {
     public void pushToStdOut(char[] input) throws IOException {
         if(input != null && input.length > 0) {
             //if redirection enabled, put it into a buffer
-            if(redirection || pipeline)
+            if(currentOperation != null &&
+                    Redirection.isRedirectionOut(currentOperation.getRedirection()))
                 redirectPipeOutBuffer.append(input);
             else
                 terminal.writeToStdOut(input);
@@ -199,7 +208,8 @@ public class Console {
 
     public void pushToStdErr(String input) throws IOException {
         if(input != null && input.length() > 0) {
-            if(redirection || pipeline)
+            if(currentOperation != null &&
+                    Redirection.isRedirectionErr(currentOperation.getRedirection()))
                 redirectPipeErrBuffer.append(input);
             else
                 terminal.writeToStdErr(input);
@@ -208,7 +218,8 @@ public class Console {
 
     public void pushToStdErr(char[] input) throws IOException {
         if(input != null && input.length > 0) {
-            if(redirection || pipeline)
+            if(currentOperation != null &&
+                    Redirection.isRedirectionErr(currentOperation.getRedirection()))
                 redirectPipeErrBuffer.append(input);
             else
                 terminal.writeToStdErr(input);
@@ -295,13 +306,9 @@ public class Console {
     public ConsoleOutput read(String prompt, Character mask) throws IOException {
         if(!running)
             throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
-        if(redirection) {
-            redirection = false;
-            persistRedirection(buffer.getLine());
-        }
-        if(pipeline) {
-            pipeline = false;
-            return parseConsoleOutput(buffer.getLine());
+
+        if(currentOperation != null) {
+            parseCurrentOperation();
         }
 
         buffer.reset(prompt, mask);
@@ -329,8 +336,10 @@ public class Console {
             else
                 result = parseOperation(operation, mask);
 
-            if(result != null)
-                return parseConsoleOutput(result);
+            if(result != null) {
+                operations = RedirectionParser.matchAllRedirections(result);
+                return parseOperations();
+            }
         }
     }
 
@@ -1120,23 +1129,74 @@ public class Console {
             terminal.writeToStdOut(buffer.getLineWithPrompt());
     }
 
-    private ConsoleOutput parseConsoleOutput(String buffer) {
-        ConsoleOutput output;
-        if(buffer.contains(">")) {
-            redirection = true;
-            this.buffer.setLine(buffer.substring(buffer.indexOf(">")+1, buffer.length()).trim());
-            output = new ConsoleOutput(buffer.substring(0, buffer.indexOf(">")),
-                    redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), true);
+    private ConsoleOutput parseCurrentOperation() throws IOException {
+        if(currentOperation.getRedirection() == Redirection.OVERWRITE_OUT
+                || currentOperation.getRedirection() == Redirection.OVERWRITE_ERR
+                || currentOperation.getRedirection() == Redirection.APPEND_OUT
+                || currentOperation.getRedirection() == Redirection.APPEND_ERR
+                || currentOperation.getRedirection() == Redirection.OVERWRITE_OUT_AND_ERR) {
+
+            RedirectionOperation nextOperation = operations.remove(0);
+            logger.info("currentOperation: "+currentOperation+", NextOperation: "+nextOperation);
+            persistRedirection(nextOperation.getBuffer(), currentOperation.getRedirection());
+            if(nextOperation.getRedirection() == Redirection.NONE) {
+                redirectPipeErrBuffer = new StringBuilder();
+                redirectPipeOutBuffer = new StringBuilder();
+                currentOperation = null;
+                return null;
+            }
+            else {
+                redirectPipeErrBuffer = new StringBuilder();
+                redirectPipeOutBuffer = new StringBuilder();
+                currentOperation = nextOperation;
+                return parseCurrentOperation();
+            }
         }
-        else if(buffer.contains("|")) {
-            pipeline = true;
-            this.buffer.setLine(buffer.substring(buffer.indexOf("|")+1, buffer.length()).trim());
-            output =  new ConsoleOutput(buffer.substring(0, buffer.indexOf("|")),
-                    redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), true);
+        else if(currentOperation.getRedirection() == Redirection.PIPE
+                || currentOperation.getRedirection() == Redirection.PIPE_OUT_AND_ERR) {
+            return parseOperations();
+        }
+        //TODO: handle OVERWRITE_IN
+        else {
+            return null;
+        }
+    }
+
+    private ConsoleOutput parseOperations() {
+
+        ConsoleOutput output = null;
+        RedirectionOperation op = operations.remove(0);
+
+        if(op.getRedirection() == Redirection.OVERWRITE_OUT
+                || op.getRedirection() == Redirection.OVERWRITE_ERR
+                || op.getRedirection() == Redirection.APPEND_OUT
+                || op.getRedirection() == Redirection.APPEND_ERR
+                || op.getRedirection() == Redirection.OVERWRITE_OUT_AND_ERR
+                || op.getRedirection() == Redirection.PIPE_OUT_AND_ERR
+                || op.getRedirection() == Redirection.PIPE ) {
+            if(operations.size() == 0) {
+                //throw some sort of exception
+            }
+            else {
+                currentOperation = op;
+                output = new ConsoleOutput(op.getBuffer(),
+                        redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), op.getRedirection());
+            }
+        }
+        else if(op.getRedirection() == Redirection.OVERWRITE_IN) {
+            if(operations.size() == 0) {
+                //throw some sort of exception
+            }
+            else {
+                currentOperation = op;
+                output = new ConsoleOutput(op.getBuffer(),
+                        redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), op.getRedirection());
+            }
         }
         else {
-            output = new ConsoleOutput(buffer,
-                    redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), false);
+            currentOperation = null;
+            output = new ConsoleOutput(op.getBuffer(),
+                    redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), op.getRedirection());
         }
 
         if(redirectPipeOutBuffer.length() > 0)
@@ -1147,19 +1207,21 @@ public class Console {
         return output;
     }
 
-    private void persistRedirection(String fileName) throws IOException {
+    private void persistRedirection(String fileName, Redirection redirection) throws IOException {
         try {
-            FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeOutBuffer.toString(), false);
+            if(redirection == Redirection.OVERWRITE_OUT)
+                FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeOutBuffer.toString(), false);
+            else if(redirection == Redirection.OVERWRITE_ERR)
+                FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeErrBuffer.toString(), false);
+            else if(redirection == Redirection.APPEND_OUT)
+                FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeOutBuffer.toString(), true);
+            else if(redirection == Redirection.APPEND_ERR)
+                FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeErrBuffer.toString(), true);
         }
         catch (IOException e) {
             pushToStdErr(e.getMessage());
         }
         redirectPipeOutBuffer = new StringBuilder();
     }
-
-    //private ConsoleOutput parsePipeLine(String buffer) {
-    //    ConsoleOutput output = parseConsoleOutput(buffer);
-    //    return output;
-    //}
 
 }

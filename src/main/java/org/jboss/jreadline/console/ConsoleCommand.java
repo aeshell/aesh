@@ -16,6 +16,7 @@
  */
 package org.jboss.jreadline.console;
 
+import org.jboss.jreadline.console.redirection.Redirection;
 import org.jboss.jreadline.edit.actions.Operation;
 
 import java.io.IOException;
@@ -70,8 +71,8 @@ public abstract class ConsoleCommand {
         afterDetach();
 	}
 
-    public final boolean hasRedirect() {
-        return consoleOutput.hasRedirectOrPipe();
+    public final boolean hasRedirectOut() {
+        return Redirection.isRedirectionOut(consoleOutput.getRedirection());
     }
 
     public final ConsoleOutput getConsoleOutput() {
