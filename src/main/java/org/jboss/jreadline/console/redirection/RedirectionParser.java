@@ -36,6 +36,12 @@ public class RedirectionParser {
         return redirectionNoPipelinePattern.matcher(buffer).find();
     }
 
+    /**
+     * Used when parsing a complete
+     *
+     * @param buffer text
+     * @return true if it contains pipeline
+     */
     public static boolean doStringContainPipeline(String buffer) {
         return pipelinePattern.matcher(buffer).find();
     }
@@ -48,10 +54,24 @@ public class RedirectionParser {
             return 0;
     }
 
+    /**
+     * Used when finding the correct word to base complete on
+     *
+     * @param buffer text
+     * @param cursor position
+     * @return last pipeline pos before cursor
+     */
     public static int findLastPipelinePositionBeforeCursor(String buffer, int cursor) {
         return findLastRedirectionOrPipelinePositionBeforeCursor(pipelinePattern, buffer, cursor);
     }
 
+    /**
+     * Used when finding the correct word to base redirection complete on
+     *
+     * @param buffer text
+     * @param cursor position
+     * @return last redirection pos before cursor
+     */
     public static int findLastRedirectionPositionBeforeCursor(String buffer, int cursor) {
         return findLastRedirectionOrPipelinePositionBeforeCursor(redirectionNoPipelinePattern, buffer, cursor);
     }
@@ -70,6 +90,12 @@ public class RedirectionParser {
         return end;
     }
 
+    /**
+     * Parse buffer and find all RedirectionOperations
+     *
+     * @param buffer text
+     * @return all RedirectionOperations
+     */
     public static List<RedirectionOperation> findAllRedirections(String buffer) {
         Matcher matcher = redirectionPattern.matcher(buffer);
         List<RedirectionOperation> reOpList = new ArrayList<RedirectionOperation>();
