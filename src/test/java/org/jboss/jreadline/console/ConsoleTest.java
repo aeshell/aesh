@@ -18,6 +18,7 @@ package org.jboss.jreadline.console;
 
 import org.jboss.jreadline.JReadlineTestCase;
 import org.jboss.jreadline.TestBuffer;
+import org.jboss.jreadline.console.redirection.Redirection;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.Mode;
 import org.jboss.jreadline.terminal.TestTerminal;
@@ -37,11 +38,13 @@ public class ConsoleTest extends JReadlineTestCase {
         TestBuffer buffer = new TestBuffer("ls . | find\n");
         assertEquals("ls .  find", buffer);
 
-        buffer = new TestBuffer("ls < find\n");
+        /* not needed for now
+        buffer = new TestBuffer("ls > find\n");
         assertEquals("ls ", buffer);
 
-        buffer = new TestBuffer("ls < find\n\n");
+        buffer = new TestBuffer("ls 2>> find\n\n");
         assertEquals("ls ", buffer);
+        */
 
     }
 
@@ -58,15 +61,28 @@ public class ConsoleTest extends JReadlineTestCase {
         assertEquals(" find", output.getBuffer());
 
         if(Config.isOSPOSIXCompatible()) {
-            outputStream.write("ls >/tmp/foo.txt\n".getBytes());
+            outputStream.write("ls >/tmp/foo\\ bar.txt\n".getBytes());
             output = console.read(null);
             assertEquals("ls ", output.getBuffer());
             console.pushToStdOut("CONTENT OF FILE");
             outputStream.write("\n".getBytes());
             output = console.read(null);
             assertEquals("", output.getBuffer());
-            assertEquals("CONTENT OF FILE\n", getContentOfFile("/tmp/foo.txt"));
+            assertEquals("CONTENT OF FILE\n", getContentOfFile("/tmp/foo bar.txt"));
+        }
+    }
 
+    public void testRedirectIn() throws IOException {
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+
+        if(Config.isOSPOSIXCompatible()) {
+            Console console = getTestConsole(pipedInputStream);
+            outputStream.write("ls < /tmp/foo\\ bar.txt | man\n".getBytes());
+            ConsoleOutput output = console.read(null);
+            assertEquals("ls ", output.getBuffer());
+            assertEquals("CONTENT OF FILE\n", output.getStdOut());
+            assertEquals(Redirection.PIPE, output.getRedirection());
         }
     }
 

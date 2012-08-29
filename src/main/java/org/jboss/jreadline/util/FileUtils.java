@@ -19,10 +19,7 @@ package org.jboss.jreadline.util;
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.console.Config;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -35,13 +32,13 @@ import java.util.regex.Pattern;
  */
 public class FileUtils {
 
-    public static final Pattern startsWithParent = Pattern.compile("^\\.\\..*");
-    public static final Pattern containParent =
+    private static final Pattern startsWithParent = Pattern.compile("^\\.\\..*");
+    private static final Pattern containParent =
             Pattern.compile("[\\.\\.["+ Config.getPathSeparator()+"]?]+");
-    public static final Pattern space = Pattern.compile(".+\\s+.+");
-    public static final Pattern startsWithSlash =
+    private static final Pattern space = Pattern.compile(".+\\s+.+");
+    private static final Pattern startsWithSlash =
             Pattern.compile("^\\"+Config.getPathSeparator()+".*");
-    public static final Pattern endsWithSlash =
+    private static final Pattern endsWithSlash =
             Pattern.compile(".*\\"+Config.getPathSeparator()+"$");
 
     public static void listMatchingDirectories(CompleteOperation completion, String possibleDir, File cwd) {
@@ -217,6 +214,30 @@ public class FileUtils {
             fileWriter.write(text);
             fileWriter.flush();
             fileWriter.close();
+        }
+    }
+
+    public static String readFile(File file) throws IOException {
+        if(file.isDirectory())
+            throw new IOException(file+": Is a directory");
+        else if(file.isFile()) {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            try {
+                StringBuilder sb = new StringBuilder();
+                String line = br.readLine();
+
+                while (line != null) {
+                    sb.append(line).append(Config.getLineSeparator());
+                    line = br.readLine();
+                }
+                return sb.toString();
+            }
+            finally {
+                br.close();
+            }
+        }
+        else {
+            throw new IOException(file+": File unknown");
         }
     }
 }

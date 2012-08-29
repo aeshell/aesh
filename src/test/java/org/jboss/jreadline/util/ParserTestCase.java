@@ -86,6 +86,10 @@ public class ParserTestCase extends TestCase {
         assertEquals("bar\\ baz", words.get(1));
         assertEquals("12345", words.get(2));
 
+        words = Parser.findAllWords("man < foo\\ bar ");
+        assertEquals("man", words.get(0));
+        assertEquals("<", words.get(1));
+        assertEquals("foo\\ bar", words.get(2));
 
     }
 

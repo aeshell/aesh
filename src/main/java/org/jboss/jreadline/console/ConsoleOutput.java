@@ -58,4 +58,12 @@ public class ConsoleOutput {
     public String getStdErr() {
         return stdErr;
     }
+
+    @Override
+    public String toString() {
+        return new StringBuilder().append("Buffer: ").append(getBuffer())
+                .append("\nRedirection: ").append(getRedirection())
+                .append("\nStdOut: ").append(getStdOut())
+                .append("\nStdErr: ").append(getStdErr()).toString();
+    }
 }

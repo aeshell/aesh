@@ -54,7 +54,8 @@ public class Example {
                         getConsoleOutput().getStdOut().length() > 0) {
                     console.pushToStdOut("FROM STDOUT: "+getConsoleOutput().getStdOut());
                 }
-                console.pushToStdOut("here should we present some text... press 'q' to quit");
+                else
+                    console.pushToStdOut("here should we present some text... press 'q' to quit");
             }
 
             @Override

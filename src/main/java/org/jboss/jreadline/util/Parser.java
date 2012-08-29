@@ -32,14 +32,12 @@ import java.util.regex.Pattern;
  */
 public class Parser {
 
-
     private static final String spaceEscapedMatcher = "\\ ";
     private static final String SPACE = " ";
     private static final char SPACE_CHAR = ' ';
     private static final char SLASH = '\\';
     private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
     private static final Pattern spacePattern = Pattern.compile(" ");
-    private static final Pattern onlyEscapedSpacePattern = Pattern.compile("[(\\\\ )&&[^(\\s)]]");
 
     /**
      * Format completions so that they look similar to GNU Readline
@@ -53,6 +51,14 @@ public class Parser {
         return formatDisplayList(Arrays.asList(displayList), termHeight, termWidth);
     }
 
+    /**
+     * Format completions so that they look similar to GNU Readline
+     *
+     * @param displayList to format
+     * @param termHeight max height
+     * @param termWidth max width
+     * @return formatted string to be outputted
+     */
     public static String formatDisplayList(List<String> displayList, int termHeight, int termWidth) {
         if(displayList == null || displayList.size() < 1)
             return "";

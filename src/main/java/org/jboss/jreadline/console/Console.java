@@ -339,7 +339,14 @@ public class Console {
 
             if(result != null) {
                 operations = RedirectionParser.findAllRedirections(result);
-                return parseOperations();
+                ConsoleOutput output = parseOperations();
+                if(output.getBuffer() != null)
+                    return output;
+                else {
+                    buffer.reset(prompt, mask);
+                    terminal.writeToStdOut(buffer.getPrompt());
+                    search = null;
+                }
             }
         }
     }
@@ -1040,7 +1047,10 @@ public class Console {
      * @throws IOException stream
      */
     private void displayCompletions(List<String> completions) throws IOException {
+        //printNewline reset cursor pos, so we need to store it
+        int oldCursorPos = buffer.getCursor();
         printNewline();
+        buffer.setCursor(oldCursorPos);
         terminal.writeToStdOut(Parser.formatDisplayList(completions, terminal.getHeight(), terminal.getWidth()));
         terminal.writeToStdOut(buffer.getLineWithPrompt());
         //if we do a complete and the cursor is not at the end of the
@@ -1149,7 +1159,6 @@ public class Console {
                 || currentOperation.getRedirection() == Redirection.OVERWRITE_OUT_AND_ERR) {
 
             RedirectionOperation nextOperation = operations.remove(0);
-            logger.info("currentOperation: "+currentOperation+", NextOperation: "+nextOperation);
             persistRedirection(nextOperation.getBuffer(), currentOperation.getRedirection());
             if(nextOperation.getRedirection() == Redirection.NONE) {
                 redirectPipeErrBuffer = new StringBuilder();
@@ -1168,13 +1177,24 @@ public class Console {
                 || currentOperation.getRedirection() == Redirection.PIPE_OUT_AND_ERR) {
             return parseOperations();
         }
-        //TODO: handle OVERWRITE_IN
+        //this should never happen (all overwrite_in should be parsed in parseOperations())
+        else if(currentOperation.getRedirection() == Redirection.OVERWRITE_IN) {
+            pushToStdErr("jreadline: syntax error while reading token: \'<\'");
+            return null;
+        }
+        //Redirection.NONE
         else {
+            //do nothing
             return null;
         }
     }
 
-    private ConsoleOutput parseOperations() {
+    /**
+     * Find the next ConsoleOutput based on operations
+     *
+     * @return next ConsoleOutput
+     */
+    private ConsoleOutput parseOperations() throws IOException {
 
         ConsoleOutput output = null;
         RedirectionOperation op = operations.remove(0);
@@ -1196,13 +1216,37 @@ public class Console {
             }
         }
         else if(op.getRedirection() == Redirection.OVERWRITE_IN) {
-            if(operations.size() == 0) {
-                //throw some sort of exception
+            //1. we need to find next operation
+            //2. use the buffer from the next operation to read file to buffer
+            //3. switch redirection operation with next one
+            if(operations.size() > 0) {
+                RedirectionOperation nextOperation = operations.remove(0);
+                if( nextOperation.getBuffer().length() > 0) {
+                    List<String> files = Parser.findAllWords(nextOperation.getBuffer());
+                    currentOperation = new RedirectionOperation(nextOperation.getRedirection(), op.getBuffer());
+                    try {
+                        output = new ConsoleOutput(op.getBuffer(),
+                                FileUtils.readFile(new File(Parser.switchEscapedSpacesToSpacesInWord(files.get(0)))),
+                                redirectPipeErrBuffer.toString(),
+                                nextOperation.getRedirection());
+                    }
+                    //if we get any io error reading the file:
+                    catch (IOException ioe) {
+                        pushToStdErr("jreadline: "+ioe.getMessage()+Config.getLineSeparator());
+                        currentOperation = null;
+                        output = new ConsoleOutput(null, Redirection.NONE);
+                    }
+                }
+                else {
+                    pushToStdErr("jreadline: syntax error near unexpected token '<'"+Config.getLineSeparator());
+                    currentOperation = null;
+                    output = new ConsoleOutput(null, Redirection.NONE);
+                }
             }
             else {
-                currentOperation = op;
-                output = new ConsoleOutput(op.getBuffer(),
-                        redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), op.getRedirection());
+                pushToStdErr("jreadline: syntax error near unexpected token 'newline'"+Config.getLineSeparator());
+                currentOperation = null;
+                output = new ConsoleOutput(null, Redirection.NONE);
             }
         }
         else {
