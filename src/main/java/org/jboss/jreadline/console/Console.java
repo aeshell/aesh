@@ -68,10 +68,8 @@ public class Console {
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
     private boolean running = false;
-    private boolean redirection = false;
     private StringBuilder redirectPipeOutBuffer;
     private StringBuilder redirectPipeErrBuffer;
-    private boolean pipeline = false;
     private List<RedirectionOperation> operations;
     private RedirectionOperation currentOperation;
 
@@ -308,7 +306,9 @@ public class Console {
             throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
 
         if(currentOperation != null) {
-            parseCurrentOperation();
+            ConsoleOutput output = parseCurrentOperation();
+            if(output != null)
+                return output;
         }
 
         buffer.reset(prompt, mask);
@@ -337,7 +337,7 @@ public class Console {
                 result = parseOperation(operation, mask);
 
             if(result != null) {
-                operations = RedirectionParser.matchAllRedirections(result);
+                operations = RedirectionParser.findAllRedirections(result);
                 return parseOperations();
             }
         }
@@ -938,11 +938,22 @@ public class Console {
         if(completionList.size() < 1)
             return;
 
-        
         List<CompleteOperation> possibleCompletions = new ArrayList<CompleteOperation>();
-        //List<String> possibleCompletions = new ArrayList<String>();
+        int pipeLinePos = 0;
+        if(RedirectionParser.doStringContainPipeline(buffer.getLine())) {
+            pipeLinePos =  RedirectionParser.findLastPipelinePositionBeforeCursor(buffer.getLine(), buffer.getCursor());
+            if(RedirectionParser.findLastRedirectionPositionBeforeCursor(buffer.getLine(), buffer.getCursor()) > pipeLinePos)
+                pipeLinePos = 0;
+        }
+
         for(Completion completion : completionList) {
-            CompleteOperation co = new CompleteOperation(buffer.getLine(), buffer.getCursor());
+            CompleteOperation co;
+            if(pipeLinePos > 0) {
+                co = new CompleteOperation(buffer.getLine().substring(pipeLinePos,buffer.getCursor()), buffer.getCursor()-pipeLinePos);
+            }
+            else {
+                co = new CompleteOperation(buffer.getLine(), buffer.getCursor());
+            }
             completion.complete(co);
             if(co.getCompletionCandidates() != null && co.getCompletionCandidates().size() > 0)
                 possibleCompletions.add(co);
@@ -1208,6 +1219,13 @@ public class Console {
     }
 
     private void persistRedirection(String fileName, Redirection redirection) throws IOException {
+        List<String> fileNames = Parser.findAllWords(fileName);
+        if(fileNames.size() > 1) {
+            pushToStdErr("Cant pipe to more than one file!");
+            return;
+        }
+        else
+            fileName = fileNames.get(0);
         try {
             if(redirection == Redirection.OVERWRITE_OUT)
                 FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeOutBuffer.toString(), false);

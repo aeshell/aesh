@@ -22,6 +22,7 @@ import org.jboss.jreadline.console.Config;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -34,6 +35,7 @@ public class Parser {
 
     private static final String spaceEscapedMatcher = "\\ ";
     private static final String SPACE = " ";
+    private static final char SPACE_CHAR = ' ';
     private static final char SLASH = '\\';
     private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
     private static final Pattern spacePattern = Pattern.compile(" ");
@@ -137,7 +139,7 @@ public class Parser {
     public static String findWordClosestToCursor(String text, int cursor) {
         if(text.length() <= cursor+1) {
             // return last word
-            if(text.substring(0, cursor).contains(" ")) {
+            if(text.contains(SPACE)) {
                 if(doWordContainEscapedSpace(text)) {
                     if(doWordContainOnlyEscapedSpace(text))
                         return switchEscapedSpacesToSpacesInWord(text);
@@ -146,30 +148,35 @@ public class Parser {
                     }
                 }
                 else {
-                    if(text.lastIndexOf(" ") >= cursor) //cant use lastIndexOf
-                        return text.substring(text.substring(0, cursor).lastIndexOf(" ")).trim();
+                    if(text.lastIndexOf(SPACE) >= cursor) //cant use lastIndexOf
+                        return text.substring(text.substring(0, cursor).lastIndexOf(SPACE)).trim();
                     else
-                        return text.trim().substring(text.lastIndexOf(" ")).trim();
+                        return text.substring(text.lastIndexOf(SPACE)).trim();
                 }
             }
             else
                 return text.trim();
         }
         else {
-            String rest = text.substring(0, cursor+1);
+            String rest;
+            if(text.length() > cursor+1)
+                rest = text.substring(0, cursor+1);
+            else
+                rest = text;
+
             if(doWordContainOnlyEscapedSpace(rest)) {
                 if(cursor > 1 &&
-                        text.charAt(cursor) == ' ' && text.charAt(cursor-1) == ' ')
+                        text.charAt(cursor) == SPACE_CHAR && text.charAt(cursor-1) == SPACE_CHAR)
                     return "";
                 else
                     return switchEscapedSpacesToSpacesInWord(rest);
             }
             else {
                 if(cursor > 1 &&
-                        text.charAt(cursor) == ' ' && text.charAt(cursor-1) == ' ')
+                        text.charAt(cursor) == SPACE_CHAR && text.charAt(cursor-1) == SPACE_CHAR)
                     return "";
                 //only if it contains a ' ' and its not at the end of the string
-                if(rest.trim().contains(" "))
+                if(rest.trim().contains(SPACE))
                     return rest.substring(rest.trim().lastIndexOf(" ")).trim();
                 else
                     return rest.trim();
@@ -190,19 +197,41 @@ public class Parser {
         return originalText;
     }
 
-    public static String findEscapedSpaceWordCloseToBeginning(String text) {
-        int index;
-        int totalIndex = 0;
-        String originalText = text;
-        while((index = text.indexOf(SPACE)) > -1) {
-            if(index > 0 && text.charAt(index-1) == SLASH) {
-                text = text.substring(index+1);
-                totalIndex += index+1;
-            }
-            else
-                return originalText.substring(0, totalIndex+index);
+    public static List<String> findAllWords(String text) {
+        if(!doWordContainEscapedSpace(text)) {
+            return Arrays.asList(text.trim().split(SPACE));
         }
-        return originalText;
+        else {
+            List<String> textList = new ArrayList<String>();
+            Matcher matcher = spacePattern.matcher(text);
+            while(matcher.find()) {
+                if(matcher.start() > 0) {
+                    //do we have an escaped space?
+                    if(text.charAt(matcher.start()-1) == SLASH) {
+                        //if word is \\  bla we remove the first
+                        if(matcher.end()+1 < text.length() &&
+                                text.charAt(matcher.end()) == SPACE_CHAR) {
+                            text = text.substring(matcher.end()+1);
+                            matcher = spacePattern.matcher(text);
+                        }
+                    }
+                    //just a normal space
+                    else {
+                        textList.add(text.substring(0,matcher.start()));
+                        text = text.substring(matcher.end());
+                        matcher = spacePattern.matcher(text);
+                    }
+                }
+                //word starts with a space
+                else {
+                    text = text.substring(1);
+                    matcher = spacePattern.matcher(text);
+                }
+            }
+            if(text.length() > 0)
+                textList.add(text);
+            return textList;
+        }
     }
 
     public static boolean doWordContainOnlyEscapedSpace(String word) {
@@ -234,23 +263,7 @@ public class Parser {
     }
 
     public static String switchEscapedSpacesToSpacesInWord(String word) {
-        return spaceEscapedPattern.matcher(word).replaceAll(" ");
+        return spaceEscapedPattern.matcher(word).replaceAll(SPACE);
     }
 
-
-
-    public static String findWordClosestToCursorDividedByRedirectOrPipe(String text, int cursor) {
-        //1. find all occurrences of pipe/redirect.
-        //2. find position thats closest to cursor.
-        //3. return word closest to it
-        String[] splitText = text.split(">|\\|");
-        int length = 0;
-        for(String s : splitText) {
-            length += s.length()+1;
-            if(cursor <= length) {
-                return findWordClosestToCursor(s, cursor-(length-s.length()));
-            }
-        }
-        return "";
-    }
 }

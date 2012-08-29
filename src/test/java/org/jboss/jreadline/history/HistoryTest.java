@@ -39,7 +39,7 @@ public class HistoryTest extends JReadlineTestCase {
                 .append(TestBuffer.getNewLine()).append(TestBuffer.EMACS_HISTORY_PREV)
                 .append(TestBuffer.getNewLine());
 
-        assertEquals("567", buffer);
+        assertEquals("567", buffer, true);
 
 
         buffer = new TestBuffer();
@@ -51,7 +51,7 @@ public class HistoryTest extends JReadlineTestCase {
                 .append(TestBuffer.EMACS_HISTORY_PREV)
                 .append(TestBuffer.EMACS_HISTORY_PREV).append(TestBuffer.getNewLine());
 
-        assertEquals("1234", buffer);
+        assertEquals("1234", buffer, true);
 
         Settings.getInstance().setHistoryDisabled(true);
 
@@ -61,7 +61,7 @@ public class HistoryTest extends JReadlineTestCase {
                 .append(TestBuffer.getNewLine())
                 .append(TestBuffer.EMACS_HISTORY_PREV).append(TestBuffer.getNewLine());
 
-        assertEquals("", buffer);
+        assertEquals("", buffer,true);
 
         Settings.getInstance().resetToDefaults();
 

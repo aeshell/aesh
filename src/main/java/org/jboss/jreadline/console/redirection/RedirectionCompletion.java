@@ -33,12 +33,12 @@ public class RedirectionCompletion implements Completion {
     @Override
     public void complete(CompleteOperation completeOperation) {
 
-        if(completeOperation.getBuffer().contains(">") &&
-                completeOperation.getCursor() >= completeOperation.getBuffer().indexOf(">")) {
+        if(RedirectionParser.doStringContainRedirectionNoPipeline(completeOperation.getBuffer())) {
+            int redirectPos =  RedirectionParser.findLastRedirectionPositionBeforeCursor(
+                    completeOperation.getBuffer(), completeOperation.getCursor());
 
-            String word =
-                    Parser.findWordClosestToCursorDividedByRedirectOrPipe(
-                            completeOperation.getBuffer(), completeOperation.getCursor());
+            String word = Parser.findWordClosestToCursor(completeOperation.getBuffer().substring(redirectPos, completeOperation.getCursor()), completeOperation.getCursor()-redirectPos);
+
             completeOperation.setOffset(completeOperation.getCursor());
             FileUtils.listMatchingDirectories(completeOperation, word,
                     new File(System.getProperty("user.dir")));

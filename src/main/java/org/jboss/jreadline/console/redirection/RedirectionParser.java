@@ -22,13 +22,55 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * Parser class for everything that contain redirection and pipelines
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class RedirectionParser {
 
     private static Pattern redirectionPattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)|(\\|&)|(\\|)");
+    private static Pattern redirectionNoPipelinePattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)");
+    private static Pattern pipelinePattern = Pattern.compile("(\\|&)|(\\|)");
 
-    public static List<RedirectionOperation> matchAllRedirections(String buffer) {
+    public static boolean doStringContainRedirectionNoPipeline(String buffer) {
+        return redirectionNoPipelinePattern.matcher(buffer).find();
+    }
+
+    public static boolean doStringContainPipeline(String buffer) {
+        return pipelinePattern.matcher(buffer).find();
+    }
+
+    public static int getPositionOfFirstRedirectionNoPipeline(String buffer) {
+        Matcher matcher = redirectionNoPipelinePattern.matcher(buffer);
+        if(matcher.find())
+            return matcher.end();
+        else
+            return 0;
+    }
+
+    public static int findLastPipelinePositionBeforeCursor(String buffer, int cursor) {
+        return findLastRedirectionOrPipelinePositionBeforeCursor(pipelinePattern, buffer, cursor);
+    }
+
+    public static int findLastRedirectionPositionBeforeCursor(String buffer, int cursor) {
+        return findLastRedirectionOrPipelinePositionBeforeCursor(redirectionNoPipelinePattern, buffer, cursor);
+    }
+
+    private static int findLastRedirectionOrPipelinePositionBeforeCursor(Pattern pattern, String buffer, int cursor) {
+        Matcher matcher = pattern.matcher(buffer);
+        if(cursor > buffer.length())
+            cursor = buffer.length();
+        int end = 0;
+        while(matcher.find()) {
+            if(matcher.start() > cursor)
+                return end;
+            else
+                end = matcher.end();
+        }
+        return end;
+    }
+
+    public static List<RedirectionOperation> findAllRedirections(String buffer) {
         Matcher matcher = redirectionPattern.matcher(buffer);
         List<RedirectionOperation> reOpList = new ArrayList<RedirectionOperation>();
 

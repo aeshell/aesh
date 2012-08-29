@@ -31,31 +31,49 @@ public class RedirectionParserTest extends TestCase {
 
     public void testRedirectionOperation() {
         assertEquals(new RedirectionOperation(Redirection.NONE, "ls foo.txt"),
-                RedirectionParser.matchAllRedirections("ls foo.txt").get(0));
+                RedirectionParser.findAllRedirections("ls foo.txt").get(0));
 
         assertEquals(new RedirectionOperation(Redirection.OVERWRITE_OUT, "ls . "),
-                RedirectionParser.matchAllRedirections("ls . > foo.txt").get(0));
+                RedirectionParser.findAllRedirections("ls . > foo.txt").get(0));
         assertEquals(new RedirectionOperation(Redirection.NONE, " foo.txt"),
-                RedirectionParser.matchAllRedirections("ls . > foo.txt").get(1));
+                RedirectionParser.findAllRedirections("ls . > foo.txt").get(1));
 
         assertEquals(new RedirectionOperation(Redirection.OVERWRITE_OUT, "bas "),
-                RedirectionParser.matchAllRedirections("bas > foo.txt 2>&1 ").get(0));
+                RedirectionParser.findAllRedirections("bas > foo.txt 2>&1 ").get(0));
         assertEquals(new RedirectionOperation(Redirection.OVERWRITE_OUT_AND_ERR, " foo.txt "),
-                RedirectionParser.matchAllRedirections("bas > foo.txt 2>&1 ").get(1));
+                RedirectionParser.findAllRedirections("bas > foo.txt 2>&1 ").get(1));
 
         List<RedirectionOperation> ops =
-                RedirectionParser.matchAllRedirections("bas | foo.txt 2>&1 foo");
+                RedirectionParser.findAllRedirections("bas | foo.txt 2>&1 foo");
 
         assertEquals(new RedirectionOperation(Redirection.PIPE, "bas "), ops.get(0));
         assertEquals(new RedirectionOperation(Redirection.OVERWRITE_OUT_AND_ERR, " foo.txt "), ops.get(1));
         assertEquals(new RedirectionOperation(Redirection.NONE, " foo"), ops.get(2));
 
-        ops = RedirectionParser.matchAllRedirections("bas | foo");
+        ops = RedirectionParser.findAllRedirections("bas | foo");
         assertEquals(new RedirectionOperation(Redirection.PIPE, "bas "), ops.get(0));
         assertEquals(new RedirectionOperation(Redirection.NONE, " foo"), ops.get(1));
 
-        ops = RedirectionParser.matchAllRedirections("bas 2> foo");
+        ops = RedirectionParser.findAllRedirections("bas 2> foo");
         assertEquals(new RedirectionOperation(Redirection.OVERWRITE_ERR, "bas "), ops.get(0));
         assertEquals(new RedirectionOperation(Redirection.NONE, " foo"), ops.get(1));
+
+        ops = RedirectionParser.findAllRedirections("bas < foo");
+        assertEquals(new RedirectionOperation(Redirection.OVERWRITE_IN, "bas "), ops.get(0));
+        assertEquals(new RedirectionOperation(Redirection.NONE, " foo"), ops.get(1));
+
+        ops = RedirectionParser.findAllRedirections("bas > foo > foo2");
+        assertEquals(new RedirectionOperation(Redirection.OVERWRITE_OUT, "bas "), ops.get(0));
+        assertEquals(new RedirectionOperation(Redirection.OVERWRITE_OUT, " foo "), ops.get(1));
+        assertEquals(new RedirectionOperation(Redirection.NONE, " foo2"), ops.get(2));
+    }
+
+    public void testFindLastRedirectionBeforeCursor() {
+        assertEquals(0, RedirectionParser.findLastRedirectionPositionBeforeCursor(" foo", 5));
+        assertEquals(2, RedirectionParser.findLastRedirectionPositionBeforeCursor(" > foo", 5));
+        assertEquals(4, RedirectionParser.findLastRedirectionPositionBeforeCursor("ls > bah > foo", 6));
+        assertEquals(10, RedirectionParser.findLastRedirectionPositionBeforeCursor("ls > bah > foo", 12));
+        assertEquals(13, RedirectionParser.findLastRedirectionPositionBeforeCursor("ls > bah 2>&1 foo", 15));
+
     }
 }

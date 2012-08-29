@@ -36,6 +36,10 @@ public abstract class JReadlineTestCase extends TestCase {
     }
 
     public void assertEquals(String expected, TestBuffer buffer) throws IOException {
+        assertEquals(expected, buffer, false);
+    }
+
+    public void assertEquals(String expected, TestBuffer buffer, boolean lastOnly) throws IOException {
 
         Settings settings = Settings.getInstance();
         settings.setReadInputrc(false);
@@ -50,11 +54,14 @@ public abstract class JReadlineTestCase extends TestCase {
         Console console = new Console(settings);
 
 
-        String in = null;
+        StringBuilder in = new StringBuilder();
+        String tmpString = null;
         while (true) {
             ConsoleOutput tmp = console.read(null);
-            if(tmp != null)
-                in = tmp.getBuffer();
+            if(tmp != null) {
+                in.append(tmp.getBuffer());
+                tmpString = tmp.getBuffer();
+            }
             else
                 break;
         }
@@ -64,7 +71,11 @@ public abstract class JReadlineTestCase extends TestCase {
             e.printStackTrace();
         }
 
-        assertEquals(expected, in);
+        if(lastOnly) {
+            assertEquals(expected, tmpString);
+        }
+        else
+            assertEquals(expected, in.toString());
     }
 
     public void assertEqualsViMode(String expected, TestBuffer buffer) throws IOException {
