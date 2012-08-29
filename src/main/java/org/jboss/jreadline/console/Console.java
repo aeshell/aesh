@@ -33,6 +33,7 @@ import org.jboss.jreadline.history.SearchDirection;
 import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.undo.UndoAction;
 import org.jboss.jreadline.undo.UndoManager;
+import org.jboss.jreadline.util.ANSI;
 import org.jboss.jreadline.util.FileUtils;
 import org.jboss.jreadline.util.LoggerUtil;
 import org.jboss.jreadline.util.Parser;
@@ -882,7 +883,7 @@ public class Console {
         out.append(result);
         buffer.disablePrompt(true);
         moveCursor(-buffer.getCursor());
-        terminal.writeToStdOut(Buffer.printAnsi("1G"));//move the cursor all the way to the start of the line
+        terminal.writeToStdOut(ANSI.moveCursorToBeginningOfLine());
         setBufferLine(out.toString());
         moveCursor(cursor);
         drawLine(buffer.getLine());
@@ -1072,7 +1073,7 @@ public class Console {
     private int getCurrentRow() {
         if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
             try {
-                terminal.writeToStdOut(Buffer.printAnsi("6n"));
+                terminal.writeToStdOut(ANSI.getCurrentCursorPos());
                 StringBuilder builder = new StringBuilder(8);
                 int row;
                 while((row = terminal.read(false)[0]) > -1 && row != 'R') {
@@ -1094,7 +1095,7 @@ public class Console {
     private int getCurrentColumn() {
         if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
             try {
-                terminal.writeToStdOut(Buffer.printAnsi("6n"));
+                terminal.writeToStdOut(ANSI.getCurrentCursorPos());
                 StringBuilder builder = new StringBuilder(8);
                 int row;
                 while((row = settings.getInputStream().read()) > -1 && row != 'R' ) {
@@ -1132,7 +1133,7 @@ public class Console {
      */
     public void clear(boolean includeBuffer) throws IOException {
         //first clear console
-        terminal.writeToStdOut(Buffer.printAnsi("2J"));
+        terminal.writeToStdOut(ANSI.clearScreen());
         //move cursor to correct position
         terminal.writeToStdOut(Buffer.printAnsi("1;1H"));
         //then writeToStdOut prompt

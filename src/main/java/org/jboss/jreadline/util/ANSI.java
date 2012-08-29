@@ -48,6 +48,9 @@ public class ANSI {
     private static char[] NORMAL_BACKGROUND =  Buffer.printAnsi(new String("27m"));
     private static char[] RESET = Buffer.printAnsi(new char[]{'0','m'});
     private static char[] BOLD = Buffer.printAnsi(new char[]{'1','m'});
+    private static char[] CURSOR_START = Buffer.printAnsi(new char[]{'1','G'});
+    private static char[] CURSOR_ROW = Buffer.printAnsi(new char[]{'6','n'});
+    private static char[] CLEAR_SCREEN = Buffer.printAnsi(new char[]{'2','J'});
 
     public static char[] blackText() {
         return Buffer.printAnsi(BLACK_TEXT);
@@ -137,4 +140,15 @@ public class ANSI {
         return BOLD;
     }
 
+    public static char[] moveCursorToBeginningOfLine() {
+        return CURSOR_START;
+    }
+
+    public static char[] getCurrentCursorPos() {
+       return CURSOR_ROW;
+    }
+
+    public static char[] clearScreen() {
+        return CLEAR_SCREEN;
+    }
 }
