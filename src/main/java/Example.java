@@ -149,7 +149,7 @@ public class Example {
                 test.attach(line);
             }
         }
-        if(line != null && line.equals("reset")) {
+        if(line != null && line.getBuffer().equals("reset")) {
             exampleConsole.stop();
             exampleConsole = new Console();
 

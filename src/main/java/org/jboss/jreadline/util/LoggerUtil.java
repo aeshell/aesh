@@ -38,7 +38,7 @@ public class LoggerUtil {
      * @param name class
      * @return logger
      */
-    public static Logger getLogger(String name) {
+    public synchronized static Logger getLogger(String name) {
         if(logHandler == null)
             try {
                 logHandler = new FileHandler(Settings.getInstance().getLogFile());

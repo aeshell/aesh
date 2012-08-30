@@ -97,7 +97,14 @@ public class Parser {
     private static String padRight(int n, String s) {
         return String.format("%1$-" + n + "s", s);
     }
-    
+
+
+    /**
+     * If there is any common start string in the completion list, return it
+     *
+     * @param coList completion list
+     * @return common start string
+     */
     public static String findStartsWithOperation(List<CompleteOperation> coList) {
         List<String> tmpList = new ArrayList<String>();
         for(CompleteOperation co : coList) {
@@ -190,6 +197,12 @@ public class Parser {
         }
     }
 
+    /**
+     * Search backwards for a non-escaped space and only return work containing non-escaped space
+     *
+     * @param text text
+     * @return text with only non-escaped space
+     */
     public static String findEscapedSpaceWordCloseToEnd(String text) {
         int index;
         String originalText = text;

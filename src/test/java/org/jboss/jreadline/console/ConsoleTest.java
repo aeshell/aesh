@@ -69,6 +69,8 @@ public class ConsoleTest extends JReadlineTestCase {
             output = console.read(null);
             assertEquals("", output.getBuffer());
             assertEquals("CONTENT OF FILE\n", getContentOfFile("/tmp/foo bar.txt"));
+
+            console.stop();
         }
     }
 
@@ -83,6 +85,11 @@ public class ConsoleTest extends JReadlineTestCase {
             assertEquals("ls ", output.getBuffer());
             assertEquals("CONTENT OF FILE\n", output.getStdOut());
             assertEquals(Redirection.PIPE, output.getRedirection());
+            output = console.read(null);
+            assertEquals(" man", output.getBuffer());
+            assertEquals(Redirection.NONE, output.getRedirection());
+
+            console.stop();
         }
     }
 

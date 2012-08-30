@@ -1266,11 +1266,13 @@ public class Console {
     private void persistRedirection(String fileName, Redirection redirection) throws IOException {
         List<String> fileNames = Parser.findAllWords(fileName);
         if(fileNames.size() > 1) {
-            pushToStdErr("Cant pipe to more than one file!");
+            pushToStdErr("jreadline: can't redirect to more than one file."+Config.getLineSeparator());
             return;
         }
+        //this is safe since we check that buffer do contain text earlier
         else
             fileName = fileNames.get(0);
+
         try {
             if(redirection == Redirection.OVERWRITE_OUT)
                 FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeOutBuffer.toString(), false);
@@ -1285,6 +1287,7 @@ public class Console {
             pushToStdErr(e.getMessage());
         }
         redirectPipeOutBuffer = new StringBuilder();
+        redirectPipeErrBuffer = new StringBuilder();
     }
 
 }
