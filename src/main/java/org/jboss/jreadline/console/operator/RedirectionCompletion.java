@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.jreadline.console.redirection;
+package org.jboss.jreadline.console.operator;
 
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
@@ -24,7 +24,7 @@ import org.jboss.jreadline.util.Parser;
 import java.io.File;
 
 /**
- * Redirection completor
+ * ControlOperator completor
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -33,8 +33,8 @@ public class RedirectionCompletion implements Completion {
     @Override
     public void complete(CompleteOperation completeOperation) {
 
-        if(RedirectionParser.doStringContainRedirectionNoPipeline(completeOperation.getBuffer())) {
-            int redirectPos =  RedirectionParser.findLastRedirectionPositionBeforeCursor(
+        if(ControlOperatorParser.doStringContainRedirectionNoPipeline(completeOperation.getBuffer())) {
+            int redirectPos =  ControlOperatorParser.findLastRedirectionPositionBeforeCursor(
                     completeOperation.getBuffer(), completeOperation.getCursor());
 
             String word = Parser.findWordClosestToCursor(completeOperation.getBuffer().substring(redirectPos, completeOperation.getCursor()), completeOperation.getCursor()-redirectPos);

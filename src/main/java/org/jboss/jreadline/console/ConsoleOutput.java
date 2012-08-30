@@ -16,7 +16,7 @@
  */
 package org.jboss.jreadline.console;
 
-import org.jboss.jreadline.console.redirection.Redirection;
+import org.jboss.jreadline.console.operator.ControlOperator;
 
 /**
  * Value object returned by Console when newline is pressed
@@ -27,28 +27,27 @@ import org.jboss.jreadline.console.redirection.Redirection;
 public class ConsoleOutput {
 
     private String buffer;
-    private Redirection redirection;
+    private ControlOperator controlOperator;
     private String stdOut;
     private String stdErr;
+    private ConsoleOperation consoleOperation;
 
-    public ConsoleOutput(String buffer, Redirection redirection) {
-        this.buffer = buffer;
-        this.redirection = redirection;
+    public ConsoleOutput(ConsoleOperation consoleOperation) {
+       this.consoleOperation = consoleOperation;
     }
 
-    public ConsoleOutput(String buffer, String stdOut, String stdErr, Redirection redirection) {
-        this.buffer = buffer;
-        this.redirection = redirection;
+   public ConsoleOutput(ConsoleOperation consoleOperation, String stdOut, String stdErr) {
+        this(consoleOperation);
         this.stdOut = stdOut;
         this.stdErr = stdErr;
     }
 
     public String getBuffer() {
-        return buffer;
+        return consoleOperation.getBuffer();
     }
 
-    public Redirection getRedirection() {
-        return redirection;
+    public ControlOperator getControlOperator() {
+        return consoleOperation.getControlOperator();
     }
 
     public String getStdOut() {
@@ -62,7 +61,7 @@ public class ConsoleOutput {
     @Override
     public String toString() {
         return new StringBuilder().append("Buffer: ").append(getBuffer())
-                .append("\nRedirection: ").append(getRedirection())
+                .append("\nControlOperator: ").append(getControlOperator())
                 .append("\nStdOut: ").append(getStdOut())
                 .append("\nStdErr: ").append(getStdErr()).toString();
     }

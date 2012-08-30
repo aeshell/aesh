@@ -16,7 +16,7 @@
  */
 package org.jboss.jreadline.console;
 
-import org.jboss.jreadline.console.redirection.Redirection;
+import org.jboss.jreadline.console.operator.ControlOperator;
 import org.jboss.jreadline.edit.actions.Operation;
 
 import java.io.IOException;
@@ -72,7 +72,7 @@ public abstract class ConsoleCommand {
 	}
 
     public final boolean hasRedirectOut() {
-        return Redirection.isRedirectionOut(consoleOutput.getRedirection());
+        return ControlOperator.isRedirectionOut(consoleOutput.getControlOperator());
     }
 
     public final ConsoleOutput getConsoleOutput() {

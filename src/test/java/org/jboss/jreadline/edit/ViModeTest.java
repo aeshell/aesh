@@ -129,7 +129,7 @@ public class ViModeTest extends JReadlineTestCase {
     }
 
     public void testRepeatAndEdit() throws IOException {
-        TestBuffer b = new TestBuffer("/cd /home/foo; ls; cd Desktop; ls ../");
+        TestBuffer b = new TestBuffer("/cd /home/foo/ ls/ cd Desktop/ ls ../");
         b.append(TestBuffer.ESCAPE)
                 .append("0")
                 .append("w").append("w").append("w").append("w").append("w")
@@ -140,9 +140,9 @@ public class ViModeTest extends JReadlineTestCase {
                 .append("d").append("w")
                 .append(".")
                 .append(TestBuffer.getNewLine());
-        assertEqualsViMode("/cd /home/bar; cd Desktop; ls ../", b);
+        assertEqualsViMode("/cd /home/bar/ cd Desktop/ ls ../", b);
 
-        b = new TestBuffer("/cd /home/foo; ls; cd Desktop; ls ../");
+        b = new TestBuffer("/cd /home/foo/ ls/ cd Desktop/ ls ../");
         b.append(TestBuffer.ESCAPE)
                 .append("B")
                 .append("D")
@@ -151,7 +151,7 @@ public class ViModeTest extends JReadlineTestCase {
                 .append("B")
                 .append(".")
                 .append(TestBuffer.getNewLine());
-        assertEqualsViMode("/cd /home/foo; ls; cd ", b);
+        assertEqualsViMode("/cd /home/foo/ ls/ cd ", b);
     }
 
     public void testTildeAndEdit() throws IOException {

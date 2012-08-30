@@ -14,7 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.jreadline.console.redirection;
+package org.jboss.jreadline.console.operator;
+
+import org.jboss.jreadline.console.ConsoleOperation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +24,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Parser class for everything that contain redirection and pipelines
+ * Parser class for everything that contain operator and pipelines
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class RedirectionParser {
+public class ControlOperatorParser {
 
-    private static Pattern redirectionPattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)|(\\|&)|(\\|)");
+    private static Pattern controlOperatorPattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)|(\\|&)|(\\|)|(;)|(&&)|(&)");
     private static Pattern redirectionNoPipelinePattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)");
     private static Pattern pipelinePattern = Pattern.compile("(\\|&)|(\\|)");
 
@@ -66,11 +68,11 @@ public class RedirectionParser {
     }
 
     /**
-     * Used when finding the correct word to base redirection complete on
+     * Used when finding the correct word to base operator complete on
      *
      * @param buffer text
      * @param cursor position
-     * @return last redirection pos before cursor
+     * @return last operator pos before cursor
      */
     public static int findLastRedirectionPositionBeforeCursor(String buffer, int cursor) {
         return findLastRedirectionOrPipelinePositionBeforeCursor(redirectionNoPipelinePattern, buffer, cursor);
@@ -96,65 +98,82 @@ public class RedirectionParser {
      * @param buffer text
      * @return all RedirectionOperations
      */
-    public static List<RedirectionOperation> findAllRedirections(String buffer) {
-        Matcher matcher = redirectionPattern.matcher(buffer);
-        List<RedirectionOperation> reOpList = new ArrayList<RedirectionOperation>();
+    public static List<ConsoleOperation> findAllControlOperators(String buffer) {
+        Matcher matcher = controlOperatorPattern.matcher(buffer);
+        List<ConsoleOperation> reOpList = new ArrayList<ConsoleOperation>();
 
         while(matcher.find()) {
             if(matcher.group(1) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_OUT_AND_ERR,
+                reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_OUT_AND_ERR,
                         buffer.substring(0, matcher.start(1))));
                 buffer = buffer.substring(matcher.end(1));
-                matcher = redirectionPattern.matcher(buffer);
+                matcher = controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(2) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.APPEND_ERR,
+                reOpList.add( new ConsoleOperation(ControlOperator.APPEND_ERR,
                         buffer.substring(0, matcher.start(2))));
                 buffer = buffer.substring(matcher.end(2));
-                matcher = redirectionPattern.matcher(buffer);
+                matcher = controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(3) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_ERR,
+                reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_ERR,
                         buffer.substring(0, matcher.start(3))));
                 buffer = buffer.substring(matcher.end(3));
-                matcher = redirectionPattern.matcher(buffer);
+                matcher = controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(4) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.APPEND_OUT,
+                reOpList.add( new ConsoleOperation(ControlOperator.APPEND_OUT,
                         buffer.substring(0, matcher.start(4))));
                 buffer = buffer.substring(matcher.end(4));
-                matcher = redirectionPattern.matcher(buffer);
+                matcher = controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(5) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_OUT,
+                reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_OUT,
                         buffer.substring(0, matcher.start(5))));
                 buffer = buffer.substring(matcher.end(5));
-                matcher = redirectionPattern.matcher(buffer);
+                matcher = controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(6) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.OVERWRITE_IN,
+                reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_IN,
                         buffer.substring(0, matcher.start(6))));
                 buffer = buffer.substring(matcher.end(6));
-                matcher = redirectionPattern.matcher(buffer);
+                matcher = controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(7) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.PIPE_OUT_AND_ERR,
+                reOpList.add( new ConsoleOperation(ControlOperator.PIPE_OUT_AND_ERR,
                         buffer.substring(0, matcher.start(7))));
                 buffer = buffer.substring(matcher.end(7));
-                matcher = redirectionPattern.matcher(buffer);
+                matcher = controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(8) != null) {
-                reOpList.add( new RedirectionOperation(Redirection.PIPE,
+                reOpList.add( new ConsoleOperation(ControlOperator.PIPE,
                         buffer.substring(0, matcher.start(8))));
                 buffer = buffer.substring(matcher.end(8));
-                matcher = redirectionPattern.matcher(buffer);
+                matcher = controlOperatorPattern.matcher(buffer);
             }
-
+            else if(matcher.group(9) != null) {
+                reOpList.add( new ConsoleOperation(ControlOperator.END,
+                        buffer.substring(0, matcher.start(9))));
+                buffer = buffer.substring(matcher.end(9));
+                matcher = controlOperatorPattern.matcher(buffer);
+            }
+            else if(matcher.group(10) != null) {
+                reOpList.add( new ConsoleOperation(ControlOperator.AND,
+                        buffer.substring(0, matcher.start(10))));
+                buffer = buffer.substring(matcher.end(10));
+                matcher = controlOperatorPattern.matcher(buffer);
+            }
+            else if(matcher.group(11) != null) {
+                reOpList.add( new ConsoleOperation(ControlOperator.AMP,
+                        buffer.substring(0, matcher.start(11))));
+                buffer = buffer.substring(matcher.end(11));
+                matcher = controlOperatorPattern.matcher(buffer);
+            }
         }
         if(reOpList.size() == 0)
-            reOpList.add(new RedirectionOperation( Redirection.NONE, buffer));
+            reOpList.add(new ConsoleOperation( ControlOperator.NONE, buffer));
         if(buffer.trim().length() > 0)
-            reOpList.add(new RedirectionOperation(Redirection.NONE, buffer));
+            reOpList.add(new ConsoleOperation(ControlOperator.NONE, buffer));
 
         return reOpList;
     }

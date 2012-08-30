@@ -19,10 +19,9 @@ package org.jboss.jreadline.console;
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
 import org.jboss.jreadline.console.helper.Search;
-import org.jboss.jreadline.console.redirection.Redirection;
-import org.jboss.jreadline.console.redirection.RedirectionCompletion;
-import org.jboss.jreadline.console.redirection.RedirectionOperation;
-import org.jboss.jreadline.console.redirection.RedirectionParser;
+import org.jboss.jreadline.console.operator.ControlOperator;
+import org.jboss.jreadline.console.operator.ControlOperatorParser;
+import org.jboss.jreadline.console.operator.RedirectionCompletion;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.*;
 import org.jboss.jreadline.edit.actions.*;
@@ -71,8 +70,8 @@ public class Console {
     private boolean running = false;
     private StringBuilder redirectPipeOutBuffer;
     private StringBuilder redirectPipeErrBuffer;
-    private List<RedirectionOperation> operations;
-    private RedirectionOperation currentOperation;
+    private List<ConsoleOperation> operations;
+    private ConsoleOperation currentOperation;
 
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
 
@@ -129,7 +128,7 @@ public class Console {
         completionList = new ArrayList<Completion>();
         completionList.add(new RedirectionCompletion());
 
-        operations = new ArrayList<RedirectionOperation>();
+        operations = new ArrayList<ConsoleOperation>();
         currentOperation = null;
 
         redirectPipeOutBuffer = new StringBuilder();
@@ -181,7 +180,7 @@ public class Console {
         if(input != null && input.length() > 0) {
             //if redirection enabled, put it into a buffer
             if(currentOperation != null &&
-                    Redirection.isRedirectionOut(currentOperation.getRedirection()))
+                    ControlOperator.isRedirectionOut(currentOperation.getControlOperator()))
                 redirectPipeOutBuffer.append(input);
             else
                 terminal.writeToStdOut(input);
@@ -198,7 +197,7 @@ public class Console {
         if(input != null && input.length > 0) {
             //if redirection enabled, put it into a buffer
             if(currentOperation != null &&
-                    Redirection.isRedirectionOut(currentOperation.getRedirection()))
+                    ControlOperator.isRedirectionOut(currentOperation.getControlOperator()))
                 redirectPipeOutBuffer.append(input);
             else
                 terminal.writeToStdOut(input);
@@ -208,7 +207,7 @@ public class Console {
     public void pushToStdErr(String input) throws IOException {
         if(input != null && input.length() > 0) {
             if(currentOperation != null &&
-                    Redirection.isRedirectionErr(currentOperation.getRedirection()))
+                    ControlOperator.isRedirectionErr(currentOperation.getControlOperator()))
                 redirectPipeErrBuffer.append(input);
             else
                 terminal.writeToStdErr(input);
@@ -218,7 +217,7 @@ public class Console {
     public void pushToStdErr(char[] input) throws IOException {
         if(input != null && input.length > 0) {
             if(currentOperation != null &&
-                    Redirection.isRedirectionErr(currentOperation.getRedirection()))
+                    ControlOperator.isRedirectionErr(currentOperation.getControlOperator()))
                 redirectPipeErrBuffer.append(input);
             else
                 terminal.writeToStdErr(input);
@@ -338,7 +337,7 @@ public class Console {
                 result = parseOperation(operation, mask);
 
             if(result != null) {
-                operations = RedirectionParser.findAllRedirections(result);
+                operations = ControlOperatorParser.findAllControlOperators(result);
                 ConsoleOutput output = parseOperations();
                 if(output.getBuffer() != null)
                     return output;
@@ -948,16 +947,16 @@ public class Console {
 
         List<CompleteOperation> possibleCompletions = new ArrayList<CompleteOperation>();
         int pipeLinePos = 0;
-        if(RedirectionParser.doStringContainPipeline(buffer.getLine())) {
-            pipeLinePos =  RedirectionParser.findLastPipelinePositionBeforeCursor(buffer.getLine(), buffer.getCursor());
-            if(RedirectionParser.findLastRedirectionPositionBeforeCursor(buffer.getLine(), buffer.getCursor()) > pipeLinePos)
+        if(ControlOperatorParser.doStringContainPipeline(buffer.getLine())) {
+            pipeLinePos =  ControlOperatorParser.findLastPipelinePositionBeforeCursor(buffer.getLine(), buffer.getCursor());
+            if(ControlOperatorParser.findLastRedirectionPositionBeforeCursor(buffer.getLine(), buffer.getCursor()) > pipeLinePos)
                 pipeLinePos = 0;
         }
 
         for(Completion completion : completionList) {
             CompleteOperation co;
             if(pipeLinePos > 0) {
-                co = new CompleteOperation(buffer.getLine().substring(pipeLinePos,buffer.getCursor()), buffer.getCursor()-pipeLinePos);
+                co = new CompleteOperation(buffer.getLine().substring(pipeLinePos, buffer.getCursor()), buffer.getCursor()-pipeLinePos);
             }
             else {
                 co = new CompleteOperation(buffer.getLine(), buffer.getCursor());
@@ -1152,15 +1151,15 @@ public class Console {
     }
 
     private ConsoleOutput parseCurrentOperation() throws IOException {
-        if(currentOperation.getRedirection() == Redirection.OVERWRITE_OUT
-                || currentOperation.getRedirection() == Redirection.OVERWRITE_ERR
-                || currentOperation.getRedirection() == Redirection.APPEND_OUT
-                || currentOperation.getRedirection() == Redirection.APPEND_ERR
-                || currentOperation.getRedirection() == Redirection.OVERWRITE_OUT_AND_ERR) {
+        if(currentOperation.getControlOperator() == ControlOperator.OVERWRITE_OUT
+                || currentOperation.getControlOperator() == ControlOperator.OVERWRITE_ERR
+                || currentOperation.getControlOperator() == ControlOperator.APPEND_OUT
+                || currentOperation.getControlOperator() == ControlOperator.APPEND_ERR
+                || currentOperation.getControlOperator() == ControlOperator.OVERWRITE_OUT_AND_ERR) {
 
-            RedirectionOperation nextOperation = operations.remove(0);
-            persistRedirection(nextOperation.getBuffer(), currentOperation.getRedirection());
-            if(nextOperation.getRedirection() == Redirection.NONE) {
+            ConsoleOperation nextOperation = operations.remove(0);
+            persistRedirection(nextOperation.getBuffer(), currentOperation.getControlOperator());
+            if(nextOperation.getControlOperator() == ControlOperator.NONE) {
                 redirectPipeErrBuffer = new StringBuilder();
                 redirectPipeOutBuffer = new StringBuilder();
                 currentOperation = null;
@@ -1173,16 +1172,16 @@ public class Console {
                 return parseCurrentOperation();
             }
         }
-        else if(currentOperation.getRedirection() == Redirection.PIPE
-                || currentOperation.getRedirection() == Redirection.PIPE_OUT_AND_ERR) {
+        else if(currentOperation.getControlOperator() == ControlOperator.PIPE
+                || currentOperation.getControlOperator() == ControlOperator.PIPE_OUT_AND_ERR) {
             return parseOperations();
         }
         //this should never happen (all overwrite_in should be parsed in parseOperations())
-        else if(currentOperation.getRedirection() == Redirection.OVERWRITE_IN) {
+        else if(currentOperation.getControlOperator() == ControlOperator.OVERWRITE_IN) {
             pushToStdErr("jreadline: syntax error while reading token: \'<\'");
             return null;
         }
-        //Redirection.NONE
+        //ControlOperator.NONE
         else {
             //do nothing
             return null;
@@ -1197,62 +1196,61 @@ public class Console {
     private ConsoleOutput parseOperations() throws IOException {
 
         ConsoleOutput output = null;
-        RedirectionOperation op = operations.remove(0);
+        ConsoleOperation op = operations.remove(0);
 
-        if(op.getRedirection() == Redirection.OVERWRITE_OUT
-                || op.getRedirection() == Redirection.OVERWRITE_ERR
-                || op.getRedirection() == Redirection.APPEND_OUT
-                || op.getRedirection() == Redirection.APPEND_ERR
-                || op.getRedirection() == Redirection.OVERWRITE_OUT_AND_ERR
-                || op.getRedirection() == Redirection.PIPE_OUT_AND_ERR
-                || op.getRedirection() == Redirection.PIPE ) {
+        if(op.getControlOperator() == ControlOperator.OVERWRITE_OUT
+                || op.getControlOperator() == ControlOperator.OVERWRITE_ERR
+                || op.getControlOperator() == ControlOperator.APPEND_OUT
+                || op.getControlOperator() == ControlOperator.APPEND_ERR
+                || op.getControlOperator() == ControlOperator.OVERWRITE_OUT_AND_ERR
+                || op.getControlOperator() == ControlOperator.PIPE_OUT_AND_ERR
+                || op.getControlOperator() == ControlOperator.PIPE ) {
             if(operations.size() == 0) {
                 //throw some sort of exception
             }
             else {
                 currentOperation = op;
-                output = new ConsoleOutput(op.getBuffer(),
-                        redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), op.getRedirection());
+                output = new ConsoleOutput(op,
+                        redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString());
             }
         }
-        else if(op.getRedirection() == Redirection.OVERWRITE_IN) {
+        else if(op.getControlOperator() == ControlOperator.OVERWRITE_IN) {
             //1. we need to find next operation
             //2. use the buffer from the next operation to read file to buffer
             //3. switch redirection operation with next one
             if(operations.size() > 0) {
-                RedirectionOperation nextOperation = operations.remove(0);
+                ConsoleOperation nextOperation = operations.remove(0);
                 if( nextOperation.getBuffer().length() > 0) {
                     List<String> files = Parser.findAllWords(nextOperation.getBuffer());
-                    currentOperation = new RedirectionOperation(nextOperation.getRedirection(), op.getBuffer());
+                    currentOperation = new ConsoleOperation(nextOperation.getControlOperator(), op.getBuffer());
                     try {
-                        output = new ConsoleOutput(op.getBuffer(),
+                        output = new ConsoleOutput(new ConsoleOperation(nextOperation.getControlOperator(),op.getBuffer()),
                                 FileUtils.readFile(new File(Parser.switchEscapedSpacesToSpacesInWord(files.get(0)))),
-                                redirectPipeErrBuffer.toString(),
-                                nextOperation.getRedirection());
+                                redirectPipeErrBuffer.toString());
                     }
                     //if we get any io error reading the file:
                     catch (IOException ioe) {
                         pushToStdErr("jreadline: "+ioe.getMessage()+Config.getLineSeparator());
                         currentOperation = null;
-                        output = new ConsoleOutput(null, Redirection.NONE);
+                        output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
                     }
                 }
                 else {
                     pushToStdErr("jreadline: syntax error near unexpected token '<'"+Config.getLineSeparator());
                     currentOperation = null;
-                    output = new ConsoleOutput(null, Redirection.NONE);
+                    output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
                 }
             }
             else {
                 pushToStdErr("jreadline: syntax error near unexpected token 'newline'"+Config.getLineSeparator());
                 currentOperation = null;
-                output = new ConsoleOutput(null, Redirection.NONE);
+                output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
             }
         }
         else {
             currentOperation = null;
-            output = new ConsoleOutput(op.getBuffer(),
-                    redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString(), op.getRedirection());
+            output = new ConsoleOutput(op,
+                    redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString());
         }
 
         if(redirectPipeOutBuffer.length() > 0)
@@ -1263,7 +1261,7 @@ public class Console {
         return output;
     }
 
-    private void persistRedirection(String fileName, Redirection redirection) throws IOException {
+    private void persistRedirection(String fileName, ControlOperator redirection) throws IOException {
         List<String> fileNames = Parser.findAllWords(fileName);
         if(fileNames.size() > 1) {
             pushToStdErr("jreadline: can't redirect to more than one file."+Config.getLineSeparator());
@@ -1274,13 +1272,13 @@ public class Console {
             fileName = fileNames.get(0);
 
         try {
-            if(redirection == Redirection.OVERWRITE_OUT)
+            if(redirection == ControlOperator.OVERWRITE_OUT)
                 FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeOutBuffer.toString(), false);
-            else if(redirection == Redirection.OVERWRITE_ERR)
+            else if(redirection == ControlOperator.OVERWRITE_ERR)
                 FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeErrBuffer.toString(), false);
-            else if(redirection == Redirection.APPEND_OUT)
+            else if(redirection == ControlOperator.APPEND_OUT)
                 FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeOutBuffer.toString(), true);
-            else if(redirection == Redirection.APPEND_ERR)
+            else if(redirection == ControlOperator.APPEND_ERR)
                 FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeErrBuffer.toString(), true);
         }
         catch (IOException e) {

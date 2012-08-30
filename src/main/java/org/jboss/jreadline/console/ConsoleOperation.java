@@ -14,19 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.jreadline.console.redirection;
+package org.jboss.jreadline.console;
+
+import org.jboss.jreadline.console.operator.ControlOperator;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class RedirectionOperation {
+public class ConsoleOperation {
 
-    private Redirection redirection;
+    private ControlOperator controlOperator;
     private String buffer;
 
 
-    public RedirectionOperation(Redirection redirection, String buffer) {
-        this.redirection = redirection;
+    public ConsoleOperation(ControlOperator controlOperator, String buffer) {
+        this.controlOperator = controlOperator;
         this.buffer = buffer;
     }
 
@@ -34,17 +36,17 @@ public class RedirectionOperation {
         return buffer;
     }
 
-    public Redirection getRedirection() {
-        return redirection;
+    public ControlOperator getControlOperator() {
+        return controlOperator;
     }
 
 
     @Override
     public boolean equals(Object o) {
-        if(o instanceof RedirectionOperation) {
-            RedirectionOperation r = (RedirectionOperation) o;
+        if(o instanceof ConsoleOperation) {
+            ConsoleOperation r = (ConsoleOperation) o;
             if(r.getBuffer().equals(getBuffer()) &&
-                    r.getRedirection().equals(getRedirection()))
+                    r.getControlOperator().equals(getControlOperator()))
                 return true;
         }
         return false;
@@ -57,7 +59,7 @@ public class RedirectionOperation {
 
     @Override
     public String toString() {
-        return "Redirection: "+getRedirection()+", Buffer: "+buffer;
+        return "ControlOperator: "+ getControlOperator()+", Buffer: "+buffer;
     }
 
 }

@@ -18,7 +18,7 @@ package org.jboss.jreadline.console;
 
 import org.jboss.jreadline.JReadlineTestCase;
 import org.jboss.jreadline.TestBuffer;
-import org.jboss.jreadline.console.redirection.Redirection;
+import org.jboss.jreadline.console.operator.ControlOperator;
 import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.Mode;
 import org.jboss.jreadline.terminal.TestTerminal;
@@ -84,10 +84,10 @@ public class ConsoleTest extends JReadlineTestCase {
             ConsoleOutput output = console.read(null);
             assertEquals("ls ", output.getBuffer());
             assertEquals("CONTENT OF FILE\n", output.getStdOut());
-            assertEquals(Redirection.PIPE, output.getRedirection());
+            assertEquals(ControlOperator.PIPE, output.getControlOperator());
             output = console.read(null);
             assertEquals(" man", output.getBuffer());
-            assertEquals(Redirection.NONE, output.getRedirection());
+            assertEquals(ControlOperator.NONE, output.getControlOperator());
 
             console.stop();
         }
