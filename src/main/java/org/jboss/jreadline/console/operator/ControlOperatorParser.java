@@ -48,7 +48,7 @@ public class ControlOperatorParser {
         return pipelinePattern.matcher(buffer).find();
     }
 
-    public static int getPositionOfFirstRedirectionNoPipeline(String buffer) {
+    public static int getPositionOfFirstRedirection(String buffer) {
         Matcher matcher = redirectionNoPipelinePattern.matcher(buffer);
         if(matcher.find())
             return matcher.end();

@@ -17,6 +17,7 @@
 package org.jboss.jreadline.console.settings;
 
 import org.jboss.jreadline.console.Config;
+import org.jboss.jreadline.console.alias.AliasManager;
 import org.jboss.jreadline.console.reader.ConsoleInputSession;
 import org.jboss.jreadline.edit.*;
 import org.jboss.jreadline.terminal.POSIXTerminal;
@@ -51,6 +52,8 @@ public class Settings {
     private boolean readAhead = true;
     private QuitHandler quitHandler;
     private KeyOperationManager operationManager = new KeyOperationManager();
+    private File aliasFile;
+    private boolean enableAlias = true;
 
     private static final Settings INSTANCE = new Settings();
 
@@ -78,6 +81,7 @@ public class Settings {
         disableCompletion = false;
         quitHandler = null;
         operationManager.clear();
+        enableAlias = true;
     }
     /**
      * Either Emacs or Vi mode.
@@ -455,6 +459,17 @@ public class Settings {
      */
     public void setReadAhead(boolean readAhead) {
         this.readAhead = readAhead;
+    }
+
+    public void setAliasFile(File file) {
+        this.aliasFile = file;
+    }
+
+    public File getAliasFile() {
+        if(aliasFile == null)
+            aliasFile = new File(System.getProperty("user.home")+Config.getPathSeparator()+".jreadlie_aliases");
+
+        return aliasFile;
     }
 
     public void setQuitHandler(QuitHandler qh) {

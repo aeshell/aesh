@@ -26,8 +26,6 @@ import org.jboss.jreadline.console.operator.ControlOperator;
  */
 public class ConsoleOutput {
 
-    private String buffer;
-    private ControlOperator controlOperator;
     private String stdOut;
     private String stdErr;
     private ConsoleOperation consoleOperation;

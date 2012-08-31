@@ -18,6 +18,9 @@ package org.jboss.jreadline.console;
 
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
+import org.jboss.jreadline.console.alias.Alias;
+import org.jboss.jreadline.console.alias.AliasCompletion;
+import org.jboss.jreadline.console.alias.AliasManager;
 import org.jboss.jreadline.console.helper.Search;
 import org.jboss.jreadline.console.operator.ControlOperator;
 import org.jboss.jreadline.console.operator.ControlOperatorParser;
@@ -72,6 +75,7 @@ public class Console {
     private StringBuilder redirectPipeErrBuffer;
     private List<ConsoleOperation> operations;
     private ConsoleOperation currentOperation;
+    private AliasManager aliasManager;
 
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
 
@@ -124,15 +128,18 @@ public class Console {
         else
             history = new InMemoryHistory(settings.getHistorySize());
 
+        aliasManager = new AliasManager(Settings.getInstance().getAliasFile());
 
         completionList = new ArrayList<Completion>();
         completionList.add(new RedirectionCompletion());
+        completionList.add(new AliasCompletion(aliasManager));
 
         operations = new ArrayList<ConsoleOperation>();
         currentOperation = null;
 
         redirectPipeOutBuffer = new StringBuilder();
         redirectPipeErrBuffer = new StringBuilder();
+
         this.settings = settings;
         running = true;
     }
@@ -1259,6 +1266,12 @@ public class Console {
             redirectPipeErrBuffer = new StringBuilder();
 
         return output;
+    }
+
+    private String checkAliases(String buffer) {
+        buffer = Parser.findFirstWord(buffer);
+
+        return null;
     }
 
     private void persistRedirection(String fileName, ControlOperator redirection) throws IOException {
