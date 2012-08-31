@@ -285,4 +285,56 @@ public class Parser {
         return spaceEscapedPattern.matcher(word).replaceAll(SPACE);
     }
 
+    /**
+     * Similar to String.trim(), but do not remove spaces that are escaped
+     *
+     * @param buffer input
+     * @return trimmed buffer
+     */
+    public static String trim(String buffer) {
+        //remove spaces in front
+        int count = 0;
+        for(int i=0; i < buffer.length(); i++) {
+            if(buffer.charAt(i) == SPACE_CHAR)
+                count++;
+            else
+                break;
+        }
+        if(count > 0)
+            buffer = buffer.substring(count);
+
+        //remove spaces in the end
+        count = buffer.length();
+        for(int i=buffer.length()-1; i > 0; i--) {
+            if(buffer.charAt(i) == SPACE_CHAR && buffer.charAt(i-1) != SLASH)
+                count--;
+            else
+                break;
+        }
+        if(count != buffer.length())
+            buffer = buffer.substring(0, count);
+
+        return buffer;
+    }
+
+    /**
+     * If string contain space, return the text before the first space.
+     * Spaces in the beginning and end is removed with Parser.trim(..)
+     *
+     * @param buffer input
+     * @return first word
+     */
+    public static String findFirstWord(String buffer) {
+        if(buffer.indexOf(SPACE_CHAR) < 0)
+            return buffer;
+        else {
+            buffer = Parser.trim(buffer);
+            int index = buffer.indexOf(SPACE_CHAR);
+            if(index > 0)
+                return buffer.substring(0, index);
+            else
+                return buffer;
+        }
+    }
+
 }

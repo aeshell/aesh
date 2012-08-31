@@ -95,4 +95,19 @@ public class ParserTestCase extends TestCase {
 
     }
 
+    public void testTrim() {
+        assertEquals("foo", Parser.trim("  foo "));
+        assertEquals("bar foo", Parser.trim("bar foo "));
+        assertEquals("bar foo", Parser.trim(" bar foo"));
+        assertEquals("\\ foo\\ ", Parser.trim("\\ foo\\  "));
+    }
+
+    public void testFindFirstWord() {
+        assertEquals("foo", Parser.findFirstWord(" foo \\ bar"));
+        assertEquals("foo", Parser.findFirstWord(" foo bar baz"));
+        assertEquals("foo", Parser.findFirstWord("foo bar baz"));
+        assertEquals("foobar", Parser.findFirstWord("foobar baz"));
+        assertEquals("foobarbaz", Parser.findFirstWord("foobarbaz"));
+    }
+
 }

@@ -54,11 +54,11 @@ public class ConsoleTest extends JReadlineTestCase {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
         Console console = getTestConsole(pipedInputStream);
-        outputStream.write("ls | find\n".getBytes());
+        outputStream.write("ls | find *. -print\n".getBytes());
         ConsoleOutput output = console.read(null);
         assertEquals("ls ", output.getBuffer());
         output = console.read(null);
-        assertEquals(" find", output.getBuffer());
+        assertEquals(" find *. -print", output.getBuffer());
 
         if(Config.isOSPOSIXCompatible()) {
             outputStream.write("ls >/tmp/foo\\ bar.txt\n".getBytes());
