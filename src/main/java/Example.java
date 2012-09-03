@@ -125,7 +125,10 @@ public class Example {
                 if(co.getBuffer().equals("deploy")) {
                     commands.add("deploy /home/blabla/foo/bar/alkdfe/en/to/tre");
                 }
-                 co.setCompletionCandidates(commands);
+                if(co.getBuffer().equals("testing")) {
+                    commands.add("testing YAY");
+                }
+                co.setCompletionCandidates(commands);
             }
         };
 

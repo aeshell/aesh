@@ -953,15 +953,17 @@ public class Console {
         for(Completion completion : completionList) {
             CompleteOperation co;
             if(pipeLinePos > 0) {
-                co = new CompleteOperation(buffer.getLine().substring(pipeLinePos, buffer.getCursor()), buffer.getCursor()-pipeLinePos);
+                co = findAliases(buffer.getLine().substring(pipeLinePos, buffer.getCursor()), buffer.getCursor()-pipeLinePos);
             }
             else {
-                co = new CompleteOperation(buffer.getLine(), buffer.getCursor());
+                co = findAliases(buffer.getLine(), buffer.getCursor());
             }
             completion.complete(co);
             if(co.getCompletionCandidates() != null && co.getCompletionCandidates().size() > 0)
                 possibleCompletions.add(co);
         }
+
+        logger.info("possible completions: "+possibleCompletions);
 
         // not hits, just return (perhaps we should beep?)
         if(possibleCompletions.size() < 1) {
@@ -1255,13 +1257,29 @@ public class Console {
         if(redirectPipeErrBuffer.length() > 0)
             redirectPipeErrBuffer = new StringBuilder();
 
-        return output;
+        return findAliases(output);
     }
 
-    private String checkAliases(String buffer) {
-        buffer = Parser.findFirstWord(buffer);
+    private ConsoleOutput findAliases(ConsoleOutput operation) {
+        String command = Parser.findFirstWord(operation.getBuffer());
+        Alias alias = aliasManager.getAlias(command);
 
-        return null;
+        if(alias != null) {
+            operation.setConsoleOperation( new ConsoleOperation(operation.getControlOperator(),
+                    alias.getValue() + operation.getBuffer().substring(command.length())));
+        }
+        return operation;
+    }
+
+    private CompleteOperation findAliases(String buffer, int cursor) {
+        String command = Parser.findFirstWord(buffer);
+        Alias alias = aliasManager.getAlias(command);
+        if(alias != null) {
+            return new CompleteOperation( alias.getValue()+buffer.substring(command.length()),
+                    cursor+(alias.getValue().length()-command.length()));
+        }
+        else
+            return new CompleteOperation(buffer, cursor);
     }
 
     private void persistRedirection(String fileName, ControlOperator redirection) throws IOException {

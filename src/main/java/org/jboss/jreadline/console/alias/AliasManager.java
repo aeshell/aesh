@@ -7,22 +7,25 @@
 package org.jboss.jreadline.console.alias;
 
 import org.jboss.jreadline.console.Config;
+import org.jboss.jreadline.util.Parser;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AliasManager {
 
     private List<Alias> aliases;
+    private Pattern aliasPattern = Pattern.compile("^(alias)\\s+(\\w+)\\s*=\\s*(.*)$");
+    private Pattern listAliasPattern = Pattern.compile("^(alias)((\\s+\\w+)+)$");
 
     public AliasManager(File aliasFile) {
         aliases = new ArrayList<Alias>();
-        addAlias("test", "testing");
-        addAlias("bar", "barbar");
     }
 
     public void addAlias(String name, String value) {
@@ -42,8 +45,8 @@ public class AliasManager {
     }
 
     public Alias getAlias(String name) {
-        int index = aliases.indexOf(new Alias(name, ""));
-        if(index > 0)
+        int index = aliases.indexOf(new Alias(name, null));
+        if(index > -1)
             return aliases.get(index);
         else
             return null;
@@ -64,5 +67,54 @@ public class AliasManager {
             names.add(a.getName());
 
         return names;
+    }
+
+    public String parseAlias(String buffer) throws Exception {
+        if(buffer.trim().equals("alias"))
+            return printAllAliases();
+        String command = Parser.findFirstWord(buffer);
+        Matcher aliasMatcher = aliasPattern.matcher(buffer);
+        if(aliasMatcher.matches()) {
+            String name = aliasMatcher.group(2);
+            String value = aliasMatcher.group(3);
+            if(value.startsWith("'")) {
+                if(value.endsWith("'"))
+                    value = value.substring(1,value.length()-1);
+                else
+                    throw new Exception("Error, malformed alias command");
+            }
+            if(name.contains(" "))
+                throw new Exception("Error, alias name cannot contain space");
+
+            addAlias(name, value);
+            return null;
+        }
+
+        Matcher listMatcher = listAliasPattern.matcher(buffer);
+        if(listMatcher.matches()) {
+            StringBuilder sb = new StringBuilder();
+                for(String s : listMatcher.group(2).trim().split(" ")) {
+                if(s != null) {
+                    Alias a = getAlias(s.trim());
+                    if(a != null)
+                        sb.append("alias ").append(a.getName()).append("='")
+                                .append(a.getValue()).append("'").append(Config.getLineSeparator());
+                }
+            }
+
+            return sb.toString();
+        }
+
+        return null;
+    }
+
+    public String printAllAliases() {
+        StringBuilder sb = new StringBuilder();
+        Collections.sort(aliases); // not very efficient, but it'll do for now...
+        for(Alias alias : aliases)
+            sb.append("alias ").append(alias.getName()).append("='")
+                    .append(alias.getValue()).append("'").append(Config.getLineSeparator());
+
+        return sb.toString();
     }
 }

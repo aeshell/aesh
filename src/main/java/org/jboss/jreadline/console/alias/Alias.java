@@ -9,7 +9,7 @@ package org.jboss.jreadline.console.alias;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class Alias {
+public class Alias implements Comparable {
 
     private String name;
     private String value;
@@ -29,10 +29,7 @@ public class Alias {
 
     @Override
     public boolean equals(Object o) {
-        if(o instanceof Alias) {
-            return ((Alias) o).getName().equals(getName());
-        }
-        return false;
+        return (o instanceof Alias && ((Alias) o).getName().equals(getName()));
     }
 
     @Override
@@ -44,5 +41,10 @@ public class Alias {
     public String toString() {
         return new StringBuilder(getName()).append("='")
                 .append(getValue()).append("'").toString();
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        return getName().compareTo(((Alias )o ).getName());
     }
 }

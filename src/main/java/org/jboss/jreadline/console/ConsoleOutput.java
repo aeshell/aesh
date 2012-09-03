@@ -38,6 +38,10 @@ public class ConsoleOutput {
         return consoleOperation.getControlOperator();
     }
 
+    public void setConsoleOperation(ConsoleOperation co) {
+        this.consoleOperation = co;
+    }
+
     public String getStdOut() {
         return stdOut;
     }
