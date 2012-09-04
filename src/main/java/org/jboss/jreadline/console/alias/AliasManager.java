@@ -31,6 +31,7 @@ public class AliasManager {
     private Pattern listAliasPattern = Pattern.compile("^(alias)((\\s+\\w+)+)$");
     private static final String ALIAS = "alias";
     private static final String ALIAS_SPACE = "alias ";
+    private static final String UNALIAS = "unalias";
 
     public AliasManager(File aliasFile) throws IOException {
         aliases = new ArrayList<Alias>();
@@ -101,6 +102,24 @@ public class AliasManager {
             names.add(a.getName());
 
         return names;
+    }
+
+    public String removeAlias(String buffer) throws Exception {
+        if(buffer.trim().equals(UNALIAS))
+            return "unalias: usage: unalias name [name ...]"+Config.getLineSeparator();
+
+        buffer = buffer.substring(UNALIAS.length()).trim();
+        for(String s : buffer.split(" ")) {
+            if(s != null) {
+                Alias a = getAlias(s.trim());
+                if(a != null)
+                    aliases.remove(a);
+                else
+                    return Settings.getInstance().getName()+": unalias: "+s+": not found"
+                            +Config.getLineSeparator();
+            }
+        }
+        return null;
     }
 
     public String parseAlias(String buffer) throws Exception {

@@ -1285,6 +1285,19 @@ public class Console {
                 //empty output, will result
                 return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, null));
             }
+            else if(settings.isAliasEnabled() &&
+                    output.getBuffer().startsWith(InternalCommands.UNALIAS.getCommand())) {
+                try {
+                    String out = aliasManager.removeAlias(output.getBuffer());
+                    if(out != null)
+                        pushToStdOut(out);
+                }
+                catch (Exception parseException) {
+                    //should do print to error stream here:
+                }
+
+                return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, null));
+            }
         }
         return output;
     }

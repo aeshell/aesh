@@ -40,4 +40,17 @@ public class AliasManagerTest extends TestCase {
                 .append("alias foo3='bar --help'"+ Config.getLineSeparator());
         assertEquals(sb.toString(), out);
     }
+
+    public void testUnalias() throws Exception {
+        AliasManager manager = new AliasManager(new File("foo"));
+
+        manager.parseAlias("alias foo2='bar -s -h'");
+        manager.parseAlias("alias foo=bar");
+        manager.parseAlias("alias foo3=bar --help");
+
+        manager.removeAlias("unalias foo3");
+        assertEquals("jreadline: unalias: foo3: not found"+Config.getLineSeparator(), manager.removeAlias("unalias foo3"));
+
+
+    }
 }

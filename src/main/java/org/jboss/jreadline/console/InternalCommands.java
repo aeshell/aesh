@@ -13,6 +13,7 @@ package org.jboss.jreadline.console;
  */
 public enum InternalCommands {
     ALIAS("alias"),
+    UNALIAS("unalias"),
     ECHO("echo");
 
     private String command;
