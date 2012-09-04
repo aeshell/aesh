@@ -27,15 +27,6 @@ public class ConsoleTest extends JReadlineTestCase {
     public void testSimpleRedirectionCommands() throws IOException {
         TestBuffer buffer = new TestBuffer("ls . | find\n");
         assertEquals("ls .  find", buffer);
-
-        /* not needed for now
-        buffer = new TestBuffer("ls > find\n");
-        assertEquals("ls ", buffer);
-
-        buffer = new TestBuffer("ls 2>> find\n\n");
-        assertEquals("ls ", buffer);
-        */
-
     }
 
     public void testRedirectionCommands() throws IOException {
@@ -83,9 +74,28 @@ public class ConsoleTest extends JReadlineTestCase {
         }
     }
 
+    public void testAlias() throws IOException {
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+
+
+        if(Config.isOSPOSIXCompatible()) {
+            Console console = getTestConsole(pipedInputStream);
+            outputStream.write("ll\n".getBytes());
+            ConsoleOutput output = console.read(null);
+            assertEquals("ls -alF", output.getBuffer());
+            outputStream.write("grep -l\n".getBytes());
+            output = console.read(null);
+            assertEquals("grep --color=auto -l", output.getBuffer());
+
+            console.stop();
+        }
+    }
+
 
     private Console getTestConsole(InputStream is) throws IOException {
         Settings settings = Settings.getInstance();
+        settings.setAliasFile(new File("src/test/resources/alias1"));
         settings.setReadInputrc(false);
         settings.setTerminal(new TestTerminal());
         settings.setInputStream(is);
@@ -95,9 +105,8 @@ public class ConsoleTest extends JReadlineTestCase {
         settings.setReadAhead(false);
         if(!Config.isOSPOSIXCompatible())
             settings.setAnsiConsole(false);
-        Console console = new Console(settings);
 
-        return console;
+        return new Console(settings);
     }
 
     private String getContentOfFile(String filename) throws IOException {

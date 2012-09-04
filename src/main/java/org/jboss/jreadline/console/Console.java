@@ -79,6 +79,8 @@ public class Console {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void start() {
                 try {
+                    if(Settings.getInstance().isAliasEnabled())
+                        aliasManager.persist();
                     Settings.getInstance().getTerminal().reset();
                     Settings.getInstance().quit();
                 }
@@ -118,11 +120,16 @@ public class Console {
         else
             history = new InMemoryHistory(settings.getHistorySize());
 
-        aliasManager = new AliasManager(Settings.getInstance().getAliasFile());
 
         completionList = new ArrayList<Completion>();
+        //enable completion for redirection
         completionList.add(new RedirectionCompletion());
-        completionList.add(new AliasCompletion(aliasManager));
+
+        //enable aliasing
+        if(Settings.getInstance().isAliasEnabled()) {
+            aliasManager = new AliasManager(Settings.getInstance().getAliasFile());
+            completionList.add(new AliasCompletion(aliasManager));
+        }
 
         operations = new ArrayList<ConsoleOperation>();
         currentOperation = null;
@@ -336,8 +343,10 @@ public class Console {
             if(result != null) {
                 operations = ControlOperatorParser.findAllControlOperators(result);
                 ConsoleOutput output = parseOperations();
-                if(output.getBuffer() != null)
+                output = processInternalCommands(output);
+                if(output.getBuffer() != null) {
                     return output;
+                }
                 else {
                     buffer.reset(prompt, mask);
                     terminal.writeToStdOut(buffer.getPrompt());
@@ -953,7 +962,7 @@ public class Console {
         for(Completion completion : completionList) {
             CompleteOperation co;
             if(pipeLinePos > 0) {
-                co = findAliases(buffer.getLine().substring(pipeLinePos, buffer.getCursor()), buffer.getCursor()-pipeLinePos);
+                co = findAliases(buffer.getLine().substring(pipeLinePos, buffer.getCursor()), buffer.getCursor() - pipeLinePos);
             }
             else {
                 co = findAliases(buffer.getLine(), buffer.getCursor());
@@ -1260,26 +1269,50 @@ public class Console {
         return findAliases(output);
     }
 
-    private ConsoleOutput findAliases(ConsoleOutput operation) {
-        String command = Parser.findFirstWord(operation.getBuffer());
-        Alias alias = aliasManager.getAlias(command);
+    private ConsoleOutput processInternalCommands(ConsoleOutput output) {
+        if(output.getBuffer() != null) {
+            if(settings.isAliasEnabled() &&
+                    output.getBuffer().startsWith(InternalCommands.ALIAS.getCommand())) {
+                try {
+                    String out = aliasManager.parseAlias(output.getBuffer());
+                    if(out != null) {
+                        pushToStdOut(out);
+                    }
+                }
+                catch (Exception parseException) {
+                    //should do print to error stream here:
+                }
+                //empty output, will result
+                return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, null));
+            }
+        }
+        return output;
+    }
 
-        if(alias != null) {
-            operation.setConsoleOperation( new ConsoleOperation(operation.getControlOperator(),
-                    alias.getValue() + operation.getBuffer().substring(command.length())));
+    private ConsoleOutput findAliases(ConsoleOutput operation) {
+        if(settings.isAliasEnabled()) {
+            String command = Parser.findFirstWord(operation.getBuffer());
+            Alias alias = aliasManager.getAlias(command);
+
+            if(alias != null) {
+                operation.setConsoleOperation( new ConsoleOperation(operation.getControlOperator(),
+                        alias.getValue() + operation.getBuffer().substring(command.length())));
+            }
         }
         return operation;
     }
 
     private CompleteOperation findAliases(String buffer, int cursor) {
-        String command = Parser.findFirstWord(buffer);
-        Alias alias = aliasManager.getAlias(command);
-        if(alias != null) {
-            return new CompleteOperation( alias.getValue()+buffer.substring(command.length()),
-                    cursor+(alias.getValue().length()-command.length()));
+        if(settings.isAliasEnabled()) {
+            String command = Parser.findFirstWord(buffer);
+            Alias alias = aliasManager.getAlias(command);
+            if(alias != null) {
+                return new CompleteOperation( alias.getValue()+buffer.substring(command.length()),
+                        cursor+(alias.getValue().length()-command.length()));
+            }
         }
-        else
-            return new CompleteOperation(buffer, cursor);
+
+        return new CompleteOperation(buffer, cursor);
     }
 
     private void persistRedirection(String fileName, ControlOperator redirection) throws IOException {

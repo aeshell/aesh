@@ -8,8 +8,6 @@ package org.jboss.jreadline.console.alias;
 
 import org.jboss.jreadline.complete.CompleteOperation;
 import org.jboss.jreadline.complete.Completion;
-import org.jboss.jreadline.console.Console;
-import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.util.Parser;
 
 /**
@@ -17,7 +15,8 @@ import org.jboss.jreadline.util.Parser;
  */
 public class AliasCompletion implements Completion {
 
-    private String completionName = "alias";
+    private static final String ALIAS = "alias";
+    private static final String ALIAS_SPACE = "alias ";
     private AliasManager manager;
     public AliasCompletion(AliasManager manager) {
         this.manager = manager;
@@ -27,16 +26,15 @@ public class AliasCompletion implements Completion {
     public void complete(CompleteOperation completeOperation) {
         completeOperation.addCompletionCandidates(manager.findAllMatchingNames(completeOperation.getBuffer().trim()));
 
-        if(completionName.startsWith(completeOperation.getBuffer()))
-            completeOperation.addCompletionCandidate(completionName);
-        else if(completeOperation.getBuffer().equals("alias ")) {
+        if(ALIAS.startsWith(completeOperation.getBuffer()))
+            completeOperation.addCompletionCandidate(ALIAS);
+        else if(completeOperation.getBuffer().equals(ALIAS_SPACE)) {
             completeOperation.addCompletionCandidates(manager.getAllNames());
         }
-        else if(completeOperation.getBuffer().startsWith("alias ")) {
+        else if(completeOperation.getBuffer().startsWith(ALIAS_SPACE)) {
             String word = Parser.findWordClosestToCursor(completeOperation.getBuffer(), completeOperation.getCursor());
             completeOperation.addCompletionCandidates(manager.findAllMatchingNames(word));
             completeOperation.setOffset(completeOperation.getCursor()-word.length());
-
         }
     }
 

@@ -7,9 +7,11 @@
 package org.jboss.jreadline.console.alias;
 
 import org.jboss.jreadline.console.Config;
-import org.jboss.jreadline.util.Parser;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,9 +25,36 @@ public class AliasManager {
     private List<Alias> aliases;
     private Pattern aliasPattern = Pattern.compile("^(alias)\\s+(\\w+)\\s*=\\s*(.*)$");
     private Pattern listAliasPattern = Pattern.compile("^(alias)((\\s+\\w+)+)$");
+    private static final String ALIAS = "alias";
+    private static final String ALIAS_SPACE = "alias ";
 
-    public AliasManager(File aliasFile) {
+    public AliasManager(File aliasFile) throws IOException {
         aliases = new ArrayList<Alias>();
+        if(aliasFile != null && aliasFile.isFile())
+            readAliasesFromFile(aliasFile);
+    }
+
+    private void readAliasesFromFile(File aliasFile) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(aliasFile));
+        try {
+            String line;
+            while((line = br.readLine()) != null) {
+                if(line.startsWith(ALIAS)) {
+                    try {
+                        parseAlias(line);
+                    }
+                    catch (Exception ignored) {
+                    }
+                }
+            }
+        }
+        finally {
+            br.close();
+        }
+    }
+
+    public void persist() {
+        //TODO: implementation
     }
 
     public void addAlias(String name, String value) {
@@ -36,10 +65,11 @@ public class AliasManager {
         aliases.add(alias);
     }
 
-    public String showAll() {
+    public String printAllAliases() {
         StringBuilder sb = new StringBuilder();
+        Collections.sort(aliases); // not very efficient, but it'll do for now...
         for(Alias a : aliases)
-            sb.append("alias ").append(a.toString()).append(Config.getLineSeparator());
+            sb.append(ALIAS_SPACE).append(a.toString()).append(Config.getLineSeparator());
 
         return sb.toString();
     }
@@ -70,9 +100,8 @@ public class AliasManager {
     }
 
     public String parseAlias(String buffer) throws Exception {
-        if(buffer.trim().equals("alias"))
+        if(buffer.trim().equals(ALIAS))
             return printAllAliases();
-        String command = Parser.findFirstWord(buffer);
         Matcher aliasMatcher = aliasPattern.matcher(buffer);
         if(aliasMatcher.matches()) {
             String name = aliasMatcher.group(2);
@@ -97,24 +126,16 @@ public class AliasManager {
                 if(s != null) {
                     Alias a = getAlias(s.trim());
                     if(a != null)
-                        sb.append("alias ").append(a.getName()).append("='")
+                        sb.append(ALIAS_SPACE).append(a.getName()).append("='")
                                 .append(a.getValue()).append("'").append(Config.getLineSeparator());
+                    else
+                        sb.append("jreadline: ").append("alias: ").append(s)
+                                .append(" : not found").append(Config.getLineSeparator());
                 }
             }
-
             return sb.toString();
         }
-
         return null;
     }
 
-    public String printAllAliases() {
-        StringBuilder sb = new StringBuilder();
-        Collections.sort(aliases); // not very efficient, but it'll do for now...
-        for(Alias alias : aliases)
-            sb.append("alias ").append(alias.getName()).append("='")
-                    .append(alias.getValue()).append("'").append(Config.getLineSeparator());
-
-        return sb.toString();
-    }
 }
