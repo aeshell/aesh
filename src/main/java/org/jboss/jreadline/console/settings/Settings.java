@@ -22,6 +22,7 @@ import java.io.*;
  */
 public class Settings {
 
+    private String name;
     private Mode editMode = Mode.EMACS;
     private File historyFile;
     private int historySize = 500;
@@ -54,6 +55,7 @@ public class Settings {
     }
 
     public void resetToDefaults() {
+        setName("jreadline");
         editMode = Mode.EMACS;
         historyFile = null;
         historySize = 500;
@@ -72,6 +74,27 @@ public class Settings {
         operationManager.clear();
         setAliasEnabled(true);
     }
+
+    /**
+     * Set the name of the cli
+     *
+     * @param name name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Get the name of the cli
+     *
+     * @return default is jreadline
+     */
+    public String getName() {
+        if(name == null)
+            name = "jreadline";
+        return name;
+    }
+
     /**
      * Either Emacs or Vi mode.
      * Emacs is default if not set

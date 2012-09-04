@@ -7,6 +7,7 @@
 package org.jboss.jreadline.console.alias;
 
 import org.jboss.jreadline.console.Config;
+import org.jboss.jreadline.console.settings.Settings;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -17,7 +18,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 /**
+ * Manages Aliases
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AliasManager {
@@ -129,7 +133,7 @@ public class AliasManager {
                         sb.append(ALIAS_SPACE).append(a.getName()).append("='")
                                 .append(a.getValue()).append("'").append(Config.getLineSeparator());
                     else
-                        sb.append("jreadline: ").append("alias: ").append(s)
+                        sb.append(Settings.getInstance().getName()).append(": alias: ").append(s)
                                 .append(" : not found").append(Config.getLineSeparator());
                 }
             }

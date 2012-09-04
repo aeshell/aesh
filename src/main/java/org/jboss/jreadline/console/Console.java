@@ -1186,7 +1186,7 @@ public class Console {
         }
         //this should never happen (all overwrite_in should be parsed in parseOperations())
         else if(currentOperation.getControlOperator() == ControlOperator.OVERWRITE_IN) {
-            pushToStdErr("jreadline: syntax error while reading token: \'<\'");
+            pushToStdErr(settings.getName()+": syntax error while reading token: \'<\'");
             return null;
         }
         //ControlOperator.NONE
@@ -1238,19 +1238,19 @@ public class Console {
                     }
                     //if we get any io error reading the file:
                     catch (IOException ioe) {
-                        pushToStdErr("jreadline: "+ioe.getMessage()+Config.getLineSeparator());
+                        pushToStdErr(settings.getName()+": "+ioe.getMessage()+Config.getLineSeparator());
                         currentOperation = null;
                         output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
                     }
                 }
                 else {
-                    pushToStdErr("jreadline: syntax error near unexpected token '<'"+Config.getLineSeparator());
+                    pushToStdErr(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
                     currentOperation = null;
                     output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
                 }
             }
             else {
-                pushToStdErr("jreadline: syntax error near unexpected token 'newline'"+Config.getLineSeparator());
+                pushToStdErr(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
                 currentOperation = null;
                 output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
             }
@@ -1318,7 +1318,7 @@ public class Console {
     private void persistRedirection(String fileName, ControlOperator redirection) throws IOException {
         List<String> fileNames = Parser.findAllWords(fileName);
         if(fileNames.size() > 1) {
-            pushToStdErr("jreadline: can't redirect to more than one file."+Config.getLineSeparator());
+            pushToStdErr(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
             return;
         }
         //this is safe since we check that buffer do contain text earlier
