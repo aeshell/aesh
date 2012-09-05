@@ -985,8 +985,6 @@ public class Console {
                 possibleCompletions.add(co);
         }
 
-        logger.info("possible completions: "+possibleCompletions);
-
         // not hits, just return (perhaps we should beep?)
         if(possibleCompletions.size() < 1) {
             //do nothing atm
@@ -1282,32 +1280,22 @@ public class Console {
         return findAliases(output);
     }
 
-    private ConsoleOutput processInternalCommands(ConsoleOutput output) {
+    private ConsoleOutput processInternalCommands(ConsoleOutput output) throws IOException {
         if(output.getBuffer() != null) {
             if(settings.isAliasEnabled() &&
                     output.getBuffer().startsWith(InternalCommands.ALIAS.getCommand())) {
-                try {
-                    String out = aliasManager.parseAlias(output.getBuffer());
-                    if(out != null) {
-                        pushToStdOut(out);
-                    }
-                }
-                catch (Exception parseException) {
-                    //should do print to error stream here:
+                String out = aliasManager.parseAlias(output.getBuffer());
+                if(out != null) {
+                    pushToStdOut(out);
                 }
                 //empty output, will result
                 return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, null));
             }
             else if(settings.isAliasEnabled() &&
                     output.getBuffer().startsWith(InternalCommands.UNALIAS.getCommand())) {
-                try {
-                    String out = aliasManager.removeAlias(output.getBuffer());
-                    if(out != null)
-                        pushToStdOut(out);
-                }
-                catch (Exception parseException) {
-                    //should do print to error stream here:
-                }
+                String out = aliasManager.removeAlias(output.getBuffer());
+                if(out != null)
+                    pushToStdOut(out);
 
                 return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, null));
             }

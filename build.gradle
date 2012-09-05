@@ -9,6 +9,7 @@ group = 'org.jboss.jreadline'
 version = '0.19'
 
 sourceCompatibility = 1.6
+targetCompatibility = 1.6
 jar {
     manifest {
         attributes 'Implementation-Title': 'JReadline', 'Implementation-Version': version

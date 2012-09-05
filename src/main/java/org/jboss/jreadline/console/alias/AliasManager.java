@@ -105,7 +105,7 @@ public class AliasManager {
         return names;
     }
 
-    public String removeAlias(String buffer) throws Exception {
+    public String removeAlias(String buffer) {
         if(buffer.trim().equals(UNALIAS))
             return "unalias: usage: unalias name [name ...]"+Config.getLineSeparator();
 
@@ -123,7 +123,7 @@ public class AliasManager {
         return null;
     }
 
-    public String parseAlias(String buffer) throws Exception {
+    public String parseAlias(String buffer) {
         if(buffer.trim().equals(ALIAS))
             return printAllAliases();
         Matcher aliasMatcher = aliasPattern.matcher(buffer);
@@ -134,10 +134,16 @@ public class AliasManager {
                 if(value.endsWith("'"))
                     value = value.substring(1,value.length()-1);
                 else
-                    throw new Exception("Error, malformed alias command");
+                    return "alias: usage: alias [name[=value] ... ]";
+            }
+            else if(value.startsWith("\"")) {
+                if(value.endsWith("\""))
+                    value = value.substring(1,value.length()-1);
+                else
+                    return "alias: usage: alias [name[=value] ... ]";
             }
             if(name.contains(" "))
-                throw new Exception("Error, alias name cannot contain space");
+                return "alias: usage: alias [name[=value] ... ]";
 
             addAlias(name, value);
             return null;
