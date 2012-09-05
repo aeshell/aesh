@@ -192,7 +192,7 @@ public class KeyOperationFactory {
 
         return keys;
     }
-    
+
     public static KeyOperation findOperation(List<KeyOperation> operations, int[] input) {
         for(KeyOperation operation : operations) {
             if(operation.equalValues(input))

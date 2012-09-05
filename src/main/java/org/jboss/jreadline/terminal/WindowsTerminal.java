@@ -11,7 +11,12 @@ import org.fusesource.jansi.WindowsAnsiOutputStream;
 import org.fusesource.jansi.internal.WindowsSupport;
 import org.jboss.jreadline.console.settings.Settings;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
 
 /**
  *
@@ -120,7 +125,7 @@ public class WindowsTerminal implements Terminal {
 
     @Override
     public boolean isEchoEnabled() {
-        return false;  
+        return false;
     }
 
     @Override

@@ -8,12 +8,19 @@ package org.jboss.jreadline.console.settings;
 
 import org.jboss.jreadline.console.Config;
 import org.jboss.jreadline.console.reader.ConsoleInputSession;
-import org.jboss.jreadline.edit.*;
+import org.jboss.jreadline.edit.EditMode;
+import org.jboss.jreadline.edit.EmacsEditMode;
+import org.jboss.jreadline.edit.KeyOperationFactory;
+import org.jboss.jreadline.edit.KeyOperationManager;
+import org.jboss.jreadline.edit.Mode;
+import org.jboss.jreadline.edit.ViEditMode;
 import org.jboss.jreadline.terminal.POSIXTerminal;
 import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.terminal.WindowsTerminal;
 
-import java.io.*;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Settings object that is parsed when Console is initialized.

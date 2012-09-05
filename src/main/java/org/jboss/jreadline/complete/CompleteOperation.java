@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * A payload object to store completion data
- * 
+ *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class CompleteOperation {
@@ -87,7 +87,7 @@ public class CompleteOperation {
         else
             return completionCandidates;
     }
-    
+
     public String getFormattedCompletion(String completion) {
         if(offset < cursor) {
             int pos = cursor - offset;
@@ -98,15 +98,14 @@ public class CompleteOperation {
         }
         else
             return completion;
-        
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Buffer: ").append(buffer).append(", Cursor:").append(cursor).append(", Offset:").append(offset);
-        sb.append(", candidates:"+completionCandidates);
-        
+        sb.append(", candidates:").append(completionCandidates);
+
         return sb.toString();
     }
 

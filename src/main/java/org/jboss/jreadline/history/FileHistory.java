@@ -8,9 +8,12 @@ package org.jboss.jreadline.history;
 
 import org.jboss.jreadline.console.Config;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
 
 /**
  * Read the history file at init and writeToStdOut to it at shutdown
@@ -70,7 +73,7 @@ public class FileHistory extends InMemoryHistory {
         FileWriter fw = new FileWriter(historyFile);
 
         for(int i=0; i < size();i++)
-            fw.write(get(i) + (Config.getLineSeparator()).toString());
+            fw.write(get(i) + (Config.getLineSeparator()));
 
         fw.flush();
         fw.close();

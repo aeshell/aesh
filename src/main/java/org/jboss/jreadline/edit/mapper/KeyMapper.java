@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  * Map key bindings to specified operation. Used when reading inputrc files.
  * Created to map bindings like:
  * "\M-[D":        backward-char
- * Meta-Control-h:	backward-kill-word
+ * Meta-Control-h: backward-kill-word
  * C-q: quoted-insert
  * ... etc
  *
@@ -52,7 +52,7 @@ public class KeyMapper {
 
     /**
      * Parse lines that contain mapping like: C-q, Control-q, M-a, Meta-a, Meta-Control-b....
-     * 
+     *
      * @param keys that need mapping
      * @param operation it is specified for
      * @return proper KeyOperation
@@ -72,7 +72,7 @@ public class KeyMapper {
         return new KeyOperation(mapKeys(keys),
                 OperationMapper.mapToFunction(operation));
     }
-    
+
     private static int[] mapKeys(String keys) {
         boolean meta = false;
         boolean control = false;
@@ -107,7 +107,7 @@ public class KeyMapper {
 
         return mapRandomKeys(randomKeys, control, meta);
     }
-    
+
     /**
      * Map all random keys after meta/control to its proper int value.
      * - yes its a bad method name....
@@ -144,7 +144,7 @@ public class KeyMapper {
 
         return out;
     }
-    
+
     private static int[] convertRandomKeys(String random) {
         int[] converted = new int[random.length()];
         for(int i=0; i < random.length(); i++)
@@ -152,7 +152,7 @@ public class KeyMapper {
 
         return converted;
     }
-    
+
     private static int[] convertRandomControlKeys(String random) {
         int[] converted = new int[random.length()];
         for(int i=0; i < random.length(); i++) {
@@ -163,7 +163,7 @@ public class KeyMapper {
 
         return converted;
     }
-    
+
     private static int lookupControlKey(char c) {
         switch (c) {
             case '@' : return 0;

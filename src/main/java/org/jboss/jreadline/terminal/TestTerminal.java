@@ -6,7 +6,12 @@
  */
 package org.jboss.jreadline.terminal;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
 
 /**
  * A dummy terminal used for tests
@@ -14,7 +19,7 @@ import java.io.*;
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class TestTerminal implements Terminal {
-    
+
     private InputStream input;
     private Writer writer;
 

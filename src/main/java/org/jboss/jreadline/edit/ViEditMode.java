@@ -51,7 +51,7 @@ public class ViEditMode implements EditMode {
     private boolean isChangeMode() {
         return (mode == Action.CHANGE);
     }
-    
+
     private boolean isInReplaceMode() {
         return (mode == Action.REPLACE);
     }
@@ -144,9 +144,9 @@ public class ViEditMode implements EditMode {
                 return Operation.SEARCH_INPUT;
             }
         } // end search mode
-        
+
         if(isInReplaceMode()) {
-            if(currentOperations.size() == 1 && 
+            if(currentOperations.size() == 1 &&
                     currentOperations.get(0).getOperation() == Operation.ESCAPE) {
                 operationLevel = 0;
                 currentOperations.clear();
@@ -409,7 +409,7 @@ public class ViEditMode implements EditMode {
             else
                 mode = Action.YANK;
         }
-        else if(operation == Operation.VI_EDIT_MODE || 
+        else if(operation == Operation.VI_EDIT_MODE ||
                 operation == Operation.EMACS_EDIT_MODE)
             return operation;
 

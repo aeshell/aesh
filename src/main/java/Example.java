@@ -32,8 +32,6 @@ public class Example {
         //Settings.getInstance().setHistoryPersistent(false);
         Console exampleConsole = new Console();
 
-        PrintWriter out = new PrintWriter(System.out);
-
         ConsoleCommand test = new ConsoleCommand(exampleConsole) {
 
             @Override
@@ -67,14 +65,13 @@ public class Example {
 
             @Override
             public void processOperation(Operation operation) throws IOException {
-                //console.pushToStdOut("blablablablablabal");
                 if(operation.getInput()[0] == 'q') {
-					detach();
-				}
+                    detach();
+                }
                 else if(operation.getInput()[0] == 'a') {
                     readFromFile();
                 }
-				else {
+                else {
 
                 }
             }

@@ -26,7 +26,7 @@ public class Buffer {
     private Character mask;
     private boolean disablePrompt = false;
 
-    private final static int TAB = 4;
+    private static final int TAB = 4;
 
     protected Buffer() {
         this(null, null);
@@ -274,7 +274,7 @@ public class Buffer {
                 return "";
         }
     }
-    
+
     public String getLineNoMask() {
         return line.toString();
     }
@@ -358,7 +358,7 @@ public class Buffer {
         else
             return false;
     }
-    
+
     protected void replaceChar(char rChar) {
         line.setCharAt(getCursor(), rChar);
     }

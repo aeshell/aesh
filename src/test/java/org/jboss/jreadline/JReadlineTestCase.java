@@ -14,7 +14,9 @@ import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.Mode;
 import org.jboss.jreadline.terminal.TestTerminal;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

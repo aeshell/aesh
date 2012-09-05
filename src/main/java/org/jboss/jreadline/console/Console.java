@@ -16,8 +16,18 @@ import org.jboss.jreadline.console.operator.ControlOperator;
 import org.jboss.jreadline.console.operator.ControlOperatorParser;
 import org.jboss.jreadline.console.operator.RedirectionCompletion;
 import org.jboss.jreadline.console.settings.Settings;
-import org.jboss.jreadline.edit.*;
-import org.jboss.jreadline.edit.actions.*;
+
+import org.jboss.jreadline.edit.EditMode;
+import org.jboss.jreadline.edit.Mode;
+import org.jboss.jreadline.edit.PasteManager;
+import org.jboss.jreadline.edit.ViEditMode;
+import org.jboss.jreadline.edit.actions.Action;
+import org.jboss.jreadline.edit.actions.EditAction;
+import org.jboss.jreadline.edit.actions.EditActionManager;
+import org.jboss.jreadline.edit.actions.Operation;
+import org.jboss.jreadline.edit.actions.PrevWordAction;
+import org.jboss.jreadline.edit.actions.Movement;
+
 import org.jboss.jreadline.history.FileHistory;
 import org.jboss.jreadline.history.History;
 import org.jboss.jreadline.history.InMemoryHistory;
@@ -30,7 +40,10 @@ import org.jboss.jreadline.util.FileUtils;
 import org.jboss.jreadline.util.LoggerUtil;
 import org.jboss.jreadline.util.Parser;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -75,7 +88,7 @@ public class Console {
 
     public Console(Settings settings) throws IOException {
         reset(settings);
-        
+
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void start() {
                 try {
@@ -103,7 +116,7 @@ public class Console {
             throw new RuntimeException("Cant reset an already running Console, must stop if first!");
          if(Settings.getInstance().doReadInputrc())
             Config.parseInputrc(Settings.getInstance());
-        
+
         Config.readRuntimeProperties(Settings.getInstance());
 
         setTerminal(settings.getTerminal(),
@@ -172,11 +185,11 @@ public class Console {
     public History getHistory() {
         return history;
     }
-    
+
     /**
      * Push text to the console, note that this will not update the internal
      * cursor position.
-     * 
+     *
      * @param input text
      * @throws IOException stream
      */
@@ -316,8 +329,8 @@ public class Console {
         }
 
         buffer.reset(prompt, mask);
-		if(command == null)
-			terminal.writeToStdOut(buffer.getPrompt());
+        if(command == null)
+            terminal.writeToStdOut(buffer.getPrompt());
         search = null;
 
         while(true) {
@@ -617,7 +630,7 @@ public class Console {
         }
         prevAction = Action.HISTORY;
     }
-    
+
     private void setBufferLine(String newLine) throws IOException {
         //must make sure that there are enough space for the
         // line thats about to be injected
@@ -643,7 +656,7 @@ public class Console {
         }
         buffer.setLine(newLine);
     }
-    
+
     private void insertBufferLine(String insert, int position) throws IOException {
         if((insert.length()+buffer.totalLength()) >= getTerminalWidth()) { //&&
                 //(insert.length()+buffer.totalLength()) > buffer.getLine().length()) {
@@ -670,7 +683,7 @@ public class Console {
         if(!settings.isHistoryDisabled())
             history.push(line);
     }
-    
+
     private void writeChars(int[] chars, Character mask) throws IOException {
         for(int c : chars)
             writeChar(c,mask);
@@ -840,7 +853,7 @@ public class Console {
                 currentRow = buffer.getCursorWithPrompt() / getTerminalWidth();
             if(currentRow > 0 && buffer.getCursorWithPrompt() % getTerminalWidth() == 0)
                 currentRow--;
-            
+
             //logger.info("actualRow:"+getCurrentRow()+", actualColumn:"+getCurrentColumn());
             //logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
             //+", width:"+getTerminalWidth()+", height:"+getTerminalHeight()+", delta:"+buffer.getDelta()
@@ -979,7 +992,7 @@ public class Console {
             //do nothing atm
         }
         // only one hit, do a completion
-        else if(possibleCompletions.size() == 1 && 
+        else if(possibleCompletions.size() == 1 &&
                 possibleCompletions.get(0).getCompletionCandidates().size() == 1) {
             //some formatted completions might not be valid and shouldnt be displayed
             displayCompletion(possibleCompletions.get(0).getCompletionCandidates().get(0),

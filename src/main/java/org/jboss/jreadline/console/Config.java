@@ -12,12 +12,18 @@ import org.jboss.jreadline.edit.mapper.KeyMapper;
 import org.jboss.jreadline.terminal.Terminal;
 import org.jboss.jreadline.util.LoggerUtil;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.jboss.jreadline.console.settings.VariableSettings.*;
+import static org.jboss.jreadline.console.settings.VariableSettings.BELL_STYLE;
+import static org.jboss.jreadline.console.settings.VariableSettings.DISABLE_COMPLETION;
+import static org.jboss.jreadline.console.settings.VariableSettings.EDITING_MODE;
+import static org.jboss.jreadline.console.settings.VariableSettings.HISTORY_SIZE;
 
 /**
  *
@@ -164,7 +170,7 @@ public class Config {
                         ", only: "+DISABLE_COMPLETION.getValues());
         }
     }
-    
+
     protected static void readRuntimeProperties(Settings settings) {
         try {
             String term = System.getProperty("jreadline.terminal");
@@ -188,34 +194,34 @@ public class Config {
             if(inputrc != null && inputrc.length() > 0)
                 if(new File(inputrc).isFile())
                     settings.setInputrc(new File(inputrc));
-            
+
             String historyFile = System.getProperty("jreadline.historyfile");
             if(historyFile != null && historyFile.length() > 0)
                 if(new File(historyFile).isFile())
                     settings.setHistoryFile(new File(historyFile));
-            
+
             String historyPersistent = System.getProperty("jreadline.historypersistent");
             if(historyPersistent != null && historyPersistent.length() > 0)
-                if(historyPersistent.equalsIgnoreCase("true") || 
+                if(historyPersistent.equalsIgnoreCase("true") ||
                         historyPersistent.equalsIgnoreCase("false"))
                     settings.setHistoryPersistent(Boolean.parseBoolean(historyPersistent));
-            
+
             String historyDisabled = System.getProperty("jreadline.historydisabled");
             if(historyDisabled != null && historyDisabled.length() > 0)
                 if(historyDisabled.equalsIgnoreCase("true") ||
                         historyDisabled.equalsIgnoreCase("false"))
                     settings.setHistoryDisabled(Boolean.parseBoolean(historyDisabled));
-           
+
             String historySize = System.getProperty("jreadline.historysize");
             if(historySize != null && historySize.length() > 0)
                 settings.setHistorySize(Integer.parseInt(historySize));
-            
+
             String doLogging = System.getProperty("jreadline.logging");
             if(doLogging != null && doLogging.length() > 0)
                 if(doLogging.equalsIgnoreCase("true") ||
                         doLogging.equalsIgnoreCase("false"))
                     settings.setLogging(Boolean.parseBoolean(doLogging));
-            
+
             String logFile = System.getProperty("jreadline.logfile");
             if(logFile != null && logFile.length() > 0)
                 settings.setLogFile(logFile);

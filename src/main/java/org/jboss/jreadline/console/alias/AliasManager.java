@@ -70,6 +70,7 @@ public class AliasManager {
         aliases.add(alias);
     }
 
+    @SuppressWarnings("unchecked")
     public String printAllAliases() {
         StringBuilder sb = new StringBuilder();
         Collections.sort(aliases); // not very efficient, but it'll do for now...

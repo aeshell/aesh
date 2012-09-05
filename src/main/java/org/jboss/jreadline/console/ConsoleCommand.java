@@ -21,8 +21,8 @@ import java.io.IOException;
  */
 public abstract class ConsoleCommand {
 
-	boolean attached = false;
-	protected Console console = null;
+    boolean attached = false;
+    protected Console console = null;
     ConsoleOutput consoleOutput;
 
     public ConsoleCommand(Console console) {
@@ -36,19 +36,19 @@ public abstract class ConsoleCommand {
      * @throws IOException stream
      */
     public final void attach(ConsoleOutput output) throws IOException {
-		attached = true;
+        attached = true;
         this.console.attachProcess(this);
         this.consoleOutput = output;
         afterAttach();
-	}
+    }
 
     /**
      *
      * @return true if the process is attached to console. eg. its "running".
      */
     public final boolean isAttached() {
-		return attached;
-	}
+        return attached;
+    }
 
     /**
      * Mark this process ready to be detached from console.
@@ -56,10 +56,10 @@ public abstract class ConsoleCommand {
      *
      * @throws IOException stream
      */
-	public final void detach() throws IOException {
-		attached = false;
+    public final void detach() throws IOException {
+        attached = false;
         afterDetach();
-	}
+    }
 
     public final boolean hasRedirectOut() {
         return ControlOperator.isRedirectionOut(consoleOutput.getControlOperator());

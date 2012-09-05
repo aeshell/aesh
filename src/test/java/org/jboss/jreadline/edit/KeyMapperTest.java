@@ -15,11 +15,11 @@ import org.jboss.jreadline.edit.mapper.KeyMapper;
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class KeyMapperTest extends TestCase {
-    
+
     public KeyMapperTest(String test) {
         super(test);
     }
-    
+
     public void testQuoteMapKeys() {
         KeyOperation o1 = KeyMapper.mapQuoteKeys("\"\\M-a","meta");
         assertEquals(new KeyOperation(new int[]{27,97}, Operation.NO_ACTION), o1);

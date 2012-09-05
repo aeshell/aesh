@@ -23,7 +23,7 @@ public class ConsoleInputSession {
     private ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<String>(1000);
 
     private volatile boolean connected;
-    
+
     public ConsoleInputSession(InputStream consoleStream) {
         this.consoleStream = consoleStream;
         this.connected = true;
@@ -49,9 +49,9 @@ public class ConsoleInputSession {
                 }
                 return -1;
             }
-            
+
             @Override
-            public int available() { 
+            public int available() {
                 if(b != null)
                     return b.length();
                 else

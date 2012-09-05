@@ -74,7 +74,7 @@ public class ConfigTest extends TestCase {
         Config.readRuntimeProperties(Settings.getInstance());
 
         assertEquals(Settings.getInstance().getTerminal().getClass().getName(), "org.jboss.jreadline.terminal.TestTerminal");
-                
+
         assertEquals(Settings.getInstance().getEditMode(), Mode.VI);
 
         assertEquals(Settings.getInstance().isHistoryPersistent(), false);

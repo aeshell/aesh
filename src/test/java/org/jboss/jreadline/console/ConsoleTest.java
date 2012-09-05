@@ -13,7 +13,14 @@ import org.jboss.jreadline.console.settings.Settings;
 import org.jboss.jreadline.edit.Mode;
 import org.jboss.jreadline.terminal.TestTerminal;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

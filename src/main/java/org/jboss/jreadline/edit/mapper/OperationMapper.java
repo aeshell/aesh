@@ -13,7 +13,7 @@ import org.jboss.jreadline.edit.actions.Operation;
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class OperationMapper {
-    
+
     public static Operation mapToFunction(String function) {
 
         if(function.equals("abort"))
