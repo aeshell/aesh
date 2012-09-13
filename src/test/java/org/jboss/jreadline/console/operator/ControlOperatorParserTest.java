@@ -70,7 +70,9 @@ public class ControlOperatorParserTest extends TestCase {
         assertEquals(new ConsoleOperation(ControlOperator.END, " foo3"), ops.get(3));
         assertEquals(new ConsoleOperation(ControlOperator.NONE, " bar"), ops.get(4));
 
-
+        //TODO: must fix this!
+        //assertEquals(new ConsoleOperation(ControlOperator.NONE, "ls \\<foo.txt\\>"),
+        //        ControlOperatorParser.findAllControlOperators("ls \\<foo.txt\\>").get(0));
 
     }
 
