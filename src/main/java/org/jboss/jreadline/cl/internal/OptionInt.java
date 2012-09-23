@@ -6,6 +6,9 @@
  */
 package org.jboss.jreadline.cl.internal;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -20,16 +23,24 @@ public class OptionInt {
     private String argument;
     private Object type;
     private boolean required = false;
+    private char valueSeparator;
+    private boolean isProperty = false;
+    private Map<String,String> properties;
 
-    public OptionInt(String name, String longName, String description, boolean hasValue,
-                     String argument, boolean required, Object type) {
-        this.name = name;
+    public OptionInt(char name, String longName, String description, boolean hasValue,
+                     String argument, boolean required, char valueSeparator,
+                     boolean isProperty, Object type) {
+        this.name = String.valueOf(name);
         this.longName = longName;
         this.description = description;
         this.hasValue = hasValue;
         this.argument = argument;
         this.required = required;
+        this.valueSeparator = valueSeparator;
+        this.isProperty = isProperty;
         this.type = type;
+
+        properties = new HashMap<String, String>();
     }
 
     public String getName() {
@@ -64,8 +75,24 @@ public class OptionInt {
         return description;
     }
 
+    public char getValueSeparator() {
+       return valueSeparator;
+    }
+
+    public boolean isProperty() {
+        return isProperty;
+    }
+
     public String getArgument() {
         return argument;
+    }
+
+    public void addProperty(String name, String value) {
+        properties.put(name,value);
+    }
+
+    public Map<String,String> getProperties() {
+        return properties;
     }
 
 }

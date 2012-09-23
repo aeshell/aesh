@@ -29,9 +29,8 @@ public @interface Option {
 
     /**
      * The name of the default option param.
-     * There is no need to add "-" to the name.
      */
-    String name() default "";
+    char name() default '\u0000';
 
     /**
      * An optional long name.
@@ -55,6 +54,23 @@ public @interface Option {
      * A description on what kind of value is used for this option.
      */
     String argument() default "";
+
+    /**
+     * If set will force the option to be of the form:
+     * name[separator]value
+     * As an example, if we want to create an option like: --foo bar1,bar2
+     * {@code @Option(longName='foo', valueSeparator=',')}
+     */
+    char valueSeparator() default '\u0000';
+
+    /**
+     * Specify if this option is of the type:
+     * name=value. Eg:
+     * -Dname=value
+     * The default separator is '=',
+     * but it can be changed with {@code valueSeparator()}
+     */
+    boolean isProperty() default false;
 
     /**
      * Specify if this option is required

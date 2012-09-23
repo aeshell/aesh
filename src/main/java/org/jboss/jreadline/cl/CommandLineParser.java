@@ -17,19 +17,53 @@ import java.util.List;
  */
 public class CommandLineParser {
 
-    private ParserType parserType;
     private ParameterInt param;
 
-    public CommandLineParser(ParserType parserType, ParameterInt parameterInt) {
-        this.parserType = parserType;
+    public CommandLineParser(ParameterInt parameterInt) {
         this.param = parameterInt;
+    }
+
+    public CommandLineParser(String usage) {
+        this.param = new ParameterInt(usage);
+    }
+
+    /**
+     * Add an option
+     * Name or longName can be null
+     * Both argument and type can be null
+     *
+     * @param name name (short) one char
+     * @param longName multi character name
+     * @param description a description of the option
+     * @param hasValue if this option has value
+     * @param argument what kind of argument this option can have
+     * @param required is it required?
+     * @param type what kind of type it is (not used)
+     */
+    public void addOption(char name, String longName, String description, boolean hasValue,
+                          String argument, boolean required, Object type) {
+        this.param.addOption(name, longName, description, hasValue, argument,
+                required, type);
+    }
+
+    /**
+     * Add an option
+     * Name or longName can be null
+     *
+     * @param name name (short) one char
+     * @param longName multi character name
+     * @param description a description of the option
+     * @param hasValue if this option has value
+     */
+    public void addOption(char name, String longName, String description, boolean hasValue) {
+        this.param.addOption(name, longName, description, hasValue, null, false, null);
     }
 
     protected ParameterInt getParameter() {
         return param;
     }
 
-    public CommandLine parse(String line) throws CommandLineParserException {
+    public CommandLine parse(String line) throws IllegalArgumentException {
         List<String> lines = Parser.findAllWords(line);
         CommandLine commandLine = new CommandLine();
         OptionInt active = null;
@@ -38,25 +72,59 @@ public class CommandLineParser {
             String parseLine = lines.get(i);
             if(parseLine.startsWith("--")) {
                 active = findLongOption(parseLine.substring(2));
-                if(active != null && (!active.hasValue() || active.getValue() != null)) {
-                    commandLine.addOption(new ParsedOption(active.getName(), active.getValue()));
+                if(active != null && active.isProperty()) {
+                    if(parseLine.length() <= (2+active.getLongName().length()) ||
+                        !parseLine.contains(String.valueOf(active.getValueSeparator())))
+                        throw new IllegalArgumentException(
+                                "Option "+active.getLongName()+", must be part of a property");
+
+                    String name =
+                            parseLine.substring(2+active.getLongName().length(),
+                                    parseLine.indexOf(active.getValueSeparator()));
+                    String value = parseLine.substring( parseLine.indexOf(active.getValueSeparator()+1));
+
+                    commandLine.addOption(new
+                            ParsedOption(active.getName(), active.getLongName(),
+                            new OptionProperty(name, value)));
+                    active = null;
+                }
+                else if(active != null && (!active.hasValue() || active.getValue() != null)) {
+                    commandLine.addOption(new ParsedOption(active.getName(), active.getLongName(), active.getValue()));
                     active = null;
                 }
                 else if(active == null)
-                    throw new CommandLineParserException("Option: "+parseLine+" is not a valid option for this command");
+                    throw new IllegalArgumentException("Option: "+parseLine+" is not a valid option for this command");
             }
+
             else if(parseLine.startsWith("-")) {
                 active = findOption(parseLine.substring(1));
+
+                if(active != null && active.isProperty()) {
+                    if(parseLine.length() <= 2 ||
+                            !parseLine.contains(String.valueOf(active.getValueSeparator())))
+                    throw new IllegalArgumentException(
+                            "Option "+active.getLongName()+", must be part of a property");
+                    String name =
+                            parseLine.substring(3, // 2+char.length
+                                    parseLine.indexOf(active.getValueSeparator()));
+                    String value = parseLine.substring( parseLine.indexOf(active.getValueSeparator()+1));
+
+                    commandLine.addOption(new
+                            ParsedOption(active.getName(), active.getLongName(),
+                            new OptionProperty(name, value)));
+                    active = null;
+                }
+
                 if(active != null && !active.hasValue()) {
-                    commandLine.addOption(new ParsedOption(active.getName(), active.getValue()));
+                    commandLine.addOption(new ParsedOption(String.valueOf(active.getName()), active.getLongName(), active.getValue()));
                     active = null;
                 }
                 else if(active == null)
-                    throw new CommandLineParserException("Option: "+parseLine+" is not a valid option for this command");
+                    throw new IllegalArgumentException("Option: "+parseLine+" is not a valid option for this command");
             }
             else if(active != null) {
                 active.setValue(parseLine);
-                commandLine.addOption(new ParsedOption(active.getName(), active.getValue()));
+                commandLine.addOption(new ParsedOption(active.getName(), active.getLongName(), active.getValue()));
                 active = null;
             }
             else {
@@ -69,7 +137,7 @@ public class CommandLineParser {
         return commandLine;
     }
 
-    private void checkForMissingRequiredOptions(CommandLine commandLine) throws CommandLineParserException {
+    private void checkForMissingRequiredOptions(CommandLine commandLine) throws IllegalArgumentException {
         for(OptionInt o : param.getOptions())
             if(o.isRequired()) {
                 boolean found = false;
@@ -79,7 +147,7 @@ public class CommandLineParser {
                         found = true;
                 }
                 if(!found)
-                    throw new CommandLineParserException("Option: "+o.getName()+" is required for this command.");
+                    throw new IllegalArgumentException("Option: "+o.getName()+" is required for this command.");
             }
     }
 

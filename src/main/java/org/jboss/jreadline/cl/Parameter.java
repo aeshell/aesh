@@ -22,12 +22,6 @@ import java.lang.annotation.Target;
 public @interface Parameter {
 
     /**
-     * Define which kind of parser thats appropriate for this command
-     * Default is ParserType.GNU
-     */
-    ParserType parser() default ParserType.GNU;
-
-    /**
      * General usage information that will be used when usage/help info
      * is displayed.
      */

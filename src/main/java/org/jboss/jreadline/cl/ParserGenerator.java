@@ -21,19 +21,20 @@ public class ParserGenerator {
         if(param == null)
             throw new RuntimeException("Can only create parser from class thats annotated with Parameter");
 
-        ParserType parserType = param.parser();
-
         if(param.options() != null) {
             OptionInt[] options = new OptionInt[param.options().length];
             for(int i=0; i < param.options().length; i++) {
                 Option o = param.options()[i];
-                options[i] =  new OptionInt(o.name(), o.longName(), o.description(), o.hasValue(), o.argument(), o.required(), null);
+                options[i] =  new OptionInt(
+                        o.name(), o.longName(), o.description(),
+                        o.hasValue(), o.argument(), o.required(), o.valueSeparator(),
+                        o.isProperty(), null);
             }
 
-            return new CommandLineParser(parserType, new ParameterInt(param.usage(), options));
+            return new CommandLineParser(new ParameterInt(param.usage(), options));
         }
         else
-            return new CommandLineParser(parserType, new ParameterInt(param.usage(), new OptionInt[0]));
+            return new CommandLineParser(new ParameterInt(param.usage(), new OptionInt[0]));
 
     }
 }

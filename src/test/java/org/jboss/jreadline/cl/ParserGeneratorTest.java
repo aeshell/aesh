@@ -9,6 +9,8 @@ package org.jboss.jreadline.cl;
 import junit.framework.TestCase;
 import org.jboss.jreadline.cl.internal.OptionInt;
 
+import java.util.List;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -23,36 +25,34 @@ public class ParserGeneratorTest extends TestCase {
         CommandLineParser parser = ParserGenerator.generateParser(Test1.class);
 
         assertEquals("a simple test", parser.getParameter().getUsage());
-        OptionInt[] options = parser.getParameter().getOptions();
-        assertEquals("f", options[0].getName());
-        assertEquals("foo", options[0].getLongName());
-        assertEquals("e", options[1].getName());
-        assertEquals("enable e", options[1].getDescription());
-        assertTrue(options[1].hasValue());
-        assertTrue(options[1].isRequired());
+        List<OptionInt> options = parser.getParameter().getOptions();
+        assertEquals("f", options.get(0).getName());
+        assertEquals("foo", options.get(0).getLongName());
+        assertEquals("e", options.get(1).getName());
+        assertEquals("enable e", options.get(1).getDescription());
+        assertTrue(options.get(1).hasValue());
+        assertTrue(options.get(1).isRequired());
 
         parser = ParserGenerator.generateParser(Test2.class);
         assertEquals("more [options] file...", parser.getParameter().getUsage());
         options = parser.getParameter().getOptions();
-        assertEquals("d", options[0].getName());
-        assertEquals("V", options[1].getName());
+        assertEquals("d", options.get(1).getName());
+        assertEquals("V", options.get(1).getName());
 
     }
 }
 
 @Parameter(usage = "a simple test",
-        parser = ParserType.GNU,
         options = {
-                @Option(name = "f", longName = "foo", description = "enable foo"),
-                @Option(name = "e", description = "enable e", hasValue = true, required = true)
+                @Option(name = 'f', longName = "foo", description = "enable foo"),
+                @Option(name = 'e', description = "enable e", hasValue = true, required = true)
         })
 class Test1 {}
 
 @Parameter(usage = "more [options] file...",
-        parser = ParserType.POSIX,
         options = {
-                @Option(name = "d", description = "display help instead of ring bell"),
-                @Option(name = "V", description = "output version information and exit")
+                @Option(name = 'd', description = "display help instead of ring bell"),
+                @Option(name = 'V', description = "output version information and exit")
         })
 class Test2 {}
 

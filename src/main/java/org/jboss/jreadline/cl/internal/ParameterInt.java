@@ -6,24 +6,39 @@
  */
 package org.jboss.jreadline.cl.internal;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ParameterInt {
 
     private String usage;
-    private OptionInt[] options;
+    private List<OptionInt> options;
+
+    public ParameterInt(String usage) {
+        setUsage(usage);
+        setOptions(new ArrayList<OptionInt>());
+    }
 
     public ParameterInt(String usage, OptionInt[] options) {
         setUsage(usage);
-       setOptions(options);
+        setOptions(Arrays.asList(options));
     }
 
-    public OptionInt[] getOptions() {
+    public List<OptionInt> getOptions() {
         return options;
     }
 
-    private void setOptions(OptionInt[] options) {
+    public void addOption(char name, String longName, String description, boolean hasValue,
+                     String argument, boolean required, Object type) {
+        options.add(new OptionInt(name, longName, description,
+                hasValue, argument, required, '\u0000', false, type));
+    }
+
+    private void setOptions(List<OptionInt> options) {
         this.options = options;
     }
 

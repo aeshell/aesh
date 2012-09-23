@@ -6,6 +6,8 @@
  */
 package org.jboss.jreadline.console;
 
+import org.jboss.jreadline.cl.CommandLine;
+import org.jboss.jreadline.cl.CommandLineParser;
 import org.jboss.jreadline.console.operator.ControlOperator;
 
 /**
@@ -50,11 +52,15 @@ public class ConsoleOutput {
         return stdErr;
     }
 
+    public CommandLine parse(CommandLineParser parser) throws IllegalArgumentException {
+        return parser.parse(getBuffer());
+    }
+
     @Override
     public String toString() {
-        return new StringBuilder().append("Buffer: ").append(getBuffer())
-                .append("\nControlOperator: ").append(getControlOperator())
-                .append("\nStdOut: ").append(getStdOut())
-                .append("\nStdErr: ").append(getStdErr()).toString();
+        return "Buffer: " + getBuffer() +
+                "\nControlOperator: " + getControlOperator() +
+                "\nStdOut: " + getStdOut() +
+                "\nStdErr: " + getStdErr();
     }
 }
