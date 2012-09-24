@@ -23,8 +23,8 @@ public class CommandLineParser {
         this.param = parameterInt;
     }
 
-    public CommandLineParser(String usage) {
-        this.param = new ParameterInt(usage);
+    public CommandLineParser(String name, String usage) {
+        this.param = new ParameterInt(name, usage);
     }
 
     /**
@@ -97,17 +97,24 @@ public class CommandLineParser {
             }
 
             else if(parseLine.startsWith("-")) {
-                active = findOption(parseLine.substring(1));
+                if(parseLine.length() == 2)
+                    active = findOption(parseLine.substring(1));
+                else if(parseLine.length() < 2)
+                    throw new IllegalArgumentException("Option: - must be followed by a valid operator");
+                else
+                    active = findOption(parseLine.substring(1,2));
+
+
 
                 if(active != null && active.isProperty()) {
                     if(parseLine.length() <= 2 ||
                             !parseLine.contains(String.valueOf(active.getValueSeparator())))
                     throw new IllegalArgumentException(
-                            "Option "+active.getLongName()+", must be part of a property");
+                            "Option "+active.getName()+", must be part of a property");
                     String name =
-                            parseLine.substring(3, // 2+char.length
+                            parseLine.substring(2, // 2+char.length
                                     parseLine.indexOf(active.getValueSeparator()));
-                    String value = parseLine.substring( parseLine.indexOf(active.getValueSeparator()+1));
+                    String value = parseLine.substring( parseLine.indexOf(active.getValueSeparator())+1);
 
                     commandLine.addOption(new
                             ParsedOption(active.getName(), active.getLongName(),
@@ -115,7 +122,7 @@ public class CommandLineParser {
                     active = null;
                 }
 
-                if(active != null && !active.hasValue()) {
+                else if(active != null && !active.hasValue()) {
                     commandLine.addOption(new ParsedOption(String.valueOf(active.getName()), active.getLongName(), active.getValue()));
                     active = null;
                 }

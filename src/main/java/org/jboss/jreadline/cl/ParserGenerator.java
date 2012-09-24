@@ -31,10 +31,10 @@ public class ParserGenerator {
                         o.isProperty(), null);
             }
 
-            return new CommandLineParser(new ParameterInt(param.usage(), options));
+            return new CommandLineParser(new ParameterInt(param.name(), param.usage(), options));
         }
         else
-            return new CommandLineParser(new ParameterInt(param.usage(), new OptionInt[0]));
+            return new CommandLineParser(new ParameterInt(param.name(), param.usage(), new OptionInt[0]));
 
     }
 }

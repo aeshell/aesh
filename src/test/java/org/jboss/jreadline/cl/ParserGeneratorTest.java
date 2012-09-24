@@ -36,7 +36,7 @@ public class ParserGeneratorTest extends TestCase {
         parser = ParserGenerator.generateParser(Test2.class);
         assertEquals("more [options] file...", parser.getParameter().getUsage());
         options = parser.getParameter().getOptions();
-        assertEquals("d", options.get(1).getName());
+        assertEquals("d", options.get(0).getName());
         assertEquals("V", options.get(1).getName());
 
     }

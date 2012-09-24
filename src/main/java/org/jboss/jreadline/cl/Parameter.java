@@ -22,6 +22,11 @@ import java.lang.annotation.Target;
 public @interface Parameter {
 
     /**
+     * The command name
+     */
+    String name() default "";
+
+    /**
      * General usage information that will be used when usage/help info
      * is displayed.
      */

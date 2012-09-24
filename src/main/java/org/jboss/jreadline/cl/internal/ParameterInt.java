@@ -15,15 +15,17 @@ import java.util.List;
  */
 public class ParameterInt {
 
+    private String name;
     private String usage;
     private List<OptionInt> options;
 
-    public ParameterInt(String usage) {
+    public ParameterInt(String name, String usage) {
+        setName(name);
         setUsage(usage);
         setOptions(new ArrayList<OptionInt>());
     }
 
-    public ParameterInt(String usage, OptionInt[] options) {
+    public ParameterInt(String name, String usage, OptionInt[] options) {
         setUsage(usage);
         setOptions(Arrays.asList(options));
     }
@@ -40,6 +42,14 @@ public class ParameterInt {
 
     private void setOptions(List<OptionInt> options) {
         this.options = options;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getUsage() {

@@ -25,13 +25,13 @@ public class CommandLineParserTest extends TestCase {
         CommandLineParser parser = ParserGenerator.generateParser(Parser1Test.class);
 
         try {
-            CommandLine cl = parser.parse("test -f -DXms=128m -DXmx=512m /tmp/file.txt");
-            assertEquals("f", cl.getOptions().get(0).getName());
-            assertEquals("/tmp/file.txt", cl.getArguments().get(0));
-            cl = parser.parse("test -f -e bar /tmp/file.txt");
+            CommandLine cl = parser.parse("test -f -e bar -Df=g /tmp/file.txt");
             assertEquals("f", cl.getOptions().get(0).getName());
             assertEquals("e", cl.getOptions().get(1).getName());
-            assertEquals("bar", cl.getOptions().get(1).getValue());
+            assertEquals("/tmp/file.txt", cl.getArguments().get(0));
+            cl = parser.parse("test -e bar -DXms=128m -DXmx=512m /tmp/file.txt");
+            assertEquals("e", cl.getOptions().get(0).getName());
+            assertEquals("bar", cl.getOptions().get(0).getValue());
             assertEquals("/tmp/file.txt", cl.getArguments().get(0));
 
             List<OptionProperty> properties = cl.getOptionProperties("D");
@@ -39,6 +39,8 @@ public class CommandLineParserTest extends TestCase {
             assertEquals("512m", properties.get(1).getValue());
         }
         catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            assertTrue(false);
         }
         try {
             CommandLine cl = parser.parse("test -a /tmp/file.txt");
@@ -50,7 +52,7 @@ public class CommandLineParserTest extends TestCase {
         }
 
         try {
-            CommandLine cl = parser.parse("test -f -D /tmp/file.txt");
+            CommandLine cl = parser.parse("test -e bar -D /tmp/file.txt");
             assertTrue(false);
             cl.getArguments();
         }

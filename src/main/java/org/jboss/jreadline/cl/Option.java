@@ -61,7 +61,7 @@ public @interface Option {
      * As an example, if we want to create an option like: --foo bar1,bar2
      * {@code @Option(longName='foo', valueSeparator=',')}
      */
-    char valueSeparator() default '\u0000';
+    char valueSeparator() default '=';
 
     /**
      * Specify if this option is of the type:
