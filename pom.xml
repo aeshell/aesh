@@ -13,12 +13,12 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.jboss.jreadline</groupId>
-    <artifactId>jreadline</artifactId>
+    <groupId>org.jboss.aesh</groupId>
+    <artifactId>aesh</artifactId>
     <packaging>jar</packaging>
     <version>0.20</version>
-    <name>JReadline</name>
-    <description>A simple GNU Readline implementation</description>
+    <name>Æsh</name>
+    <description>Æsh (Another Extendable SHell)</description>
 
     <properties>
         <!-- jboss-parent override -->
@@ -27,16 +27,16 @@
     </properties>
 
     <scm>
-        <connection>scm:git:git://github.com/stalep/jreadline.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/stalep/jreadline.git</developerConnection>
-        <url>http://github.com/stalep/jreadline</url>
+        <connection>scm:git:git://github.com/aeshell/aesh.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/aeshell/aesh.git</developerConnection>
+        <url>http://aeshell.github.com/</url>
     </scm>
 
     <!-- Licenses -->
     <licenses>
         <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <name>Eclipse License, Version 1.0</name>
+            <url>http://www.eclipse.org/legal/epl-v10.html</url>
         </license>
     </licenses>
 

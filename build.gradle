@@ -5,14 +5,14 @@ apply plugin: 'maven'
 apply plugin: 'application'
 apply plugin: 'checkstyle'
 
-group = 'org.jboss.jreadline'
+group = 'org.jboss.aesh'
 version = '0.20'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 jar {
     manifest {
-        attributes 'Implementation-Title': 'JReadline', 'Implementation-Version': version
+        attributes 'Implementation-Title': 'Aesh', 'Implementation-Version': version
     }
 }
 
@@ -45,7 +45,7 @@ idea {
         }
     }
     module {
-        name = "jreadline"
+        name = "æsh"
     }
 }
 

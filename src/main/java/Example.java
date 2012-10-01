@@ -5,14 +5,14 @@
  * http://www.eclipse.org/legal/epl-v10.html
  */
 
-import org.jboss.jreadline.console.ConsoleCommand;
-import org.jboss.jreadline.complete.CompleteOperation;
-import org.jboss.jreadline.complete.Completion;
-import org.jboss.jreadline.console.Console;
-import org.jboss.jreadline.console.ConsoleOutput;
-import org.jboss.jreadline.console.settings.Settings;
-import org.jboss.jreadline.edit.actions.Operation;
-import org.jboss.jreadline.util.ANSI;
+import org.jboss.aesh.console.ConsoleCommand;
+import org.jboss.aesh.complete.CompleteOperation;
+import org.jboss.aesh.complete.Completion;
+import org.jboss.aesh.console.Console;
+import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.util.ANSI;
 
 import java.io.IOException;
 import java.io.PrintWriter;

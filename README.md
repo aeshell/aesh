@@ -1,7 +1,7 @@
-JReadline
+Æsh (Another Extendable SHell)
 =========
 
-JReadline is a Java library for handling console input with the goal to support most GNU Readline features.
+Æsh is a Java library for handling console input with the goal to support most GNU Readline features.
 
 Features:
 ---------
@@ -19,7 +19,7 @@ Features:
 
 How to build:
 -------------
-* JReadline uses Gradle (http://gradle.org) as its build tool.
+* Æsh uses Gradle (http://gradle.org) as its build tool.
 
 To get going:
 -------------
@@ -28,9 +28,9 @@ public class Example {
 
     public static void main(String[] args) throws java.io.IOException {
 
-        org.jboss.jreadline.console.Console console = new org.jboss.jreadline.console.Console();
+        org.jboss.aesh.console.Console console = new org.jboss.aesh.console.Console();
 
-        org.jboss.jreadline.console.ConsoleOutput line;
+        org.jboss.aesh.console.ConsoleOutput line;
         while ((line = console.read("> ")) != null) {
             console.pushToConsole("======>\"" +line.getBuffer()+ "\n");
 
@@ -42,7 +42,7 @@ public class Example {
     }
 }
 
-Keys that are mapped by default in JReadline
+Keys that are mapped by default in Æsh
 --------------------------------------------
 Note: C equals Control and M is Meta/Alt
 
@@ -105,14 +105,14 @@ In edit mode:
 
 Supported runtime properties:
 -------------
-* jreadline.terminal : specify Terminal object
-* jreadline.editmode : specify either VI or EMACS edit mode
-* jreadline.readinputrc : specify if jreadline should read settings from inputrc
-* jreadline.inputrc : specify the inputrc file (must exist)
-* jreadline.historyfile : specify the history file (must exist)
-* jreadline.historypersistent : specify if jreadlin should persist history file on exit
-* jreadline.historydisabled : specify if history should be disabled
-* jreadline.historysize : speficy the maximum size of the history file
-* jreadline.logging : specify if logging should be enabled
-* jreadline.logfile : specify the log file
-* jreadline.disablecompletion : specify if completion should be disabled
+* aesh.terminal : specify Terminal object
+* aesh.editmode : specify either VI or EMACS edit mode
+* aesh.readinputrc : specify if æsh should read settings from inputrc
+* aesh.inputrc : specify the inputrc file (must exist)
+* aesh.historyfile : specify the history file (must exist)
+* aesh.historypersistent : specify if jreadlin should persist history file on exit
+* aesh.historydisabled : specify if history should be disabled
+* aesh.historysize : speficy the maximum size of the history file
+* aesh.logging : specify if logging should be enabled
+* aesh.logfile : specify the log file
+* aesh.disablecompletion : specify if completion should be disabled
