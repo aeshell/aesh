@@ -28,7 +28,7 @@ public class ParserGenerator {
                 options[i] =  new OptionInt(
                         o.name(), o.longName(), o.description(),
                         o.hasValue(), o.argument(), o.required(), o.valueSeparator(),
-                        o.isProperty(), null);
+                        o.isProperty(), o.hasMultipleValues(), null);
             }
 
             return new CommandLineParser(new ParameterInt(param.name(), param.usage(), options));

@@ -13,6 +13,7 @@ import java.lang.annotation.Target;
 
 /**
  * A single command line option.
+ *
  * It keep information regarding the short option name (-f)
  * and long option name (--foo).
  * A flag to specify if this option is required and a description.
@@ -61,16 +62,21 @@ public @interface Option {
      * As an example, if we want to create an option like: --foo bar1,bar2
      * {@code @Option(longName='foo', valueSeparator=',')}
      */
-    char valueSeparator() default '=';
+    char valueSeparator() default ',';
 
     /**
      * Specify if this option is of the type:
-     * name=value. Eg:
-     * -Dname=value
-     * The default separator is '=',
-     * but it can be changed with {@code valueSeparator()}
+     * -Dname1=value1 -Dname2=value2.
+     *
      */
     boolean isProperty() default false;
+
+    /**
+     * Set to true if this option can have many values separated by valueSeparator.
+     * Eg: --foo=bar1,bar2,bar3 or --foo bar1,bar2,bar3
+     * {@code valueSeparator} is here set to ','
+     */
+    boolean hasMultipleValues() default false;
 
     /**
      * Specify if this option is required

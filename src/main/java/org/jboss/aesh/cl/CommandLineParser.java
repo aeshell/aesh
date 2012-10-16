@@ -18,6 +18,7 @@ import java.util.List;
 public class CommandLineParser {
 
     private ParameterInt param;
+    private static final String EQUALS = "=";
 
     public CommandLineParser(ParameterInt parameterInt) {
         this.param = parameterInt;
@@ -41,9 +42,9 @@ public class CommandLineParser {
      * @param type what kind of type it is (not used)
      */
     public void addOption(char name, String longName, String description, boolean hasValue,
-                          String argument, boolean required, Object type) {
+                          String argument, boolean required, boolean hasMultipleValues, Object type) {
         this.param.addOption(name, longName, description, hasValue, argument,
-                required, type);
+                required, hasMultipleValues, type);
     }
 
     /**
@@ -56,7 +57,7 @@ public class CommandLineParser {
      * @param hasValue if this option has value
      */
     public void addOption(char name, String longName, String description, boolean hasValue) {
-        this.param.addOption(name, longName, description, hasValue, null, false, null);
+        this.param.addOption(name, longName, description, hasValue, null, false, false, null);
     }
 
     protected ParameterInt getParameter() {
@@ -64,24 +65,26 @@ public class CommandLineParser {
     }
 
     public CommandLine parse(String line) throws IllegalArgumentException {
+        param.clean();
         List<String> lines = Parser.findAllWords(line);
         CommandLine commandLine = new CommandLine();
         OptionInt active = null;
         //skip first entry since that's the name of the command
         for(int i=1; i < lines.size(); i++) {
             String parseLine = lines.get(i);
+            //longName
             if(parseLine.startsWith("--")) {
                 active = findLongOption(parseLine.substring(2));
                 if(active != null && active.isProperty()) {
                     if(parseLine.length() <= (2+active.getLongName().length()) ||
-                        !parseLine.contains(String.valueOf(active.getValueSeparator())))
+                        !parseLine.contains(EQUALS))
                         throw new IllegalArgumentException(
                                 "Option "+active.getLongName()+", must be part of a property");
 
                     String name =
                             parseLine.substring(2+active.getLongName().length(),
-                                    parseLine.indexOf(active.getValueSeparator()));
-                    String value = parseLine.substring( parseLine.indexOf(active.getValueSeparator()+1));
+                                    parseLine.indexOf(EQUALS));
+                    String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
 
                     commandLine.addOption(new
                             ParsedOption(active.getName(), active.getLongName(),
@@ -95,7 +98,7 @@ public class CommandLineParser {
                 else if(active == null)
                     throw new IllegalArgumentException("Option: "+parseLine+" is not a valid option for this command");
             }
-
+            //name
             else if(parseLine.startsWith("-")) {
                 if(parseLine.length() == 2)
                     active = findOption(parseLine.substring(1));
@@ -104,17 +107,15 @@ public class CommandLineParser {
                 else
                     active = findOption(parseLine.substring(1,2));
 
-
-
                 if(active != null && active.isProperty()) {
                     if(parseLine.length() <= 2 ||
-                            !parseLine.contains(String.valueOf(active.getValueSeparator())))
+                            !parseLine.contains(EQUALS))
                     throw new IllegalArgumentException(
                             "Option "+active.getName()+", must be part of a property");
                     String name =
                             parseLine.substring(2, // 2+char.length
-                                    parseLine.indexOf(active.getValueSeparator()));
-                    String value = parseLine.substring( parseLine.indexOf(active.getValueSeparator())+1);
+                                    parseLine.indexOf(EQUALS));
+                    String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
 
                     commandLine.addOption(new
                             ParsedOption(active.getName(), active.getLongName(),
@@ -130,15 +131,26 @@ public class CommandLineParser {
                     throw new IllegalArgumentException("Option: "+parseLine+" is not a valid option for this command");
             }
             else if(active != null) {
-                active.setValue(parseLine);
-                commandLine.addOption(new ParsedOption(active.getName(), active.getLongName(), active.getValue()));
+                if(active.hasMultipleValues()) {
+                    if(parseLine.contains(String.valueOf(active.getValueSeparator()))) {
+                        for(String value : parseLine.split(String.valueOf(active.getValueSeparator()))) {
+                            active.addValue(value.trim());
+                        }
+                    }
+                }
+                else
+                    active.addValue(parseLine);
+
+                commandLine.addOption(new ParsedOption(active.getName(), active.getLongName(), active.getValues()));
                 active = null;
             }
+            //if no param is "active", we add it as an argument
             else {
                 commandLine.addArgument(parseLine);
             }
         }
 
+        //this will throw and IllegalArgumentException if needed
         checkForMissingRequiredOptions(commandLine);
 
         return commandLine;
@@ -177,7 +189,7 @@ public class CommandLineParser {
         if(option != null) {
             String rest = line.substring(option.getLongName().length());
             if(rest != null && rest.length() > 1 && rest.startsWith("=")) {
-                option.setValue(rest.substring(1));
+                option.addValue(rest.substring(1));
                 return option;
             }
         }

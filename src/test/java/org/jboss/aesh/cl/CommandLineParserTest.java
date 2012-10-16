@@ -112,6 +112,31 @@ public class CommandLineParserTest extends TestCase {
         }
 
     }
+
+    public void testParseCommandLine3() {
+        try {
+            ParserGenerator.generateParser(Parser3Test.class);
+            assertTrue(false);
+        }
+        catch (IllegalArgumentException iae) {
+            assertTrue(true);
+        }
+    }
+
+    public void testParseCommandLine4() {
+        CommandLineParser clp = ParserGenerator.generateParser(Parser4Test.class);
+
+        CommandLine cl = clp.parse("test -o bar1,bar2,bar3 foo");
+        assertTrue(cl.hasOption('o'));
+        assertEquals("bar1", cl.getOptionValues("o").get(0));
+        assertEquals("bar3", cl.getOptionValues("o").get(2));
+
+        cl = clp.parse("test --help bar4,bar5,bar6 foo");
+        assertTrue(cl.hasOption("help"));
+        assertEquals("bar4", cl.getOptionValues("help").get(0));
+        assertEquals("bar6", cl.getOptionValues("h").get(2));
+
+    }
 }
 
 @Parameter(usage = "a simple test",
@@ -132,4 +157,19 @@ class Parser1Test {}
                         hasValue = false, description = "output version information and exit")
         })
 class Parser2Test {}
+
+@Parameter(usage = "this should fail",
+        options = {
+                @Option()
+        })
+class Parser3Test {}
+
+@Parameter(usage = "testing multiple values",
+        options = {
+                @Option(name = 'o', longName="option", hasValue = true, hasMultipleValues = true,
+                        valueSeparator = ','),
+                @Option(name = 'h', longName="help", hasValue = true, hasMultipleValues = true,
+                        valueSeparator = ',')
+        })
+class Parser4Test {}
 

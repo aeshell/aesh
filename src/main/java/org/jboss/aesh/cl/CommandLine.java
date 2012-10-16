@@ -73,6 +73,10 @@ public class CommandLine {
         return false;
     }
 
+    public String getOptionValue(char c) {
+        return getOptionValue(String.valueOf(c));
+    }
+
     public String getOptionValue(String name) {
         return getOptionValue(name, null);
     }
@@ -84,6 +88,10 @@ public class CommandLine {
                 return po.getValue();
         }
         return fallback;
+    }
+
+    public List<String> getOptionValues(char c) {
+        return getOptionValues(String.valueOf(c), new ArrayList<String>());
     }
 
     public List<String> getOptionValues(String name) {

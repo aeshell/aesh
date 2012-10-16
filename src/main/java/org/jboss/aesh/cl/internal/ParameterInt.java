@@ -30,14 +30,19 @@ public class ParameterInt {
         setOptions(Arrays.asList(options));
     }
 
+    public ParameterInt(String name, String usage, List<OptionInt> options) {
+        setUsage(usage);
+        setOptions(options);
+    }
+
     public List<OptionInt> getOptions() {
         return options;
     }
 
     public void addOption(char name, String longName, String description, boolean hasValue,
-                     String argument, boolean required, Object type) {
+                     String argument, boolean required, boolean hasMultipleValues, Object type) {
         options.add(new OptionInt(name, longName, description,
-                hasValue, argument, required, '\u0000', false, type));
+                hasValue, argument, required, '\u0000', false, hasMultipleValues, type));
     }
 
     private void setOptions(List<OptionInt> options) {
@@ -84,4 +89,8 @@ public class ParameterInt {
         return null;
     }
 
+   public void clean() {
+       for(OptionInt optionInt : options)
+           optionInt.clean();
+    }
 }

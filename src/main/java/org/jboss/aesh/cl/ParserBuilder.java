@@ -27,7 +27,7 @@ public class ParserBuilder {
         reset();
     }
 
-    public static ParserBuilder create() {
+    public static ParserBuilder init() {
         reset();
         return builder;
     }

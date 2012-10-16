@@ -6,7 +6,9 @@
  */
 package org.jboss.aesh.cl.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,17 +21,18 @@ public class OptionInt {
 
     private String description;
     private boolean hasValue = true;
-    private String value;
+    private List<String> values;
     private String argument;
     private Object type;
     private boolean required = false;
     private char valueSeparator;
     private boolean isProperty = false;
+    private boolean hasMultipleValues = false;
     private Map<String,String> properties;
 
     public OptionInt(char name, String longName, String description, boolean hasValue,
                      String argument, boolean required, char valueSeparator,
-                     boolean isProperty, Object type) {
+                     boolean isProperty, boolean hasMultipleValues, Object type) {
         this.name = String.valueOf(name);
         this.longName = longName;
         this.description = description;
@@ -39,8 +42,14 @@ public class OptionInt {
         this.valueSeparator = valueSeparator;
         this.isProperty = isProperty;
         this.type = type;
+        this.hasMultipleValues = hasMultipleValues;
 
         properties = new HashMap<String, String>();
+        values = new ArrayList<String>();
+
+        if((name == Character.MIN_VALUE) && longName.equals("")) {
+            throw new IllegalArgumentException("Either name or long name must be set.");
+        }
     }
 
     public String getName() {
@@ -51,16 +60,27 @@ public class OptionInt {
         return longName;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void addValue(String value) {
+        values.add(value);
     }
 
     public String getValue() {
-        return value;
+        if(values.size() > 0)
+            return values.get(0);
+        else
+            return null;
+    }
+
+    public List<String> getValues() {
+        return values;
     }
 
     public boolean hasValue() {
-        return hasValue;
+        return hasValue || hasMultipleValues;
+    }
+
+    public boolean hasMultipleValues() {
+        return hasMultipleValues;
     }
 
     public boolean isRequired() {
@@ -93,6 +113,11 @@ public class OptionInt {
 
     public Map<String,String> getProperties() {
         return properties;
+    }
+
+    public void clean() {
+        values.clear();
+        properties.clear();
     }
 
 }

@@ -23,7 +23,9 @@ public class ParsedOption {
     public ParsedOption(String name, String longName, List<String> values) {
         this.name = name;
         this.longName = longName;
-        this.values = values;
+
+        this.values = new ArrayList<String>();
+        this.values.addAll(values);
     }
 
     public ParsedOption(String name, String longName, OptionProperty property) {
