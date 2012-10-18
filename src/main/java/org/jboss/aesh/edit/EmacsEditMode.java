@@ -37,7 +37,7 @@ public class EmacsEditMode implements EditMode {
     public Operation parseInput(int[] in) {
 
         int input = in[0];
-        if(Config.isOSPOSIXCompatible() && in.length > 1) {
+        if(in.length > 1) {
             KeyOperation ko = KeyOperationFactory.findOperation(operationManager.getOperations(), in);
             if(ko != null) {
                 //clear current operations to make sure that everything works as expected
