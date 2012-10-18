@@ -1160,6 +1160,9 @@ public class Console {
      * @throws IOException stream
      */
     public void clear(boolean includeBuffer) throws IOException {
+        //(windows fix)
+        if(!Config.isOSPOSIXCompatible())
+            printNewline();
         //first clear console
         terminal.writeToStdOut(ANSI.clearScreen());
         //move cursor to correct position
