@@ -381,10 +381,7 @@ public class Settings {
      */
     public String getLogFile() {
         if(logFile == null) {
-            if(Config.isOSPOSIXCompatible())
-                logFile = "/tmp/aesh.log";
-            else
-                logFile = "aesh.log";
+            logFile = Config.getTmpDir()+Config.getPathSeparator()+"aesh.log";
         }
         return logFile;
     }

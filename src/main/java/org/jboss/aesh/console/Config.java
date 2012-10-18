@@ -33,6 +33,7 @@ public class Config {
 
     private static String lineSeparator = System.getProperty("line.separator");
     private static String pathSeparator = System.getProperty("file.separator");
+    private static String tmpDir = System.getProperty("java.io.tmpdir");
     private static boolean posixCompatible =
             !(System.getProperty("os.name").startsWith("Windows") ||
                     System.getProperty("os.name").startsWith("OS/2"));
@@ -47,6 +48,10 @@ public class Config {
 
     public static String getPathSeparator() {
         return pathSeparator;
+    }
+
+    public static String getTmpDir() {
+        return tmpDir;
     }
 
     /**
