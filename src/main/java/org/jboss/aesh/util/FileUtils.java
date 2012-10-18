@@ -27,13 +27,13 @@ import java.util.regex.Pattern;
 public class FileUtils {
 
     private static final Pattern startsWithParent = Pattern.compile("^\\.\\..*");
-    private static final Pattern containParent =
-            Pattern.compile("[\\.\\.["+ Config.getPathSeparator()+"]?]+");
+    private static final Pattern containParent = Config.isOSPOSIXCompatible() ?
+            Pattern.compile("[\\.\\.["+ Config.getPathSeparator()+"]?]+") : Pattern.compile("[\\.\\.[\\\\]?]+");
     private static final Pattern space = Pattern.compile(".+\\s+.+");
-    private static final Pattern startsWithSlash =
-            Pattern.compile("^\\"+Config.getPathSeparator()+".*");
-    private static final Pattern endsWithSlash =
-            Pattern.compile(".*\\"+Config.getPathSeparator()+"$");
+    private static final Pattern startsWithSlash = Config.isOSPOSIXCompatible() ?
+            Pattern.compile("^\\"+Config.getPathSeparator()+".*") : Pattern.compile("^\\\\.*");
+    private static final Pattern endsWithSlash = Config.isOSPOSIXCompatible() ?
+            Pattern.compile(".*\\"+Config.getPathSeparator()+"$") : Pattern.compile(".*\\\\$");
 
     public static void listMatchingDirectories(CompleteOperation completion, String possibleDir, File cwd) {
         // that starts with possibleDir
@@ -50,7 +50,7 @@ public class FileUtils {
                 new File(cwd.getAbsolutePath() +
                         Config.getPathSeparator() +possibleDir).isDirectory()) {
             if(!endsWithSlash.matcher(possibleDir).matches()){
-                returnFiles.add("/");
+                returnFiles.add(Config.getPathSeparator());
                 completion.addCompletionCandidates(returnFiles);
             }
             else {
@@ -82,6 +82,7 @@ public class FileUtils {
                 return;
             }
 
+
             //1.list possibleDir.substring(pos
             String lastDir = null;
             String rest = null;
@@ -98,8 +99,12 @@ public class FileUtils {
             }
 
             List<String> allFiles;
-            if(startsWithSlash.matcher(possibleDir).matches())
-                allFiles =  listDirectory(new File(Config.getPathSeparator()+lastDir));
+            if(startsWithSlash.matcher(possibleDir).matches()) {
+                if(lastDir.startsWith(Config.getPathSeparator()))
+                    allFiles =  listDirectory(new File(lastDir));
+                else
+                    allFiles =  listDirectory(new File(Config.getPathSeparator()+lastDir));
+            }
             else if(lastDir != null)
                 allFiles =  listDirectory(new File(cwd+
                         Config.getPathSeparator()+lastDir));
@@ -137,7 +142,6 @@ public class FileUtils {
             completion.addCompletionCandidates(returnFiles);
             if(returnFiles.size() > 1 && rest != null && rest.length() > 0)
                 completion.setOffset(completion.getCursor()-rest.length());
-            return;
 
         }
     }
