@@ -705,7 +705,7 @@ public class Console {
         // add a 'fake' new line when inserting at the edge of terminal
         if(buffer.getCursorWithPrompt() > getTerminalWidth() &&
                 buffer.getCursorWithPrompt() % getTerminalWidth() == 1) {
-           terminal.writeToStdOut((char) 32);
+            terminal.writeToStdOut((char) 32);
             terminal.writeToStdOut((char) 13);
         }
 

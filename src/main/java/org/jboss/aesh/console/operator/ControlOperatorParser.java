@@ -23,6 +23,7 @@ public class ControlOperatorParser {
     private static Pattern controlOperatorPattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)|(\\|&)|(\\|)|(;)|(&&)|(&)");
     private static Pattern redirectionNoPipelinePattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)");
     private static Pattern pipelinePattern = Pattern.compile("(\\|&)|(\\|)");
+    private static char escape = '\\';
 
     public static boolean doStringContainRedirectionNoPipeline(String buffer) {
         return redirectionNoPipelinePattern.matcher(buffer).find();
@@ -118,16 +119,22 @@ public class ControlOperatorParser {
                 matcher = controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(5) != null) {
-                reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_OUT,
-                        buffer.substring(0, matcher.start(5))));
-                buffer = buffer.substring(matcher.end(5));
-                matcher = controlOperatorPattern.matcher(buffer);
+                if(matcher.start(5) > 0 &&
+                        buffer.charAt(matcher.start(5)-1) != escape) {
+                    reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_OUT,
+                            buffer.substring(0, matcher.start(5))));
+                    buffer = buffer.substring(matcher.end(5));
+                    matcher = controlOperatorPattern.matcher(buffer);
+                }
             }
             else if(matcher.group(6) != null) {
-                reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_IN,
-                        buffer.substring(0, matcher.start(6))));
-                buffer = buffer.substring(matcher.end(6));
-                matcher = controlOperatorPattern.matcher(buffer);
+                if(matcher.start(6) > 0 &&
+                        buffer.charAt(matcher.start(6)-1) != escape) {
+                    reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_IN,
+                            buffer.substring(0, matcher.start(6))));
+                    buffer = buffer.substring(matcher.end(6));
+                    matcher = controlOperatorPattern.matcher(buffer);
+                }
             }
             else if(matcher.group(7) != null) {
                 reOpList.add( new ConsoleOperation(ControlOperator.PIPE_OUT_AND_ERR,
@@ -136,10 +143,13 @@ public class ControlOperatorParser {
                 matcher = controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(8) != null) {
-                reOpList.add( new ConsoleOperation(ControlOperator.PIPE,
-                        buffer.substring(0, matcher.start(8))));
-                buffer = buffer.substring(matcher.end(8));
-                matcher = controlOperatorPattern.matcher(buffer);
+                if(matcher.start(8) > 0 &&
+                        buffer.charAt(matcher.start(8)-1) != escape) {
+                    reOpList.add( new ConsoleOperation(ControlOperator.PIPE,
+                            buffer.substring(0, matcher.start(8))));
+                    buffer = buffer.substring(matcher.end(8));
+                    matcher = controlOperatorPattern.matcher(buffer);
+                }
             }
             else if(matcher.group(9) != null) {
                 reOpList.add( new ConsoleOperation(ControlOperator.END,
@@ -154,10 +164,13 @@ public class ControlOperatorParser {
                 matcher = controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(11) != null) {
-                reOpList.add( new ConsoleOperation(ControlOperator.AMP,
-                        buffer.substring(0, matcher.start(11))));
-                buffer = buffer.substring(matcher.end(11));
-                matcher = controlOperatorPattern.matcher(buffer);
+                if(matcher.start(11) > 0 &&
+                        buffer.charAt(matcher.start(11)-1) != escape) {
+                    reOpList.add( new ConsoleOperation(ControlOperator.AMP,
+                            buffer.substring(0, matcher.start(11))));
+                    buffer = buffer.substring(matcher.end(11));
+                    matcher = controlOperatorPattern.matcher(buffer);
+                }
             }
         }
         if(reOpList.size() == 0)
