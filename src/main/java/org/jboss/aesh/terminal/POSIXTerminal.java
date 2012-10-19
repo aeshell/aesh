@@ -36,6 +36,8 @@ public class POSIXTerminal implements Terminal {
     private Writer stdOut;
     private Writer stdErr;
 
+    private static long TIMEOUT_PERIOD = 2000;
+
     private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 
     @Override
@@ -158,7 +160,7 @@ public class POSIXTerminal implements Terminal {
      */
     @Override
     public int getHeight() {
-        if(height < 0) {
+        if(height < 0 || propertiesTimedOut()) {
             try {
                 height = getTerminalProperty("rows");
             }
@@ -178,7 +180,7 @@ public class POSIXTerminal implements Terminal {
      */
     @Override
     public int getWidth() {
-        if(width < 0) {
+        if(width < 0 || propertiesTimedOut()) {
             try {
                 width = getTerminalProperty("columns");
             }
@@ -220,9 +222,13 @@ public class POSIXTerminal implements Terminal {
         }
     }
 
+    private boolean propertiesTimedOut() {
+        return (System.currentTimeMillis() -ttyPropsLastFetched) > TIMEOUT_PERIOD;
+    }
+
     private int getTerminalProperty(String prop) throws IOException, InterruptedException {
         // tty properties are cached so we don't have to worry too much about getting term widht/height
-        if (ttyProps == null || System.currentTimeMillis() - ttyPropsLastFetched > 1000) {
+        if (ttyProps == null || propertiesTimedOut()) {
             ttyProps = stty("-a");
             ttyPropsLastFetched = System.currentTimeMillis();
         }
