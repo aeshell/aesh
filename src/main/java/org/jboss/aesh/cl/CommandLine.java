@@ -10,6 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * A parsed String based on the provided Parameter and Options defined
+ * in a {@link CommandLineParser}.
+ *
+ * All found options and arguments can be queried after.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */

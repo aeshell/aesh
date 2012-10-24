@@ -120,4 +120,39 @@ public class OptionInt {
         properties.clear();
     }
 
+    public int getFormattedLength() {
+        StringBuilder sb = new StringBuilder();
+        if(name != null)
+            sb.append("-").append(name);
+        if(longName != null) {
+            if(sb.toString().trim().length() > 0)
+                sb.append(", ");
+            sb.append("--").append(longName);
+        }
+        if(argument != null && argument.length() > 0) {
+            sb.append(" <").append(argument).append(">");
+        }
+
+        return sb.length();
+    }
+
+    //TODO: add offset, offset for descriptionstart and break on width
+    public String getFormattedOption(int offset, int descriptionStart, int width) {
+        StringBuilder sb = new StringBuilder();
+        if(name != null)
+            sb.append("-").append(name);
+        if(longName != null) {
+            if(sb.toString().trim().length() > 0)
+                sb.append(", ");
+            sb.append("--").append(longName);
+        }
+        if(argument != null && argument.length() > 0) {
+            sb.append(" <").append(argument).append(">");
+        }
+        if(description != null && description.length() > 0)
+            sb.append(" ").append(description);
+        //ignore offset and descriptionstart for now
+        return sb.toString();
+    }
+
 }

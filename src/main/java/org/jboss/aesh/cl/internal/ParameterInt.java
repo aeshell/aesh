@@ -26,11 +26,13 @@ public class ParameterInt {
     }
 
     public ParameterInt(String name, String usage, OptionInt[] options) {
+        setName(name);
         setUsage(usage);
         setOptions(Arrays.asList(options));
     }
 
     public ParameterInt(String name, String usage, List<OptionInt> options) {
+        setName(name);
         setUsage(usage);
         setOptions(options);
     }

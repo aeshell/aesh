@@ -13,6 +13,12 @@ import org.jboss.aesh.util.Parser;
 import java.util.List;
 
 /**
+ * A simple command line parser.
+ * It parses a given string based on the Parameter given and
+ * returns a {@link CommandLine}
+ *
+ * It can also print a formatted usage/help information.
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class CommandLineParser {
@@ -62,6 +68,10 @@ public class CommandLineParser {
 
     protected ParameterInt getParameter() {
         return param;
+    }
+
+    public String printHelp() {
+        return new CommandLineFormatter().printHelp(getParameter());
     }
 
     public CommandLine parse(String line) throws IllegalArgumentException {

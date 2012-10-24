@@ -9,6 +9,8 @@ package org.jboss.aesh.cl;
 import org.jboss.aesh.cl.internal.OptionInt;
 
 /**
+ * Build a {@link OptionInt} object using the Builder pattern.
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class OptionBuilder {
