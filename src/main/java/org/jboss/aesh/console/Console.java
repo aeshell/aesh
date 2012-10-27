@@ -398,6 +398,15 @@ public class Console {
         else if (action == Action.EDIT) {
             writeChars(operation.getInput(), mask);
         }
+        //make sure that every action except delete is ignored when masking is enabled
+        else if(mask != null) {
+            if(action == Action.DELETE) {
+                if(mask == 0)
+                    deleteWithMaskEnabled();
+                else
+                    performAction(EditActionManager.parseAction(operation, buffer.getCursor(), buffer.length()));
+            }
+        }
         // For search movement is used a bit differently.
         // It only triggers what kind of search action thats performed
         else if(action == Action.SEARCH && !settings.isHistoryDisabled()) {
@@ -413,13 +422,9 @@ public class Console {
         }
         else if(action == Action.MOVE || action == Action.DELETE ||
                 action == Action.CHANGE || action == Action.YANK) {
-            if(action == Action.DELETE && mask != null && mask == 0)
-                deleteWithMaskEnabled();
-            else
-                performAction(EditActionManager.parseAction(operation, buffer.getCursor(), buffer.length()));
+            performAction(EditActionManager.parseAction(operation, buffer.getCursor(), buffer.length()));
         }
         else if(action == Action.ABORT) {
-
         }
         else if(action == Action.CASE) {
             addActionToUndoStack();
@@ -437,16 +442,7 @@ public class Console {
             else if(operation.getMovement() == Movement.PREV)
                 getHistoryElement(false);
         }
-        else if(action == Action.NEWLINE) {
-            // clear the undo stack for each new line
-            clearUndoStack();
-            if(mask == null) // dont push to history if masking
-                addToHistory(buffer.getLine());
-            prevAction = Action.NEWLINE;
-            //moveToEnd();
-            printNewline(); // output newline
-            return buffer.getLineNoMask();
-        }
+
         else if(action == Action.UNDO) {
             undo();
         }
@@ -476,6 +472,18 @@ public class Console {
         //a hack to get history working
         if(action == Action.HISTORY && !settings.isHistoryDisabled())
             prevAction = action;
+
+        //in the end we check for a newline
+        if(action == Action.NEWLINE) {
+            // clear the undo stack for each new line
+            clearUndoStack();
+            if(mask == null) // dont push to history if masking
+                addToHistory(buffer.getLine());
+            prevAction = Action.NEWLINE;
+            //moveToEnd();
+            printNewline(); // output newline
+            return buffer.getLineNoMask();
+        }
 
         return null;
 
