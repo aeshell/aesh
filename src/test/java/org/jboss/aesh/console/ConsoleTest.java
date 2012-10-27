@@ -106,6 +106,21 @@ public class ConsoleTest extends AeshTestCase {
         console.stop();
     }
 
+    public void testMasking() throws IOException {
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+
+        KeyOperation deletePrevChar =  new KeyOperation(8, Operation.DELETE_PREV_CHAR);
+
+        Console console = getTestConsole(pipedInputStream);
+        outputStream.write(("mypassword").getBytes());
+        outputStream.write(deletePrevChar.getFirstValue());
+        outputStream.write(("\n").getBytes());
+        ConsoleOutput output = console.read(null, new Character('\u0000'));
+        assertEquals("mypasswor", output.getBuffer());
+
+    }
+
 
     private Console getTestConsole(InputStream is) throws IOException {
         Settings settings = Settings.getInstance();

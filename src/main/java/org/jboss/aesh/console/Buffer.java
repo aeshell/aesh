@@ -76,18 +76,22 @@ public class Buffer {
      * @return length of the line without prompt
      */
     protected int length() {
-        return line.length();
+        if(mask != null && mask == 0)
+            return 1;
+        else
+            return line.length();
     }
 
     protected int totalLength() {
-        if(disablePrompt)
-            return line.length()+1;
-        else
-            return line.length() + prompt.length()+1;
+        if(mask != null) {
+            if(mask == 0)
+                return disablePrompt ? 1 : prompt.length()+1;
+        }
+        return disablePrompt ? line.length()+1 : line.length() + prompt.length()+1;
     }
 
     protected int getCursor() {
-        return cursor;
+        return (mask != null && mask == 0) ? 0 : cursor;
     }
 
     protected int getCursorWithPrompt() {
@@ -230,11 +234,11 @@ public class Buffer {
             return 0;
         // cant move longer than the length of the line
         if(viMode) {
-            if(getCursor() == line.length()-1 && (move > 0))
+            if(getCursor() == length()-1 && (move > 0))
                 return 0;
         }
         else {
-            if(getCursor() == line.length() && (move > 0))
+            if(getCursor() == length() && (move > 0))
                 return 0;
         }
 
@@ -243,12 +247,12 @@ public class Buffer {
             return -getCursor();
 
         if(viMode) {
-            if(getCursor() + move > line.length()-1)
-                return (line.length()-1-getCursor());
+            if(getCursor() + move > length()-1)
+                return (length()-1-getCursor());
         }
         else {
-            if(getCursor() + move > line.length())
-                return (line.length()-getCursor());
+            if(getCursor() + move > length())
+                return (length()-getCursor());
         }
 
         return move;

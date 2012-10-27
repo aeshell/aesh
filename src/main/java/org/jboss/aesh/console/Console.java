@@ -413,7 +413,10 @@ public class Console {
         }
         else if(action == Action.MOVE || action == Action.DELETE ||
                 action == Action.CHANGE || action == Action.YANK) {
-            performAction(EditActionManager.parseAction(operation, buffer.getCursor(), buffer.length()));
+            if(action == Action.DELETE && mask != null && mask == 0)
+                deleteWithMaskEnabled();
+            else
+                performAction(EditActionManager.parseAction(operation, buffer.getCursor(), buffer.length()));
         }
         else if(action == Action.ABORT) {
 
@@ -692,10 +695,10 @@ public class Console {
     private void writeChar(int c, Character mask) throws IOException {
 
         buffer.write((char) c);
+        //if mask is set and not set to 0 (nullvalue) we write out
+        //the masked char. if masked is set to 0 we write nothing
         if(mask != null) {
-            if(mask == 0)
-                terminal.writeToStdOut(' '); //TODO: fix this hack
-            else
+            if(mask != 0)
                 terminal.writeToStdOut(mask);
         }
         else {
@@ -730,6 +733,19 @@ public class Console {
             }
             redrawLine();
         }
+    }
+
+    /**
+     * A simple hack to ensure that delete works when masking is enabled and
+     * the mask character is set to null (empty).
+     * The only operation that will work when the mask character is set to 0 is
+     * delete.
+     *
+     * @throws IOException
+     */
+    private void deleteWithMaskEnabled() throws IOException {
+        if(buffer.getLineNoMask().length() > 0)
+            buffer.delete(buffer.getLineNoMask().length()-1, buffer.getLineNoMask().length());
     }
 
     /**
