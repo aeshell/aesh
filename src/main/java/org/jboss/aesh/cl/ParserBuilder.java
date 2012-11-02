@@ -19,52 +19,36 @@ import java.util.List;
  */
 public class ParserBuilder {
 
-    private static ParserBuilder builder = new ParserBuilder();
-    private static String name;
-    private static String usage;
-    private static List<OptionInt> options;
+    private String name;
+    private String usage;
+    private List<OptionInt> options;
 
 
-    private ParserBuilder() {
-        reset();
-    }
-
-    public static ParserBuilder init() {
-        reset();
-        return builder;
+    public ParserBuilder() {
+        options = new ArrayList<OptionInt>();
     }
 
     public ParserBuilder name(String name) {
-        ParserBuilder.name = name;
-        return builder;
+        this.name = name;
+        return this;
     }
 
     public ParserBuilder usage(String usage) {
-        ParserBuilder.usage = usage;
-        return builder;
+        this.usage = usage;
+        return this;
     }
 
     public ParserBuilder addOption(OptionInt option) {
-        ParserBuilder.options.add(option);
-        return builder;
+        this.options.add(option);
+        return this;
     }
 
     public ParserBuilder addOptions(List<OptionInt> options) {
-        ParserBuilder.options.addAll(options);
-        return builder;
+        this.options.addAll(options);
+        return this;
     }
 
     public CommandLineParser generateParser() {
-        CommandLineParser clp = new CommandLineParser(
-                new ParameterInt(ParserBuilder.name, ParserBuilder.usage, ParserBuilder.options));
-
-        reset();
-        return clp;
-    }
-
-    private static void reset() {
-        ParserBuilder.name = name;
-        ParserBuilder.usage = usage;
-        options = new ArrayList<OptionInt>();
+        return new CommandLineParser( new ParameterInt(name, usage, options));
     }
 }

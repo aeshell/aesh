@@ -15,86 +15,66 @@ import org.jboss.aesh.cl.internal.OptionInt;
  */
 public class OptionBuilder {
 
-    private static char name;
-    private static String longName;
-    private static String description;
-    private static String argument;
-    private static boolean hasValue = true;
-    private static boolean required = false;
-    private static boolean isProperty = false;
-    private static boolean hasMultipleValues = false;
-    private static char valueSeparator;
+    private char name = '\u0000';
+    private String longName = "";
+    private String description;
+    private String argument;
+    private boolean hasValue = true;
+    private boolean required = false;
+    private boolean isProperty = false;
+    private boolean hasMultipleValues = false;
+    private char valueSeparator = ',';
 
-    private static OptionBuilder builder = new OptionBuilder();
-
-    private OptionBuilder() {
-    }
-
-    public static OptionBuilder init() {
-        return builder;
+    public OptionBuilder() {
     }
 
     public OptionBuilder name(char n) {
         name = n;
-        return builder;
+        return this;
     }
 
     public OptionBuilder longName(String longName) {
-        OptionBuilder.longName = longName;
-        return builder;
+        this.longName = longName;
+        return this;
     }
 
     public OptionBuilder description(String description) {
-        OptionBuilder.description = description;
-        return builder;
+        this.description = description;
+        return this;
     }
 
     public OptionBuilder argument(String argument) {
-        OptionBuilder.argument = argument;
-        return builder;
+        this.argument = argument;
+        return this;
     }
 
     public OptionBuilder hasValue(boolean hasValue) {
-        OptionBuilder.hasValue = hasValue;
-        return builder;
+        this.hasValue = hasValue;
+        return this;
     }
 
     public OptionBuilder required(boolean required) {
-        OptionBuilder.required = required;
-        return builder;
+        this.required = required;
+        return this;
     }
 
     public OptionBuilder isProperty(boolean isProperty) {
-        OptionBuilder.isProperty = isProperty;
-        return builder;
+        this.isProperty = isProperty;
+        return this;
     }
 
     public OptionBuilder hasMultipleValues(boolean hasMultipleValues) {
-        OptionBuilder.hasMultipleValues = hasMultipleValues;
-        return builder;
+        this.hasMultipleValues = hasMultipleValues;
+        return this;
     }
 
     public OptionBuilder valueSeparator(char valueSeparator) {
-        OptionBuilder.valueSeparator = valueSeparator;
-        return builder;
+        this.valueSeparator = valueSeparator;
+        return this;
     }
 
     public OptionInt create() {
-        OptionInt option = new OptionInt(name, longName, description, hasValue, argument, required,
+        return new OptionInt(name, longName, description, hasValue, argument, required,
                 valueSeparator, isProperty, hasMultipleValues, null);
-        reset();
-        return option;
-    }
-
-    private void reset() {
-        name = '\u0000';
-        longName = "";
-        description = "";
-        argument = "";
-        hasValue = true;
-        required = false;
-        isProperty = false;
-        hasMultipleValues = false;
-        valueSeparator = ',';
     }
 }

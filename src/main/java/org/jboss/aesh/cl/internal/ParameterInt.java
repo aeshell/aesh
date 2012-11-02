@@ -69,7 +69,7 @@ public class ParameterInt {
 
     public OptionInt findOption(String name) {
         for(OptionInt option : options)
-            if(option.getName().equals(name))
+            if(option.getName() != null && option.getName().equals(name))
                 return option;
 
         return null;
@@ -77,7 +77,7 @@ public class ParameterInt {
 
     public OptionInt findLongOption(String name) {
         for(OptionInt option : options)
-            if(option.getLongName().equals(name))
+            if(option.getLongName() != null && option.getLongName().equals(name))
                 return option;
 
         return null;

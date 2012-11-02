@@ -18,17 +18,17 @@ public class CommandLineFormatterTest extends TestCase {
     }
 
     public void testFormatter() {
-        ParserBuilder pb = ParserBuilder.init().name("man").usage("[OPTION...]");
+        ParserBuilder pb = new ParserBuilder().name("man").usage("[OPTION...]");
 
         pb.addOption(
-                OptionBuilder.init()
+                new OptionBuilder()
                         .name('d')
                         .longName("debug")
                         .description("emit debugging messages")
                         .create());
 
         pb.addOption(
-                OptionBuilder.init()
+                new OptionBuilder()
                         .name('D')
                         .longName("default")
                         .description("reset all options to their default values")
@@ -43,24 +43,24 @@ public class CommandLineFormatterTest extends TestCase {
     }
 
     public void testFormatter2() {
-        ParserBuilder pb = ParserBuilder.init().name("man").usage("[OPTION...]");
+        ParserBuilder pb = new ParserBuilder().name("man").usage("[OPTION...]");
 
         pb.addOption(
-                OptionBuilder.init()
+                new OptionBuilder()
                         .name('d')
                         .longName("debug")
                         .description("emit debugging messages")
                         .create());
 
         pb.addOption(
-                OptionBuilder.init()
+                new OptionBuilder()
                         .name('D')
                         .longName("default")
                         .description("reset all options to their default values")
                         .create());
 
         pb.addOption(
-                OptionBuilder.init()
+                new OptionBuilder()
                         .name('f')
                         .longName("file")
                         .hasValue(true)

@@ -18,10 +18,10 @@ public class BuilderTest extends TestCase {
     }
 
     public void testBuilder() {
-        ParserBuilder pb = ParserBuilder.init();
+        ParserBuilder pb = new ParserBuilder();
         pb.name("foo").usage("foo is bar");
         pb.addOption(
-                OptionBuilder.init().description("filename given").name('f').longName("filename")
+                new OptionBuilder().description("filename given").name('f').longName("filename")
                         .hasValue(true).create());
 
         CommandLineParser clp = pb.generateParser();
@@ -34,20 +34,20 @@ public class BuilderTest extends TestCase {
 
     public void testBuilder2() {
 
-        ParserBuilder pb = ParserBuilder.init().name("less").usage("less is more");
+        ParserBuilder pb = new ParserBuilder().name("less").usage("less is more");
         pb.addOption(
-                OptionBuilder.init().description("version").name('V').longName("version")
+                new OptionBuilder().description("version").name('V').longName("version")
                         .hasValue(false).required(true).create());
         pb.addOption(
-                OptionBuilder.init().description("is verbose").name('v').longName("verbose")
+                new OptionBuilder().description("is verbose").name('v').longName("verbose")
                         .hasValue(false).create());
 
         pb.addOption(
-                OptionBuilder.init().description("attributes").name('D')
+                new OptionBuilder().description("attributes").name('D')
                         .isProperty(true).create());
 
         pb.addOption(
-                OptionBuilder.init().description("values").longName("values")
+                new OptionBuilder().description("values").longName("values")
                         .hasMultipleValues(true).create());
 
         CommandLineParser clp = pb.generateParser();
