@@ -37,8 +37,45 @@ public class CommandLineFormatterTest extends TestCase {
         CommandLineParser clp = pb.generateParser();
 
         assertEquals("Usage: man [OPTION...]\n"+
-                "-d, --debug emit debugging messages\n"+
-        "-D, --default reset all options to their default values\n",
+                "  -d, --debug    emit debugging messages\n"+
+                "  -D, --default  reset all options to their default values\n",
                 clp.printHelp());
     }
+
+    public void testFormatter2() {
+        ParserBuilder pb = ParserBuilder.init().name("man").usage("[OPTION...]");
+
+        pb.addOption(
+                OptionBuilder.init()
+                        .name('d')
+                        .longName("debug")
+                        .description("emit debugging messages")
+                        .create());
+
+        pb.addOption(
+                OptionBuilder.init()
+                        .name('D')
+                        .longName("default")
+                        .description("reset all options to their default values")
+                        .create());
+
+        pb.addOption(
+                OptionBuilder.init()
+                        .name('f')
+                        .longName("file")
+                        .hasValue(true)
+                        .argument("filename")
+                        .description("set the filename")
+                        .create());
+
+
+        CommandLineParser clp = pb.generateParser();
+
+        assertEquals("Usage: man [OPTION...]\n"+
+                "  -d, --debug            emit debugging messages\n"+
+                "  -D, --default          reset all options to their default values\n"+
+                "  -f, --file=<filename>  set the filename\n",
+                clp.printHelp());
+    }
+
 }

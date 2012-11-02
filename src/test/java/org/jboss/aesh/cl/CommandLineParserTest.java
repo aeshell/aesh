@@ -29,6 +29,7 @@ public class CommandLineParserTest extends TestCase {
             assertEquals("f", cl.getOptions().get(0).getName());
             assertEquals("e", cl.getOptions().get(1).getName());
             assertEquals("/tmp/file.txt", cl.getArguments().get(0));
+
             cl = parser.parse("test -e bar -DXms=128m -DXmx=512m /tmp/file.txt");
             assertEquals("e", cl.getOptions().get(0).getName());
             assertEquals("bar", cl.getOptions().get(0).getValue());
@@ -37,6 +38,16 @@ public class CommandLineParserTest extends TestCase {
             List<OptionProperty> properties = cl.getOptionProperties("D");
             assertEquals("128m", properties.get(0).getValue());
             assertEquals("512m", properties.get(1).getValue());
+
+            cl = parser.parse("test -e=bar -DXms=128m -DXmx=512m /tmp/file.txt");
+            assertEquals("e", cl.getOptions().get(0).getName());
+            assertEquals("bar", cl.getOptions().get(0).getValue());
+
+            cl = parser.parse("test --equal=bar -DXms=128m -DXmx=512m /tmp/file.txt");
+            assertEquals("e", cl.getOptions().get(0).getName());
+            assertEquals("equal", cl.getOptions().get(0).getLongName());
+            assertEquals("bar", cl.getOptions().get(0).getValue());
+
         }
         catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -52,7 +63,15 @@ public class CommandLineParserTest extends TestCase {
         }
 
         try {
-            CommandLine cl = parser.parse("test -e bar -D /tmp/file.txt");
+            CommandLine cl = parser.parse("test -a /tmp/file.txt");
+            assertTrue(false);
+            cl.getArguments();
+        }
+        catch (IllegalArgumentException e) {
+            assertTrue(true);
+        }
+        try {
+            CommandLine cl = parser.parse("test -e bar --equal bar2 -DXms=128m -DXmx=512m /tmp/file.txt");
             assertTrue(false);
             cl.getArguments();
         }
@@ -142,7 +161,8 @@ public class CommandLineParserTest extends TestCase {
 @Parameter(usage = "a simple test",
         options = {
                 @Option(name = 'f', longName = "foo", description = "enable foo"),
-                @Option(name = 'e', description = "enable e", hasValue = true, required = true),
+                @Option(name = 'e', longName = "equal", description = "enable equal",
+                        hasValue = true, required = true),
                 @Option(name = 'D', description = "define properties",
                         hasValue = true, required = true, isProperty = true)
         })

@@ -27,7 +27,7 @@ public class CommandLine {
         arguments = new ArrayList<String>();
     }
 
-    public void addOption(ParsedOption option) {
+    protected void addOption(ParsedOption option) {
         ParsedOption existingOption = getOption(option.getName());
         if (existingOption == null) {
             options.add(option);

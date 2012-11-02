@@ -83,9 +83,17 @@ public class ParameterInt {
         return null;
     }
 
+    public OptionInt startWithOption(String name) {
+        for(OptionInt option : options)
+            if(name.startsWith(option.getName()))
+                return option;
+
+        return null;
+    }
+
     public OptionInt startWithLongOption(String name) {
         for(OptionInt option : options)
-            if(option.getLongName().startsWith(name))
+            if(name.startsWith(option.getLongName()))
                 return option;
 
         return null;

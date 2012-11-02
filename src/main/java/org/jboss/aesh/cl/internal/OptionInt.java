@@ -130,7 +130,7 @@ public class OptionInt {
             sb.append("--").append(longName);
         }
         if(argument != null && argument.length() > 0) {
-            sb.append(" <").append(argument).append(">");
+            sb.append("=<").append(argument).append(">");
         }
 
         return sb.length();
@@ -139,6 +139,8 @@ public class OptionInt {
     //TODO: add offset, offset for descriptionstart and break on width
     public String getFormattedOption(int offset, int descriptionStart, int width) {
         StringBuilder sb = new StringBuilder();
+        if(offset > 0)
+            sb.append(String.format("%" + offset+ "s", ""));
         if(name != null)
             sb.append("-").append(name);
         if(longName != null) {
@@ -147,11 +149,19 @@ public class OptionInt {
             sb.append("--").append(longName);
         }
         if(argument != null && argument.length() > 0) {
-            sb.append(" <").append(argument).append(">");
+            sb.append("=<").append(argument).append(">");
         }
-        if(description != null && description.length() > 0)
-            sb.append(" ").append(description);
-        //ignore offset and descriptionstart for now
+        if(description != null && description.length() > 0) {
+            //int descOffset = descriptionStart - sb.length();
+            int descOffset = descriptionStart - getFormattedLength() - offset;
+            if(descOffset > 0)
+                sb.append(String.format("%"+descOffset+"s", ""));
+            else
+                sb.append(" ");
+
+            sb.append(description);
+        }
+
         return sb.toString();
     }
 

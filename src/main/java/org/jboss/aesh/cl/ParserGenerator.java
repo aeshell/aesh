@@ -10,10 +10,12 @@ import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
 
 /**
+ * Generates a {@link CommandLineParser} based on annotations defined in
+ * the specified class.
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ParserGenerator {
-
 
     public static CommandLineParser generateParser(Class<?> clazz) {
 
@@ -35,6 +37,5 @@ public class ParserGenerator {
         }
         else
             return new CommandLineParser(new ParameterInt(param.name(), param.usage(), new OptionInt[0]));
-
     }
 }
