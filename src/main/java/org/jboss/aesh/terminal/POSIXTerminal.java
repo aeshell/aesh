@@ -238,7 +238,6 @@ public class POSIXTerminal implements Terminal {
         // speed 38400 baud; rows = 49; columns = 111;
         for (String str : ttyProps.split(";")) {
             str = str.trim();
-
             if (str.startsWith(prop)) {
                 int index = str.lastIndexOf(" ");
 

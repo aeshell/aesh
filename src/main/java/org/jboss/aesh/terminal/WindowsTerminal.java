@@ -27,7 +27,11 @@ public class WindowsTerminal implements Terminal {
     private Writer stdOut;
     private Writer stdErr;
     private InputStream input;
+    private int width;
+    private int height;
 
+    private long ttyPropsLastFetched;
+    private static long TIMEOUT_PERIOD = 2000;
 
     @Override
     public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
@@ -115,12 +119,24 @@ public class WindowsTerminal implements Terminal {
 
     @Override
     public int getHeight() {
-        return WindowsSupport.getWindowsTerminalHeight();
+        if(height < 0 || propertiesTimedOut()) {
+            height = WindowsSupport.getWindowsTerminalHeight();
+            ttyPropsLastFetched = System.currentTimeMillis();
+            if(height < 1)
+                height = 24;
+        }
+        return height;
     }
 
     @Override
     public int getWidth() {
-        return WindowsSupport.getWindowsTerminalWidth();
+        if(width < 0 || propertiesTimedOut()) {
+            int width = WindowsSupport.getWindowsTerminalWidth();
+            ttyPropsLastFetched = System.currentTimeMillis();
+            if(width < 1)
+                width = 80;
+        }
+        return width;
     }
 
     @Override
@@ -130,6 +146,10 @@ public class WindowsTerminal implements Terminal {
 
     @Override
     public void reset() throws IOException {
+    }
+
+    private boolean propertiesTimedOut() {
+        return (System.currentTimeMillis() -ttyPropsLastFetched) > TIMEOUT_PERIOD;
     }
 }
 

@@ -52,6 +52,10 @@ public class Parser {
     public static String formatDisplayList(List<String> displayList, int termHeight, int termWidth) {
         if(displayList == null || displayList.size() < 1)
             return "";
+        //make sure that termWidth is > 0
+        if(termWidth < 1)
+            termWidth = 80; //setting it to default
+
         int maxLength = 0;
         for(String completion : displayList)
             if(completion.length() > maxLength)
