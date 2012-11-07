@@ -8,6 +8,7 @@ package org.jboss.aesh.util;
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.settings.Settings;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,6 +17,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -34,6 +36,8 @@ public class FileUtils {
             Pattern.compile("^\\"+Config.getPathSeparator()+".*") : Pattern.compile("^\\\\.*");
     private static final Pattern endsWithSlash = Config.isOSPOSIXCompatible() ?
             Pattern.compile(".*\\"+Config.getPathSeparator()+"$") : Pattern.compile(".*\\\\$");
+
+    private static Logger logger = LoggerUtil.getLogger(FileUtils.class.getName());
 
     public static void listMatchingDirectories(CompleteOperation completion, String possibleDir, File cwd) {
         // that starts with possibleDir
@@ -100,7 +104,7 @@ public class FileUtils {
 
             List<String> allFiles;
             if(startsWithSlash.matcher(possibleDir).matches()) {
-                if(lastDir.startsWith(Config.getPathSeparator()))
+                if(lastDir != null && lastDir.startsWith(Config.getPathSeparator()))
                     allFiles =  listDirectory(new File(lastDir));
                 else
                     allFiles =  listDirectory(new File(Config.getPathSeparator()+lastDir));
@@ -191,6 +195,8 @@ public class FileUtils {
 
     public static void saveFile(File file, String text, boolean append) throws IOException {
         if(file.isDirectory()) {
+            if(Settings.getInstance().isLogging())
+                logger.info("Cannot save file "+file+", it is a directory");
             throw new IOException(file+": Is a directory");
         }
         else if(file.isFile()) {
@@ -216,8 +222,11 @@ public class FileUtils {
     }
 
     public static String readFile(File file) throws IOException {
-        if(file.isDirectory())
+        if(file.isDirectory()) {
+            if(Settings.getInstance().isLogging())
+                logger.info("Cannot save file "+file+", it is a directory");
             throw new IOException(file+": Is a directory");
+        }
         else if(file.isFile()) {
             BufferedReader br = new BufferedReader(new FileReader(file));
             try {
@@ -235,6 +244,8 @@ public class FileUtils {
             }
         }
         else {
+            if(Settings.getInstance().isLogging())
+                logger.info("Cannot read file "+file+", file unknown");
             throw new IOException(file+": File unknown");
         }
     }

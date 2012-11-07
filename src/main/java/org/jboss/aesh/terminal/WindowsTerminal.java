@@ -10,6 +10,7 @@ import org.fusesource.jansi.AnsiOutputStream;
 import org.fusesource.jansi.WindowsAnsiOutputStream;
 import org.fusesource.jansi.internal.WindowsSupport;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +18,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -33,12 +36,10 @@ public class WindowsTerminal implements Terminal {
     private long ttyPropsLastFetched;
     private static long TIMEOUT_PERIOD = 2000;
 
+    private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
+
     @Override
     public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
-        if(inputStream == System.in) {
-            System.out.println("Using System.in");
-        }
-
         //setting up reader
         try {
             //AnsiConsole.systemInstall();
@@ -122,6 +123,8 @@ public class WindowsTerminal implements Terminal {
         if(height < 0 || propertiesTimedOut()) {
             height = WindowsSupport.getWindowsTerminalHeight();
             ttyPropsLastFetched = System.currentTimeMillis();
+            if(height < 1 && Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE, "Fetched terminal height is "+height+", setting it to 24");
             if(height < 1)
                 height = 24;
         }
@@ -133,6 +136,8 @@ public class WindowsTerminal implements Terminal {
         if(width < 0 || propertiesTimedOut()) {
             int width = WindowsSupport.getWindowsTerminalWidth();
             ttyPropsLastFetched = System.currentTimeMillis();
+            if(width < 1 && Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE, "Fetched terminal width is "+width+", setting it to 80");
             if(width < 1)
                 width = 80;
         }

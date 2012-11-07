@@ -43,7 +43,7 @@ public class Settings {
     private Terminal terminal;
     private boolean readInputrc = true;
     private File inputrc;
-    private boolean isLogging = true;
+    private boolean isLogging = false;
     private String logFile;
     private boolean disableCompletion = false;
     private boolean readAhead = true;
@@ -75,6 +75,7 @@ public class Settings {
         setStdErr(null);
         terminal = null;
         readInputrc = true;
+        isLogging = false;
         logFile = null;
         disableCompletion = false;
         setQuitHandler(null);

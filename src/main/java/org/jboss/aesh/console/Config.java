@@ -16,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,6 +38,8 @@ public class Config {
     private static boolean posixCompatible =
             !(System.getProperty("os.name").startsWith("Windows") ||
                     System.getProperty("os.name").startsWith("OS/2"));
+
+    private static Logger logger = LoggerUtil.getLogger("Config");
 
     public static boolean isOSPOSIXCompatible() {
         return posixCompatible;
@@ -65,9 +68,9 @@ public class Config {
      *
      */
     protected static void parseInputrc(Settings settings) throws IOException {
-        Logger logger = LoggerUtil.getLogger("Config");
         if(!settings.getInputrc().isFile()) {
-            logger.info("Error while parsing: "+settings.getInputrc().getAbsolutePath()+" couldn't find file.");
+            if(settings.isLogging())
+                logger.info("Error while parsing: "+settings.getInputrc().getAbsolutePath()+" couldn't find file.");
             return;
         }
 
@@ -133,7 +136,6 @@ public class Config {
     }
 
     private static void parseVariables(String variable, String value, Settings settings) {
-        Logger logger = LoggerUtil.getLogger("Config");
         if (variable.equals(EDITING_MODE.getVariable())) {
             if(EDITING_MODE.getValues().contains(value)) {
                 if(value.equals("vi"))
@@ -142,7 +144,7 @@ public class Config {
                     settings.setEditMode(Mode.EMACS);
             }
             // should log some error
-            else
+            else if(Settings.getInstance().isLogging())
                 logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+EDITING_MODE.getValues());
 
@@ -150,7 +152,7 @@ public class Config {
         else if(variable.equals(BELL_STYLE.getVariable())) {
             if(BELL_STYLE.getValues().contains(value))
                 settings.setBellStyle(value);
-            else
+            else if(Settings.getInstance().isLogging())
                 logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+BELL_STYLE.getValues());
         }
@@ -159,8 +161,9 @@ public class Config {
                 settings.setHistorySize(Integer.parseInt(value));
             }
             catch (NumberFormatException nfe) {
-                logger.warning("Value "+value+" not accepted for: "+variable+
-                        ", it must be an integer.");
+                if(Settings.getInstance().isLogging())
+                    logger.warning("Value "+value+" not accepted for: "
+                            +variable+", it must be an integer.");
             }
         }
         else if(variable.equals(DISABLE_COMPLETION.getVariable())) {
@@ -170,7 +173,7 @@ public class Config {
                 else
                     settings.setDisableCompletion(false);
             }
-            else
+            else if(Settings.getInstance().isLogging())
                 logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+DISABLE_COMPLETION.getValues());
         }
@@ -239,11 +242,14 @@ public class Config {
 
           }
         catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            if(Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE, "Fail while finding class: ", e);
         } catch (InstantiationException e) {
-            e.printStackTrace();
+            if(Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE, "Fail while instantiating class: ", e);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            if(Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE, "Fail while accessing class: ", e);
         }
     }
 }

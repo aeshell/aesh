@@ -28,6 +28,7 @@ public class Example {
 
         //Settings.getInstance().setAnsiConsole(false);
         Settings.getInstance().setReadInputrc(false);
+        Settings.getInstance().setLogging(true);
        //Settings.getInstance().setHistoryDisabled(true);
         //Settings.getInstance().setHistoryPersistent(false);
         Console exampleConsole = new Console();

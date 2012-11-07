@@ -46,6 +46,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -656,9 +657,11 @@ public class Console {
                     if((newLine.length()+buffer.getPrompt().length()) % getTerminalWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
-                        //int totalRows = (newLine.length()+buffer.getPrompt().length()) / getTerminalWidth() +1;
-                        //logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
-                        //        ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
+                        if(Settings.getInstance().isLogging()) {
+                            int totalRows = (newLine.length()+buffer.getPrompt().length()) / getTerminalWidth() +1;
+                            logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
+                                    ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
+                        }
                         terminal.writeToStdOut(Buffer.printAnsi(numNewRows + "S"));
                         terminal.writeToStdOut(Buffer.printAnsi(numNewRows + "A"));
                     }
@@ -878,10 +881,12 @@ public class Console {
             if(currentRow > 0 && buffer.getCursorWithPrompt() % getTerminalWidth() == 0)
                 currentRow--;
 
-            //logger.info("actualRow:"+getCurrentRow()+", actualColumn:"+getCurrentColumn());
-            //logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
-            //+", width:"+getTerminalWidth()+", height:"+getTerminalHeight()+", delta:"+buffer.getDelta()
-            //+", buffer:"+buffer.getLine());
+            if(Settings.getInstance().isLogging()) {
+                logger.info("actualRow:"+getCurrentRow()+", actualColumn:"+getCurrentColumn());
+                logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
+                        +", width:"+getTerminalWidth()+", height:"+getTerminalHeight()
+                        +", delta:"+buffer.getDelta() +", buffer:"+buffer.getLine());
+            }
 
             terminal.writeToStdOut(Buffer.printAnsi("s")); //save cursor
 
@@ -1008,6 +1013,9 @@ public class Console {
             if(co.getCompletionCandidates() != null && co.getCompletionCandidates().size() > 0)
                 possibleCompletions.add(co);
         }
+
+        if(Settings.getInstance().isLogging())
+            logger.info("Found completions: "+possibleCompletions);
 
         // not hits, just return (perhaps we should beep?)
         if(possibleCompletions.size() < 1) {
@@ -1137,7 +1145,7 @@ public class Console {
             }
             catch (Exception e) {
                 if(settings.isLogging())
-                    logger.warning("Failed to find current row with ansi code: "+e.getMessage());
+                    logger.log(Level.SEVERE, "Failed to find current row with ansi code: ",e);
                 return -1;
             }
         }
@@ -1159,7 +1167,7 @@ public class Console {
             }
             catch (Exception e) {
                 if(settings.isLogging())
-                    logger.warning("Failed to find current column with ansi code: "+e.getMessage());
+                    logger.log(Level.SEVERE, "Failed to find current column with ansi code: ",e);
                 return -1;
             }
         }
@@ -1224,6 +1232,8 @@ public class Console {
         }
         //this should never happen (all overwrite_in should be parsed in parseOperations())
         else if(currentOperation.getControlOperator() == ControlOperator.OVERWRITE_IN) {
+            if(Settings.getInstance().isLogging())
+                logger.info(settings.getName()+": syntax error while reading token: \'<\'");
             pushToStdErr(settings.getName()+": syntax error while reading token: \'<\'");
             return null;
         }
@@ -1282,12 +1292,16 @@ public class Console {
                     }
                 }
                 else {
+                    if(Settings.getInstance().isLogging())
+                        logger.info(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
                     pushToStdErr(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
                     currentOperation = null;
                     output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
                 }
             }
             else {
+                if(Settings.getInstance().isLogging())
+                    logger.info(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
                 pushToStdErr(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
                 currentOperation = null;
                 output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
@@ -1359,6 +1373,8 @@ public class Console {
     private void persistRedirection(String fileName, ControlOperator redirection) throws IOException {
         List<String> fileNames = Parser.findAllWords(fileName);
         if(fileNames.size() > 1) {
+            if(Settings.getInstance().isLogging())
+                logger.info(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
             pushToStdErr(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
             return;
         }
@@ -1377,6 +1393,8 @@ public class Console {
                 FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeErrBuffer.toString(), true);
         }
         catch (IOException e) {
+            if(Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
             pushToStdErr(e.getMessage());
         }
         redirectPipeOutBuffer = new StringBuilder();

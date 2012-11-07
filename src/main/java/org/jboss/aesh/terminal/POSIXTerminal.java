@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -15,6 +16,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -49,6 +51,8 @@ public class POSIXTerminal implements Terminal {
             // sanity check
             if ((ttyConfig.length() == 0)
                     || ((!ttyConfig.contains("=")) && (!ttyConfig.contains(":")))) {
+                if(Settings.getInstance().isLogging())
+                    logger.log(Level.SEVERE, "Unrecognized stty code: "+ttyConfig);
                 throw new RuntimeException("Unrecognized stty code: " + ttyConfig);
             }
 
@@ -64,9 +68,12 @@ public class POSIXTerminal implements Terminal {
             input = inputStream;
         }
         catch (IOException ioe) {
-            System.err.println("TTY failed with: " + ioe.getMessage());
+            if(Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE, "tty failed: ",ioe);
         }
         catch (InterruptedException e) {
+            if(Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE, "failed while waiting for process to end: ",e);
             e.printStackTrace();
         }
 
@@ -165,7 +172,8 @@ public class POSIXTerminal implements Terminal {
                 height = getTerminalProperty("rows");
             }
             catch (Exception e) {
-                logger.severe("Failed to fetch terminal height: "+e.getMessage());
+                if(Settings.getInstance().isLogging())
+                    logger.log(Level.SEVERE,"Failed to fetch terminal height: ",e);
             }
         }
         //cant use height < 0
@@ -185,7 +193,8 @@ public class POSIXTerminal implements Terminal {
                 width = getTerminalProperty("columns");
             }
             catch (Exception e) {
-                logger.severe("Failed to fetch terminal width: "+e.getMessage());
+                if(Settings.getInstance().isLogging())
+                    logger.log(Level.SEVERE,"Failed to fetch terminal width: ",e);
             }
         }
         //cant use with < 0
@@ -216,7 +225,8 @@ public class POSIXTerminal implements Terminal {
                     restored = true;
                 }
                 catch (InterruptedException e) {
-                    logger.severe("Failed to reset terminal: "+e.getMessage());
+                    if(Settings.getInstance().isLogging())
+                        logger.log(Level.SEVERE,"Failed to reset terminal: ",e);
                 }
             }
         }
@@ -261,8 +271,7 @@ public class POSIXTerminal implements Terminal {
      * @throws IOException stream
      * @throws InterruptedException stream
      */
-    protected static String stty(final String args)
-            throws IOException, InterruptedException {
+    protected static String stty(final String args) throws IOException, InterruptedException {
         return exec("stty " + args + " < /dev/tty").trim();
     }
 
@@ -322,7 +331,8 @@ public class POSIXTerminal implements Terminal {
                     out.close();
             }
             catch (Exception e) {
-               logger.warning("Failed to close streams");
+                if(Settings.getInstance().isLogging())
+                    logger.log(Level.SEVERE,"Failed to close streams: ",e);
             }
         }
 
