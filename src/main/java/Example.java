@@ -33,6 +33,8 @@ public class Example {
         //Settings.getInstance().setHistoryPersistent(false);
         Console exampleConsole = new Console();
 
+        String prompt = ANSI.redText()+"[test@foo]"+ANSI.reset()+"$ ";
+
         ConsoleCommand test = new ConsoleCommand(exampleConsole) {
 
             @Override
@@ -133,7 +135,8 @@ public class Example {
         exampleConsole.addCompletion(completer);
 
         ConsoleOutput line;
-        //console.pushToStdOut(ANSI.GREEN_TEXT());
+        //exampleConsole.pushToStdOut(ANSI.greenBackground());
+        //while ((line = exampleConsole.read(prompt)) != null) {
         while ((line = exampleConsole.read("[test@foo.bar]~> ")) != null) {
             exampleConsole.pushToStdOut("======>\"" + line.getBuffer() + "\"\n");
 
