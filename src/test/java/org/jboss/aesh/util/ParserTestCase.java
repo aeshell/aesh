@@ -89,17 +89,55 @@ public class ParserTestCase extends TestCase {
     }
 
     public void testFindAllWords() {
-        List<String> words = Parser.findAllWords(" \\  foo bar\\ baz 12345 ");
+        List<String> words = Parser.findAllWords("   foo bar\\ baz 12345 ");
         assertEquals("foo", words.get(0));
-        assertEquals("bar\\ baz", words.get(1));
+        assertEquals("bar baz", words.get(1));
         assertEquals("12345", words.get(2));
 
         words = Parser.findAllWords("man < foo\\ bar ");
         assertEquals("man", words.get(0));
         assertEquals("<", words.get(1));
-        assertEquals("foo\\ bar", words.get(2));
-
+        assertEquals("foo bar", words.get(2));
     }
+
+    public void testFindAllQuotedWords() {
+        List<String> words = Parser.findAllWords("foo bar \"baz 12345\"");
+        assertEquals("foo", words.get(0));
+        assertEquals("bar", words.get(1));
+        assertEquals("baz 12345", words.get(2));
+
+        words = Parser.findAllWords("java -cp \"foo/bar\" \"Example\"");
+        assertEquals("foo/bar", words.get(2));
+        assertEquals("Example", words.get(3));
+
+        words = Parser.findAllWords("'foo/bar/' Example\\ 1");
+        assertEquals("foo/bar/", words.get(0));
+        assertEquals("Example 1", words.get(1));
+
+        words = Parser.findAllWords("man -f='foo/bar/' Example\\ 1 foo");
+        assertEquals("man", words.get(0));
+        assertEquals("-f=foo/bar/", words.get(1));
+        assertEquals("Example 1", words.get(2));
+        assertEquals("foo", words.get(3));
+
+
+        try {
+            Parser.findAllWords("man -f='foo/bar/ Example\\ 1");
+            assertTrue(false);
+        }
+        catch (IllegalArgumentException iae) {
+            assertTrue(true);
+        }
+
+        try {
+            Parser.findAllWords("man -f='foo/bar/' Example\\ 1\"");
+            assertTrue(false);
+        }
+        catch (IllegalArgumentException iae) {
+            assertTrue(true);
+        }
+    }
+
 
     public void testTrim() {
         assertEquals("foo", Parser.trim("  foo "));

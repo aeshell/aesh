@@ -11,6 +11,7 @@ import org.jboss.aesh.console.Config;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +29,7 @@ public class Parser {
     private static final char SLASH = '\\';
     private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
     private static final Pattern spacePattern = Pattern.compile(" ");
+    private static final Pattern lineBreakerPattern = Pattern.compile("(\".+?\")|('.+?')|(\".*)|('.*)|( )");
 
     /**
      * Format completions so that they look similar to GNU Readline
@@ -211,40 +213,89 @@ public class Parser {
     }
 
     public static List<String> findAllWords(String text) {
-        if(!doWordContainEscapedSpace(text)) {
-            return Arrays.asList(text.trim().split(SPACE));
-        }
-        else {
-            List<String> textList = new ArrayList<String>();
-            Matcher matcher = spacePattern.matcher(text);
-            while(matcher.find()) {
+        List<String> textList = new ArrayList<String>();
+        Matcher matcher = lineBreakerPattern.matcher(text);
+        String buffer = null;
+        while(matcher.find()) {
+
+            // \".+?\"
+            if(matcher.group(1) != null) {
+                if(matcher.start(1) > 0) {
+                    textList.add(text.substring(0, matcher.start(1))+
+                            text.substring(matcher.start(1)+1, matcher.end(1)-1));
+                }
+                else
+                    textList.add(text.substring(matcher.start(1)+1, matcher.end(1)-1));
+
+                text = text.substring(matcher.end(1));
+                matcher = lineBreakerPattern.matcher(text);
+
+            }
+            // '.+?'
+            else if(matcher.group(2) != null) {
+                if(matcher.start(2) > 0) {
+                    textList.add(text.substring(0, matcher.start(2))+
+                            text.substring(matcher.start(2)+1, matcher.end(2)-1));
+                }
+                else
+                    textList.add(text.substring(matcher.start(2)+1, matcher.end(2)-1));
+
+                text = text.substring(matcher.end(2));
+                matcher = lineBreakerPattern.matcher(text);
+            }
+            else if(matcher.group(3) != null) {
+                throw new IllegalArgumentException("Parser error: unclosed quote");
+
+            }
+            else if(matcher.group(4) != null) {
+                throw new IllegalArgumentException("Parser error: unclosed quote");
+            }
+            // space
+            else if(matcher.group(5) != null) {
                 if(matcher.start() > 0) {
                     //do we have an escaped space?
-                    if(text.charAt(matcher.start()-1) == SLASH) {
+                    if(text.charAt(matcher.start(5)-1) == SLASH) {
                         //if word is \\  bla we remove the first
-                        if(matcher.end()+1 < text.length() &&
-                                text.charAt(matcher.end()) == SPACE_CHAR) {
-                            text = text.substring(matcher.end()+1);
-                            matcher = spacePattern.matcher(text);
+                        if(matcher.end(5)+1 < text.length() &&
+                                text.charAt(matcher.end(5)) == SPACE_CHAR) {
+                            text = text.substring(matcher.end(5)+1);
+                            matcher = lineBreakerPattern.matcher(text);
+                        }
+                        else {
+                            buffer = text.substring(0, matcher.start(5)-1) +
+                                    text.substring(matcher.start(5), matcher.end(5));
+                            text = text.substring(buffer.length());
+                            matcher = lineBreakerPattern.matcher(text);
                         }
                     }
                     //just a normal space
                     else {
-                        textList.add(text.substring(0,matcher.start()));
-                        text = text.substring(matcher.end());
-                        matcher = spacePattern.matcher(text);
+                        if(buffer != null) {
+                            textList.add(buffer+text.substring(0,matcher.start(5)));
+                            buffer = null;
+                        }
+                        else
+                            textList.add(text.substring(0,matcher.start(5)));
+                        text = text.substring(matcher.end(5));
+                        matcher = lineBreakerPattern.matcher(text);
                     }
-                }
-                //word starts with a space
+                }                //word starts with a space
                 else {
                     text = text.substring(1);
-                    matcher = spacePattern.matcher(text);
+                    matcher = lineBreakerPattern.matcher(text);
                 }
             }
-            if(text.length() > 0)
-                textList.add(text);
-            return textList;
         }
+        if(text.length() > 0) {
+            if(buffer != null) {
+                textList.add(buffer+text);
+                buffer = null;
+            }
+            else
+                textList.add(text);
+        }
+
+        return textList;
     }
 
     public static boolean doWordContainOnlyEscapedSpace(String word) {

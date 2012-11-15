@@ -48,6 +48,14 @@ public class CommandLineParserTest extends TestCase {
             assertEquals("equal", cl.getOptions().get(0).getLongName());
             assertEquals("bar", cl.getOptions().get(0).getValue());
 
+            cl = parser.parse("test --equal \"bar bar2\" -DXms=\"128g \" -DXmx=512g\\ m /tmp/file.txt");
+            assertEquals("bar bar2", cl.getOptionValue("equal"));
+
+            assertEquals("Xms", cl.getOptionProperties("D").get(0).getName());
+            assertEquals("128g ", cl.getOptionProperties("D").get(0).getValue());
+            assertEquals("Xmx", cl.getOptionProperties("D").get(1).getName());
+            assertEquals("512g m", cl.getOptionProperties("D").get(1).getValue());
+
         }
         catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -115,7 +123,7 @@ public class CommandLineParserTest extends TestCase {
             assertTrue(cl.hasOption('d'));
             assertTrue(cl.hasOption('b'));
             assertEquals("com.bar.Bar.class", cl.getOptionValue("b"));
-            assertEquals("/tmp/file\\ foo.txt", cl.getArguments().get(0));
+            assertEquals("/tmp/file foo.txt", cl.getArguments().get(0));
             assertEquals("/tmp/bah.txt", cl.getArguments().get(1));
 
         }
