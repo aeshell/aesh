@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * A console reader.
@@ -82,6 +83,8 @@ public class Console {
     private AliasManager aliasManager;
 
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
+
+    private Pattern endsWithBackslashPattern = Pattern.compile(".* \\\\$");
 
     public Console() throws IOException {
         this(Settings.getInstance());
@@ -355,6 +358,14 @@ public class Console {
                 result = parseOperation(operation, mask);
 
             if(result != null) {
+
+                // if the line ends with: \ we create a new line
+                if(mask == null && endsWithBackslashPattern.matcher(result).find()) {
+                    String line = result.substring(0,result.length()-1);
+                    ConsoleOutput tempOutput = read("> ");
+                    result = line + tempOutput.getBuffer();
+                }
+
                 operations = ControlOperatorParser.findAllControlOperators(result);
                 ConsoleOutput output = parseOperations();
                 output = processInternalCommands(output);
