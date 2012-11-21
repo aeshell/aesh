@@ -1093,7 +1093,7 @@ public class Console {
             buffer.write(completion);
             terminal.writeToStdOut(completion);
         }
-        if(appendSpace && fullCompletion.startsWith(buffer.getLine())) {
+        if(appendSpace) {
             buffer.write(' ');
             terminal.writeToStdOut(' ');
         }
