@@ -7,6 +7,7 @@
 package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.EmacsEditMode;
@@ -51,6 +52,7 @@ public class Settings {
     private KeyOperationManager operationManager = new KeyOperationManager();
     private File aliasFile;
     private boolean aliasEnabled = true;
+    private InterruptHook interruptHook = null;
 
     private static final Settings INSTANCE = new Settings();
 
@@ -505,4 +507,17 @@ public class Settings {
         if(quitHandler != null)
             quitHandler.quit();
     }
+
+    public void setInterruptHook(InterruptHook hook) {
+        interruptHook = hook;
+    }
+
+    public boolean hasInterruptHook() {
+        return interruptHook != null;
+    }
+
+    public InterruptHook getInterruptHook() {
+        return interruptHook;
+    }
+
 }

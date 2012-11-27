@@ -10,6 +10,7 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.util.ANSI;
@@ -31,9 +32,23 @@ public class Example {
         Settings.getInstance().setLogging(true);
        //Settings.getInstance().setHistoryDisabled(true);
         //Settings.getInstance().setHistoryPersistent(false);
-        Console exampleConsole = new Console();
 
         String prompt = ANSI.redText()+"[test@foo]"+ANSI.reset()+"$ ";
+
+        //a simple interruptHook
+        Settings.getInstance().setInterruptHook(new InterruptHook() {
+            @Override
+            public void handleInterrupt(Console console) {
+                try {
+                    console.pushToStdOut("KILLED!\n");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                System.exit(0);
+            }
+        });
+
+        Console exampleConsole = new Console();
 
         ConsoleCommand test = new ConsoleCommand(exampleConsole) {
 

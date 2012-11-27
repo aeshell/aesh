@@ -11,6 +11,7 @@ import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasCompletion;
 import org.jboss.aesh.console.alias.AliasManager;
+import org.jboss.aesh.console.helper.InterruptHandler;
 import org.jboss.aesh.console.helper.Search;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
@@ -93,6 +94,19 @@ public class Console {
     public Console(Settings settings) throws IOException {
         reset(settings);
 
+        //init a interrupt hook if its defined (by default its null)
+        if(settings.hasInterruptHook()) {
+            try {
+                if(Class.forName("sun.misc.Signal") != null)
+                    new InterruptHandler(this).initInterrupt();
+            }
+            catch(ClassNotFoundException e) {
+                if(settings.isLogging())
+                    logger.log(Level.WARNING,
+                            "Class sun.misc.Signal was not found. No interrupt handling enabled.");
+            }
+        }
+
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void start() {
                 try {
@@ -106,6 +120,7 @@ public class Console {
                 }
             }
         });
+
     }
 
     /**
