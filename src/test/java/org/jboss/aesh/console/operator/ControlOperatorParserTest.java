@@ -88,6 +88,19 @@ public class ControlOperatorParserTest extends TestCase {
 
         assertEquals(new ConsoleOperation(ControlOperator.OVERWRITE_OUT, "ls \\<foo.txt\\> "),
                 ControlOperatorParser.findAllControlOperators("ls \\<foo.txt\\> > test.txt").get(0));
+
+        assertEquals(new ConsoleOperation(ControlOperator.NONE, "ls bar=>foo"),
+                ControlOperatorParser.findAllControlOperators("ls bar=>foo").get(0));
+
+        assertEquals(new ConsoleOperation(ControlOperator.NONE, "ls bar=<foo"),
+                ControlOperatorParser.findAllControlOperators("ls bar=<foo").get(0));
+
+        assertEquals(new ConsoleOperation(ControlOperator.NONE, "ls bar>=foo"),
+                ControlOperatorParser.findAllControlOperators("ls bar>=foo").get(0));
+
+        assertEquals(new ConsoleOperation(ControlOperator.NONE, "ls bar<=foo"),
+                ControlOperatorParser.findAllControlOperators("ls bar<=foo").get(0));
+
     }
 
     public void testFindLastRedirectionBeforeCursor() {

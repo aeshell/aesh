@@ -24,6 +24,7 @@ public class ControlOperatorParser {
     private static Pattern redirectionNoPipelinePattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)");
     private static Pattern pipelinePattern = Pattern.compile("(\\|&)|(\\|)");
     private static char escape = '\\';
+    private static char equals = '=';
 
     public static boolean doStringContainRedirectionNoPipeline(String buffer) {
         return redirectionNoPipelinePattern.matcher(buffer).find();
@@ -120,7 +121,10 @@ public class ControlOperatorParser {
             }
             else if(matcher.group(5) != null) {
                 if(matcher.start(5) > 0 &&
-                        buffer.charAt(matcher.start(5)-1) != escape) {
+                        buffer.charAt(matcher.start(5)-1) != escape &&
+                        buffer.charAt(matcher.start(5)-1) != equals &&
+                        ( matcher.start(5)+1 <= buffer.length() &&
+                        buffer.charAt(matcher.start(5)+1) != equals)) {
                     reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_OUT,
                             buffer.substring(0, matcher.start(5))));
                     buffer = buffer.substring(matcher.end(5));
@@ -129,7 +133,10 @@ public class ControlOperatorParser {
             }
             else if(matcher.group(6) != null) {
                 if(matcher.start(6) > 0 &&
-                        buffer.charAt(matcher.start(6)-1) != escape) {
+                        buffer.charAt(matcher.start(6)-1) != escape &&
+                        buffer.charAt(matcher.start(6)-1) != equals &&
+                        ( matcher.start(6)+1 <= buffer.length() &&
+                                buffer.charAt(matcher.start(6)+1) != equals)) {
                     reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_IN,
                             buffer.substring(0, matcher.start(6))));
                     buffer = buffer.substring(matcher.end(6));
