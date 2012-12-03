@@ -28,8 +28,9 @@ public class Example {
     public static void main(String[] args) throws IOException {
 
         //Settings.getInstance().setAnsiConsole(false);
-        Settings.getInstance().setReadInputrc(false);
+        //Settings.getInstance().setReadInputrc(false);
         Settings.getInstance().setLogging(true);
+        Settings.getInstance().setLogFile("aesh_example.log");
        //Settings.getInstance().setHistoryDisabled(true);
         //Settings.getInstance().setHistoryPersistent(false);
 
@@ -109,6 +110,20 @@ public class Example {
                     commands.add("foobcx");
                     commands.add("foobdx");
                 }
+                if(co.getBuffer().equals("p")) {
+                    commands.add("profile=foo");
+                    co.setOffset(0);
+                }
+                /*
+                if(co.getBuffer().equals("p")) {
+                    commands.add("profile=bar");
+                    co.setOffset(0);
+                }
+                */
+                if(co.getBuffer().equals("profile="))
+                    commands.add("profile=foo");
+                if(co.getBuffer().equals("profile="))
+                    commands.add("profile=bar");
                 if(co.getBuffer().equals("--")) {
                     commands.add("--help-");
                 }

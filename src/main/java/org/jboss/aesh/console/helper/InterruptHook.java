@@ -18,5 +18,5 @@ import java.io.IOException;
  */
 public interface InterruptHook {
 
-    public void handleInterrupt(Console console);
+    void handleInterrupt(Console console);
 }

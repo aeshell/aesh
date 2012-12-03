@@ -22,9 +22,14 @@ public class CompleteOperation {
     private int offset;
     private List<String> completionCandidates;
 
+    private char separator = ' ';
+    private boolean appendSeparator = true;
+
     public CompleteOperation(String buffer, int cursor) {
         setBuffer(buffer);
         setCursor(cursor);
+        setSeparator(' ');
+        doAppendSeparator(true);
         completionCandidates = new ArrayList<String>();
     }
 
@@ -50,6 +55,45 @@ public class CompleteOperation {
 
     public void setOffset(int offset) {
         this.offset = offset;
+    }
+
+    /**
+     * Get the separator character, by default its space
+     *
+     * @return separator
+     */
+    public char getSeparator() {
+        return separator;
+    }
+
+    /**
+     * By default the separator is one space char, but
+     * it can be overridden here.
+     *
+     * @param separator separator
+     */
+    public void setSeparator(char separator) {
+        this.separator = separator;
+    }
+
+    /**
+     * Do this completion allow for appending a separator
+     * after completion? By default this is true.
+     *
+     * @return appendSeparator
+     */
+    public boolean hasAppendSeparator() {
+        return appendSeparator;
+    }
+
+    /**
+     * Set if this CompletionOperation would allow an separator to
+     * be appended. By default this is true.
+     *
+     * @param appendSeparator appendSeparator
+     */
+    public void doAppendSeparator(boolean appendSeparator) {
+        this.appendSeparator = appendSeparator;
     }
 
     public List<String> getCompletionCandidates() {

@@ -82,10 +82,11 @@ public class Console {
     private List<ConsoleOperation> operations;
     private ConsoleOperation currentOperation;
     private AliasManager aliasManager;
+    private StringBuilder multiLine = new StringBuilder();
 
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
 
-    private Pattern endsWithBackslashPattern = Pattern.compile(".* \\\\$");
+    private Pattern endsWithBackslashPattern = Pattern.compile(".*\\s\\\\$");
 
     public Console() throws IOException {
         this(Settings.getInstance());
@@ -133,6 +134,9 @@ public class Console {
     public void reset(Settings settings) throws IOException {
         if(running)
             throw new RuntimeException("Cant reset an already running Console, must stop if first!");
+        if(Settings.getInstance().isLogging())
+            logger.info("RESET");
+
          if(Settings.getInstance().doReadInputrc())
             Config.parseInputrc(Settings.getInstance());
 
@@ -376,9 +380,11 @@ public class Console {
 
                 // if the line ends with: \ we create a new line
                 if(mask == null && endsWithBackslashPattern.matcher(result).find()) {
-                    String line = result.substring(0,result.length()-1);
+                    //String line = result.substring(0,result.length()-1);
+                    appendMultiLine(result.substring(0,result.length()-1));
                     ConsoleOutput tempOutput = read("> ");
-                    result = line + tempOutput.getBuffer();
+                    result = getMultiLine() + tempOutput.getBuffer();
+                    resetMultiLine();
                 }
 
                 operations = ControlOperatorParser.findAllControlOperators(result);
@@ -1035,7 +1041,13 @@ public class Console {
             else {
                 co = findAliases(buffer.getLine(), buffer.getCursor());
             }
-            completion.complete(co);
+            if(getMultiLine().length() > 0) {
+                String multi = getMultiLine();
+                //TODO: must implement this
+            }
+            else
+                completion.complete(co);
+
             if(co.getCompletionCandidates() != null && co.getCompletionCandidates().size() > 0)
                 possibleCompletions.add(co);
         }
@@ -1052,7 +1064,9 @@ public class Console {
                 possibleCompletions.get(0).getCompletionCandidates().size() == 1) {
             //some formatted completions might not be valid and shouldnt be displayed
             displayCompletion(possibleCompletions.get(0).getCompletionCandidates().get(0),
-                    possibleCompletions.get(0).getFormattedCompletionCandidates().get(0), true);
+                    possibleCompletions.get(0).getFormattedCompletionCandidates().get(0),
+                    possibleCompletions.get(0).hasAppendSeparator(),
+                    possibleCompletions.get(0).getSeparator());
         }
         // more than one hit...
         else {
@@ -1060,7 +1074,7 @@ public class Console {
             String startsWith = Parser.findStartsWithOperation(possibleCompletions);
 
             if(startsWith.length() > 0)
-                displayCompletion("", startsWith, false);
+                displayCompletion("", startsWith, false, possibleCompletions.get(0).getSeparator());
                 // display all
                 // check size
             else {
@@ -1096,7 +1110,8 @@ public class Console {
      * @param appendSpace if its an actual complete
      * @throws java.io.IOException stream
      */
-    private void displayCompletion(String fullCompletion, String completion, boolean appendSpace) throws IOException {
+    private void displayCompletion(String fullCompletion, String completion,
+                                   boolean appendSpace, char separator) throws IOException {
         if(completion.startsWith(buffer.getLine())) {
             performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
             buffer.write(completion);
@@ -1108,9 +1123,9 @@ public class Console {
             buffer.write(completion);
             terminal.writeToStdOut(completion);
         }
-        if(appendSpace && fullCompletion.startsWith(buffer.getLine())) {
-            buffer.write(' ');
-            terminal.writeToStdOut(' ');
+        if(appendSpace) { // && fullCompletion.startsWith(buffer.getLine())) {
+            buffer.write(separator);
+            terminal.writeToStdOut(separator);
         }
 
         redrawLine();
@@ -1427,4 +1442,15 @@ public class Console {
         redirectPipeErrBuffer = new StringBuilder();
     }
 
+    private void appendMultiLine(String newLine) {
+       multiLine.append(newLine);
+    }
+
+    private void resetMultiLine() {
+        multiLine = new StringBuilder();
+    }
+
+    private String getMultiLine() {
+        return multiLine.toString();
+    }
 }
