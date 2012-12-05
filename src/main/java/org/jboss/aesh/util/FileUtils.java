@@ -40,6 +40,8 @@ public class FileUtils {
     private static Logger logger = LoggerUtil.getLogger(FileUtils.class.getName());
 
     public static void listMatchingDirectories(CompleteOperation completion, String possibleDir, File cwd) {
+        //by default we set the completion to not append separator
+        completion.doAppendSeparator(false);
         // that starts with possibleDir
         List<String> returnFiles = new ArrayList<String>();
         if (possibleDir.trim().isEmpty()) {
@@ -63,14 +65,18 @@ public class FileUtils {
             }
         }
         else if(new File(cwd.getAbsolutePath() +Config.getPathSeparator()+ possibleDir).isFile()) {
-            returnFiles.add(" ");
+            returnFiles.add("");
             completion.addCompletionCandidates(returnFiles);
+            //append when we have a file
+            completion.doAppendSeparator(true);
         }
         //else if(possibleDir.startsWith(("/")) && new File(possibleDir).isFile()) {
         else if(startsWithSlash.matcher(possibleDir).matches() &&
                 new File(possibleDir).isFile()) {
-            returnFiles.add(" ");
+            returnFiles.add("");
             completion.addCompletionCandidates(returnFiles);
+            //append when we have a file
+            completion.doAppendSeparator(true);
         }
         else {
             returnFiles = new ArrayList<String>();
