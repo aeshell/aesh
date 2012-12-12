@@ -123,23 +123,25 @@ public class WindowsTerminal implements Terminal {
         if(height < 0 || propertiesTimedOut()) {
             height = WindowsSupport.getWindowsTerminalHeight();
             ttyPropsLastFetched = System.currentTimeMillis();
-            if(height < 1 && Settings.getInstance().isLogging())
-                logger.log(Level.SEVERE, "Fetched terminal height is "+height+", setting it to 24");
-            if(height < 1)
+            if(height < 1) {
+                if(Settings.getInstance().isLogging())
+                    logger.log(Level.SEVERE, "Fetched terminal height is "+height+", setting it to 24");
                 height = 24;
+            }
         }
         return height;
     }
 
     @Override
     public int getWidth() {
-        if(width < 0 || propertiesTimedOut()) {
-            int width = WindowsSupport.getWindowsTerminalWidth();
+        if(width < 1 || propertiesTimedOut()) {
+            width = WindowsSupport.getWindowsTerminalWidth();
             ttyPropsLastFetched = System.currentTimeMillis();
-            if(width < 1 && Settings.getInstance().isLogging())
-                logger.log(Level.SEVERE, "Fetched terminal width is "+width+", setting it to 80");
-            if(width < 1)
+            if(width < 1) {
+                if(Settings.getInstance().isLogging())
+                    logger.log(Level.SEVERE, "Fetched terminal width is "+width+", setting it to 80");
                 width = 80;
+            }
         }
         return width;
     }

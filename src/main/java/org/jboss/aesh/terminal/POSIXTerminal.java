@@ -167,7 +167,7 @@ public class POSIXTerminal implements Terminal {
      */
     @Override
     public int getHeight() {
-        if(height < 0 || propertiesTimedOut()) {
+        if(height < 1 || propertiesTimedOut()) {
             try {
                 height = getTerminalProperty("rows");
             }
@@ -176,8 +176,8 @@ public class POSIXTerminal implements Terminal {
                     logger.log(Level.SEVERE,"Failed to fetch terminal height: ",e);
             }
         }
-        //cant use height < 0
-        if(height < 0)
+        //cant use height < 1
+        if(height < 1)
             height = 24;
 
         return height;
@@ -188,7 +188,7 @@ public class POSIXTerminal implements Terminal {
      */
     @Override
     public int getWidth() {
-        if(width < 0 || propertiesTimedOut()) {
+        if(width < 1 || propertiesTimedOut()) {
             try {
                 width = getTerminalProperty("columns");
             }
@@ -197,8 +197,8 @@ public class POSIXTerminal implements Terminal {
                     logger.log(Level.SEVERE,"Failed to fetch terminal width: ",e);
             }
         }
-        //cant use with < 0
-        if(width < 0)
+        //cant use with < 1
+        if(width < 1)
             width = 80;
 
         return width;
