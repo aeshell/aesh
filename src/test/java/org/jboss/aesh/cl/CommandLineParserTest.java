@@ -166,7 +166,7 @@ public class CommandLineParserTest extends TestCase {
     }
 }
 
-@Parameter(usage = "a simple test",
+@Parameter(name = "test", usage = "a simple test",
         options = {
                 @Option(name = 'f', longName = "foo", description = "enable foo"),
                 @Option(name = 'e', longName = "equal", description = "enable equal",
@@ -176,7 +176,7 @@ public class CommandLineParserTest extends TestCase {
         })
 class Parser1Test {}
 
-@Parameter(usage = "more [options] file...",
+@Parameter(name = "test", usage = "more [options] file...",
         options = {
                 @Option(name = 'd', longName = "display", hasValue = false, description = "display help instead of ring bell"),
                 @Option(name = 'b', longName = "bar", argument = "classname", required = true,
@@ -186,13 +186,13 @@ class Parser1Test {}
         })
 class Parser2Test {}
 
-@Parameter(usage = "this should fail",
+@Parameter(name = "test", usage = "this should fail",
         options = {
                 @Option()
         })
 class Parser3Test {}
 
-@Parameter(usage = "testing multiple values",
+@Parameter(name = "test", usage = "testing multiple values",
         options = {
                 @Option(name = 'o', longName="option", hasValue = true, hasMultipleValues = true,
                         valueSeparator = ','),

@@ -48,7 +48,9 @@ public class ParserBuilder {
         return this;
     }
 
-    public CommandLineParser generateParser() {
+    public CommandLineParser generateParser() throws IllegalArgumentException {
+        if(name == null || name.length() < 1)
+            throw new RuntimeException("The parameter name must be defined");
         return new CommandLineParser( new ParameterInt(name, usage, options));
     }
 }

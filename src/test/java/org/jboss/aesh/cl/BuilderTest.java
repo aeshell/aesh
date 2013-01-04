@@ -52,17 +52,17 @@ public class BuilderTest extends TestCase {
 
         CommandLineParser clp = pb.generateParser();
 
-        CommandLine cl = clp.parse("foo -V test1.txt");
+        CommandLine cl = clp.parse("less -V test1.txt");
         assertTrue(cl.hasOption('V'));
         assertNull(cl.getOptionValue('V'));
         assertFalse(cl.hasOption('v'));
         assertEquals("test1.txt", cl.getArguments().get(0));
 
-        cl = clp.parse("foo -V -Dfoo1=bar1 -Dfoo2=bar2 test1.txt");
+        cl = clp.parse("less -V -Dfoo1=bar1 -Dfoo2=bar2 test1.txt");
         assertTrue(cl.hasOption('D'));
         assertEquals("bar2", cl.getOptionProperties("D").get(1).getValue());
 
-        cl = clp.parse("foo -V -Dfoo1=bar1 -Dfoo2=bar2 --values f1,f2,f3 test1.txt");
+        cl = clp.parse("less -V -Dfoo1=bar1 -Dfoo2=bar2 --values f1,f2,f3 test1.txt");
         assertTrue(cl.hasOption("values"));
         assertEquals("f2", cl.getOptionValues("values").get(1));
         assertEquals("test1.txt", cl.getArguments().get(0));

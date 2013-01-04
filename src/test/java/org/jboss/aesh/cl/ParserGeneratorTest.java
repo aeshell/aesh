@@ -42,14 +42,14 @@ public class ParserGeneratorTest extends TestCase {
     }
 }
 
-@Parameter(usage = "a simple test",
+@Parameter(name = "test", usage = "a simple test",
         options = {
                 @Option(name = 'f', longName = "foo", description = "enable foo"),
                 @Option(name = 'e', description = "enable e", hasValue = true, required = true)
         })
 class Test1 {}
 
-@Parameter(usage = "more [options] file...",
+@Parameter(name = "test", usage = "more [options] file...",
         options = {
                 @Option(name = 'd', description = "display help instead of ring bell"),
                 @Option(name = 'V', description = "output version information and exit")

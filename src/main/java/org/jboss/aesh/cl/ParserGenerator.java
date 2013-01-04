@@ -22,6 +22,8 @@ public class ParserGenerator {
         Parameter param = clazz.getAnnotation(Parameter.class);
         if(param == null)
             throw new RuntimeException("Can only create parser from class thats annotated with Parameter");
+        if(param.name() == null || param.name().length() < 1)
+            throw new RuntimeException("The parameter name must be defined");
 
         if(param.options() != null) {
             OptionInt[] options = new OptionInt[param.options().length];
