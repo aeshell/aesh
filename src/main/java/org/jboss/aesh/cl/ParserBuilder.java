@@ -6,51 +6,34 @@
  */
 package org.jboss.aesh.cl;
 
-import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Build a {@link ParameterInt} object using the Builder pattern.
- *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ParserBuilder {
 
-    private String name;
-    private String usage;
-    private List<OptionInt> options;
-
+    private List<ParameterInt> params;
 
     public ParserBuilder() {
-        options = new ArrayList<OptionInt>();
+        params = new ArrayList<ParameterInt>();
     }
 
-    public ParserBuilder name(String name) {
-        this.name = name;
-        return this;
+    public ParserBuilder(ParameterInt param) {
+        params = new ArrayList<ParameterInt>();
+        params.add(param);
     }
 
-    public ParserBuilder usage(String usage) {
-        this.usage = usage;
-        return this;
-    }
-
-    public ParserBuilder addOption(OptionInt option) {
-        this.options.add(option);
-        return this;
-    }
-
-    public ParserBuilder addOptions(List<OptionInt> options) {
-        this.options.addAll(options);
+    public ParserBuilder addParameter(ParameterInt param) {
+        params.add(param);
         return this;
     }
 
     public CommandLineParser generateParser() throws IllegalArgumentException {
-        if(name == null || name.length() < 1)
-            throw new RuntimeException("The parameter name must be defined");
-        return new CommandLineParser( new ParameterInt(name, usage, options));
+        return new CommandLineParser( params);
     }
+
 }

@@ -24,8 +24,8 @@ public class ParserGeneratorTest extends TestCase {
 
         CommandLineParser parser = ParserGenerator.generateParser(Test1.class);
 
-        assertEquals("a simple test", parser.getParameter().getUsage());
-        List<OptionInt> options = parser.getParameter().getOptions();
+        assertEquals("a simple test", parser.getParameters().get(0).getUsage());
+        List<OptionInt> options = parser.getParameters().get(0).getOptions();
         assertEquals("f", options.get(0).getName());
         assertEquals("foo", options.get(0).getLongName());
         assertEquals("e", options.get(1).getName());
@@ -34,8 +34,8 @@ public class ParserGeneratorTest extends TestCase {
         assertTrue(options.get(1).isRequired());
 
         parser = ParserGenerator.generateParser(Test2.class);
-        assertEquals("more [options] file...", parser.getParameter().getUsage());
-        options = parser.getParameter().getOptions();
+        assertEquals("more [options] file...", parser.getParameters().get(0).getUsage());
+        options = parser.getParameters().get(0).getOptions();
         assertEquals("d", options.get(0).getName());
         assertEquals("V", options.get(1).getName());
 

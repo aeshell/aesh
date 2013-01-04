@@ -18,7 +18,7 @@ public class CommandLineFormatterTest extends TestCase {
     }
 
     public void testFormatter() {
-        ParserBuilder pb = new ParserBuilder().name("man").usage("[OPTION...]");
+        ParameterBuilder pb = new ParameterBuilder().name("man").usage("[OPTION...]");
 
         pb.addOption(
                 new OptionBuilder()
@@ -34,7 +34,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .description("reset all options to their default values")
                         .create());
 
-        CommandLineParser clp = pb.generateParser();
+        CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 
         assertEquals("Usage: man [OPTION...]\n"+
                 "  -d, --debug    emit debugging messages\n"+
@@ -43,7 +43,7 @@ public class CommandLineFormatterTest extends TestCase {
     }
 
     public void testFormatter2() {
-        ParserBuilder pb = new ParserBuilder().name("man").usage("[OPTION...]");
+        ParameterBuilder pb = new ParameterBuilder().name("man").usage("[OPTION...]");
 
         pb.addOption(
                 new OptionBuilder()
@@ -69,7 +69,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .create());
 
 
-        CommandLineParser clp = pb.generateParser();
+        CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 
         assertEquals("Usage: man [OPTION...]\n"+
                 "  -d, --debug            emit debugging messages\n"+

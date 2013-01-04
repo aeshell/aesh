@@ -11,6 +11,7 @@ import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.util.Parser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,51 +25,30 @@ import java.util.List;
  */
 public class CommandLineParser {
 
-    private ParameterInt param;
+    private List<ParameterInt> params;
     private static final String EQUALS = "=";
 
+    public CommandLineParser(List<ParameterInt> parameters) {
+        params = new ArrayList<ParameterInt>();
+        params.addAll(parameters);
+    }
+
     public CommandLineParser(ParameterInt parameterInt) {
-        this.param = parameterInt;
+        params = new ArrayList<ParameterInt>();
+        params.add(parameterInt);
     }
 
     public CommandLineParser(String name, String usage) {
-        this.param = new ParameterInt(name, usage);
+        params = new ArrayList<ParameterInt>();
+        params.add(new ParameterInt(name, usage));
     }
 
-    /**
-     * Add an option
-     * Name or longName can be null
-     * Both argument and type can be null
-     *
-     * @param name name (short) one char
-     * @param longName multi character name
-     * @param description a description of the option
-     * @param hasValue if this option has value
-     * @param argument what kind of argument this option can have
-     * @param required is it required?
-     * @param type what kind of type it is (not used)
-     */
-    public void addOption(char name, String longName, String description, boolean hasValue,
-                          String argument, boolean required, boolean hasMultipleValues, Object type) {
-        this.param.addOption(name, longName, description, hasValue, argument,
-                required, hasMultipleValues, type);
+    public void addParameter(ParameterInt param) {
+        params.add(param);
     }
 
-    /**
-     * Add an option
-     * Name or longName can be null
-     *
-     * @param name name (short) one char
-     * @param longName multi character name
-     * @param description a description of the option
-     * @param hasValue if this option has value
-     */
-    public void addOption(char name, String longName, String description, boolean hasValue) {
-        this.param.addOption(name, longName, description, hasValue, null, false, false, null);
-    }
-
-    protected ParameterInt getParameter() {
-        return param;
+    protected List<ParameterInt> getParameters() {
+        return params;
     }
 
     /**
@@ -77,17 +57,11 @@ public class CommandLineParser {
      *
      */
     public String printHelp() {
-        int maxLength = 0;
-        int width = 80;
-        for(OptionInt o : getParameter().getOptions())
-            if(o.getFormattedLength() > maxLength)
-                maxLength = o.getFormattedLength();
+        StringBuilder builder = new StringBuilder();
+        for(ParameterInt param : params)
+            builder.append(param.printHelp());
 
-        StringBuilder sb = new StringBuilder();
-        for(OptionInt o : getParameter().getOptions())
-            sb.append(o.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
-        return "Usage: "+getParameter().getName()+" "+getParameter().getUsage()+Config.getLineSeparator()+sb.toString();
-
+        return builder.toString();
     }
 
     /**
@@ -105,8 +79,18 @@ public class CommandLineParser {
      * @throws IllegalArgumentException
      */
     public CommandLine parse(String line) throws IllegalArgumentException {
-        param.clean();
         List<String> lines = Parser.findAllWords(line);
+        if(lines.size() > 0) {
+            for(ParameterInt param : params) {
+                if(param.getName().equals(lines.get(0)))
+                    return doParse(param, lines);
+            }
+        }
+        throw new IllegalArgumentException("param not found: "+line);
+    }
+
+    private CommandLine doParse(ParameterInt param, List<String> lines) throws IllegalArgumentException {
+        param.clean();
         CommandLine commandLine = new CommandLine();
         OptionInt active = null;
         //skip first entry since that's the name of the command
@@ -118,7 +102,7 @@ public class CommandLineParser {
                 if(active != null)
                     throw new IllegalArgumentException("Option: "+active.getName()+" must be given a value");
 
-                active = findLongOption(parseLine.substring(2));
+                active = findLongOption(param, parseLine.substring(2));
                 if(active != null && active.isProperty()) {
                     if(parseLine.length() <= (2+active.getLongName().length()) ||
                         !parseLine.contains(EQUALS))
@@ -150,7 +134,7 @@ public class CommandLineParser {
                 if(parseLine.length() != 2 && !parseLine.contains("="))
                     throw new IllegalArgumentException("Option: - must be followed by a valid operator");
 
-                active = findOption(parseLine.substring(1));
+                active = findOption(param, parseLine.substring(1));
 
                 if(active != null && active.isProperty()) {
                     if(parseLine.length() <= 2 ||
@@ -196,12 +180,12 @@ public class CommandLineParser {
         }
 
         //this will throw and IllegalArgumentException if needed
-        checkForMissingRequiredOptions(commandLine);
+        checkForMissingRequiredOptions(param, commandLine);
 
         return commandLine;
     }
 
-    private void checkForMissingRequiredOptions(CommandLine commandLine) throws IllegalArgumentException {
+    private void checkForMissingRequiredOptions(ParameterInt param, CommandLine commandLine) throws IllegalArgumentException {
         for(OptionInt o : param.getOptions())
             if(o.isRequired()) {
                 boolean found = false;
@@ -215,7 +199,7 @@ public class CommandLineParser {
             }
     }
 
-    private OptionInt findOption(String line) {
+    private OptionInt findOption(ParameterInt param, String line) {
         OptionInt option = param.findOption(line);
         //simplest case
         if(option != null)
@@ -236,7 +220,7 @@ public class CommandLineParser {
         return null;
     }
 
-    private OptionInt findLongOption(String line) {
+    private OptionInt findLongOption(ParameterInt param, String line) {
         OptionInt option = param.findLongOption(line);
         //simplest case
         if(option != null)

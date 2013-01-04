@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl.internal;
 
+import org.jboss.aesh.console.Config;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,10 +43,40 @@ public class ParameterInt {
         return options;
     }
 
+    public void addOption(OptionInt option) {
+        options.add(option);
+    }
+
+    /**
+     * Add an option
+     * Name or longName can be null
+     * Both argument and type can be null
+     *
+     * @param name name (short) one char
+     * @param longName multi character name
+     * @param description a description of the option
+     * @param hasValue if this option has value
+     * @param argument what kind of argument this option can have
+     * @param required is it required?
+     * @param type what kind of type it is (not used)
+     */
     public void addOption(char name, String longName, String description, boolean hasValue,
                      String argument, boolean required, boolean hasMultipleValues, Object type) {
         options.add(new OptionInt(name, longName, description,
                 hasValue, argument, required, '\u0000', false, hasMultipleValues, type));
+    }
+
+    /**
+     * Add an option
+     * Name or longName can be null
+     *
+     * @param name name (short) one char
+     * @param longName multi character name
+     * @param description a description of the option
+     * @param hasValue if this option has value
+     */
+    public void addOption(char name, String longName, String description, boolean hasValue) {
+        addOption(name, longName, description, hasValue, null, false, false, null);
     }
 
     private void setOptions(List<OptionInt> options) {
@@ -102,5 +134,23 @@ public class ParameterInt {
    public void clean() {
        for(OptionInt optionInt : options)
            optionInt.clean();
+    }
+
+    /**
+     * Returns a usage String based on the defined parameter and options.
+     * Useful when printing "help" info etc.
+     *
+     */
+    public String printHelp() {
+        int maxLength = 0;
+        int width = 80;
+        for(OptionInt o : getOptions())
+            if(o.getFormattedLength() > maxLength)
+                maxLength = o.getFormattedLength();
+
+        StringBuilder sb = new StringBuilder();
+        for(OptionInt o : getOptions())
+            sb.append(o.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
+        return "Usage: "+getName()+" "+getUsage()+ Config.getLineSeparator()+sb.toString();
     }
 }

@@ -18,13 +18,13 @@ public class BuilderTest extends TestCase {
     }
 
     public void testBuilder() {
-        ParserBuilder pb = new ParserBuilder();
+        ParameterBuilder pb = new ParameterBuilder();
         pb.name("foo").usage("foo is bar");
         pb.addOption(
                 new OptionBuilder().description("filename given").name('f').longName("filename")
                         .hasValue(true).create());
 
-        CommandLineParser clp = pb.generateParser();
+        CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 
         CommandLine cl = clp.parse("foo -f test1.txt");
         assertTrue(cl.hasOption('f'));
@@ -34,7 +34,7 @@ public class BuilderTest extends TestCase {
 
     public void testBuilder2() {
 
-        ParserBuilder pb = new ParserBuilder().name("less").usage("less is more");
+        ParameterBuilder pb = new ParameterBuilder().name("less").usage("less is more");
         pb.addOption(
                 new OptionBuilder().description("version").name('V').longName("version")
                         .hasValue(false).required(true).create());
@@ -50,7 +50,7 @@ public class BuilderTest extends TestCase {
                 new OptionBuilder().description("values").longName("values")
                         .hasMultipleValues(true).create());
 
-        CommandLineParser clp = pb.generateParser();
+        CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 
         CommandLine cl = clp.parse("less -V test1.txt");
         assertTrue(cl.hasOption('V'));
