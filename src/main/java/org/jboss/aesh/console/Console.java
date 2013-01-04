@@ -298,6 +298,14 @@ public class Console {
     }
 
     /**
+     *
+     * @return true if Console is set up and streams are open
+     */
+    public boolean isRunning() {
+        return running;
+    }
+
+    /**
      * Used by ConsoleCommand to attach itself to the Console
      *
      * @param cc command
