@@ -47,7 +47,7 @@ public class CommandLineParser {
         params.add(param);
     }
 
-    protected List<ParameterInt> getParameters() {
+    public List<ParameterInt> getParameters() {
         return params;
     }
 
