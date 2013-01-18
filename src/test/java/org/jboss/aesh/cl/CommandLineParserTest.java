@@ -30,10 +30,11 @@ public class CommandLineParserTest extends TestCase {
             assertEquals("e", cl.getOptions().get(1).getName());
             assertEquals("/tmp/file.txt", cl.getArguments().get(0));
 
-            cl = parser.parse("test -e bar -DXms=128m -DXmx=512m /tmp/file.txt");
+            cl = parser.parse("test -e bar -DXms=128m -DXmx=512m --X /tmp/file.txt");
             assertEquals("e", cl.getOptions().get(0).getName());
             assertEquals("bar", cl.getOptions().get(0).getValue());
             assertEquals("/tmp/file.txt", cl.getArguments().get(0));
+            assertNotNull(cl.hasOption("X"));
 
             List<OptionProperty> properties = cl.getOptionProperties("D");
             assertEquals("128m", properties.get(0).getValue());
@@ -168,6 +169,7 @@ public class CommandLineParserTest extends TestCase {
 
 @Parameter(name = "test", usage = "a simple test",
         options = {
+                @Option(longName = "X", description = "enable X"),
                 @Option(name = 'f', longName = "foo", description = "enable foo"),
                 @Option(name = 'e', longName = "equal", description = "enable equal",
                         hasValue = true, required = true),
