@@ -26,8 +26,7 @@ import java.util.logging.Logger;
  */
 public class POSIXTerminal implements Terminal {
 
-    private int height = -1;
-    private int width = -1;
+    private TerminalSize size;
     private boolean echoEnabled;
     private String ttyConfig;
     private String ttyProps;
@@ -79,6 +78,7 @@ public class POSIXTerminal implements Terminal {
 
         this.stdOut = new PrintWriter( new OutputStreamWriter(stdOut));
         this.stdErr = new PrintWriter( new OutputStreamWriter(stdErr));
+        size = new TerminalSize(getHeight(), getWidth());
     }
 
     /**
@@ -162,19 +162,23 @@ public class POSIXTerminal implements Terminal {
         stdErr.flush();
     }
 
-    /**
-     * @see org.jboss.aesh.terminal.Terminal
-     */
     @Override
-    public int getHeight() {
-        if(height < 1 || propertiesTimedOut()) {
-            try {
-                height = getTerminalProperty("rows");
-            }
-            catch (Exception e) {
-                if(Settings.getInstance().isLogging())
-                    logger.log(Level.SEVERE,"Failed to fetch terminal height: ",e);
-            }
+    public TerminalSize getSize() {
+        if(propertiesTimedOut()) {
+            size.setHeight(getHeight());
+            size.setWidth(getWidth());
+        }
+        return size;
+    }
+
+    private int getHeight() {
+        int height = 0;
+        try {
+            height = getTerminalProperty("rows");
+        }
+        catch (Exception e) {
+            if(Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE,"Failed to fetch terminal height: ",e);
         }
         //cant use height < 1
         if(height < 1)
@@ -183,19 +187,14 @@ public class POSIXTerminal implements Terminal {
         return height;
     }
 
-    /**
-     * @see org.jboss.aesh.terminal.Terminal
-     */
-    @Override
-    public int getWidth() {
-        if(width < 1 || propertiesTimedOut()) {
-            try {
-                width = getTerminalProperty("columns");
-            }
-            catch (Exception e) {
-                if(Settings.getInstance().isLogging())
-                    logger.log(Level.SEVERE,"Failed to fetch terminal width: ",e);
-            }
+    private int getWidth() {
+        int width = 0;
+        try {
+            width = getTerminalProperty("columns");
+        }
+        catch (Exception e) {
+            if(Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE,"Failed to fetch terminal width: ",e);
         }
         //cant use with < 1
         if(width < 1)

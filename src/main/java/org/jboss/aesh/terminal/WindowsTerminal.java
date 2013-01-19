@@ -32,6 +32,7 @@ public class WindowsTerminal implements Terminal {
     private InputStream input;
     private int width;
     private int height;
+    private TerminalSize size;
 
     private long ttyPropsLastFetched;
     private static long TIMEOUT_PERIOD = 2000;
@@ -118,32 +119,37 @@ public class WindowsTerminal implements Terminal {
         stdOut.flush();
     }
 
-    @Override
-    public int getHeight() {
-        if(height < 0 || propertiesTimedOut()) {
-            height = WindowsSupport.getWindowsTerminalHeight();
-            ttyPropsLastFetched = System.currentTimeMillis();
-            if(height < 1) {
-                if(Settings.getInstance().isLogging())
-                    logger.log(Level.SEVERE, "Fetched terminal height is "+height+", setting it to 24");
-                height = 24;
-            }
+    private int getHeight() {
+        int height;
+        height = WindowsSupport.getWindowsTerminalHeight();
+        ttyPropsLastFetched = System.currentTimeMillis();
+        if(height < 1) {
+            if(Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE, "Fetched terminal height is "+height+", setting it to 24");
+            height = 24;
         }
         return height;
     }
 
-    @Override
-    public int getWidth() {
-        if(width < 1 || propertiesTimedOut()) {
-            width = WindowsSupport.getWindowsTerminalWidth();
-            ttyPropsLastFetched = System.currentTimeMillis();
-            if(width < 1) {
-                if(Settings.getInstance().isLogging())
-                    logger.log(Level.SEVERE, "Fetched terminal width is "+width+", setting it to 80");
-                width = 80;
-            }
+    private int getWidth() {
+        int width;
+        width = WindowsSupport.getWindowsTerminalWidth();
+        ttyPropsLastFetched = System.currentTimeMillis();
+        if(width < 1) {
+            if(Settings.getInstance().isLogging())
+                logger.log(Level.SEVERE, "Fetched terminal width is "+width+", setting it to 80");
+            width = 80;
         }
         return width;
+    }
+
+    @Override
+    public TerminalSize getSize() {
+        if(propertiesTimedOut()) {
+            size.setHeight(getHeight());
+            size.setWidth(getWidth());
+        }
+        return size;
     }
 
     @Override

@@ -22,11 +22,13 @@ public class TestTerminal implements Terminal {
 
     private InputStream input;
     private Writer writer;
+    private TerminalSize size;
 
     @Override
     public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
         input = inputStream;
         writer = new PrintWriter(new OutputStreamWriter(stdOut));
+        size = new TerminalSize(24,80);
     }
 
     @Override
@@ -90,13 +92,8 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
-    public int getHeight() {
-        return 24;
-    }
-
-    @Override
-    public int getWidth() {
-        return 80;
+    public TerminalSize getSize() {
+        return size;
     }
 
     @Override

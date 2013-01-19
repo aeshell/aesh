@@ -83,14 +83,9 @@ public interface Terminal {
     void writeToStdErr(char err) throws IOException;
 
     /**
-     * @return terminal height
+     * @return terminal size
      */
-    int getHeight();
-
-    /**
-     * @return terminal width
-     */
-    int getWidth();
+    TerminalSize getSize();
 
     boolean isEchoEnabled();
 

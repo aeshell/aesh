@@ -34,6 +34,7 @@ import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.InMemoryHistory;
 import org.jboss.aesh.history.SearchDirection;
 import org.jboss.aesh.terminal.Terminal;
+import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.undo.UndoManager;
 import org.jboss.aesh.util.ANSI;
@@ -183,21 +184,11 @@ public class Console {
     }
 
     /**
-     * Get the terminal height
      *
-     * @return height
+     * @return get the terminal size
      */
-    public int getTerminalHeight() {
-        return terminal.getHeight();
-    }
-
-    /**
-     * Get the terminal width
-     *
-     * @return width
-     */
-    public int getTerminalWidth() {
-        return terminal.getWidth();
+    public TerminalSize getTerminalSize() {
+        return terminal.getSize();
     }
 
     /**
@@ -686,19 +677,19 @@ public class Console {
     private void setBufferLine(String newLine) throws IOException {
         //must make sure that there are enough space for the
         // line thats about to be injected
-        if((newLine.length()+buffer.getPrompt().length()) >= getTerminalWidth() &&
+        if((newLine.length()+buffer.getPrompt().length()) >= terminal.getSize().getWidth() &&
                 newLine.length() >= buffer.getLine().length()) {
             int currentRow = getCurrentRow();
             if(currentRow > -1) {
-                int cursorRow = buffer.getCursorWithPrompt() / getTerminalWidth();
-                if(currentRow + (newLine.length() / getTerminalWidth()) - cursorRow >= getTerminalHeight()) {
-                    int numNewRows = currentRow + ((newLine.length()+buffer.getPrompt().length()) / getTerminalWidth()) - cursorRow - getTerminalHeight();
+                int cursorRow = buffer.getCursorWithPrompt() / terminal.getSize().getWidth();
+                if(currentRow + (newLine.length() / terminal.getSize().getWidth()) - cursorRow >= terminal.getSize().getHeight()) {
+                    int numNewRows = currentRow + ((newLine.length()+buffer.getPrompt().length()) / terminal.getSize().getWidth()) - cursorRow - terminal.getSize().getHeight();
                     //if the line is exactly equal to termWidth we need to add another row
-                    if((newLine.length()+buffer.getPrompt().length()) % getTerminalWidth() == 0)
+                    if((newLine.length()+buffer.getPrompt().length()) % terminal.getSize().getWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
                         if(Settings.getInstance().isLogging()) {
-                            int totalRows = (newLine.length()+buffer.getPrompt().length()) / getTerminalWidth() +1;
+                            int totalRows = (newLine.length()+buffer.getPrompt().length()) / terminal.getSize().getWidth() +1;
                             logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
                                     ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
                         }
@@ -712,16 +703,16 @@ public class Console {
     }
 
     private void insertBufferLine(String insert, int position) throws IOException {
-        if((insert.length()+buffer.totalLength()) >= getTerminalWidth()) { //&&
+        if((insert.length()+buffer.totalLength()) >= terminal.getSize().getWidth()) { //&&
                 //(insert.length()+buffer.totalLength()) > buffer.getLine().length()) {
             int currentRow = getCurrentRow();
             if(currentRow > -1) {
                 int newLine = insert.length()+buffer.totalLength();
-                int cursorRow = buffer.getCursorWithPrompt() / getTerminalWidth();
-                if(currentRow + (newLine / getTerminalWidth()) - cursorRow >= getTerminalHeight()) {
-                    int numNewRows = currentRow + (newLine / getTerminalWidth()) - cursorRow - getTerminalHeight();
+                int cursorRow = buffer.getCursorWithPrompt() / terminal.getSize().getWidth();
+                if(currentRow + (newLine / terminal.getSize().getWidth()) - cursorRow >= terminal.getSize().getHeight()) {
+                    int numNewRows = currentRow + (newLine / terminal.getSize().getWidth()) - cursorRow - terminal.getSize().getHeight();
                     //if the line is exactly equal to termWidth we need to add another row
-                    if((insert.length()+buffer.totalLength()) % getTerminalWidth() == 0)
+                    if((insert.length()+buffer.totalLength()) % terminal.getSize().getWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
                         terminal.writeToStdOut(Buffer.printAnsi(numNewRows + "S"));
@@ -757,8 +748,8 @@ public class Console {
         }
 
         // add a 'fake' new line when inserting at the edge of terminal
-        if(buffer.getCursorWithPrompt() > getTerminalWidth() &&
-                buffer.getCursorWithPrompt() % getTerminalWidth() == 1) {
+        if(buffer.getCursorWithPrompt() > terminal.getSize().getWidth() &&
+                buffer.getCursorWithPrompt() % terminal.getSize().getWidth() == 1) {
             terminal.writeToStdOut((char) 32);
             terminal.writeToStdOut((char) 13);
         }
@@ -766,18 +757,18 @@ public class Console {
         // if we insert somewhere other than the end of the line we need to redraw from cursor
         if(buffer.getCursor() < buffer.length()) {
             //check if we just started a new line, if we did we need to make sure that we add one
-            if(buffer.totalLength() > getTerminalWidth() &&
-                    (buffer.totalLength()-1) % getTerminalWidth() == 1) {
+            if(buffer.totalLength() > terminal.getSize().getWidth() &&
+                    (buffer.totalLength()-1) % terminal.getSize().getWidth() == 1) {
                 int ansiCurrentRow = getCurrentRow();
-                int currentRow = (buffer.getCursorWithPrompt() / getTerminalWidth());
-                if(currentRow > 0 && buffer.getCursorWithPrompt() % getTerminalWidth() == 0)
+                int currentRow = (buffer.getCursorWithPrompt() / terminal.getSize().getWidth());
+                if(currentRow > 0 && buffer.getCursorWithPrompt() % terminal.getSize().getWidth() == 0)
                     currentRow--;
 
-                int totalRows = buffer.totalLength() / getTerminalWidth();
-                if(totalRows > 0 && buffer.totalLength() % getTerminalWidth() == 0)
+                int totalRows = buffer.totalLength() / terminal.getSize().getWidth();
+                if(totalRows > 0 && buffer.totalLength() % terminal.getSize().getWidth() == 0)
                     totalRows--;
 
-                if(ansiCurrentRow+(totalRows-currentRow) > getTerminalHeight()) {
+                if(ansiCurrentRow+(totalRows-currentRow) > terminal.getSize().getHeight()) {
                     terminal.writeToStdOut(Buffer.printAnsi("1S")); //adding a line
                     terminal.writeToStdOut(Buffer.printAnsi("1A")); // moving up a line
                 }
@@ -899,10 +890,10 @@ public class Console {
                 (editMode.getCurrentAction() == Action.MOVE ||
                         editMode.getCurrentAction() == Action.DELETE)) {
 
-            terminal.writeToStdOut(buffer.move(where, getTerminalWidth(), true));
+            terminal.writeToStdOut(buffer.move(where, terminal.getSize().getWidth(), true));
         }
         else {
-            terminal.writeToStdOut(buffer.move(where, getTerminalWidth()));
+            terminal.writeToStdOut(buffer.move(where, terminal.getSize().getWidth()));
         }
     }
 
@@ -912,19 +903,19 @@ public class Console {
 
     private void drawLine(String line) throws IOException {
        //need to clear more than one line
-        if(line.length() > getTerminalWidth() ||
-                (line.length()+ Math.abs(buffer.getDelta()) > getTerminalWidth())) {
+        if(line.length() > terminal.getSize().getWidth() ||
+                (line.length()+ Math.abs(buffer.getDelta()) > terminal.getSize().getWidth())) {
 
             int currentRow = 0;
             if(buffer.getCursorWithPrompt() > 0)
-                currentRow = buffer.getCursorWithPrompt() / getTerminalWidth();
-            if(currentRow > 0 && buffer.getCursorWithPrompt() % getTerminalWidth() == 0)
+                currentRow = buffer.getCursorWithPrompt() / terminal.getSize().getWidth();
+            if(currentRow > 0 && buffer.getCursorWithPrompt() % terminal.getSize().getWidth() == 0)
                 currentRow--;
 
             if(Settings.getInstance().isLogging()) {
                 logger.info("actualRow:"+getCurrentRow()+", actualColumn:"+getCurrentColumn());
                 logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
-                        +", width:"+getTerminalWidth()+", height:"+getTerminalHeight()
+                        +", width:"+terminal.getSize().getWidth()+", height:"+terminal.getSize().getHeight()
                         +", delta:"+buffer.getDelta() +", buffer:"+buffer.getLine());
             }
 
@@ -1150,7 +1141,7 @@ public class Console {
         int oldCursorPos = buffer.getCursor();
         printNewline();
         buffer.setCursor(oldCursorPos);
-        terminal.writeToStdOut(Parser.formatDisplayList(completions, terminal.getHeight(), terminal.getWidth()));
+        terminal.writeToStdOut(Parser.formatDisplayList(completions, terminal.getSize().getHeight(), terminal.getSize().getWidth()));
         terminal.writeToStdOut(buffer.getLineWithPrompt());
         //if we do a complete and the cursor is not at the end of the
         //buffer we need to move it to the correct place
