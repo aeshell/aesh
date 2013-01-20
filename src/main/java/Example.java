@@ -10,6 +10,7 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.actions.Operation;
@@ -175,7 +176,7 @@ public class Example {
                 break;
             }
             if(line.getBuffer().equalsIgnoreCase("password")) {
-                line = exampleConsole.read("password: ", Character.valueOf((char) 0));
+                line = exampleConsole.read(new Prompt("password: "), Character.valueOf((char) 0));
                 exampleConsole.pushToStdOut("password typed:" + line + "\n");
 
             }

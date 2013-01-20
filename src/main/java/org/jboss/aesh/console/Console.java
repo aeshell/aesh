@@ -34,6 +34,7 @@ import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.InMemoryHistory;
 import org.jboss.aesh.history.SearchDirection;
 import org.jboss.aesh.terminal.Terminal;
+import org.jboss.aesh.terminal.TerminalCharacter;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.undo.UndoManager;
@@ -327,7 +328,7 @@ public class Console {
      * @throws IOException stream
      */
     public ConsoleOutput read(String prompt) throws IOException {
-        return read(prompt, null);
+        return read(new Prompt(prompt), null);
     }
 
     /**
@@ -340,7 +341,7 @@ public class Console {
      * @return input stream
      * @throws IOException stream
      */
-    public ConsoleOutput read(String prompt, Character mask) throws IOException {
+    public ConsoleOutput read(Prompt prompt, Character mask) throws IOException {
         if(!running)
             throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
 
@@ -350,9 +351,10 @@ public class Console {
                 return output;
         }
 
-        buffer.reset(prompt, mask);
-        if(command == null)
-            terminal.writeToStdOut(buffer.getPrompt());
+        buffer.reset(prompt.getPromptAsString(), mask);
+        if(command == null) {
+                displayPrompt(prompt);
+        }
         search = null;
 
         while(true) {
@@ -393,8 +395,8 @@ public class Console {
                     return output;
                 }
                 else {
-                    buffer.reset(prompt, mask);
-                    terminal.writeToStdOut(buffer.getPrompt());
+                    buffer.reset(prompt.getPromptAsString(), mask);
+                    displayPrompt(prompt);
                     search = null;
                 }
             }
@@ -727,6 +729,15 @@ public class Console {
     private void addToHistory(String line) {
         if(!settings.isHistoryDisabled())
             history.push(line);
+    }
+
+    private void displayPrompt(Prompt prompt) throws IOException {
+        if(prompt.hasChars()) {
+        for(TerminalCharacter c : prompt.getCharacters())
+            terminal.writeChar(c);
+        }
+        else
+            terminal.writeToStdOut(prompt.getPromptAsString());
     }
 
     private void writeChars(int[] chars, Character mask) throws IOException {

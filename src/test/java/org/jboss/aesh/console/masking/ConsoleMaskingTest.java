@@ -9,6 +9,7 @@ package org.jboss.aesh.console.masking;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 
@@ -35,7 +36,7 @@ public class ConsoleMaskingTest extends BaseConsoleTest {
         outputStream.write(("mypassword").getBytes());
         outputStream.write(deletePrevChar.getFirstValue());
         outputStream.write(("\n").getBytes());
-        ConsoleOutput output = console.read(null, new Character('\u0000'));
+        ConsoleOutput output = console.read(new Prompt(""), new Character('\u0000'));
         assertEquals("mypasswor", output.getBuffer());
 
     }
