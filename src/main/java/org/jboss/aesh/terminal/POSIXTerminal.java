@@ -7,6 +7,7 @@
 package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -16,6 +17,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,7 +26,7 @@ import java.util.logging.Logger;
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
-public class POSIXTerminal implements Terminal {
+public class POSIXTerminal extends AbstractTerminal {
 
     private TerminalSize size;
     private boolean echoEnabled;
@@ -105,6 +107,7 @@ public class POSIXTerminal implements Terminal {
      */
     @Override
     public void writeToStdOut(String out) throws IOException {
+        logger.info("writing to out: "+out);
         if(out != null && out.length() > 0) {
             stdOut.write(out);
             stdOut.flush();

@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.List;
 
 /**
  * A dummy terminal used for tests
@@ -97,6 +98,17 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
+    public void writeChar(TerminalCharacter character) throws IOException {
+        writeToStdOut(character.getCharacter());
+    }
+
+    @Override
+    public void writeChars(List<TerminalCharacter> chars) throws IOException {
+        for(TerminalCharacter c : chars)
+            writeToStdOut(c.getCharacter());
+    }
+
+     @Override
     public boolean isEchoEnabled() {
         return false;
     }

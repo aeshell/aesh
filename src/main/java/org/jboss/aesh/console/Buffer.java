@@ -21,7 +21,7 @@ public class Buffer {
 
     private int cursor = 0;
     private StringBuilder line;
-    private String prompt;
+    private Prompt prompt;
     private int delta; //need to keep track of a delta for ansi terminal
     private Character mask;
     private boolean disablePrompt = false;
@@ -35,17 +35,17 @@ public class Buffer {
     /**
      * Instantiate a Buffer with given prompt
      *
-     * @param promptText set prompt
+     * @param prompt set prompt
      */
-    protected Buffer(String promptText) {
-        this(promptText, null);
+    protected Buffer(Prompt prompt) {
+        this(prompt, null);
     }
 
-    protected Buffer(String promptText, Character mask) {
-        if(promptText != null)
-            prompt = promptText;
+    protected Buffer(Prompt prompt, Character mask) {
+        if(prompt != null)
+            this.prompt = prompt;
         else
-            prompt = "";
+            this.prompt = new Prompt("");
 
         line = new StringBuilder();
         delta = 0;
@@ -55,17 +55,17 @@ public class Buffer {
     /**
      * Reset the buffer
      *
-     * @param promptText set prompt
+     * @param prompt set prompt
      */
-    protected void reset(String promptText) {
-        reset(promptText, null);
+    protected void reset(Prompt prompt) {
+        reset(prompt, null);
     }
 
-    protected void reset(String promptText, Character mask) {
-        if(promptText != null)
-            prompt = promptText;
+    protected void reset(Prompt prompt, Character mask) {
+        if(prompt != null)
+            this.prompt = prompt;
         else
-            prompt = "";
+            this.prompt = new Prompt("");
         cursor = 0;
         line = new StringBuilder();
         delta = 0;
@@ -85,9 +85,9 @@ public class Buffer {
     protected int totalLength() {
         if(mask != null) {
             if(mask == 0)
-                return disablePrompt ? 1 : prompt.length()+1;
+                return disablePrompt ? 1 : prompt.getLength()+1;
         }
-        return disablePrompt ? line.length()+1 : line.length() + prompt.length()+1;
+        return disablePrompt ? line.length()+1 : line.length() + prompt.getLength()+1;
     }
 
     protected int getCursor() {
@@ -98,10 +98,10 @@ public class Buffer {
         if(disablePrompt)
             return getCursor()+1;
         else
-            return getCursor() + prompt.length()+1;
+            return getCursor() + prompt.getLength()+1;
     }
 
-    protected String getPrompt() {
+    protected Prompt getPrompt() {
         return prompt;
     }
 
@@ -303,7 +303,7 @@ public class Buffer {
      * @return complete line
      */
     public String getLineWithPrompt() {
-        return prompt + line;
+        return prompt.getPromptAsString() + line;
     }
 
     /**

@@ -1,3 +1,9 @@
+/*
+ * Copyright 2012 Red Hat, Inc. and/or its affiliates.
+ *
+ * Licensed under the Eclipse Public License version 1.0, available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ */
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.terminal.TerminalCharacter;
@@ -18,7 +24,10 @@ public class Prompt {
     private String prompt;
 
     public Prompt(String prompt) {
-        this.prompt = prompt;
+        if(prompt != null)
+            this.prompt = prompt;
+        else
+            this.prompt = "";
     }
 
     public Prompt(List<TerminalCharacter> characters) {
@@ -32,6 +41,10 @@ public class Prompt {
 
     public String getPromptAsString() {
         return prompt;
+    }
+
+    public int getLength() {
+        return prompt.length();
     }
 
     public boolean hasChars() {

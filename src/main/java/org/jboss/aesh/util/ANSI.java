@@ -6,8 +6,6 @@
  */
 package org.jboss.aesh.util;
 
-import org.jboss.aesh.console.Buffer;
-
 /**
  * Utility class to provide ANSI codes for different operations
  *
@@ -23,6 +21,7 @@ public class ANSI {
     private static String MAGENTA_TEXT = "\u001B[0;35m";
     private static String CYAN_TEXT = "\u001B[0;36m";
     private static String WHITE_TEXT = "\u001B[0;37m";
+    private static String DEFAULT_TEXT = "\u001B[0;39m";
 
     private static String BLACK_BG = "\u001B[0;40m";
     private static String RED_BG = "\u001B[0;41m";
@@ -32,11 +31,13 @@ public class ANSI {
     private static String MAGENTA_BG = "\u001B[0;45m";
     private static String CYAN_BG = "\u001B[0;46m";
     private static String WHITE_BG = "\u001B[0;47m";
+    private static String DEFAULT_BG = "\u001B[0;47m";
     private static String ALTERNATE_BUFFER =  "\u001B[?1049h";
     private static String MAIN_BUFFER =  "\u001B[?1049l";
     private static String INVERT_BACKGROUND =  "\u001B[7m";
     private static String NORMAL_BACKGROUND =  "\u001B[27m";
     private static String RESET = "\u001B[0;0m";
+    private static String NORMAL_TEXT = "\u001B[0;22m";
     private static String BOLD = "\u001B[0;1m";
     private static String CURSOR_START = "\u001B[1G";
     private static String CURSOR_ROW = "\u001B[6n";
@@ -77,6 +78,10 @@ public class ANSI {
         return WHITE_TEXT;
     }
 
+    public static String defaultText() {
+        return DEFAULT_TEXT;
+    }
+
     public static String blackBackground() {
         return BLACK_BG;
     }
@@ -109,6 +114,10 @@ public class ANSI {
         return WHITE_BG;
     }
 
+    public static String defaultBackground() {
+        return DEFAULT_BG;
+    }
+
     public static String reset() {
         return RESET;
     }
@@ -131,6 +140,10 @@ public class ANSI {
 
     public static String getBold() {
         return BOLD;
+    }
+
+    public static String getNormalText() {
+        return NORMAL_TEXT;
     }
 
     public static String moveCursorToBeginningOfLine() {

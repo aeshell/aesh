@@ -10,6 +10,7 @@ import org.fusesource.jansi.AnsiOutputStream;
 import org.fusesource.jansi.WindowsAnsiOutputStream;
 import org.fusesource.jansi.internal.WindowsSupport;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -150,6 +152,26 @@ public class WindowsTerminal implements Terminal {
             size.setWidth(getWidth());
         }
         return size;
+    }
+
+    @Override
+    public void writeChar(TerminalCharacter character) throws IOException {
+        writeToStdOut(character.getBackgroundColor().getBackgroundColor());
+        writeToStdOut(character.getForegroundColor().getForegroundColor());
+        writeToStdOut(character.getTextType());
+        writeToStdOut(character.getCharacter());
+    }
+
+    @Override
+    public void writeChars(List<TerminalCharacter> chars) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        for(TerminalCharacter c : chars) {
+            builder.append(c.getTextType())
+                    .append(c.getBackgroundColor().getBackgroundColor())
+                    .append(c.getForegroundColor().getForegroundColor())
+                    .append(c.getCharacter());
+        }
+        writeToStdOut(builder.toString());
     }
 
     @Override

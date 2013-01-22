@@ -9,6 +9,7 @@ package org.jboss.aesh.terminal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 /**
  * Generic interface for Terminals
@@ -86,6 +87,10 @@ public interface Terminal {
      * @return terminal size
      */
     TerminalSize getSize();
+
+    void writeChar(TerminalCharacter c) throws IOException;
+
+    void writeChars(List<TerminalCharacter> chars) throws IOException;
 
     boolean isEchoEnabled();
 

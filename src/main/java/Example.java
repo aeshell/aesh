@@ -14,6 +14,8 @@ import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Color;
+import org.jboss.aesh.terminal.TerminalCharacter;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.IOException;
@@ -34,8 +36,18 @@ public class Example {
         Settings.getInstance().setLogFile("aesh_example.log");
        //Settings.getInstance().setHistoryDisabled(true);
         //Settings.getInstance().setHistoryPersistent(false);
+        List<TerminalCharacter> chars = new ArrayList<TerminalCharacter>();
+        chars.add(new TerminalCharacter('[', Color.DEFAULT, Color.BLUE, false));
+        chars.add(new TerminalCharacter('t', Color.DEFAULT, Color.RED, false));
+        chars.add(new TerminalCharacter('e', Color.DEFAULT, Color.RED, false));
+        chars.add(new TerminalCharacter('s', Color.DEFAULT, Color.RED, true));
+        chars.add(new TerminalCharacter('t', Color.DEFAULT, Color.RED, false));
+        chars.add(new TerminalCharacter(']', Color.DEFAULT, Color.BLUE, false));
+        chars.add(new TerminalCharacter('$', Color.DEFAULT, Color.WHITE, false));
+        chars.add(new TerminalCharacter(' ', Color.DEFAULT, Color.WHITE, false));
 
-        String prompt = ANSI.redText()+"[test@foo]"+ANSI.reset()+"$ ";
+        Prompt prompt = new Prompt(chars);
+        //String prompt = ANSI.redText()+"[test@foo]"+ANSI.reset()+"$ ";
 
         //a simple interruptHook
         Settings.getInstance().setInterruptHook(new InterruptHook() {
@@ -166,9 +178,10 @@ public class Example {
         exampleConsole.addCompletion(completer);
 
         ConsoleOutput line;
-        //exampleConsole.pushToStdOut(ANSI.greenBackground());
+        exampleConsole.pushToStdOut(ANSI.greenBackground());
         //while ((line = exampleConsole.read(prompt)) != null) {
-        while ((line = exampleConsole.read("[test@foo.bar]~> ")) != null) {
+        //while ((line = exampleConsole.read("[test@foo.bar]~> ")) != null) {
+        while ((line = exampleConsole.read(prompt, null)) != null) {
             exampleConsole.pushToStdOut("======>\"" + line.getBuffer() + "\"\n");
 
             if (line.getBuffer().equalsIgnoreCase("quit") || line.getBuffer().equalsIgnoreCase("exit") ||

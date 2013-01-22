@@ -57,7 +57,7 @@ public class BufferTest extends TestCase {
 
         String prompt = "foo@bar:";
 
-        buffer.reset(prompt);
+        buffer.reset(new Prompt(prompt));
         buffer.write(input);
         //buffer.setCursor(5);
 
@@ -87,7 +87,7 @@ public class BufferTest extends TestCase {
         assertEquals(new String(expected), new String(out));
         assertEquals(7, buffer.getCursor());
 
-        buffer.reset(">");
+        buffer.reset(new Prompt(">"));
         buffer.write("foo");
         buffer.move(-4, 80, true);
 
