@@ -27,7 +27,7 @@ import java.util.logging.Logger;
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
-public class WindowsTerminal implements Terminal {
+public class WindowsTerminal extends AbstractTerminal {
 
     private Writer stdOut;
     private Writer stdErr;
@@ -152,26 +152,6 @@ public class WindowsTerminal implements Terminal {
             size.setWidth(getWidth());
         }
         return size;
-    }
-
-    @Override
-    public void writeChar(TerminalCharacter character) throws IOException {
-        writeToStdOut(character.getBackgroundColor().getBackgroundColor());
-        writeToStdOut(character.getForegroundColor().getForegroundColor());
-        writeToStdOut(character.getTextType());
-        writeToStdOut(character.getCharacter());
-    }
-
-    @Override
-    public void writeChars(List<TerminalCharacter> chars) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        for(TerminalCharacter c : chars) {
-            builder.append(c.getTextType())
-                    .append(c.getBackgroundColor().getBackgroundColor())
-                    .append(c.getForegroundColor().getForegroundColor())
-                    .append(c.getCharacter());
-        }
-        writeToStdOut(builder.toString());
     }
 
     @Override

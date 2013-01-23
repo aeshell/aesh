@@ -44,7 +44,7 @@ public class Example {
         chars.add(new TerminalCharacter('t', Color.DEFAULT, Color.RED, false));
         chars.add(new TerminalCharacter(']', Color.DEFAULT, Color.BLUE, false));
         chars.add(new TerminalCharacter('$', Color.DEFAULT, Color.WHITE, false));
-        chars.add(new TerminalCharacter(' ', Color.DEFAULT, Color.WHITE, false));
+        chars.add(new TerminalCharacter(' ', Color.DEFAULT, Color.DEFAULT, false));
 
         Prompt prompt = new Prompt(chars);
         //String prompt = ANSI.redText()+"[test@foo]"+ANSI.reset()+"$ ";
