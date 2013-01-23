@@ -79,17 +79,37 @@ public class CommandLineParser {
      * @throws IllegalArgumentException
      */
     public CommandLine parse(String line) throws IllegalArgumentException {
+        return parse(line, false);
+    }
+
+    /**
+     * Parse a command line with the defined parameter as base of the rules.
+     * If any options are found, but not defined in the parameter object an
+     * IllegalArgumentException will be thrown.
+     * Also, if a required option is not found or options specified with value,
+     * but is not given any value an IllegalArgumentException will be thrown.
+     *
+     * The options found will be returned as a {@link CommandLine} object where
+     * they can be queried after.
+     *
+     * @param line input
+     * @param ignoreMissingRequirements if we should ignore
+     * @return CommandLine
+     * @throws IllegalArgumentException
+     */
+    public CommandLine parse(String line, boolean ignoreMissingRequirements) throws IllegalArgumentException {
         List<String> lines = Parser.findAllWords(line);
         if(lines.size() > 0) {
             for(ParameterInt param : params) {
                 if(param.getName().equals(lines.get(0)))
-                    return doParse(param, lines);
+                    return doParse(param, lines, ignoreMissingRequirements);
             }
         }
         throw new IllegalArgumentException("param not found: "+line);
     }
 
-    private CommandLine doParse(ParameterInt param, List<String> lines) throws IllegalArgumentException {
+    private CommandLine doParse(ParameterInt param, List<String> lines,
+                                boolean ignoreMissing) throws IllegalArgumentException {
         param.clean();
         CommandLine commandLine = new CommandLine();
         OptionInt active = null;
@@ -180,7 +200,8 @@ public class CommandLineParser {
         }
 
         //this will throw and IllegalArgumentException if needed
-        checkForMissingRequiredOptions(param, commandLine);
+        if(!ignoreMissing)
+            checkForMissingRequiredOptions(param, commandLine);
 
         return commandLine;
     }
