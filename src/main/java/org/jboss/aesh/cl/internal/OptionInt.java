@@ -23,7 +23,7 @@ public class OptionInt {
     private boolean hasValue = true;
     private List<String> values;
     private String argument;
-    private Object type;
+    private Class<?> type;
     private boolean required = false;
     private char valueSeparator;
     private boolean isProperty = false;
@@ -32,7 +32,7 @@ public class OptionInt {
 
     public OptionInt(char name, String longName, String description, boolean hasValue,
                      String argument, boolean required, char valueSeparator,
-                     boolean isProperty, boolean hasMultipleValues, Object type) {
+                     boolean isProperty, boolean hasMultipleValues, Class<?> type) {
         this.name = String.valueOf(name);
         this.longName = longName;
         this.description = description;
@@ -87,7 +87,7 @@ public class OptionInt {
         return required;
     }
 
-    public Object getType() {
+    public Class<?> getType() {
         return type;
     }
 

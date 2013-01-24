@@ -6,6 +6,11 @@
  */
 package org.jboss.aesh.console.completion;
 
+import org.jboss.aesh.cl.CommandLineParser;
+import org.jboss.aesh.cl.OptionBuilder;
+import org.jboss.aesh.cl.ParameterBuilder;
+import org.jboss.aesh.cl.internal.OptionInt;
+import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.BaseConsoleTest;
@@ -90,5 +95,64 @@ public class CompletionConsoleTest extends BaseConsoleTest {
 
         console.stop();
     }
+
+    public void testCompletionWithOptions() throws IOException {
+
+        final ParameterInt param = new ParameterBuilder().name("less")
+                .usage("less -options <files>")
+                .generateParameter();
+
+        param.addOption(new OptionBuilder().name('f').longName("foo").hasValue(true).create());
+        param.addOption(new OptionBuilder().name('b').longName("bar").hasValue(true).create());
+
+        final CommandLineParser parser = new CommandLineParser(param);
+        final StringBuilder builder = new StringBuilder();
+
+        Completion completion = new Completion() {
+            @Override
+            public void complete(CompleteOperation co) {
+                if(parser.getParameters().get(0).getName().startsWith(co.getBuffer())) {
+                    co.addCompletionCandidate(parser.getParameters().get(0).getName());
+                }
+                // commandline longer than the name
+                else if(co.getBuffer().startsWith(parser.getParameters().get(0).getName())){
+                   if(co.getBuffer().length() > parser.getParameters().get(0).getName().length())  {
+                      if(co.getBuffer().endsWith(" --")) {
+                         for(OptionInt o : parser.getParameters().get(0).getOptions()) {
+                             co.addCompletionCandidate("--"+o.getLongName());
+                             builder.append("--"+o.getLongName()+" ");
+                         }
+                      }
+                      else if(co.getBuffer().endsWith(" -")) {
+                          for(OptionInt o : parser.getParameters().get(0).getOptions()) {
+                              co.addCompletionCandidate("-"+o.getName());
+                              builder.append("-"+o.getName()+" ");
+                          }
+                      }
+                   }
+                }
+            }
+        };
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+
+        Console console = getTestConsole(pipedInputStream);
+        console.addCompletion(completion);
+
+
+        outputStream.write("le".getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.write("\n".getBytes());
+        ConsoleOutput output = console.read(null);
+        assertEquals("less ", output.getBuffer());
+
+        outputStream.write("less -".getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.write("\n".getBytes());
+        output = console.read(null);
+        assertEquals("-f -b ", builder.toString());
+
+    }
+
 
 }

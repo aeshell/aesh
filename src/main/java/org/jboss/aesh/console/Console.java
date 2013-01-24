@@ -34,7 +34,6 @@ import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.InMemoryHistory;
 import org.jboss.aesh.history.SearchDirection;
 import org.jboss.aesh.terminal.Terminal;
-import org.jboss.aesh.terminal.TerminalCharacter;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.undo.UndoManager;
@@ -909,10 +908,7 @@ public class Console {
     }
 
     private void redrawLine() throws IOException {
-        //drawLine(buffer.getPrompt()+ buffer.getLine());
         drawLine(buffer.getPrompt().getPromptAsString()+ buffer.getLine());
-        //displayPrompt(buffer.getPrompt());
-        //drawLine(buffer.getLine());
     }
 
     private void drawLine(String line) throws IOException {

@@ -61,7 +61,7 @@ public class ParameterInt {
      * @param type what kind of type it is (not used)
      */
     public void addOption(char name, String longName, String description, boolean hasValue,
-                     String argument, boolean required, boolean hasMultipleValues, Object type) {
+                     String argument, boolean required, boolean hasMultipleValues, Class<?> type) {
         options.add(new OptionInt(name, longName, description,
                 hasValue, argument, required, '\u0000', false, hasMultipleValues, type));
     }

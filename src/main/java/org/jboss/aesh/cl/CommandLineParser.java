@@ -136,11 +136,12 @@ public class CommandLineParser {
 
                     commandLine.addOption(new
                             ParsedOption(active.getName(), active.getLongName(),
-                            new OptionProperty(name, value)));
+                            new OptionProperty(name, value), active.getType()));
                     active = null;
                 }
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
-                    commandLine.addOption(new ParsedOption(active.getName(), active.getLongName(), active.getValue()));
+                    commandLine.addOption(new ParsedOption(active.getName(), active.getLongName(),
+                            active.getValue(), active.getType()));
                     active = null;
                 }
                 else if(active == null)
@@ -168,12 +169,13 @@ public class CommandLineParser {
 
                     commandLine.addOption(new
                             ParsedOption(active.getName(), active.getLongName(),
-                            new OptionProperty(name, value)));
+                            new OptionProperty(name, value), active.getType()));
                     active = null;
                 }
 
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
-                    commandLine.addOption(new ParsedOption(String.valueOf(active.getName()), active.getLongName(), active.getValue()));
+                    commandLine.addOption(new ParsedOption(String.valueOf(active.getName()),
+                            active.getLongName(), active.getValue(), active.getType()));
                     active = null;
                 }
                 else if(active == null)
@@ -190,7 +192,8 @@ public class CommandLineParser {
                 else
                     active.addValue(parseLine);
 
-                commandLine.addOption(new ParsedOption(active.getName(), active.getLongName(), active.getValues()));
+                commandLine.addOption(new ParsedOption(active.getName(),
+                        active.getLongName(), active.getValues(), active.getType()));
                 active = null;
             }
             //if no param is "active", we add it as an argument

@@ -19,6 +19,7 @@ public class OptionBuilder {
     private String longName = "";
     private String description;
     private String argument;
+    private Class<?> type;
     private boolean hasValue = true;
     private boolean required = false;
     private boolean isProperty = false;
@@ -45,6 +46,11 @@ public class OptionBuilder {
 
     public OptionBuilder argument(String argument) {
         this.argument = argument;
+        return this;
+    }
+
+    public OptionBuilder type(Class<?> type) {
+        this.type = type;
         return this;
     }
 
@@ -75,6 +81,6 @@ public class OptionBuilder {
 
     public OptionInt create() {
         return new OptionInt(name, longName, description, hasValue, argument, required,
-                valueSeparator, isProperty, hasMultipleValues, null);
+                valueSeparator, isProperty, hasMultipleValues, type);
     }
 }

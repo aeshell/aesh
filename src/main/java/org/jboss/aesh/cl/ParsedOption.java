@@ -17,28 +17,31 @@ public class ParsedOption {
 
     private String name;
     private String longName;
+    private Class<?> type;
     private List<String> values;
     private List<OptionProperty> properties;
 
-    public ParsedOption(String name, String longName, List<String> values) {
+    public ParsedOption(String name, String longName, List<String> values, Class<?> type) {
         this.name = name;
         this.longName = longName;
-
+        this.type = type;
         this.values = new ArrayList<String>();
         this.values.addAll(values);
     }
 
-    public ParsedOption(String name, String longName, OptionProperty property) {
+    public ParsedOption(String name, String longName, OptionProperty property, Class<?> type) {
         this.name = name;
         this.longName = longName;
+        this.type = type;
         values = new ArrayList<String>();
         properties = new ArrayList<OptionProperty>();
         properties.add(property);
     }
 
-    public ParsedOption(String name, String longName, String value) {
+    public ParsedOption(String name, String longName, String value, Class<?> type) {
         this.name = name;
         this.longName = longName;
+        this.type = type;
         values = new ArrayList<String>();
         values.add(value);
     }
@@ -49,6 +52,10 @@ public class ParsedOption {
 
     public String getLongName() {
         return longName;
+    }
+
+    public Class<?> getType() {
+        return type;
     }
 
     public String getValue() {
@@ -62,7 +69,4 @@ public class ParsedOption {
     public List<OptionProperty> getProperties() {
         return properties;
     }
-
-
-
 }

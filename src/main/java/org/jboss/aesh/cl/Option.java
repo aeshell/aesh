@@ -83,4 +83,9 @@ public @interface Option {
      */
     boolean required() default false;
 
+    /**
+     * Option type, default is String.class
+     */
+    Class<?> type() default String.class;
+
 }
