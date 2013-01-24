@@ -57,6 +57,10 @@ public class Config {
         return tmpDir;
     }
 
+    public static String getHomeDir() {
+        return System.getProperty("user.home");
+    }
+
     /**
      * Must be able to parse:
      * set variablename value

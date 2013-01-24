@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 public class FileUtils {
 
     private static final Pattern startsWithParent = Pattern.compile("^\\.\\..*");
+    private static final Pattern startsWithHomePattern = Pattern.compile("^~/*");
     private static final Pattern containParent = Config.isOSPOSIXCompatible() ?
             Pattern.compile("[\\.\\.["+ Config.getPathSeparator()+"]?]+") : Pattern.compile("[\\.\\.[\\\\]?]+");
     private static final Pattern space = Pattern.compile(".+\\s+.+");
@@ -40,12 +41,19 @@ public class FileUtils {
     private static Logger logger = LoggerUtil.getLogger(FileUtils.class.getName());
 
     public static void listMatchingDirectories(CompleteOperation completion, String possibleDir, File cwd) {
+        boolean startsWithHome = false;
         //by default we set the completion to not append separator
         completion.doAppendSeparator(false);
         // that starts with possibleDir
         List<String> returnFiles = new ArrayList<String>();
+
+        if(startsWithHomePattern.matcher(possibleDir).matches()) {
+            startsWithHome = true;
+            possibleDir = Config.getHomeDir() + possibleDir.substring(1);
+        }
+
         if (possibleDir.trim().isEmpty()) {
-            List<String> allFiles = listDirectory(cwd);
+            List<String> allFiles = listDirectory(cwd, null);
             for (String file : allFiles)
                 if (file.startsWith(possibleDir))
                     returnFiles.add(Parser.switchSpacesToEscapedSpacesInWord( file.substring(possibleDir.length())));
@@ -60,8 +68,9 @@ public class FileUtils {
                 completion.addCompletionCandidates(returnFiles);
             }
             else {
-                completion.addCompletionCandidates( listDirectory(new File(cwd.getAbsolutePath() +
-                        Config.getPathSeparator() +possibleDir)));
+                completion.addCompletionCandidates(
+                        listDirectory(new File(cwd.getAbsolutePath() +
+                        Config.getPathSeparator() +possibleDir), null));
             }
         }
         else if(new File(cwd.getAbsolutePath() +Config.getPathSeparator()+ possibleDir).isFile()) {
@@ -70,7 +79,7 @@ public class FileUtils {
             //append when we have a file
             completion.doAppendSeparator(true);
         }
-        //else if(possibleDir.startsWith(("/")) && new File(possibleDir).isFile()) {
+        //starts with / and the possibleDir is a file
         else if(startsWithSlash.matcher(possibleDir).matches() &&
                 new File(possibleDir).isFile()) {
             returnFiles.add("");
@@ -78,8 +87,12 @@ public class FileUtils {
             //append when we have a file
             completion.doAppendSeparator(true);
         }
+        // starts with / and no file
         else {
             returnFiles = new ArrayList<String>();
+            //if is a dir and do not end with /
+            //TODO: need to check if there are other files/folders that might start
+            // with that filename
             if(new File(possibleDir).isDirectory() &&
                     !endsWithSlash.matcher(possibleDir).matches()) {
                 returnFiles.add(Config.getPathSeparator());
@@ -88,10 +101,9 @@ public class FileUtils {
             }
             else if(new File(possibleDir).isDirectory() &&
                     !endsWithSlash.matcher(possibleDir).matches()) {
-                completion.addCompletionCandidates( listDirectory(new File(possibleDir)));
+                completion.addCompletionCandidates( listDirectory(new File(possibleDir), null));
                 return;
             }
-
 
             //1.list possibleDir.substring(pos
             String lastDir = null;
@@ -111,15 +123,15 @@ public class FileUtils {
             List<String> allFiles;
             if(startsWithSlash.matcher(possibleDir).matches()) {
                 if(lastDir != null && lastDir.startsWith(Config.getPathSeparator()))
-                    allFiles =  listDirectory(new File(lastDir));
+                    allFiles =  listDirectory(new File(lastDir), rest);
                 else
-                    allFiles =  listDirectory(new File(Config.getPathSeparator()+lastDir));
+                    allFiles =  listDirectory(new File(Config.getPathSeparator()+lastDir), rest);
             }
             else if(lastDir != null)
                 allFiles =  listDirectory(new File(cwd+
-                        Config.getPathSeparator()+lastDir));
+                        Config.getPathSeparator()+lastDir), rest);
             else
-                allFiles =  listDirectory(cwd);
+                allFiles =  listDirectory(cwd, rest);
 
             //TODO: optimize
             //1. remove those that do not start with rest, if its more than one
@@ -134,6 +146,7 @@ public class FileUtils {
                     returnFiles.add(Parser.switchSpacesToEscapedSpacesInWord(file));
             }
 
+            //try to find if more than one filename start with the same word
             if(returnFiles.size() > 1) {
                 String startsWith = Parser.findStartsWith(returnFiles);
                 if(startsWith != null && startsWith.length() > 0) {
@@ -156,11 +169,17 @@ public class FileUtils {
         }
     }
 
-    private static List<String> listDirectory(File path) {
+    private static List<String> listDirectory(File path, String rest) {
         List<String> fileNames = new ArrayList<String>();
         if(path != null && path.isDirectory())
-            for(File file : path.listFiles())
-                fileNames.add(file.getName());
+            for(File file : path.listFiles()) {
+                if(rest == null || rest.length() == 0)
+                    fileNames.add(file.getName());
+                else {
+                    if(file.getName().startsWith(rest))
+                        fileNames.add(file.getName());
+                }
+            }
 
         return fileNames;
     }

@@ -71,6 +71,4 @@ public class TerminalHandler {
     public void setForegroundColor(Color foregroundColor) {
         this.foregroundColor = foregroundColor;
     }
-
-
 }
