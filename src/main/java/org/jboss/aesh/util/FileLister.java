@@ -12,7 +12,6 @@ import org.jboss.aesh.console.Config;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -34,8 +33,6 @@ public class FileLister {
     private String rest;
     private String lastDir;
 
-    private static Logger logger = LoggerUtil.getLogger(FileLister.class.getName());
-
     public FileLister(String incDir, File cwd) {
         if(incDir == null)
             throw new IllegalArgumentException("Incoming directory cannot be null");
@@ -44,16 +41,33 @@ public class FileLister {
         this.incDir = Parser.switchEscapedSpacesToSpacesInWord(incDir);
         this.cwd = cwd;
         findRestAndLastDir();
-        logger.info("FileLister: "+this.toString());
     }
 
     public void findMatchingDirectories(CompleteOperation completion) {
        completion.doAppendSeparator(false);
 
-
         //if incDir is empty, just list cwd
         if(incDir.trim().isEmpty()) {
             completion.addCompletionCandidates( listDirectory(cwd, null));
+        }
+        else if(startWithHome()) {
+            if(isHomeAndIncDirADirectory()) {
+                if(endWithSlash()) {
+                    completion.addCompletionCandidates(
+                            listDirectory(new File(Config.getHomeDir()+incDir.substring(1)), null));
+                }
+                else
+                    completion.addCompletionCandidate(Config.getPathSeparator());
+            }
+            else if(isHomeAndIncDirAFile()) {
+                completion.addCompletionCandidate("");
+                //append when we have a file
+                completion.doAppendSeparator(true);
+            }
+            //not a directory or file, list what we find
+            else {
+               listPossibleDirectories(completion);
+            }
         }
         else if(!startWithSlash()) {
             if(isCwdAndIncDirADirectory()) {
@@ -93,11 +107,8 @@ public class FileLister {
             else {
                listPossibleDirectories(completion);
             }
-
         }
-        else if(startWithHome()) {
 
-        }
     }
 
     private void listPossibleDirectories(CompleteOperation completion) {
@@ -109,9 +120,18 @@ public class FileLister {
             else
                 returnFiles =  listDirectory(new File(Config.getPathSeparator()+lastDir), rest);
         }
-        else if(lastDir != null)
+        else if(startWithHome()) {
+            //if(lastDir != null && lastDir.startsWith(Config.getPathSeparator()))
+            if(lastDir != null) {
+                returnFiles =  listDirectory(new File(Config.getHomeDir()+lastDir.substring(1)), rest);
+            }
+            else
+                returnFiles =  listDirectory(new File(Config.getHomeDir()+Config.getPathSeparator()), rest);
+        }
+        else if(lastDir != null) {
             returnFiles =  listDirectory(new File(cwd+
                     Config.getPathSeparator()+lastDir), rest);
+        }
         else
             returnFiles =  listDirectory(cwd, rest);
 
@@ -148,7 +168,6 @@ public class FileLister {
         }
     }
 
-
     private boolean isIncDirADirectory() {
         return new File(incDir).isDirectory();
     }
@@ -167,12 +186,22 @@ public class FileLister {
                 Config.getPathSeparator() + incDir).isFile();
     }
 
+    private boolean isHomeAndIncDirADirectory() {
+        return new File(Config.getHomeDir()+
+                 incDir.substring(1)).isDirectory();
+    }
+
+    private boolean isHomeAndIncDirAFile() {
+        return new File(Config.getHomeDir()+
+                incDir.substring(1)).isFile();
+    }
+
     private boolean startWithParent() {
         return startsWithParent.matcher(incDir).matches();
     }
 
     private boolean startWithHome() {
-        return startsWithHomePattern.matcher(incDir).matches();
+        return incDir.startsWith("~/");
     }
 
     private boolean startWithSlash() {
@@ -188,11 +217,9 @@ public class FileLister {
         if(path != null && path.isDirectory())
             for(File file : path.listFiles()) {
                 if(rest == null || rest.length() == 0)
-                    //fileNames.add(file.getName());
                     fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
                 else {
                     if(file.getName().startsWith(rest))
-                        //fileNames.add(file.getName());
                         fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
                 }
             }
