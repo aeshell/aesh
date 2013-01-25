@@ -36,4 +36,9 @@ public @interface Parameter {
      * All the defined options for this command
      */
     Option[] options() default {};
+
+    /**
+     * Define which kind of type the arguments are
+     */
+    Class<?> argumentType() default String.class;
 }

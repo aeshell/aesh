@@ -209,6 +209,20 @@ public class CommandLineParser {
         return commandLine;
     }
 
+    public ParsedCompleteObject findCompleteObject(String line) {
+        CommandLine cl = parse(line, true);
+        if(cl.getArguments().isEmpty()) {
+            ParsedOption po = cl.getOptions().get(cl.getOptions().size()-1);
+            return new ParsedCompleteObject( po.getLongName().isEmpty() ? po.getName() : po.getLongName(),
+                    po.getValue(), po.getType(), true);
+        }
+        else {
+            return new ParsedCompleteObject("",
+                    cl.getArguments().get(cl.getArguments().size()-1),
+            getParameters().get(0).getArgumentType(), false);
+        }
+    }
+
     private void checkForMissingRequiredOptions(ParameterInt param, CommandLine commandLine) throws IllegalArgumentException {
         for(OptionInt o : param.getOptions())
             if(o.isRequired()) {

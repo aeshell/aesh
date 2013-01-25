@@ -41,13 +41,15 @@ public class ParserGenerator {
                 options[i] =  new OptionInt(
                         o.name(), o.longName(), o.description(),
                         o.hasValue(), o.argument(), o.required(), o.valueSeparator(),
-                        o.isProperty(), o.hasMultipleValues(), null);
+                        o.isProperty(), o.hasMultipleValues(), o.type());
             }
 
-            return new ParameterInt(param.name(), param.usage(), options);
+            return new ParameterInt(param.name(), param.usage(),
+                    param.argumentType(), options);
         }
         else
-            return new ParameterInt(param.name(), param.usage(), new OptionInt[0]);
+            return new ParameterInt(param.name(), param.usage(),
+                    param.argumentType(), new OptionInt[0]);
     }
 
 }

@@ -21,6 +21,7 @@ public class ParameterBuilder {
 
     private String name;
     private String usage;
+    private Class<?> argumentType = String.class;
     private List<OptionInt> options;
 
 
@@ -38,6 +39,11 @@ public class ParameterBuilder {
         return this;
     }
 
+    public ParameterBuilder argumentType(Class<?> type) {
+        this.argumentType = type;
+        return this;
+    }
+
     public ParameterBuilder addOption(OptionInt option) {
         this.options.add(option);
         return this;
@@ -51,6 +57,6 @@ public class ParameterBuilder {
     public ParameterInt generateParameter() throws IllegalArgumentException {
         if(name == null || name.length() < 1)
             throw new RuntimeException("The parameter name must be defined");
-        return  new ParameterInt(name, usage, options);
+        return  new ParameterInt(name, usage, argumentType, options);
     }
 }

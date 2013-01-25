@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
+ * Helper class to list possible files during a complete operation.
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class FileLister {
@@ -43,6 +45,12 @@ public class FileLister {
         findRestAndLastDir();
     }
 
+    /**
+     * findMatchingDirectories will try to populate the CompleteOperation
+     * object based on it initial params.
+     *
+     * @param completion
+     */
     public void findMatchingDirectories(CompleteOperation completion) {
        completion.doAppendSeparator(false);
 

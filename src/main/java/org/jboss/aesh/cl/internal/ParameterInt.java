@@ -19,6 +19,8 @@ public class ParameterInt {
 
     private String name;
     private String usage;
+
+   private Class<?> argumentType;
     private List<OptionInt> options;
 
     public ParameterInt(String name, String usage) {
@@ -27,15 +29,26 @@ public class ParameterInt {
         setOptions(new ArrayList<OptionInt>());
     }
 
-    public ParameterInt(String name, String usage, OptionInt[] options) {
+    public ParameterInt(String name, String usage, Class<?> argumentType) {
         setName(name);
         setUsage(usage);
+        setArgumentType(argumentType);
+        setOptions(new ArrayList<OptionInt>());
+    }
+
+    public ParameterInt(String name, String usage,
+                        Class<?> argumentType, OptionInt[] options) {
+        setName(name);
+        setUsage(usage);
+        setArgumentType(argumentType);
         setOptions(Arrays.asList(options));
     }
 
-    public ParameterInt(String name, String usage, List<OptionInt> options) {
+    public ParameterInt(String name, String usage,
+                        Class<?> argumentType, List<OptionInt> options) {
         setName(name);
         setUsage(usage);
+        setArgumentType(argumentType);
         setOptions(options);
     }
 
@@ -97,6 +110,14 @@ public class ParameterInt {
 
     public void setUsage(String usage) {
         this.usage = usage;
+    }
+
+    public Class<?> getArgumentType() {
+        return argumentType;
+    }
+
+    public void setArgumentType(Class<?> argumentType) {
+        this.argumentType = argumentType;
     }
 
     public OptionInt findOption(String name) {
