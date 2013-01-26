@@ -113,6 +113,7 @@ public class CommandLineParser {
         param.clean();
         CommandLine commandLine = new CommandLine();
         OptionInt active = null;
+        boolean addedArgument = false;
         //skip first entry since that's the name of the command
         for(int i=1; i < lines.size(); i++) {
             String parseLine = lines.get(i);
@@ -138,11 +139,15 @@ public class CommandLineParser {
                             ParsedOption(active.getName(), active.getLongName(),
                             new OptionProperty(name, value), active.getType()));
                     active = null;
+                    if(addedArgument)
+                        throw new IllegalArgumentException("An argument was given to an option that do not support it.");
                 }
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
                     commandLine.addOption(new ParsedOption(active.getName(), active.getLongName(),
                             active.getValue(), active.getType()));
                     active = null;
+                    if(addedArgument)
+                        throw new IllegalArgumentException("An argument was given to an option that do not support it.");
                 }
                 else if(active == null)
                     throw new IllegalArgumentException("Option: "+parseLine+" is not a valid option for this command");
@@ -171,12 +176,16 @@ public class CommandLineParser {
                             ParsedOption(active.getName(), active.getLongName(),
                             new OptionProperty(name, value), active.getType()));
                     active = null;
+                    if(addedArgument)
+                        throw new IllegalArgumentException("An argument was given to an option that do not support it.");
                 }
 
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
                     commandLine.addOption(new ParsedOption(String.valueOf(active.getName()),
                             active.getLongName(), active.getValue(), active.getType()));
                     active = null;
+                    if(addedArgument)
+                        throw new IllegalArgumentException("An argument was given to an option that do not support it.");
                 }
                 else if(active == null)
                     throw new IllegalArgumentException("Option: "+parseLine+" is not a valid option for this command");
@@ -195,10 +204,13 @@ public class CommandLineParser {
                 commandLine.addOption(new ParsedOption(active.getName(),
                         active.getLongName(), active.getValues(), active.getType()));
                 active = null;
+                if(addedArgument)
+                    throw new IllegalArgumentException("An argument was given to an option that do not support it.");
             }
             //if no param is "active", we add it as an argument
             else {
                 commandLine.addArgument(parseLine);
+                addedArgument = true;
             }
         }
 

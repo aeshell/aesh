@@ -17,11 +17,18 @@ public class ParseCompleteObjectTest extends TestCase {
         ParsedCompleteObject pco = clp.findCompleteObject("test -e foo1");
         assertEquals("foo1", pco.getValue());
         assertEquals(Boolean.class, pco.getType());
+        assertTrue(pco.isOption());
 
         pco = clp.findCompleteObject("test -f --equal tru");
         assertEquals("tru", pco.getValue());
         assertEquals(Boolean.class, pco.getType());
         assertEquals("equal", pco.getName());
+        assertTrue(pco.isOption());
+
+        pco = clp.findCompleteObject("test --equal true foo.txt");
+        assertEquals("foo.txt", pco.getValue());
+        assertEquals(String.class, pco.getType());
+        assertTrue(pco.isArgument());
 
     }
 }
