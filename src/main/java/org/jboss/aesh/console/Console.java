@@ -681,7 +681,7 @@ public class Console {
         // line thats about to be injected
         if((newLine.length()+buffer.getPrompt().getLength()) >= terminal.getSize().getWidth() &&
                 newLine.length() >= buffer.getLine().length()) {
-            int currentRow = getCurrentRow();
+            int currentRow = terminal.getCursor().getRow();
             if(currentRow > -1) {
                 int cursorRow = buffer.getCursorWithPrompt() / terminal.getSize().getWidth();
                 if(currentRow + (newLine.length() / terminal.getSize().getWidth()) - cursorRow >= terminal.getSize().getHeight()) {
@@ -707,7 +707,7 @@ public class Console {
     private void insertBufferLine(String insert, int position) throws IOException {
         if((insert.length()+buffer.totalLength()) >= terminal.getSize().getWidth()) { //&&
                 //(insert.length()+buffer.totalLength()) > buffer.getLine().length()) {
-            int currentRow = getCurrentRow();
+            int currentRow = terminal.getCursor().getRow();
             if(currentRow > -1) {
                 int newLine = insert.length()+buffer.totalLength();
                 int cursorRow = buffer.getCursorWithPrompt() / terminal.getSize().getWidth();
@@ -769,7 +769,7 @@ public class Console {
             //check if we just started a new line, if we did we need to make sure that we add one
             if(buffer.totalLength() > terminal.getSize().getWidth() &&
                     (buffer.totalLength()-1) % terminal.getSize().getWidth() == 1) {
-                int ansiCurrentRow = getCurrentRow();
+                int ansiCurrentRow = terminal.getCursor().getRow();
                 int currentRow = (buffer.getCursorWithPrompt() / terminal.getSize().getWidth());
                 if(currentRow > 0 && buffer.getCursorWithPrompt() % terminal.getSize().getWidth() == 0)
                     currentRow--;
@@ -923,7 +923,7 @@ public class Console {
                 currentRow--;
 
             if(Settings.getInstance().isLogging()) {
-                logger.info("actualRow:"+getCurrentRow()+", actualColumn:"+getCurrentColumn());
+                logger.info("actual position: "+terminal.getCursor());
                 logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
                         +", width:"+terminal.getSize().getWidth()+", height:"+terminal.getSize().getHeight()
                         +", delta:"+buffer.getDelta() +", buffer:"+buffer.getLine());
@@ -1185,6 +1185,7 @@ public class Console {
      *
      * @return current row
      */
+    /*
     private int getCurrentRow() {
         if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
             try {
@@ -1228,6 +1229,7 @@ public class Console {
         }
         return -1;
     }
+    */
 
     /**
      * Clear a ansi terminal

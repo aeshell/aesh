@@ -88,6 +88,11 @@ public interface Terminal {
      */
     TerminalSize getSize();
 
+    /**
+     * @return get the cursor position
+     */
+    CursorPosition getCursor();
+
     void writeChar(TerminalCharacter c) throws IOException;
 
     void writeChars(List<TerminalCharacter> chars) throws IOException;

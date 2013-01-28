@@ -11,40 +11,40 @@ package org.jboss.aesh.terminal;
  */
 public class CursorPosition {
 
-    private int y;
-    private int x;
+    private int row;
+    private int column;
 
-    public CursorPosition(int y, int x) {
-        setY(y);
-        setX(x);
+    public CursorPosition(int row, int column) {
+        setRow(row);
+        setColumn(column);
     }
 
     public void setPosition(CursorPosition cp) {
-        setY(cp.getY());
-        setX(cp.getX());
+        setRow(cp.getRow());
+        setColumn(cp.getColumn());
     }
 
-    public int getY() {
-        return y;
+    public int getRow() {
+        return row;
     }
 
-    public void setY(int y) {
-        this.y = y;
+    public void setRow(int row) {
+        this.row = row;
     }
 
-    public int getX() {
-        return x;
+    public int getColumn() {
+        return column;
     }
 
-    public void setX(int x) {
-        this.x = x;
+    public void setColumn(int column) {
+        this.column = column;
     }
 
     @Override
     public String toString() {
         return "CursorPosition{" +
-                "y=" + y +
-                ", x=" + x +
+                "row=" + row +
+                ", column=" + column +
                 '}';
     }
 
@@ -55,16 +55,16 @@ public class CursorPosition {
 
         CursorPosition that = (CursorPosition) o;
 
-        if (x != that.x) return false;
-        if (y != that.y) return false;
+        if (column != that.column) return false;
+        if (row != that.row) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = y;
-        result = 31 * result + x;
+        int result = row;
+        result = 31 * result + column;
         return result;
     }
 

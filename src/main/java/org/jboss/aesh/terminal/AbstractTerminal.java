@@ -6,13 +6,25 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.util.ANSI;
+
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public abstract class AbstractTerminal implements Terminal {
+
+    private Logger logger;
+
+    AbstractTerminal(Logger logger) {
+        this.logger = logger;
+    }
 
     @Override
     public void writeChar(TerminalCharacter character) throws IOException {
@@ -35,6 +47,30 @@ public abstract class AbstractTerminal implements Terminal {
                     .append(c.getCharacter());
         }
         writeToStdOut(builder.toString());
+    }
+
+    @Override
+    public CursorPosition getCursor() {
+        if(Settings.getInstance().isAnsiConsole() && Config.isOSPOSIXCompatible()) {
+            try {
+                writeToStdOut(ANSI.getCurrentCursorPos());
+                StringBuilder builder = new StringBuilder(8);
+                int row;
+                while((row = read(false)[0]) > -1 && row != 'R') {
+                    if (row != 27 && row != '[') {
+                        builder.append((char) row);
+                    }
+                }
+                return new CursorPosition(Integer.parseInt(builder.substring(0, builder.indexOf(";"))),
+                        Integer.parseInt(builder.substring(builder.lastIndexOf(";") + 1, builder.length())));
+            }
+            catch (Exception e) {
+                if(Settings.getInstance().isLogging())
+                    logger.log(Level.SEVERE, "Failed to find current row with ansi code: ",e);
+                return new CursorPosition(-1,-1);
+            }
+        }
+        return new CursorPosition(-1,-1);
     }
 
 }

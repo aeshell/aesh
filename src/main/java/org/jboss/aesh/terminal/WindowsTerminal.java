@@ -41,6 +41,10 @@ public class WindowsTerminal extends AbstractTerminal {
 
     private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 
+    public WindowsTerminal() {
+        super(logger);
+    }
+
     @Override
     public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
         //setting up reader

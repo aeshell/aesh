@@ -43,6 +43,10 @@ public class POSIXTerminal extends AbstractTerminal {
 
     private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 
+    public POSIXTerminal() {
+        super(logger);
+    }
+
     @Override
     public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
         // save the initial tty configuration

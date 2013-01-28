@@ -98,6 +98,11 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
+    public CursorPosition getCursor() {
+        return new CursorPosition(0,0);
+    }
+
+    @Override
     public void writeChar(TerminalCharacter character) throws IOException {
         writeToStdOut(character.getCharacter());
     }
