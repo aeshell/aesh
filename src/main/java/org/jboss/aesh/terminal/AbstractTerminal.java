@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.console.Buffer;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.ANSI;
@@ -49,6 +50,12 @@ public abstract class AbstractTerminal implements Terminal {
         writeToStdOut(builder.toString());
     }
 
+    /**
+     * Return the row position if we use a ansi terminal
+     * Send a terminal: '<ESC>[6n'
+     * and we receive the position as: '<ESC>[n;mR'
+     * where n = current row and m = current column
+     */
     @Override
     public CursorPosition getCursor() {
         if(Settings.getInstance().isAnsiConsole() && Config.isOSPOSIXCompatible()) {
@@ -71,6 +78,27 @@ public abstract class AbstractTerminal implements Terminal {
             }
         }
         return new CursorPosition(-1,-1);
+    }
+
+    @Override
+    public void setCursor(CursorPosition position) throws IOException {
+        if(getSize().isPositionWithinSize(position)) {
+            writeToStdOut(position.asAnsi());
+        }
+    }
+
+    @Override
+    public void moveCursor(int rows, int columns) throws IOException {
+        CursorPosition cp = getCursor();
+        cp.move(rows, columns);
+        if(getSize().isPositionWithinSize(cp)) {
+            setCursor(cp);
+        }
+    }
+
+    @Override
+    public void clear() throws IOException {
+        writeToStdOut(ANSI.clearScreen());
     }
 
 }

@@ -103,6 +103,14 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
+    public void setCursor(CursorPosition cp) throws IOException {
+    }
+
+    @Override
+    public void moveCursor(int r, int c) throws IOException {
+    }
+
+    @Override
     public void writeChar(TerminalCharacter character) throws IOException {
         writeToStdOut(character.getCharacter());
     }
@@ -120,5 +128,9 @@ public class TestTerminal implements Terminal {
 
     @Override
     public void reset() throws IOException {
+    }
+
+    @Override
+    public void clear() throws IOException {
     }
 }

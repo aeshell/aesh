@@ -34,6 +34,11 @@ public class TerminalSize {
         this.height = height;
     }
 
+    public boolean isPositionWithinSize(CursorPosition pos) {
+        return (pos.getRow() > -1 && pos.getColumn() > -1 &&
+        pos.getRow() < height && pos.getColumn() < width);
+    }
+
     @Override
     public String toString() {
         return "TerminalSize{" +

@@ -6,7 +6,14 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.console.Buffer;
+
+import java.io.IOException;
+
 /**
+ * Define the position of the cursor in a terminal
+ * 1:1 is upper left corner.
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class CursorPosition {
@@ -38,6 +45,15 @@ public class CursorPosition {
 
     public void setColumn(int column) {
         this.column = column;
+    }
+
+    public void move(int row, int column) {
+        this.row = this.row + row;
+        this.column = this.column + column;
+    }
+
+    public char[] asAnsi() throws IOException {
+        return Buffer.printAnsi(row+";"+column+"H");
     }
 
     @Override

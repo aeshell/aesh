@@ -93,8 +93,25 @@ public interface Terminal {
      */
     CursorPosition getCursor();
 
+    /**
+     * Set cursor position
+     */
+    void setCursor(CursorPosition position) throws IOException;
+
+    /**
+     * Move the cursor relative to the current position
+     * Will not move outside of TerminalSize boundaries
+     */
+    void moveCursor(int rows, int columns) throws IOException;
+
+    /**
+     * Write a TerminalCharacter to std out
+     */
     void writeChar(TerminalCharacter c) throws IOException;
 
+    /**
+     * Write a list of TerminalCharacters to std out
+     */
     void writeChars(List<TerminalCharacter> chars) throws IOException;
 
     boolean isEchoEnabled();
@@ -106,5 +123,9 @@ public interface Terminal {
      */
     void reset() throws IOException;
 
+    /**
+     * clears the screen
+     */
+    void clear() throws IOException;
 
 }

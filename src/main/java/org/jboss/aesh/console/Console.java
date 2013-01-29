@@ -1178,60 +1178,6 @@ public class Console {
     }
 
     /**
-     * Return the row position if we use a ansi terminal
-     * Send a terminal: '<ESC>[6n'
-     * and we receive the position as: '<ESC>[n;mR'
-     * where n = current row and m = current column
-     *
-     * @return current row
-     */
-    /*
-    private int getCurrentRow() {
-        if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
-            try {
-                terminal.writeToStdOut(ANSI.getCurrentCursorPos());
-                StringBuilder builder = new StringBuilder(8);
-                int row;
-                while((row = terminal.read(false)[0]) > -1 && row != 'R') {
-                    if (row != 27 && row != '[') {
-                        builder.append((char) row);
-                    }
-                }
-                return Integer.parseInt(builder.substring(0, builder.indexOf(";")));
-            }
-            catch (Exception e) {
-                if(settings.isLogging())
-                    logger.log(Level.SEVERE, "Failed to find current row with ansi code: ",e);
-                return -1;
-            }
-        }
-        return -1;
-    }
-
-    private int getCurrentColumn() {
-        if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
-            try {
-                terminal.writeToStdOut(ANSI.getCurrentCursorPos());
-                StringBuilder builder = new StringBuilder(8);
-                int row;
-                while((row = settings.getInputStream().read()) > -1 && row != 'R' ) {
-                    if (row != 27 && row != '[') {
-                        builder.append((char) row);
-                    }
-                }
-                return Integer.parseInt(builder.substring(builder.lastIndexOf(";") + 1, builder.length()));
-            }
-            catch (Exception e) {
-                if(settings.isLogging())
-                    logger.log(Level.SEVERE, "Failed to find current column with ansi code: ",e);
-                return -1;
-            }
-        }
-        return -1;
-    }
-    */
-
-    /**
      * Clear a ansi terminal
      *
      * @throws IOException stream
