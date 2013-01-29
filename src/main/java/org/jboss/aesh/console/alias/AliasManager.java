@@ -134,16 +134,16 @@ public class AliasManager {
                 if(value.endsWith("'"))
                     value = value.substring(1,value.length()-1);
                 else
-                    return "alias: usage: alias [name[=value] ... ]";
+                    return "alias: usage: alias [name[=value] ... ]"+Config.getLineSeparator();
             }
             else if(value.startsWith("\"")) {
                 if(value.endsWith("\""))
                     value = value.substring(1,value.length()-1);
                 else
-                    return "alias: usage: alias [name[=value] ... ]";
+                    return "alias: usage: alias [name[=value] ... ]"+Config.getLineSeparator();
             }
             if(name.contains(" "))
-                return "alias: usage: alias [name[=value] ... ]";
+                return "alias: usage: alias [name[=value] ... ]"+Config.getLineSeparator();
 
             addAlias(name, value);
             return null;

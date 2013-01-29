@@ -1335,7 +1335,7 @@ public class Console {
         if(output.getBuffer() != null) {
             if(settings.isAliasEnabled() &&
                     output.getBuffer().startsWith(InternalCommands.ALIAS.getCommand())) {
-                String out = aliasManager.parseAlias(output.getBuffer());
+                String out = aliasManager.parseAlias(output.getBuffer().trim());
                 if(out != null) {
                     pushToStdOut(out);
                 }
@@ -1344,7 +1344,7 @@ public class Console {
             }
             else if(settings.isAliasEnabled() &&
                     output.getBuffer().startsWith(InternalCommands.UNALIAS.getCommand())) {
-                String out = aliasManager.removeAlias(output.getBuffer());
+                String out = aliasManager.removeAlias(output.getBuffer().trim());
                 if(out != null)
                     pushToStdOut(out);
 
