@@ -30,6 +30,10 @@ public class ParseCompleteObjectTest extends TestCase {
         assertEquals(String.class, pco.getType());
         assertTrue(pco.isArgument());
 
+        pco = clp.findCompleteObject("test -e");
+        assertEquals("equal", pco.getName());
+        assertEquals("", pco.getValue());
+
     }
 }
 @Parameter(name = "test", usage = "a simple test",

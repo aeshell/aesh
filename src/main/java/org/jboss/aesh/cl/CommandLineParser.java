@@ -213,6 +213,10 @@ public class CommandLineParser {
                 addedArgument = true;
             }
         }
+        if(active != null && ignoreMissing) {
+            commandLine.addOption(new ParsedOption(active.getName(),
+                    active.getLongName(), active.getValues(), active.getType()));
+        }
 
         //this will throw and IllegalArgumentException if needed
         if(!ignoreMissing)
@@ -221,7 +225,34 @@ public class CommandLineParser {
         return commandLine;
     }
 
+    /**
+     * 1. find the last "word"
+     *   if it starts with '-', we need to check if its a value or name
+     * @param line buffer
+     * @return ParsedCompleteObject
+     */
     public ParsedCompleteObject findCompleteObject(String line) {
+        String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line);
+        //last word might be an option
+        if(lastWord.startsWith("-") ) {
+            String secLastWord = line.substring(0,line.length()-lastWord.length());
+            if(secLastWord.startsWith("-")) {
+
+            }
+            //so we know that this word is an option
+            else {
+
+            }
+            return null;
+        }
+        else
+            return findCompleteObjectValue(line);
+    }
+
+    /**
+     * Only called when we know that the last word is an option value
+     */
+    private ParsedCompleteObject findCompleteObjectValue(String line) {
         CommandLine cl = parse(line, true);
         if(cl.getArguments().isEmpty()) {
             ParsedOption po = cl.getOptions().get(cl.getOptions().size()-1);
@@ -231,7 +262,7 @@ public class CommandLineParser {
         else {
             return new ParsedCompleteObject("",
                     cl.getArguments().get(cl.getArguments().size()-1),
-            getParameters().get(0).getArgumentType(), false);
+                    getParameters().get(0).getArgumentType(), false);
         }
     }
 

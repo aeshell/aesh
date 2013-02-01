@@ -31,7 +31,7 @@ public class Example {
     public static void main(String[] args) throws IOException {
 
         //Settings.getInstance().setAnsiConsole(false);
-        //Settings.getInstance().setReadInputrc(false);
+        Settings.getInstance().setReadInputrc(false);
         Settings.getInstance().setLogging(true);
         Settings.getInstance().setLogFile("aesh_example.log");
        //Settings.getInstance().setHistoryDisabled(true);
@@ -140,7 +140,8 @@ public class Example {
                 if(co.getBuffer().equals("--")) {
                     commands.add("--help-");
                 }
-                if(co.getBuffer().startsWith("--help-") || co.getBuffer().startsWith("--help-m")) {
+                //if(co.getBuffer().startsWith("--help-") || co.getBuffer().startsWith("--help-m")) {
+                if("--help-me".startsWith(co.getBuffer())) {
                     commands.add("--help-me");
                 }
                 if(co.getBuffer().equals("fooba")) {
