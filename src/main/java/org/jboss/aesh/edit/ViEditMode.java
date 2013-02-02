@@ -76,7 +76,7 @@ public class ViEditMode implements EditMode {
     }
 
     @Override
-    public Operation parseInput(int[] in) {
+    public Operation parseInput(int[] in, String buffer) {
         int input = in[0];
 
         if(Config.isOSPOSIXCompatible() && in.length > 1) {
@@ -174,6 +174,15 @@ public class ViEditMode implements EditMode {
             Action workingMode = currentOperations.get(0).getWorkingMode();
             operationLevel = 0;
             currentOperations.clear();
+
+            //if ctrl-d is pressed on an empty line we need to return logout
+            //else return new_line
+            if(operation == Operation.EXIT) {
+                if(buffer.isEmpty())
+                    return operation;
+                else
+                    return Operation.NEW_LINE;
+            }
 
             if(operation == Operation.NEW_LINE) {
                 mode = Action.EDIT; //set to edit after a newline

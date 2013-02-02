@@ -52,7 +52,7 @@ public class KeyOperationFactory {
 
     public static List<KeyOperation> generateWindowsEmacsMode() {
         List<KeyOperation> keys = generateGenericEmacsKeys();
-        keys.add(new KeyOperation(3, Operation.EXIT)); //ctrl-c
+        //keys.add(new KeyOperation(3, Operation.EXIT)); //ctrl-c
         keys.add(new KeyOperation(8, Operation.DELETE_PREV_CHAR)); // backspace
         keys.add(new KeyOperation(13, Operation.NEW_LINE));
 
@@ -86,7 +86,9 @@ public class KeyOperationFactory {
         List<KeyOperation> keys = new ArrayList<KeyOperation>();
         keys.add(new KeyOperation(1, Operation.MOVE_BEGINNING));
         keys.add(new KeyOperation(2, Operation.MOVE_PREV_CHAR));
-        keys.add(new KeyOperation(4, Operation.DELETE_NEXT_CHAR));
+        //ctrl-d, if pressed on a line with chars it will cause the
+        //action delete_next_char else exit
+        keys.add(new KeyOperation(4, Operation.EXIT));
         keys.add(new KeyOperation(5, Operation.MOVE_END));
         keys.add(new KeyOperation(6, Operation.MOVE_NEXT_CHAR));
         keys.add(new KeyOperation(7, Operation.ABORT));
@@ -141,6 +143,9 @@ public class KeyOperationFactory {
 
     private static List<KeyOperation> generateGenericViMode() {
         List<KeyOperation> keys = new ArrayList<KeyOperation>();
+        //ctrl-d, if pressed on a line with chars it will cause the
+        //action delete_next_char else exit
+        keys.add(new KeyOperation(4, Operation.EXIT));
         keys.add(new KeyOperation(5, Operation.EMACS_EDIT_MODE)); //ctrl-e
         keys.add(new KeyOperation(9, Operation.COMPLETE)); //tab
         keys.add(new KeyOperation(12, Operation.CLEAR)); //ctrl-l

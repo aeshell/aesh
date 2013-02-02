@@ -31,7 +31,7 @@ public class Example {
     public static void main(String[] args) throws IOException {
 
         //Settings.getInstance().setAnsiConsole(false);
-        Settings.getInstance().setReadInputrc(false);
+        Settings.getInstance().setReadInputrc(true);
         Settings.getInstance().setLogging(true);
         Settings.getInstance().setLogFile("aesh_example.log");
        //Settings.getInstance().setHistoryDisabled(true);
@@ -58,7 +58,6 @@ public class Example {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                System.exit(0);
             }
         });
 

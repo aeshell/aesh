@@ -373,7 +373,7 @@ public class Console {
             if (in[0] == -1) {
                 return null;
             }
-            Operation operation = editMode.parseInput(in);
+            Operation operation = editMode.parseInput(in, buffer.getLine());
             operation.setInput(in);
 
             String result = null;
@@ -474,7 +474,10 @@ public class Console {
             complete();
         }
         else if(action == Action.EXIT) {
-            //deleteCurrentCharacter();
+            if(Settings.getInstance().hasInterruptHook())
+                Settings.getInstance().getInterruptHook().handleInterrupt(this);
+            stop();
+            System.exit(0);
         }
         else if(action == Action.HISTORY) {
             if(operation.getMovement() == Movement.NEXT)

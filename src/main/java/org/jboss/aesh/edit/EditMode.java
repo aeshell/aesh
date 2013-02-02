@@ -15,7 +15,7 @@ import org.jboss.aesh.edit.actions.Operation;
  */
 public interface EditMode {
 
-    Operation parseInput(int[] input);
+    Operation parseInput(int[] input, String buffer);
 
     Action getCurrentAction();
 

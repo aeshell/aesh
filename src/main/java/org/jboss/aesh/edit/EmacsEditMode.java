@@ -34,7 +34,7 @@ public class EmacsEditMode implements EditMode {
     }
 
     @Override
-    public Operation parseInput(int[] in) {
+    public Operation parseInput(int[] in, String buffer) {
 
         int input = in[0];
         if(in.length > 1) {
@@ -129,6 +129,15 @@ public class EmacsEditMode implements EditMode {
 
                 operationLevel = 0;
                 currentOperations.clear();
+
+                //if ctrl-d is pressed on an empty line we need to return logout
+                //else return delete next char
+                if(currentOperation.equals(Operation.EXIT)) {
+                    if(buffer.isEmpty())
+                        return currentOperation;
+                    else
+                        return Operation.DELETE_NEXT_CHAR;
+                }
 
                 return currentOperation;
             }
