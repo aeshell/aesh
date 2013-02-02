@@ -94,6 +94,18 @@ public class Parser {
         return String.format("%1$-" + n + "s", s);
     }
 
+    /**
+     * remove leading dashes from word
+     */
+    public static String trimOptionName(String word) {
+        if(word.startsWith("--"))
+            return word.substring(2);
+        else if(word.startsWith("-"))
+            return word.substring(1);
+        else
+            return word;
+    }
+
 
     /**
      * If there is any common start string in the completion list, return it

@@ -157,6 +157,23 @@ public class ParameterInt {
            optionInt.clean();
     }
 
+    public List<String> getOptionLongNamesWithDash() {
+        List<String> names = new ArrayList<String>(options.size());
+        for(OptionInt o : options)
+            names.add("--"+o.getLongName());
+
+        return names;
+    }
+
+    public List<String> findPossibleLongNamesWitdDash(String name) {
+        List<String> names = new ArrayList<String>(options.size());
+        for(OptionInt o : options) {
+           if(o.getName().equals(name) || o.getLongName().startsWith(name))
+               names.add("--"+o.getLongName());
+        }
+        return names;
+    }
+
     /**
      * Returns a usage String based on the defined parameter and options.
      * Useful when printing "help" info etc.

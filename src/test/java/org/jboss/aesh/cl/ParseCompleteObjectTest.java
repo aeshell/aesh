@@ -13,26 +13,38 @@ public class ParseCompleteObjectTest extends TestCase {
 
     public void testParseCompleteObject() throws Exception {
         CommandLineParser clp = ParserGenerator.generateParser(ParseCompleteTest1.class);
+        CommandLineCompletionParser completeParser = new CommandLineCompletionParser(clp);
 
-        ParsedCompleteObject pco = clp.findCompleteObject("test -e foo1");
+        ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1");
         assertEquals("foo1", pco.getValue());
         assertEquals(Boolean.class, pco.getType());
         assertTrue(pco.isOption());
 
-        pco = clp.findCompleteObject("test -f --equal tru");
+        pco = completeParser.findCompleteObject("test -f --equal tru");
         assertEquals("tru", pco.getValue());
         assertEquals(Boolean.class, pco.getType());
         assertEquals("equal", pco.getName());
         assertTrue(pco.isOption());
 
-        pco = clp.findCompleteObject("test --equal true foo.txt");
+        pco = completeParser.findCompleteObject("test --equal true foo.txt");
         assertEquals("foo.txt", pco.getValue());
         assertEquals(String.class, pco.getType());
         assertTrue(pco.isArgument());
 
-        pco = clp.findCompleteObject("test -e");
-        assertEquals("equal", pco.getName());
-        assertEquals("", pco.getValue());
+        pco = completeParser.findCompleteObject("test -e");
+        assertTrue(pco.doDisplayOptions());
+        assertEquals("e", pco.getName());
+        assertEquals("--equal", clp.getParameters().get(0).findPossibleLongNamesWitdDash(pco.getName()).get(0));
+
+        pco = completeParser.findCompleteObject("test --eq");
+        assertTrue(pco.doDisplayOptions());
+        assertEquals("eq", pco.getName());
+        assertEquals("--equal", clp.getParameters().get(0).findPossibleLongNamesWitdDash(pco.getName()).get(0));
+
+        pco = completeParser.findCompleteObject("test --");
+        assertTrue(pco.doDisplayOptions());
+        assertEquals("", pco.getName());
+        assertEquals(4, clp.getParameters().get(0).getOptionLongNamesWithDash().size());
 
     }
 }
