@@ -52,6 +52,13 @@ public class TerminalCharacter {
             return ANSI.reset();
     }
 
+    public String getAsString() {
+        return  getTextType()+
+                backgroundColor.getBackgroundColor()+
+                foregroundColor.getForegroundColor()+
+                character;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

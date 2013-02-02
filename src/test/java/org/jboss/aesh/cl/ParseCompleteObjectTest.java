@@ -39,11 +39,13 @@ public class ParseCompleteObjectTest extends TestCase {
         pco = completeParser.findCompleteObject("test --eq");
         assertTrue(pco.doDisplayOptions());
         assertEquals("eq", pco.getName());
+        assertEquals(4, pco.getOffset());
         assertEquals("--equal", clp.getParameters().get(0).findPossibleLongNamesWitdDash(pco.getName()).get(0));
 
         pco = completeParser.findCompleteObject("test --");
         assertTrue(pco.doDisplayOptions());
         assertEquals("", pco.getName());
+        assertEquals(2, pco.getOffset());
         assertEquals(4, clp.getParameters().get(0).getOptionLongNamesWithDash().size());
 
     }

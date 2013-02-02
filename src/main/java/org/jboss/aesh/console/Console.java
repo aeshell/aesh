@@ -316,6 +316,12 @@ public class Console {
         displayPrompt(buffer.getPrompt());
     }
 
+    /**
+     * @return get the specified terminal
+     */
+    public Terminal getTerminal() {
+        return terminal;
+    }
 
     /**
      * Read from the input stream, perform action according to mapped

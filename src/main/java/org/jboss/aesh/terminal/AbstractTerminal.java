@@ -29,23 +29,14 @@ public abstract class AbstractTerminal implements Terminal {
 
     @Override
     public void writeChar(TerminalCharacter character) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        builder.append(character.getTextType())
-                .append(character.getBackgroundColor().getBackgroundColor())
-                .append(character.getForegroundColor().getForegroundColor())
-                .append(character.getCharacter());
-
-        writeToStdOut(builder.toString());
+        writeToStdOut(character.getAsString());
     }
 
     @Override
     public void writeChars(List<TerminalCharacter> chars) throws IOException {
         StringBuilder builder = new StringBuilder();
         for(TerminalCharacter c : chars) {
-            builder.append(c.getTextType())
-                    .append(c.getBackgroundColor().getBackgroundColor())
-                    .append(c.getForegroundColor().getForegroundColor())
-                    .append(c.getCharacter());
+            builder.append(c.getAsString());
         }
         writeToStdOut(builder.toString());
     }
