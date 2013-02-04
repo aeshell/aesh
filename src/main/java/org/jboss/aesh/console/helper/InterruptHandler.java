@@ -28,7 +28,7 @@ public class InterruptHandler {
         this.console = console;
     }
 
-    public void initInterrupt() {
+    public void initInterrupt() throws IOException {
         SignalHandler handler = new SignalHandler () {
             public void handle(Signal sig) {
                 Settings.getInstance().getInterruptHook().handleInterrupt(console);

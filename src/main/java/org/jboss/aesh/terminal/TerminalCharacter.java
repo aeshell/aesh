@@ -9,54 +9,95 @@ package org.jboss.aesh.terminal;
 import org.jboss.aesh.util.ANSI;
 
 /**
+ * Describe how a terminal character should be displayed
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class TerminalCharacter {
 
     private char character;
     private Color backgroundColor;
-    private Color foregroundColor;
-    private boolean bold;
+    private Color textColor;
+    private CharacterType type;
 
     public TerminalCharacter(char c) {
-        this(c, Color.DEFAULT, Color.DEFAULT, false);
+        this(c, CharacterType.NORMAL);
     }
 
-    public TerminalCharacter(char c, Color background, Color foreground, boolean b) {
+    public TerminalCharacter(char c, CharacterType type) {
         this.character = c;
+        this.type = type;
+        textColor = Color.DEFAULT_TEXT;
+        backgroundColor = Color.DEFAULT_BG;
+    }
+
+    public TerminalCharacter(char c, Color background, Color text) {
+        this(c,background, text, CharacterType.NORMAL);
+    }
+
+    public TerminalCharacter(char c, Color background, Color text,
+                             CharacterType type) {
+        this(c, type);
         this.backgroundColor = background;
-        this.foregroundColor = foreground;
-        this.bold = b;
+        this.textColor = text;
     }
 
     public char getCharacter() {
         return character;
     }
 
+    public CharacterType getType() {
+        return type;
+    }
+
     public Color getBackgroundColor() {
         return backgroundColor;
     }
 
-    public boolean isBold() {
-        return bold;
+    public Color getTextColor() {
+        return textColor;
     }
 
-    public Color getForegroundColor() {
-        return foregroundColor;
-    }
+    /**
+     * type, text color, background color
+     */
+    public String getAsString(TerminalCharacter prev) {
+        if(equalsIgnoreCharacter(prev))
+            return String.valueOf(character);
+        else {
+            StringBuilder builder = new StringBuilder();
+            builder.append(ANSI.getStart());
+            builder.append(type.getValueComparedToPrev(prev.getType()));
+            if(this.getTextColor() != prev.getTextColor() ||
+                    prev.getType() == CharacterType.INVERT)
+                builder.append(';').append(this.getTextColor().getValue());
+            if(this.getBackgroundColor() != prev.getBackgroundColor() ||
+                    prev.getType() == CharacterType.INVERT)
+                builder.append(';').append(this.getBackgroundColor().getValue());
 
-    public String getTextType() {
-        if(bold)
-            return ANSI.getBold();
-        else
-            return ANSI.reset();
+            builder.append('m');
+            builder.append(getCharacter());
+            return builder.toString();
+        }
     }
 
     public String getAsString() {
-        return  getTextType()+
-                backgroundColor.getBackgroundColor()+
-                foregroundColor.getForegroundColor()+
-                character;
+        StringBuilder builder = new StringBuilder();
+        builder.append(ANSI.getStart());
+        builder.append(type.getValue()).append(';');
+        builder.append(this.getTextColor().getValue()).append(';');
+        builder.append(this.getBackgroundColor().getValue());
+        builder.append('m');
+        builder.append(getCharacter());
+        return builder.toString();
+    }
+
+    public boolean equalsIgnoreCharacter(TerminalCharacter that) {
+        if (type != that.type) return false;
+        if (backgroundColor != that.backgroundColor) return false;
+        if (textColor != that.textColor) return false;
+
+        return true;
     }
 
     @Override
@@ -66,10 +107,10 @@ public class TerminalCharacter {
 
         TerminalCharacter that = (TerminalCharacter) o;
 
-        if (bold != that.bold) return false;
+        if (type != that.type) return false;
         if (character != that.character) return false;
         if (backgroundColor != that.backgroundColor) return false;
-        if (foregroundColor != that.foregroundColor) return false;
+        if (textColor != that.textColor) return false;
 
         return true;
     }
@@ -78,8 +119,8 @@ public class TerminalCharacter {
     public int hashCode() {
         int result = (int) character;
         result = 31 * result + backgroundColor.hashCode();
-        result = 31 * result + foregroundColor.hashCode();
-        result = 31 * result + (bold ? 1 : 0);
+        result = 31 * result + textColor.hashCode();
+        result = 31 * result + type.hashCode();
         return result;
     }
 
@@ -88,8 +129,8 @@ public class TerminalCharacter {
         return "TerminalCharacter{" +
                 "character=" + character +
                 ", backgroundColor=" + backgroundColor +
-                ", foregroundColor=" + foregroundColor +
-                ", bold=" + bold +
+                ", textColor=" + textColor +
+                ", type=" + type +
                 '}';
     }
 

@@ -27,8 +27,8 @@ public class TerminalHandler {
     public TerminalHandler(final Terminal terminal) {
         this.terminal = terminal;
         position = new CursorPosition(0,0);
-        backgroundColor = Color.DEFAULT;
-        foregroundColor = Color.DEFAULT;
+        backgroundColor = Color.DEFAULT_BG;
+        foregroundColor = Color.DEFAULT_TEXT;
     }
 
     public Terminal getTerminal() {

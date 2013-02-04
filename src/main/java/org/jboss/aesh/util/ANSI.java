@@ -13,6 +13,7 @@ package org.jboss.aesh.util;
  */
 public class ANSI {
 
+    private static String START = "\u001B[";
     private static String BLACK_TEXT = "\u001B[0;30m";
     private static String RED_TEXT = "\u001B[0;31m";
     private static String GREEN_TEXT = "\u001B[0;32m";
@@ -31,19 +32,27 @@ public class ANSI {
     private static String MAGENTA_BG = "\u001B[0;45m";
     private static String CYAN_BG = "\u001B[0;46m";
     private static String WHITE_BG = "\u001B[0;47m";
-    private static String DEFAULT_BG = "\u001B[0;47m";
+    private static String DEFAULT_BG = "\u001B[0;49m";
     private static String ALTERNATE_BUFFER =  "\u001B[?1049h";
     private static String MAIN_BUFFER =  "\u001B[?1049l";
     private static String INVERT_BACKGROUND =  "\u001B[7m";
     private static String NORMAL_BACKGROUND =  "\u001B[27m";
     private static String RESET = "\u001B[0;0m";
-    private static String NORMAL_TEXT = "\u001B[0;22m";
     private static String BOLD = "\u001B[0;1m";
+    private static String BOLD_OFF = "\u001B[0;22m";
+    private static String UNDERLINE = "\u001B[0;4m";
+    private static String UNDERLINE_OFF = "\u001B[0;24m";
+    private static String BLINK = "\u001B[0;5m";
+    private static String BLINK_OFF = "\u001B[0;25m";
     private static String CURSOR_START = "\u001B[1G";
     private static String CURSOR_ROW = "\u001B[6n";
     private static String CLEAR_SCREEN = "\u001B[2J";
 
     private ANSI() {
+    }
+
+    public static String getStart() {
+        return START;
     }
 
     public static String blackText() {
@@ -142,8 +151,24 @@ public class ANSI {
         return BOLD;
     }
 
-    public static String getNormalText() {
-        return NORMAL_TEXT;
+    public static String getBoldOff() {
+        return BOLD_OFF;
+    }
+
+    public static String getUnderline() {
+        return UNDERLINE;
+    }
+
+    public static String getUnderlineOff() {
+        return UNDERLINE_OFF;
+    }
+
+    public static String getBlink() {
+        return BLINK;
+    }
+
+    public static String getBlinkOff() {
+        return BLINK_OFF;
     }
 
     public static String moveCursorToBeginningOfLine() {

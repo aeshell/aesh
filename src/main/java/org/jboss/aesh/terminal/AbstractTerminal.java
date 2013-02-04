@@ -6,7 +6,6 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.jboss.aesh.console.Buffer;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.ANSI;
@@ -35,8 +34,13 @@ public abstract class AbstractTerminal implements Terminal {
     @Override
     public void writeChars(List<TerminalCharacter> chars) throws IOException {
         StringBuilder builder = new StringBuilder();
+        TerminalCharacter prev = null;
         for(TerminalCharacter c : chars) {
-            builder.append(c.getAsString());
+            if(prev == null)
+                builder.append(c.getAsString());
+            else
+                builder.append(c.getAsString(prev));
+            prev = c;
         }
         writeToStdOut(builder.toString());
     }

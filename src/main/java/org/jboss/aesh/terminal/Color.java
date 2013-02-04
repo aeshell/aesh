@@ -13,55 +13,32 @@ import org.jboss.aesh.util.ANSI;
  */
 public enum Color {
 
-    DEFAULT,
-    BLACK,
-    WHITE,
-    RED,
-    GREEN,
-    YELLOW,
-    BLUE,
-    CYAN;
+    DEFAULT_TEXT(39),
+    BLACK_TEXT(30),
+    RED_TEXT(31),
+    GREEN_TEXT(32),
+    YELLOW_TEXT(33),
+    BLUE_TEXT(34),
+    MAGENTA_TEXT(35),
+    CYAN_TEXT(36),
+    WHITE_TEXT(37),
+    DEFAULT_BG(49),
+    BLACK_BG(40),
+    RED_BG(41),
+    GREEN_BG(42),
+    YELLOW_BG(43),
+    BLUE_BG(44),
+    MAGENTA_BG(45),
+    CYAN_BG(46),
+    WHITE_BG(47);
 
-    public String getBackgroundColor() {
-        if(this == DEFAULT)
-            return ANSI.defaultBackground();
-        else if(this == BLACK)
-            return ANSI.blackBackground();
-        else if(this == WHITE)
-            return ANSI.whiteBackground();
-        else if(this == RED)
-            return ANSI.redBackground();
-        else if(this == GREEN)
-            return ANSI.greenBackground();
-        else if(this == YELLOW)
-            return ANSI.yellowBackground();
-        else if(this == BLUE)
-            return ANSI.blueBackground();
-        else if(this == CYAN)
-            return ANSI.cyanBackground();
-        else
-            return ANSI.reset();
+    private int value;
+
+    Color(int value) {
+        this.value = value;
     }
 
-    public String getForegroundColor() {
-        if(this == DEFAULT)
-            return ANSI.defaultText();
-        else if(this == BLACK)
-            return ANSI.blackText();
-        else if(this == WHITE)
-            return ANSI.whiteText();
-        else if(this == RED)
-            return ANSI.redText();
-        else if(this == GREEN)
-            return ANSI.greenText();
-        else if(this == YELLOW)
-            return ANSI.yellowText();
-        else if(this == BLUE)
-            return ANSI.blueText();
-        else if(this == CYAN)
-            return ANSI.cyanText();
-        else
-            return ANSI.reset();
+    public int getValue() {
+        return value;
     }
-
 }
