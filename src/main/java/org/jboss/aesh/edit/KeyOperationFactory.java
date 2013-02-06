@@ -33,6 +33,11 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(new int[]{27,91,67}, Operation.MOVE_NEXT_CHAR)); //arrow right
         keys.add(new KeyOperation(new int[]{27,91,68}, Operation.MOVE_PREV_CHAR)); //arrow left
 
+        keys.add(new KeyOperation(new int[]{27,79,65}, Operation.HISTORY_PREV));   //arrow up
+        keys.add(new KeyOperation(new int[]{27,79,66}, Operation.HISTORY_NEXT));   //arrow down
+        keys.add(new KeyOperation(new int[]{27,79,67}, Operation.MOVE_NEXT_CHAR)); //arrow right
+        keys.add(new KeyOperation(new int[]{27,79,68}, Operation.MOVE_PREV_CHAR)); //arrow left
+
         //meta
         keys.add(new KeyOperation(new int[]{27,102}, Operation.MOVE_NEXT_WORD));   //meta-f
         keys.add(new KeyOperation(new int[]{27,98}, Operation.MOVE_PREV_WORD));    //meta-b
@@ -120,6 +125,12 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(new int[]{27,91,66}, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
         keys.add(new KeyOperation(new int[]{27,91,67}, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
         keys.add(new KeyOperation(new int[]{27,91,68}, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+
+        keys.add(new KeyOperation(new int[]{27,79,65}, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
+        keys.add(new KeyOperation(new int[]{27,79,66}, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
+        keys.add(new KeyOperation(new int[]{27,79,67}, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
+        keys.add(new KeyOperation(new int[]{27,79,68}, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+
         keys.add(new KeyOperation(new int[]{27,91,51,126}, Operation.DELETE_NEXT_CHAR, Action.COMMAND)); //Delete
 
         keys.add(new KeyOperation(new int[]{27,91,53,126}, Operation.PGUP));   //pgup
