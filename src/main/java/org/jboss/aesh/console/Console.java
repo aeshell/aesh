@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -368,8 +369,9 @@ public class Console {
             }
 
             int[] in = terminal.read(settings.isReadAhead());
-            //for(int i : in)
-            //    System.out.println("got int:"+i);
+            if(Settings.getInstance().isLogging()) {
+                logger.info("GOT: "+ Arrays.toString(in));
+            }
             if (in[0] == -1) {
                 return null;
             }

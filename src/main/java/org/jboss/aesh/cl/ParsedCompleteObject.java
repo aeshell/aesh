@@ -12,7 +12,12 @@ public class ParsedCompleteObject {
     private Class<?> type;
     private boolean option; //if its not option, its an argument
     private boolean displayOptions = false;
+    private boolean displayArguments = false;
     private int offset = 0;
+
+    public ParsedCompleteObject(boolean displayArguments) {
+        this.option = !displayArguments;
+    }
 
     public ParsedCompleteObject(boolean displayOptions, String name, int offset) {
         this.displayOptions = displayOptions;

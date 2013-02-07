@@ -27,6 +27,12 @@ public class CommandLineCompletionParser {
      * @return ParsedCompleteObject
      */
     public ParsedCompleteObject findCompleteObject(String line) {
+
+        //first we check if it could be a param
+        if(Parser.findIfWordEndWithSpace(line)) {
+            return new ParsedCompleteObject(true);
+        }
+
         String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line);
         //last word might be an option
         if(lastWord.startsWith("-") ) {

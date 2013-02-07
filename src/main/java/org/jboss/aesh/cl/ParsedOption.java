@@ -59,7 +59,10 @@ public class ParsedOption {
     }
 
     public String getValue() {
-        return values.get(0);
+        if(values.isEmpty())
+            return null;
+        else
+            return values.get(0);
     }
 
     public List<String> getValues() {

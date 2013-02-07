@@ -48,6 +48,9 @@ public class ParseCompleteObjectTest extends TestCase {
         assertEquals(2, pco.getOffset());
         assertEquals(4, clp.getParameters().get(0).getOptionLongNamesWithDash().size());
 
+        pco = completeParser.findCompleteObject("test --equal true  ");
+        assertTrue(pco.isArgument());
+
     }
 }
 @Parameter(name = "test", usage = "a simple test",

@@ -106,6 +106,9 @@ public class Parser {
             return word;
     }
 
+    public static boolean findIfWordEndWithSpace(String word) {
+       return !word.isEmpty() && word.endsWith(" ") && !word.endsWith("\\ ");
+    }
 
     /**
      * If there is any common start string in the completion list, return it
