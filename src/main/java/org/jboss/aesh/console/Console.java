@@ -90,6 +90,10 @@ public class Console {
 
     private Pattern endsWithBackslashPattern = Pattern.compile(".*\\s\\\\$");
 
+    //used to optimize text deletion
+    private char[] resetLineAndSetCursorToStart =
+            (ANSI.getStart()+"s"+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
+
     public Console() throws IOException {
         this(Settings.getInstance());
     }
@@ -965,17 +969,21 @@ public class Console {
         }
         // only clear the current line
         else {
-            terminal.writeToStdOut(Buffer.printAnsi("s")); //save cursor
-            //move cursor to 0. - need to do this to clear the entire line
-            terminal.writeToStdOut(Buffer.printAnsi("0G"));
-            terminal.writeToStdOut(Buffer.printAnsi("2K")); // clear line
+            //most deletions are backspace from the end of the line so we've
+            //optimize that like this
+            if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length()) {
+                terminal.writeToStdOut(' '+ANSI.getStart()+"1D"); //move cursor to left
+            }
+            else {
+                //save cursor, move the cursor to the beginning, reset line
+                terminal.writeToStdOut(resetLineAndSetCursorToStart);
 
-            //terminal.writeToStdOut(line);
-            displayPrompt(buffer.getPrompt());
-            terminal.writeToStdOut(buffer.getLine());
+                displayPrompt(buffer.getPrompt());
+                terminal.writeToStdOut(buffer.getLine());
 
-            // move cursor to saved pos
-            terminal.writeToStdOut(Buffer.printAnsi("u"));
+                // move cursor to saved pos
+                terminal.writeToStdOut(Buffer.printAnsi("u"));
+            }
         }
     }
 
