@@ -138,6 +138,21 @@ public class ParserTestCase extends TestCase {
         }
     }
 
+    public void testSplitBySizeKeepWords() {
+        String words = "foo to bar is how it is i guess";
+        List<String> out = Parser.splitBySizeKeepWords(words, 10);
+        assertEquals("foo to bar", out.get(0));
+        assertEquals("is how it", out.get(1));
+        assertEquals("is i guess", out.get(2));
+
+        words = "It is an error to use a backslash prior to any alphabetic";
+        out = Parser.splitBySizeKeepWords(words, 20);
+        assertEquals("It is an error to", out.get(0));
+        assertEquals("use a backslash", out.get(1));
+        assertEquals("prior to any", out.get(2));
+        assertEquals("alphabetic", out.get(3));
+    }
+
 
     public void testTrim() {
         assertEquals("foo", Parser.trim("  foo "));

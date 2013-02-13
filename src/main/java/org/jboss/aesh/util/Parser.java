@@ -94,6 +94,30 @@ public class Parser {
         return String.format("%1$-" + n + "s", s);
     }
 
+    public static List<String> splitBySizeKeepWords(String words, int size) {
+        List<String> out = new ArrayList<String>();
+        if(words.length() <= size) {
+            out.add(words);
+            return out;
+        }
+        else {
+            while(words.length() > size) {
+               int i = words.lastIndexOf(' ', size);
+                if(i > 0) {
+                    out.add(words.substring(0,i));
+                    words = words.substring(i+1);
+                }
+                else {
+                    out.add(words);
+                    break;
+                }
+            }
+            if(words.length() > 0)
+                out.add(words);
+            return out;
+        }
+    }
+
     /**
      * remove leading dashes from word
      */
