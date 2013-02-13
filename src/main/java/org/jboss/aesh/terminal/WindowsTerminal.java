@@ -152,8 +152,13 @@ public class WindowsTerminal extends AbstractTerminal {
     @Override
     public TerminalSize getSize() {
         if(propertiesTimedOut()) {
-            size.setHeight(getHeight());
-            size.setWidth(getWidth());
+            if(size == null) {
+                size = new TerminalSize(getHeight(), getWidth());
+            }
+            else {
+                size.setHeight(getHeight());
+                size.setWidth(getWidth());
+            }
         }
         return size;
     }
