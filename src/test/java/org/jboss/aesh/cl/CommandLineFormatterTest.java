@@ -7,6 +7,7 @@
 package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
+import org.jboss.aesh.console.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -36,9 +37,9 @@ public class CommandLineFormatterTest extends TestCase {
 
         CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 
-        assertEquals("Usage: man [OPTION...]\n"+
-                "  -d, --debug    emit debugging messages\n"+
-                "  -D, --default  reset all options to their default values\n",
+        assertEquals("Usage: man [OPTION...]"+ Config.getLineSeparator()+
+                "  -d, --debug    emit debugging messages"+Config.getLineSeparator()+
+                "  -D, --default  reset all options to their default values"+Config.getLineSeparator(),
                 clp.printHelp());
     }
 
@@ -71,10 +72,10 @@ public class CommandLineFormatterTest extends TestCase {
 
         CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 
-        assertEquals("Usage: man [OPTION...]\n"+
-                "  -d, --debug            emit debugging messages\n"+
-                "  -D, --default          reset all options to their default values\n"+
-                "  -f, --file=<filename>  set the filename\n",
+        assertEquals("Usage: man [OPTION...]"+Config.getLineSeparator()+
+                "  -d, --debug            emit debugging messages"+Config.getLineSeparator()+
+                "  -D, --default          reset all options to their default values"+Config.getLineSeparator()+
+                "  -f, --file=<filename>  set the filename"+Config.getLineSeparator(),
                 clp.printHelp());
     }
 

@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.util;
 
+import org.jboss.aesh.console.Config;
+
 /**
  * Utility class to provide ANSI codes for different operations
  *
@@ -47,8 +49,8 @@ public class ANSI {
     private static String CURSOR_START = "\u001B[1G";
     private static String CURSOR_ROW = "\u001B[6n";
     private static String CLEAR_SCREEN = "\u001B[2J";
-    private static String CURSOR_SAVE = "\u001B7";
-    private static String CURSOR_RESTORE = "\u001B8";
+    private static String CURSOR_SAVE = Config.isOSPOSIXCompatible() ? "\u001B7" : "\u001B[s";
+    private static String CURSOR_RESTORE = Config.isOSPOSIXCompatible() ? "\u001B8" : "\u001B[u";
 
     private ANSI() {
     }
