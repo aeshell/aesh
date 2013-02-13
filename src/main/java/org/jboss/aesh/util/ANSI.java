@@ -47,6 +47,8 @@ public class ANSI {
     private static String CURSOR_START = "\u001B[1G";
     private static String CURSOR_ROW = "\u001B[6n";
     private static String CLEAR_SCREEN = "\u001B[2J";
+    private static String CURSOR_SAVE = "\u001B7";
+    private static String CURSOR_RESTORE = "\u001B8";
 
     private ANSI() {
     }
@@ -181,5 +183,13 @@ public class ANSI {
 
     public static String clearScreen() {
         return CLEAR_SCREEN;
+    }
+
+    public static String saveCursor() {
+        return CURSOR_SAVE;
+    }
+
+    public static String restoreCursor() {
+        return CURSOR_RESTORE;
     }
 }

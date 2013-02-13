@@ -92,7 +92,7 @@ public class Console {
 
     //used to optimize text deletion
     private char[] resetLineAndSetCursorToStart =
-            (ANSI.getStart()+"s"+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
+            (ANSI.saveCursor()+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
 
     public Console() throws IOException {
         this(Settings.getInstance());
@@ -944,7 +944,7 @@ public class Console {
                         +", delta:"+buffer.getDelta() +", buffer:"+buffer.getLine());
             }
 
-            terminal.writeToStdOut(Buffer.printAnsi("s")); //save cursor
+            terminal.writeToStdOut(ANSI.saveCursor()); //save cursor
 
             if(currentRow > 0)
                 for(int i=0; i<currentRow; i++)
@@ -965,7 +965,7 @@ public class Console {
             }
 
             // move cursor to saved pos
-            terminal.writeToStdOut(Buffer.printAnsi("u"));
+            terminal.writeToStdOut(ANSI.restoreCursor());
         }
         // only clear the current line
         else {
@@ -982,7 +982,7 @@ public class Console {
                 terminal.writeToStdOut(buffer.getLine());
 
                 // move cursor to saved pos
-                terminal.writeToStdOut(Buffer.printAnsi("u"));
+                terminal.writeToStdOut(ANSI.restoreCursor());
             }
         }
     }
