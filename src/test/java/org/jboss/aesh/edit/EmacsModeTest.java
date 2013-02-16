@@ -10,6 +10,7 @@ import org.jboss.aesh.AeshTestCase;
 import org.jboss.aesh.TestBuffer;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Key;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -23,15 +24,15 @@ public class EmacsModeTest extends AeshTestCase {
     public void testSimpleMovementAndEdit() throws Exception {
         TestBuffer b = new TestBuffer("1234");
 
-        KeyOperation deleteNextChar = new KeyOperation(4, Operation.DELETE_NEXT_CHAR);
-        KeyOperation deletePrevChar =  new KeyOperation(8, Operation.DELETE_PREV_CHAR);
+        KeyOperation deleteNextChar = new KeyOperation(Key.CTRL_D, Operation.DELETE_NEXT_CHAR);
+        KeyOperation deletePrevChar =  new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR);
 
         b.append(deletePrevChar.getFirstValue())
                 .append(TestBuffer.getNewLine()); // enter
 
         assertEquals("123", b);
 
-        KeyOperation movePrevChar = new KeyOperation(2, Operation.MOVE_PREV_CHAR);
+        KeyOperation movePrevChar = new KeyOperation(Key.CTRL_B, Operation.MOVE_PREV_CHAR);
 
         b = new TestBuffer("1234");
         b.append(movePrevChar.getFirstValue())
@@ -41,7 +42,7 @@ public class EmacsModeTest extends AeshTestCase {
                 .append(TestBuffer.getNewLine()); // enter
         assertEquals("1254", b);
 
-        KeyOperation moveBeginning = new KeyOperation(1, Operation.MOVE_BEGINNING);
+        KeyOperation moveBeginning = new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING);
 
         b = new TestBuffer("1234");
         b.append(moveBeginning.getFirstValue())
@@ -50,7 +51,7 @@ public class EmacsModeTest extends AeshTestCase {
 
         assertEquals("234", b);
 
-        KeyOperation moveNextChar = new KeyOperation(6, Operation.MOVE_NEXT_CHAR);
+        KeyOperation moveNextChar = new KeyOperation(Key.CTRL_F, Operation.MOVE_NEXT_CHAR);
 
         b = new TestBuffer("1234");
         b.append(moveBeginning.getFirstValue())
@@ -66,11 +67,11 @@ public class EmacsModeTest extends AeshTestCase {
     public void testWordMovementAndEdit() throws Exception {
 
         if(Config.isOSPOSIXCompatible()) {
-            KeyOperation moveNextWord = new KeyOperation(new int[]{27,102}, Operation.MOVE_NEXT_WORD);
-            KeyOperation movePrevWord = new KeyOperation(new int[]{27,98}, Operation.MOVE_PREV_WORD);
-            KeyOperation deleteNextWord = new KeyOperation(new int[]{27,100}, Operation.DELETE_NEXT_WORD);
-            KeyOperation moveBeginning = new KeyOperation(1, Operation.MOVE_BEGINNING);
-            KeyOperation deleteBeginning = new KeyOperation(21, Operation.DELETE_BEGINNING);
+            KeyOperation moveNextWord = new KeyOperation(Key.META_F, Operation.MOVE_NEXT_WORD);
+            KeyOperation movePrevWord = new KeyOperation(Key.META_B, Operation.MOVE_PREV_WORD);
+            KeyOperation deleteNextWord = new KeyOperation(Key.META_D, Operation.DELETE_NEXT_WORD);
+            KeyOperation moveBeginning = new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING);
+            KeyOperation deleteBeginning = new KeyOperation(Key.CTRL_U, Operation.DELETE_BEGINNING);
 
             TestBuffer b = new TestBuffer("foo   bar...  Foo-Bar.");
             b.append(movePrevWord.getKeyValues())
@@ -101,19 +102,12 @@ public class EmacsModeTest extends AeshTestCase {
 
     public void testArrowMovement() throws Exception {
 
-        KeyOperation deletePrevChar =  new KeyOperation(8, Operation.DELETE_PREV_CHAR);
-        KeyOperation moveBeginning = new KeyOperation(1, Operation.MOVE_BEGINNING);
+        KeyOperation deletePrevChar =  new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR);
+        KeyOperation moveBeginning = new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING);
         KeyOperation movePrevChar;
         KeyOperation moveNextChar;
-        if(Config.isOSPOSIXCompatible()) {
-            moveNextChar = new KeyOperation(new int[]{27,91,67}, Operation.MOVE_NEXT_CHAR);
-            movePrevChar = new KeyOperation(new int[]{27,91,68}, Operation.MOVE_PREV_CHAR);
-        }
-        else {
-            moveNextChar = new KeyOperation(new int[]{224,77}, Operation.MOVE_NEXT_CHAR);
-            movePrevChar = new KeyOperation(new int[]{224,75}, Operation.MOVE_PREV_CHAR);
-
-        }
+        moveNextChar = new KeyOperation(Key.RIGHT, Operation.MOVE_NEXT_CHAR);
+        movePrevChar = new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR);
 
         TestBuffer b = new TestBuffer("foo   bar...  Foo-Bar.");
         b.append(movePrevChar.getKeyValues())

@@ -12,6 +12,7 @@ import org.jboss.aesh.console.ConsoleOutput;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Key;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
@@ -30,7 +31,7 @@ public class ConsoleMaskingTest extends BaseConsoleTest {
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
-        KeyOperation deletePrevChar =  new KeyOperation(8, Operation.DELETE_PREV_CHAR);
+        KeyOperation deletePrevChar =  new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR);
 
         Console console = getTestConsole(pipedInputStream);
         outputStream.write(("mypassword").getBytes());

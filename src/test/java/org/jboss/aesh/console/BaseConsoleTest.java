@@ -11,6 +11,7 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.TestTerminal;
 
 import java.io.BufferedReader;
@@ -42,7 +43,7 @@ public abstract class BaseConsoleTest extends AeshTestCase {
         if(!Config.isOSPOSIXCompatible())
             settings.setAnsiConsole(false);
 
-        settings.getOperationManager().addOperation(new KeyOperation(10, Operation.NEW_LINE));
+        settings.getOperationManager().addOperation(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
         return new Console(settings);
     }
 

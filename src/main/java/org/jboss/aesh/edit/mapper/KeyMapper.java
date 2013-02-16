@@ -8,6 +8,7 @@ package org.jboss.aesh.edit.mapper;
 
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Key;
 
 import java.util.regex.Pattern;
 
@@ -35,7 +36,7 @@ public class KeyMapper {
      * @return proper KeyOperation
      */
     public static KeyOperation mapQuoteKeys(String keys, Operation operation) {
-        return new KeyOperation(mapKeys(quotePattern.split(keys)[1]), operation);
+        return new KeyOperation(Key.getKey(mapKeys(quotePattern.split(keys)[1])), operation);
     }
 
     /**
@@ -46,7 +47,8 @@ public class KeyMapper {
      * @return proper KeyOperation
      */
     public static KeyOperation mapQuoteKeys(String keys, String operation) {
-        return new KeyOperation(mapKeys(quotePattern.split(keys)[1]),
+        //return new KeyOperation(Key.getKey(mapKeys(quotePattern.split(keys)[1])),
+        return new KeyOperation(Key.getKey(mapKeys(keys.substring(1))),
                 OperationMapper.mapToFunction(operation));
     }
 
@@ -58,7 +60,7 @@ public class KeyMapper {
      * @return proper KeyOperation
      */
     public static KeyOperation mapKeys(String keys, Operation operation) {
-        return new KeyOperation(mapKeys(keys), operation);
+        return new KeyOperation(Key.getKey(mapKeys(keys)), operation);
     }
 
     /**
@@ -69,7 +71,7 @@ public class KeyMapper {
      * @return proper KeyOperation
      */
     public static KeyOperation mapKeys(String keys, String operation) {
-        return new KeyOperation(mapKeys(keys),
+        return new KeyOperation(Key.getKey(mapKeys(keys)),
                 OperationMapper.mapToFunction(operation));
     }
 

@@ -65,7 +65,7 @@ public class KeyOperationManager {
 
     public KeyOperation findOperation(int[] input) {
         for(KeyOperation operation : operations) {
-            if(operation.equalValues(input))
+            if(operation.getKey().equals(input))
                 return operation;
         }
         return null;

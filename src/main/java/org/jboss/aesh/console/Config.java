@@ -62,6 +62,8 @@ public class Config {
     }
 
     /**
+     * TODO: clean this shit up!
+     *
      * Must be able to parse:
      * set variablename value
      * keyname: function-name or macro
@@ -81,7 +83,7 @@ public class Config {
         Pattern variablePattern = Pattern.compile("^set\\s+(\\S+)\\s+(\\S+)$");
         Pattern commentPattern = Pattern.compile("^#.*");
         //Pattern keyNamePattern = Pattern.compile("^\\b:\\s+\\b");
-        Pattern keyQuoteNamePattern = Pattern.compile("(^\\\"\\S+)(\\\":\\s+)(\\S+)");
+        Pattern keyQuoteNamePattern = Pattern.compile("(^\"\\\\\\S+)(\":\\s+)(\\S+)");
         Pattern keyNamePattern = Pattern.compile("(^\\S+)(:\\s+)(\\S+)");
         Pattern keySeqPattern = Pattern.compile("^\"keyseq:\\s+\\b");
         Pattern startConstructs = Pattern.compile("^\\$if");
@@ -128,9 +130,11 @@ public class Config {
                                 KeyMapper.mapQuoteKeys(keyQuoteMatcher.group(1),
                                         keyQuoteMatcher.group(3)));
                     }
-                    Matcher keyMatcher = keyNamePattern.matcher(line);
-                    if(keyMatcher.matches()) {
-                        settings.getOperationManager().addOperation(KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
+                    else {
+                        Matcher keyMatcher = keyNamePattern.matcher(line);
+                        if(keyMatcher.matches()) {
+                            settings.getOperationManager().addOperation(KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
+                        }
                     }
                 }
             }

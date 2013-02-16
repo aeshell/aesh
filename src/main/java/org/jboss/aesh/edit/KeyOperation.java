@@ -8,50 +8,38 @@ package org.jboss.aesh.edit;
 
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
-
-import java.util.Arrays;
+import org.jboss.aesh.terminal.Key;
 
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class KeyOperation {
 
-    private int[] keyValues;
+    private Key key;
     private Operation operation;
     private Action workingMode = Action.NO_ACTION;
 
-    public KeyOperation(int value, Operation operation) {
-        keyValues = new int[] {value};
+    public KeyOperation(Key key, Operation operation) {
+        this.key = key;
         this.operation = operation;
     }
 
-    public KeyOperation(int[] value, Operation operation) {
-        keyValues = value;
-        this.operation = operation;
-    }
-
-    public KeyOperation(int value, Operation operation, Action workingMode) {
-        keyValues = new int[] {value};
+    public KeyOperation(Key key, Operation operation, Action workingMode) {
+        this.key = key;
         this.operation = operation;
         this.workingMode = workingMode;
     }
 
-    public KeyOperation(int[] value, Operation operation, Action  workingMode) {
-        keyValues = value;
-        this.operation = operation;
-        this.workingMode = workingMode;
+    public Key getKey() {
+        return key;
     }
 
     public int[] getKeyValues() {
-        return keyValues;
+        return key.getKeyValues();
     }
 
     public int getFirstValue() {
-        return keyValues[0];
-    }
-
-    public boolean hasMoreThanOneKeyValue() {
-        return keyValues.length > 1;
+        return key.getFirstValue();
     }
 
     public Operation getOperation() {
@@ -62,32 +50,34 @@ public class KeyOperation {
         return workingMode;
     }
 
+    @Override
     public boolean equals(Object o) {
-        if(o instanceof KeyOperation) {
-            KeyOperation ko = (KeyOperation) o;
-            if(ko.getOperation() == operation) {
-                if(ko.getKeyValues().length == keyValues.length) {
-                    for(int i=0; i < keyValues.length; i++)
-                        if(ko.getKeyValues()[i] != keyValues[i])
-                            return false;
-                    return true;
-                }
-            }
-        }
-        return false;
+        if (this == o) return true;
+        if (!(o instanceof KeyOperation)) return false;
+
+        KeyOperation that = (KeyOperation) o;
+
+        if (key != that.key) return false;
+        if (operation != that.operation) return false;
+        if (workingMode != that.workingMode) return false;
+
+        return true;
     }
 
+    @Override
     public int hashCode() {
-        return 1481003;
+        int result = key.hashCode();
+        result = 31 * result + operation.hashCode();
+        result = 31 * result + workingMode.hashCode();
+        return result;
     }
 
+    @Override
     public String toString() {
-        return "Operation: "+operation+", "+Arrays.toString(keyValues);
+        return "KeyOperation{" +
+                "key=" + key +
+                ", operation=" + operation +
+                ", workingMode=" + workingMode +
+                '}';
     }
-
-    public boolean equalValues(int[] values) {
-        return Arrays.equals(keyValues, values);
-    }
-
-
 }

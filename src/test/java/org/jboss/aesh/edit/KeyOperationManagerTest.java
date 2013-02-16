@@ -8,6 +8,7 @@ package org.jboss.aesh.edit;
 
 import junit.framework.TestCase;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Key;
 
 /**
  *
@@ -21,29 +22,29 @@ public class KeyOperationManagerTest extends TestCase {
 
     public void testOperations() {
         KeyOperationManager kom = new KeyOperationManager();
-        kom.addOperation(new KeyOperation(new int[]{27,1}, Operation.HISTORY_NEXT));
-        kom.addOperation(new KeyOperation(new int[]{27,2}, Operation.HISTORY_PREV));
-        kom.addOperation(new KeyOperation(new int[]{27,1,23}, Operation.MOVE_NEXT_CHAR));
+        kom.addOperation(new KeyOperation(Key.DOWN, Operation.HISTORY_NEXT));
+        kom.addOperation(new KeyOperation(Key.UP, Operation.HISTORY_PREV));
+        kom.addOperation(new KeyOperation(Key.RIGHT, Operation.MOVE_NEXT_CHAR));
         assertEquals(3, kom.getOperations().size());
 
-        kom.addOperation(new KeyOperation(new int[]{27,1}, Operation.MOVE_BEGINNING));
+        kom.addOperation(new KeyOperation(Key.RIGHT, Operation.MOVE_BEGINNING));
         assertEquals(3, kom.getOperations().size());
 
         kom.clear();
-        kom.addOperation(new KeyOperation(new int[]{27,1}, Operation.MOVE_BEGINNING));
+        kom.addOperation(new KeyOperation(Key.PGUP, Operation.MOVE_BEGINNING));
         assertEquals(1, kom.getOperations().size());
-        kom.addOperation(new KeyOperation(new int[]{27,1,23}, Operation.MOVE_NEXT_CHAR));
+        kom.addOperation(new KeyOperation(Key.PGDOWN, Operation.MOVE_NEXT_CHAR));
         assertEquals(2, kom.getOperations().size());
 
     }
 
     public void testFindOperation() {
         KeyOperationManager kom = new KeyOperationManager();
-        kom.addOperation(new KeyOperation(new int[]{27,1}, Operation.HISTORY_NEXT));
-        kom.addOperation(new KeyOperation(new int[]{27,2}, Operation.HISTORY_PREV));
-        kom.addOperation(new KeyOperation(new int[]{27,1,23}, Operation.MOVE_NEXT_CHAR));
+        kom.addOperation(new KeyOperation(Key.j, Operation.HISTORY_NEXT));
+        kom.addOperation(new KeyOperation(Key.k, Operation.HISTORY_PREV));
+        kom.addOperation(new KeyOperation(Key.l, Operation.MOVE_NEXT_CHAR));
 
-       assertEquals(new KeyOperation(new int[]{27,1,23}, Operation.MOVE_NEXT_CHAR),
-               kom.findOperation(new int[]{27,1,23}));
+       assertEquals(new KeyOperation(Key.l, Operation.MOVE_NEXT_CHAR),
+               kom.findOperation(new int[]{108}));
     }
 }

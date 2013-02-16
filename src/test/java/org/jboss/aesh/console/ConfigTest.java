@@ -11,6 +11,7 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Key;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,16 +53,16 @@ public class ConfigTest extends TestCase {
         if(Config.isOSPOSIXCompatible()) {  //TODO: must fix this for windows
             Config.parseInputrc(settings);
 
-            assertEquals(new KeyOperation(new int[]{27,91,68}, Operation.MOVE_NEXT_CHAR),
+            assertEquals(new KeyOperation(Key.LEFT, Operation.MOVE_NEXT_CHAR),
                     settings.getOperationManager().findOperation(new int[]{27,91,68}));
 
-            assertEquals(new KeyOperation(new int[]{27,91,66}, Operation.HISTORY_PREV),
+            assertEquals(new KeyOperation(Key.DOWN, Operation.HISTORY_PREV),
                     settings.getOperationManager().findOperation(new int[]{27,91,66}));
 
-            assertEquals(new KeyOperation(new int[]{27,10}, Operation.MOVE_PREV_CHAR),
+            assertEquals(new KeyOperation(Key.META_CTRL_J, Operation.MOVE_PREV_CHAR),
                     settings.getOperationManager().findOperation(new int[]{27,10}));
 
-            assertEquals(new KeyOperation(new int[]{1}, Operation.MOVE_NEXT_WORD),
+            assertEquals(new KeyOperation(Key.CTRL_A, Operation.MOVE_NEXT_WORD),
                     settings.getOperationManager().findOperation(new int[]{1}));
         }
     }

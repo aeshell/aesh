@@ -20,6 +20,7 @@ import org.jboss.aesh.console.ConsoleOutput;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Key;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +32,7 @@ import java.io.PipedOutputStream;
  */
 public class CompletionConsoleTest extends BaseConsoleTest {
 
-    private KeyOperation completeChar =  new KeyOperation(9, Operation.COMPLETE);
+    private KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
 
     public CompletionConsoleTest(String test) {
         super(test);
