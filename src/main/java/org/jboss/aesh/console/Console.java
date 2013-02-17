@@ -338,7 +338,7 @@ public class Console {
      * @throws IOException stream
      */
     public ConsoleOutput read(String prompt) throws IOException {
-        return read(new Prompt(prompt), null);
+        return read(new Prompt(prompt));
     }
 
     /**
@@ -346,12 +346,11 @@ public class Console {
      * operations/completions/etc
      * Return the stream when a new line is found.
      *
-     * @param prompt starting prompt
-     * @param mask if set typed chars will be masked with this specified char
+     * @param prompt starting prompt, also specify masking if needed
      * @return input stream
      * @throws IOException stream
      */
-    public ConsoleOutput read(Prompt prompt, Character mask) throws IOException {
+    public ConsoleOutput read(Prompt prompt) throws IOException {
         if(!running)
             throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
 
@@ -361,7 +360,7 @@ public class Console {
                 return output;
         }
 
-        buffer.reset(prompt, mask);
+        buffer.reset(prompt);
         if(command == null) {
             displayPrompt(prompt);
         }
@@ -386,12 +385,12 @@ public class Console {
             if(command != null)
                 command.processOperation(operation);
             else
-                result = parseOperation(operation, mask);
+                result = parseOperation(operation, prompt.getMask());
 
             if(result != null) {
 
                 // if the line ends with: \ we create a new line
-                if(mask == null && endsWithBackslashPattern.matcher(result).find()) {
+                if(!prompt.isMasking() && endsWithBackslashPattern.matcher(result).find()) {
                     //String line = result.substring(0,result.length()-1);
                     appendMultiLine(result.substring(0,result.length()-1));
                     ConsoleOutput tempOutput = read("> ");
@@ -406,7 +405,7 @@ public class Console {
                     return output;
                 }
                 else {
-                    buffer.reset(prompt, mask);
+                    buffer.reset(prompt);
                     displayPrompt(prompt);
                     search = null;
                 }

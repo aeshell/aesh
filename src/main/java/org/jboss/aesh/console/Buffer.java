@@ -58,10 +58,6 @@ public class Buffer {
      * @param prompt set prompt
      */
     protected void reset(Prompt prompt) {
-        reset(prompt, null);
-    }
-
-    protected void reset(Prompt prompt, Character mask) {
         if(prompt != null)
             this.prompt = prompt;
         else
@@ -69,7 +65,7 @@ public class Buffer {
         cursor = 0;
         line = new StringBuilder();
         delta = 0;
-        this.mask = mask;
+        this.mask = prompt.getMask();
     }
 
     /**

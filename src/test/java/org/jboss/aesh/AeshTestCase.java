@@ -10,6 +10,7 @@ import junit.framework.TestCase;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.terminal.TestTerminal;
@@ -49,7 +50,7 @@ public abstract class AeshTestCase extends TestCase {
         StringBuilder in = new StringBuilder();
         String tmpString = null;
         while (true) {
-            ConsoleOutput tmp = console.read(null);
+            ConsoleOutput tmp = console.read(new Prompt(""));
             if(tmp != null) {
                 in.append(tmp.getBuffer());
                 tmpString = tmp.getBuffer();
@@ -87,7 +88,7 @@ public abstract class AeshTestCase extends TestCase {
 
         String in = null;
         while (true) {
-            ConsoleOutput tmp = console.read(null);
+            ConsoleOutput tmp = console.read("");
             if(tmp != null)
                 in = tmp.getBuffer();
             else

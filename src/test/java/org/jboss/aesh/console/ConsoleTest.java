@@ -43,7 +43,7 @@ public class ConsoleTest extends BaseConsoleTest {
         outputStream.write(("foo \\").getBytes());
         outputStream.write(("\n").getBytes());
         outputStream.write(("bar\n").getBytes());
-        ConsoleOutput output = console.read(null);
+        ConsoleOutput output = console.read(new Prompt(""));
         assertEquals("ls foo bar", output.getBuffer());
     }
 

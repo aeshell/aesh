@@ -38,9 +38,9 @@ public class ConsoleRedirection extends BaseConsoleTest {
 
         Console console = getTestConsole(pipedInputStream);
         outputStream.write("ls | find *. -print\n".getBytes());
-        ConsoleOutput output = console.read(null);
+        ConsoleOutput output = console.read("");
         assertEquals("ls ", output.getBuffer());
-        output = console.read(null);
+        output = console.read("");
         assertEquals(" find *. -print", output.getBuffer());
 
         if(Config.isOSPOSIXCompatible()) {
@@ -49,11 +49,11 @@ public class ConsoleRedirection extends BaseConsoleTest {
         else {
             outputStream.write(("ls >"+Config.getTmpDir()+"\\foo\\ bar.txt\n").getBytes());
         }
-        output = console.read(null);
+        output = console.read("");
         assertEquals("ls ", output.getBuffer());
         console.pushToStdOut("CONTENT OF FILE");
         outputStream.write("\n".getBytes());
-        output = console.read(null);
+        output = console.read("");
         assertEquals("", output.getBuffer());
         if(Config.isOSPOSIXCompatible())
             assertEquals("CONTENT OF FILE\n", getContentOfFile(Config.getTmpDir()+"/foo bar.txt"));
@@ -73,11 +73,11 @@ public class ConsoleRedirection extends BaseConsoleTest {
         else
             outputStream.write(("ls < "+Config.getTmpDir()+"\\foo\\ bar.txt | man\n").getBytes());
 
-        ConsoleOutput output = console.read(null);
+        ConsoleOutput output = console.read("");
         assertEquals("ls ", output.getBuffer());
         assertTrue(output.getStdOut().contains("CONTENT OF FILE"));
         assertEquals(ControlOperator.PIPE, output.getControlOperator());
-        output = console.read(null);
+        output = console.read("");
         assertEquals(" man", output.getBuffer());
         assertEquals(ControlOperator.NONE, output.getControlOperator());
 

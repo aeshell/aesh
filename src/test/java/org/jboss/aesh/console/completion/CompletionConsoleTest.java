@@ -79,19 +79,19 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         outputStream.write("foo".getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.write("\n".getBytes());
-        ConsoleOutput output = console.read(null);
+        ConsoleOutput output = console.read("");
         assertEquals("foobar ", output.getBuffer());
 
         outputStream.write("bar".getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.write("\n".getBytes());
-        output = console.read(null);
+        output = console.read("");
         assertEquals("barfoo", output.getBuffer());
 
         outputStream.write("le".getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.write("\n".getBytes());
-        output = console.read(null);
+        output = console.read("");
         assertEquals("less:", output.getBuffer());
 
         console.stop();
@@ -144,13 +144,13 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         outputStream.write("le".getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.write("\n".getBytes());
-        ConsoleOutput output = console.read(null);
+        ConsoleOutput output = console.read("");
         assertEquals("less ", output.getBuffer());
 
         outputStream.write("less -".getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.write("\n".getBytes());
-        output = console.read(null);
+        output = console.read("");
         assertEquals("-f -b ", builder.toString());
 
     }

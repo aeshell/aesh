@@ -37,7 +37,7 @@ public class ConsoleMaskingTest extends BaseConsoleTest {
         outputStream.write(("mypassword").getBytes());
         outputStream.write(deletePrevChar.getFirstValue());
         outputStream.write(("\n").getBytes());
-        ConsoleOutput output = console.read(new Prompt(""), new Character('\u0000'));
+        ConsoleOutput output = console.read(new Prompt("", new Character('\u0000')));
         assertEquals("mypasswor", output.getBuffer());
 
     }

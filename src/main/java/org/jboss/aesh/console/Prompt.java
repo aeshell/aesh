@@ -22,12 +22,21 @@ public class Prompt {
 
     private List<TerminalCharacter> characters;
     private String prompt;
+    private Character mask;
 
     public Prompt(String prompt) {
         if(prompt != null)
             this.prompt = prompt;
         else
             this.prompt = "";
+    }
+
+    public Prompt(String prompt, Character mask) {
+        if(prompt != null)
+            this.prompt = prompt;
+        else
+            this.prompt = "";
+        this.mask = mask;
     }
 
     public Prompt(List<TerminalCharacter> characters) {
@@ -37,6 +46,24 @@ public class Prompt {
             builder.append(c.getCharacter());
 
         this.prompt = builder.toString();
+    }
+
+    public Prompt(List<TerminalCharacter> characters, Character mask) {
+        this.characters = characters;
+        StringBuilder builder = new StringBuilder(characters.size());
+        for(TerminalCharacter c : characters)
+            builder.append(c.getCharacter());
+
+        this.prompt = builder.toString();
+        this.mask = mask;
+    }
+
+    public Character getMask() {
+        return mask;
+    }
+
+    public boolean isMasking() {
+        return mask != null;
     }
 
     public String getPromptAsString() {

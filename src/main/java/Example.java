@@ -189,7 +189,7 @@ public class Example {
         exampleConsole.pushToStdOut(ANSI.greenBackground());
         //while ((line = exampleConsole.read(prompt)) != null) {
         //while ((line = exampleConsole.read("[test@foo.bar]~> ")) != null) {
-        while ((line = exampleConsole.read(prompt, null)) != null) {
+        while ((line = exampleConsole.read(prompt)) != null) {
             exampleConsole.pushToStdOut("======>\"" + line.getBuffer() + "\"\n");
 
             if (line.getBuffer().equalsIgnoreCase("quit") || line.getBuffer().equalsIgnoreCase("exit") ||
@@ -197,7 +197,7 @@ public class Example {
                 break;
             }
             if(line.getBuffer().equalsIgnoreCase("password")) {
-                line = exampleConsole.read(new Prompt("password: "), Character.valueOf((char) 0));
+                line = exampleConsole.read(new Prompt("password: ", (char) 0));
                 exampleConsole.pushToStdOut("password typed:" + line + "\n");
 
             }

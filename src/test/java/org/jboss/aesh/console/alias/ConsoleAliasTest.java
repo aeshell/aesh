@@ -34,10 +34,10 @@ public class ConsoleAliasTest extends BaseConsoleTest {
 
         Console console = getTestConsole(pipedInputStream);
         outputStream.write("ll\n".getBytes());
-        ConsoleOutput output = console.read(null);
+        ConsoleOutput output = console.read("");
         assertEquals("ls -alF", output.getBuffer());
         outputStream.write("grep -l\n".getBytes());
-        output = console.read(null);
+        output = console.read("");
         assertEquals("grep --color=auto -l", output.getBuffer());
 
         console.stop();
