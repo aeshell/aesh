@@ -75,6 +75,8 @@ public class Console {
     private Action prevAction = Action.EDIT;
 
     private ConsoleCommand command;
+    private Prompt prompt;
+    private ConsoleCallback consoleCallback;
 
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
@@ -203,6 +205,23 @@ public class Console {
      */
     public History getHistory() {
         return history;
+    }
+
+    public void setPrompt(Prompt prompt) {
+        this.prompt = prompt;
+    }
+
+    public void setConsoleCallback(ConsoleCallback consoleCallback) {
+        this.consoleCallback = consoleCallback;
+    }
+
+    public void start() {
+        if(running)
+            throw new IllegalStateException("Not allowed to start the Console without stopping it first");
+        if(consoleCallback == null)
+            throw new IllegalStateException("Not possible to start the Console without setting ConsoleCallback");
+        running = true;
+        //read();
     }
 
     /**

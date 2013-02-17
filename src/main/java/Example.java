@@ -187,8 +187,6 @@ public class Example {
 
         ConsoleOutput line;
         exampleConsole.pushToStdOut(ANSI.greenBackground());
-        //while ((line = exampleConsole.read(prompt)) != null) {
-        //while ((line = exampleConsole.read("[test@foo.bar]~> ")) != null) {
         while ((line = exampleConsole.read(prompt)) != null) {
             exampleConsole.pushToStdOut("======>\"" + line.getBuffer() + "\"\n");
 
