@@ -6,10 +6,15 @@
  */
 package org.jboss.aesh.console.reader;
 
+import org.jboss.aesh.util.LoggerUtil;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 /**
  *
@@ -19,10 +24,12 @@ import java.util.concurrent.TimeUnit;
 public class ConsoleInputSession {
     private InputStream consoleStream;
     private InputStream externalInputStream;
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<String>(1000);
 
     private volatile boolean connected;
+    Logger logger = LoggerUtil.getLogger("ConsoleInputSession");
 
     public ConsoleInputSession(InputStream consoleStream) {
         this.consoleStream = consoleStream;
@@ -60,7 +67,11 @@ public class ConsoleInputSession {
 
             @Override
             public void close() throws IOException {
-                stop();
+                try {
+                    stop();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         };
 
@@ -68,10 +79,10 @@ public class ConsoleInputSession {
     }
 
     private void startReader() {
-        Thread readerThread = new Thread() {
+        Runnable reader = new Runnable() {
             @Override
             public void run() {
-                while (connected) {
+                while (!executorService.isShutdown()) {
                     try {
                         byte[] bBuf = new byte[20];
                         int read = consoleStream.read(bBuf);
@@ -83,7 +94,8 @@ public class ConsoleInputSession {
                         Thread.sleep(10);
                     }
                     catch (IOException e) {
-                        if (connected) {
+                        if (!executorService.isShutdown()) {
+                            executorService.shutdown();
                             connected = false;
                             throw new RuntimeException("broken pipe");
                         }
@@ -95,16 +107,27 @@ public class ConsoleInputSession {
             }
         };
 
-        readerThread.start();
+        executorService.execute(reader);
     }
 
     public void interruptPipe() {
         blockingQueue.offer("\n");
     }
 
-    public void stop() {
-        connected = false;
-        blockingQueue.offer("");
+    public void stop() throws IOException, InterruptedException {
+        try {
+            logger.info("started stop");
+            connected = false;
+            executorService.shutdown();
+            blockingQueue.offer("");
+            logger.info("awaiting");
+            executorService.awaitTermination(500, TimeUnit.MILLISECONDS);
+            logger.info("done waiting");
+        } finally {
+            logger.info("closing stream");
+            consoleStream.close();
+            logger.info("done closing stream");
+        }
     }
 
     public InputStream getExternalInputStream() {

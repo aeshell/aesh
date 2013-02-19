@@ -111,10 +111,13 @@ public class POSIXTerminal extends AbstractTerminal {
      */
     @Override
     public void writeToStdOut(String out) throws IOException {
-        logger.info("writing to out: "+out);
+        if(Settings.getInstance().isLogging())
+            logger.info("writing to out: "+out);
         if(out != null && out.length() > 0) {
-            stdOut.write(out);
-            stdOut.flush();
+            synchronized (this) {
+                stdOut.write(out);
+                stdOut.flush();
+            }
         }
     }
 
@@ -124,6 +127,19 @@ public class POSIXTerminal extends AbstractTerminal {
     @Override
     public void writeToStdOut(char[] out) throws IOException {
         if(out != null && out.length > 0) {
+            synchronized (this) {
+                stdOut.write(out);
+                stdOut.flush();
+            }
+        }
+    }
+
+    /**
+     * @see org.jboss.aesh.terminal.Terminal
+     */
+    @Override
+    public void writeToStdOut(char out) throws IOException {
+        synchronized (this) {
             stdOut.write(out);
             stdOut.flush();
         }
@@ -133,19 +149,12 @@ public class POSIXTerminal extends AbstractTerminal {
      * @see org.jboss.aesh.terminal.Terminal
      */
     @Override
-    public void writeToStdOut(char out) throws IOException {
-        stdOut.write(out);
-        stdOut.flush();
-    }
-
-    /**
-     * @see org.jboss.aesh.terminal.Terminal
-     */
-    @Override
     public void writeToStdErr(String err) throws IOException {
         if(err != null && err.length() > 0) {
-            stdErr.write(err);
-            stdErr.flush();
+            synchronized (this) {
+                stdErr.write(err);
+                stdErr.flush();
+            }
         }
     }
 
@@ -155,8 +164,10 @@ public class POSIXTerminal extends AbstractTerminal {
     @Override
     public void writeToStdErr(char[] err) throws IOException {
         if(err != null && err.length > 0) {
-            stdErr.write(err);
-            stdErr.flush();
+            synchronized (this) {
+                stdErr.write(err);
+                stdErr.flush();
+            }
         }
     }
 
@@ -165,8 +176,10 @@ public class POSIXTerminal extends AbstractTerminal {
      */
     @Override
     public void writeToStdErr(char err) throws IOException {
-        stdErr.write(err);
-        stdErr.flush();
+        synchronized (this) {
+            stdErr.write(err);
+            stdErr.flush();
+        }
     }
 
     @Override

@@ -324,6 +324,8 @@ public class Console {
         }
         finally {
             settings.getInputStream().close();
+            settings.getStdErr().close();
+            settings.getStdOut().close();
         }
     }
 
@@ -367,12 +369,10 @@ public class Console {
      * operations/completions/etc
      */
     private void startReader() {
-        if(!running)
-            throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
         Runnable reader = new Runnable() {
             @Override
             public void run() {
-                while(running) {
+                while(!executorService.isShutdown()) {
                     read();
                 }
             }
@@ -392,6 +392,7 @@ public class Console {
             }
             //close thread, exit
             if (in[0] == -1) {
+                executorService.shutdown();
                 running = false;
                 //consoleCallback.readConsoleOutput(null);
                 return;
@@ -424,12 +425,12 @@ public class Console {
                         //return output;
                         consoleCallback.readConsoleOutput(output);
                         //abort if the user have initiated stop
-                        if(!running)
+                        if(executorService.isShutdown())
                             return;
 
                         while(currentOperation != null) {
                             ConsoleOutput tmpOutput = parseCurrentOperation();
-                            if(tmpOutput != null && running)
+                            if(tmpOutput != null && !executorService.isShutdown())
                                 consoleCallback.readConsoleOutput(tmpOutput);
                         }
                         search = null;
@@ -1049,13 +1050,9 @@ public class Console {
         moveCursor(-buffer.getCursor());
         terminal.writeToStdOut(ANSI.moveCursorToBeginningOfLine());
         terminal.writeToStdOut(ANSI.getStart()+"2K");
-        logger.info("AFTER CLEARING LINE");
         setBufferLine(out.toString());
-        logger.info("set bufferline to:"+out.toString()+", actual: "+buffer.getLine());
         moveCursor(cursor);
-        logger.info("AFTER MOVING");
         drawLine(buffer.getLine());
-        logger.info("after drawing line");
         buffer.disablePrompt(false);
     }
 

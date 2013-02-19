@@ -84,45 +84,57 @@ public class WindowsTerminal extends AbstractTerminal {
     @Override
     public void writeToStdOut(String out) throws IOException {
         if(out != null && out.length() > 0) {
-            stdOut.write(out);
-            stdOut.flush();
+            synchronized (this) {
+                stdOut.write(out);
+                stdOut.flush();
+            }
         }
     }
 
     @Override
     public void writeToStdOut(char[] out) throws IOException {
         if(out != null && out.length > 0) {
+            synchronized (this) {
+                stdOut.write(out);
+                stdOut.flush();
+            }
+        }
+    }
+
+    @Override
+    public void writeToStdOut(char out) throws IOException {
+        synchronized (this) {
             stdOut.write(out);
             stdOut.flush();
         }
     }
 
     @Override
-    public void writeToStdOut(char out) throws IOException {
-        stdOut.write(out);
-        stdOut.flush();
-    }
-
-    @Override
     public void writeToStdErr(String err) throws IOException {
         if(err != null && err.length() > 0) {
-            stdOut.write(err);
-            stdOut.flush();
+            synchronized (this) {
+                stdOut.write(err);
+                stdOut.flush();
+            }
         }
     }
 
     @Override
     public void writeToStdErr(char[] err) throws IOException {
         if(err != null && err.length > 0) {
-            stdOut.write(err);
-            stdOut.flush();
+            synchronized (this) {
+                stdOut.write(err);
+                stdOut.flush();
+            }
         }
     }
 
     @Override
     public void writeToStdErr(char err) throws IOException {
-        stdOut.write(err);
-        stdOut.flush();
+        synchronized (this) {
+            stdOut.write(err);
+            stdOut.flush();
+        }
     }
 
     private int getHeight() {
