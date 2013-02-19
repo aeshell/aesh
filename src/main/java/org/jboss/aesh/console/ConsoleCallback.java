@@ -6,13 +6,22 @@
  */
 package org.jboss.aesh.console;
 
+import java.io.IOException;
+
 /**
  * Implementation of this interface will be called when a user press the
  * "enter/return" key.
+ * The return value is to indicate if the outcome was a success or not.
+ * Return 0 for success and something else for failure (typical 1 or -1).
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface ConsoleCallback {
 
-    public void readConsoleOutput(ConsoleOutput output);
+    /**
+     * @param output the consoleOutput
+     * @return 0 for success or 1/-1 for failure.
+     * @throws IOException
+     */
+    public int readConsoleOutput(ConsoleOutput output) throws IOException;
 }
