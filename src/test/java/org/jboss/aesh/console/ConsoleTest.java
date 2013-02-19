@@ -6,45 +6,43 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.AeshTestCase;
-import org.jboss.aesh.TestBuffer;
-import org.jboss.aesh.console.operator.ControlOperator;
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.edit.KeyOperation;
-import org.jboss.aesh.edit.Mode;
-import org.jboss.aesh.edit.actions.Operation;
-import org.jboss.aesh.terminal.TestTerminal;
+import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ConsoleTest extends BaseConsoleTest {
 
-    public ConsoleTest(String test) {
-        super(test);
-    }
 
-    public void testMultiLine() throws IOException {
+    @Test
+    public void multiLine() throws IOException, InterruptedException {
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
         Console console = getTestConsole(pipedInputStream);
+        console.setConsoleCallback(new ConsoleCallback() {
+            @Override
+            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+                assertEquals("ls foo bar", output.getBuffer());
+                return 0;
+            }
+        });
+        console.start();
+
         outputStream.write(("ls \\").getBytes());
         outputStream.write(("\n").getBytes());
         outputStream.write(("foo \\").getBytes());
         outputStream.write(("\n").getBytes());
         outputStream.write(("bar\n").getBytes());
-        ConsoleOutput output = console.read(new Prompt(""));
-        assertEquals("ls foo bar", output.getBuffer());
+
+        Thread.sleep(100);
+        console.stop();
     }
 
 

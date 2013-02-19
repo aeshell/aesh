@@ -10,10 +10,18 @@ version = '0.33'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
+
 jar {
     manifest {
         attributes 'Implementation-Title': 'Aesh', 'Implementation-Version': version
     }
+}
+
+test {
+    testLogging.showStandardStreams = true
+    onOutput { descriptor, event ->
+    logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
+  }
 }
 
 repositories {

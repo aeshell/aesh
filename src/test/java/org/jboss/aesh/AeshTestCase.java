@@ -9,6 +9,7 @@ package org.jboss.aesh;
 import junit.framework.TestCase;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
+import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOutput;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.settings.Settings;
@@ -32,7 +33,7 @@ public abstract class AeshTestCase extends TestCase {
         assertEquals(expected, buffer, false);
     }
 
-    public void assertEquals(String expected, TestBuffer buffer, boolean lastOnly) throws IOException {
+    public void assertEquals(final String expected, TestBuffer buffer, final boolean lastOnly) throws IOException {
 
         Settings settings = Settings.getInstance();
         settings.setReadInputrc(false);
@@ -45,15 +46,28 @@ public abstract class AeshTestCase extends TestCase {
         if(!Config.isOSPOSIXCompatible())
             settings.setAnsiConsole(false);
         Console console = new Console(settings);
-
-
-        StringBuilder in = new StringBuilder();
+        final StringBuilder in = new StringBuilder();
         String tmpString = null;
+        console.setConsoleCallback(new ConsoleCallback() {
+            @Override
+            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+                if(lastOnly) {
+                    assertEquals(expected, output.getBuffer());
+                }
+                else
+                    assertEquals(expected, output.getBuffer());
+                return 0;
+            }
+        });
+        console.start();
+        try { Thread.sleep(100); }
+        catch (InterruptedException e) { }
+        console.stop();
+
+        /*
         while (true) {
             ConsoleOutput tmp = console.read(new Prompt(""));
             if(tmp != null) {
-                in.append(tmp.getBuffer());
-                tmpString = tmp.getBuffer();
             }
             else
                 break;
@@ -69,9 +83,10 @@ public abstract class AeshTestCase extends TestCase {
         }
         else
             assertEquals(expected, in.toString());
+        */
     }
 
-    public void assertEqualsViMode(String expected, TestBuffer buffer) throws IOException {
+    public void assertEqualsViMode(final String expected, TestBuffer buffer) throws IOException {
 
         Settings settings = Settings.getInstance();
         settings.setReadInputrc(false);
@@ -85,7 +100,20 @@ public abstract class AeshTestCase extends TestCase {
             settings.setAnsiConsole(false);
 
         Console console = new Console(settings);
+        console.setConsoleCallback(new ConsoleCallback() {
+            @Override
+            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+                assertEquals(expected, output.getBuffer());
+                return 0;
+            }
+        });
 
+        console.start();
+        try { Thread.sleep(100); }
+        catch (InterruptedException e) { }
+        console.stop();
+
+        /*
         String in = null;
         while (true) {
             ConsoleOutput tmp = console.read("");
@@ -101,5 +129,6 @@ public abstract class AeshTestCase extends TestCase {
         }
 
         assertEquals(expected, in);
+        */
     }
 }

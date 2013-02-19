@@ -5,6 +5,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  */
 
+import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleCommand;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
@@ -28,6 +29,8 @@ import java.util.List;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class Example {
+
+    private static boolean masking = false;
 
     public static void main(String[] args) throws IOException {
 
@@ -53,7 +56,7 @@ public class Example {
                 CharacterType.UNDERLINE));
         chars.add(new TerminalCharacter(' ', Color.DEFAULT_BG, Color.WHITE_TEXT));
 
-        Prompt prompt = new Prompt(chars);
+        final Prompt prompt = new Prompt(chars);
         //String prompt = ANSI.redText()+"[test@foo]"+ANSI.reset()+"$ ";
 
         //a simple interruptHook
@@ -62,15 +65,17 @@ public class Example {
             public void handleInterrupt(Console console) {
                 try {
                     console.pushToStdOut("KILLED!\n");
+                    console.stop();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
 
-        Console exampleConsole = new Console();
+        final Console exampleConsole = new Console();
+        exampleConsole.setPrompt(prompt);
 
-        ConsoleCommand test = new ConsoleCommand(exampleConsole) {
+        final ConsoleCommand test = new ConsoleCommand(exampleConsole) {
 
             @Override
             protected void afterAttach() throws IOException {
@@ -146,7 +151,6 @@ public class Example {
                 if(co.getBuffer().equals("--")) {
                     commands.add("--help-");
                 }
-                //if(co.getBuffer().startsWith("--help-") || co.getBuffer().startsWith("--help-m")) {
                 if("--help-me".startsWith(co.getBuffer())) {
                     commands.add("--help-me");
                 }
@@ -185,49 +189,49 @@ public class Example {
 
         exampleConsole.addCompletion(completer);
 
-        ConsoleOutput line;
-        exampleConsole.pushToStdOut(ANSI.greenBackground());
-        while ((line = exampleConsole.read(prompt)) != null) {
-            exampleConsole.pushToStdOut("======>\"" + line.getBuffer() + "\"\n");
+        final ConsoleOutput line;
+        ConsoleCallback consoleCallback = new ConsoleCallback() {
+            @Override
+            public int readConsoleOutput(ConsoleOutput output) throws IOException{
+                //To change body of implemented methods use File | Settings | File Templates.
 
-            if (line.getBuffer().equalsIgnoreCase("quit") || line.getBuffer().equalsIgnoreCase("exit") ||
-                    line.getBuffer().equalsIgnoreCase("reset")) {
-                break;
-            }
-            if(line.getBuffer().equalsIgnoreCase("password")) {
-                line = exampleConsole.read(new Prompt("password: ", (char) 0));
-                exampleConsole.pushToStdOut("password typed:" + line + "\n");
-
-            }
-            //test stdErr
-            if(line.getBuffer().startsWith("blah")) {
-                exampleConsole.pushToStdErr("blah. command not found.\n");
-            }
-            if(line.getBuffer().equals("clear"))
-                exampleConsole.clear();
-            if(line.getBuffer().startsWith("man")) {
-                //exampleConsole.attachProcess(test);
-                test.attach(line);
-            }
-        }
-        if(line != null && line.getBuffer().equals("reset")) {
-            exampleConsole.stop();
-            exampleConsole = new Console();
-
-            while ((line = exampleConsole.read("> ")) != null) {
-                exampleConsole.pushToStdOut("======>\"" + line + "\"\n");
-                if (line.getBuffer().equalsIgnoreCase("quit") || line.getBuffer().equalsIgnoreCase("exit") ||
-                        line.getBuffer().equalsIgnoreCase("reset")) {
-                    break;
+                exampleConsole.pushToStdOut("======>\"" + output.getBuffer() + "\"\n");
+                if(masking) {
+                    exampleConsole.pushToStdOut("got password: "+output.getBuffer()+", stopping masking");
+                    masking = false;
+                    exampleConsole.setPrompt(prompt);
                 }
-
+                else if (output.getBuffer().equalsIgnoreCase("quit") || output.getBuffer().equalsIgnoreCase("exit") ||
+                        output.getBuffer().equalsIgnoreCase("reset")) {
+                    exampleConsole.stop();
+                }
+                else if(output.getBuffer().equalsIgnoreCase("password")) {
+                    masking = true;
+                    exampleConsole.setPrompt(new Prompt("password: ", (char) 0));
+                }
+                else if(output.getBuffer().startsWith("blah")) {
+                    exampleConsole.pushToStdErr("blah. command not found.\n");
+                }
+                else if(output.getBuffer().equals("clear"))
+                    exampleConsole.clear();
+                else if(output.getBuffer().startsWith("man")) {
+                    //exampleConsole.attachProcess(test);
+                    test.attach(output);
+                }
+                 return 0;
             }
-        }
+        };
+        exampleConsole.setConsoleCallback(consoleCallback);
+        exampleConsole.start();
 
+        /*
         try {
-            exampleConsole.stop();
-        } catch (Exception e) {
+            Thread.sleep(10000);
+            exampleConsole.setPrompt(new Prompt("[FOO]» "));
+        } catch (InterruptedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
+        */
     }
 
 }

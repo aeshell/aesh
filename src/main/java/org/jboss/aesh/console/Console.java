@@ -49,6 +49,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -80,17 +82,18 @@ public class Console {
 
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
-    private boolean running = false;
+    private volatile boolean running = false;
     private StringBuilder redirectPipeOutBuffer;
     private StringBuilder redirectPipeErrBuffer;
     private List<ConsoleOperation> operations;
     private ConsoleOperation currentOperation;
     private AliasManager aliasManager;
-    private StringBuilder multiLine = new StringBuilder();
 
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
 
     private Pattern endsWithBackslashPattern = Pattern.compile(".*\\s\\\\$");
+
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     //used to optimize text deletion
     private char[] resetLineAndSetCursorToStart =
@@ -180,9 +183,9 @@ public class Console {
 
         redirectPipeOutBuffer = new StringBuilder();
         redirectPipeErrBuffer = new StringBuilder();
+        prompt = new Prompt("");
 
         this.settings = settings;
-        running = true;
     }
 
      private void setTerminal(Terminal term, InputStream in, OutputStream stdOut, OutputStream stdErr) {
@@ -207,21 +210,28 @@ public class Console {
         return history;
     }
 
-    public void setPrompt(Prompt prompt) {
+    public void setPrompt(Prompt prompt) throws IOException {
         this.prompt = prompt;
+        buffer.updatePrompt(this.prompt);
+        //only update the prompt if Console is running
+        if(running) {
+            syncCursor();
+            redrawLine();
+        }
     }
 
     public void setConsoleCallback(ConsoleCallback consoleCallback) {
         this.consoleCallback = consoleCallback;
     }
 
-    public void start() {
+    public void start() throws IOException {
         if(running)
             throw new IllegalStateException("Not allowed to start the Console without stopping it first");
         if(consoleCallback == null)
             throw new IllegalStateException("Not possible to start the Console without setting ConsoleCallback");
         running = true;
-        //read();
+        displayPrompt(prompt);
+        startReader();
     }
 
     /**
@@ -304,12 +314,17 @@ public class Console {
      * @throws IOException stream
      */
     public void stop() throws IOException {
-        settings.getInputStream().close();
-        //setting it to null to prevent uncertain state
-        settings.setInputStream(null);
-        terminal.reset();
-        terminal = null;
-        running = false;
+        try {
+            running = false;
+            executorService.shutdown();
+            //setting it to null to prevent uncertain state
+            //settings.setInputStream(null);
+            terminal.reset();
+            //terminal = null;
+        }
+        finally {
+            settings.getInputStream().close();
+        }
     }
 
     /**
@@ -350,42 +365,23 @@ public class Console {
     /**
      * Read from the input stream, perform action according to mapped
      * operations/completions/etc
-     * Return the stream when a new line is found.
-     *
-     * @param prompt starting prompt
-     * @return input stream
-     * @throws IOException stream
      */
-    public ConsoleOutput read(String prompt) throws IOException {
-        return read(new Prompt(prompt));
-    }
-
-    /**
-     * Read from the input stream, perform action according to mapped
-     * operations/completions/etc
-     * Return the stream when a new line is found.
-     *
-     * @param prompt starting prompt, also specify masking if needed
-     * @return input stream
-     * @throws IOException stream
-     */
-    public ConsoleOutput read(Prompt prompt) throws IOException {
+    private void startReader() {
         if(!running)
             throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
+        Runnable reader = new Runnable() {
+            @Override
+            public void run() {
+                while(running) {
+                    read();
+                }
+            }
+        };
+        executorService.execute(reader);
+    }
 
-        if(currentOperation != null) {
-            ConsoleOutput output = parseCurrentOperation();
-            if(output != null)
-                return output;
-        }
-
-        buffer.reset(prompt);
-        if(command == null) {
-            displayPrompt(prompt);
-        }
-        search = null;
-
-        while(true) {
+    private void read() {
+        try {
             if(command != null && !command.isAttached()) {
                 detachProcess();
             }
@@ -394,8 +390,11 @@ public class Console {
             if(Settings.getInstance().isLogging()) {
                 logger.info("GOT: "+ Arrays.toString(in));
             }
+            //close thread, exit
             if (in[0] == -1) {
-                return null;
+                running = false;
+                //consoleCallback.readConsoleOutput(null);
+                return;
             }
             Operation operation = editMode.parseInput(in, buffer.getLine());
             operation.setInput(in);
@@ -406,29 +405,50 @@ public class Console {
             else
                 result = parseOperation(operation, prompt.getMask());
 
-            if(result != null) {
+            if(operation.equals(Operation.NEW_LINE) && buffer.isMultiLine())
+                result = buffer.getMultiLineBuffer() + result;
 
+            if(result != null) {
                 // if the line ends with: \ we create a new line
                 if(!prompt.isMasking() && endsWithBackslashPattern.matcher(result).find()) {
-                    //String line = result.substring(0,result.length()-1);
-                    appendMultiLine(result.substring(0,result.length()-1));
-                    ConsoleOutput tempOutput = read("> ");
-                    result = getMultiLine() + tempOutput.getBuffer();
-                    resetMultiLine();
+                    buffer.setMultiLine(true);
+                    buffer.updateMultiLineBuffer();
+                    displayPrompt(buffer.getPrompt());
                 }
-
-                operations = ControlOperatorParser.findAllControlOperators(result);
-                ConsoleOutput output = parseOperations();
-                output = processInternalCommands(output);
-                if(output.getBuffer() != null) {
-                    return output;
-                }
+                //normal line
                 else {
-                    buffer.reset(prompt);
-                    displayPrompt(prompt);
-                    search = null;
+                    operations = ControlOperatorParser.findAllControlOperators(result);
+                    ConsoleOutput output = parseOperations();
+                    output = processInternalCommands(output);
+                    if(output.getBuffer() != null) {
+                        //return output;
+                        consoleCallback.readConsoleOutput(output);
+                        //abort if the user have initiated stop
+                        if(!running)
+                            return;
+
+                        while(currentOperation != null) {
+                            ConsoleOutput tmpOutput = parseCurrentOperation();
+                            if(tmpOutput != null && running)
+                                consoleCallback.readConsoleOutput(tmpOutput);
+                        }
+                        search = null;
+                        buffer.reset(prompt);
+                        if(command == null) {
+                            displayPrompt(prompt);
+                        }
+                    }
+                    else {
+                        buffer.reset(prompt);
+                        displayPrompt(prompt);
+                        search = null;
+                    }
                 }
             }
+        }
+        catch (IOException ioe) {
+            if(Settings.getInstance().isLogging())
+                logger.severe("Stream failure: "+ioe);
         }
     }
 
@@ -544,8 +564,15 @@ public class Console {
         if(action == Action.NEWLINE) {
             // clear the undo stack for each new line
             clearUndoStack();
-            if(mask == null) // dont push to history if masking
-                addToHistory(buffer.getLine());
+            if(mask == null) {// dont push to history if masking
+                //dont push lines that end with \ to history
+                if(!endsWithBackslashPattern.matcher(buffer.getLine()).find()) {
+                    if(buffer.isMultiLine())
+                        addToHistory(buffer.getMultiLineBuffer()+buffer.getLine());
+                    else
+                        addToHistory(buffer.getLine());
+                }
+            }
             prevAction = Action.NEWLINE;
             //moveToEnd();
             printNewline(); // output newline
@@ -766,10 +793,11 @@ public class Console {
 
     private void displayPrompt(Prompt prompt) throws IOException {
         if(prompt.hasChars()) {
+            terminal.writeToStdOut(ANSI.getStart()+"0G"+ANSI.getStart()+"2K");
             terminal.writeChars(prompt.getCharacters());
         }
         else
-            terminal.writeToStdOut(prompt.getPromptAsString());
+            terminal.writeToStdOut(ANSI.getStart()+"0G"+ANSI.getStart()+"2K"+prompt.getPromptAsString());
     }
 
     private void writeChars(int[] chars, Character mask) throws IOException {
@@ -971,7 +999,8 @@ public class Console {
             terminal.writeToStdOut(Buffer.printAnsi("0G")); //clear
 
             //terminal.writeToStdOut(line);
-            displayPrompt(buffer.getPrompt());
+            if(!buffer.isPromptDisabled())
+                displayPrompt(buffer.getPrompt());
             terminal.writeToStdOut(buffer.getLine());
             //if the current line.length < compared to previous we add spaces to the end
             // to overwrite the old chars (wtb a better way of doing this)
@@ -988,20 +1017,19 @@ public class Console {
         // only clear the current line
         else {
             //most deletions are backspace from the end of the line so we've
-            //optimize that like this
+            //optimize that like this.
+            //NOTE: this doesnt work with history, need to find a better solution
+            /*
             if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length()) {
-                terminal.writeToStdOut(' '+ANSI.getStart()+"1D"); //move cursor to left
+                terminal.writeToStdOut(' ' + ANSI.getStart() + "1D"); //move cursor to left
             }
-            else {
-                //save cursor, move the cursor to the beginning, reset line
-                terminal.writeToStdOut(resetLineAndSetCursorToStart);
-
+            */
+            //save cursor, move the cursor to the beginning, reset line
+            terminal.writeToStdOut(resetLineAndSetCursorToStart);
+            if(!buffer.isPromptDisabled())
                 displayPrompt(buffer.getPrompt());
-                terminal.writeToStdOut(buffer.getLine());
-
-                // move cursor to saved pos
-                terminal.writeToStdOut(ANSI.restoreCursor());
-            }
+            //write line and restore cursor
+            terminal.writeToStdOut(buffer.getLine()+ANSI.restoreCursor());
         }
     }
 
@@ -1020,9 +1048,14 @@ public class Console {
         buffer.disablePrompt(true);
         moveCursor(-buffer.getCursor());
         terminal.writeToStdOut(ANSI.moveCursorToBeginningOfLine());
+        terminal.writeToStdOut(ANSI.getStart()+"2K");
+        logger.info("AFTER CLEARING LINE");
         setBufferLine(out.toString());
+        logger.info("set bufferline to:"+out.toString()+", actual: "+buffer.getLine());
         moveCursor(cursor);
+        logger.info("AFTER MOVING");
         drawLine(buffer.getLine());
+        logger.info("after drawing line");
         buffer.disablePrompt(false);
     }
 
@@ -1091,12 +1124,8 @@ public class Console {
             else {
                 co = findAliases(buffer.getLine(), buffer.getCursor());
             }
-            if(getMultiLine().length() > 0) {
-                String multi = getMultiLine();
-                //TODO: must implement this
-            }
-            else
-                completion.complete(co);
+
+            completion.complete(co);
 
             if(co.getCompletionCandidates() != null && co.getCompletionCandidates().size() > 0)
                 possibleCompletions.add(co);
@@ -1448,15 +1477,4 @@ public class Console {
         redirectPipeErrBuffer = new StringBuilder();
     }
 
-    private void appendMultiLine(String newLine) {
-       multiLine.append(newLine);
-    }
-
-    private void resetMultiLine() {
-        multiLine = new StringBuilder();
-    }
-
-    private String getMultiLine() {
-        return multiLine.toString();
-    }
 }

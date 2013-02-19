@@ -14,18 +14,20 @@ import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
+import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOutput;
-import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
+import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -34,11 +36,8 @@ public class CompletionConsoleTest extends BaseConsoleTest {
 
     private KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
 
-    public CompletionConsoleTest(String test) {
-        super(test);
-    }
-
-    public void testCompletion() throws IOException {
+    @Test
+    public void completion() throws IOException, InterruptedException {
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
@@ -76,28 +75,26 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         };
         console.addCompletion(completion3);
 
+        console.setConsoleCallback(new CompletionConsoleCallback(console, outputStream));
+        console.start();
+
         outputStream.write("foo".getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.write("\n".getBytes());
-        ConsoleOutput output = console.read("");
-        assertEquals("foobar ", output.getBuffer());
 
         outputStream.write("bar".getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.write("\n".getBytes());
-        output = console.read("");
-        assertEquals("barfoo", output.getBuffer());
 
         outputStream.write("le".getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.write("\n".getBytes());
-        output = console.read("");
-        assertEquals("less:", output.getBuffer());
 
-        console.stop();
+        Thread.sleep(100);
     }
 
-    public void testCompletionWithOptions() throws IOException {
+    @Test
+    public void completionWithOptions() throws IOException, InterruptedException {
 
         final ParameterInt param = new ParameterBuilder().name("less")
                 .usage("less -options <files>")
@@ -140,20 +137,61 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         Console console = getTestConsole(pipedInputStream);
         console.addCompletion(completion);
 
+        console.setConsoleCallback(new CompletionConsoleCallback2(console));
+        console.start();
 
         outputStream.write("le".getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.write("\n".getBytes());
-        ConsoleOutput output = console.read("");
-        assertEquals("less ", output.getBuffer());
 
         outputStream.write("less -".getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.write("\n".getBytes());
-        output = console.read("");
-        assertEquals("-f -b ", builder.toString());
 
+        Thread.sleep(100);
     }
 
+    class CompletionConsoleCallback implements ConsoleCallback {
+        private int count = 0;
+        Console console;
+        OutputStream outputStream;
+        CompletionConsoleCallback(Console console, OutputStream outputStream) {
+            this.outputStream = outputStream;
+            this.console = console;
+        }
+        @Override
+        public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            if(count == 0) {
+                assertEquals("foobar ", output.getBuffer());
+            }
+            else if(count == 1)
+                assertEquals("barfoo", output.getBuffer());
+            else if(count == 2) {
+                assertEquals("less:", output.getBuffer());
+                console.stop();
+            }
+
+            count++;
+            return 0;
+        }
+    }
+
+    class CompletionConsoleCallback2 implements ConsoleCallback {
+        private int count = 0;
+        Console console;
+        CompletionConsoleCallback2(Console console) {
+            this.console = console;
+        }
+        @Override
+        public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            if(count == 0) {
+                assertEquals("less ", output.getBuffer());
+                console.stop();
+            }
+
+            count++;
+            return 0;
+        }
+    }
 
 }

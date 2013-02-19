@@ -243,7 +243,7 @@ public class POSIXTerminal extends AbstractTerminal {
     }
 
     private int getTerminalProperty(String prop) throws IOException, InterruptedException {
-        // tty properties are cached so we don't have to worry too much about getting term widht/height
+        // tty properties are cached so we don't have to worry too much about getting term width/height
         if (ttyProps == null || propertiesTimedOut()) {
             ttyProps = stty("-a");
             ttyPropsLastFetched = System.currentTimeMillis();

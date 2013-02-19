@@ -9,7 +9,6 @@ package org.jboss.aesh.console;
 import org.jboss.aesh.console.settings.Settings;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * A simple buffer to keep track of one line in the console
@@ -25,6 +24,8 @@ public class Buffer {
     private int delta; //need to keep track of a delta for ansi terminal
     private Character mask;
     private boolean disablePrompt = false;
+    private boolean multiLine = false;
+    private StringBuilder multiLineBuffer;
 
     private static final int TAB = 4;
 
@@ -66,6 +67,17 @@ public class Buffer {
         line = new StringBuilder();
         delta = 0;
         this.mask = prompt.getMask();
+        multiLine = false;
+        multiLineBuffer = null;
+    }
+
+    protected void updatePrompt(Prompt prompt) {
+        //only update if buffer contain items
+        if(line.length() > 0) {
+            this.prompt = prompt;
+        }
+        else
+            reset(prompt);
     }
 
     /**
@@ -81,9 +93,9 @@ public class Buffer {
     protected int totalLength() {
         if(mask != null) {
             if(mask == 0)
-                return disablePrompt ? 1 : prompt.getLength()+1;
+                return disablePrompt ? 1 : getPrompt().getLength()+1;
         }
-        return disablePrompt ? line.length()+1 : line.length() + prompt.getLength()+1;
+        return disablePrompt ? line.length()+1 : line.length() + getPrompt().getLength()+1;
     }
 
     protected int getCursor() {
@@ -94,15 +106,39 @@ public class Buffer {
         if(disablePrompt)
             return getCursor()+1;
         else
-            return getCursor() + prompt.getLength()+1;
+            return getCursor() + getPrompt().getLength()+1;
     }
 
     protected Prompt getPrompt() {
-        return prompt;
+        if(!isMultiLine())
+            return prompt;
+        else
+            return new Prompt("> ");
     }
 
     protected void setCursor(int cursor) {
         this.cursor = cursor ;
+    }
+
+    protected boolean isMultiLine() {
+        return multiLine;
+    }
+
+    protected void setMultiLine(boolean m) {
+        multiLine = m;
+    }
+
+    protected void updateMultiLineBuffer() {
+        if(multiLineBuffer == null)
+            multiLineBuffer = new StringBuilder();
+
+        multiLineBuffer.append(line.toString().substring(0, line.length() - 1));
+        line = new StringBuilder();
+        cursor = 0;
+    }
+
+    protected String getMultiLineBuffer() {
+        return multiLineBuffer.toString();
     }
 
     /**
@@ -112,6 +148,10 @@ public class Buffer {
      */
     protected void disablePrompt(boolean disable) {
         disablePrompt = disable;
+    }
+
+    protected boolean isPromptDisabled() {
+        return disablePrompt;
     }
 
     /**
@@ -299,7 +339,7 @@ public class Buffer {
      * @return complete line
      */
     public String getLineWithPrompt() {
-        return prompt.getPromptAsString() + line;
+        return getPrompt().getPromptAsString() + line;
     }
 
     /**

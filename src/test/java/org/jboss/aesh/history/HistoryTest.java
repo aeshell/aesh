@@ -6,55 +6,63 @@
  */
 package org.jboss.aesh.history;
 
-import org.jboss.aesh.AeshTestCase;
 import org.jboss.aesh.TestBuffer;
-import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.BaseConsoleTest;
+import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.Console;
+import org.jboss.aesh.console.ConsoleCallback;
+import org.jboss.aesh.console.ConsoleOutput;
+import org.junit.Test;
 
 import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+
+import static org.junit.Assert.*;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class HistoryTest extends AeshTestCase {
+public class HistoryTest extends BaseConsoleTest {
 
-    public HistoryTest(String test) {
-        super(test);
-    }
+    @Test
+    public void testHistory() throws IOException, InterruptedException {
 
-    public void testHistory() throws IOException {
-        TestBuffer buffer = new TestBuffer();
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
-        buffer.append("1234")
-                .append(TestBuffer.getNewLine()).append("567")
-                .append(TestBuffer.getNewLine()).append(TestBuffer.EMACS_HISTORY_PREV)
-                .append(TestBuffer.getNewLine());
+        Console console = getTestConsole(pipedInputStream);
+        console.setConsoleCallback(new ConsoleCallback() {
+            private int count = 0;
+            @Override
+            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+                if(count == 0)
+                    assertEquals("1234", output.getBuffer());
+                else if(count == 1)
+                    assertEquals("567", output.getBuffer());
+                else if(count == 2)
+                    assertEquals("1234", output.getBuffer());
+                else if(count == 3)
+                    assertEquals("567", output.getBuffer());
 
-        assertEquals("567", buffer, true);
+                count++;
+                return 0;
+            }
+        });
+        console.start();
+
+        outputStream.write(("1234"+ Config.getLineSeparator()+"567").getBytes());
+        outputStream.write("\n".getBytes());
+        outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
+        outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
+        outputStream.write("\n".getBytes());
+        outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
+        outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
+        outputStream.write("\n".getBytes());
 
 
-        buffer = new TestBuffer();
-        buffer.append("1234")
-                .append(TestBuffer.getNewLine()).append("567")
-                .append(TestBuffer.getNewLine()).append("89")
-                .append(TestBuffer.getNewLine())
-                .append(TestBuffer.EMACS_HISTORY_PREV)
-                .append(TestBuffer.EMACS_HISTORY_PREV)
-                .append(TestBuffer.EMACS_HISTORY_PREV).append(TestBuffer.getNewLine());
-
-        assertEquals("1234", buffer, true);
-
-        Settings.getInstance().setHistoryDisabled(true);
-
-        buffer = new TestBuffer();
-        buffer.append("1234")
-                .append(TestBuffer.getNewLine()).append("567")
-                .append(TestBuffer.getNewLine())
-                .append(TestBuffer.EMACS_HISTORY_PREV).append(TestBuffer.getNewLine());
-
-        assertEquals("", buffer,true);
-
-        Settings.getInstance().resetToDefaults();
-
+        Thread.sleep(200);
+        console.stop();
     }
 
     public void testHistorySize() {
