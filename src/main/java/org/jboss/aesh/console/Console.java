@@ -1452,8 +1452,12 @@ public class Console {
             return;
         }
         //this is safe since we check that buffer do contain text earlier
-        else
+        else {
             fileName = fileNames.get(0);
+            if(fileName.startsWith("~/")) {
+                fileName = Config.getHomeDir()+fileName.substring(1);
+            }
+        }
 
         try {
             if(redirection == ControlOperator.OVERWRITE_OUT)
