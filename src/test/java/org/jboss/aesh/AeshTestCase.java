@@ -11,7 +11,6 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOutput;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.terminal.TestTerminal;
@@ -45,7 +44,8 @@ public abstract class AeshTestCase extends TestCase {
         settings.setReadAhead(false);
         if(!Config.isOSPOSIXCompatible())
             settings.setAnsiConsole(false);
-        Console console = new Console(settings);
+        Console console = Console.getInstance();
+        console.reset();
         final StringBuilder in = new StringBuilder();
         String tmpString = null;
         console.setConsoleCallback(new ConsoleCallback() {
@@ -99,7 +99,8 @@ public abstract class AeshTestCase extends TestCase {
         if(!Config.isOSPOSIXCompatible())
             settings.setAnsiConsole(false);
 
-        Console console = new Console(settings);
+        Console console = Console.getInstance();
+        console.reset();
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
             public int readConsoleOutput(ConsoleOutput output) throws IOException {

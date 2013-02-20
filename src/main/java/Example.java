@@ -21,7 +21,6 @@ import org.jboss.aesh.terminal.TerminalCharacter;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,7 +71,7 @@ public class Example {
             }
         });
 
-        final Console exampleConsole = new Console();
+        final Console exampleConsole = Console.getInstance();
         exampleConsole.setPrompt(prompt);
 
         final ConsoleCommand test = new ConsoleCommand(exampleConsole) {

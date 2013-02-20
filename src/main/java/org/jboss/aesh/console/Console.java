@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.console;
 
+import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.alias.Alias;
@@ -93,18 +94,29 @@ public class Console {
 
     private Pattern endsWithBackslashPattern = Pattern.compile(".*\\s\\\\$");
 
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private ExecutorService executorService;
 
     //used to optimize text deletion
     private char[] resetLineAndSetCursorToStart =
             (ANSI.saveCursor()+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
 
-    public Console() throws IOException {
-        this(Settings.getInstance());
+    //create a holder for console, it will not be called before the getInstance()
+    //method is called
+    private static class ConsoleHolder {
+        static final Console INSTANCE = new Console();
     }
 
-    public Console(Settings settings) throws IOException {
-        reset(settings);
+    public static Console getInstance() {
+        return ConsoleHolder.INSTANCE;
+    }
+
+    private Console() {
+        settings = Settings.getInstance();
+        try {
+            reset();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         //init a interrupt hook if its defined (by default its null)
         if(settings.hasInterruptHook()) {
@@ -116,6 +128,8 @@ public class Console {
                 if(settings.isLogging())
                     logger.log(Level.WARNING,
                             "Class sun.misc.Signal was not found. No interrupt handling enabled.");
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
 
@@ -139,14 +153,15 @@ public class Console {
      * Reset the Console with Settings
      * Can only be called after stop()
      *
-     * @param settings with given settings
      * @throws IOException stream
      */
-    public void reset(Settings settings) throws IOException {
+    public synchronized void reset() throws IOException {
         if(running)
             throw new RuntimeException("Cant reset an already running Console, must stop if first!");
         if(Settings.getInstance().isLogging())
             logger.info("RESET");
+
+        executorService = Executors.newSingleThreadExecutor();
 
          if(Settings.getInstance().doReadInputrc())
             Config.parseInputrc(Settings.getInstance());
@@ -184,8 +199,6 @@ public class Console {
         redirectPipeOutBuffer = new StringBuilder();
         redirectPipeErrBuffer = new StringBuilder();
         prompt = new Prompt("");
-
-        this.settings = settings;
     }
 
      private void setTerminal(Terminal term, InputStream in, OutputStream stdOut, OutputStream stdErr) {
@@ -1049,7 +1062,7 @@ public class Console {
         buffer.disablePrompt(true);
         moveCursor(-buffer.getCursor());
         terminal.writeToStdOut(ANSI.moveCursorToBeginningOfLine());
-        terminal.writeToStdOut(ANSI.getStart()+"2K");
+        terminal.writeToStdOut(ANSI.getStart() + "2K");
         setBufferLine(out.toString());
         moveCursor(cursor);
         drawLine(buffer.getLine());

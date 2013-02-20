@@ -37,7 +37,8 @@ public abstract class BaseConsoleTest {
             settings.setAnsiConsole(false);
 
         settings.getOperationManager().addOperation(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
-        return new Console(settings);
+        Console.getInstance().reset();
+        return Console.getInstance();
     }
 
     public String getContentOfFile(String filename) throws IOException {
