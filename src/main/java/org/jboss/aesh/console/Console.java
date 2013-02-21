@@ -334,11 +334,15 @@ public class Console {
             //settings.setInputStream(null);
             terminal.reset();
             //terminal = null;
+            if(Settings.getInstance().isLogging())
+                logger.info("Done stopping reading thread. Terminal is reset");
         }
         finally {
             settings.getInputStream().close();
             settings.getStdErr().close();
             settings.getStdOut().close();
+            if(Settings.getInstance().isLogging())
+                logger.info("Streams are closed");
         }
     }
 

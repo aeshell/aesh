@@ -5,6 +5,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  */
 
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleCommand;
 import org.jboss.aesh.complete.CompleteOperation;
@@ -210,6 +211,7 @@ public class Example {
                 }
                 else if(output.getBuffer().startsWith("blah")) {
                     exampleConsole.pushToStdErr("blah. command not found.\n");
+                    exampleConsole.pushToStdOut("BAH"+ Config.getLineSeparator());
                 }
                 else if(output.getBuffer().equals("clear"))
                     exampleConsole.clear();
