@@ -81,4 +81,26 @@ public class Prompt {
     public List<TerminalCharacter> getCharacters() {
         return characters;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Prompt)) return false;
+
+        Prompt prompt1 = (Prompt) o;
+
+        if (characters != null ? !characters.equals(prompt1.characters) : prompt1.characters != null) return false;
+        if (mask != null ? !mask.equals(prompt1.mask) : prompt1.mask != null) return false;
+        if (!prompt.equals(prompt1.prompt)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = characters != null ? characters.hashCode() : 0;
+        result = 31 * result + prompt.hashCode();
+        result = 31 * result + (mask != null ? mask.hashCode() : 0);
+        return result;
+    }
 }

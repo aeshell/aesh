@@ -223,13 +223,21 @@ public class Console {
         return history;
     }
 
+    /**
+     * Set the current prompt.
+     *
+     * @param prompt prompt
+     * @throws IOException stream
+     */
     public void setPrompt(Prompt prompt) throws IOException {
-        this.prompt = prompt;
-        buffer.updatePrompt(this.prompt);
-        //only update the prompt if Console is running
-        if(running) {
-            syncCursor();
-            redrawLine();
+        if(!this.prompt.equals(prompt)) {
+            this.prompt = prompt;
+            buffer.updatePrompt(this.prompt);
+            //only update the prompt if Console is running
+            if(running) {
+                syncCursor();
+                redrawLine();
+            }
         }
     }
 
