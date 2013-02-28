@@ -39,6 +39,8 @@ public class WindowsTerminal extends AbstractTerminal {
     private long ttyPropsLastFetched;
     private static long TIMEOUT_PERIOD = 2000;
 
+    private final Object lock = new Object();
+
     private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 
     public WindowsTerminal() {
@@ -84,7 +86,7 @@ public class WindowsTerminal extends AbstractTerminal {
     @Override
     public void writeToStdOut(String out) throws IOException {
         if(out != null && out.length() > 0) {
-            synchronized (this) {
+            synchronized (lock) {
                 stdOut.write(out);
                 stdOut.flush();
             }
@@ -94,7 +96,7 @@ public class WindowsTerminal extends AbstractTerminal {
     @Override
     public void writeToStdOut(char[] out) throws IOException {
         if(out != null && out.length > 0) {
-            synchronized (this) {
+            synchronized (lock) {
                 stdOut.write(out);
                 stdOut.flush();
             }
@@ -103,7 +105,7 @@ public class WindowsTerminal extends AbstractTerminal {
 
     @Override
     public void writeToStdOut(char out) throws IOException {
-        synchronized (this) {
+        synchronized (lock) {
             stdOut.write(out);
             stdOut.flush();
         }
@@ -112,7 +114,7 @@ public class WindowsTerminal extends AbstractTerminal {
     @Override
     public void writeToStdErr(String err) throws IOException {
         if(err != null && err.length() > 0) {
-            synchronized (this) {
+            synchronized (lock) {
                 stdOut.write(err);
                 stdOut.flush();
             }
@@ -122,7 +124,7 @@ public class WindowsTerminal extends AbstractTerminal {
     @Override
     public void writeToStdErr(char[] err) throws IOException {
         if(err != null && err.length > 0) {
-            synchronized (this) {
+            synchronized (lock) {
                 stdOut.write(err);
                 stdOut.flush();
             }
@@ -131,7 +133,7 @@ public class WindowsTerminal extends AbstractTerminal {
 
     @Override
     public void writeToStdErr(char err) throws IOException {
-        synchronized (this) {
+        synchronized (lock) {
             stdOut.write(err);
             stdOut.flush();
         }
