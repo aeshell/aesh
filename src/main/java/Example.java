@@ -31,6 +31,10 @@ import java.util.List;
 public class Example {
 
     private static boolean masking = false;
+    private static String password;
+    private static String username;
+    static boolean hasPassword;
+    static ConsoleCallback passwordCallback;
 
     public static void main(String[] args) throws IOException {
 
@@ -190,7 +194,7 @@ public class Example {
         exampleConsole.addCompletion(completer);
 
         final ConsoleOutput line;
-        ConsoleCallback consoleCallback = new ConsoleCallback() {
+        final ConsoleCallback consoleCallback = new ConsoleCallback() {
             @Override
             public int readConsoleOutput(ConsoleOutput output) throws IOException{
                 //To change body of implemented methods use File | Settings | File Templates.
@@ -219,11 +223,39 @@ public class Example {
                     //exampleConsole.attachProcess(test);
                     test.attach(output);
                 }
+                else if(output.getBuffer().startsWith("login")) {
+                    exampleConsole.setConsoleCallback(passwordCallback);
+                    exampleConsole.setPrompt(new Prompt("Username: "));
+                }
                  return 0;
             }
         };
         exampleConsole.setConsoleCallback(consoleCallback);
         exampleConsole.start();
+
+        passwordCallback = new ConsoleCallback() {
+            private boolean hasUsername = false;
+
+            @Override
+            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+                if(hasUsername) {
+                    password = output.getBuffer();
+                    hasPassword = true;
+                    exampleConsole.pushToStdOut("Username: "+username+", password: "+password+Config.getLineSeparator());
+                    exampleConsole.setPrompt(prompt);
+                    exampleConsole.setConsoleCallback(consoleCallback);
+                }
+                else {
+                    username = output.getBuffer();
+                    exampleConsole.setPrompt( new Prompt("Password: ", (char) 0));
+                    hasUsername = true;
+                }
+                return 0;
+            }
+        };
+
+
+    }
 
         /*
         try {
@@ -233,6 +265,5 @@ public class Example {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
         */
-    }
 
 }
