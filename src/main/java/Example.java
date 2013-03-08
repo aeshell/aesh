@@ -77,7 +77,6 @@ public class Example {
         });
 
         final Console exampleConsole = Console.getInstance();
-        exampleConsole.setPrompt(prompt);
 
         final ConsoleCommand test = new ConsoleCommand(exampleConsole) {
 
@@ -232,6 +231,7 @@ public class Example {
         };
         exampleConsole.setConsoleCallback(consoleCallback);
         exampleConsole.start();
+        exampleConsole.setPrompt(prompt);
 
         passwordCallback = new ConsoleCallback() {
             private boolean hasUsername = false;
@@ -255,15 +255,13 @@ public class Example {
         };
 
 
-    }
 
-        /*
         try {
-            Thread.sleep(10000);
+            Thread.sleep(4000);
             exampleConsole.setPrompt(new Prompt("[FOO]» "));
         } catch (InterruptedException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-        */
 
+    }
 }

@@ -234,9 +234,13 @@ public class Console {
             this.prompt = prompt;
             buffer.updatePrompt(this.prompt);
             //only update the prompt if Console is running
+            //set cursor position line.length
             if(running) {
-                syncCursor();
-                redrawLine();
+                displayPrompt(this.prompt);
+                if(buffer.getLine().length() > 0) {
+                    pushToStdOut(buffer.getLine());
+                    buffer.setCursor(buffer.getLine().length());
+                }
             }
         }
     }
