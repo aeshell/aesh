@@ -71,6 +71,20 @@ public class Buffer {
         multiLineBuffer = null;
     }
 
+    /**
+     * Reset the buffer, keep the existing prompt
+     */
+    protected void reset() {
+        if(prompt == null)
+            this.prompt = new Prompt("");
+        cursor = 0;
+        line = new StringBuilder();
+        delta = 0;
+        this.mask = prompt.getMask();
+        multiLine = false;
+        multiLineBuffer = null;
+    }
+
     protected void updatePrompt(Prompt prompt) {
         //only update if buffer contain items
         if(line.length() > 0) {

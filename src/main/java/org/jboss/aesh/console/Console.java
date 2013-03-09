@@ -78,7 +78,6 @@ public class Console {
     private Action prevAction = Action.EDIT;
 
     private ConsoleCommand command;
-    private Prompt prompt;
     private ConsoleCallback consoleCallback;
 
     private boolean displayCompletion = false;
@@ -198,7 +197,7 @@ public class Console {
 
         redirectPipeOutBuffer = new StringBuilder();
         redirectPipeErrBuffer = new StringBuilder();
-        prompt = new Prompt("");
+        setPrompt(new Prompt(""));
     }
 
      private void setTerminal(Terminal term, InputStream in, OutputStream stdOut, OutputStream stdErr) {
@@ -230,13 +229,12 @@ public class Console {
      * @throws IOException stream
      */
     public void setPrompt(Prompt prompt) throws IOException {
-        if(!this.prompt.equals(prompt)) {
-            this.prompt = prompt;
-            buffer.updatePrompt(this.prompt);
+        if(!buffer.getPrompt().equals(prompt)) {
+            buffer.updatePrompt(prompt);
             //only update the prompt if Console is running
             //set cursor position line.length
             if(running) {
-                displayPrompt(this.prompt);
+                displayPrompt(prompt);
                 if(buffer.getLine().length() > 0) {
                     pushToStdOut(buffer.getLine());
                     buffer.setCursor(buffer.getLine().length());
@@ -255,7 +253,7 @@ public class Console {
         if(consoleCallback == null)
             throw new IllegalStateException("Not possible to start the Console without setting ConsoleCallback");
         running = true;
-        displayPrompt(prompt);
+        displayPrompt();
         startReader();
     }
 
@@ -383,7 +381,7 @@ public class Console {
      */
     private void detachProcess() throws IOException {
         command = null;
-        displayPrompt(buffer.getPrompt());
+        displayPrompt();
     }
 
     /**
@@ -435,17 +433,17 @@ public class Console {
                 command.processOperation(operation);
             //the input is parsed by æsh
             else
-                result = parseOperation(operation, prompt.getMask());
+                result = parseOperation(operation, buffer.getPrompt().getMask());
 
             if(operation.equals(Operation.NEW_LINE) && buffer.isMultiLine())
                 result = buffer.getMultiLineBuffer() + result;
 
             if(result != null) {
                 // if the line ends with: \ we create a new line
-                if(!prompt.isMasking() && endsWithBackslashPattern.matcher(result).find()) {
+                if(!buffer.getPrompt().isMasking() && endsWithBackslashPattern.matcher(result).find()) {
                     buffer.setMultiLine(true);
                     buffer.updateMultiLineBuffer();
-                    displayPrompt(buffer.getPrompt());
+                    displayPrompt();
                 }
                 //normal line
                 else {
@@ -467,14 +465,14 @@ public class Console {
                                 consoleCallback.readConsoleOutput(tmpOutput);
                         }
                         search = null;
-                        buffer.reset(prompt);
+                        buffer.reset();
                         if(command == null) {
-                            displayPrompt(prompt);
+                            displayPrompt();
                         }
                     }
                     else {
-                        buffer.reset(prompt);
-                        displayPrompt(prompt);
+                        buffer.reset();
+                        displayPrompt();
                         search = null;
                     }
                 }
@@ -508,7 +506,7 @@ public class Console {
             // is restored correctly
             else {
                 terminal.writeToStdOut(Config.getLineSeparator());
-                displayPrompt(buffer.getPrompt());
+                displayPrompt();
                 terminal.writeToStdOut(buffer.getLine());
                 syncCursor();
             }
@@ -825,6 +823,10 @@ public class Console {
             history.push(line);
     }
 
+    private void displayPrompt() throws IOException {
+        displayPrompt(buffer.getPrompt());
+    }
+
     private void displayPrompt(Prompt prompt) throws IOException {
         if(prompt.hasChars()) {
             terminal.writeToStdOut(ANSI.getStart()+"0G"+ANSI.getStart()+"2K");
@@ -1034,7 +1036,7 @@ public class Console {
 
             //terminal.writeToStdOut(line);
             if(!buffer.isPromptDisabled())
-                displayPrompt(buffer.getPrompt());
+                displayPrompt();
             terminal.writeToStdOut(buffer.getLine());
             //if the current line.length < compared to previous we add spaces to the end
             // to overwrite the old chars (wtb a better way of doing this)
@@ -1061,7 +1063,7 @@ public class Console {
             //save cursor, move the cursor to the beginning, reset line
             terminal.writeToStdOut(resetLineAndSetCursorToStart);
             if(!buffer.isPromptDisabled())
-                displayPrompt(buffer.getPrompt());
+                displayPrompt();
             //write line and restore cursor
             terminal.writeToStdOut(buffer.getLine()+ANSI.restoreCursor());
         }
@@ -1252,7 +1254,7 @@ public class Console {
         printNewline();
         buffer.setCursor(oldCursorPos);
         terminal.writeToStdOut(Parser.formatDisplayList(completions, terminal.getSize().getHeight(), terminal.getSize().getWidth()));
-        displayPrompt(buffer.getPrompt());
+        displayPrompt();
         terminal.writeToStdOut(buffer.getLine());
         //if we do a complete and the cursor is not at the end of the
         //buffer we need to move it to the correct place
@@ -1304,7 +1306,7 @@ public class Console {
 
             }
             else {
-                displayPrompt(buffer.getPrompt());
+                displayPrompt();
                 terminal.writeToStdOut(buffer.getLine());
             }
         }
