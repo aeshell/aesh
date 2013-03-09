@@ -8,14 +8,17 @@ package org.jboss.aesh.console.alias;
 
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,14 +35,19 @@ public class AliasManager {
     private static final String ALIAS = "alias";
     private static final String ALIAS_SPACE = "alias ";
     private static final String UNALIAS = "unalias";
+    private File aliasFile;
+    private Logger logger = LoggerUtil.getLogger(getClass().getName());
 
     public AliasManager(File aliasFile) throws IOException {
         aliases = new ArrayList<Alias>();
-        if(aliasFile != null && aliasFile.isFile())
-            readAliasesFromFile(aliasFile);
+        if(aliasFile != null) {
+            this.aliasFile = aliasFile;
+            if(this.aliasFile.isFile())
+                readAliasesFromFile();
+        }
     }
 
-    private void readAliasesFromFile(File aliasFile) throws IOException {
+    private void readAliasesFromFile() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(aliasFile));
         try {
             String line;
@@ -58,8 +66,25 @@ public class AliasManager {
         }
     }
 
-    public void persist() {
-        //TODO: implementation
+    public void persist() throws IOException {
+        if(Settings.getInstance().doPersistAlias() &&
+                aliasFile != null) {
+            //just do it easily and remove the current file
+            if(aliasFile.isFile())
+                aliasFile.delete();
+
+            FileWriter fw = new FileWriter(aliasFile);
+            logger.info("created fileWriter");
+
+            Collections.sort(aliases); // not very efficient, but it'll do for now...
+            for(Alias a : aliases) {
+                logger.info("writing to file: "+ALIAS_SPACE+a.toString());
+                fw.write(ALIAS_SPACE+a.toString()+Config.getLineSeparator());
+            }
+
+            fw.flush();
+            fw.close();
+        }
     }
 
     public void addAlias(String name, String value) {

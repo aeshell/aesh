@@ -52,6 +52,7 @@ public class Settings {
     private KeyOperationManager operationManager = new KeyOperationManager();
     private File aliasFile;
     private boolean aliasEnabled = true;
+    private boolean persistAlias = true;
     private InterruptHook interruptHook = null;
 
     private static final Settings INSTANCE = new Settings();
@@ -486,7 +487,7 @@ public class Settings {
 
     public File getAliasFile() {
         if(aliasFile == null)
-            aliasFile = new File(System.getProperty("user.home")+Config.getPathSeparator()+".jreadlie_aliases");
+            aliasFile = new File(System.getProperty("user.home")+Config.getPathSeparator()+".aesh_aliases");
 
         return aliasFile;
     }
@@ -497,6 +498,14 @@ public class Settings {
 
     public void setAliasEnabled(boolean enabled) {
         aliasEnabled = enabled;
+    }
+
+    public void setPersistAlias(boolean persist) {
+        persistAlias = persist;
+    }
+
+    public boolean doPersistAlias() {
+        return persistAlias;
     }
 
     public void setQuitHandler(QuitHandler qh) {

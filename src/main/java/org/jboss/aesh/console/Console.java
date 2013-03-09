@@ -134,8 +134,6 @@ public class Console {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void start() {
                 try {
-                    if(Settings.getInstance().isAliasEnabled())
-                        aliasManager.persist();
                     Settings.getInstance().getTerminal().reset();
                     Settings.getInstance().quit();
                 }
@@ -187,6 +185,7 @@ public class Console {
 
         //enable aliasing
         if(Settings.getInstance().isAliasEnabled()) {
+            logger.info("enabeling aliasmanager with file: "+Settings.getInstance().getAliasFile());
             aliasManager = new AliasManager(Settings.getInstance().getAliasFile());
             completionList.add(new AliasCompletion(aliasManager));
         }
@@ -338,12 +337,13 @@ public class Console {
     public void stop() throws IOException {
         try {
             running = false;
-            history.stop();
             executorService.shutdown();
             //setting it to null to prevent uncertain state
             //settings.setInputStream(null);
             terminal.reset();
             //terminal = null;
+            history.stop();
+            aliasManager.persist();
             if(Settings.getInstance().isLogging())
                 logger.info("Done stopping reading thread. Terminal is reset");
         }

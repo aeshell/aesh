@@ -21,6 +21,7 @@ import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalCharacter;
 import org.jboss.aesh.util.ANSI;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,8 @@ public class Example {
         Settings.getInstance().setReadInputrc(true);
         Settings.getInstance().setLogging(true);
         Settings.getInstance().setLogFile("aesh_example.log");
+        Settings.getInstance().setAliasEnabled(true);
+        Settings.getInstance().setAliasFile(new File("aesh_aliases.txt"));
        //Settings.getInstance().setHistoryDisabled(true);
         //Settings.getInstance().setHistoryPersistent(false);
         List<TerminalCharacter> chars = new ArrayList<TerminalCharacter>();
