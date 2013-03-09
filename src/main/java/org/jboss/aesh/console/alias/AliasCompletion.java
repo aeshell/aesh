@@ -29,7 +29,11 @@ public class AliasCompletion implements Completion {
     public void complete(CompleteOperation completeOperation) {
         completeOperation.addCompletionCandidates(manager.findAllMatchingNames(completeOperation.getBuffer().trim()));
 
-        if(ALIAS.startsWith(completeOperation.getBuffer()))
+        if(completeOperation.getBuffer() == null || completeOperation.getBuffer().length() < 1) {
+            completeOperation.addCompletionCandidate(ALIAS);
+            completeOperation.addCompletionCandidate(UNALIAS);
+        }
+        else if(ALIAS.startsWith(completeOperation.getBuffer()))
             completeOperation.addCompletionCandidate(ALIAS);
         else if(UNALIAS.startsWith(completeOperation.getBuffer()))
             completeOperation.addCompletionCandidate(UNALIAS);

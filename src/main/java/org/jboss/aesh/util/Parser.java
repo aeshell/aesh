@@ -402,6 +402,27 @@ public class Parser {
     }
 
     /**
+     * Only trim space in front of the word
+     *
+     * @param buffer input
+     * @return trimmed buffer
+     */
+    public static String trimInFront(String buffer) {
+        //remove spaces in front
+        int count = 0;
+        for(int i=0; i < buffer.length(); i++) {
+            if(buffer.charAt(i) == SPACE_CHAR)
+                count++;
+            else
+                break;
+        }
+        if(count > 0)
+            return buffer.substring(count);
+        else
+            return buffer;
+    }
+
+    /**
      * If string contain space, return the text before the first space.
      * Spaces in the beginning and end is removed with Parser.trim(..)
      *

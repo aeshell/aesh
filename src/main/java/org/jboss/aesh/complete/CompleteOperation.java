@@ -21,16 +21,20 @@ public class CompleteOperation {
     private int cursor;
     private int offset;
     private List<String> completionCandidates;
+    private boolean trimmed = false;
+    private int trimmedSize = 0;
+    private String nonTrimmedBuffer;
+
 
     private char separator = ' ';
     private boolean appendSeparator = true;
 
     public CompleteOperation(String buffer, int cursor) {
-        setBuffer(buffer);
         setCursor(cursor);
         setSeparator(' ');
         doAppendSeparator(true);
         completionCandidates = new ArrayList<String>();
+        setBuffer(buffer);
     }
 
     public String getBuffer() {
@@ -38,7 +42,26 @@ public class CompleteOperation {
     }
 
     private void setBuffer(String buffer) {
-        this.buffer = buffer;
+        if(buffer.startsWith(" ")) {
+            trimmed = true;
+            this.buffer = Parser.trimInFront(buffer);
+            nonTrimmedBuffer = buffer;
+            setCursor(cursor - getTrimmedSize());
+        }
+        else
+            this.buffer = buffer;
+    }
+
+    public boolean isTrimmed() {
+        return trimmed;
+    }
+
+    public int getTrimmedSize() {
+        return nonTrimmedBuffer.length() - buffer.length();
+    }
+
+    public String getNonTrimmedBuffer() {
+        return nonTrimmedBuffer;
     }
 
     public int getCursor() {
@@ -46,7 +69,10 @@ public class CompleteOperation {
     }
 
     private void setCursor(int cursor) {
-        this.cursor = cursor;
+        if(cursor < 0)
+            this.cursor = 0;
+        else
+            this.cursor = cursor;
     }
 
     public int getOffset() {

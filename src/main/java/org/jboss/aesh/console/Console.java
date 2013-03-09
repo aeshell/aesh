@@ -430,8 +430,10 @@ public class Console {
             operation.setInput(in);
 
             String result = null;
+            //if we have a command hooked in the input goes there
             if(command != null)
                 command.processOperation(operation);
+            //the input is parsed by æsh
             else
                 result = parseOperation(operation, prompt.getMask());
 
@@ -447,6 +449,8 @@ public class Console {
                 }
                 //normal line
                 else {
+                    if(result.startsWith(" "))
+                        result = Parser.trimInFront(result);
                     operations = ControlOperatorParser.findAllControlOperators(result);
                     ConsoleOutput output = parseOperations();
                     output = processInternalCommands(output);

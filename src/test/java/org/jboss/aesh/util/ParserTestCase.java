@@ -169,4 +169,10 @@ public class ParserTestCase extends TestCase {
         assertEquals("foobarbaz", Parser.findFirstWord("foobarbaz"));
     }
 
+    public void testTrimInFront() {
+        assertEquals("foo ", Parser.trimInFront("  foo "));
+        assertEquals("foo", Parser.trimInFront("  foo"));
+        assertEquals("foo", Parser.trimInFront("foo"));
+    }
+
 }
