@@ -27,19 +27,7 @@ public class FileHistory extends InMemoryHistory {
     public FileHistory(String fileName, int maxSize) throws IOException {
         super(maxSize);
         historyFile = fileName;
-
         readFile();
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void start() {
-                try {
-                    writeFile();
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
     }
 
     /**
@@ -77,6 +65,15 @@ public class FileHistory extends InMemoryHistory {
 
         fw.flush();
         fw.close();
+    }
+
+    @Override
+    public void stop() {
+       try {
+           writeFile();
+       } catch (IOException e) {
+           e.printStackTrace();
+       }
     }
 
 }

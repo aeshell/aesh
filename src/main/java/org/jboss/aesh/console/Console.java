@@ -6,7 +6,6 @@
  */
 package org.jboss.aesh.console;
 
-import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.alias.Alias;
@@ -339,6 +338,7 @@ public class Console {
     public void stop() throws IOException {
         try {
             running = false;
+            history.stop();
             executorService.shutdown();
             //setting it to null to prevent uncertain state
             //settings.setInputStream(null);

@@ -164,4 +164,9 @@ public class InMemoryHistory implements History {
         historyList.clear();
         current = "";
     }
+
+    @Override
+    public void stop() {
+        //does nothing for in-memory atm
+    }
 }

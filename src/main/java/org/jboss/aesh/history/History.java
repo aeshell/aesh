@@ -40,4 +40,6 @@ public interface History {
 
     void clear();
 
+    void stop();
+
 }
