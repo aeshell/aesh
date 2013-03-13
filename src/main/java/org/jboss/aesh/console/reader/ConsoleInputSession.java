@@ -25,11 +25,8 @@ public class ConsoleInputSession {
 
     private ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<String>(1000);
 
-    private volatile boolean connected;
-
     public ConsoleInputSession(InputStream consoleStream) {
         this.consoleStream = consoleStream;
-        this.connected = true;
 
         this.externalInputStream = new InputStream() {
             private String b;
@@ -81,18 +78,18 @@ public class ConsoleInputSession {
                 while (!executorService.isShutdown()) {
                     try {
                         byte[] bBuf = new byte[20];
-                        int read = consoleStream.read(bBuf);
+                        if(consoleStream.available() > 0) {
+                            int read = consoleStream.read(bBuf);
 
-                        if (read > 0) {
-                            blockingQueue.put(new String(bBuf, 0, read));
+                            if (read > 0) {
+                                blockingQueue.put(new String(bBuf, 0, read));
+                            }
                         }
-
                         Thread.sleep(10);
                     }
                     catch (IOException e) {
                         if (!executorService.isShutdown()) {
                             executorService.shutdown();
-                            connected = false;
                             throw new RuntimeException("broken pipe");
                         }
                     }
@@ -112,11 +109,10 @@ public class ConsoleInputSession {
 
     public void stop() throws IOException, InterruptedException {
         try {
-            connected = false;
             executorService.shutdown();
             blockingQueue.offer("");
-            executorService.awaitTermination(500, TimeUnit.MILLISECONDS);
-        } finally {
+        }
+        finally {
             consoleStream.close();
         }
     }
