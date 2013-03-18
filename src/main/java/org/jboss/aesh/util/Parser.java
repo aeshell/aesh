@@ -67,6 +67,8 @@ public class Parser {
         int numColumns = termWidth / maxLength;
         if(numColumns > displayList.size()) // we dont need more columns than items
             numColumns = displayList.size();
+        if(numColumns < 1)
+            numColumns = 1;
         int numRows = displayList.size() / numColumns;
 
         // add a row if we cant display all the items
