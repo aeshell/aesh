@@ -29,6 +29,7 @@ public class ConsoleAliasTest extends BaseConsoleTest {
 
     @Test
     public void alias() throws IOException, InterruptedException {
+        Settings.getInstance().setPersistAlias(false);
         Settings.getInstance().setAliasFile(Config.isOSPOSIXCompatible() ?
                 new File("src/test/resources/alias1") : new File("src\\test\\resources\\alias1"));
         PipedOutputStream outputStream = new PipedOutputStream();

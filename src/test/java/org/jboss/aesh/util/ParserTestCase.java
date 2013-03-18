@@ -7,6 +7,7 @@
 package org.jboss.aesh.util;
 
 import junit.framework.TestCase;
+import org.jboss.aesh.console.Config;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -173,6 +174,15 @@ public class ParserTestCase extends TestCase {
         assertEquals("foo ", Parser.trimInFront("  foo "));
         assertEquals("foo", Parser.trimInFront("  foo"));
         assertEquals("foo", Parser.trimInFront("foo"));
+    }
+
+    //verify divide by zero fix
+    public void testFormatDisplayList() {
+        List<String> list = new ArrayList<String>();
+        String s1 = "this is a loooooong string thats longer than the terminal width";
+        list.add(s1);
+
+        assertEquals(s1+"  "+ Config.getLineSeparator(), Parser.formatDisplayList(list, 20, 20));
     }
 
 }
