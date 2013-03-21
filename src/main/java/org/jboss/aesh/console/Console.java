@@ -154,6 +154,10 @@ public class Console {
     public synchronized void reset() throws IOException {
         if(running)
             throw new RuntimeException("Cant reset an already running Console, must stop if first!");
+        //if we already have reset, just return
+        if(executorService != null && !executorService.isShutdown()) {
+            return;
+        }
         if(Settings.getInstance().isLogging())
             logger.info("RESET");
 
@@ -185,7 +189,7 @@ public class Console {
 
         //enable aliasing
         if(Settings.getInstance().isAliasEnabled()) {
-            logger.info("enabeling aliasmanager with file: "+Settings.getInstance().getAliasFile());
+            logger.info("enable aliasmanager with file: "+Settings.getInstance().getAliasFile());
             aliasManager = new AliasManager(Settings.getInstance().getAliasFile());
             completionList.add(new AliasCompletion(aliasManager));
         }
@@ -245,7 +249,7 @@ public class Console {
         this.consoleCallback = consoleCallback;
     }
 
-    public void start() throws IOException {
+    public synchronized void start() throws IOException {
         if(running)
             throw new IllegalStateException("Not allowed to start the Console without stopping it first");
         if(consoleCallback == null)
@@ -334,7 +338,7 @@ public class Console {
      * before its used.
      * @throws IOException stream
      */
-    public void stop() throws IOException {
+    public synchronized void stop() throws IOException {
         try {
             running = false;
             executorService.shutdown();
