@@ -34,7 +34,7 @@ public class LoggerUtil {
         if(logHandler == null)
             try {
                 File logFile = new File(Settings.getInstance().getLogFile());
-                if(!logFile.getParentFile().isDirectory()) {
+                if(logFile.getParentFile() != null && !logFile.getParentFile().isDirectory()) {
                     if(!logFile.getParentFile().mkdirs()) {
                         //if creating dirs failed, just create a logger without a file handler
                         return Logger.getLogger(name);
