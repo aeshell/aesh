@@ -12,11 +12,13 @@ public class ParsedCompleteObject {
     private Class<?> type;
     private boolean option; //if its not option, its an argument
     private boolean displayOptions = false;
+    private boolean argument = false;
     private boolean displayArguments = false;
     private int offset = 0;
 
     public ParsedCompleteObject(boolean displayArguments) {
         this.option = !displayArguments;
+        this.argument = !option;
     }
 
     public ParsedCompleteObject(boolean displayOptions, String name, int offset) {
@@ -34,6 +36,7 @@ public class ParsedCompleteObject {
         this.value = value;
         this.type = type;
         this.option = option;
+        this.argument = !this.option;
         this.offset = value.length();
     }
 
@@ -54,7 +57,7 @@ public class ParsedCompleteObject {
     }
 
     public boolean isArgument() {
-        return !option;
+        return argument;
     }
 
     public int getOffset() {
@@ -63,5 +66,19 @@ public class ParsedCompleteObject {
 
     public boolean doDisplayOptions() {
         return displayOptions;
+    }
+
+    @Override
+    public String toString() {
+        return "ParsedCompleteObject{" +
+                "name='" + name + '\'' +
+                ", value='" + value + '\'' +
+                ", type=" + type +
+                ", option=" + option +
+                ", argument=" + argument +
+                ", displayOptions=" + displayOptions +
+                ", displayArguments=" + displayArguments +
+                ", offset=" + offset +
+                '}';
     }
 }

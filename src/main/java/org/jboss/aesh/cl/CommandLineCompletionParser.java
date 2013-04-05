@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.util.Parser;
 
 /**
@@ -30,6 +31,12 @@ public class CommandLineCompletionParser {
 
         //first we check if it could be a param
         if(Parser.findIfWordEndWithSpace(line)) {
+            //check if we try to complete just after the command name
+            for(ParameterInt param : parser.getParameters()) {
+                if(line.trim().equals(param.getName()))
+                    return new ParsedCompleteObject(false, null, 0);
+            }
+            //else we try to complete an option
             return new ParsedCompleteObject(true);
         }
 
