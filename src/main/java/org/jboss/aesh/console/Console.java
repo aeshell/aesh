@@ -453,7 +453,15 @@ public class Console {
                 else {
                     if(result.startsWith(" "))
                         result = Parser.trimInFront(result);
-                    operations = ControlOperatorParser.findAllControlOperators(result);
+
+                    if(Settings.getInstance().isOperatorParserEnabled())
+                        operations = ControlOperatorParser.findAllControlOperators(result);
+                    else {
+                        //if we do not parse operators just add ControlOperator.NONE
+                        operations = new ArrayList<ConsoleOperation>(1);
+                        operations.add(new ConsoleOperation(ControlOperator.NONE, result));
+                    }
+
                     ConsoleOutput output = parseOperations();
                     output = processInternalCommands(output);
                     if(output.getBuffer() != null) {

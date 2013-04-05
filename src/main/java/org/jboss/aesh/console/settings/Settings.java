@@ -54,6 +54,7 @@ public class Settings {
     private boolean aliasEnabled = true;
     private boolean persistAlias = true;
     private InterruptHook interruptHook = null;
+    private boolean enableOperatorParser = true;
 
     private static final Settings INSTANCE = new Settings();
 
@@ -527,6 +528,14 @@ public class Settings {
 
     public InterruptHook getInterruptHook() {
         return interruptHook;
+    }
+
+    public void enableOperatorParser(boolean enable) {
+        enableOperatorParser = enable;
+    }
+
+    public boolean isOperatorParserEnabled() {
+        return enableOperatorParser;
     }
 
 }

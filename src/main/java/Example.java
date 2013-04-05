@@ -45,7 +45,8 @@ public class Example {
         Settings.getInstance().setLogFile("aesh_example.log");
         Settings.getInstance().setAliasEnabled(true);
         Settings.getInstance().setAliasFile(new File("aesh_aliases.txt"));
-       //Settings.getInstance().setHistoryDisabled(true);
+        //Settings.getInstance().enableOperatorParser(false);
+        //Settings.getInstance().setHistoryDisabled(true);
         //Settings.getInstance().setHistoryPersistent(false);
         List<TerminalCharacter> chars = new ArrayList<TerminalCharacter>();
         chars.add(new TerminalCharacter('[', Color.DEFAULT_BG, Color.BLUE_TEXT));
