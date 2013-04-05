@@ -399,7 +399,13 @@ public class Console {
                     resetMultiLine();
                 }
 
-                operations = ControlOperatorParser.findAllControlOperators(result);
+                if(Settings.getInstance().isPipelineAndRedirectionEnabled())
+                    operations = ControlOperatorParser.findAllControlOperators(result);
+                else {
+                    //if we do not parse operators just add ControlOperator.NONE
+                    operations = new ArrayList<ConsoleOperation>(1);
+                    operations.add(new ConsoleOperation( ControlOperator.NONE, result));
+                }
                 ConsoleOutput output = parseOperations();
                 output = processInternalCommands(output);
                 if(output.getBuffer() != null) {
@@ -923,7 +929,7 @@ public class Console {
     }
 
     private void redrawLine() throws IOException {
-        drawLine(buffer.getPrompt().getPromptAsString()+ buffer.getLine());
+        drawLine(buffer.getPrompt().getPromptAsString() + buffer.getLine());
     }
 
     private void drawLine(String line) throws IOException {

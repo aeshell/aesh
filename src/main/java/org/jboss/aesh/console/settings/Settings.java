@@ -53,6 +53,7 @@ public class Settings {
     private File aliasFile;
     private boolean aliasEnabled = true;
     private InterruptHook interruptHook = null;
+    private boolean pipelineAndRedirection = true;
 
     private static final Settings INSTANCE = new Settings();
 
@@ -518,6 +519,14 @@ public class Settings {
 
     public InterruptHook getInterruptHook() {
         return interruptHook;
+    }
+
+    public void setEnablePipelineAndRedirectionParser(boolean enable) {
+        pipelineAndRedirection = enable;
+    }
+
+    public boolean isPipelineAndRedirectionEnabled() {
+        return pipelineAndRedirection;
     }
 
 }

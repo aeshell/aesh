@@ -34,7 +34,8 @@ public class Example {
         //Settings.getInstance().setAnsiConsole(false);
         Settings.getInstance().setReadInputrc(true);
         Settings.getInstance().setLogging(true);
-        Settings.getInstance().setLogFile("aesh_example.log");
+        Settings.getInstance().setEnablePipelineAndRedirectionParser(false);
+        //Settings.getInstance().setLogFile("aesh_example.log");
        //Settings.getInstance().setHistoryDisabled(true);
         //Settings.getInstance().setHistoryPersistent(false);
         List<TerminalCharacter> chars = new ArrayList<TerminalCharacter>();
