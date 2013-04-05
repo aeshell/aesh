@@ -10,6 +10,7 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Config;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -34,6 +35,7 @@ public class FileLister {
     private File cwd;
     private String rest;
     private String lastDir;
+    private FileFilter fileFilter;
 
     public FileLister(String incDir, File cwd) {
         if(incDir == null)
@@ -43,6 +45,26 @@ public class FileLister {
         this.incDir = Parser.switchEscapedSpacesToSpacesInWord(incDir);
         this.cwd = cwd;
         findRestAndLastDir();
+        setFileFilter(Filter.ALL);
+    }
+
+    public FileLister(String incDir, File cwd, Filter filter) {
+        this(incDir, cwd);
+        setFileFilter(filter);
+    }
+
+    public FileLister(String incDir, File cwd, FileFilter fileFilter) {
+        this(incDir, cwd);
+        this.fileFilter = fileFilter;
+    }
+
+    private void setFileFilter(Filter filter) {
+        if(filter == Filter.ALL)
+            fileFilter = new FileAndDirectoryFilter();
+        else if(filter == Filter.FILE)
+            fileFilter = new OnlyFileFilter();
+        else
+            fileFilter = new DirectoryFileFilter();
     }
 
     /**
@@ -222,8 +244,8 @@ public class FileLister {
 
     private List<String> listDirectory(File path, String rest) {
         List<String> fileNames = new ArrayList<String>();
-        if(path != null && path.isDirectory())
-            for(File file : path.listFiles()) {
+        if(path != null && path.isDirectory()) {
+            for(File file : path.listFiles(fileFilter)) {
                 if(rest == null || rest.length() == 0)
                     fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
                 else {
@@ -231,6 +253,7 @@ public class FileLister {
                         fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
                 }
             }
+        }
 
         return fileNames;
     }
@@ -244,4 +267,29 @@ public class FileLister {
                 ", lastDir='" + lastDir + '\'' +
                 '}';
     }
+
+    class DirectoryFileFilter implements FileFilter {
+        @Override
+        public boolean accept(File pathname) {
+            return pathname.isDirectory();
+        }
+    }
+
+    class FileAndDirectoryFilter implements FileFilter {
+        @Override
+        public boolean accept(File pathname) {
+            return pathname.isDirectory() || pathname.isFile();
+        }
+    }
+
+    //love this name :)
+    class OnlyFileFilter implements FileFilter {
+        @Override
+        public boolean accept(File pathname) {
+            return pathname.isFile();
+        }
+    }
+
+    public enum Filter { FILE,DIRECTORY,ALL}
+
 }
