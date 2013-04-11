@@ -7,6 +7,7 @@
 package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
+import org.jboss.aesh.cl.exception.CommandLineParserException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +59,7 @@ public class CommandLineParserTest extends TestCase {
             assertEquals("512g m", cl.getOptionProperties("D").get(1).getValue());
 
         }
-        catch (IllegalArgumentException e) {
+        catch (CommandLineParserException e) {
             e.printStackTrace();
             assertTrue(false);
         }
@@ -67,7 +68,7 @@ public class CommandLineParserTest extends TestCase {
             assertTrue(false);
             cl.getArguments();
         }
-        catch (IllegalArgumentException e) {
+        catch (CommandLineParserException e) {
             assertTrue(true);
         }
 
@@ -76,7 +77,7 @@ public class CommandLineParserTest extends TestCase {
             assertTrue(false);
             cl.getArguments();
         }
-        catch (IllegalArgumentException e) {
+        catch (CommandLineParserException e) {
             assertTrue(true);
         }
         try {
@@ -84,7 +85,7 @@ public class CommandLineParserTest extends TestCase {
             assertTrue(false);
             cl.getArguments();
         }
-        catch (IllegalArgumentException e) {
+        catch (CommandLineParserException e) {
             assertTrue(true);
         }
 
@@ -93,7 +94,7 @@ public class CommandLineParserTest extends TestCase {
             assertTrue(false);
             cl.getArguments();
         }
-        catch (IllegalArgumentException e) {
+        catch (CommandLineParserException e) {
             assertTrue(true);
         }
 
@@ -102,7 +103,7 @@ public class CommandLineParserTest extends TestCase {
             assertTrue(false);
             cl.getArguments();
         }
-        catch (IllegalArgumentException e) {
+        catch (CommandLineParserException e) {
             assertTrue(true);
         }
 
@@ -128,14 +129,14 @@ public class CommandLineParserTest extends TestCase {
             assertEquals("/tmp/bah.txt", cl.getArguments().get(1));
 
         }
-        catch (IllegalArgumentException e) {
+        catch (CommandLineParserException e) {
         }
         try {
             CommandLine cl = parser.parse("test -d /tmp/file.txt");
             assertTrue(false);
             cl.getArguments();
         }
-        catch (IllegalArgumentException e) {
+        catch (CommandLineParserException e) {
             assertTrue(true);
         }
 
@@ -151,7 +152,7 @@ public class CommandLineParserTest extends TestCase {
         }
     }
 
-    public void testParseCommandLine4() {
+    public void testParseCommandLine4() throws CommandLineParserException {
         CommandLineParser clp = ParserGenerator.generateParser(Parser4Test.class);
 
         CommandLine cl = clp.parse("test -o bar1,bar2,bar3 foo");

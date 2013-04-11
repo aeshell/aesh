@@ -8,6 +8,7 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.CommandLineParser;
+import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.console.operator.ControlOperator;
 
 /**
@@ -52,7 +53,7 @@ public class ConsoleOutput {
         return stdErr;
     }
 
-    public CommandLine parse(CommandLineParser parser) throws IllegalArgumentException {
+    public CommandLine parse(CommandLineParser parser) throws CommandLineParserException {
         return parser.parse(getBuffer());
     }
 

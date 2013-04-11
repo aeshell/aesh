@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.exception.OptionParserException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +29,7 @@ public class CommandLine {
         arguments = new ArrayList<String>();
     }
 
-    public void addOption(ParsedOption option) {
+    public void addOption(ParsedOption option) throws OptionParserException {
         ParsedOption existingOption = getOption(option.getName());
         if (existingOption == null) {
             options.add(option);
@@ -36,7 +38,7 @@ public class CommandLine {
             if((existingOption.getProperties() == null ||
                     existingOption.getProperties().size() == 0) ||
             (option.getProperties() == null || existingOption.getProperties().size() == 0))
-                throw new IllegalArgumentException("Not allowed to specify the same option twice");
+                throw new OptionParserException("Not allowed to specify the same option twice");
             else
                 existingOption.getProperties().addAll(option.getProperties());
         }

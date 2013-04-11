@@ -6,6 +6,9 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.exception.ArgumentParserException;
+import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.console.Config;
@@ -67,27 +70,27 @@ public class CommandLineParser {
     /**
      * Parse a command line with the defined parameter as base of the rules.
      * If any options are found, but not defined in the parameter object an
-     * IllegalArgumentException will be thrown.
+     * CommandLineParserException will be thrown.
      * Also, if a required option is not found or options specified with value,
-     * but is not given any value an IllegalArgumentException will be thrown.
+     * but is not given any value an OptionParserException will be thrown.
      *
      * The options found will be returned as a {@link CommandLine} object where
      * they can be queried after.
      *
      * @param line input
      * @return CommandLine
-     * @throws IllegalArgumentException
+     * @throws CommandLineParserException
      */
-    public CommandLine parse(String line) throws IllegalArgumentException {
+    public CommandLine parse(String line) throws CommandLineParserException {
         return parse(line, false);
     }
 
     /**
      * Parse a command line with the defined parameter as base of the rules.
      * If any options are found, but not defined in the parameter object an
-     * IllegalArgumentException will be thrown.
+     * CommandLineParserException will be thrown.
      * Also, if a required option is not found or options specified with value,
-     * but is not given any value an IllegalArgumentException will be thrown.
+     * but is not given any value an CommandLineParserException will be thrown.
      *
      * The options found will be returned as a {@link CommandLine} object where
      * they can be queried after.
@@ -95,9 +98,9 @@ public class CommandLineParser {
      * @param line input
      * @param ignoreMissingRequirements if we should ignore
      * @return CommandLine
-     * @throws IllegalArgumentException
+     * @throws CommandLineParserException
      */
-    public CommandLine parse(String line, boolean ignoreMissingRequirements) throws IllegalArgumentException {
+    public CommandLine parse(String line, boolean ignoreMissingRequirements) throws CommandLineParserException {
         List<String> lines = Parser.findAllWords(line);
         if(lines.size() > 0) {
             for(ParameterInt param : params) {
@@ -105,11 +108,11 @@ public class CommandLineParser {
                     return doParse(param, lines, ignoreMissingRequirements);
             }
         }
-        throw new IllegalArgumentException("param not found: "+line);
+        throw new CommandLineParserException("Param:"+ params+", not found in: "+line);
     }
 
     private CommandLine doParse(ParameterInt param, List<String> lines,
-                                boolean ignoreMissing) throws IllegalArgumentException {
+                                boolean ignoreMissing) throws CommandLineParserException {
         param.clean();
         CommandLine commandLine = new CommandLine();
         OptionInt active = null;
@@ -121,13 +124,13 @@ public class CommandLineParser {
             if(parseLine.startsWith("--")) {
                 //make sure that we dont have any "active" options lying around
                 if(active != null)
-                    throw new IllegalArgumentException("Option: "+active.getName()+" must be given a value");
+                    throw new OptionParserException("Option: "+active.getName()+" must be given a value");
 
                 active = findLongOption(param, parseLine.substring(2));
                 if(active != null && active.isProperty()) {
                     if(parseLine.length() <= (2+active.getLongName().length()) ||
                         !parseLine.contains(EQUALS))
-                        throw new IllegalArgumentException(
+                        throw new OptionParserException(
                                 "Option "+active.getLongName()+", must be part of a property");
 
                     String name =
@@ -140,32 +143,32 @@ public class CommandLineParser {
                             new OptionProperty(name, value), active.getType()));
                     active = null;
                     if(addedArgument)
-                        throw new IllegalArgumentException("An argument was given to an option that do not support it.");
+                        throw new ArgumentParserException("An argument was given to an option that do not support it.");
                 }
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
                     commandLine.addOption(new ParsedOption(active.getName(), active.getLongName(),
                             active.getValue(), active.getType()));
                     active = null;
                     if(addedArgument)
-                        throw new IllegalArgumentException("An argument was given to an option that do not support it.");
+                        throw new ArgumentParserException("An argument was given to an option that do not support it.");
                 }
                 else if(active == null)
-                    throw new IllegalArgumentException("Option: "+parseLine+" is not a valid option for this command");
+                    throw new OptionParserException("Option: "+parseLine+" is not a valid option for this command");
             }
             //name
             else if(parseLine.startsWith("-")) {
                 //make sure that we dont have any "active" options lying around
                 if(active != null)
-                    throw new IllegalArgumentException("Option: "+active.getName()+" must be given a value");
+                    throw new OptionParserException("Option: "+active.getName()+" must be given a value");
                 if(parseLine.length() != 2 && !parseLine.contains("="))
-                    throw new IllegalArgumentException("Option: - must be followed by a valid operator");
+                    throw new OptionParserException("Option: - must be followed by a valid operator");
 
                 active = findOption(param, parseLine.substring(1));
 
                 if(active != null && active.isProperty()) {
                     if(parseLine.length() <= 2 ||
                             !parseLine.contains(EQUALS))
-                    throw new IllegalArgumentException(
+                    throw new OptionParserException(
                             "Option "+active.getName()+", must be part of a property");
                     String name =
                             parseLine.substring(2, // 2+char.length
@@ -177,7 +180,7 @@ public class CommandLineParser {
                             new OptionProperty(name, value), active.getType()));
                     active = null;
                     if(addedArgument)
-                        throw new IllegalArgumentException("An argument was given to an option that do not support it.");
+                        throw new OptionParserException("An argument was given to an option that do not support it.");
                 }
 
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
@@ -185,10 +188,10 @@ public class CommandLineParser {
                             active.getLongName(), active.getValue(), active.getType()));
                     active = null;
                     if(addedArgument)
-                        throw new IllegalArgumentException("An argument was given to an option that do not support it.");
+                        throw new OptionParserException("An argument was given to an option that do not support it.");
                 }
                 else if(active == null)
-                    throw new IllegalArgumentException("Option: "+parseLine+" is not a valid option for this command");
+                    throw new OptionParserException("Option: "+parseLine+" is not a valid option for this command");
             }
             else if(active != null) {
                 if(active.hasMultipleValues()) {
@@ -205,7 +208,7 @@ public class CommandLineParser {
                         active.getLongName(), active.getValues(), active.getType()));
                 active = null;
                 if(addedArgument)
-                    throw new IllegalArgumentException("An argument was given to an option that do not support it.");
+                    throw new OptionParserException("An argument was given to an option that do not support it.");
             }
             //if no param is "active", we add it as an argument
             else {
@@ -218,14 +221,14 @@ public class CommandLineParser {
                     active.getLongName(), active.getValues(), active.getType()));
         }
 
-        //this will throw and IllegalArgumentException if needed
+        //this will throw and CommandLineParserException if needed
         if(!ignoreMissing)
             checkForMissingRequiredOptions(param, commandLine);
 
         return commandLine;
     }
 
-    private void checkForMissingRequiredOptions(ParameterInt param, CommandLine commandLine) throws IllegalArgumentException {
+    private void checkForMissingRequiredOptions(ParameterInt param, CommandLine commandLine) throws CommandLineParserException {
         for(OptionInt o : param.getOptions())
             if(o.isRequired()) {
                 boolean found = false;
@@ -235,7 +238,7 @@ public class CommandLineParser {
                         found = true;
                 }
                 if(!found)
-                    throw new IllegalArgumentException("Option: "+o.getName()+" is required for this command.");
+                    throw new CommandLineParserException("Option: "+o.getName()+" is required for this command.");
             }
     }
 

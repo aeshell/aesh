@@ -7,6 +7,7 @@
 package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
+import org.jboss.aesh.cl.exception.CommandLineParserException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -17,7 +18,7 @@ public class BuilderTest extends TestCase {
         super(name);
     }
 
-    public void testBuilder() {
+    public void testBuilder() throws CommandLineParserException {
         ParameterBuilder pb = new ParameterBuilder();
         pb.name("foo").usage("foo is bar");
         pb.addOption(
@@ -32,7 +33,7 @@ public class BuilderTest extends TestCase {
         assertEquals("test1.txt", cl.getOptionValue('f'));
     }
 
-    public void testBuilder2() {
+    public void testBuilder2() throws CommandLineParserException {
 
         ParameterBuilder pb = new ParameterBuilder().name("less").usage("less is more");
         pb.addOption(

@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.util.Parser;
 
@@ -27,7 +28,7 @@ public class CommandLineCompletionParser {
      * @param line buffer
      * @return ParsedCompleteObject
      */
-    public ParsedCompleteObject findCompleteObject(String line) {
+    public ParsedCompleteObject findCompleteObject(String line) throws CommandLineParserException {
 
         //first we check if it could be a param
         if(Parser.findIfWordEndWithSpace(line)) {
@@ -73,7 +74,7 @@ public class CommandLineCompletionParser {
     /**
      * Only called when we know that the last word is an option value
      */
-    private ParsedCompleteObject findCompleteObjectValue(String line) {
+    private ParsedCompleteObject findCompleteObjectValue(String line) throws CommandLineParserException {
         CommandLine cl = parser.parse(line, true);
         if(cl.getArguments().isEmpty()) {
             ParsedOption po = cl.getOptions().get(cl.getOptions().size()-1);
