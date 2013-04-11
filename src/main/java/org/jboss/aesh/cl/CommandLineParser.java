@@ -124,14 +124,14 @@ public class CommandLineParser {
             if(parseLine.startsWith("--")) {
                 //make sure that we dont have any "active" options lying around
                 if(active != null)
-                    throw new OptionParserException("Option: "+active.getName()+" must be given a value");
+                    throw new OptionParserException("Option: "+active.getDisplayName()+" must be given a value");
 
                 active = findLongOption(param, parseLine.substring(2));
                 if(active != null && active.isProperty()) {
                     if(parseLine.length() <= (2+active.getLongName().length()) ||
                         !parseLine.contains(EQUALS))
                         throw new OptionParserException(
-                                "Option "+active.getLongName()+", must be part of a property");
+                                "Option "+active.getDisplayName()+", must be part of a property");
 
                     String name =
                             parseLine.substring(2+active.getLongName().length(),
@@ -159,7 +159,7 @@ public class CommandLineParser {
             else if(parseLine.startsWith("-")) {
                 //make sure that we dont have any "active" options lying around
                 if(active != null)
-                    throw new OptionParserException("Option: "+active.getName()+" must be given a value");
+                    throw new OptionParserException("Option: "+active.getDisplayName()+" must be given a value");
                 if(parseLine.length() != 2 && !parseLine.contains("="))
                     throw new OptionParserException("Option: - must be followed by a valid operator");
 
@@ -169,7 +169,7 @@ public class CommandLineParser {
                     if(parseLine.length() <= 2 ||
                             !parseLine.contains(EQUALS))
                     throw new OptionParserException(
-                            "Option "+active.getName()+", must be part of a property");
+                            "Option "+active.getDisplayName()+", must be part of a property");
                     String name =
                             parseLine.substring(2, // 2+char.length
                                     parseLine.indexOf(EQUALS));
@@ -238,7 +238,7 @@ public class CommandLineParser {
                         found = true;
                 }
                 if(!found)
-                    throw new CommandLineParserException("Option: "+o.getName()+" is required for this command.");
+                    throw new CommandLineParserException("Option: "+o.getDisplayName()+" is required for this command.");
             }
     }
 

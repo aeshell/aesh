@@ -120,6 +120,14 @@ public class OptionInt {
         properties.clear();
     }
 
+    public String getDisplayName() {
+        if(longName != null) {
+            return "--"+longName;
+        }
+        else
+            return "-"+name;
+    }
+
     public int getFormattedLength() {
         StringBuilder sb = new StringBuilder();
         if(name != null)
