@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
 
@@ -54,9 +56,9 @@ public class ParameterBuilder {
         return this;
     }
 
-    public ParameterInt generateParameter() throws IllegalArgumentException {
+    public ParameterInt generateParameter() throws CommandLineParserException {
         if(name == null || name.length() < 1)
-            throw new RuntimeException("The parameter name must be defined");
+            throw new CommandLineParserException("The parameter name must be defined");
         return  new ParameterInt(name, usage, argumentType, options);
     }
 }

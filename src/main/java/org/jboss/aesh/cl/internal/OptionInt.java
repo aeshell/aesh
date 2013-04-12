@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl.internal;
 
+import org.jboss.aesh.cl.exception.OptionParserException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +34,7 @@ public class OptionInt {
 
     public OptionInt(char name, String longName, String description, boolean hasValue,
                      String argument, boolean required, char valueSeparator,
-                     boolean isProperty, boolean hasMultipleValues, Class<?> type) {
+                     boolean isProperty, boolean hasMultipleValues, Class<?> type) throws OptionParserException {
         this.name = String.valueOf(name);
         this.longName = longName;
         this.description = description;
@@ -48,7 +50,7 @@ public class OptionInt {
         values = new ArrayList<String>();
 
         if((name == Character.MIN_VALUE) && longName.equals("")) {
-            throw new IllegalArgumentException("Either name or long name must be set.");
+            throw new OptionParserException("Either name or long name must be set.");
         }
     }
 

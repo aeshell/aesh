@@ -9,6 +9,8 @@ package org.jboss.aesh.console.completion;
 import org.jboss.aesh.cl.CommandLineParser;
 import org.jboss.aesh.cl.OptionBuilder;
 import org.jboss.aesh.cl.ParameterBuilder;
+import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.complete.CompleteOperation;
@@ -94,7 +96,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
     }
 
     @Test
-    public void completionWithOptions() throws IOException, InterruptedException {
+    public void completionWithOptions() throws IOException, InterruptedException, CommandLineParserException {
 
         final ParameterInt param = new ParameterBuilder().name("less")
                 .usage("less -options <files>")

@@ -7,6 +7,8 @@
 package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
+import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.console.Config;
 
 /**
@@ -18,7 +20,7 @@ public class CommandLineFormatterTest extends TestCase {
         super(name);
     }
 
-    public void testFormatter() {
+    public void testFormatter() throws CommandLineParserException {
         ParameterBuilder pb = new ParameterBuilder().name("man").usage("[OPTION...]");
 
         pb.addOption(
@@ -43,7 +45,7 @@ public class CommandLineFormatterTest extends TestCase {
                 clp.printHelp());
     }
 
-    public void testFormatter2() {
+    public void testFormatter2() throws CommandLineParserException {
         ParameterBuilder pb = new ParameterBuilder().name("man").usage("[OPTION...]");
 
         pb.addOption(

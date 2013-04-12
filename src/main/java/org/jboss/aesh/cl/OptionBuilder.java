@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 
 /**
@@ -79,7 +80,7 @@ public class OptionBuilder {
         return this;
     }
 
-    public OptionInt create() {
+    public OptionInt create() throws OptionParserException {
         return new OptionInt(name, longName, description, hasValue, argument, required,
                 valueSeparator, isProperty, hasMultipleValues, type);
     }

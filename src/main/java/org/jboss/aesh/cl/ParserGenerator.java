@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
 
@@ -17,22 +18,22 @@ import org.jboss.aesh.cl.internal.ParameterInt;
  */
 public class ParserGenerator {
 
-    public static CommandLineParser generateParser(Class<?>... clazzes) {
+    public static CommandLineParser generateParser(Class<?>... clazzes) throws CommandLineParserException {
 
         ParserBuilder builder = new ParserBuilder();
         for(Class clazz : clazzes) {
 
         Parameter param = (Parameter) clazz.getAnnotation(Parameter.class);
         if(param == null)
-            throw new RuntimeException("Can only create parser from class thats annotated with Parameter");
+            throw new CommandLineParserException("Can only create parser from class thats annotated with Parameter");
             builder.addParameter(generateParameter(param));
         }
         return builder.generateParser();
     }
 
-    private static ParameterInt generateParameter(Parameter param) {
+    private static ParameterInt generateParameter(Parameter param) throws CommandLineParserException {
         if(param.name() == null || param.name().length() < 1)
-            throw new RuntimeException("The parameter name must be defined");
+            throw new CommandLineParserException("The parameter name must be defined");
 
         if(param.options() != null) {
             OptionInt[] options = new OptionInt[param.options().length];

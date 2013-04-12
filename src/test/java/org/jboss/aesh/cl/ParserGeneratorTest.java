@@ -7,6 +7,7 @@
 package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
+import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class ParserGeneratorTest extends TestCase {
         super(name);
     }
 
-    public void testClassGenerator() {
+    public void testClassGenerator() throws CommandLineParserException {
 
         CommandLineParser parser = ParserGenerator.generateParser(Test1.class);
 

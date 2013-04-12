@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl.internal;
 
+import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.console.Config;
 
 import java.util.ArrayList;
@@ -26,29 +27,39 @@ public class ParameterInt {
     public ParameterInt(String name, String usage) {
         setName(name);
         setUsage(usage);
-        setOptions(new ArrayList<OptionInt>());
+        try {
+            setOptions(new ArrayList<OptionInt>());
+        } catch (OptionParserException e) {
+            //ignored as this shouldnt happen
+        }
     }
 
     public ParameterInt(String name, String usage, Class<?> argumentType) {
         setName(name);
         setUsage(usage);
         setArgumentType(argumentType);
-        setOptions(new ArrayList<OptionInt>());
+        try {
+            setOptions(new ArrayList<OptionInt>());
+        } catch (OptionParserException e) {
+            //ignored as this shouldnt happen
+        }
     }
 
     public ParameterInt(String name, String usage,
-                        Class<?> argumentType, OptionInt[] options) {
+                        Class<?> argumentType, OptionInt[] options) throws OptionParserException {
         setName(name);
         setUsage(usage);
         setArgumentType(argumentType);
+        this.options = new ArrayList<OptionInt>(options.length);
         setOptions(Arrays.asList(options));
     }
 
     public ParameterInt(String name, String usage,
-                        Class<?> argumentType, List<OptionInt> options) {
+                        Class<?> argumentType, List<OptionInt> options) throws OptionParserException {
         setName(name);
         setUsage(usage);
         setArgumentType(argumentType);
+        this.options = new ArrayList<OptionInt>(options.size());
         setOptions(options);
     }
 
@@ -74,8 +85,8 @@ public class ParameterInt {
      * @param type what kind of type it is (not used)
      */
     public void addOption(char name, String longName, String description, boolean hasValue,
-                     String argument, boolean required, boolean hasMultipleValues, Class<?> type) {
-        options.add(new OptionInt(name, longName, description,
+                     String argument, boolean required, boolean hasMultipleValues, Class<?> type) throws OptionParserException {
+        options.add(new OptionInt(verifyThatNamesAreUnique(name, longName), longName, description,
                 hasValue, argument, required, '\u0000', false, hasMultipleValues, type));
     }
 
@@ -88,12 +99,17 @@ public class ParameterInt {
      * @param description a description of the option
      * @param hasValue if this option has value
      */
-    public void addOption(char name, String longName, String description, boolean hasValue) {
-        addOption(name, longName, description, hasValue, null, false, false, null);
+    public void addOption(char name, String longName, String description, boolean hasValue) throws OptionParserException {
+        addOption(verifyThatNamesAreUnique(name, longName), longName, description, hasValue, null, false, false, null);
     }
 
-    private void setOptions(List<OptionInt> options) {
-        this.options = options;
+    private void setOptions(List<OptionInt> options) throws OptionParserException {
+        for(OptionInt opt : options) {
+            if(opt.getName() != null)
+                verifyThatNamesAreUnique(opt.getName(), opt.getLongName());
+
+            this.options.add(opt);
+        }
     }
 
     public String getName() {
@@ -118,6 +134,37 @@ public class ParameterInt {
 
     public void setArgumentType(Class<?> argumentType) {
         this.argumentType = argumentType;
+    }
+
+    private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {
+        return verifyThatNamesAreUnique(name.charAt(0), longName);
+    }
+
+    private char verifyThatNamesAreUnique(char name, String longName) throws OptionParserException {
+        if(longName != null && longName.length() > 0 && findLongOption(longName) != null) {
+            throw new OptionParserException("Option --"+longName+" is already added to Param: "+this.toString());
+        }
+        if(name != '\u0000'&& findOption(String.valueOf(name)) != null) {
+            throw new OptionParserException("Option -"+name+" is already added to Param: "+this.toString());
+        }
+
+        //if name is null, use one based on longName
+        if(name == '\u0000') {
+            if(longName != null && longName.length() > 0)
+                return findPossibleName(longName);
+            else
+                throw new OptionParserException("Neither option name and option long name can be both null");
+        }
+        return name;
+    }
+
+    private char findPossibleName(String longName) throws OptionParserException {
+        for(int i=0; i < longName.length(); i++) {
+            if(findOption(String.valueOf(longName.charAt(i))) == null)
+                return longName.charAt(i);
+        }
+        //all chars are taken
+        throw new OptionParserException("All option names are taken, please specify a unique name");
     }
 
     public OptionInt findOption(String name) {

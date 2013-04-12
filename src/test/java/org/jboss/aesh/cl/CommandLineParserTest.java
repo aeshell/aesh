@@ -21,7 +21,7 @@ public class CommandLineParserTest extends TestCase {
         super(name);
     }
 
-    public void testParseCommandLine1() {
+    public void testParseCommandLine1() throws CommandLineParserException {
 
         CommandLineParser parser = ParserGenerator.generateParser(Parser1Test.class);
 
@@ -109,7 +109,7 @@ public class CommandLineParserTest extends TestCase {
 
     }
 
-    public void testParseCommandLine2() {
+    public void testParseCommandLine2() throws CommandLineParserException {
 
         CommandLineParser parser = ParserGenerator.generateParser(Parser2Test.class);
 
@@ -147,7 +147,7 @@ public class CommandLineParserTest extends TestCase {
             ParserGenerator.generateParser(Parser3Test.class);
             assertTrue(false);
         }
-        catch (IllegalArgumentException iae) {
+        catch (CommandLineParserException iae) {
             assertTrue(true);
         }
     }
