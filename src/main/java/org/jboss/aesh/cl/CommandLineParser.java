@@ -9,6 +9,7 @@ package org.jboss.aesh.cl;
 import org.jboss.aesh.cl.exception.ArgumentParserException;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.exception.RequiredOptionException;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.console.Config;
@@ -238,7 +239,7 @@ public class CommandLineParser {
                         found = true;
                 }
                 if(!found)
-                    throw new CommandLineParserException("Option: "+o.getDisplayName()+" is required for this command.");
+                    throw new RequiredOptionException("Option: "+o.getDisplayName()+" is required for this command.");
             }
     }
 
@@ -282,5 +283,12 @@ public class CommandLineParser {
         }
 
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return "CommandLineParser{" +
+                "params=" + params +
+                '}';
     }
 }

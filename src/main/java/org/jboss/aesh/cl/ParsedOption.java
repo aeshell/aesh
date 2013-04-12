@@ -54,6 +54,13 @@ public class ParsedOption {
         return longName;
     }
 
+    public String getDisplayName() {
+        if(longName != null)
+            return "--"+longName;
+        else
+            return "-"+name;
+    }
+
     public Class<?> getType() {
         return type;
     }

@@ -38,7 +38,7 @@ public class CommandLine {
             if((existingOption.getProperties() == null ||
                     existingOption.getProperties().size() == 0) ||
             (option.getProperties() == null || existingOption.getProperties().size() == 0))
-                throw new OptionParserException("Not allowed to specify the same option twice");
+                throw new OptionParserException("Not allowed to specify the same option ("+option.getDisplayName()+") twice");
             else
                 existingOption.getProperties().addAll(option.getProperties());
         }

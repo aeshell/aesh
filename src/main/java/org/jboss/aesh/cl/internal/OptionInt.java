@@ -173,4 +173,21 @@ public class OptionInt {
         return sb.toString();
     }
 
+    @Override
+    public String toString() {
+        return "OptionInt{" +
+                "name='" + name + '\'' +
+                ", longName='" + longName + '\'' +
+                ", description='" + description + '\'' +
+                ", hasValue=" + hasValue +
+                ", values=" + values +
+                ", argument='" + argument + '\'' +
+                ", type=" + type +
+                ", required=" + required +
+                ", valueSeparator=" + valueSeparator +
+                ", isProperty=" + isProperty +
+                ", hasMultipleValues=" + hasMultipleValues +
+                ", properties=" + properties +
+                '}';
+    }
 }

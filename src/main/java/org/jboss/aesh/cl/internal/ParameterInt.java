@@ -191,4 +191,14 @@ public class ParameterInt {
             sb.append(o.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
         return "Usage: "+getName()+" "+getUsage()+ Config.getLineSeparator()+sb.toString();
     }
+
+    @Override
+    public String toString() {
+        return "ParameterInt{" +
+                "name='" + name + '\'' +
+                ", usage='" + usage + '\'' +
+                ", argumentType=" + argumentType +
+                ", options=" + options +
+                '}';
+    }
 }
