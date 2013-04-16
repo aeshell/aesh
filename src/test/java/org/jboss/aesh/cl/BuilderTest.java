@@ -68,4 +68,23 @@ public class BuilderTest extends TestCase {
         assertEquals("f2", cl.getOptionValues("values").get(1));
         assertEquals("test1.txt", cl.getArguments().get(0));
     }
+
+    public void testBuilder3() throws CommandLineParserException {
+        ParameterBuilder pb = new ParameterBuilder().name("less").usage("less is more");
+        pb.addOption(
+                new OptionBuilder().description("version").longName("version").hasValue(false).required(true).create());
+        pb.addOption(
+                new OptionBuilder().description("is verbose").longName("verbose").hasValue(false).create());
+
+        CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
+
+        System.out.println(clp.getParameters().get(0));
+        assertEquals("version", clp.getParameters().get(0).findOption("v").getLongName());
+        assertEquals("verbose", clp.getParameters().get(0).findOption("e").getLongName());
+
+        CommandLine cl = clp.parse("less -v -e test1.txt");
+        assertTrue(cl.hasOption('v'));
+        assertTrue(cl.hasOption('e'));
+    }
+
 }

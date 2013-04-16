@@ -27,22 +27,14 @@ public class ParameterInt {
     public ParameterInt(String name, String usage) {
         setName(name);
         setUsage(usage);
-        try {
-            setOptions(new ArrayList<OptionInt>());
-        } catch (OptionParserException e) {
-            //ignored as this shouldnt happen
-        }
+        options = new ArrayList<OptionInt>();
     }
 
     public ParameterInt(String name, String usage, Class<?> argumentType) {
         setName(name);
         setUsage(usage);
         setArgumentType(argumentType);
-        try {
-            setOptions(new ArrayList<OptionInt>());
-        } catch (OptionParserException e) {
-            //ignored as this shouldnt happen
-        }
+        options = new ArrayList<OptionInt>();
     }
 
     public ParameterInt(String name, String usage,
@@ -50,7 +42,7 @@ public class ParameterInt {
         setName(name);
         setUsage(usage);
         setArgumentType(argumentType);
-        this.options = new ArrayList<OptionInt>(options.length);
+        this.options = new ArrayList<OptionInt>();
         setOptions(Arrays.asList(options));
     }
 
@@ -59,7 +51,7 @@ public class ParameterInt {
         setName(name);
         setUsage(usage);
         setArgumentType(argumentType);
-        this.options = new ArrayList<OptionInt>(options.size());
+        this.options = new ArrayList<OptionInt>();
         setOptions(options);
     }
 
@@ -69,6 +61,29 @@ public class ParameterInt {
 
     public void addOption(OptionInt option) {
         options.add(option);
+    }
+
+    /**
+     * Add an option
+     * Name or longName can be null
+     * Both argument and type can be null
+     *
+     * @param name name (short) one char
+     * @param longName multi character name
+     * @param description a description of the option
+     * @param hasValue if this option has value
+     * @param argument what kind of argument this option can have
+     * @param required is it required?
+     * @param valueSeparator separator char
+     * @param isProperty is it a property
+     * @param hasMultipleValues have it multiple values
+     * @param type what kind of type it is (not used)
+     */
+    public void addOption(char name, String longName, String description, boolean hasValue,
+                     String argument, boolean required, char valueSeparator, boolean isProperty,
+                     boolean hasMultipleValues, Class<?> type) throws OptionParserException {
+        options.add(new OptionInt(verifyThatNamesAreUnique(name, longName), longName, description,
+                hasValue, argument, required, valueSeparator, isProperty, hasMultipleValues, type));
     }
 
     /**
@@ -105,10 +120,9 @@ public class ParameterInt {
 
     private void setOptions(List<OptionInt> options) throws OptionParserException {
         for(OptionInt opt : options) {
-            if(opt.getName() != null)
-                verifyThatNamesAreUnique(opt.getName(), opt.getLongName());
-
-            this.options.add(opt);
+            this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getName(), opt.getLongName()), opt.getLongName(),
+                    opt.getDescription(), opt.hasValue(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
+                    opt.isProperty(), opt.hasMultipleValues() , opt.getType()));
         }
     }
 

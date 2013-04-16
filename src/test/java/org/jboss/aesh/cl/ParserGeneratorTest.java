@@ -40,6 +40,11 @@ public class ParserGeneratorTest extends TestCase {
         assertEquals("d", options.get(0).getName());
         assertEquals("V", options.get(1).getName());
 
+        parser = ParserGenerator.generateParser(Test3.class);
+        options = parser.getParameters().get(0).getOptions();
+        assertEquals("t", options.get(0).getName());
+        assertEquals("e", options.get(1).getName());
+
     }
 }
 
@@ -56,4 +61,11 @@ class Test1 {}
                 @Option(name = 'V', description = "output version information and exit")
         })
 class Test2 {}
+
+@Parameter(name = "test", usage = "more [options] file...",
+        options = {
+                @Option(longName = "target", description = "target directory"),
+                @Option(longName = "test", description = "test run")
+        })
+class Test3 {}
 

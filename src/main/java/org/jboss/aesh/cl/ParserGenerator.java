@@ -35,22 +35,18 @@ public class ParserGenerator {
         if(param.name() == null || param.name().length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
 
-        if(param.options() != null) {
-            OptionInt[] options = new OptionInt[param.options().length];
-            for(int i=0; i < param.options().length; i++) {
-                Option o = param.options()[i];
-                options[i] =  new OptionInt(
-                        o.name(), o.longName(), o.description(),
-                        o.hasValue(), o.argument(), o.required(), o.valueSeparator(),
-                        o.isProperty(), o.hasMultipleValues(), o.type());
-            }
+        ParameterInt parameterInt = new ParameterInt(param.name(), param.usage(), param.argumentType());
 
-            return new ParameterInt(param.name(), param.usage(),
-                    param.argumentType(), options);
+        if(param.options() != null) {
+            for(Option o : param.options()) {
+                parameterInt.addOption(
+                        o.name(), o.longName(), o.description(),
+                        o.hasValue(), o.argument(), o.required(),
+                        o.valueSeparator(), o.isProperty(),
+                        o.hasMultipleValues(), o.type());
+            }
         }
-        else
-            return new ParameterInt(param.name(), param.usage(),
-                    param.argumentType(), new OptionInt[0]);
+        return parameterInt;
     }
 
 }
