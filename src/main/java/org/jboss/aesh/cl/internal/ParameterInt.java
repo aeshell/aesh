@@ -59,8 +59,10 @@ public class ParameterInt {
         return options;
     }
 
-    public void addOption(OptionInt option) {
-        options.add(option);
+    public void addOption(OptionInt opt) throws OptionParserException {
+        this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getName(), opt.getLongName()), opt.getLongName(),
+                opt.getDescription(), opt.hasValue(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
+                opt.isProperty(), opt.hasMultipleValues() , opt.getType()));
     }
 
     /**
@@ -122,7 +124,7 @@ public class ParameterInt {
         for(OptionInt opt : options) {
             this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getName(), opt.getLongName()), opt.getLongName(),
                     opt.getDescription(), opt.hasValue(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
-                    opt.isProperty(), opt.hasMultipleValues() , opt.getType()));
+                    opt.isProperty(), opt.hasMultipleValues(), opt.getType()));
         }
     }
 
