@@ -23,7 +23,7 @@ How to build:
 
 To get going:
 -------------
-
+```java
 public class Example {
 
     public static void main(String[] args) throws java.io.IOException {
@@ -41,6 +41,7 @@ public class Example {
 
     }
 }
+```
 
 Keys that are mapped by default in Æsh
 --------------------------------------------
