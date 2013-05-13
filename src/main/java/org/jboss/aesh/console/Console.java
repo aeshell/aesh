@@ -33,6 +33,7 @@ import org.jboss.aesh.history.FileHistory;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.InMemoryHistory;
 import org.jboss.aesh.history.SearchDirection;
+import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.undo.UndoAction;
@@ -425,68 +426,103 @@ public class Console {
             if (in[0] == -1) {
                 executorService.shutdown();
                 running = false;
-                //consoleCallback.readConsoleOutput(null);
                 return;
             }
-            Operation operation = editMode.parseInput(in, buffer.getLine());
-            operation.setInput(in);
 
-            String result = null;
-            //if we have a command hooked in the input goes there
-            if(command != null)
-                command.processOperation(operation);
-            //the input is parsed by æsh
-            else
-                result = parseOperation(operation, buffer.getPrompt().getMask());
-
-            if(operation.equals(Operation.NEW_LINE) && buffer.isMultiLine())
-                result = buffer.getMultiLineBuffer() + result;
-
-            if(result != null) {
-                // if the line ends with: \ we create a new line
-                if(!buffer.getPrompt().isMasking() && endsWithBackslashPattern.matcher(result).find()) {
-                    buffer.setMultiLine(true);
-                    buffer.updateMultiLineBuffer();
-                    displayPrompt();
+            //we have a paste that contain enter
+            if(in.length > 1 && Key.ENTER.containKey(in)) {
+                //split it up based on enter, atm we assuming its only chars
+                // not special chars like delete, arrow up, etc
+                List<String> lines = new ArrayList<String>();
+                StringBuilder current = new StringBuilder();
+                for(int i : in) {
+                    if(Key.ENTER.getFirstValue() == i) {
+                        lines.add(current.toString());
+                        current = new StringBuilder();
+                    }
+                    else
+                        current.append((char) i);
                 }
-                //normal line
+                for(String line : lines) {
+                    buffer.write(line);
+                    pushToStdOut(line);
+                    printNewline();
+                    addToHistory(buffer.getLine());
+                    processOperationResult(buffer.getLine());
+                }
+                //if we have some chars after the last enter, paste that is as well
+                if(current.length() > 0) {
+                    buffer.write(current.toString());
+                    pushToStdOut(buffer.getLine());
+                }
+            }
+            //a "normal" line, no paste etc...
+            else {
+                Operation operation = editMode.parseInput(in, buffer.getLine());
+                operation.setInput(in);
+
+                //if we have a command hooked in the input goes there
+                if(command != null)
+                    command.processOperation(operation);
+                    //the input is parsed by æsh
                 else {
-                    if(result.startsWith(" "))
-                        result = Parser.trimInFront(result);
+                    String result = parseOperation(operation, buffer.getPrompt().getMask());
+                    if(result != null)
+                        processOperationResult(result);
+                }
+            }
+        }
+        catch (IOException ioe) {
+            if(Settings.getInstance().isLogging())
+                logger.severe("Stream failure: "+ioe);
+        }
+    }
 
-                    if(Settings.getInstance().isOperatorParserEnabled())
-                        operations = ControlOperatorParser.findAllControlOperators(result);
-                    else {
-                        //if we do not parse operators just add ControlOperator.NONE
-                        operations = new ArrayList<ConsoleOperation>(1);
-                        operations.add(new ConsoleOperation(ControlOperator.NONE, result));
+    private void processOperationResult(String result) {
+        try {
+            // if the line ends with: \ we create a new line
+            if(!buffer.getPrompt().isMasking() && endsWithBackslashPattern.matcher(result).find()) {
+                buffer.setMultiLine(true);
+                buffer.updateMultiLineBuffer();
+                displayPrompt();
+            }
+            //normal line
+            else {
+                if(result.startsWith(" "))
+                    result = Parser.trimInFront(result);
+
+                if(Settings.getInstance().isOperatorParserEnabled())
+                    operations = ControlOperatorParser.findAllControlOperators(result);
+                else {
+                    //if we do not parse operators just add ControlOperator.NONE
+                    operations = new ArrayList<ConsoleOperation>(1);
+                    operations.add(new ConsoleOperation(ControlOperator.NONE, result));
+                }
+
+                ConsoleOutput output = parseOperations();
+                output = processInternalCommands(output);
+                if(output.getBuffer() != null) {
+                    //return output;
+                    consoleCallback.readConsoleOutput(output);
+                    //abort if the user have initiated stop
+                    if(executorService.isShutdown())
+                        return;
+
+                    while(currentOperation != null) {
+                        ConsoleOutput tmpOutput = parseCurrentOperation();
+                        if(tmpOutput != null && !executorService.isShutdown())
+                            consoleCallback.readConsoleOutput(tmpOutput);
                     }
-
-                    ConsoleOutput output = parseOperations();
-                    output = processInternalCommands(output);
-                    if(output.getBuffer() != null) {
-                        //return output;
-                        consoleCallback.readConsoleOutput(output);
-                        //abort if the user have initiated stop
-                        if(executorService.isShutdown())
-                            return;
-
-                        while(currentOperation != null) {
-                            ConsoleOutput tmpOutput = parseCurrentOperation();
-                            if(tmpOutput != null && !executorService.isShutdown())
-                                consoleCallback.readConsoleOutput(tmpOutput);
-                        }
-                        search = null;
-                        buffer.reset();
-                        if(command == null) {
-                            displayPrompt();
-                        }
-                    }
-                    else {
-                        buffer.reset();
+                    search = null;
+                    buffer.reset();
+                    if(command == null) {
                         displayPrompt();
-                        search = null;
                     }
+                }
+                else {
+                    buffer.reset();
+                    displayPrompt();
+                    search = null;
                 }
             }
         }
@@ -620,7 +656,10 @@ public class Console {
             prevAction = Action.NEWLINE;
             //moveToEnd();
             printNewline(); // output newline
-            return buffer.getLineNoMask();
+            if(buffer.isMultiLine())
+                return buffer.getMultiLineBuffer() + buffer.getLineNoMask();
+            else
+                return buffer.getLineNoMask();
         }
 
         return null;

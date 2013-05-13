@@ -222,6 +222,26 @@ public enum Key {
         return null;
     }
 
+    public boolean containKey(int[] input) {
+        for(int i=0; i < input.length; i++) {
+            if(input[i] == keyValues[0]) {
+                if(keyValues.length == 1)
+                    return true;
+                else if((i + keyValues.length) < input.length) {
+                    int j = i;
+                    for(int k : keyValues) {
+                        if(input[j] != k) {
+                            return false;
+                        }
+                        j++;
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public boolean equals(int[] otherValues) {
         if(keyValues.length == otherValues.length) {
             for(int i=0; i < keyValues.length; i++) {
