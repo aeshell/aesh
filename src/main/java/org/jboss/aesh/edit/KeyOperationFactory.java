@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.edit;
 
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
 
@@ -216,5 +217,17 @@ public class KeyOperationFactory {
         }
         return null;
 
+    }
+
+    public static boolean containNewLine(int[] input) {
+        int newLine = getNewLine();
+        for(int i : input)
+            if(i == newLine)
+                return true;
+        return false;
+    }
+
+    public static int getNewLine() {
+        return Config.isOSPOSIXCompatible() ? 10 : 13;
     }
 }

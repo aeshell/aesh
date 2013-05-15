@@ -19,6 +19,7 @@ import org.jboss.aesh.console.operator.RedirectionCompletion;
 import org.jboss.aesh.console.settings.Settings;
 
 import org.jboss.aesh.edit.EditMode;
+import org.jboss.aesh.edit.KeyOperationFactory;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.PasteManager;
 import org.jboss.aesh.edit.ViEditMode;
@@ -93,6 +94,8 @@ public class Console {
     //used to optimize text deletion
     private char[] resetLineAndSetCursorToStart =
             (ANSI.saveCursor()+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
+
+    private List<String> pasteLines;
 
     public Console() throws IOException {
         this(Settings.getInstance());
@@ -178,6 +181,8 @@ public class Console {
 
         redirectPipeOutBuffer = new StringBuilder();
         redirectPipeErrBuffer = new StringBuilder();
+
+        pasteLines = new ArrayList<String>();
 
         this.settings = settings;
         running = true;
@@ -355,6 +360,7 @@ public class Console {
         if(!running)
             throw new RuntimeException("Cant reuse a stopped Console before its reset again!");
 
+
         if(currentOperation != null) {
             ConsoleOutput output = parseCurrentOperation();
             if(output != null)
@@ -366,6 +372,15 @@ public class Console {
             displayPrompt(prompt);
         }
         search = null;
+
+        if(pasteLines.size() > 0) {
+            buffer.write(pasteLines.get(0));
+            pushToStdOut(pasteLines.get(0));
+            if(pasteLines.size() > 1)
+                return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, pasteLines.remove(0)));
+            else
+                pasteLines.remove(0);
+        }
 
         while(true) {
             if(command != null && !command.isAttached()) {
@@ -379,42 +394,77 @@ public class Console {
             if (in[0] == -1) {
                 return null;
             }
-            Operation operation = editMode.parseInput(in, buffer.getLine());
-            operation.setInput(in);
 
-            String result = null;
-            if(command != null)
-                command.processOperation(operation);
-            else
-                result = parseOperation(operation, mask);
-
-            if(result != null) {
-
-                // if the line ends with: \ we create a new line
-                if(mask == null && endsWithBackslashPattern.matcher(result).find()) {
-                    //String line = result.substring(0,result.length()-1);
-                    appendMultiLine(result.substring(0,result.length()-1));
-                    ConsoleOutput tempOutput = read("> ");
-                    result = getMultiLine() + tempOutput.getBuffer();
-                    resetMultiLine();
+            if(in.length > 1 && KeyOperationFactory.containNewLine(in)) {
+                //split it up based on enter, atm we assuming its only chars
+                //not special chars like delete, arrow up, etc
+                List<String> lines = new ArrayList<String>();
+                StringBuilder current = new StringBuilder();
+                for(int i : in) {
+                    if(KeyOperationFactory.getNewLine() == i) {
+                        lines.add(current.toString());
+                        current = new StringBuilder();
+                    }
+                    else
+                        current.append((char) i);
                 }
+                if(current.length() > 0)
+                    lines.add(current.toString());
+                //the first line gets added to the prompt, the others are saved
+                //to the list and then pushed as soon as read(..) is called again
+                if(lines.size() > 0) {
+                String firstLine = lines.remove(0);
+                    buffer.write(firstLine);
+                    pushToStdOut(firstLine);
+                    printNewline();
+                    addToHistory(buffer.getLine());
+                    if(lines.size() > 0) {
+                       for(String line : lines)
+                           pasteLines.add(line);
+                    }
 
-                if(Settings.getInstance().isPipelineAndRedirectionEnabled())
-                    operations = ControlOperatorParser.findAllControlOperators(result);
-                else {
-                    //if we do not parse operators just add ControlOperator.NONE
-                    operations = new ArrayList<ConsoleOperation>(1);
-                    operations.add(new ConsoleOperation( ControlOperator.NONE, result));
+                    return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, buffer.getLineNoMask()));
                 }
-                ConsoleOutput output = parseOperations();
-                output = processInternalCommands(output);
-                if(output.getBuffer() != null) {
-                    return output;
-                }
-                else {
-                    buffer.reset(prompt, mask);
-                    displayPrompt(prompt);
-                    search = null;
+            }
+            else {
+
+                Operation operation = editMode.parseInput(in, buffer.getLine());
+                operation.setInput(in);
+
+                String result = null;
+                if(command != null)
+                    command.processOperation(operation);
+                else
+                    result = parseOperation(operation, mask);
+
+                if(result != null) {
+
+                    // if the line ends with: \ we create a new line
+                    if(mask == null && endsWithBackslashPattern.matcher(result).find()) {
+                        //String line = result.substring(0,result.length()-1);
+                        appendMultiLine(result.substring(0,result.length()-1));
+                        ConsoleOutput tempOutput = read("> ");
+                        result = getMultiLine() + tempOutput.getBuffer();
+                        resetMultiLine();
+                    }
+
+                    if(Settings.getInstance().isPipelineAndRedirectionEnabled())
+                        operations = ControlOperatorParser.findAllControlOperators(result);
+                    else {
+                        //if we do not parse operators just add ControlOperator.NONE
+                        operations = new ArrayList<ConsoleOperation>(1);
+                        operations.add(new ConsoleOperation( ControlOperator.NONE, result));
+                    }
+                    ConsoleOutput output = parseOperations();
+                    output = processInternalCommands(output);
+                    if(output.getBuffer() != null) {
+                        return output;
+                    }
+                    else {
+                        buffer.reset(prompt, mask);
+                        displayPrompt(prompt);
+                        search = null;
+                    }
                 }
             }
         }
