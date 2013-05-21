@@ -19,6 +19,7 @@ import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalCharacter;
+import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.File;
@@ -258,13 +259,14 @@ public class Example {
             }
         };
 
-
-
+        //show how we can change the prompt async
         try {
             Thread.sleep(4000);
-            exampleConsole.setPrompt(new Prompt("[FOO]» "));
+            exampleConsole.setPrompt(new Prompt(
+                    new TerminalString("[FOO]» ", Color.DEFAULT_BG, Color.RED_TEXT, CharacterType.BOLD)));
+            //exampleConsole.pushToStdOut(new TerminalString("PUSHING", Color.DEFAULT_BG, Color.BLUE_TEXT).getAsString());
         } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
 
     }

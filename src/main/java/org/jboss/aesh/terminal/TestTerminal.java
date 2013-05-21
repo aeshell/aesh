@@ -121,6 +121,11 @@ public class TestTerminal implements Terminal {
             writeToStdOut(c.getCharacter());
     }
 
+    @Override
+    public void writeString(TerminalString termString) throws IOException {
+        writeToStdOut(termString.getAsString());
+    }
+
      @Override
     public boolean isEchoEnabled() {
         return false;

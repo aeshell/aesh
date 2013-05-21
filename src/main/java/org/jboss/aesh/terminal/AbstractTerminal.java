@@ -45,6 +45,11 @@ public abstract class AbstractTerminal implements Terminal {
         writeToStdOut(builder.toString());
     }
 
+    @Override
+    public void writeString(TerminalString termString) throws IOException {
+        writeToStdOut(termString.getAsString());
+    }
+
     /**
      * Return the row position if we use a ansi terminal
      * Send a terminal: '<ESC>[6n'

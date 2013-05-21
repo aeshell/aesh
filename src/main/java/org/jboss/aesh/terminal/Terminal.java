@@ -114,6 +114,11 @@ public interface Terminal {
      */
     void writeChars(List<TerminalCharacter> chars) throws IOException;
 
+    /**
+     * Write a TerminalString to std out
+     */
+    void writeString(TerminalString string) throws IOException;
+
     boolean isEchoEnabled();
 
     /**

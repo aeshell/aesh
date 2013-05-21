@@ -879,9 +879,9 @@ public class Console {
     }
 
     private void displayPrompt(Prompt prompt) throws IOException {
-        if(prompt.hasChars()) {
+        if(prompt.hasANSI()) {
             terminal.writeToStdOut(ANSI.getStart()+"0G"+ANSI.getStart()+"2K");
-            terminal.writeChars(prompt.getCharacters());
+            terminal.writeToStdOut(prompt.getANSI());
         }
         else
             terminal.writeToStdOut(ANSI.getStart()+"0G"+ANSI.getStart()+"2K"+prompt.getPromptAsString());
@@ -1353,13 +1353,8 @@ public class Console {
         terminal.writeToStdOut(Buffer.printAnsi("1;1H"));
         //then writeToStdOut prompt
         if(includeBuffer) {
-            if(buffer.getPrompt().hasChars()) {
-
-            }
-            else {
-                displayPrompt();
-                terminal.writeToStdOut(buffer.getLine());
-            }
+            displayPrompt();
+            terminal.writeToStdOut(buffer.getLine());
         }
     }
 

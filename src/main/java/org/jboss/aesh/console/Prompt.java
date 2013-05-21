@@ -7,6 +7,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.terminal.TerminalCharacter;
+import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.List;
 
@@ -20,9 +21,9 @@ import java.util.List;
  */
 public class Prompt {
 
-    private List<TerminalCharacter> characters;
     private String prompt;
     private Character mask;
+    private String ansiString;
 
     public Prompt(String prompt) {
         if(prompt != null)
@@ -39,23 +40,38 @@ public class Prompt {
         this.mask = mask;
     }
 
-    public Prompt(List<TerminalCharacter> characters) {
-        this.characters = characters;
-        StringBuilder builder = new StringBuilder(characters.size());
-        for(TerminalCharacter c : characters)
-            builder.append(c.getCharacter());
+    public Prompt(TerminalString terminalString) {
+        if(terminalString != null) {
+            ansiString = terminalString.getAsString();
+            this.prompt = terminalString.getCharacters();
+        }
+        else
+            this.prompt = "";
+    }
 
-        this.prompt = builder.toString();
+    public Prompt(List<TerminalCharacter> characters) {
+        generateOutString(characters);
     }
 
     public Prompt(List<TerminalCharacter> characters, Character mask) {
-        this.characters = characters;
-        StringBuilder builder = new StringBuilder(characters.size());
-        for(TerminalCharacter c : characters)
-            builder.append(c.getCharacter());
-
-        this.prompt = builder.toString();
         this.mask = mask;
+        generateOutString(characters);
+    }
+
+    private void generateOutString(List<TerminalCharacter> chars) {
+        StringBuilder promptBuilder = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
+        TerminalCharacter prev = null;
+        for(TerminalCharacter c : chars) {
+            if(prev == null)
+                builder.append(c.getAsString());
+            else
+                builder.append(c.getAsString(prev));
+            prev = c;
+            promptBuilder.append(c.getCharacter());
+        }
+        ansiString = builder.toString();
+        this.prompt = promptBuilder.toString();
     }
 
     public Character getMask() {
@@ -74,12 +90,12 @@ public class Prompt {
         return prompt.length();
     }
 
-    public boolean hasChars() {
-        return characters != null;
+    public boolean hasANSI() {
+        return ansiString != null;
     }
 
-    public List<TerminalCharacter> getCharacters() {
-        return characters;
+    public String getANSI() {
+        return ansiString;
     }
 
     @Override
@@ -89,7 +105,7 @@ public class Prompt {
 
         Prompt prompt1 = (Prompt) o;
 
-        if (characters != null ? !characters.equals(prompt1.characters) : prompt1.characters != null) return false;
+        if (ansiString != null ? !ansiString.equals(prompt1.ansiString) : prompt1.ansiString != null) return false;
         if (mask != null ? !mask.equals(prompt1.mask) : prompt1.mask != null) return false;
         if (!prompt.equals(prompt1.prompt)) return false;
 
@@ -98,7 +114,7 @@ public class Prompt {
 
     @Override
     public int hashCode() {
-        int result = characters != null ? characters.hashCode() : 0;
+        int result = ansiString != null ? ansiString.hashCode() : 0;
         result = 31 * result + prompt.hashCode();
         result = 31 * result + (mask != null ? mask.hashCode() : 0);
         return result;

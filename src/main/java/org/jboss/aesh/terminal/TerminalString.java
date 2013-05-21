@@ -9,42 +9,41 @@ package org.jboss.aesh.terminal;
 import org.jboss.aesh.util.ANSI;
 
 /**
- * Value object that describe how a terminal character should be displayed
+ * Value object that describe how a string should be displayed
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class TerminalCharacter {
+public class TerminalString {
 
-    private char character;
+    private String characters;
     private Color backgroundColor;
     private Color textColor;
     private CharacterType type;
 
-    public TerminalCharacter(char c) {
-        this(c, CharacterType.NORMAL);
-    }
-
-    public TerminalCharacter(char c, CharacterType type) {
-        this.character = c;
+    public TerminalString(String chars, Color backgroundColor, Color textColor,
+                          CharacterType type) {
+        this.characters = chars;
         this.type = type;
-        textColor = Color.DEFAULT_TEXT;
-        backgroundColor = Color.DEFAULT_BG;
+        this.backgroundColor = backgroundColor;
+        this.textColor = textColor;
     }
 
-    public TerminalCharacter(char c, Color background, Color text) {
-        this(c,background, text, CharacterType.NORMAL);
+    public TerminalString(String chars, Color backgroundColor, Color textColor) {
+        this(chars, backgroundColor, textColor, CharacterType.NORMAL);
     }
 
-    public TerminalCharacter(char c, Color background, Color text,
-                             CharacterType type) {
-        this(c, type);
-        this.backgroundColor = background;
-        this.textColor = text;
+    public TerminalString(String chars, CharacterType type) {
+        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, type);
     }
 
-    public char getCharacter() {
-        return character;
+    public TerminalString(String chars) {
+        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, CharacterType.NORMAL);
     }
+
+    public String getCharacters() {
+        return characters;
+    }
+
 
     public CharacterType getType() {
         return type;
@@ -61,9 +60,9 @@ public class TerminalCharacter {
     /**
      * type, text color, background color
      */
-    public String getAsString(TerminalCharacter prev) {
+    public String getAsString(TerminalString prev) {
         if(equalsIgnoreCharacter(prev))
-            return String.valueOf(character);
+            return characters;
         else {
             StringBuilder builder = new StringBuilder();
             builder.append(ANSI.getStart());
@@ -76,7 +75,7 @@ public class TerminalCharacter {
                 builder.append(';').append(this.getBackgroundColor().getValue());
 
             builder.append('m');
-            builder.append(getCharacter());
+            builder.append(getCharacters());
             return builder.toString();
         }
     }
@@ -88,11 +87,11 @@ public class TerminalCharacter {
         builder.append(this.getTextColor().getValue()).append(';');
         builder.append(this.getBackgroundColor().getValue());
         builder.append('m');
-        builder.append(getCharacter());
+        builder.append(getCharacters());
         return builder.toString();
     }
 
-    public boolean equalsIgnoreCharacter(TerminalCharacter that) {
+    public boolean equalsIgnoreCharacter(TerminalString that) {
         if (type != that.type) return false;
         if (backgroundColor != that.backgroundColor) return false;
         if (textColor != that.textColor) return false;
@@ -103,21 +102,21 @@ public class TerminalCharacter {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TerminalCharacter)) return false;
+        if (!(o instanceof TerminalString)) return false;
 
-        TerminalCharacter that = (TerminalCharacter) o;
+        TerminalString that = (TerminalString) o;
 
-        if (type != that.type) return false;
-        if (character != that.character) return false;
         if (backgroundColor != that.backgroundColor) return false;
+        if (!characters.equals(that.characters)) return false;
         if (textColor != that.textColor) return false;
+        if (type != that.type) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = (int) character;
+        int result = characters.hashCode();
         result = 31 * result + backgroundColor.hashCode();
         result = 31 * result + textColor.hashCode();
         result = 31 * result + type.hashCode();
@@ -126,12 +125,11 @@ public class TerminalCharacter {
 
     @Override
     public String toString() {
-        return "TerminalCharacter{" +
-                "character=" + character +
+        return "TerminalString{" +
+                "characters='" + characters + '\'' +
                 ", backgroundColor=" + backgroundColor +
                 ", textColor=" + textColor +
                 ", type=" + type +
                 '}';
     }
-
- }
+}
