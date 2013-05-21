@@ -233,6 +233,14 @@ public class ViEditMode implements EditMode {
                 return operation;
             else if(operation == Operation.HISTORY_NEXT && workingMode.equals(Action.EDIT))
                 return operation;
+            else if(operation == Operation.MOVE_BEGINNING && workingMode.equals(Action.EDIT)) //home
+                return operation;
+            else if(operation == Operation.MOVE_END && workingMode.equals(Action.EDIT)) //end
+                return operation;
+
+            //pgup / pgdown
+            else if(operation == Operation.PGDOWN || operation == Operation.PGUP)
+                return Operation.NO_ACTION;
 
 
             if(!isInEditMode())

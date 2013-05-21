@@ -430,7 +430,9 @@ public class Console {
             }
 
             //we have a paste that contain enter
-            if(in.length > 1 && Key.ENTER.containKey(in)) {
+            if(in.length > 1 && Key.ENTER.containKey(in) &&
+                    //dont want ctrl chars in a paste
+                    !Key.ESC.containKey(in)) {
                 //split it up based on enter, atm we assuming its only chars
                 // not special chars like delete, arrow up, etc
                 List<String> lines = new ArrayList<String>();

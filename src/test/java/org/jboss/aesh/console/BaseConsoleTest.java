@@ -30,7 +30,6 @@ public abstract class BaseConsoleTest {
         settings.setTerminal(new TestTerminal());
         settings.setInputStream(is);
         settings.setStdOut(new ByteArrayOutputStream());
-        settings.setEditMode(Mode.EMACS);
         settings.resetEditMode();
         settings.setReadAhead(false);
         if(!Config.isOSPOSIXCompatible())

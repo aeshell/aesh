@@ -147,26 +147,13 @@ public class Settings {
 
     public KeyOperationManager getOperationManager() {
         if(operationManager.getOperations().size() < 1) {
-            if(Config.isOSPOSIXCompatible()) {
-                if(getEditMode() == Mode.EMACS)
-                    operationManager.addOperations(KeyOperationFactory.generatePOSIXEmacsMode());
-                else
-                    operationManager.addOperations(KeyOperationFactory.generatePOSIXViMode());
-
-            }
-            else {
-                if(getEditMode() == Mode.EMACS)
-                    operationManager.addOperations(KeyOperationFactory.generateWindowsEmacsMode());
-                else
-                    operationManager.addOperations(KeyOperationFactory.generateWindowsViMode());
-            }
+            if(getEditMode() == Mode.EMACS)
+                operationManager.addOperations(KeyOperationFactory.generateEmacsMode());
+            else
+                operationManager.addOperations(KeyOperationFactory.generateViMode());
         }
         return operationManager;
     }
-
-
-
-
 
     /**
      * If not set the history file will be:

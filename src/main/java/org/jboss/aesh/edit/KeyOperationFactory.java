@@ -20,10 +20,34 @@ import java.util.List;
  */
 public class KeyOperationFactory {
 
-    public static List<KeyOperation> generatePOSIXEmacsMode() {
-        List<KeyOperation> keys = generateGenericEmacsKeys();
+    public static List<KeyOperation> generateEmacsMode() {
+        List<KeyOperation> keys = new ArrayList<KeyOperation>();
 
         keys.add(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
+
+        keys.add(new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING));
+        keys.add(new KeyOperation(Key.CTRL_B, Operation.MOVE_PREV_CHAR));
+        //ctrl-d, if pressed on a line with chars it will cause the
+        //action delete_next_char else exit
+        keys.add(new KeyOperation(Key.CTRL_D, Operation.EXIT));
+        keys.add(new KeyOperation(Key.CTRL_E, Operation.MOVE_END));
+        keys.add(new KeyOperation(Key.CTRL_F, Operation.MOVE_NEXT_CHAR));
+        keys.add(new KeyOperation(Key.CTRL_G, Operation.ABORT));
+        keys.add(new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR));
+        keys.add(new KeyOperation(Key.CTRL_I, Operation.COMPLETE));
+        keys.add(new KeyOperation(Key.CTRL_K, Operation.DELETE_END));
+        keys.add(new KeyOperation(Key.CTRL_L, Operation.CLEAR));
+        keys.add(new KeyOperation(Key.CTRL_N, Operation.HISTORY_NEXT));
+        keys.add(new KeyOperation(Key.CTRL_P, Operation.HISTORY_PREV));
+        keys.add(new KeyOperation(Key.CTRL_R, Operation.SEARCH_PREV));
+        keys.add(new KeyOperation(Key.CTRL_S, Operation.SEARCH_NEXT_WORD));
+        keys.add(new KeyOperation(Key.CTRL_U, Operation.DELETE_BEGINNING));
+        keys.add(new KeyOperation(Key.CTRL_V, Operation.PASTE_FROM_CLIPBOARD));
+        keys.add(new KeyOperation(Key.CTRL_W, Operation.DELETE_PREV_BIG_WORD));
+        //keys.add(new KeyOperation(24, Operation.NO_ACTION)); ctrl-x
+        keys.add(new KeyOperation(Key.CTRL_Y, Operation.PASTE_BEFORE));
+
+        keys.add(new KeyOperation(Key.CTRL_X_CTRL_U, Operation.UNDO)); //ctrl-x ctrl-u
 
         keys.add(new KeyOperation(Key.UNIT_SEPARATOR, Operation.UNDO));
         keys.add(new KeyOperation(Key.BACKSPACE, Operation.DELETE_PREV_CHAR));
@@ -56,109 +80,10 @@ public class KeyOperationFactory {
         return keys;
     }
 
-    public static List<KeyOperation> generateWindowsEmacsMode() {
-        List<KeyOperation> keys = generateGenericEmacsKeys();
-        keys.addAll(generatePOSIXEmacsMode());
-        //keys.add(new KeyOperation(3, Operation.EXIT)); //ctrl-c
-        /*
-        keys.add(new KeyOperation(8, Operation.DELETE_PREV_CHAR)); // backspace
-        keys.add(new KeyOperation(13, Operation.NEW_LINE));
-
-        //movement
-        keys.add(new KeyOperation(new int[]{224,72}, Operation.HISTORY_PREV));   //arrow up
-        keys.add(new KeyOperation(new int[]{224,80}, Operation.HISTORY_NEXT));   //arrow down
-        keys.add(new KeyOperation(new int[]{224,77}, Operation.MOVE_NEXT_CHAR)); //arrow right
-        keys.add(new KeyOperation(new int[]{224,75}, Operation.MOVE_PREV_CHAR)); //arrow left
-
-        //meta, alt gr on windows
-        keys.add(new KeyOperation(new int[]{0,33}, Operation.MOVE_NEXT_WORD));   //meta-f
-        keys.add(new KeyOperation(new int[]{0,48}, Operation.MOVE_PREV_WORD));    //meta-b
-        keys.add(new KeyOperation(new int[]{0,32}, Operation.DELETE_NEXT_WORD)); //meta-d
-
-        //pgup, pgdown, end, home
-        keys.add(new KeyOperation(new int[]{224,83}, Operation.DELETE_NEXT_CHAR)); //Delete
-        keys.add(new KeyOperation(new int[]{224,73}, Operation.PGUP));   //pgup
-        keys.add(new KeyOperation(new int[]{224,81}, Operation.PGDOWN));   //pgdown
-        keys.add(new KeyOperation(new int[]{224,71}, Operation.MOVE_BEGINNING));  //home
-        keys.add(new KeyOperation(new int[]{224,79}, Operation.MOVE_END));        //end
-
-        //div
-        keys.add(new KeyOperation(new int[] {0,36}, Operation.VI_EDIT_MODE)); //meta-ctrl-j
-        */
-
-        return keys;
-    }
-
-    private static List<KeyOperation> generateGenericEmacsKeys() {
+    public static List<KeyOperation> generateViMode() {
         List<KeyOperation> keys = new ArrayList<KeyOperation>();
-        keys.add(new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING));
-        keys.add(new KeyOperation(Key.CTRL_B, Operation.MOVE_PREV_CHAR));
-        //ctrl-d, if pressed on a line with chars it will cause the
-        //action delete_next_char else exit
-        keys.add(new KeyOperation(Key.CTRL_D, Operation.EXIT));
-        keys.add(new KeyOperation(Key.CTRL_E, Operation.MOVE_END));
-        keys.add(new KeyOperation(Key.CTRL_F, Operation.MOVE_NEXT_CHAR));
-        keys.add(new KeyOperation(Key.CTRL_G, Operation.ABORT));
-        keys.add(new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR));
-        keys.add(new KeyOperation(Key.CTRL_I, Operation.COMPLETE));
-        keys.add(new KeyOperation(Key.CTRL_K, Operation.DELETE_END));
-        keys.add(new KeyOperation(Key.CTRL_L, Operation.CLEAR));
-        keys.add(new KeyOperation(Key.CTRL_N, Operation.HISTORY_NEXT));
-        keys.add(new KeyOperation(Key.CTRL_P, Operation.HISTORY_PREV));
-        keys.add(new KeyOperation(Key.CTRL_R, Operation.SEARCH_PREV));
-        keys.add(new KeyOperation(Key.CTRL_S, Operation.SEARCH_NEXT_WORD));
-        keys.add(new KeyOperation(Key.CTRL_U, Operation.DELETE_BEGINNING));
-        keys.add(new KeyOperation(Key.CTRL_V, Operation.PASTE_FROM_CLIPBOARD));
-        keys.add(new KeyOperation(Key.CTRL_W, Operation.DELETE_PREV_BIG_WORD));
-        //keys.add(new KeyOperation(24, Operation.NO_ACTION)); ctrl-x
-        keys.add(new KeyOperation(Key.CTRL_Y, Operation.PASTE_BEFORE));
 
-        keys.add(new KeyOperation(Key.CTRL_X_CTRL_U, Operation.UNDO)); //ctrl-x ctrl-u
-
-        return keys;
-    }
-
-    public static List<KeyOperation> generatePOSIXViMode() {
-        List<KeyOperation> keys = generateGenericViMode();
         keys.add(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
-
-        //movement
-        keys.add(new KeyOperation(Key.UP, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
-        keys.add(new KeyOperation(Key.DOWN, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
-        keys.add(new KeyOperation(Key.RIGHT, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
-        keys.add(new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
-
-        keys.add(new KeyOperation(Key.UP_2, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
-        keys.add(new KeyOperation(Key.DOWN_2, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
-        keys.add(new KeyOperation(Key.RIGHT_2, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
-        keys.add(new KeyOperation(Key.LEFT_2, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
-
-        keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.COMMAND)); //Delete
-
-        keys.add(new KeyOperation(Key.PGUP, Operation.PGUP));   //pgup
-        keys.add(new KeyOperation(Key.PGDOWN, Operation.PGDOWN));   //pgdown
-
-        return keys;
-    }
-
-
-    public static List<KeyOperation> generateWindowsViMode() {
-        List<KeyOperation> keys = generateGenericViMode();
-        keys.addAll(generatePOSIXViMode());
-        /*
-        keys.add(new KeyOperation(13, Operation.NEW_LINE));
-        keys.add(new KeyOperation(new int[]{224,83}, Operation.DELETE_NEXT_CHAR, Action.COMMAND)); //Delete
-
-        keys.add(new KeyOperation(new int[]{224,73}, Operation.PGUP));   //pgup
-        keys.add(new KeyOperation(new int[]{224,81}, Operation.PGDOWN));   //pgdown
-        */
-
-        return keys;
-    }
-
-
-    private static List<KeyOperation> generateGenericViMode() {
-        List<KeyOperation> keys = new ArrayList<KeyOperation>();
         //ctrl-d, if pressed on a line with chars it will cause the
         //action delete_next_char else exit
         keys.add(new KeyOperation(Key.CTRL_D, Operation.EXIT));
@@ -210,6 +135,25 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.u, Operation.UNDO)); //u
         //backspace
         keys.add(new KeyOperation(Key.BACKSPACE, Operation.DELETE_PREV_CHAR));
+
+        //movement
+        keys.add(new KeyOperation(Key.UP, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
+        keys.add(new KeyOperation(Key.DOWN, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
+        keys.add(new KeyOperation(Key.RIGHT, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
+        keys.add(new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+
+        keys.add(new KeyOperation(Key.UP_2, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
+        keys.add(new KeyOperation(Key.DOWN_2, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
+        keys.add(new KeyOperation(Key.RIGHT_2, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
+        keys.add(new KeyOperation(Key.LEFT_2, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+
+        keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.COMMAND)); //Delete
+
+        keys.add(new KeyOperation(Key.PGUP, Operation.PGUP));   //pgup
+        keys.add(new KeyOperation(Key.PGDOWN, Operation.PGDOWN));   //pgdown
+
+        keys.add(new KeyOperation(Key.HOME, Operation.MOVE_BEGINNING, Action.EDIT));  //home
+        keys.add(new KeyOperation(Key.END, Operation.MOVE_END, Action.EDIT));        //end
 
         return keys;
     }

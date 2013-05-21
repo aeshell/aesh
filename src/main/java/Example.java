@@ -41,7 +41,7 @@ public class Example {
     public static void main(String[] args) throws IOException {
 
         //Settings.getInstance().setAnsiConsole(false);
-        Settings.getInstance().setReadInputrc(true);
+        Settings.getInstance().setReadInputrc(false);
         Settings.getInstance().setLogging(true);
         Settings.getInstance().setLogFile("aesh_example.log");
         Settings.getInstance().setAliasEnabled(true);

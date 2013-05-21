@@ -7,6 +7,7 @@
 package org.jboss.aesh.edit;
 
 import junit.framework.TestCase;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
 
@@ -47,4 +48,25 @@ public class KeyOperationManagerTest extends TestCase {
        assertEquals(new KeyOperation(Key.l, Operation.MOVE_NEXT_CHAR),
                kom.findOperation(new int[]{108}));
     }
+
+    public void testFindEmacsOperations() {
+        KeyOperationManager kom = new KeyOperationManager();
+        kom.addOperations(KeyOperationFactory.generateEmacsMode());
+
+        if(Config.isOSPOSIXCompatible()) {
+            assertEquals(new KeyOperation(Key.HOME, Operation.MOVE_BEGINNING),
+                    kom.findOperation(new int[]{27,79,72}));
+
+        }
+    }
+
+    public void testFindViOperations() {
+        KeyOperationManager kom = new KeyOperationManager();
+        kom.addOperations(KeyOperationFactory.generateViMode());
+
+        assertEquals(new KeyOperation(Key.CTRL_E, Operation.EMACS_EDIT_MODE),
+                kom.findOperation(new int[]{5}));
+
+    }
+
 }
