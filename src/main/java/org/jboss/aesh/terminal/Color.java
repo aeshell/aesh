@@ -6,8 +6,6 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.jboss.aesh.util.ANSI;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */

@@ -9,7 +9,6 @@ package org.jboss.aesh.console.operator;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.util.FileLister;
-import org.jboss.aesh.util.FileUtils;
 import org.jboss.aesh.util.Parser;
 
 import java.io.File;

@@ -6,7 +6,6 @@
  */
 package org.jboss.aesh.edit;
 
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
 

@@ -216,7 +216,7 @@ public enum Key {
 
     public static Key getKey(int[] otherValues) {
         for(Key key : Key.values()) {
-            if(key.equals(otherValues))
+            if(key.equalTo(otherValues))
                 return key;
         }
         return null;
@@ -242,7 +242,7 @@ public enum Key {
         return false;
     }
 
-    public boolean equals(int[] otherValues) {
+    public boolean equalTo(int[] otherValues) {
         if(keyValues.length == otherValues.length) {
             for(int i=0; i < keyValues.length; i++) {
                 if(keyValues[i] != otherValues[i])
@@ -252,5 +252,7 @@ public enum Key {
         }
         return false;
     }
+
+
 
 }

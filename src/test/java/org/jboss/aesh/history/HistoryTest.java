@@ -12,6 +12,8 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.edit.Mode;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -27,6 +29,8 @@ public class HistoryTest extends BaseConsoleTest {
 
     @Test
     public void testHistory() throws IOException, InterruptedException {
+
+        Settings.getInstance().setEditMode(Mode.EMACS);
 
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
@@ -65,6 +69,7 @@ public class HistoryTest extends BaseConsoleTest {
         console.stop();
     }
 
+    @Test
     public void testHistorySize() {
         History history = new InMemoryHistory(20);
 
@@ -76,6 +81,7 @@ public class HistoryTest extends BaseConsoleTest {
         assertEquals("24", history.getPreviousFetch());
     }
 
+    @Test
     public void testClear() {
         History history = new InMemoryHistory(10);
         history.push("1");
@@ -86,6 +92,7 @@ public class HistoryTest extends BaseConsoleTest {
         assertEquals(null, history.getPreviousFetch());
     }
 
+    @Test
     public void testDupes() {
         History history = new InMemoryHistory(10);
         history.push("1");

@@ -12,7 +12,6 @@ import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.exception.RequiredOptionException;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.util.Parser;
 
 import java.util.ArrayList;

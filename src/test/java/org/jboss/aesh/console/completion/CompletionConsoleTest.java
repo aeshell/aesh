@@ -10,7 +10,6 @@ import org.jboss.aesh.cl.CommandLineParser;
 import org.jboss.aesh.cl.OptionBuilder;
 import org.jboss.aesh.cl.ParameterBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.complete.CompleteOperation;

@@ -8,8 +8,6 @@ package org.jboss.aesh.console.helper;
 
 import org.jboss.aesh.console.Console;
 
-import java.io.IOException;
-
 /**
  * InterruptHook is the handler thats called when an interrupt has occured.
  * Its implementation need to be added to Settings.

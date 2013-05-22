@@ -10,7 +10,6 @@ import org.fusesource.jansi.AnsiOutputStream;
 import org.fusesource.jansi.WindowsAnsiOutputStream;
 import org.fusesource.jansi.internal.WindowsSupport;
 import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
@@ -19,7 +18,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

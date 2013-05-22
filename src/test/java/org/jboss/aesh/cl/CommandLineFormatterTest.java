@@ -8,7 +8,6 @@ package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.console.Config;
 
 /**

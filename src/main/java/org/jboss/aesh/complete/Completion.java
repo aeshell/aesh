@@ -6,8 +6,6 @@
  */
 package org.jboss.aesh.complete;
 
-import java.util.List;
-
 /**
  * To enable auto completion, commands need to implement this interface.
  *

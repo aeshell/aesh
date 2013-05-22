@@ -5,25 +5,34 @@
 
 <module name="Checker">
     <module name="FileTabCharacter">
-        <property name="eachLine" keyValues="true" value="4"/>
+        <property name="eachLine" value="true"/>
     </module>
 
     <module name="RegexpSingleline">
         <!-- \s matches whitespace character, $ matches end of line. -->
-        <property name="format" keyValues="\s+$"/>
-        <property name="message" keyValues="Line has trailing spaces."/>
+        <property name="format" value="\s+$"/>
+        <property name="message" value="Line has trailing spaces."/>
     </module>
 
     <module name="TreeWalker">
 
-	    <!--
-        <property name="cacheFile" keyValues="${checkstyle.cache.file}"/>
--->
+        <!--
+        <property name="cacheFile" value="${checkstyle.cache.file}"/>
+        -->
+
         <!-- Checks for imports                              -->
-        <module name="AvoidStarImport"/>
+        <module name="AvoidStarImport">
+            <property name="allowStaticMemberImports" value="true"/>
+        </module>
         <module name="RedundantImport"/>
-        <!-- Disabled until checkstyle can recognize imports which are used only by javadoc -->
-        <!--<module name="UnusedImports"/>-->
+
+        <module name="UnusedImports" />
+
+        <!--
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="junit.framework"/>
+        </module>
+        -->
 
         <!-- Modifier Checks                                    -->
         <module name="ModifierOrder"/>
@@ -39,7 +48,9 @@
         <module name="EqualsHashCode"/>
         <module name="IllegalInstantiation"/>
         <module name="RedundantThrows">
-            <property name="allowUnchecked" keyValues="true"/>
+            <property name="allowUnchecked" value="true"/>
+            <property name="allowSubclasses" value="true"/>
+            <property name="suppressLoadErrors" value="true"/>
         </module>
 
         <!-- Miscellaneous other checks.                   -->

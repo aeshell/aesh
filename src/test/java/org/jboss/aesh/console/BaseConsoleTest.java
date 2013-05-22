@@ -8,7 +8,6 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.KeyOperation;
-import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.TestTerminal;

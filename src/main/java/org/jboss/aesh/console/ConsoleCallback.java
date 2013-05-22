@@ -23,5 +23,5 @@ public interface ConsoleCallback {
      * @return 0 for success or 1/-1 for failure.
      * @throws IOException
      */
-    public int readConsoleOutput(ConsoleOutput output) throws IOException;
+    int readConsoleOutput(ConsoleOutput output) throws IOException;
 }

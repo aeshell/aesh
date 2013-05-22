@@ -7,7 +7,6 @@
 package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -17,7 +16,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
