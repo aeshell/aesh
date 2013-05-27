@@ -151,14 +151,15 @@ public enum Key {
             new int[]{27,91,67} : new int[]{224,77}),
     LEFT(Config.isOSPOSIXCompatible() ?
             new int[]{27,91,68} : new int[]{224,75}),
+
     UP_2(Config.isOSPOSIXCompatible() ?
-            new int[]{27,79,65} : new int[]{224,72}),
+            InfocmpManager.getUp() : new int[]{224,72}),
     DOWN_2(Config.isOSPOSIXCompatible() ?
-            new int[]{27,79,66} : new int[]{224,80}),
+            InfocmpManager.getDown() : new int[]{224,80}),
     RIGHT_2(Config.isOSPOSIXCompatible() ?
-            new int[]{27,79,67} : new int[]{224,77}),
+            InfocmpManager.getRight() : new int[]{224,77}),
     LEFT_2(Config.isOSPOSIXCompatible() ?
-            new int[]{27,79,68} : new int[]{224,75}),
+            InfocmpManager.getLeft() : new int[]{224,75}),
     //meta
     META_F(Config.isOSPOSIXCompatible() ?
             new int[]{27,102} : new int[]{0,33}),
@@ -169,15 +170,17 @@ public enum Key {
     META_A(new int[]{27,97}),
     //div
     DELETE(Config.isOSPOSIXCompatible() ?
-            new int[]{27,91,51,126} : new int[]{224,83}),
+            InfocmpManager.getDelete() : new int[]{224,83}),
+    INSERT(Config.isOSPOSIXCompatible() ?
+            InfocmpManager.getIns() : new int[]{224,82}),
     PGUP(Config.isOSPOSIXCompatible() ?
-            new int[]{27,91,53,126} : new int[]{224,73}),
+            InfocmpManager.getPgUp() : new int[]{224,73}),
     PGDOWN(Config.isOSPOSIXCompatible() ?
-            new int[]{27,91,54,126} : new int[]{224,81}),
+            InfocmpManager.getPgDown() : new int[]{224,81}),
     HOME(Config.isOSPOSIXCompatible() ?
-            new int[]{27,79,72} : new int[]{224,71}),
+            InfocmpManager.getHome() : new int[]{224,71}),
     END(Config.isOSPOSIXCompatible() ?
-            new int[]{27,79,70} : new int[]{224,79}),
+            InfocmpManager.getEnd() : new int[]{224,79}),
     META_CTRL_J(Config.isOSPOSIXCompatible() ?
             new int[]{27,10} : new int[]{0,36}),
     META_CTRL_D(new int[]{27,4}),

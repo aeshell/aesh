@@ -74,6 +74,7 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.PGDOWN, Operation.PGDOWN));   //pgdown
         keys.add(new KeyOperation(Key.HOME, Operation.MOVE_BEGINNING));  //home
         keys.add(new KeyOperation(Key.END, Operation.MOVE_END));        //end
+        keys.add(new KeyOperation(Key.INSERT, Operation.NO_ACTION));        //insert
 
         keys.add(new KeyOperation(Key.META_CTRL_J, Operation.VI_EDIT_MODE)); //meta-ctrl-j
 
@@ -154,6 +155,7 @@ public class KeyOperationFactory {
 
         keys.add(new KeyOperation(Key.HOME, Operation.MOVE_BEGINNING, Action.EDIT));  //home
         keys.add(new KeyOperation(Key.END, Operation.MOVE_END, Action.EDIT));        //end
+        keys.add(new KeyOperation(Key.INSERT, Operation.NO_ACTION));        //insert
 
         return keys;
     }
