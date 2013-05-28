@@ -20,18 +20,28 @@ public class InfocmpManager {
 
     private static Logger logger = LoggerUtil.getLogger(InfocmpManager.class.getName());
 
-    public static int[] getHome() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("khome");
-        if(infocmpValue.length == 0) {
-            logger.warning("Failed to get home from infocmp, using default");
+    public static int[] getKeyHome() {
+        int[] home = InfocmpHandler.getInstance().getAsInts("khome");
+        if(home.length == 0) {
+            logger.warning("Failed to get key home from infocmp, using default");
             return new int[]{27,79,72}; //use default value
         }
         else
-            return infocmpValue;
+            return home;
+    }
+
+    public static int[] getCursorHome() {
+        int[] home = InfocmpHandler.getInstance().getAsInts("home");
+        if(home.length == 0) {
+            logger.warning("Failed to get cursor home from infocmp, using default");
+            return new int[]{27,91,72}; //use default value
+        }
+        else
+            return home;
     }
 
     public static int[] getEnd() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("kend");
+        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("end");
         if(infocmpValue.length == 0) {
             logger.warning("Failed to get end from infocmp, using default");
             return new int[]{27,79,70}; //use default value

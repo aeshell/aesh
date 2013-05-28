@@ -178,9 +178,12 @@ public enum Key {
     PGDOWN(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getPgDown() : new int[]{224,81}),
     HOME(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getHome() : new int[]{224,71}),
+            InfocmpManager.getKeyHome() : new int[]{224,71}),
+    HOME_2(Config.isOSPOSIXCompatible() ?
+            InfocmpManager.getCursorHome() : new int[]{224,71}),
     END(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getEnd() : new int[]{224,79}),
+    END_2(Config.isOSPOSIXCompatible() ? new int[]{27,91,70} : new int[]{224,79}),
     META_CTRL_J(Config.isOSPOSIXCompatible() ?
             new int[]{27,10} : new int[]{0,36}),
     META_CTRL_D(new int[]{27,4}),
