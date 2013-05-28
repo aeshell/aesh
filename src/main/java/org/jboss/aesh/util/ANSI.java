@@ -36,22 +36,33 @@ public class ANSI {
     private static String CYAN_BG = "\u001B[0;46m";
     private static String WHITE_BG = "\u001B[0;47m";
     private static String DEFAULT_BG = "\u001B[0;49m";
-    private static String ALTERNATE_BUFFER =  "\u001B[?1049h";
-    private static String MAIN_BUFFER =  "\u001B[?1049l";
-    private static String INVERT_BACKGROUND =  "\u001B[7m";
-    private static String NORMAL_BACKGROUND =  "\u001B[27m";
+    private static String ALTERNATE_BUFFER = Config.isOSPOSIXCompatible() ?
+            InfocmpManager.alternateBuffer() : "\u001B[?1049h";
+    private static String MAIN_BUFFER = Config.isOSPOSIXCompatible() ?
+            InfocmpManager.mainBuffer() : "\u001B[?1049l";
+    private static String INVERT_BACKGROUND = Config.isOSPOSIXCompatible() ?
+            InfocmpManager.invertBackground() : "\u001B[7m";
+    private static String NORMAL_BACKGROUND = Config.isOSPOSIXCompatible() ?
+            InfocmpManager.normalBackground() : "\u001B[27m";
     private static String RESET = "\u001B[0;0m";
-    private static String BOLD = "\u001B[0;1m";
+    private static String BOLD = Config.isOSPOSIXCompatible() ?
+            InfocmpManager.enableBold() : "\u001B[0;1m";
     private static String BOLD_OFF = "\u001B[0;22m";
-    private static String UNDERLINE = "\u001B[0;4m";
-    private static String UNDERLINE_OFF = "\u001B[0;24m";
-    private static String BLINK = "\u001B[0;5m";
+    private static String UNDERLINE = Config.isOSPOSIXCompatible() ?
+            InfocmpManager.enableUnderline() : "\u001B[0;4m";
+    private static String UNDERLINE_OFF = Config.isOSPOSIXCompatible() ?
+            InfocmpManager.disableUnderline() : "\u001B[0;24m";
+    private static String BLINK = Config.isOSPOSIXCompatible() ?
+            InfocmpManager.enableBlink() : "\u001B[0;5m";
     private static String BLINK_OFF = "\u001B[0;25m";
     private static String CURSOR_START = "\u001B[1G";
     private static String CURSOR_ROW = "\u001B[6n";
-    private static String CLEAR_SCREEN = Config.isOSPOSIXCompatible() ? InfocmpManager.clearScreen() : "\u001B[2J";
-    private static String CURSOR_SAVE = Config.isOSPOSIXCompatible() ? InfocmpManager.saveCursor() : "\u001B[s";
-    private static String CURSOR_RESTORE = Config.isOSPOSIXCompatible() ? InfocmpManager.restoreCursor() : "\u001B[u";
+    private static String CLEAR_SCREEN = Config.isOSPOSIXCompatible() ?
+            InfocmpManager.clearScreen() : "\u001B[2J";
+    private static String CURSOR_SAVE = Config.isOSPOSIXCompatible() ?
+            InfocmpManager.saveCursor() : "\u001B[s";
+    private static String CURSOR_RESTORE = Config.isOSPOSIXCompatible() ?
+            InfocmpManager.restoreCursor() : "\u001B[u";
 
     private ANSI() {
     }

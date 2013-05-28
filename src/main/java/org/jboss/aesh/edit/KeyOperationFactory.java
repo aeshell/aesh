@@ -148,6 +148,7 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.RIGHT_2, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
         keys.add(new KeyOperation(Key.LEFT_2, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
 
+        keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.EDIT)); //Delete
         keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.COMMAND)); //Delete
 
         keys.add(new KeyOperation(Key.PGUP, Operation.PGUP));   //pgup

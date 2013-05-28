@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-//@Ignore //only run locally as these codes are hardcoded and will/can change from machine to machine
+@Ignore //only run locally as these codes are hardcoded and will/can change from machine to machine
 public class InfocmpHandlerTest {
 
     @Test

@@ -71,7 +71,7 @@ public class InfocmpManager {
     }
 
     public static int[] getRight() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("kcuf1");
+        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("cuf1");
         if(infocmpValue.length == 0) {
             logger.warning("Failed to get right from infocmp, using default");
             return new int[]{27,79,68}; //use default value
@@ -142,13 +142,105 @@ public class InfocmpManager {
     }
 
     public static String clearScreen() {
-        String cursor = InfocmpHandler.getInstance().get("clear");
-        if(cursor.length() == 0) {
+        String clear = InfocmpHandler.getInstance().get("clear");
+        if(clear.length() == 0) {
             logger.warning("Failed to get clear from infocmp, using default");
             return "\u001B[2J";
         }
         else
-            return cursor;
+            return clear;
     }
+
+    public static String alternateBuffer() {
+        String buffer = InfocmpHandler.getInstance().get("smcup");
+        if(buffer.length() == 0) {
+            logger.warning("Failed to get alternate buffer from infocmp, using default");
+            return "\u001B[?1049h";
+        }
+        else
+            return buffer;
+    }
+
+    public static String mainBuffer() {
+        String buffer = InfocmpHandler.getInstance().get("rmcup");
+        if(buffer.length() == 0) {
+            logger.warning("Failed to get main buffer from infocmp, using default");
+            return "\u001B[?1049l";
+        }
+        else
+            return buffer;
+    }
+
+    public static String invertBackground() {
+        String buffer = InfocmpHandler.getInstance().get("smso");
+        if(buffer.length() == 0) {
+            logger.warning("Failed to invert background from infocmp, using default");
+            return "\u001B[7m";
+        }
+        else
+            return buffer;
+    }
+
+    public static String normalBackground() {
+        String buffer = InfocmpHandler.getInstance().get("rmso");
+        if(buffer.length() == 0) {
+            logger.warning("Failed to reset to normal background from infocmp, using default");
+            return "\u001B[27m";
+        }
+        else
+            return buffer;
+    }
+
+    public static String enableBold() {
+        String bold = InfocmpHandler.getInstance().get("bold");
+        if(bold.length() == 0) {
+            logger.warning("Failed to get bold from infocmp, using default");
+            return "\u001B[0;1m";
+        }
+        else
+            return bold;
+    }
+
+    public static String enableUnderline() {
+        String underline = InfocmpHandler.getInstance().get("smul");
+        if(underline.length() == 0) {
+            logger.warning("Failed to get underline from infocmp, using default");
+            return "\u001B[0;4m";
+        }
+        else
+            return underline;
+    }
+
+    public static String disableUnderline() {
+        String underline = InfocmpHandler.getInstance().get("rmul");
+        if(underline.length() == 0) {
+            logger.warning("Failed to exit underline from infocmp, using default");
+            return "\u001B[0;24m";
+        }
+        else
+            return underline;
+    }
+
+    public static String enableBlink() {
+        String blink = InfocmpHandler.getInstance().get("blink");
+        if(blink.length() == 0) {
+            logger.warning("Failed to enable blink from infocmp, using default");
+            return "\u001B[0;5m";
+        }
+        else
+            return blink;
+    }
+
+    public static String originalColors() {
+        String reset = InfocmpHandler.getInstance().get("op");
+        if(reset.length() == 0) {
+            logger.warning("Failed to reset from infocmp, using default");
+            return "\u001B[0;0m";
+        }
+        else
+            return reset;
+    }
+
+
 
 }
