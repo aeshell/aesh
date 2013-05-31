@@ -48,8 +48,6 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(new int[]{27,91,51,126}, Operation.DELETE_NEXT_CHAR)); //Delete
         keys.add(new KeyOperation(new int[]{27,91,53,126}, Operation.PGUP));   //pgup
         keys.add(new KeyOperation(new int[]{27,91,54,126}, Operation.PGDOWN));   //pgdown
-        keys.add(new KeyOperation(new int[]{27,79,72}, Operation.MOVE_BEGINNING));  //home
-        keys.add(new KeyOperation(new int[]{27,79,70}, Operation.MOVE_END));        //end
 
         keys.add(new KeyOperation(new int[] {27,10}, Operation.VI_EDIT_MODE)); //meta-ctrl-j
 
@@ -81,8 +79,6 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(new int[]{224,79}, Operation.MOVE_END));        //end
 
         //div
-        keys.add(new KeyOperation(new int[]{224,83}, Operation.DELETE_NEXT_CHAR)); //delete
-
         keys.add(new KeyOperation(new int[] {0,36}, Operation.VI_EDIT_MODE)); //meta-ctrl-j
 
         return keys;
@@ -113,6 +109,16 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(25, Operation.PASTE_BEFORE));
 
         keys.add(new KeyOperation(new int[] {24,21}, Operation.UNDO)); //ctrl-x ctrl-u
+        keys.add(new KeyOperation(Config.isOSPOSIXCompatible() ? new int[]{27,79,72} : new int[]{224,71},
+                Operation.MOVE_BEGINNING));  //home
+        keys.add(new KeyOperation(Config.isOSPOSIXCompatible() ? new int[]{27,91,72} : new int[]{224,71},
+                Operation.MOVE_BEGINNING));  //home
+        keys.add(new KeyOperation(Config.isOSPOSIXCompatible() ? new int[]{27,79,70} : new int[]{224,79},
+                Operation.MOVE_END));        //end
+        keys.add(new KeyOperation(Config.isOSPOSIXCompatible() ? new int[]{27,91,70} : new int[]{224,79},
+                Operation.MOVE_END));        //end
+        keys.add(new KeyOperation(Config.isOSPOSIXCompatible() ? new int[]{27,91,50,126} : new int[]{224,82},
+                Operation.NO_ACTION));        //insert
 
         return keys;
     }
@@ -199,6 +205,17 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(119, Operation.NEXT_WORD)); //w
         keys.add(new KeyOperation(87, Operation.NEXT_BIG_WORD)); //W
         keys.add(new KeyOperation(32, Operation.NEXT_CHAR)); //space
+
+        keys.add(new KeyOperation(Config.isOSPOSIXCompatible() ? new int[]{27,79,72} : new int[]{224,71},
+                Operation.MOVE_BEGINNING, Action.EDIT));  //home
+        keys.add(new KeyOperation(Config.isOSPOSIXCompatible() ? new int[]{27,91,72} : new int[]{224,71},
+                Operation.MOVE_BEGINNING, Action.EDIT));  //home
+        keys.add(new KeyOperation(Config.isOSPOSIXCompatible() ? new int[]{27,79,70} : new int[]{224,79},
+                Operation.MOVE_END, Action.EDIT));        //end
+        keys.add(new KeyOperation(Config.isOSPOSIXCompatible() ? new int[]{27,91,70} : new int[]{224,79},
+                Operation.MOVE_END, Action.EDIT));        //end
+        keys.add(new KeyOperation(Config.isOSPOSIXCompatible() ? new int[]{27,91,50,126} : new int[]{224,82},
+                Operation.NO_ACTION));        //insert
 
         //repeat
         keys.add(new KeyOperation(46, Operation.REPEAT)); //.
