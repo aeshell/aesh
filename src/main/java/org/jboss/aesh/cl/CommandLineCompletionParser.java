@@ -37,10 +37,27 @@ public class CommandLineCompletionParser {
                 if(line.trim().equals(param.getName()))
                     return new ParsedCompleteObject(false, null, 0);
             }
-            //else we try to complete an option
-            return new ParsedCompleteObject(true);
+            //else we try to complete an option,an option value or arguments
+            String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line.trim());
+            if(lastWord.startsWith("-")) {
+                while(lastWord.startsWith("-"))
+                    lastWord = lastWord.substring(1);
+                if(lastWord.length() == 0)
+                    return new ParsedCompleteObject(false, null, 0);
+                else if(parser.getParameters().get(0).findOption(lastWord) != null ||
+                        parser.getParameters().get(0).findLongOption(lastWord) != null)
+                    return findCompleteObjectValue(line, true);
+                else
+                    return new ParsedCompleteObject(false, null, 0);
+            }
+            else
+                return new ParsedCompleteObject(true);
         }
+        else
+            return optionFinder(line);
+    }
 
+    private ParsedCompleteObject optionFinder(String line) throws CommandLineParserException {
         String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line);
         //last word might be an option
         if(lastWord.startsWith("-") ) {
@@ -50,7 +67,7 @@ public class CommandLineCompletionParser {
             //second to last word also start with -
             if(secLastWord.startsWith("-")) {
                 //do this for now
-                return findCompleteObjectValue(line);
+                return findCompleteObjectValue(line, false);
             }
             //the last word is an option (most likely)
             else {
@@ -66,20 +83,20 @@ public class CommandLineCompletionParser {
                 }
             }
         }
-        //trying to complete a value (a bit crude, but will do for now)
         else
-            return findCompleteObjectValue(line);
+            return findCompleteObjectValue(line, false);
     }
 
     /**
      * Only called when we know that the last word is an option value
+     * If endsWithSpace is true we set the value to an empty string to indicate a value
      */
-    private ParsedCompleteObject findCompleteObjectValue(String line) throws CommandLineParserException {
+    private ParsedCompleteObject findCompleteObjectValue(String line, boolean endsWithSpace) throws CommandLineParserException {
         CommandLine cl = parser.parse(line, true);
         if(cl.getArguments().isEmpty()) {
             ParsedOption po = cl.getOptions().get(cl.getOptions().size()-1);
             return new ParsedCompleteObject( po.getLongName().isEmpty() ? po.getName() : po.getLongName(),
-                    po.getValue(), po.getType(), true);
+                    endsWithSpace ? "" : po.getValue(), po.getType(), true);
         }
         else {
             return new ParsedCompleteObject("",
