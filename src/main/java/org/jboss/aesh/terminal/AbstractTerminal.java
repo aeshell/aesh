@@ -27,12 +27,12 @@ public abstract class AbstractTerminal implements Terminal {
     }
 
     @Override
-    public void writeChar(TerminalCharacter character) throws IOException {
+    public void writeToStdOut(TerminalCharacter character) throws IOException {
         writeToStdOut(character.getAsString());
     }
 
     @Override
-    public void writeChars(List<TerminalCharacter> chars) throws IOException {
+    public void writeToStdOut(List<TerminalCharacter> chars) throws IOException {
         StringBuilder builder = new StringBuilder();
         TerminalCharacter prev = null;
         for(TerminalCharacter c : chars) {
@@ -46,7 +46,7 @@ public abstract class AbstractTerminal implements Terminal {
     }
 
     @Override
-    public void writeString(TerminalString termString) throws IOException {
+    public void writeStdOut(TerminalString termString) throws IOException {
         writeToStdOut(termString.getAsString());
     }
 

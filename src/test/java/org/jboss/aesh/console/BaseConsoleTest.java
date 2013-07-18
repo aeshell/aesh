@@ -24,6 +24,9 @@ import java.io.InputStream;
 public abstract class BaseConsoleTest {
 
     public Console getTestConsole(InputStream is) throws IOException {
+        if(Console.getInstance().isRunning())
+            Console.getInstance().stop();
+
         Settings settings = Settings.getInstance();
         settings.setReadInputrc(false);
         settings.setTerminal(new TestTerminal());

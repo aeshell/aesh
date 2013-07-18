@@ -43,9 +43,10 @@ public class Example {
         //Settings.getInstance().setAnsiConsole(false);
         Settings.getInstance().setReadInputrc(false);
         Settings.getInstance().setLogging(true);
-        Settings.getInstance().setLogFile("aesh_example.log");
-        Settings.getInstance().setAliasEnabled(true);
-        Settings.getInstance().setAliasFile(new File("aesh_aliases.txt"));
+        Settings.getInstance().setLogFile(System.getProperty("user.dir")+System.getProperty("file.separator")+"aesh_example.log");
+        //Settings.getInstance().setAliasEnabled(true);
+        //Settings.getInstance().setAliasFile(new File(System.getProperty("user.dir")+Config.getPathSeparator()+"aesh_aliases.txt"));
+        //Settings.getInstance().setPersistAlias(true);
         //Settings.getInstance().enableOperatorParser(false);
         //Settings.getInstance().setHistoryDisabled(true);
         //Settings.getInstance().setHistoryPersistent(false);

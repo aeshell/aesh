@@ -111,18 +111,18 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
-    public void writeChar(TerminalCharacter character) throws IOException {
+    public void writeToStdOut(TerminalCharacter character) throws IOException {
         writeToStdOut(character.getCharacter());
     }
 
     @Override
-    public void writeChars(List<TerminalCharacter> chars) throws IOException {
+    public void writeToStdOut(List<TerminalCharacter> chars) throws IOException {
         for(TerminalCharacter c : chars)
             writeToStdOut(c.getCharacter());
     }
 
     @Override
-    public void writeString(TerminalString termString) throws IOException {
+    public void writeStdOut(TerminalString termString) throws IOException {
         writeToStdOut(termString.getAsString());
     }
 

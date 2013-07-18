@@ -60,6 +60,21 @@ public interface Terminal {
     void writeToStdOut(char out) throws IOException;
 
     /**
+     * Write a TerminalCharacter to std out
+     */
+    void writeToStdOut(TerminalCharacter c) throws IOException;
+
+    /**
+     * Write a list of TerminalCharacters to std out
+     */
+    void writeToStdOut(List<TerminalCharacter> chars) throws IOException;
+
+    /**
+     * Write a TerminalString to std out
+     */
+    void writeStdOut(TerminalString string) throws IOException;
+
+    /**
      * Write to the standard error stream
      *
      * @param err what goes into the stream
@@ -103,21 +118,6 @@ public interface Terminal {
      * Will not move outside of TerminalSize boundaries
      */
     void moveCursor(int rows, int columns) throws IOException;
-
-    /**
-     * Write a TerminalCharacter to std out
-     */
-    void writeChar(TerminalCharacter c) throws IOException;
-
-    /**
-     * Write a list of TerminalCharacters to std out
-     */
-    void writeChars(List<TerminalCharacter> chars) throws IOException;
-
-    /**
-     * Write a TerminalString to std out
-     */
-    void writeString(TerminalString string) throws IOException;
 
     boolean isEchoEnabled();
 

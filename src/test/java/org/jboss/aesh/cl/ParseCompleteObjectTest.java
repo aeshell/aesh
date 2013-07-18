@@ -25,12 +25,14 @@ public class ParseCompleteObjectTest extends TestCase {
         assertEquals(Boolean.class, pco.getType());
         assertEquals("equal", pco.getName());
         assertTrue(pco.isOption());
+        assertFalse(pco.doDisplayOptions());
 
         pco = completeParser.findCompleteObject("test -f --equal ");
         assertEquals("", pco.getValue());
         assertEquals(Boolean.class, pco.getType());
         assertEquals("equal", pco.getName());
         assertTrue(pco.isOption());
+        assertFalse(pco.doDisplayOptions());
 
         pco = completeParser.findCompleteObject("test -f --equ ");
         assertFalse(pco.isArgument());

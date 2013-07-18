@@ -35,7 +35,9 @@ import org.jboss.aesh.history.InMemoryHistory;
 import org.jboss.aesh.history.SearchDirection;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Terminal;
+import org.jboss.aesh.terminal.TerminalCharacter;
 import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.undo.UndoManager;
 import org.jboss.aesh.util.ANSI;
@@ -292,6 +294,37 @@ public class Console {
                 redirectPipeOutBuffer.append(input);
             else
                 terminal.writeToStdOut(input);
+        }
+    }
+
+    public void pushToStdOut(List<TerminalCharacter> termChars) throws IOException {
+        if(termChars != null && termChars.size() > 0) {
+            if(currentOperation != null &&
+                    ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
+                StringBuilder builder = new StringBuilder();
+                TerminalCharacter prev = null;
+                for(TerminalCharacter c : termChars) {
+                    if(prev == null)
+                        builder.append(c.getAsString());
+                    else
+                        builder.append(c.getAsString(prev));
+                    prev = c;
+                }
+                redirectPipeOutBuffer.append(builder.toString());
+            }
+            else
+                terminal.writeToStdOut(termChars);
+        }
+    }
+
+    public void pushToStdOut(TerminalString terminalString) throws IOException {
+        if(terminalString != null) {
+            if(currentOperation != null &&
+                    ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
+                redirectPipeOutBuffer.append(terminalString.getAsString());
+            }
+            else
+                terminal.writeStdOut(terminalString);
         }
     }
 
