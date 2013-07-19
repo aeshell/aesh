@@ -25,6 +25,7 @@ public class OptionInt {
     private boolean hasValue = true;
     private List<String> values;
     private String argument;
+    private String defaultValue;
     private Class<?> type;
     private boolean required = false;
     private char valueSeparator;
@@ -34,7 +35,7 @@ public class OptionInt {
 
     public OptionInt(char name, String longName, String description, boolean hasValue,
                      String argument, boolean required, char valueSeparator,
-                     boolean isProperty, boolean hasMultipleValues, Class<?> type) throws OptionParserException {
+                     boolean isProperty, boolean hasMultipleValues, String defaultValue, Class<?> type) throws OptionParserException {
         this.name = String.valueOf(name);
         this.longName = longName;
         this.description = description;
@@ -45,6 +46,7 @@ public class OptionInt {
         this.isProperty = isProperty;
         this.type = type;
         this.hasMultipleValues = hasMultipleValues;
+        this.defaultValue = defaultValue;
 
         properties = new HashMap<String, String>();
         values = new ArrayList<String>();
@@ -107,6 +109,10 @@ public class OptionInt {
 
     public String getArgument() {
         return argument;
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
     }
 
     public void addProperty(String name, String value) {

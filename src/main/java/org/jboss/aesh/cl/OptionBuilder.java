@@ -20,6 +20,7 @@ public class OptionBuilder {
     private String longName = "";
     private String description;
     private String argument;
+    private String defaultValue;
     private Class<?> type;
     private boolean hasValue = true;
     private boolean required = false;
@@ -75,6 +76,11 @@ public class OptionBuilder {
         return this;
     }
 
+    public OptionBuilder defaultValue(String defaultValue) {
+        this.defaultValue = defaultValue;
+        return this;
+    }
+
     public OptionBuilder valueSeparator(char valueSeparator) {
         this.valueSeparator = valueSeparator;
         return this;
@@ -82,6 +88,6 @@ public class OptionBuilder {
 
     public OptionInt create() throws OptionParserException {
         return new OptionInt(name, longName, description, hasValue, argument, required,
-                valueSeparator, isProperty, hasMultipleValues, type);
+                valueSeparator, isProperty, hasMultipleValues, defaultValue, type);
     }
 }

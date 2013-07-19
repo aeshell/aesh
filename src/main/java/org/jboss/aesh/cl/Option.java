@@ -84,6 +84,12 @@ public @interface Option {
     boolean required() default false;
 
     /**
+     * If this options has a value the default will be auto completed if it matches
+     * the value already typed
+     */
+    String defaultValue() default "";
+
+    /**
      * Option type, default is String.class
      */
     Class<?> type() default String.class;

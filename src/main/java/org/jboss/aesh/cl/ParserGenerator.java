@@ -42,7 +42,7 @@ public class ParserGenerator {
                         o.name(), o.longName(), o.description(),
                         o.hasValue(), o.argument(), o.required(),
                         o.valueSeparator(), o.isProperty(),
-                        o.hasMultipleValues(), o.type());
+                        o.hasMultipleValues(), o.defaultValue(), o.type());
             }
         }
         return parameterInt;

@@ -69,6 +69,17 @@ public class ParseCompleteObjectTest extends TestCase {
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());
     }
+
+    public void testParseCompleteObject2() throws Exception {
+        CommandLineParser clp = ParserGenerator.generateParser(ParseCompleteTest1.class);
+        CommandLineCompletionParser completeParser = new CommandLineCompletionParser(clp);
+
+        ParsedCompleteObject pco = completeParser.findCompleteObject("test -e ");
+        assertEquals("foo1", pco.getValue());
+        assertEquals(Boolean.class, pco.getType());
+        assertTrue(pco.isOption());
+
+    }
 }
 @Parameter(name = "test", usage = "a simple test",
         options = {
@@ -80,3 +91,14 @@ public class ParseCompleteObjectTest extends TestCase {
                         hasValue = true, required = true, isProperty = true)
         })
 class ParseCompleteTest1 {}
+
+@Parameter(name = "test", usage = "a simple test",
+        options = {
+                @Option(longName = "X", description = "enable X"),
+                @Option(name = 'f', longName = "foo", description = "enable foo"),
+                @Option(name = 'e', longName = "equal", description = "enable equal",
+                        type = Boolean.class, hasValue = true, required = true, defaultValue = "false"),
+                @Option(name = 'D', description = "define properties",
+                        hasValue = true, required = true, isProperty = true)
+        })
+class ParseCompleteTest2 {}

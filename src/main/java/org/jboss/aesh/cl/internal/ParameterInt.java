@@ -62,7 +62,7 @@ public class ParameterInt {
     public void addOption(OptionInt opt) throws OptionParserException {
         this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getName(), opt.getLongName()), opt.getLongName(),
                 opt.getDescription(), opt.hasValue(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
-                opt.isProperty(), opt.hasMultipleValues() , opt.getType()));
+                opt.isProperty(), opt.hasMultipleValues(), opt.getDefaultValue(), opt.getType()));
     }
 
     /**
@@ -79,13 +79,14 @@ public class ParameterInt {
      * @param valueSeparator separator char
      * @param isProperty is it a property
      * @param hasMultipleValues have it multiple values
+     * @param defaultValue the default value
      * @param type what kind of type it is (not used)
      */
     public void addOption(char name, String longName, String description, boolean hasValue,
                      String argument, boolean required, char valueSeparator, boolean isProperty,
-                     boolean hasMultipleValues, Class<?> type) throws OptionParserException {
+                     boolean hasMultipleValues, String defaultValue, Class<?> type) throws OptionParserException {
         options.add(new OptionInt(verifyThatNamesAreUnique(name, longName), longName, description,
-                hasValue, argument, required, valueSeparator, isProperty, hasMultipleValues, type));
+                hasValue, argument, required, valueSeparator, isProperty, hasMultipleValues, defaultValue, type));
     }
 
     /**
@@ -104,7 +105,7 @@ public class ParameterInt {
     public void addOption(char name, String longName, String description, boolean hasValue,
                      String argument, boolean required, boolean hasMultipleValues, Class<?> type) throws OptionParserException {
         options.add(new OptionInt(verifyThatNamesAreUnique(name, longName), longName, description,
-                hasValue, argument, required, '\u0000', false, hasMultipleValues, type));
+                hasValue, argument, required, '\u0000', false, hasMultipleValues, "", type));
     }
 
     /**
@@ -124,7 +125,7 @@ public class ParameterInt {
         for(OptionInt opt : options) {
             this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getName(), opt.getLongName()), opt.getLongName(),
                     opt.getDescription(), opt.hasValue(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
-                    opt.isProperty(), opt.hasMultipleValues(), opt.getType()));
+                    opt.isProperty(), opt.hasMultipleValues(), opt.getDefaultValue(), opt.getType()));
         }
     }
 
