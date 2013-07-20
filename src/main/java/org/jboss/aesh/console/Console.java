@@ -414,7 +414,11 @@ public class Console {
                 //to the list and then pushed as soon as read(..) is called again
                 if(lines.size() > 0) {
                 String firstLine = lines.remove(0);
-                    buffer.write(firstLine);
+                    if(buffer.isMasking()) {
+                       buffer.setLine(buffer.getLineNoMask()+firstLine);
+                    }
+                    else
+                        buffer.write(firstLine);
                     pushToStdOut(firstLine);
                     printNewline();
                     addToHistory(buffer.getLine());

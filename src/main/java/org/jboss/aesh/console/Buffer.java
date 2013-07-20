@@ -109,6 +109,10 @@ public class Buffer {
         this.cursor = cursor ;
     }
 
+    public boolean isMasking() {
+        return mask != null;
+    }
+
     /**
      * Need to disable prompt in calculations involving search.
      *
