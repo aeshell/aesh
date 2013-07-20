@@ -22,7 +22,6 @@ import org.jboss.aesh.terminal.TerminalCharacter;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ANSI;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

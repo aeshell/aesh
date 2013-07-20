@@ -75,7 +75,6 @@ public class ParseCompleteObjectTest extends TestCase {
         CommandLineCompletionParser completeParser = new CommandLineCompletionParser(clp);
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e ");
-        assertEquals("foo1", pco.getValue());
         assertEquals(Boolean.class, pco.getType());
         assertTrue(pco.isOption());
 
