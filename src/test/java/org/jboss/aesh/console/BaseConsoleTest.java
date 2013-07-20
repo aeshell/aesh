@@ -24,8 +24,6 @@ import java.io.InputStream;
 public abstract class BaseConsoleTest {
 
     public Console getTestConsole(InputStream is) throws IOException {
-        if(Console.getInstance().isRunning())
-            Console.getInstance().stop();
 
         Settings settings = Settings.getInstance();
         settings.setReadInputrc(false);
@@ -34,10 +32,19 @@ public abstract class BaseConsoleTest {
         settings.setStdOut(new ByteArrayOutputStream());
         settings.resetEditMode();
         settings.setReadAhead(false);
+
         if(!Config.isOSPOSIXCompatible())
             settings.setAnsiConsole(false);
 
         settings.getOperationManager().addOperation(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
+
+        while(Console.getInstance().isRunning()) {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         Console.getInstance().reset();
         return Console.getInstance();
     }

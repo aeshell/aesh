@@ -155,6 +155,10 @@ public class Buffer {
         return multiLineBuffer.toString();
     }
 
+    public boolean isMasking() {
+        return mask != null;
+    }
+
     /**
      * Need to disable prompt in calculations involving search.
      *

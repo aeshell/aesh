@@ -92,6 +92,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         outputStream.write("\n".getBytes());
 
         Thread.sleep(100);
+        console.stop();
     }
 
     @Test
@@ -150,6 +151,8 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         outputStream.write("\n".getBytes());
 
         Thread.sleep(100);
+
+        console.stop();
     }
 
     class CompletionConsoleCallback implements ConsoleCallback {

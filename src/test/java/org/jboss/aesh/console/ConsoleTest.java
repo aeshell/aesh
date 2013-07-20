@@ -40,6 +40,7 @@ public class ConsoleTest extends BaseConsoleTest {
         outputStream.write(("foo \\").getBytes());
         outputStream.write(("\n").getBytes());
         outputStream.write(("bar\n").getBytes());
+        outputStream.flush();
 
         Thread.sleep(100);
         console.stop();

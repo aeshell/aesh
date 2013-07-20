@@ -479,7 +479,14 @@ public class Console {
                         current.append((char) i);
                 }
                 for(String line : lines) {
-                    buffer.write(line);
+                    //if we're masking the cursor is always at first pos.
+                    if(buffer.isMasking() && buffer.getLineNoMask().length() > 0) {
+                       StringBuilder builder = new StringBuilder(buffer.getLineNoMask());
+                        builder.append(line);
+                        buffer.setLine(builder.toString());
+                    }
+                    else
+                        buffer.write(line);
                     pushToStdOut(line);
                     printNewline();
                     addToHistory(buffer.getLine());
