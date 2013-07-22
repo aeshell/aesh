@@ -6,7 +6,7 @@ apply plugin: 'application'
 apply plugin: 'checkstyle'
 
 group = 'org.jboss.aesh'
-version = '0.33.5'
+version = '0.33.6'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
