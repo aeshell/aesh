@@ -480,22 +480,30 @@ public class Console {
                 }
                 for(String line : lines) {
                     //if we're masking the cursor is always at first pos.
-                    if(buffer.isMasking() && buffer.getLineNoMask().length() > 0) {
+                    if(buffer.isMasking()) {
                        StringBuilder builder = new StringBuilder(buffer.getLineNoMask());
                         builder.append(line);
                         buffer.setLine(builder.toString());
                     }
-                    else
+                    else {
                         buffer.write(line);
-                    pushToStdOut(line);
+                        pushToStdOut(line);
+                        addToHistory(buffer.getLine());
+                    }
                     printNewline();
-                    addToHistory(buffer.getLine());
-                    processOperationResult(buffer.getLine());
+                    processOperationResult(buffer.getLineNoMask());
                 }
                 //if we have some chars after the last enter, paste that is as well
                 if(current.length() > 0) {
-                    buffer.write(current.toString());
-                    pushToStdOut(buffer.getLine());
+                    if(buffer.isMasking()) {
+                        StringBuilder builder = new StringBuilder(buffer.getLineNoMask());
+                        builder.append(current);
+                        buffer.setLine(builder.toString());
+                    }
+                    else {
+                        buffer.write(current.toString());
+                        pushToStdOut(buffer.getLine());
+                    }
                 }
             }
             //a "normal" line, no paste etc...
@@ -1098,7 +1106,7 @@ public class Console {
     }
 
     private void redrawLine() throws IOException {
-        drawLine(buffer.getPrompt().getPromptAsString()+ buffer.getLine());
+        drawLine(buffer.getPrompt().getPromptAsString() + buffer.getLine());
     }
 
     private void drawLine(String line) throws IOException {
