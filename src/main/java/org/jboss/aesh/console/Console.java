@@ -375,9 +375,12 @@ public class Console {
 
         if(pasteLines.size() > 0) {
             buffer.write(pasteLines.get(0));
-            pushToStdOut(pasteLines.get(0));
-            if(pasteLines.size() > 1)
+            if(!buffer.isMasking())
+                pushToStdOut(pasteLines.get(0));
+            if(pasteLines.size() > 1) {
+                printNewline();
                 return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, pasteLines.remove(0)));
+            }
             else
                 pasteLines.remove(0);
         }
@@ -419,7 +422,8 @@ public class Console {
                     }
                     else
                         buffer.write(firstLine);
-                    pushToStdOut(firstLine);
+                    if(!buffer.isMasking())
+                        pushToStdOut(firstLine);
                     printNewline();
                     addToHistory(buffer.getLine());
                     if(lines.size() > 0) {
