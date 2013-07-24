@@ -7,12 +7,10 @@
 package org.jboss.aesh.console.helper;
 
 import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.settings.Settings;
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
 
 import java.io.IOException;
-
 
 /**
  * A simple InterruptHandler, for now it only handles INT.
@@ -23,15 +21,17 @@ import java.io.IOException;
 public class InterruptHandler {
 
     private Console console;
+    private InterruptHook interruptHook;
 
-    public InterruptHandler(Console console) {
+    public InterruptHandler(Console console, InterruptHook interruptHook) {
+        this.interruptHook = interruptHook;
         this.console = console;
     }
 
     public void initInterrupt() throws IOException {
         SignalHandler handler = new SignalHandler () {
             public void handle(Signal sig) {
-                Settings.getInstance().getInterruptHook().handleInterrupt(console);
+                interruptHook.handleInterrupt(console);
             }
         };
         Signal.handle(new Signal("INT"), handler);

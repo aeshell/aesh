@@ -7,14 +7,12 @@
 package org.jboss.aesh.util;
 
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.settings.Settings;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.logging.Logger;
 
 /**
  * Helper to find proper files/directories given partial paths/filenames.
@@ -24,12 +22,8 @@ import java.util.logging.Logger;
  */
 public class FileUtils {
 
-    private static Logger logger = LoggerUtil.getLogger(FileUtils.class.getName());
-
     public static void saveFile(File file, String text, boolean append) throws IOException {
         if(file.isDirectory()) {
-            if(Settings.getInstance().isLogging())
-                logger.info("Cannot save file "+file+", it is a directory");
             throw new IOException(file+": Is a directory");
         }
         else if(file.isFile()) {
@@ -56,8 +50,6 @@ public class FileUtils {
 
     public static String readFile(File file) throws IOException {
         if(file.isDirectory()) {
-            if(Settings.getInstance().isLogging())
-                logger.info("Cannot save file "+file+", it is a directory");
             throw new IOException(file+": Is a directory");
         }
         else if(file.isFile()) {
@@ -77,8 +69,6 @@ public class FileUtils {
             }
         }
         else {
-            if(Settings.getInstance().isLogging())
-                logger.info("Cannot read file "+file+", file unknown");
             throw new IOException(file+": File unknown");
         }
     }

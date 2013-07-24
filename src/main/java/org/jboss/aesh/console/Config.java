@@ -152,7 +152,7 @@ public class Config {
                     settings.setEditMode(Mode.EMACS);
             }
             // should log some error
-            else if(Settings.getInstance().isLogging())
+            else if(settings.isLogging())
                 logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+EDITING_MODE.getValues());
 
@@ -160,7 +160,7 @@ public class Config {
         else if(variable.equals(BELL_STYLE.getVariable())) {
             if(BELL_STYLE.getValues().contains(value))
                 settings.setBellStyle(value);
-            else if(Settings.getInstance().isLogging())
+            else if(settings.isLogging())
                 logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+BELL_STYLE.getValues());
         }
@@ -169,7 +169,7 @@ public class Config {
                 settings.setHistorySize(Integer.parseInt(value));
             }
             catch (NumberFormatException nfe) {
-                if(Settings.getInstance().isLogging())
+                if(settings.isLogging())
                     logger.warning("Value "+value+" not accepted for: "
                             +variable+", it must be an integer.");
             }
@@ -181,7 +181,7 @@ public class Config {
                 else
                     settings.setDisableCompletion(false);
             }
-            else if(Settings.getInstance().isLogging())
+            else if(settings.isLogging())
                 logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+DISABLE_COMPLETION.getValues());
         }
@@ -250,13 +250,13 @@ public class Config {
 
           }
         catch (ClassNotFoundException e) {
-            if(Settings.getInstance().isLogging())
+            if(settings.isLogging())
                 logger.log(Level.SEVERE, "Fail while finding class: ", e);
         } catch (InstantiationException e) {
-            if(Settings.getInstance().isLogging())
+            if(settings.isLogging())
                 logger.log(Level.SEVERE, "Fail while instantiating class: ", e);
         } catch (IllegalAccessException e) {
-            if(Settings.getInstance().isLogging())
+            if(settings.isLogging())
                 logger.log(Level.SEVERE, "Fail while accessing class: ", e);
         }
     }

@@ -103,6 +103,7 @@ public class Console {
 
     //create a holder for console, it will not be called before the getInstance()
     //method is called
+    /*
     private static class ConsoleHolder {
         static final Console INSTANCE = new Console();
     }
@@ -110,11 +111,12 @@ public class Console {
     public static Console getInstance() {
         return ConsoleHolder.INSTANCE;
     }
+    */
 
-    private Console() {
-        settings = Settings.getInstance();
+    public Console(final Settings settings) {
+        this.settings = settings;
         try {
-            reset();
+            init();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -123,7 +125,7 @@ public class Console {
         if(settings.hasInterruptHook()) {
             try {
                 if(Class.forName("sun.misc.Signal") != null)
-                    new InterruptHandler(this).initInterrupt();
+                    new InterruptHandler(this, settings.getInterruptHook()).initInterrupt();
             }
             catch(ClassNotFoundException e) {
                 if(settings.isLogging())
@@ -137,8 +139,8 @@ public class Console {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void start() {
                 try {
-                    Settings.getInstance().getTerminal().reset();
-                    Settings.getInstance().quit();
+                    settings.getTerminal().reset();
+                    settings.quit();
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -154,22 +156,22 @@ public class Console {
      *
      * @throws IOException stream
      */
-    public synchronized void reset() throws IOException {
+    private void init() throws IOException {
         if(running)
             throw new RuntimeException("Cant reset an already running Console, must stop if first!");
         //if we already have reset, just return
         if(executorService != null && !executorService.isShutdown()) {
             return;
         }
-        if(Settings.getInstance().isLogging())
+        if(settings.isLogging())
             logger.info("RESET");
 
         executorService = Executors.newSingleThreadExecutor();
 
-         if(Settings.getInstance().doReadInputrc())
-            Config.parseInputrc(Settings.getInstance());
+         if(settings.doReadInputrc())
+            Config.parseInputrc(settings);
 
-        Config.readRuntimeProperties(Settings.getInstance());
+        Config.readRuntimeProperties(settings);
 
         setTerminal(settings.getTerminal(),
                 settings.getInputStream(), settings.getStdOut(), settings.getStdErr());
@@ -178,7 +180,7 @@ public class Console {
 
         undoManager = new UndoManager();
         pasteManager = new PasteManager();
-        buffer = new Buffer(null);
+        buffer = new Buffer(settings.isAnsiConsole(), null);
         if(settings.isHistoryPersistent())
             history = new FileHistory(settings.getHistoryFile().getAbsolutePath(),
                     settings.getHistorySize());
@@ -191,9 +193,9 @@ public class Console {
         completionList.add(new RedirectionCompletion());
 
         //enable aliasing
-        if(Settings.getInstance().isAliasEnabled()) {
-            logger.info("enable aliasmanager with file: "+Settings.getInstance().getAliasFile());
-            aliasManager = new AliasManager(Settings.getInstance().getAliasFile());
+        if(settings.isAliasEnabled()) {
+            logger.info("enable aliasmanager with file: "+settings.getAliasFile());
+            aliasManager = new AliasManager(settings.getAliasFile(), settings.doPersistAlias(), settings.getName());
             completionList.add(new AliasCompletion(aliasManager));
         }
 
@@ -381,15 +383,16 @@ public class Console {
             terminal.reset();
             //terminal = null;
             history.stop();
-            aliasManager.persist();
-            if(Settings.getInstance().isLogging())
+            if(aliasManager != null)
+                aliasManager.persist();
+            if(settings.isLogging())
                 logger.info("Done stopping reading thread. Terminal is reset");
         }
         finally {
             settings.getInputStream().close();
             settings.getStdErr().close();
             settings.getStdOut().close();
-            if(Settings.getInstance().isLogging())
+            if(settings.isLogging())
                 logger.info("Streams are closed");
         }
     }
@@ -452,7 +455,7 @@ public class Console {
             }
 
             int[] in = terminal.read(settings.isReadAhead());
-            if(Settings.getInstance().isLogging()) {
+            if(settings.isLogging()) {
                 logger.info("GOT: "+ Arrays.toString(in));
             }
             //close thread, exit
@@ -523,7 +526,7 @@ public class Console {
             }
         }
         catch (IOException ioe) {
-            if(Settings.getInstance().isLogging())
+            if(settings.isLogging())
                 logger.severe("Stream failure: "+ioe);
         }
     }
@@ -541,7 +544,7 @@ public class Console {
                 if(result.startsWith(" "))
                     result = Parser.trimInFront(result);
 
-                if(Settings.getInstance().isOperatorParserEnabled())
+                if(settings.isOperatorParserEnabled())
                     operations = ControlOperatorParser.findAllControlOperators(result);
                 else {
                     //if we do not parse operators just add ControlOperator.NONE
@@ -577,7 +580,7 @@ public class Console {
             }
         }
         catch (IOException ioe) {
-            if(Settings.getInstance().isLogging())
+            if(settings.isLogging())
                 logger.severe("Stream failure: "+ioe);
         }
     }
@@ -648,8 +651,8 @@ public class Console {
             complete();
         }
         else if(action == Action.EXIT) {
-            if(Settings.getInstance().hasInterruptHook())
-                Settings.getInstance().getInterruptHook().handleInterrupt(this);
+            if(settings.hasInterruptHook())
+                settings.getInterruptHook().handleInterrupt(this);
             stop();
             System.exit(0);
         }
@@ -836,14 +839,14 @@ public class Console {
      */
     private void changeEditMode(Movement movement) {
         if(editMode.getMode() == Mode.EMACS && movement == Movement.PREV) {
-            Settings.getInstance().setEditMode(Mode.VI);
-            Settings.getInstance().resetEditMode();
+            settings.setEditMode(Mode.VI);
+            settings.resetEditMode();
         }
         else if(editMode.getMode() == Mode.VI && movement == Movement.NEXT) {
-            Settings.getInstance().setEditMode(Mode.EMACS);
-            Settings.getInstance().resetEditMode();
+            settings.setEditMode(Mode.EMACS);
+            settings.resetEditMode();
         }
-        editMode = Settings.getInstance().getFullEditMode();
+        editMode = settings.getFullEditMode();
     }
 
     private void getHistoryElement(boolean first) throws IOException {
@@ -883,7 +886,7 @@ public class Console {
                     if((newLine.length()+buffer.getPrompt().getLength()) % terminal.getSize().getWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
-                        if(Settings.getInstance().isLogging()) {
+                        if(settings.isLogging()) {
                             int totalRows = (newLine.length()+buffer.getPrompt().getLength()) / terminal.getSize().getWidth() +1;
                             logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
                                     ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
@@ -1120,7 +1123,7 @@ public class Console {
             if(currentRow > 0 && buffer.getCursorWithPrompt() % terminal.getSize().getWidth() == 0)
                 currentRow--;
 
-            if(Settings.getInstance().isLogging()) {
+            if(settings.isLogging()) {
                 logger.info("actual position: "+terminal.getCursor());
                 logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
                         +", width:"+terminal.getSize().getWidth()+", height:"+terminal.getSize().getHeight()
@@ -1264,7 +1267,7 @@ public class Console {
                 possibleCompletions.add(co);
         }
 
-        if(Settings.getInstance().isLogging())
+        if(settings.isLogging())
             logger.info("Found completions: "+possibleCompletions);
 
         // not hits, just return (perhaps we should beep?)
@@ -1436,7 +1439,7 @@ public class Console {
         }
         //this should never happen (all overwrite_in should be parsed in parseOperations())
         else if(currentOperation.getControlOperator() == ControlOperator.OVERWRITE_IN) {
-            if(Settings.getInstance().isLogging())
+            if(settings.isLogging())
                 logger.info(settings.getName()+": syntax error while reading token: \'<\'");
             pushToStdErr(settings.getName()+": syntax error while reading token: \'<\'");
             return null;
@@ -1496,7 +1499,7 @@ public class Console {
                     }
                 }
                 else {
-                    if(Settings.getInstance().isLogging())
+                    if(settings.isLogging())
                         logger.info(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
                     pushToStdErr(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
                     currentOperation = null;
@@ -1504,7 +1507,7 @@ public class Console {
                 }
             }
             else {
-                if(Settings.getInstance().isLogging())
+                if(settings.isLogging())
                     logger.info(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
                 pushToStdErr(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
                 currentOperation = null;
@@ -1577,7 +1580,7 @@ public class Console {
     private void persistRedirection(String fileName, ControlOperator redirection) throws IOException {
         List<String> fileNames = Parser.findAllWords(fileName);
         if(fileNames.size() > 1) {
-            if(Settings.getInstance().isLogging())
+            if(settings.isLogging())
                 logger.info(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
             pushToStdErr(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
             return;
@@ -1601,7 +1604,7 @@ public class Console {
                 FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeErrBuffer.toString(), true);
         }
         catch (IOException e) {
-            if(Settings.getInstance().isLogging())
+            if(settings.isLogging())
                 logger.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
             pushToStdErr(e.getMessage());
         }

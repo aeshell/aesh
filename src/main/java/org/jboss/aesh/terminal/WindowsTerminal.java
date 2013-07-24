@@ -41,8 +41,8 @@ public class WindowsTerminal extends AbstractTerminal {
 
     private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 
-    public WindowsTerminal() {
-        super(logger);
+    public WindowsTerminal(Settings settings) {
+        super(settings, logger);
     }
 
     @Override
@@ -63,7 +63,7 @@ public class WindowsTerminal extends AbstractTerminal {
 
     @Override
     public int[] read(boolean readAhead) throws IOException {
-        if(Settings.getInstance().isAnsiConsole())
+        if(settings.isAnsiConsole())
             return new int[] {WindowsSupport.readByte()};
         else {
             int input = this.input.read();
@@ -142,7 +142,7 @@ public class WindowsTerminal extends AbstractTerminal {
         height = WindowsSupport.getWindowsTerminalHeight();
         ttyPropsLastFetched = System.currentTimeMillis();
         if(height < 1) {
-            if(Settings.getInstance().isLogging())
+            if(settings.isLogging())
                 logger.log(Level.SEVERE, "Fetched terminal height is "+height+", setting it to 24");
             height = 24;
         }
@@ -154,7 +154,7 @@ public class WindowsTerminal extends AbstractTerminal {
         width = WindowsSupport.getWindowsTerminalWidth();
         ttyPropsLastFetched = System.currentTimeMillis();
         if(width < 1) {
-            if(Settings.getInstance().isLogging())
+            if(settings.isLogging())
                 logger.log(Level.SEVERE, "Fetched terminal width is "+width+", setting it to 80");
             width = 80;
         }

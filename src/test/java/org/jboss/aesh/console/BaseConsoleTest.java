@@ -23,9 +23,11 @@ import java.io.InputStream;
  */
 public abstract class BaseConsoleTest {
 
-    public Console getTestConsole(InputStream is) throws IOException {
-
-        Settings settings = Settings.getInstance();
+    private Settings getDefaultSettings(InputStream is, Settings settings) {
+        if(settings == null) {
+            settings = new Settings();
+            settings.setAliasEnabled(false);
+        }
         settings.setReadInputrc(false);
         settings.setTerminal(new TestTerminal());
         settings.setInputStream(is);
@@ -38,6 +40,16 @@ public abstract class BaseConsoleTest {
 
         settings.getOperationManager().addOperation(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
 
+        return settings;
+    }
+
+    public Console getTestConsole(Settings settings, InputStream is) throws IOException {
+        return new Console(getDefaultSettings(is, settings));
+    }
+
+    public Console getTestConsole(InputStream is) throws IOException {
+
+        /*
         while(Console.getInstance().isRunning()) {
             try {
                 Thread.sleep(200);
@@ -46,7 +58,8 @@ public abstract class BaseConsoleTest {
             }
         }
         Console.getInstance().reset();
-        return Console.getInstance();
+        */
+        return new Console(getDefaultSettings(is, null));
     }
 
     public String getContentOfFile(String filename) throws IOException {

@@ -56,13 +56,7 @@ public class Settings {
     private InterruptHook interruptHook = null;
     private boolean enableOperatorParser = true;
 
-    private static final Settings INSTANCE = new Settings();
-
-    private Settings() {
-    }
-
-    public static Settings getInstance() {
-        return INSTANCE;
+    public Settings() {
     }
 
     public void resetToDefaults() {
@@ -295,9 +289,9 @@ public class Settings {
     public Terminal getTerminal() {
         if(terminal == null) {
             if(Config.isOSPOSIXCompatible())
-                terminal = new POSIXTerminal();
+                terminal = new POSIXTerminal(this);
             else
-                terminal = new WindowsTerminal();
+                terminal = new WindowsTerminal(this);
         }
 
         return terminal;

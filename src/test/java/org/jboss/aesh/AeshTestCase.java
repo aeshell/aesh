@@ -34,7 +34,7 @@ public abstract class AeshTestCase extends TestCase {
 
     public void assertEquals(final String expected, TestBuffer buffer, final boolean lastOnly) throws IOException {
 
-        Settings settings = Settings.getInstance();
+        Settings settings = new Settings();
         settings.setReadInputrc(false);
         settings.setTerminal(new TestTerminal());
         settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
@@ -44,8 +44,7 @@ public abstract class AeshTestCase extends TestCase {
         settings.setReadAhead(false);
         if(!Config.isOSPOSIXCompatible())
             settings.setAnsiConsole(false);
-        Console console = Console.getInstance();
-        console.reset();
+        Console console = new Console(settings);
         final StringBuilder in = new StringBuilder();
         String tmpString = null;
         console.setConsoleCallback(new ConsoleCallback() {
@@ -88,7 +87,7 @@ public abstract class AeshTestCase extends TestCase {
 
     public void assertEqualsViMode(final String expected, TestBuffer buffer) throws IOException {
 
-        Settings settings = Settings.getInstance();
+        Settings settings = new Settings();
         settings.setReadInputrc(false);
         settings.setTerminal(new TestTerminal());
         settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
@@ -99,8 +98,7 @@ public abstract class AeshTestCase extends TestCase {
         if(!Config.isOSPOSIXCompatible())
             settings.setAnsiConsole(false);
 
-        Console console = Console.getInstance();
-        console.reset();
+        Console console = new Console(settings);
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
             public int readConsoleOutput(ConsoleOutput output) throws IOException {

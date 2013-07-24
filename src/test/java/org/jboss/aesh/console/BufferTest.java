@@ -20,7 +20,7 @@ public class BufferTest extends TestCase {
 
     public void testMove() {
         String input = "foo-bar";
-        Buffer buffer = new Buffer(null);
+        Buffer buffer = new Buffer(true, null);
         buffer.write(input);
 
         char[] out = buffer.move(-1, 80);

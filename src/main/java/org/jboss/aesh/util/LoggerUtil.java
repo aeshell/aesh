@@ -7,7 +7,6 @@
 package org.jboss.aesh.util;
 
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.settings.Settings;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +17,7 @@ import java.util.logging.SimpleFormatter;
 
 /**
  * butt ugly logger util, but its simple and gets the job done (hopefully not too dangerous)
+ * warning: made it even uglier when Settings was changed to not be a Singleton... gah!
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -25,30 +25,40 @@ public class LoggerUtil {
 
     private static Handler logHandler;
 
+    public static void createLogHandler(String log) {
+        try {
+            File logFile = new File(log);
+            if(logFile.getParentFile() != null && !logFile.getParentFile().isDirectory()) {
+                if(!logFile.getParentFile().mkdirs()) {
+                    //if creating dirs failed, just create a logger without a file handler
+                    return;
+                }
+            }
+            else if(logFile.isDirectory()) {
+                logFile = new File(logFile.getAbsolutePath()+ Config.getPathSeparator()+"aesh.log");
+            }
+            logHandler = new FileHandler(logFile.getAbsolutePath());
+            logHandler.setFormatter(new SimpleFormatter());
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     /**
      *
      * @param name class
      * @return logger
      */
     public static synchronized Logger getLogger(String name) {
+        if(logHandler == null) {
+            //just create a default logHandler
+            createLogHandler(Config.getTmpDir()+Config.getPathSeparator()+"aesh.log");
+        }
+
         if(logHandler == null)
-            try {
-                File logFile = new File(Settings.getInstance().getLogFile());
-                if(logFile.getParentFile() != null && !logFile.getParentFile().isDirectory()) {
-                    if(!logFile.getParentFile().mkdirs()) {
-                        //if creating dirs failed, just create a logger without a file handler
-                        return Logger.getLogger(name);
-                    }
-                }
-                else if(logFile.isDirectory()) {
-                    Settings.getInstance().setLogFile(Settings.getInstance().getLogFile()+ Config.getPathSeparator()+"aesh.log");
-                }
-                logHandler = new FileHandler(Settings.getInstance().getLogFile());
-                logHandler.setFormatter(new SimpleFormatter());
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
+            return Logger.getLogger(name);
 
         Logger log =  Logger.getLogger(name);
         log.setUseParentHandlers(false);

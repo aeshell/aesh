@@ -27,11 +27,12 @@ public class ViEditingTest extends BaseConsoleTest {
 
     @Test
     public void testVi() throws IOException, InterruptedException {
-        Settings.getInstance().setEditMode(Mode.VI);
+        Settings settings = new Settings();
+        settings.setEditMode(Mode.VI);
 
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        Console console = getTestConsole(pipedInputStream);
+        Console console = getTestConsole(settings, pipedInputStream);
 
         console.setConsoleCallback(new ViConsoleCallback(console));
 

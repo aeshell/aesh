@@ -21,8 +21,10 @@ import java.util.logging.Logger;
 public abstract class AbstractTerminal implements Terminal {
 
     private Logger logger;
+    protected final Settings settings;
 
-    AbstractTerminal(Logger logger) {
+    AbstractTerminal(Settings settings, Logger logger) {
+        this.settings = settings;
         this.logger = logger;
     }
 
@@ -58,7 +60,7 @@ public abstract class AbstractTerminal implements Terminal {
      */
     @Override
     public CursorPosition getCursor() {
-        if(Settings.getInstance().isAnsiConsole() && Config.isOSPOSIXCompatible()) {
+        if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
             try {
                 writeToStdOut(ANSI.getCurrentCursorPos());
                 StringBuilder builder = new StringBuilder(8);
@@ -72,7 +74,7 @@ public abstract class AbstractTerminal implements Terminal {
                         Integer.parseInt(builder.substring(builder.lastIndexOf(";") + 1, builder.length())));
             }
             catch (Exception e) {
-                if(Settings.getInstance().isLogging())
+                if(settings.isLogging())
                     logger.log(Level.SEVERE, "Failed to find current row with ansi code: ",e);
                 return new CursorPosition(-1,-1);
             }

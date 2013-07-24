@@ -12,8 +12,6 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOutput;
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.edit.Mode;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -29,8 +27,6 @@ public class HistoryTest extends BaseConsoleTest {
 
     @Test
     public void testHistory() throws IOException, InterruptedException {
-
-        Settings.getInstance().setEditMode(Mode.EMACS);
 
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);

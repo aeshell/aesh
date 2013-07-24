@@ -27,8 +27,7 @@ public class ConfigTest extends TestCase {
 
 
     public void testParseInputrc() throws IOException {
-        Settings settings = Settings.getInstance();
-        settings.resetToDefaults();
+        Settings settings = new Settings();
         settings.setInputrc( Config.isOSPOSIXCompatible() ?
                 new File("src/test/resources/inputrc1") : new File("src\\test\\resources\\inputrc1"));
 
@@ -45,8 +44,7 @@ public class ConfigTest extends TestCase {
     }
 
     public void testParseInputrc2() throws IOException {
-        Settings settings = Settings.getInstance();
-        settings.resetToDefaults();
+        Settings settings = new Settings();
         settings.setInputrc( Config.isOSPOSIXCompatible() ?
                 new File("src/test/resources/inputrc2") : new File("src\\test\\resources\\inputrc2"));
 
@@ -76,17 +74,18 @@ public class ConfigTest extends TestCase {
         System.setProperty("aesh.logging", "false");
         System.setProperty("aesh.disablecompletion", "true");
 
-        Config.readRuntimeProperties(Settings.getInstance());
+        Settings settings = new Settings();
+        Config.readRuntimeProperties(settings);
 
-        assertEquals(Settings.getInstance().getTerminal().getClass().getName(), "org.jboss.aesh.terminal.TestTerminal");
+        assertEquals(settings.getTerminal().getClass().getName(), "org.jboss.aesh.terminal.TestTerminal");
 
-        assertEquals(Settings.getInstance().getEditMode(), Mode.VI);
+        assertEquals(settings.getEditMode(), Mode.VI);
 
-        assertEquals(Settings.getInstance().isHistoryPersistent(), false);
-        assertEquals(Settings.getInstance().isHistoryDisabled(), true);
-        assertEquals(Settings.getInstance().getHistorySize(), 42);
-        assertEquals(Settings.getInstance().isLogging(), false);
-        assertEquals(Settings.getInstance().isDisableCompletion(), true);
+        assertEquals(settings.isHistoryPersistent(), false);
+        assertEquals(settings.isHistoryDisabled(), true);
+        assertEquals(settings.getHistorySize(), 42);
+        assertEquals(settings.isLogging(), false);
+        assertEquals(settings.isDisableCompletion(), true);
 
         System.setProperty("aesh.terminal", "");
         System.setProperty("aesh.editmode", "");
@@ -96,6 +95,6 @@ public class ConfigTest extends TestCase {
         System.setProperty("aesh.logging", "");
         System.setProperty("aesh.disablecompletion", "");
 
-        Settings.getInstance().resetToDefaults();
+        settings.resetToDefaults();
     }
 }

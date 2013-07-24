@@ -21,7 +21,7 @@ public class AliasManagerTest extends TestCase {
     }
 
     public void testParseAlias() throws Exception {
-        AliasManager manager = new AliasManager(new File("foo"));
+        AliasManager manager = new AliasManager(new File("foo"), false, "aesh");
 
         assertNull(manager.parseAlias("alias foo2='bar -s -h'"));
         assertNull(manager.parseAlias("alias foo=bar"));
@@ -42,7 +42,7 @@ public class AliasManagerTest extends TestCase {
     }
 
     public void testUnalias() throws Exception {
-        AliasManager manager = new AliasManager(new File("foo"));
+        AliasManager manager = new AliasManager(new File("foo"), false, "aesh");
 
         manager.parseAlias("alias foo2='bar -s -h'");
         manager.parseAlias("alias foo=bar");

@@ -6,8 +6,6 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.console.settings.Settings;
-
 import java.util.Arrays;
 
 /**
@@ -26,11 +24,12 @@ public class Buffer {
     private boolean disablePrompt = false;
     private boolean multiLine = false;
     private StringBuilder multiLineBuffer;
+    private static boolean ansi = true;
 
     private static final int TAB = 4;
 
-    protected Buffer() {
-        this(null, null);
+    protected Buffer(boolean ansi) {
+        this(ansi, null, null);
     }
 
     /**
@@ -38,11 +37,12 @@ public class Buffer {
      *
      * @param prompt set prompt
      */
-    protected Buffer(Prompt prompt) {
-        this(prompt, null);
+    protected Buffer(boolean ansi, Prompt prompt) {
+        this(ansi, prompt, null);
     }
 
-    protected Buffer(Prompt prompt, Character mask) {
+    protected Buffer(boolean ansi, Prompt prompt, Character mask) {
+        this.ansi = ansi;
         if(prompt != null)
             this.prompt = prompt;
         else
@@ -245,7 +245,7 @@ public class Buffer {
      * @return ansified string
      */
     public static char[] printAnsi(char[] out) {
-        if(!Settings.getInstance().isAnsiConsole())
+        if(!ansi)
             return new char[] {};
         //calculate length of table:
         int length = 0;
