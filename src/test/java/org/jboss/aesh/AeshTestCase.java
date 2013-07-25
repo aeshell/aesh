@@ -11,7 +11,7 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOutput;
-import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.terminal.TestTerminal;
 
@@ -34,17 +34,17 @@ public abstract class AeshTestCase extends TestCase {
 
     public void assertEquals(final String expected, TestBuffer buffer, final boolean lastOnly) throws IOException {
 
-        Settings settings = new Settings();
-        settings.setReadInputrc(false);
-        settings.setTerminal(new TestTerminal());
-        settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
-        settings.setStdOut(new ByteArrayOutputStream());
-        settings.setEditMode(Mode.EMACS);
-        settings.resetEditMode();
-        settings.setReadAhead(false);
+        SettingsBuilder builder = new SettingsBuilder();
+        builder.readInputrc(false);
+        builder.terminal(new TestTerminal());
+        builder.inputStream(new ByteArrayInputStream(buffer.getBytes()));
+        builder.outputStream(new ByteArrayOutputStream());
+        builder.readAhead(false);
+        builder.mode(Mode.EMACS);
         if(!Config.isOSPOSIXCompatible())
-            settings.setAnsiConsole(false);
-        Console console = new Console(settings);
+            builder.ansi(false);
+
+        Console console = new Console(builder.create());
         final StringBuilder in = new StringBuilder();
         String tmpString = null;
         console.setConsoleCallback(new ConsoleCallback() {
@@ -87,18 +87,17 @@ public abstract class AeshTestCase extends TestCase {
 
     public void assertEqualsViMode(final String expected, TestBuffer buffer) throws IOException {
 
-        Settings settings = new Settings();
-        settings.setReadInputrc(false);
-        settings.setTerminal(new TestTerminal());
-        settings.setInputStream(new ByteArrayInputStream(buffer.getBytes()));
-        settings.setStdOut(new ByteArrayOutputStream());
-        settings.setReadAhead(false);
-        settings.setEditMode(Mode.VI);
-        settings.resetEditMode();
+        SettingsBuilder builder = new SettingsBuilder();
+        builder.readInputrc(false);
+        builder.terminal(new TestTerminal());
+        builder.inputStream(new ByteArrayInputStream(buffer.getBytes()));
+        builder.outputStream(new ByteArrayOutputStream());
+        builder.readAhead(false);
+        builder.mode(Mode.VI);
         if(!Config.isOSPOSIXCompatible())
-            settings.setAnsiConsole(false);
+            builder.ansi(false);
 
-        Console console = new Console(settings);
+        Console console = new Console(builder.create());
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
             public int readConsoleOutput(ConsoleOutput output) throws IOException {

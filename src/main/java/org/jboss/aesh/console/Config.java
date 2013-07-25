@@ -7,6 +7,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.mapper.KeyMapper;
 import org.jboss.aesh.terminal.Terminal;
@@ -73,12 +74,13 @@ public class Config {
      * Lines starting with $ are conditional init constructs
      *
      */
-    protected static void parseInputrc(Settings settings) throws IOException {
+    protected static Settings parseInputrc(Settings settings) throws IOException {
         if(!settings.getInputrc().isFile()) {
             if(settings.isLogging())
                 logger.info("Error while parsing: "+settings.getInputrc().getAbsolutePath()+" couldn't find file.");
-            return;
+            return settings;
         }
+        SettingsBuilder builder = new SettingsBuilder(settings);
 
         Pattern variablePattern = Pattern.compile("^set\\s+(\\S+)\\s+(\\S+)$");
         Pattern commentPattern = Pattern.compile("^#.*");
@@ -120,20 +122,20 @@ public class Config {
                 // variable settings
                 Matcher variableMatcher = variablePattern.matcher(line);
                 if(variableMatcher.matches()) {
-                    parseVariables(variableMatcher.group(1), variableMatcher.group(2), settings);
+                    parseVariables(variableMatcher.group(1), variableMatcher.group(2), builder);
                 }
                 //TODO: currently the inputrc parser is posix only
                 if(Config.isOSPOSIXCompatible()) {
                     Matcher keyQuoteMatcher = keyQuoteNamePattern.matcher(line);
                     if(keyQuoteMatcher.matches()) {
-                        settings.getOperationManager().addOperation(
+                        builder.create().getOperationManager().addOperation(
                                 KeyMapper.mapQuoteKeys(keyQuoteMatcher.group(1),
                                         keyQuoteMatcher.group(3)));
                     }
                     else {
                         Matcher keyMatcher = keyNamePattern.matcher(line);
                         if(keyMatcher.matches()) {
-                            settings.getOperationManager().addOperation(KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
+                            builder.create().getOperationManager().addOperation(KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
                         }
                     }
                 }
@@ -141,35 +143,36 @@ public class Config {
 
         }
 
+        return builder.create();
     }
 
-    private static void parseVariables(String variable, String value, Settings settings) {
+    private static void parseVariables(String variable, String value, SettingsBuilder builder) {
         if (variable.equals(EDITING_MODE.getVariable())) {
             if(EDITING_MODE.getValues().contains(value)) {
                 if(value.equals("vi"))
-                    settings.setEditMode(Mode.VI);
+                    builder.mode(Mode.VI);
                 else
-                    settings.setEditMode(Mode.EMACS);
+                    builder.mode(Mode.EMACS);
             }
             // should log some error
-            else if(settings.isLogging())
+            else if(builder.create().isLogging())
                 logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+EDITING_MODE.getValues());
 
         }
         else if(variable.equals(BELL_STYLE.getVariable())) {
             if(BELL_STYLE.getValues().contains(value))
-                settings.setBellStyle(value);
-            else if(settings.isLogging())
+                builder.bellStyle(value);
+            else if(builder.create().isLogging())
                 logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+BELL_STYLE.getValues());
         }
         else if(variable.equals(HISTORY_SIZE.getVariable())) {
             try {
-                settings.setHistorySize(Integer.parseInt(value));
+                builder.historySize(Integer.parseInt(value));
             }
             catch (NumberFormatException nfe) {
-                if(settings.isLogging())
+                if(builder.create().isLogging())
                     logger.warning("Value "+value+" not accepted for: "
                             +variable+", it must be an integer.");
             }
@@ -177,76 +180,77 @@ public class Config {
         else if(variable.equals(DISABLE_COMPLETION.getVariable())) {
             if(DISABLE_COMPLETION.getValues().contains(value)) {
                 if(value.equals("on"))
-                    settings.setDisableCompletion(true);
+                    builder.disableCompletion(true);
                 else
-                    settings.setDisableCompletion(false);
+                    builder.disableCompletion(false);
             }
-            else if(settings.isLogging())
+            else if(builder.create().isLogging())
                 logger.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+DISABLE_COMPLETION.getValues());
         }
     }
 
-    protected static void readRuntimeProperties(Settings settings) {
+    protected static Settings readRuntimeProperties(Settings settings) {
+       SettingsBuilder builder = new SettingsBuilder(settings);
         try {
             String term = System.getProperty("aesh.terminal");
             if(term != null && term.length() > 0) {
-                settings.setTerminal((Terminal) settings.getClass().getClassLoader().loadClass(term).newInstance());
+                builder.terminal((Terminal) settings.getClass().getClassLoader().loadClass(term).newInstance());
             }
             String editMode = System.getProperty("aesh.editmode");
             if(editMode != null && editMode.length() > 0) {
                 if(editMode.equalsIgnoreCase("VI"))
-                    settings.setEditMode(Mode.VI);
+                    builder.mode(Mode.VI);
                 else if(editMode.equalsIgnoreCase("EMACS"))
-                    settings.setEditMode(Mode.EMACS);
+                    builder.mode(Mode.EMACS);
             }
             String readInputrc = System.getProperty("aesh.readinputrc");
             if(readInputrc != null && readInputrc.length() > 0)
                 if(readInputrc.equalsIgnoreCase("true") ||
                         readInputrc.equalsIgnoreCase("false"))
-                    settings.setReadInputrc(Boolean.parseBoolean(readInputrc));
+                    builder.readInputrc(Boolean.parseBoolean(readInputrc));
 
             String inputrc = System.getProperty("aesh.inputrc");
             if(inputrc != null && inputrc.length() > 0)
                 if(new File(inputrc).isFile())
-                    settings.setInputrc(new File(inputrc));
+                    builder.inputrc(new File(inputrc));
 
             String historyFile = System.getProperty("aesh.historyfile");
             if(historyFile != null && historyFile.length() > 0)
                 if(new File(historyFile).isFile())
-                    settings.setHistoryFile(new File(historyFile));
+                    builder.historyFile(new File(historyFile));
 
             String historyPersistent = System.getProperty("aesh.historypersistent");
             if(historyPersistent != null && historyPersistent.length() > 0)
                 if(historyPersistent.equalsIgnoreCase("true") ||
                         historyPersistent.equalsIgnoreCase("false"))
-                    settings.setHistoryPersistent(Boolean.parseBoolean(historyPersistent));
+                    builder.persistHistory(Boolean.parseBoolean(historyPersistent));
 
             String historyDisabled = System.getProperty("aesh.historydisabled");
             if(historyDisabled != null && historyDisabled.length() > 0)
                 if(historyDisabled.equalsIgnoreCase("true") ||
                         historyDisabled.equalsIgnoreCase("false"))
-                    settings.setHistoryDisabled(Boolean.parseBoolean(historyDisabled));
+                    builder.disableHistory(Boolean.parseBoolean(historyDisabled));
 
             String historySize = System.getProperty("aesh.historysize");
             if(historySize != null && historySize.length() > 0)
-                settings.setHistorySize(Integer.parseInt(historySize));
+                builder.historySize(Integer.parseInt(historySize));
 
             String doLogging = System.getProperty("aesh.logging");
             if(doLogging != null && doLogging.length() > 0)
                 if(doLogging.equalsIgnoreCase("true") ||
                         doLogging.equalsIgnoreCase("false"))
-                    settings.setLogging(Boolean.parseBoolean(doLogging));
+                    builder.logging(Boolean.parseBoolean(doLogging));
 
             String logFile = System.getProperty("aesh.logfile");
             if(logFile != null && logFile.length() > 0)
-                settings.setLogFile(logFile);
+                builder.logfile(logFile);
 
             String disableCompletion = System.getProperty("aesh.disablecompletion");
             if(disableCompletion != null && disableCompletion.length() > 0)
                 if(disableCompletion.equalsIgnoreCase("true") ||
                         disableCompletion.equalsIgnoreCase("false"))
-                    settings.setDisableCompletion(Boolean.parseBoolean(disableCompletion));
+                    builder.disableCompletion(Boolean.parseBoolean(disableCompletion));
 
           }
         catch (ClassNotFoundException e) {
@@ -259,5 +263,7 @@ public class Config {
             if(settings.isLogging())
                 logger.log(Level.SEVERE, "Fail while accessing class: ", e);
         }
+
+        return builder.create();
     }
 }

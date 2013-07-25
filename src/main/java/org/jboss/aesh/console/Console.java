@@ -16,8 +16,8 @@ import org.jboss.aesh.console.helper.Search;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
-import org.jboss.aesh.console.settings.Settings;
 
+import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.PasteManager;
@@ -140,7 +140,8 @@ public class Console {
             public void start() {
                 try {
                     settings.getTerminal().reset();
-                    settings.quit();
+                    if(settings.getQuitHandler() != null)
+                        settings.getQuitHandler().quit();
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -169,14 +170,14 @@ public class Console {
         executorService = Executors.newSingleThreadExecutor();
 
          if(settings.doReadInputrc())
-            Config.parseInputrc(settings);
+            settings = Config.parseInputrc(settings);
 
-        Config.readRuntimeProperties(settings);
+        settings = Config.readRuntimeProperties(settings);
 
         setTerminal(settings.getTerminal(),
                 settings.getInputStream(), settings.getStdOut(), settings.getStdErr());
 
-        editMode = settings.getFullEditMode();
+        editMode = settings.getEditMode();
 
         undoManager = new UndoManager();
         pasteManager = new PasteManager();
@@ -839,14 +840,14 @@ public class Console {
      */
     private void changeEditMode(Movement movement) {
         if(editMode.getMode() == Mode.EMACS && movement == Movement.PREV) {
-            settings.setEditMode(Mode.VI);
+            settings.switchMode();
             settings.resetEditMode();
         }
         else if(editMode.getMode() == Mode.VI && movement == Movement.NEXT) {
-            settings.setEditMode(Mode.EMACS);
+            settings.switchMode();
             settings.resetEditMode();
         }
-        editMode = settings.getFullEditMode();
+        editMode = settings.getEditMode();
     }
 
     private void getHistoryElement(boolean first) throws IOException {

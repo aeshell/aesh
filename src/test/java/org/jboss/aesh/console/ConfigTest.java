@@ -8,6 +8,7 @@ package org.jboss.aesh.console;
 
 import junit.framework.TestCase;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.actions.Operation;
@@ -27,13 +28,13 @@ public class ConfigTest extends TestCase {
 
 
     public void testParseInputrc() throws IOException {
-        Settings settings = new Settings();
-        settings.setInputrc( Config.isOSPOSIXCompatible() ?
+        SettingsBuilder builder = new SettingsBuilder();
+        builder.inputrc( Config.isOSPOSIXCompatible() ?
                 new File("src/test/resources/inputrc1") : new File("src\\test\\resources\\inputrc1"));
 
-        Config.parseInputrc(settings);
+        Settings settings = Config.parseInputrc(builder.create());
 
-        assertEquals(settings.getEditMode(), Mode.VI);
+        assertEquals(settings.getMode(), Mode.VI);
 
         assertEquals(settings.getBellStyle(), "visible");
 
@@ -44,12 +45,12 @@ public class ConfigTest extends TestCase {
     }
 
     public void testParseInputrc2() throws IOException {
-        Settings settings = new Settings();
-        settings.setInputrc( Config.isOSPOSIXCompatible() ?
+        SettingsBuilder builder = new SettingsBuilder();
+        builder.inputrc( Config.isOSPOSIXCompatible() ?
                 new File("src/test/resources/inputrc2") : new File("src\\test\\resources\\inputrc2"));
 
         if(Config.isOSPOSIXCompatible()) {  //TODO: must fix this for windows
-            Config.parseInputrc(settings);
+            Settings settings = Config.parseInputrc(builder.create());
 
             assertEquals(new KeyOperation(Key.LEFT, Operation.MOVE_NEXT_CHAR),
                     settings.getOperationManager().findOperation(new int[]{27,91,68}));
@@ -74,12 +75,12 @@ public class ConfigTest extends TestCase {
         System.setProperty("aesh.logging", "false");
         System.setProperty("aesh.disablecompletion", "true");
 
-        Settings settings = new Settings();
-        Config.readRuntimeProperties(settings);
+        SettingsBuilder builder = new SettingsBuilder();
+        Settings settings = Config.readRuntimeProperties(builder.create());
 
         assertEquals(settings.getTerminal().getClass().getName(), "org.jboss.aesh.terminal.TestTerminal");
 
-        assertEquals(settings.getEditMode(), Mode.VI);
+        assertEquals(settings.getMode(), Mode.VI);
 
         assertEquals(settings.isHistoryPersistent(), false);
         assertEquals(settings.isHistoryDisabled(), true);
@@ -94,7 +95,5 @@ public class ConfigTest extends TestCase {
         System.setProperty("aesh.historysize", "");
         System.setProperty("aesh.logging", "");
         System.setProperty("aesh.disablecompletion", "");
-
-        settings.resetToDefaults();
     }
 }

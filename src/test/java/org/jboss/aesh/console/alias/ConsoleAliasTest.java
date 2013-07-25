@@ -11,7 +11,7 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOutput;
-import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.junit.Test;
 
 import java.io.File;
@@ -29,15 +29,15 @@ public class ConsoleAliasTest extends BaseConsoleTest {
 
     @Test
     public void alias() throws IOException, InterruptedException {
-        Settings settings = new Settings();
-        settings.setAliasEnabled(true);
-        settings.setPersistAlias(false);
-        settings.setAliasFile(Config.isOSPOSIXCompatible() ?
+        SettingsBuilder builder = new SettingsBuilder();
+        builder.enableAlias(true);
+        builder.persistAlias(false);
+        builder.aliasFile(Config.isOSPOSIXCompatible() ?
                 new File("src/test/resources/alias1") : new File("src\\test\\resources\\alias1"));
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
-        Console console = getTestConsole(settings, pipedInputStream);
+        Console console = getTestConsole(builder, pipedInputStream);
         console.setConsoleCallback(new AliasConsoleCallback(console));
         console.start();
 

@@ -10,7 +10,7 @@ import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOutput;
-import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
 import org.junit.Test;
 
@@ -27,12 +27,12 @@ public class ViEditingTest extends BaseConsoleTest {
 
     @Test
     public void testVi() throws IOException, InterruptedException {
-        Settings settings = new Settings();
-        settings.setEditMode(Mode.VI);
+        SettingsBuilder builder = new SettingsBuilder();
+        builder.mode(Mode.VI);
 
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        Console console = getTestConsole(settings, pipedInputStream);
+        Console console = getTestConsole(builder, pipedInputStream);
 
         console.setConsoleCallback(new ViConsoleCallback(console));
 

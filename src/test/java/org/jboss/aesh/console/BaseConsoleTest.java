@@ -7,6 +7,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
@@ -23,42 +24,30 @@ import java.io.InputStream;
  */
 public abstract class BaseConsoleTest {
 
-    private Settings getDefaultSettings(InputStream is, Settings settings) {
-        if(settings == null) {
-            settings = new Settings();
-            settings.setAliasEnabled(false);
+    private Settings getDefaultSettings(InputStream is, SettingsBuilder builder) {
+        if(builder == null) {
+            builder = new SettingsBuilder();
+            builder.enableAlias(false);
         }
-        settings.setReadInputrc(false);
-        settings.setTerminal(new TestTerminal());
-        settings.setInputStream(is);
-        settings.setStdOut(new ByteArrayOutputStream());
-        settings.resetEditMode();
-        settings.setReadAhead(false);
+        builder.readInputrc(false);
+        builder.terminal(new TestTerminal());
+        builder.inputStream(is);
+        builder.outputStream(new ByteArrayOutputStream());
+        builder.readAhead(false);
 
         if(!Config.isOSPOSIXCompatible())
-            settings.setAnsiConsole(false);
+            builder.ansi(false);
 
-        settings.getOperationManager().addOperation(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
+        builder.create().getOperationManager().addOperation(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
 
-        return settings;
+        return builder.create();
     }
 
-    public Console getTestConsole(Settings settings, InputStream is) throws IOException {
-        return new Console(getDefaultSettings(is, settings));
+    public Console getTestConsole(SettingsBuilder builder, InputStream is) throws IOException {
+        return new Console(getDefaultSettings(is, builder));
     }
 
     public Console getTestConsole(InputStream is) throws IOException {
-
-        /*
-        while(Console.getInstance().isRunning()) {
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        Console.getInstance().reset();
-        */
         return new Console(getDefaultSettings(is, null));
     }
 

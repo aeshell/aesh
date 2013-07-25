@@ -14,7 +14,7 @@ import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOutput;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.helper.InterruptHook;
-import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
@@ -40,10 +40,9 @@ public class Example {
     public static void main(String[] args) throws IOException {
 
         //Settings.getInstance().setAnsiConsole(false);
-        Settings settings = new Settings();
-        settings.setReadInputrc(false);
-        settings.setLogging(true);
-        settings.setLogFile(System.getProperty("user.dir") + System.getProperty("file.separator") + "aesh_example.log");
+        SettingsBuilder builder = new SettingsBuilder();
+        builder.readInputrc(false).logging(true);
+        builder.logfile(System.getProperty("user.dir") + System.getProperty("file.separator") + "aesh_example.log");
         //Settings.getInstance().setAliasEnabled(true);
         //Settings.getInstance().setAliasFile(new File(System.getProperty("user.dir")+Config.getPathSeparator()+"aesh_aliases.txt"));
         //Settings.getInstance().setPersistAlias(true);
@@ -70,7 +69,7 @@ public class Example {
         //String prompt = ANSI.redText()+"[test@foo]"+ANSI.reset()+"$ ";
 
         //a simple interruptHook
-        settings.setInterruptHook(new InterruptHook() {
+        builder.interruptHook(new InterruptHook() {
             @Override
             public void handleInterrupt(Console console) {
                 try {
@@ -82,7 +81,7 @@ public class Example {
             }
         });
 
-        final Console exampleConsole = new Console(settings);
+        final Console exampleConsole = new Console(builder.create());
 
         final ConsoleCommand test = new ConsoleCommand(exampleConsole) {
 
