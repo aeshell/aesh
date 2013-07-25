@@ -17,72 +17,158 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
+ * Object thats define all tunable settings used by Console
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface Settings {
-    void setName(String name);
-
+    /**
+     * Get the name of the cli
+     * Default is "aesh"
+     */
     String getName();
 
+    /**
+     * Get the current Mode.
+     * Default mode is Emacs
+     *
+     */
     Mode getMode();
 
+    /**
+     * Get current edit mode
+     */
     EditMode getEditMode();
 
+    /**
+     * Reset edit mode
+     */
     void resetEditMode();
 
+    /**
+     * Get KeyOperationManager
+     */
     KeyOperationManager getOperationManager();
 
+    /**
+     * Get file where history is stored
+     */
     File getHistoryFile();
 
+    /**
+     * Get history size
+     */
     int getHistorySize();
 
+    /**
+     * Get bell style
+     * NOTE: Not used yet
+     */
     String getBellStyle();
 
+    /**
+     * If the current console is an ANSI console
+     */
     boolean isAnsiConsole();
 
+    /**
+     * Get input stream
+     */
     InputStream getInputStream();
 
+    /**
+     * Get standard output stream
+     */
     OutputStream getStdOut();
 
+    /**
+     * Get standard error stream
+     */
     OutputStream getStdErr();
 
+    /**
+     * Get current terminal
+     */
     Terminal getTerminal();
 
+    /**
+     * Get inputrc file location
+     */
     File getInputrc();
 
-
+    /**
+     * Are we logging
+     */
     boolean isLogging();
 
-
+    /**
+     * Is completion disabled
+     */
     boolean isDisableCompletion();
 
-
+    /**
+     * Get location of log file
+     */
     String getLogFile();
 
-
+    /**
+     * Do aesh read inputrc during init
+     */
     boolean doReadInputrc();
 
+    /**
+     * Is history disabled
+     */
     boolean isHistoryDisabled();
 
+    /**
+     * Is history persisted during shutdown
+     */
     boolean isHistoryPersistent();
 
+    /**
+     * Do aesh read ahead
+     * @return
+     */
     boolean isReadAhead();
 
+    /**
+     * Location of alias file
+     */
     File getAliasFile();
 
+    /**
+     * Is alias enabled
+     */
     boolean isAliasEnabled();
 
+    /**
+     * Is alias persisted
+     */
     boolean doPersistAlias();
 
+    /**
+     * Get quit handler
+     */
     QuitHandler getQuitHandler();
 
+    /**
+     * Is an interrupt hook defined
+     */
     boolean hasInterruptHook();
 
+    /**
+     * Get interrupt hook
+     */
     InterruptHook getInterruptHook();
 
-    void enableOperatorParser(boolean enable);
-
+    /**
+     * Is operator parser enabled
+     */
     boolean isOperatorParserEnabled();
 
+    /**
+     * Switch from Emacs to Vi mode (or back)
+     */
     void switchMode();
 }

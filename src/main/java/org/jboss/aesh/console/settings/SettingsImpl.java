@@ -113,7 +113,6 @@ public class SettingsImpl implements Settings {
      *
      * @param name name
      */
-    @Override
     public void setName(String name) {
         this.name = name;
     }
@@ -565,7 +564,6 @@ public class SettingsImpl implements Settings {
         return interruptHook;
     }
 
-    @Override
     public void enableOperatorParser(boolean enable) {
         enableOperatorParser = enable;
     }

@@ -63,26 +63,6 @@ public abstract class AeshTestCase extends TestCase {
         catch (InterruptedException e) { }
         console.stop();
 
-        /*
-        while (true) {
-            ConsoleOutput tmp = console.read(new Prompt(""));
-            if(tmp != null) {
-            }
-            else
-                break;
-        }
-        try {
-            console.stop();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        if(lastOnly) {
-            assertEquals(expected, tmpString);
-        }
-        else
-            assertEquals(expected, in.toString());
-        */
     }
 
     public void assertEqualsViMode(final String expected, TestBuffer buffer) throws IOException {
@@ -110,23 +90,6 @@ public abstract class AeshTestCase extends TestCase {
         try { Thread.sleep(100); }
         catch (InterruptedException e) { }
         console.stop();
-
-        /*
-        String in = null;
-        while (true) {
-            ConsoleOutput tmp = console.read("");
-            if(tmp != null)
-                in = tmp.getBuffer();
-            else
-                break;
-        }
-        try {
-            console.stop();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        assertEquals(expected, in);
-        */
     }
+
 }
