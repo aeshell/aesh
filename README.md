@@ -25,6 +25,7 @@ How to build:
 
 To get going:
 -------------
+'''java
 import java.io.IOException;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
@@ -50,6 +51,7 @@ public class Example2 {
     });   console.start();
   }   
 }
+'''
 
 Keys that are mapped by default in Æsh
 --------------------------------------------
