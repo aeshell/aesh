@@ -16,6 +16,8 @@ Features:
 * Easy to configure (history file & buffer size, edit mode, streams, possible to override terminal impls, etc)
 * Support standard out and standard error
 * Redirect
+* Alias
+* Pipeline
 
 How to build:
 -------------
@@ -23,23 +25,30 @@ How to build:
 
 To get going:
 -------------
+import java.io.IOException;
+import org.jboss.aesh.console.Console;
+import org.jboss.aesh.console.ConsoleCallback;
+import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 
-public class Example {
+public class Example2 {
 
-    public static void main(String[] args) throws java.io.IOException {
+  public static void main(String[] args) throws IOException {
 
-        org.jboss.aesh.console.Console console = new org.jboss.aesh.console.Console();
+    final Console console = new Console(new SettingsBuilder().create());
+    console.setPrompt(new Prompt("[aesh]$ "));
 
-        org.jboss.aesh.console.ConsoleOutput line;
-        while ((line = console.read("> ")) != null) {
-            console.pushToConsole("======>\"" +line.getBuffer()+ "\n");
-
-            if (line.getBuffer().equalsIgnoreCase("quit") || line.getBuffer().equalsIgnoreCase("exit")) {
-                break;
-            }
-        }
-
-    }
+    console.setConsoleCallback( new ConsoleCallback() {
+      @Override
+      public int readConsoleOutput(ConsoleOutput output) throws IOException{
+        console.pushToStdOut("======>\"" + output.getBuffer() + "\"\n");
+        if(output.getBuffer().equals("quit"))
+          console.stop();
+        return 0;
+      }  
+    });   console.start();
+  }   
 }
 
 Keys that are mapped by default in Æsh
