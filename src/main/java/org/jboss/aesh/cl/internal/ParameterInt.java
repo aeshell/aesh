@@ -60,7 +60,7 @@ public class ParameterInt {
     }
 
     public void addOption(OptionInt opt) throws OptionParserException {
-        this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getName(), opt.getLongName()), opt.getLongName(),
+        this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                 opt.getDescription(), opt.hasValue(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                 opt.isProperty(), opt.hasMultipleValues(), opt.getDefaultValue(), opt.getType()));
     }
@@ -123,7 +123,7 @@ public class ParameterInt {
 
     private void setOptions(List<OptionInt> options) throws OptionParserException {
         for(OptionInt opt : options) {
-            this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getName(), opt.getLongName()), opt.getLongName(),
+            this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                     opt.getDescription(), opt.hasValue(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                     opt.isProperty(), opt.hasMultipleValues(), opt.getDefaultValue(), opt.getType()));
         }
@@ -186,7 +186,7 @@ public class ParameterInt {
 
     public OptionInt findOption(String name) {
         for(OptionInt option : options)
-            if(option.getName() != null && option.getName().equals(name))
+            if(option.getShortName() != null && option.getShortName().equals(name))
                 return option;
 
         return null;
@@ -194,7 +194,7 @@ public class ParameterInt {
 
     public OptionInt findLongOption(String name) {
         for(OptionInt option : options)
-            if(option.getLongName() != null && option.getLongName().equals(name))
+            if(option.getName() != null && option.getName().equals(name))
                 return option;
 
         return null;
@@ -202,7 +202,7 @@ public class ParameterInt {
 
     public OptionInt startWithOption(String name) {
         for(OptionInt option : options)
-            if(name.startsWith(option.getName()))
+            if(name.startsWith(option.getShortName()))
                 return option;
 
         return null;
@@ -210,7 +210,7 @@ public class ParameterInt {
 
     public OptionInt startWithLongOption(String name) {
         for(OptionInt option : options)
-            if(name.startsWith(option.getLongName()))
+            if(name.startsWith(option.getName()))
                 return option;
 
         return null;
@@ -224,7 +224,7 @@ public class ParameterInt {
     public List<String> getOptionLongNamesWithDash() {
         List<String> names = new ArrayList<String>(options.size());
         for(OptionInt o : options)
-            names.add("--"+o.getLongName());
+            names.add("--"+o.getName());
 
         return names;
     }
@@ -232,8 +232,8 @@ public class ParameterInt {
     public List<String> findPossibleLongNamesWitdDash(String name) {
         List<String> names = new ArrayList<String>(options.size());
         for(OptionInt o : options) {
-           if(o.getName().equals(name) || o.getLongName().startsWith(name))
-               names.add("--"+o.getLongName());
+           if(o.getShortName().equals(name) || o.getName().startsWith(name))
+               names.add("--"+o.getName());
         }
         return names;
     }

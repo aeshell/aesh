@@ -18,8 +18,8 @@ import java.util.Map;
  */
 public class OptionInt {
 
+    private String shortName;
     private String name;
-    private String longName;
 
     private String description;
     private boolean hasValue = true;
@@ -33,11 +33,11 @@ public class OptionInt {
     private boolean hasMultipleValues = false;
     private Map<String,String> properties;
 
-    public OptionInt(char name, String longName, String description, boolean hasValue,
+    public OptionInt(char shortName, String name, String description, boolean hasValue,
                      String argument, boolean required, char valueSeparator,
                      boolean isProperty, boolean hasMultipleValues, String defaultValue, Class<?> type) throws OptionParserException {
-        this.name = String.valueOf(name);
-        this.longName = longName;
+        this.shortName = String.valueOf(shortName);
+        this.name = name;
         this.description = description;
         this.hasValue = hasValue;
         this.argument = argument;
@@ -51,17 +51,17 @@ public class OptionInt {
         properties = new HashMap<String, String>();
         values = new ArrayList<String>();
 
-        if((name == Character.MIN_VALUE) && longName.equals("")) {
-            throw new OptionParserException("Either name or long name must be set.");
+        if((shortName == Character.MIN_VALUE) && name.equals("")) {
+            throw new OptionParserException("Either shortName or long shortName must be set.");
         }
+    }
+
+    public String getShortName() {
+        return shortName;
     }
 
     public String getName() {
         return name;
-    }
-
-    public String getLongName() {
-        return longName;
     }
 
     public void addValue(String value) {
@@ -129,21 +129,21 @@ public class OptionInt {
     }
 
     public String getDisplayName() {
-        if(longName != null) {
-            return "--"+longName;
+        if(name != null) {
+            return "--"+ name;
         }
         else
-            return "-"+name;
+            return "-"+ shortName;
     }
 
     public int getFormattedLength() {
         StringBuilder sb = new StringBuilder();
-        if(name != null)
-            sb.append("-").append(name);
-        if(longName != null) {
+        if(shortName != null)
+            sb.append("-").append(shortName);
+        if(name != null) {
             if(sb.toString().trim().length() > 0)
                 sb.append(", ");
-            sb.append("--").append(longName);
+            sb.append("--").append(name);
         }
         if(argument != null && argument.length() > 0) {
             sb.append("=<").append(argument).append(">");
@@ -157,12 +157,12 @@ public class OptionInt {
         StringBuilder sb = new StringBuilder();
         if(offset > 0)
             sb.append(String.format("%" + offset+ "s", ""));
-        if(name != null)
-            sb.append("-").append(name);
-        if(longName != null) {
+        if(shortName != null)
+            sb.append("-").append(shortName);
+        if(name != null) {
             if(sb.toString().trim().length() > 0)
                 sb.append(", ");
-            sb.append("--").append(longName);
+            sb.append("--").append(name);
         }
         if(argument != null && argument.length() > 0) {
             sb.append("=<").append(argument).append(">");
@@ -184,8 +184,8 @@ public class OptionInt {
     @Override
     public String toString() {
         return "OptionInt{" +
-                "name='" + name + '\'' +
-                ", longName='" + longName + '\'' +
+                "shortName='" + shortName + '\'' +
+                ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", hasValue=" + hasValue +
                 ", values=" + values +

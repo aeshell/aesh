@@ -33,10 +33,10 @@ public class CommandLineCompletionParser {
         //first we check if it could be a param
         if(Parser.findIfWordEndWithSpace(line)) {
             //check if we try to complete just after the command name
-            for(ParameterInt param : parser.getParameters()) {
-                if(line.trim().equals(param.getName()))
-                    return new ParsedCompleteObject(false, null, 0);
-            }
+            ParameterInt param = parser.getParameter();
+            if(line.trim().equals(param.getName()))
+                return new ParsedCompleteObject(false, null, 0);
+
             //else we try to complete an option,an option value or arguments
             String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line.trim());
             if(lastWord.startsWith("-")) {
@@ -44,8 +44,8 @@ public class CommandLineCompletionParser {
                     lastWord = lastWord.substring(1);
                 if(lastWord.length() == 0)
                     return new ParsedCompleteObject(false, null, 0);
-                else if(parser.getParameters().get(0).findOption(lastWord) != null ||
-                        parser.getParameters().get(0).findLongOption(lastWord) != null)
+                else if(parser.getParameter().findOption(lastWord) != null ||
+                        parser.getParameter().findLongOption(lastWord) != null)
                     return findCompleteObjectValue(line, true);
                 else
                     return new ParsedCompleteObject(false, null, 0);
@@ -95,13 +95,13 @@ public class CommandLineCompletionParser {
         CommandLine cl = parser.parse(line, true);
         if(cl.getArguments().isEmpty()) {
             ParsedOption po = cl.getOptions().get(cl.getOptions().size()-1);
-            return new ParsedCompleteObject( po.getLongName().isEmpty() ? po.getName() : po.getLongName(),
+            return new ParsedCompleteObject( po.getName().isEmpty() ? po.getShortName() : po.getName(),
                     endsWithSpace ? "" : po.getValue(), po.getType(), true);
         }
         else {
             return new ParsedCompleteObject("",
                     cl.getArguments().get(cl.getArguments().size()-1),
-                    parser.getParameters().get(0).getArgumentType(), false);
+                    parser.getParameter().getArgumentType(), false);
         }
     }
 

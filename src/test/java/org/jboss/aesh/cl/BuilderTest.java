@@ -78,9 +78,9 @@ public class BuilderTest extends TestCase {
 
         CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 
-        System.out.println(clp.getParameters().get(0));
-        assertEquals("version", clp.getParameters().get(0).findOption("v").getLongName());
-        assertEquals("verbose", clp.getParameters().get(0).findOption("e").getLongName());
+        System.out.println(clp.getParameter());
+        assertEquals("version", clp.getParameter().findOption("v").getName());
+        assertEquals("verbose", clp.getParameter().findOption("e").getName());
 
         CommandLine cl = clp.parse("less -v -e test1.txt");
         assertTrue(cl.hasOption('v'));

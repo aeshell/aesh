@@ -9,6 +9,12 @@ package org.jboss.aesh.cl;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ParameterInt;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Generates a {@link CommandLineParser} based on annotations defined in
  * the specified class.
@@ -17,35 +23,120 @@ import org.jboss.aesh.cl.internal.ParameterInt;
  */
 public class ParserGenerator {
 
-    public static CommandLineParser generateParser(Class<?>... clazzes) throws CommandLineParserException {
-
-        ParserBuilder builder = new ParserBuilder();
-        for(Class clazz : clazzes) {
-
-        Parameter param = (Parameter) clazz.getAnnotation(Parameter.class);
-        if(param == null)
-            throw new CommandLineParserException("Can only create parser from class thats annotated with Parameter");
-            builder.addParameter(generateParameter(param));
-        }
-        return builder.generateParser();
+    public static CommandLineParser generateCommandLineParser(Object paramInstance) throws CommandLineParserException {
+        return generateCommandLineParser(paramInstance.getClass());
     }
 
-    private static ParameterInt generateParameter(Parameter param) throws CommandLineParserException {
-        if(param.name() == null || param.name().length() < 1)
-            throw new CommandLineParserException("The parameter name must be defined");
+    public static CommandLineParser generateCommandLineParser(Class clazz) throws CommandLineParserException {
+        Command command = (Command) clazz.getAnnotation(Command.class);
+        if(command == null)
+            throw new CommandLineParserException("Commands must be annotated with @Command");
 
-        ParameterInt parameterInt = new ParameterInt(param.name(), param.usage(), param.argumentType());
+        ParameterInt parameterInt = new ParameterInt(command.name(), command.description());
 
-        if(param.options() != null) {
-            for(Option o : param.options()) {
-                parameterInt.addOption(
-                        o.name(), o.longName(), o.description(),
-                        o.hasValue(), o.argument(), o.required(),
-                        o.valueSeparator(), o.isProperty(),
-                        o.hasMultipleValues(), o.defaultValue(), o.type());
+        //Maps option name to field name
+        Map<String, String> fieldMap = new HashMap<String, String>();
+
+
+        for(Field field : clazz.getDeclaredFields()) {
+            Option o;
+            OptionGroup og;
+            OptionList ol;
+            Arguments a;
+            boolean hasValue = true;
+            if(field.getType().equals(Boolean.class) || field.getType().equals(boolean.class))
+                hasValue = false;
+            if((o = field.getAnnotation(Option.class)) != null) {
+                if(o.name() == null || o.name().length() < 1) {
+                    if(o.shortName() == '\u0000') {
+                        parameterInt.addOption(field.getName().charAt(0), field.getName(), o.description(),
+                                hasValue, o.argument(), o.required(), ',', false, false, o.defaultValue(), field.getType());
+                    }
+                    else {
+                        parameterInt.addOption(o.shortName(), field.getName(), o.description(),
+                                hasValue, o.argument(), o.required(), ',', false, false, o.defaultValue(), field.getType());
+                    }
+                   fieldMap.put(field.getName(), field.getName());
+
+                }
+                else {
+                    if(o.shortName() == '\u0000') {
+                        parameterInt.addOption(o.name().charAt(0), o.name(), o.description(),
+                                hasValue, o.argument(), o.required(), ',', false, false, o.defaultValue(), field.getType());
+                    }
+                    else {
+                        parameterInt.addOption(o.shortName(), o.name(), o.description(),
+                                hasValue, o.argument(), o.required(), ',', false, false, o.defaultValue(), field.getType());
+                    }
+                    fieldMap.put(o.name(), field.getName());
+                }
+
+            }
+            else if((ol = field.getAnnotation(OptionList.class)) != null) {
+                if(!Collection.class.isAssignableFrom(field.getType()))
+                    throw new CommandLineParserException("OptionGroup field must be instance of Collection");
+                if(ol.name() == null || ol.name().length() < 1) {
+                    if(ol.shortName() == '\u0000') {
+                        parameterInt.addOption(field.getName().charAt(0), field.getName(), ol.description(),
+                                hasValue, "", ol.required(), ol.valueSeparator(), false, true, "", field.getType());
+                    }
+                    else {
+                        parameterInt.addOption(ol.shortName(), field.getName(), ol.description(),
+                                hasValue, "", ol.required(), ol.valueSeparator(), false, true, "", field.getType());
+                    }
+                    fieldMap.put(field.getName(), field.getName());
+                }
+                else {
+                    if(ol.shortName() == '\u0000')
+                        parameterInt.addOption(ol.name().charAt(0), ol.name(), ol.description(),
+                                hasValue, "", ol.required(), ol.valueSeparator(), false, true, "", field.getType());
+                    else
+                        parameterInt.addOption(ol.shortName(), ol.name(), ol.description(),
+                                hasValue, "", ol.required(), ol.valueSeparator(), false, true, "", field.getType());
+                    fieldMap.put(ol.name(), field.getName());
+                }
+            }
+            else if((og = field.getAnnotation(OptionGroup.class)) != null) {
+                if(!Map.class.isAssignableFrom(field.getType()))
+                    throw new CommandLineParserException("OptionGroup field must be instance of Map");
+                if(og.name() == null || og.name().length() < 1) {
+                    if(og.shortName() == '\u0000') {
+                        parameterInt.addOption(field.getName().charAt(0), field.getName(), og.description(),
+                                hasValue, "", og.required(), ',', true, true, "", field.getType());
+                    }
+                    else {
+                        parameterInt.addOption(og.shortName(), field.getName(), og.description(),
+                                hasValue, "", og.required(), ',', true, true, "", field.getType());
+                    }
+                    fieldMap.put(field.getName(), field.getName());
+                }
+                else {
+                    if(og.shortName() == '\u0000')
+                        parameterInt.addOption(og.name().charAt(0), og.name(), og.description(),
+                                hasValue, "", og.required(), ',', true, true, "", field.getType());
+                    else
+                        parameterInt.addOption(og.shortName(), og.name(), og.description(),
+                                hasValue, "", og.required(), ',', true, true, "", field.getType());
+                    fieldMap.put(og.name(), field.getName());
+                }
+            }
+
+
+            else if((a = field.getAnnotation(Arguments.class)) != null) {
+                if(!field.getDeclaringClass().isAssignableFrom(Collection.class))
+                    throw new CommandLineParserException("Arguments field must be instance of Collection");
+               //TODO:
             }
         }
-        return parameterInt;
+
+        return new ParserBuilder().parameter(parameterInt).fieldMap(fieldMap).generateParser();
+
+    }
+
+    private boolean inheritCollection(Class clazz) {
+        if(clazz.getSuperclass() == null) {
+        }
+        return false;
     }
 
 }

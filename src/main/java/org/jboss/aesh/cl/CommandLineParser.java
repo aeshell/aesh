@@ -14,8 +14,10 @@ import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.util.Parser;
 
-import java.util.ArrayList;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A simple command line parser.
@@ -28,30 +30,25 @@ import java.util.List;
  */
 public class CommandLineParser {
 
-    private List<ParameterInt> params;
+    private ParameterInt parameter;
+    private Map<String,String> fieldMap;
     private static final String EQUALS = "=";
 
-    public CommandLineParser(List<ParameterInt> parameters) {
-        params = new ArrayList<ParameterInt>();
-        params.addAll(parameters);
+    public CommandLineParser(ParameterInt parameter) {
+        this.parameter = parameter;
     }
 
-    public CommandLineParser(ParameterInt parameterInt) {
-        params = new ArrayList<ParameterInt>();
-        params.add(parameterInt);
+    public CommandLineParser(ParameterInt parameter, Map<String,String> fieldMap) {
+        this.fieldMap = fieldMap;
+        this.parameter = parameter;
     }
 
     public CommandLineParser(String name, String usage) {
-        params = new ArrayList<ParameterInt>();
-        params.add(new ParameterInt(name, usage));
+        parameter = new ParameterInt(name, usage);
     }
 
-    public void addParameter(ParameterInt param) {
-        params.add(param);
-    }
-
-    public List<ParameterInt> getParameters() {
-        return params;
+    public ParameterInt getParameter() {
+        return parameter;
     }
 
     /**
@@ -60,11 +57,7 @@ public class CommandLineParser {
      *
      */
     public String printHelp() {
-        StringBuilder builder = new StringBuilder();
-        for(ParameterInt param : params)
-            builder.append(param.printHelp());
-
-        return builder.toString();
+        return parameter.printHelp();
     }
 
     /**
@@ -103,12 +96,10 @@ public class CommandLineParser {
     public CommandLine parse(String line, boolean ignoreMissingRequirements) throws CommandLineParserException {
         List<String> lines = Parser.findAllWords(line);
         if(lines.size() > 0) {
-            for(ParameterInt param : params) {
-                if(param.getName().equals(lines.get(0)))
-                    return doParse(param, lines, ignoreMissingRequirements);
-            }
+            if(parameter.getName().equals(lines.get(0)))
+                return doParse(parameter, lines, ignoreMissingRequirements);
         }
-        throw new CommandLineParserException("Param:"+ params+", not found in: "+line);
+        throw new CommandLineParserException("Parameter:"+ parameter +", not found in: "+line);
     }
 
     private CommandLine doParse(ParameterInt param, List<String> lines,
@@ -128,25 +119,25 @@ public class CommandLineParser {
 
                 active = findLongOption(param, parseLine.substring(2));
                 if(active != null && active.isProperty()) {
-                    if(parseLine.length() <= (2+active.getLongName().length()) ||
+                    if(parseLine.length() <= (2+active.getName().length()) ||
                         !parseLine.contains(EQUALS))
                         throw new OptionParserException(
                                 "Option "+active.getDisplayName()+", must be part of a property");
 
                     String name =
-                            parseLine.substring(2+active.getLongName().length(),
+                            parseLine.substring(2+active.getName().length(),
                                     parseLine.indexOf(EQUALS));
                     String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
 
                     commandLine.addOption(new
-                            ParsedOption(active.getName(), active.getLongName(),
+                            ParsedOption(active.getShortName(), active.getName(),
                             new OptionProperty(name, value), active.getType()));
                     active = null;
                     if(addedArgument)
                         throw new ArgumentParserException("An argument was given to an option that do not support it.");
                 }
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
-                    commandLine.addOption(new ParsedOption(active.getName(), active.getLongName(),
+                    commandLine.addOption(new ParsedOption(active.getShortName(), active.getName(),
                             active.getValue(), active.getType()));
                     active = null;
                     if(addedArgument)
@@ -176,7 +167,7 @@ public class CommandLineParser {
                     String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
 
                     commandLine.addOption(new
-                            ParsedOption(active.getName(), active.getLongName(),
+                            ParsedOption(active.getShortName(), active.getName(),
                             new OptionProperty(name, value), active.getType()));
                     active = null;
                     if(addedArgument)
@@ -184,8 +175,8 @@ public class CommandLineParser {
                 }
 
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
-                    commandLine.addOption(new ParsedOption(String.valueOf(active.getName()),
-                            active.getLongName(), active.getValue(), active.getType()));
+                    commandLine.addOption(new ParsedOption(String.valueOf(active.getShortName()),
+                            active.getName(), active.getValue(), active.getType()));
                     active = null;
                     if(addedArgument)
                         throw new OptionParserException("An argument was given to an option that do not support it.");
@@ -204,21 +195,21 @@ public class CommandLineParser {
                 else
                     active.addValue(parseLine);
 
-                commandLine.addOption(new ParsedOption(active.getName(),
-                        active.getLongName(), active.getValues(), active.getType()));
+                commandLine.addOption(new ParsedOption(active.getShortName(),
+                        active.getName(), active.getValues(), active.getType()));
                 active = null;
                 if(addedArgument)
                     throw new OptionParserException("An argument was given to an option that do not support it.");
             }
-            //if no param is "active", we add it as an argument
+            //if no parameter is "active", we add it as an argument
             else {
                 commandLine.addArgument(parseLine);
                 addedArgument = true;
             }
         }
         if(active != null && ignoreMissing) {
-            commandLine.addOption(new ParsedOption(active.getName(),
-                    active.getLongName(), active.getValues(), active.getType()));
+            commandLine.addOption(new ParsedOption(active.getShortName(),
+                    active.getName(), active.getValues(), active.getType()));
         }
 
         //this will throw and CommandLineParserException if needed
@@ -233,8 +224,8 @@ public class CommandLineParser {
             if(o.isRequired()) {
                 boolean found = false;
                 for(ParsedOption po : commandLine.getOptions()) {
-                    if(po.getName().equals(o.getName()) ||
-                            po.getName().equals(o.getLongName()))
+                    if(po.getShortName().equals(o.getShortName()) ||
+                            po.getShortName().equals(o.getName()))
                         found = true;
                 }
                 if(!found)
@@ -253,7 +244,7 @@ public class CommandLineParser {
         if(option != null && option.isProperty())
             return option;
         if(option != null) {
-           String rest = line.substring(option.getName().length());
+           String rest = line.substring(option.getShortName().length());
             if(rest != null && rest.length() > 1 && rest.startsWith("=")) {
                 option.addValue(rest.substring(1));
                 return option;
@@ -274,7 +265,7 @@ public class CommandLineParser {
         if(option != null && option.isProperty())
             return option;
         if(option != null) {
-            String rest = line.substring(option.getLongName().length());
+            String rest = line.substring(option.getName().length());
             if(rest != null && rest.length() > 1 && rest.startsWith("=")) {
                 option.addValue(rest.substring(1));
                 return option;
@@ -284,10 +275,32 @@ public class CommandLineParser {
         return null;
     }
 
+    public void populateObject(Object instance, String line) throws CommandLineParserException {
+        CommandLine cl = parse(line);
+        for(String optionName : fieldMap.keySet()) {
+            if(cl.getOptionValue(optionName) != null) {
+                injectValueIntoField(instance, fieldMap.get(optionName), cl.getOptionValue(optionName));
+            }
+        }
+    }
+
+    private void injectValueIntoField(Object instance, String fieldName, String optionValue) {
+        try {
+            Field field = instance.getClass().getDeclaredField(fieldName);
+            if(Modifier.isPrivate(field.getModifiers()))
+                field.setAccessible(true);
+            field.set(instance, optionValue);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public String toString() {
         return "CommandLineParser{" +
-                "params=" + params +
+                "parameter=" + parameter +
                 '}';
     }
 }

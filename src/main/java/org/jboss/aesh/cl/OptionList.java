@@ -13,25 +13,20 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * A single command line option.
+ * A command line option list
+ * Must be defined with a field that implements Collection
  *
- * It keep information regarding the short option name (-f)
- * and long option name (--foo).
- * A flag to specify if this option is required and a description.
- *
- * Both "=" and space is valid name-value separators.
- *
- * If the field is either Boolean or boolean it will be
+ * Eg: --foo=bar1,bar2,bar3 or --foo bar1,bar2,bar3
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 @Retention(RUNTIME)
 @Target(FIELD)
-public @interface Option {
+public @interface OptionList {
 
     /**
      * The name of the option param.
-     * The first letter will be used as the short name.
+     * The first letter will be used as the short name if shortName is not defined
      * If name is not defined, the variable name will be used.
      */
     String name() default "";
@@ -48,9 +43,12 @@ public @interface Option {
     String description() default "";
 
     /**
-     * A description on what kind of value is used for this option.
+     * If set will force the option to be of the form:
+     * name[separator]value
+     * As an example, if we want to create an option like: --foo bar1,bar2
+     * {@code @Option(longName='foo', valueSeparator=',')}
      */
-    String argument() default "";
+    char valueSeparator() default ',';
 
     /**
      * Specify if this option is required
@@ -58,14 +56,7 @@ public @interface Option {
     boolean required() default false;
 
     /**
-     * If this options has a value the default will be auto completed if it matches
-     * the value already typed
-     */
-    String defaultValue() default "";
-
-    /**
      * Option type, default is String.class
      */
     Class<?> type() default String.class;
-
 }

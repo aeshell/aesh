@@ -10,30 +10,35 @@ import org.jboss.aesh.cl.internal.ParameterInt;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ParserBuilder {
 
-    private List<ParameterInt> params;
+    private ParameterInt param;
+    private Map<String, String> fieldMap;
 
     public ParserBuilder() {
-        params = new ArrayList<ParameterInt>();
     }
 
     public ParserBuilder(ParameterInt param) {
-        params = new ArrayList<ParameterInt>();
-        params.add(param);
+        this.param = param;
     }
 
-    public ParserBuilder addParameter(ParameterInt param) {
-        params.add(param);
+    public ParserBuilder parameter(ParameterInt param) {
+        this.param = param;
+        return this;
+    }
+
+    public ParserBuilder fieldMap(Map<String,String> fieldMap) {
+        this.fieldMap = fieldMap;
         return this;
     }
 
     public CommandLineParser generateParser() throws IllegalArgumentException {
-        return new CommandLineParser( params);
+        return new CommandLineParser( param, fieldMap);
     }
 
 }

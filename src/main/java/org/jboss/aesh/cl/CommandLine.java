@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A parsed String based on the provided Parameter and Options defined
+ * A parsed String based on the provided Command and Options defined
  * in a {@link CommandLineParser}.
  *
  * All found options and arguments can be queried after.
@@ -30,7 +30,7 @@ public class CommandLine {
     }
 
     public void addOption(ParsedOption option) throws OptionParserException {
-        ParsedOption existingOption = getOption(option.getName());
+        ParsedOption existingOption = getOption(option.getShortName());
         if (existingOption == null) {
             options.add(option);
         }
@@ -63,8 +63,8 @@ public class CommandLine {
 
     private ParsedOption getOption(String name) {
         for(ParsedOption po : options) {
-            if((po.getName() != null && po.getName().equals(name)) ||
-                    (po.getLongName() != null && po.getLongName().equals(name)))
+            if((po.getShortName() != null && po.getShortName().equals(name)) ||
+                    (po.getName() != null && po.getName().equals(name)))
                 return po;
         }
         return null;
@@ -72,8 +72,8 @@ public class CommandLine {
 
     public boolean hasOption(String name) {
         for(ParsedOption po : options) {
-            if(po.getName().equals(name) ||
-                    po.getLongName().equals(name))
+            if(po.getShortName().equals(name) ||
+                    po.getName().equals(name))
                 return true;
         }
         return false;
@@ -89,8 +89,8 @@ public class CommandLine {
 
     public String getOptionValue(String name, String fallback) {
         for(ParsedOption po : options) {
-            if((po.getName() != null && po.getName().equals(name)) ||
-                    (po.getLongName() != null && po.getLongName().equals(name)))
+            if((po.getShortName() != null && po.getShortName().equals(name)) ||
+                    (po.getName() != null && po.getName().equals(name)))
                 return po.getValue();
         }
         return fallback;
@@ -106,8 +106,8 @@ public class CommandLine {
 
     public List<String> getOptionValues(String name, List<String> fallback) {
         for(ParsedOption po : options) {
-            if((po.getName() != null && po.getName().equals(name)) ||
-                    (po.getLongName() != null && po.getLongName().equals(name)))
+            if((po.getShortName() != null && po.getShortName().equals(name)) ||
+                    (po.getName() != null && po.getName().equals(name)))
                 return po.getValues();
         }
 
@@ -116,8 +116,8 @@ public class CommandLine {
 
     public List<OptionProperty> getOptionProperties(String name) {
         for(ParsedOption po : options) {
-            if((po.getName() != null && po.getName().equals(name)) ||
-                    (po.getLongName() != null && po.getLongName().equals(name)))
+            if((po.getShortName() != null && po.getShortName().equals(name)) ||
+                    (po.getName() != null && po.getName().equals(name)))
                 return po.getProperties();
         }
 

@@ -23,49 +23,65 @@ public class ParserGeneratorTest extends TestCase {
 
     public void testClassGenerator() throws CommandLineParserException {
 
-        CommandLineParser parser = ParserGenerator.generateParser(Test1.class);
+        Test1 test1 = new Test1();
+        CommandLineParser parser = ParserGenerator.generateCommandLineParser(test1);
 
-        assertEquals("a simple test", parser.getParameters().get(0).getUsage());
-        List<OptionInt> options = parser.getParameters().get(0).getOptions();
-        assertEquals("f", options.get(0).getName());
-        assertEquals("foo", options.get(0).getLongName());
-        assertEquals("e", options.get(1).getName());
+        assertEquals("a simple test", parser.getParameter().getUsage());
+        List<OptionInt> options = parser.getParameter().getOptions();
+        assertEquals("f", options.get(0).getShortName());
+        assertEquals("foo", options.get(0).getName());
+        assertEquals("e", options.get(1).getShortName());
         assertEquals("enable e", options.get(1).getDescription());
         assertTrue(options.get(1).hasValue());
         assertTrue(options.get(1).isRequired());
+        assertEquals("bar", options.get(2).getName());
+        assertFalse(options.get(2).hasValue());
 
-        parser = ParserGenerator.generateParser(Test2.class);
-        assertEquals("more [options] file...", parser.getParameters().get(0).getUsage());
-        options = parser.getParameters().get(0).getOptions();
-        assertEquals("d", options.get(0).getName());
-        assertEquals("V", options.get(1).getName());
+        Test2 test2 = new Test2();
+        parser = ParserGenerator.generateCommandLineParser(test2);
+        assertEquals("more [options] file...", parser.getParameter().getUsage());
+        options = parser.getParameter().getOptions();
+        assertEquals("d", options.get(0).getShortName());
+        assertEquals("V", options.get(1).getShortName());
 
-        parser = ParserGenerator.generateParser(Test3.class);
-        options = parser.getParameters().get(0).getOptions();
-        assertEquals("t", options.get(0).getName());
-        assertEquals("e", options.get(1).getName());
+        parser = ParserGenerator.generateCommandLineParser(Test3.class);
+        options = parser.getParameter().getOptions();
+        assertEquals("t", options.get(0).getShortName());
+        assertEquals("e", options.get(1).getShortName());
 
     }
 }
 
-@Parameter(name = "test", usage = "a simple test",
-        options = {
-                @Option(name = 'f', longName = "foo", description = "enable foo"),
-                @Option(name = 'e', description = "enable e", hasValue = true, required = true)
-        })
-class Test1 {}
+@Command(name = "test", description = "a simple test")
+class Test1 {
+    @Option(shortName = 'f', name = "foo", description = "enable foo")
+    private String foo;
 
-@Parameter(name = "test", usage = "more [options] file...",
-        options = {
-                @Option(name = 'd', description = "display help instead of ring bell"),
-                @Option(name = 'V', description = "output version information and exit")
-        })
-class Test2 {}
+    @Option(shortName = 'e', description = "enable e", required = true)
+    private String e;
 
-@Parameter(name = "test", usage = "more [options] file...",
-        options = {
-                @Option(longName = "target", description = "target directory"),
-                @Option(longName = "test", description = "test run")
-        })
-class Test3 {}
+    @Option(description = "has enabled bar")
+    private Boolean bar;
+
+}
+
+@Command(name = "test", description = "more [options] file...")
+class Test2 {
+
+    @Option(description = "display help instead of ring bell")
+    private String display;
+
+    @Option(shortName = 'V', description = "output version information and exit")
+    private String version;
+}
+
+@Command(name = "test", description = "more [options] file...")
+class Test3 {
+
+    @Option(name = "target", description = "target directory")
+    private String target;
+
+    @Option(shortName = 'e', description = "test run")
+    private String test;
+}
 

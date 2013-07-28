@@ -111,22 +111,22 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         Completion completion = new Completion() {
             @Override
             public void complete(CompleteOperation co) {
-                if(parser.getParameters().get(0).getName().startsWith(co.getBuffer())) {
-                    co.addCompletionCandidate(parser.getParameters().get(0).getName());
+                if(parser.getParameter().getName().startsWith(co.getBuffer())) {
+                    co.addCompletionCandidate(parser.getParameter().getName());
                 }
                 // commandline longer than the name
-                else if(co.getBuffer().startsWith(parser.getParameters().get(0).getName())){
-                   if(co.getBuffer().length() > parser.getParameters().get(0).getName().length())  {
+                else if(co.getBuffer().startsWith(parser.getParameter().getName())){
+                   if(co.getBuffer().length() > parser.getParameter().getName().length())  {
                       if(co.getBuffer().endsWith(" --")) {
-                         for(OptionInt o : parser.getParameters().get(0).getOptions()) {
-                             co.addCompletionCandidate("--"+o.getLongName());
-                             builder.append("--"+o.getLongName()+" ");
+                         for(OptionInt o : parser.getParameter().getOptions()) {
+                             co.addCompletionCandidate("--"+o.getName());
+                             builder.append("--"+o.getName()+" ");
                          }
                       }
                       else if(co.getBuffer().endsWith(" -")) {
-                          for(OptionInt o : parser.getParameters().get(0).getOptions()) {
-                              co.addCompletionCandidate("-"+o.getName());
-                              builder.append("-"+o.getName()+" ");
+                          for(OptionInt o : parser.getParameter().getOptions()) {
+                              co.addCompletionCandidate("-"+o.getShortName());
+                              builder.append("-"+o.getShortName()+" ");
                           }
                       }
                    }

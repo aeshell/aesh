@@ -14,50 +14,50 @@ import java.util.List;
  */
 public class ParsedOption {
 
+    private String shortName;
     private String name;
-    private String longName;
     private Class<?> type;
     private List<String> values;
     private List<OptionProperty> properties;
 
-    public ParsedOption(String name, String longName, List<String> values, Class<?> type) {
+    public ParsedOption(String shortName, String name, List<String> values, Class<?> type) {
+        this.shortName = shortName;
         this.name = name;
-        this.longName = longName;
         this.type = type;
         this.values = new ArrayList<String>();
         this.values.addAll(values);
     }
 
-    public ParsedOption(String name, String longName, OptionProperty property, Class<?> type) {
+    public ParsedOption(String shortName, String name, OptionProperty property, Class<?> type) {
+        this.shortName = shortName;
         this.name = name;
-        this.longName = longName;
         this.type = type;
         values = new ArrayList<String>();
         properties = new ArrayList<OptionProperty>();
         properties.add(property);
     }
 
-    public ParsedOption(String name, String longName, String value, Class<?> type) {
+    public ParsedOption(String shortName, String name, String value, Class<?> type) {
+        this.shortName = shortName;
         this.name = name;
-        this.longName = longName;
         this.type = type;
         values = new ArrayList<String>();
         values.add(value);
+    }
+
+    public String getShortName() {
+        return shortName;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getLongName() {
-        return longName;
-    }
-
     public String getDisplayName() {
-        if(longName != null)
-            return "--"+longName;
+        if(name != null)
+            return "--"+ name;
         else
-            return "-"+name;
+            return "-"+ shortName;
     }
 
     public Class<?> getType() {
