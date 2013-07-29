@@ -106,8 +106,7 @@ class ParseCompleteTest2 {
     @Option(shortName = 'f', name = "foo", description = "enable foo")
     private String foo;
 
-    @Option(shortName = 'e', name = "equal", description = "enable equal",
-            type = Boolean.class, required = true, defaultValue = "false")
+    @Option(shortName = 'e', name = "equal", description = "enable equal", required = true, defaultValue = "false")
     private Boolean equal;
 
     @Option(shortName = 'D', description = "define properties",

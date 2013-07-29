@@ -6,8 +6,12 @@
  */
 package org.jboss.aesh.cl.internal;
 
+import org.jboss.aesh.cl.converter.CLConverter;
+import org.jboss.aesh.cl.converter.CLConverterManager;
 import org.jboss.aesh.cl.exception.OptionParserException;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +31,8 @@ public class OptionInt {
     private String argument;
     private String defaultValue;
     private Class<?> type;
+    private CLConverter converter;
+    private OptionType optionType;
     private boolean required = false;
     private char valueSeparator;
     private boolean isProperty = false;
@@ -179,6 +185,31 @@ public class OptionInt {
         }
 
         return sb.toString();
+    }
+
+    public void injectValueIntoField(Object instance, String fieldName) {
+        try {
+            Field field = instance.getClass().getDeclaredField(fieldName);
+            if(Modifier.isPrivate(field.getModifiers()))
+                field.setAccessible(true);
+            if(optionType == OptionType.NORMAL) {
+                if(converter != null) {
+                    field.set(instance, converter.convert(getValue()));
+                }
+                else {
+                    if(CLConverterManager.getInstance().hasConverter(type))
+                        field.set(instance, CLConverterManager.getInstance().getConverter(type).convert(getValue()));
+                    else {
+                       //probably throw some error
+                    }
+                }
+            }
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override

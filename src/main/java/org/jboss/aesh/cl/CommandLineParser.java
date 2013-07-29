@@ -16,6 +16,7 @@ import org.jboss.aesh.util.Parser;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -278,9 +279,79 @@ public class CommandLineParser {
     public void populateObject(Object instance, String line) throws CommandLineParserException {
         CommandLine cl = parse(line);
         for(String optionName : fieldMap.keySet()) {
-            if(cl.getOptionValue(optionName) != null) {
+            if(cl.getOptionProperties(optionName) != null && cl.getOptionProperties(optionName).size() > 0)
+                injectPropertyValuesIntoField(instance, fieldMap.get(optionName), cl.getOptionProperties(optionName));
+
+            //else if(cl.getOptionValues(optionName) != null && cl.getOptionValues(optionName).size() > 0)
+            //    injectListValuesIntoField(instance, fieldMap.get(optionName), cl.getOptionValues(optionName));
+            else if(cl.getOptionValue(optionName) != null) {
                 injectValueIntoField(instance, fieldMap.get(optionName), cl.getOptionValue(optionName));
             }
+            else
+                resetField(instance, fieldMap.get(optionName));
+        }
+    }
+
+    private void injectListValuesIntoField(Object instance, String fieldName, List<String> optionValues) {
+    }
+
+    private void injectPropertyValuesIntoField(Object instance, String fieldName, List<OptionProperty> optionProperties) {
+        try {
+            Field field = instance.getClass().getDeclaredField(fieldName);
+            if(Modifier.isPrivate(field.getModifiers()))
+                field.setAccessible(true);
+
+            //if its an interface, we just instantiate a HashMap
+            if(field.getType().isInterface()) {
+                field.set(instance, newHashMap());
+            }
+            else
+                field.set(instance, field.getClass().newInstance());
+
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public <K,V> Map<K,V> newHashMap() {
+        return new HashMap<K,V>();
+    }
+
+    private void resetField(Object instance, String fieldName) {
+        try {
+            Field field = instance.getClass().getDeclaredField(fieldName);
+            if(Modifier.isPrivate(field.getModifiers()))
+                field.setAccessible(true);
+            if(field.getType().isPrimitive()) {
+                if(boolean.class.isAssignableFrom(field.getType()))
+                    field.set(instance, false);
+                else if(int.class.isAssignableFrom(field.getType()))
+                    field.set(instance, 0);
+                else if(short.class.isAssignableFrom(field.getType()))
+                    field.set(instance, 0);
+                else if(char.class.isAssignableFrom(field.getType()))
+                    field.set(instance, '\u0000');
+                else if(byte.class.isAssignableFrom(field.getType()))
+                    field.set(instance, 0);
+                else if(long.class.isAssignableFrom(field.getType()))
+                    field.set(instance, 0L);
+                else if(float.class.isAssignableFrom(field.getType()))
+                    field.set(instance, 0.0f);
+                else if(double.class.isAssignableFrom(field.getType()))
+                    field.set(instance, 0.0d);
+            }
+            else
+                field.set(instance, null);
+        }
+        catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
     }
 
@@ -289,7 +360,26 @@ public class CommandLineParser {
             Field field = instance.getClass().getDeclaredField(fieldName);
             if(Modifier.isPrivate(field.getModifiers()))
                 field.setAccessible(true);
-            field.set(instance, optionValue);
+
+            if(String.class.isAssignableFrom(field.getType()))
+                field.set(instance, optionValue);
+            else if(Boolean.class.isAssignableFrom(field.getType()) || boolean.class.isAssignableFrom(field.getType()))
+                field.set(instance, Boolean.valueOf(optionValue));
+            else if(Integer.class.isAssignableFrom(field.getType()) || int.class.isAssignableFrom(field.getType()))
+                field.set(instance, Integer.valueOf(optionValue));
+            else if(Float.class.isAssignableFrom(field.getType()) || float.class.isAssignableFrom(field.getType()))
+                field.set(instance, Float.valueOf(optionValue));
+            else if(Character.class.isAssignableFrom(field.getType()) || char.class.isAssignableFrom(field.getType()))
+                field.set(instance, optionValue.charAt(0));
+            else if(Short.class.isAssignableFrom(field.getType()) || short.class.isAssignableFrom(field.getType()))
+                field.set(instance, Short.valueOf(optionValue));
+            else if(Long.class.isAssignableFrom(field.getType()) || long.class.isAssignableFrom(field.getType()))
+                field.set(instance, Long.valueOf(optionValue));
+            else if(Double.class.isAssignableFrom(field.getType()) || double.class.isAssignableFrom(field.getType()))
+                field.set(instance, Double.valueOf(optionValue));
+            else if(Byte.class.isAssignableFrom(field.getType()) || byte.class.isAssignableFrom(field.getType()))
+                field.set(instance, Byte.valueOf(optionValue));
+
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (NoSuchFieldException e) {

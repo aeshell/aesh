@@ -42,7 +42,10 @@ public class ParsedOption {
         this.name = name;
         this.type = type;
         values = new ArrayList<String>();
-        values.add(value);
+        if(type != null && (Boolean.class.isAssignableFrom(type) || boolean.class.isAssignableFrom(type)))
+            values.add("true");
+        else
+            values.add(value);
     }
 
     public String getShortName() {
