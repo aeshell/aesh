@@ -21,8 +21,8 @@ public class ParameterInt {
     private String name;
     private String usage;
 
-   private Class<?> argumentType;
     private List<OptionInt> options;
+    private OptionInt argument;
 
     public ParameterInt(String name, String usage) {
         setName(name);
@@ -30,27 +30,27 @@ public class ParameterInt {
         options = new ArrayList<OptionInt>();
     }
 
-    public ParameterInt(String name, String usage, Class<?> argumentType) {
+    public ParameterInt(String name, String usage, OptionInt argument) {
         setName(name);
         setUsage(usage);
-        setArgumentType(argumentType);
+        this.argument = argument;
         options = new ArrayList<OptionInt>();
     }
 
     public ParameterInt(String name, String usage,
-                        Class<?> argumentType, OptionInt[] options) throws OptionParserException {
+                         OptionInt argument, OptionInt[] options) throws OptionParserException {
         setName(name);
         setUsage(usage);
-        setArgumentType(argumentType);
+        this.argument = argument;
         this.options = new ArrayList<OptionInt>();
         setOptions(Arrays.asList(options));
     }
 
     public ParameterInt(String name, String usage,
-                        Class<?> argumentType, List<OptionInt> options) throws OptionParserException {
+                        OptionInt argument, List<OptionInt> options) throws OptionParserException {
         setName(name);
         setUsage(usage);
-        setArgumentType(argumentType);
+        this.argument = argument;
         this.options = new ArrayList<OptionInt>();
         setOptions(options);
     }
@@ -61,71 +61,69 @@ public class ParameterInt {
 
     public void addOption(OptionInt opt) throws OptionParserException {
         this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
-                opt.getDescription(), opt.hasValue(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
-                opt.isProperty(), opt.hasMultipleValues(), opt.getDefaultValue(), opt.getType()));
+                opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
+                opt.getDefaultValue(), opt.getType(), opt.getOptionType()));
     }
 
     /**
      * Add an option
-     * Name or longName can be null
+     * Name or name can be null
      * Both argument and type can be null
      *
      * @param name name (short) one char
      * @param longName multi character name
      * @param description a description of the option
-     * @param hasValue if this option has value
      * @param argument what kind of argument this option can have
      * @param required is it required?
      * @param valueSeparator separator char
-     * @param isProperty is it a property
-     * @param hasMultipleValues have it multiple values
      * @param defaultValue the default value
      * @param type what kind of type it is (not used)
      */
-    public void addOption(char name, String longName, String description, boolean hasValue,
-                     String argument, boolean required, char valueSeparator, boolean isProperty,
-                     boolean hasMultipleValues, String defaultValue, Class<?> type) throws OptionParserException {
+    public void addOption(char name, String longName, String description,
+                     String argument, boolean required, char valueSeparator,
+                     String defaultValue, Class<?> type,
+                     OptionType optionType) throws OptionParserException {
         options.add(new OptionInt(verifyThatNamesAreUnique(name, longName), longName, description,
-                hasValue, argument, required, valueSeparator, isProperty, hasMultipleValues, defaultValue, type));
+                argument, required, valueSeparator, defaultValue,
+                type, optionType));
     }
 
     /**
      * Add an option
-     * Name or longName can be null
+     * Name or name can be null
      * Both argument and type can be null
      *
      * @param name name (short) one char
      * @param longName multi character name
      * @param description a description of the option
-     * @param hasValue if this option has value
      * @param argument what kind of argument this option can have
      * @param required is it required?
      * @param type what kind of type it is (not used)
      */
-    public void addOption(char name, String longName, String description, boolean hasValue,
-                     String argument, boolean required, boolean hasMultipleValues, Class<?> type) throws OptionParserException {
+    public void addOption(char name, String longName, String description, String argument,
+                          boolean required, Class<?> type, OptionType optionType) throws OptionParserException {
         options.add(new OptionInt(verifyThatNamesAreUnique(name, longName), longName, description,
-                hasValue, argument, required, '\u0000', false, hasMultipleValues, "", type));
+                argument, required, '\u0000', "", type, optionType));
     }
 
     /**
      * Add an option
-     * Name or longName can be null
+     * Name or name can be null
      *
      * @param name name (short) one char
      * @param longName multi character name
      * @param description a description of the option
-     * @param hasValue if this option has value
      */
-    public void addOption(char name, String longName, String description, boolean hasValue) throws OptionParserException {
-        addOption(verifyThatNamesAreUnique(name, longName), longName, description, hasValue, null, false, false, null);
+    public void addOption(char name, String longName, String description) throws OptionParserException {
+        addOption(verifyThatNamesAreUnique(name, longName), longName, description, null, false, null,
+                OptionType.NORMAL);
     }
 
     private void setOptions(List<OptionInt> options) throws OptionParserException {
         for(OptionInt opt : options) {
             this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
-                    opt.getDescription(), opt.hasValue(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
-                    opt.isProperty(), opt.hasMultipleValues(), opt.getDefaultValue(), opt.getType()));
+                    opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
+                    opt.getDefaultValue(), opt.getType(), opt.getOptionType()));
         }
     }
 
@@ -145,12 +143,12 @@ public class ParameterInt {
         this.usage = usage;
     }
 
-    public Class<?> getArgumentType() {
-        return argumentType;
+    public OptionInt getArgument() {
+        return argument;
     }
 
-    public void setArgumentType(Class<?> argumentType) {
-        this.argumentType = argumentType;
+    public void setArgument(OptionInt argument) {
+        this.argument = argument;
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {
@@ -165,7 +163,7 @@ public class ParameterInt {
             throw new OptionParserException("Option -"+name+" is already added to Param: "+this.toString());
         }
 
-        //if name is null, use one based on longName
+        //if name is null, use one based on name
         if(name == '\u0000') {
             if(longName != null && longName.length() > 0)
                 return findPossibleName(longName);
@@ -216,9 +214,9 @@ public class ParameterInt {
         return null;
     }
 
-   public void clean() {
+   public void clear() {
        for(OptionInt optionInt : options)
-           optionInt.clean();
+           optionInt.clear();
     }
 
     public List<String> getOptionLongNamesWithDash() {
@@ -260,8 +258,7 @@ public class ParameterInt {
     public String toString() {
         return "ParameterInt{" +
                 "name='" + name + '\'' +
-                ", usage='" + usage + '\'' +
-                ", argumentType=" + argumentType +
+                ", description='" + usage + '\'' +
                 ", options=" + options +
                 '}';
     }

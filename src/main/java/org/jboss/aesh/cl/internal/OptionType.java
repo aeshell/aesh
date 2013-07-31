@@ -13,5 +13,6 @@ public enum OptionType {
     LIST,
     GROUP,
     ARGUMENT,
-    NORMAL;
+    NORMAL,
+    BOOLEAN;
 }

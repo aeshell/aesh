@@ -2,6 +2,8 @@ package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
 
+import java.util.List;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -94,6 +96,9 @@ class ParseCompleteTest1 {
 
     @Option(shortName = 'D', description = "define properties", required = true)
     private String define;
+
+    @Arguments
+    private List<String> arguments;
 
 }
 

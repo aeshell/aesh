@@ -26,7 +26,6 @@ public class OptionInt {
     private String name;
 
     private String description;
-    private boolean hasValue = true;
     private List<String> values;
     private String argument;
     private String defaultValue;
@@ -35,29 +34,26 @@ public class OptionInt {
     private OptionType optionType;
     private boolean required = false;
     private char valueSeparator;
-    private boolean isProperty = false;
-    private boolean hasMultipleValues = false;
     private Map<String,String> properties;
 
-    public OptionInt(char shortName, String name, String description, boolean hasValue,
+    public OptionInt(char shortName, String name, String description,
                      String argument, boolean required, char valueSeparator,
-                     boolean isProperty, boolean hasMultipleValues, String defaultValue, Class<?> type) throws OptionParserException {
+                     String defaultValue, Class<?> type,
+                     OptionType optionType) throws OptionParserException {
         this.shortName = String.valueOf(shortName);
         this.name = name;
         this.description = description;
-        this.hasValue = hasValue;
         this.argument = argument;
         this.required = required;
         this.valueSeparator = valueSeparator;
-        this.isProperty = isProperty;
         this.type = type;
-        this.hasMultipleValues = hasMultipleValues;
         this.defaultValue = defaultValue;
+        this.optionType = optionType;
 
         properties = new HashMap<String, String>();
         values = new ArrayList<String>();
 
-        if((shortName == Character.MIN_VALUE) && name.equals("")) {
+        if((shortName == Character.MIN_VALUE) && name.equals("") && optionType != OptionType.ARGUMENT) {
             throw new OptionParserException("Either shortName or long shortName must be set.");
         }
     }
@@ -86,11 +82,11 @@ public class OptionInt {
     }
 
     public boolean hasValue() {
-        return hasValue || hasMultipleValues;
+        return optionType != OptionType.BOOLEAN;
     }
 
     public boolean hasMultipleValues() {
-        return hasMultipleValues;
+        return optionType == OptionType.LIST;
     }
 
     public boolean isRequired() {
@@ -110,7 +106,7 @@ public class OptionInt {
     }
 
     public boolean isProperty() {
-        return isProperty;
+        return optionType == OptionType.GROUP;
     }
 
     public String getArgument() {
@@ -129,9 +125,15 @@ public class OptionInt {
         return properties;
     }
 
-    public void clean() {
-        values.clear();
-        properties.clear();
+    public OptionType getOptionType() {
+        return optionType;
+    }
+
+    public void clear() {
+        if(values != null)
+            values.clear();
+        if(properties != null)
+            properties.clear();
     }
 
     public String getDisplayName() {
@@ -218,14 +220,11 @@ public class OptionInt {
                 "shortName='" + shortName + '\'' +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", hasValue=" + hasValue +
                 ", values=" + values +
                 ", argument='" + argument + '\'' +
                 ", type=" + type +
                 ", required=" + required +
                 ", valueSeparator=" + valueSeparator +
-                ", isProperty=" + isProperty +
-                ", hasMultipleValues=" + hasMultipleValues +
                 ", properties=" + properties +
                 '}';
     }

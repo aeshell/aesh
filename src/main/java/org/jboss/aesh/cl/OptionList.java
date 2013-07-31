@@ -49,7 +49,6 @@ public @interface OptionList {
      * If set will force the option to be of the form:
      * name[separator]value
      * As an example, if we want to create an option like: --foo bar1,bar2
-     * {@code @Option(longName='foo', valueSeparator=',')}
      */
     char valueSeparator() default ',';
 

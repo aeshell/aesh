@@ -13,6 +13,9 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * The possible arguments of a command line command
+ * Must be defined with a field that implements Collection
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 @Retention(RUNTIME)
@@ -23,9 +26,17 @@ public @interface Arguments {
      * A description of the param.
      * This text will be printed out as part of a usage info.
      */
-     String description();
+     String description() default "";
 
     /**
      * Option type, default is String.class
      */
-    Class<?> type() default String.class;}
+    Class<?> type() default String.class;
+
+    /**
+     * Specify the value separator between arguments.
+     * Default is ' ' (space).
+     */
+    char valueSeparator() default ' ';
+
+}

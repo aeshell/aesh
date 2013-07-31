@@ -4,7 +4,7 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.cl;
+package org.jboss.aesh.cl.builder;
 
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
@@ -18,39 +18,39 @@ import java.util.List;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ParameterBuilder {
+public class CommandBuilder {
 
     private String name;
-    private String usage;
-    private Class<?> argumentType = String.class;
+    private String description;
+    private OptionInt argument;
     private List<OptionInt> options;
 
 
-    public ParameterBuilder() {
+    public CommandBuilder() {
         options = new ArrayList<OptionInt>();
     }
 
-    public ParameterBuilder name(String name) {
+    public CommandBuilder name(String name) {
         this.name = name;
         return this;
     }
 
-    public ParameterBuilder usage(String usage) {
-        this.usage = usage;
+    public CommandBuilder description(String usage) {
+        this.description = usage;
         return this;
     }
 
-    public ParameterBuilder argumentType(Class<?> type) {
-        this.argumentType = type;
+    public CommandBuilder argument(OptionInt argument) {
+        this.argument = argument;
         return this;
     }
 
-    public ParameterBuilder addOption(OptionInt option) {
+    public CommandBuilder addOption(OptionInt option) {
         this.options.add(option);
         return this;
     }
 
-    public ParameterBuilder addOptions(List<OptionInt> options) {
+    public CommandBuilder addOptions(List<OptionInt> options) {
         this.options.addAll(options);
         return this;
     }
@@ -58,6 +58,6 @@ public class ParameterBuilder {
     public ParameterInt generateParameter() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
-        return  new ParameterInt(name, usage, argumentType, options);
+        return  new ParameterInt(name, description, argument, options);
     }
 }

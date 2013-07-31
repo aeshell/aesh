@@ -7,6 +7,8 @@
 package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
+import org.jboss.aesh.cl.builder.CommandBuilder;
+import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.console.Config;
 
@@ -20,19 +22,19 @@ public class CommandLineFormatterTest extends TestCase {
     }
 
     public void testFormatter() throws CommandLineParserException {
-        ParameterBuilder pb = new ParameterBuilder().name("man").usage("[OPTION...]");
+        CommandBuilder pb = new CommandBuilder().name("man").description("[OPTION...]");
 
         pb.addOption(
                 new OptionBuilder()
-                        .name('d')
-                        .longName("debug")
+                        .shortName('d')
+                        .name("debug")
                         .description("emit debugging messages")
                         .create());
 
         pb.addOption(
                 new OptionBuilder()
-                        .name('D')
-                        .longName("default")
+                        .shortName('D')
+                        .name("default")
                         .description("reset all options to their default values")
                         .create());
 
@@ -45,26 +47,26 @@ public class CommandLineFormatterTest extends TestCase {
     }
 
     public void testFormatter2() throws CommandLineParserException {
-        ParameterBuilder pb = new ParameterBuilder().name("man").usage("[OPTION...]");
+        CommandBuilder pb = new CommandBuilder().name("man").description("[OPTION...]");
 
         pb.addOption(
                 new OptionBuilder()
-                        .name('d')
-                        .longName("debug")
+                        .shortName('d')
+                        .name("debug")
                         .description("emit debugging messages")
                         .create());
 
         pb.addOption(
                 new OptionBuilder()
-                        .name('D')
-                        .longName("default")
+                        .shortName('D')
+                        .name("default")
                         .description("reset all options to their default values")
                         .create());
 
         pb.addOption(
                 new OptionBuilder()
-                        .name('f')
-                        .longName("file")
+                        .shortName('f')
+                        .name("file")
                         .hasValue(true)
                         .argument("filename")
                         .description("set the filename")

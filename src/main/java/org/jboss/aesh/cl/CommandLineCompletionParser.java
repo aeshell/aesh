@@ -7,6 +7,7 @@
 package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.util.Parser;
 
@@ -94,14 +95,19 @@ public class CommandLineCompletionParser {
     private ParsedCompleteObject findCompleteObjectValue(String line, boolean endsWithSpace) throws CommandLineParserException {
         CommandLine cl = parser.parse(line, true);
         if(cl.getArguments().isEmpty()) {
-            ParsedOption po = cl.getOptions().get(cl.getOptions().size()-1);
+            OptionInt po = cl.getOptions().get(cl.getOptions().size()-1);
             return new ParsedCompleteObject( po.getName().isEmpty() ? po.getShortName() : po.getName(),
                     endsWithSpace ? "" : po.getValue(), po.getType(), true);
         }
         else {
-            return new ParsedCompleteObject("",
-                    cl.getArguments().get(cl.getArguments().size()-1),
-                    parser.getParameter().getArgumentType(), false);
+            if(parser.getParameter().getArgument() == null)
+                return new ParsedCompleteObject("",
+                        cl.getArguments().get(cl.getArguments().size()-1),
+                        String.class, false);
+            else
+                return new ParsedCompleteObject("",
+                        cl.getArguments().get(cl.getArguments().size()-1),
+                        parser.getParameter().getArgument().getType(), false);
         }
     }
 

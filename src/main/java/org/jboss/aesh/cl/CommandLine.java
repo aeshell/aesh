@@ -7,9 +7,12 @@
 package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.internal.OptionInt;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A parsed String based on the provided Command and Options defined
@@ -21,16 +24,16 @@ import java.util.List;
  */
 public class CommandLine {
 
-    private List<ParsedOption> options;
+    private List<OptionInt> options;
     private List<String> arguments;
 
     public CommandLine() {
-        options = new ArrayList<ParsedOption>();
+        options = new ArrayList<OptionInt>();
         arguments = new ArrayList<String>();
     }
 
-    public void addOption(ParsedOption option) throws OptionParserException {
-        ParsedOption existingOption = getOption(option.getShortName());
+    public void addOption(OptionInt option) throws OptionParserException {
+        OptionInt existingOption = getOption(option.getShortName());
         if (existingOption == null) {
             options.add(option);
         }
@@ -40,12 +43,12 @@ public class CommandLine {
             (option.getProperties() == null || existingOption.getProperties().size() == 0))
                 throw new OptionParserException("Not allowed to specify the same option ("+option.getDisplayName()+") twice");
             else
-                existingOption.getProperties().addAll(option.getProperties());
+                existingOption.getProperties().putAll(option.getProperties());
         }
 
     }
 
-    protected List<ParsedOption> getOptions() {
+    protected List<OptionInt> getOptions() {
         return options;
     }
 
@@ -61,8 +64,8 @@ public class CommandLine {
        return hasOption(String.valueOf(name));
     }
 
-    private ParsedOption getOption(String name) {
-        for(ParsedOption po : options) {
+    protected OptionInt getOption(String name) {
+        for(OptionInt po : options) {
             if((po.getShortName() != null && po.getShortName().equals(name)) ||
                     (po.getName() != null && po.getName().equals(name)))
                 return po;
@@ -71,7 +74,7 @@ public class CommandLine {
     }
 
     public boolean hasOption(String name) {
-        for(ParsedOption po : options) {
+        for(OptionInt po : options) {
             if(po.getShortName().equals(name) ||
                     po.getName().equals(name))
                 return true;
@@ -88,7 +91,7 @@ public class CommandLine {
     }
 
     public String getOptionValue(String name, String fallback) {
-        for(ParsedOption po : options) {
+        for(OptionInt po : options) {
             if((po.getShortName() != null && po.getShortName().equals(name)) ||
                     (po.getName() != null && po.getName().equals(name)))
                 return po.getValue();
@@ -105,7 +108,7 @@ public class CommandLine {
     }
 
     public List<String> getOptionValues(String name, List<String> fallback) {
-        for(ParsedOption po : options) {
+        for(OptionInt po : options) {
             if((po.getShortName() != null && po.getShortName().equals(name)) ||
                     (po.getName() != null && po.getName().equals(name)))
                 return po.getValues();
@@ -114,14 +117,14 @@ public class CommandLine {
         return fallback;
     }
 
-    public List<OptionProperty> getOptionProperties(String name) {
-        for(ParsedOption po : options) {
+    public Map<String,String> getOptionProperties(String name) {
+        for(OptionInt po : options) {
             if((po.getShortName() != null && po.getShortName().equals(name)) ||
                     (po.getName() != null && po.getName().equals(name)))
                 return po.getProperties();
         }
 
-        return new ArrayList<OptionProperty>();
+        return new HashMap<String, String>();
     }
 }
 

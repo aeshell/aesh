@@ -7,7 +7,10 @@
 package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
+import org.jboss.aesh.cl.builder.CommandBuilder;
+import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.internal.OptionType;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -19,10 +22,10 @@ public class BuilderTest extends TestCase {
     }
 
     public void testBuilder() throws CommandLineParserException {
-        ParameterBuilder pb = new ParameterBuilder();
-        pb.name("foo").usage("foo is bar");
+        CommandBuilder pb = new CommandBuilder();
+        pb.name("foo").description("foo is bar");
         pb.addOption(
-                new OptionBuilder().description("filename given").name('f').longName("filename")
+                new OptionBuilder().description("filename given").shortName('f').name("filename")
                         .hasValue(true).create());
 
         CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
@@ -35,33 +38,36 @@ public class BuilderTest extends TestCase {
 
     public void testBuilder2() throws CommandLineParserException {
 
-        ParameterBuilder pb = new ParameterBuilder().name("less").usage("less is more");
+        CommandBuilder pb = new CommandBuilder().name("less").description("less is more");
         pb.addOption(
-                new OptionBuilder().description("version").name('V').longName("version")
+                new OptionBuilder().description("version").shortName('V').name("version")
                         .hasValue(false).required(true).create());
         pb.addOption(
-                new OptionBuilder().description("is verbose").name('v').longName("verbose")
+                new OptionBuilder().description("is verbose").shortName('v').name("verbose")
                         .hasValue(false).create());
 
         pb.addOption(
-                new OptionBuilder().description("attributes").name('D')
+                new OptionBuilder().description("attributes").shortName('D').name("attributes")
                         .isProperty(true).create());
 
         pb.addOption(
-                new OptionBuilder().description("values").longName("values")
+                new OptionBuilder().description("values").name("values").shortName('a')
                         .hasMultipleValues(true).create());
+
+        pb.argument(new OptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
+                .optionType(OptionType.ARGUMENT).type(String.class).create());
 
         CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 
         CommandLine cl = clp.parse("less -V test1.txt");
         assertTrue(cl.hasOption('V'));
-        assertNull(cl.getOptionValue('V'));
+        assertEquals("true", cl.getOptionValue('V'));
         assertFalse(cl.hasOption('v'));
         assertEquals("test1.txt", cl.getArguments().get(0));
 
         cl = clp.parse("less -V -Dfoo1=bar1 -Dfoo2=bar2 test1.txt");
         assertTrue(cl.hasOption('D'));
-        assertEquals("bar2", cl.getOptionProperties("D").get(1).getValue());
+        assertEquals("bar2", cl.getOptionProperties("D").get("foo2"));
 
         cl = clp.parse("less -V -Dfoo1=bar1 -Dfoo2=bar2 --values f1,f2,f3 test1.txt");
         assertTrue(cl.hasOption("values"));
@@ -70,11 +76,14 @@ public class BuilderTest extends TestCase {
     }
 
     public void testBuilder3() throws CommandLineParserException {
-        ParameterBuilder pb = new ParameterBuilder().name("less").usage("less is more");
+        CommandBuilder pb = new CommandBuilder().name("less").description("less is more");
         pb.addOption(
-                new OptionBuilder().description("version").longName("version").hasValue(false).required(true).create());
+                new OptionBuilder().description("version").name("version").hasValue(false).required(true).create());
         pb.addOption(
-                new OptionBuilder().description("is verbose").longName("verbose").hasValue(false).create());
+                new OptionBuilder().description("is verbose").name("verbose").hasValue(false).shortName('e').create());
+
+        pb.argument(new OptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
+                .optionType(OptionType.ARGUMENT).type(String.class).create());
 
         CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 

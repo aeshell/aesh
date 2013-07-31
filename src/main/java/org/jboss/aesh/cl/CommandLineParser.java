@@ -11,14 +11,18 @@ import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.exception.RequiredOptionException;
 import org.jboss.aesh.cl.internal.OptionInt;
+import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.util.Parser;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A simple command line parser.
@@ -105,14 +109,14 @@ public class CommandLineParser {
 
     private CommandLine doParse(ParameterInt param, List<String> lines,
                                 boolean ignoreMissing) throws CommandLineParserException {
-        param.clean();
+        param.clear();
         CommandLine commandLine = new CommandLine();
         OptionInt active = null;
         boolean addedArgument = false;
         //skip first entry since that's the name of the command
         for(int i=1; i < lines.size(); i++) {
             String parseLine = lines.get(i);
-            //longName
+            //name
             if(parseLine.startsWith("--")) {
                 //make sure that we dont have any "active" options lying around
                 if(active != null)
@@ -130,16 +134,24 @@ public class CommandLineParser {
                                     parseLine.indexOf(EQUALS));
                     String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
 
+                    active.addProperty(name, value);
+                    commandLine.addOption(active);
+                    /*
                     commandLine.addOption(new
                             ParsedOption(active.getShortName(), active.getName(),
                             new OptionProperty(name, value), active.getType()));
+                            */
                     active = null;
                     if(addedArgument)
                         throw new ArgumentParserException("An argument was given to an option that do not support it.");
                 }
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
+                    active.addValue("true");
+                    commandLine.addOption(active);
+                    /*
                     commandLine.addOption(new ParsedOption(active.getShortName(), active.getName(),
                             active.getValue(), active.getType()));
+                            */
                     active = null;
                     if(addedArgument)
                         throw new ArgumentParserException("An argument was given to an option that do not support it.");
@@ -167,17 +179,25 @@ public class CommandLineParser {
                                     parseLine.indexOf(EQUALS));
                     String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
 
+                    active.addProperty(name, value);
+                    commandLine.addOption(active);
+                    /*
                     commandLine.addOption(new
                             ParsedOption(active.getShortName(), active.getName(),
                             new OptionProperty(name, value), active.getType()));
+                            */
                     active = null;
                     if(addedArgument)
                         throw new OptionParserException("An argument was given to an option that do not support it.");
                 }
 
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
+                    active.addValue("true");
+                    commandLine.addOption(active);
+                    /*
                     commandLine.addOption(new ParsedOption(String.valueOf(active.getShortName()),
                             active.getName(), active.getValue(), active.getType()));
+                            */
                     active = null;
                     if(addedArgument)
                         throw new OptionParserException("An argument was given to an option that do not support it.");
@@ -196,21 +216,32 @@ public class CommandLineParser {
                 else
                     active.addValue(parseLine);
 
+                commandLine.addOption(active);
+                /*
                 commandLine.addOption(new ParsedOption(active.getShortName(),
                         active.getName(), active.getValues(), active.getType()));
+                        */
                 active = null;
                 if(addedArgument)
                     throw new OptionParserException("An argument was given to an option that do not support it.");
             }
             //if no parameter is "active", we add it as an argument
             else {
-                commandLine.addArgument(parseLine);
-                addedArgument = true;
+                if(param.getArgument() == null) {
+                    throw new OptionParserException("An argument was given to a command that do not support it.");
+                }
+                else {
+                    commandLine.addArgument(parseLine);
+                    addedArgument = true;
+                }
             }
         }
         if(active != null && ignoreMissing) {
+            commandLine.addOption(active);
+            /*
             commandLine.addOption(new ParsedOption(active.getShortName(),
                     active.getName(), active.getValues(), active.getType()));
+                    */
         }
 
         //this will throw and CommandLineParserException if needed
@@ -224,7 +255,7 @@ public class CommandLineParser {
         for(OptionInt o : param.getOptions())
             if(o.isRequired()) {
                 boolean found = false;
-                for(ParsedOption po : commandLine.getOptions()) {
+                for(OptionInt po : commandLine.getOptions()) {
                     if(po.getShortName().equals(o.getShortName()) ||
                             po.getShortName().equals(o.getName()))
                         found = true;
@@ -279,30 +310,69 @@ public class CommandLineParser {
     public void populateObject(Object instance, String line) throws CommandLineParserException {
         CommandLine cl = parse(line);
         for(String optionName : fieldMap.keySet()) {
+            if(cl.hasOption(optionName)) {
+                OptionInt optionInt = cl.getOption(optionName);
+                if(optionInt.getOptionType() == OptionType.NORMAL ||
+                        optionInt.getOptionType() == OptionType.BOOLEAN)
+                    injectValueIntoField(instance, fieldMap.get(optionName), cl.getOptionValue(optionName));
+                else if(optionInt.getOptionType() == OptionType.GROUP)
+                    injectPropertyValuesIntoField(instance, fieldMap.get(optionName), cl.getOption(optionName));
+                else if(optionInt.getOptionType() == OptionType.LIST)
+                    injectListValuesIntoField(instance, fieldMap.get(optionName), cl.getOption(optionName));
+                //else if(optionInt.getOptionType() == OptionType.ARGUMENT)
+                //    injectListValuesIntoField(instance, fieldMap.get(optionName), cl.getOptionValues(optionName));
+
+            }
+            /*
             if(cl.getOptionProperties(optionName) != null && cl.getOptionProperties(optionName).size() > 0)
                 injectPropertyValuesIntoField(instance, fieldMap.get(optionName), cl.getOptionProperties(optionName));
-
-            //else if(cl.getOptionValues(optionName) != null && cl.getOptionValues(optionName).size() > 0)
-            //    injectListValuesIntoField(instance, fieldMap.get(optionName), cl.getOptionValues(optionName));
+            else if(cl.getOptionValues(optionName) != null && cl.getOptionValues(optionName).size() > 0)
+                injectListValuesIntoField(instance, fieldMap.get(optionName), cl.getOptionValues(optionName));
             else if(cl.getOptionValue(optionName) != null) {
                 injectValueIntoField(instance, fieldMap.get(optionName), cl.getOptionValue(optionName));
             }
+            */
             else
                 resetField(instance, fieldMap.get(optionName));
         }
     }
 
-    private void injectListValuesIntoField(Object instance, String fieldName, List<String> optionValues) {
-    }
-
-    private void injectPropertyValuesIntoField(Object instance, String fieldName, List<OptionProperty> optionProperties) {
+    private void injectListValuesIntoField(Object instance, String fieldName, OptionInt option) {
         try {
             Field field = instance.getClass().getDeclaredField(fieldName);
             if(Modifier.isPrivate(field.getModifiers()))
                 field.setAccessible(true);
 
             //if its an interface, we just instantiate a HashMap
-            if(field.getType().isInterface()) {
+            if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
+                if(Set.class.isAssignableFrom(field.getType()))
+                    field.set(instance, new HashSet());
+                else if(List.class.isAssignableFrom(field.getType()))
+                    field.set(instance, new ArrayList());
+                //todo: should change this
+                else
+                    field.set(instance, new ArrayList());
+            }
+            else
+                field.set(instance, field.getClass().newInstance());
+
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void injectPropertyValuesIntoField(Object instance, String fieldName, OptionInt option) {
+        try {
+            Field field = instance.getClass().getDeclaredField(fieldName);
+            if(Modifier.isPrivate(field.getModifiers()))
+                field.setAccessible(true);
+
+            //if its an interface, we just instantiate a HashMap
+            if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
                 field.set(instance, newHashMap());
             }
             else

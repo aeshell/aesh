@@ -38,9 +38,9 @@ public class CommandLineParserTest extends TestCase {
             assertEquals("/tmp/file.txt", cl.getArguments().get(0));
             assertNotNull(cl.hasOption("X"));
 
-            List<OptionProperty> properties = cl.getOptionProperties("D");
-            assertEquals("128m", properties.get(0).getValue());
-            assertEquals("512m", properties.get(1).getValue());
+            Map<String,String> properties = cl.getOptionProperties("D");
+            assertEquals("128m", properties.get("Xms"));
+            assertEquals("512m", properties.get("Xmx"));
 
             cl = parser.parse("test -e=bar -DXms=128m -DXmx=512m /tmp/file.txt");
             assertEquals("e", cl.getOptions().get(0).getShortName());
@@ -54,10 +54,10 @@ public class CommandLineParserTest extends TestCase {
             cl = parser.parse("test --equal \"bar bar2\" -DXms=\"128g \" -DXmx=512g\\ m /tmp/file.txt");
             assertEquals("bar bar2", cl.getOptionValue("equal"));
 
-            assertEquals("Xms", cl.getOptionProperties("D").get(0).getName());
-            assertEquals("128g ", cl.getOptionProperties("D").get(0).getValue());
-            assertEquals("Xmx", cl.getOptionProperties("D").get(1).getName());
-            assertEquals("512g m", cl.getOptionProperties("D").get(1).getValue());
+            assertTrue(cl.getOptionProperties("D").containsKey("Xms"));
+            assertEquals("128g ", cl.getOptionProperties("D").get("Xms"));
+            assertTrue(cl.getOptionProperties("D").containsKey("Xmx"));
+            assertEquals("512g m", cl.getOptionProperties("D").get("Xmx"));
 
         }
         catch (CommandLineParserException e) {
@@ -168,6 +168,9 @@ public class CommandLineParserTest extends TestCase {
         assertEquals("bar4", cl.getOptionValues("help").get(0));
         assertEquals("bar6", cl.getOptionValues("h").get(2));
 
+        cl = clp.parse("test --bar 1,2,3");
+        assertTrue(cl.hasOption("bar"));
+        assertEquals(Integer.class, cl.getOption("bar").getType());
     }
 }
 
@@ -185,6 +188,9 @@ class Parser1Test {
 
     @OptionGroup(shortName = 'D', description = "define properties", required = true)
     private Map<String,String> define;
+
+    @Arguments
+    private List<String> arguments;
 }
 
 @Command(name = "test", description = "more [options] file...")
@@ -207,7 +213,13 @@ class Parser4Test {
     @OptionList(shortName = 'o', name="option", valueSeparator = ',')
     private List<String> option;
 
+    @OptionList
+    private List<Integer> bar;
+
     @OptionList(valueSeparator = ':')
     private List<String> help;
+
+    @Arguments
+    private List<String> arguments;
 }
 

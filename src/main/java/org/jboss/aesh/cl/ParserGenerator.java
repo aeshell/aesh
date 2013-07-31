@@ -7,6 +7,8 @@
 package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.internal.OptionInt;
+import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ParameterInt;
 
 import java.lang.reflect.Field;
@@ -47,14 +49,20 @@ public class ParserGenerator {
             if(field.getType().equals(Boolean.class) || field.getType().equals(boolean.class))
                 hasValue = false;
             if((o = field.getAnnotation(Option.class)) != null) {
+                OptionType optionType;
+                if(hasValue)
+                    optionType = OptionType.NORMAL;
+                else
+                    optionType = OptionType.BOOLEAN;
                 if(o.name() == null || o.name().length() < 1) {
                     if(o.shortName() == '\u0000') {
                         parameterInt.addOption(field.getName().charAt(0), field.getName(), o.description(),
-                                hasValue, o.argument(), o.required(), ',', false, false, o.defaultValue(), field.getType());
+                                o.argument(), o.required(), ',', o.defaultValue(), field.getType(), optionType);
                     }
                     else {
                         parameterInt.addOption(o.shortName(), field.getName(), o.description(),
-                                hasValue, o.argument(), o.required(), ',', false, false, o.defaultValue(), field.getType());
+                                o.argument(), o.required(), ',', o.defaultValue(),
+                                field.getType(), optionType);
                     }
                    fieldMap.put(field.getName(), field.getName());
 
@@ -62,11 +70,13 @@ public class ParserGenerator {
                 else {
                     if(o.shortName() == '\u0000') {
                         parameterInt.addOption(o.name().charAt(0), o.name(), o.description(),
-                                hasValue, o.argument(), o.required(), ',', false, false, o.defaultValue(), field.getType());
+                                o.argument(), o.required(), ',', o.defaultValue(),
+                                field.getType(), optionType);
                     }
                     else {
                         parameterInt.addOption(o.shortName(), o.name(), o.description(),
-                                hasValue, o.argument(), o.required(), ',', false, false, o.defaultValue(), field.getType());
+                                o.argument(), o.required(), ',', o.defaultValue(),
+                                field.getType(), optionType);
                     }
                     fieldMap.put(o.name(), field.getName());
                 }
@@ -75,57 +85,72 @@ public class ParserGenerator {
             else if((ol = field.getAnnotation(OptionList.class)) != null) {
                 if(!Collection.class.isAssignableFrom(field.getType()))
                     throw new CommandLineParserException("OptionGroup field must be instance of Collection");
+                Class type = Object.class;
+                if(field.getGenericType() != null) {
+                    ParameterizedType listType = (ParameterizedType) field.getGenericType();
+                    type = (Class) listType.getActualTypeArguments()[0];
+                }
                 if(ol.name() == null || ol.name().length() < 1) {
                     if(ol.shortName() == '\u0000') {
                         parameterInt.addOption(field.getName().charAt(0), field.getName(), ol.description(),
-                                hasValue, "", ol.required(), ol.valueSeparator(), false, true, "", field.getType());
+                                "", ol.required(), ol.valueSeparator(), "", type, OptionType.LIST);
                     }
                     else {
-                        parameterInt.addOption(ol.shortName(), field.getName(), ol.description(),
-                                hasValue, "", ol.required(), ol.valueSeparator(), false, true, "", field.getType());
+                        parameterInt.addOption(ol.shortName(), field.getName(), ol.description(), "",
+                                ol.required(), ol.valueSeparator(), "", type, OptionType.LIST);
                     }
                     fieldMap.put(field.getName(), field.getName());
                 }
                 else {
                     if(ol.shortName() == '\u0000')
-                        parameterInt.addOption(ol.name().charAt(0), ol.name(), ol.description(),
-                                hasValue, "", ol.required(), ol.valueSeparator(), false, true, "", field.getType());
+                        parameterInt.addOption(ol.name().charAt(0), ol.name(), ol.description(), "",
+                                ol.required(), ol.valueSeparator(), "", type, OptionType.LIST);
                     else
-                        parameterInt.addOption(ol.shortName(), ol.name(), ol.description(),
-                                hasValue, "", ol.required(), ol.valueSeparator(), false, true, "", field.getType());
+                        parameterInt.addOption(ol.shortName(), ol.name(), ol.description(), "",
+                                ol.required(), ol.valueSeparator(), "", type, OptionType.LIST);
                     fieldMap.put(ol.name(), field.getName());
                 }
             }
             else if((og = field.getAnnotation(OptionGroup.class)) != null) {
                 if(!Map.class.isAssignableFrom(field.getType()))
                     throw new CommandLineParserException("OptionGroup field must be instance of Map");
+                Class type = Object.class;
+                if(field.getGenericType() != null) {
+                    ParameterizedType listType = (ParameterizedType) field.getGenericType();
+                    type = (Class) listType.getActualTypeArguments()[1];
+                }
                 if(og.name() == null || og.name().length() < 1) {
                     if(og.shortName() == '\u0000') {
                         parameterInt.addOption(field.getName().charAt(0), field.getName(), og.description(),
-                                hasValue, "", og.required(), ',', true, true, "", field.getType());
+                                "", og.required(), ',', "", type, OptionType.GROUP);
                     }
                     else {
                         parameterInt.addOption(og.shortName(), field.getName(), og.description(),
-                                hasValue, "", og.required(), ',', true, true, "", field.getType());
+                                "", og.required(), ',', "", type, OptionType.GROUP);
                     }
                     fieldMap.put(field.getName(), field.getName());
                 }
                 else {
                     if(og.shortName() == '\u0000')
                         parameterInt.addOption(og.name().charAt(0), og.name(), og.description(),
-                                hasValue, "", og.required(), ',', true, true, "", field.getType());
+                                "", og.required(), ',', "", type, OptionType.GROUP);
                     else
                         parameterInt.addOption(og.shortName(), og.name(), og.description(),
-                                hasValue, "", og.required(), ',', true, true, "", field.getType());
+                                "", og.required(), ',', "", type, OptionType.GROUP);
                     fieldMap.put(og.name(), field.getName());
                 }
             }
 
-
             else if((a = field.getAnnotation(Arguments.class)) != null) {
-                if(!field.getDeclaringClass().isAssignableFrom(Collection.class))
+                if(!Collection.class.isAssignableFrom(field.getType()))
                     throw new CommandLineParserException("Arguments field must be instance of Collection");
-               //TODO:
+                Class type = Object.class;
+                if(field.getGenericType() != null) {
+                    ParameterizedType listType = (ParameterizedType) field.getGenericType();
+                    type = (Class) listType.getActualTypeArguments()[0];
+                }
+                parameterInt.setArgument(new OptionInt('\u0000',"", a.description(), "", false, a.valueSeparator(),
+                        "", type, OptionType.ARGUMENT));
             }
         }
 
