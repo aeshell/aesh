@@ -136,11 +136,6 @@ public class CommandLineParser {
 
                     active.addProperty(name, value);
                     commandLine.addOption(active);
-                    /*
-                    commandLine.addOption(new
-                            ParsedOption(active.getShortName(), active.getName(),
-                            new OptionProperty(name, value), active.getType()));
-                            */
                     active = null;
                     if(addedArgument)
                         throw new ArgumentParserException("An argument was given to an option that do not support it.");
@@ -148,10 +143,6 @@ public class CommandLineParser {
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
                     active.addValue("true");
                     commandLine.addOption(active);
-                    /*
-                    commandLine.addOption(new ParsedOption(active.getShortName(), active.getName(),
-                            active.getValue(), active.getType()));
-                            */
                     active = null;
                     if(addedArgument)
                         throw new ArgumentParserException("An argument was given to an option that do not support it.");
@@ -181,11 +172,6 @@ public class CommandLineParser {
 
                     active.addProperty(name, value);
                     commandLine.addOption(active);
-                    /*
-                    commandLine.addOption(new
-                            ParsedOption(active.getShortName(), active.getName(),
-                            new OptionProperty(name, value), active.getType()));
-                            */
                     active = null;
                     if(addedArgument)
                         throw new OptionParserException("An argument was given to an option that do not support it.");
@@ -194,10 +180,6 @@ public class CommandLineParser {
                 else if(active != null && (!active.hasValue() || active.getValue() != null)) {
                     active.addValue("true");
                     commandLine.addOption(active);
-                    /*
-                    commandLine.addOption(new ParsedOption(String.valueOf(active.getShortName()),
-                            active.getName(), active.getValue(), active.getType()));
-                            */
                     active = null;
                     if(addedArgument)
                         throw new OptionParserException("An argument was given to an option that do not support it.");
@@ -217,10 +199,6 @@ public class CommandLineParser {
                     active.addValue(parseLine);
 
                 commandLine.addOption(active);
-                /*
-                commandLine.addOption(new ParsedOption(active.getShortName(),
-                        active.getName(), active.getValues(), active.getType()));
-                        */
                 active = null;
                 if(addedArgument)
                     throw new OptionParserException("An argument was given to an option that do not support it.");
@@ -238,10 +216,6 @@ public class CommandLineParser {
         }
         if(active != null && ignoreMissing) {
             commandLine.addOption(active);
-            /*
-            commandLine.addOption(new ParsedOption(active.getShortName(),
-                    active.getName(), active.getValues(), active.getType()));
-                    */
         }
 
         //this will throw and CommandLineParserException if needed
@@ -314,7 +288,8 @@ public class CommandLineParser {
                 OptionInt optionInt = cl.getOption(optionName);
                 if(optionInt.getOptionType() == OptionType.NORMAL ||
                         optionInt.getOptionType() == OptionType.BOOLEAN)
-                    injectValueIntoField(instance, fieldMap.get(optionName), cl.getOptionValue(optionName));
+                    optionInt.injectValueIntoField(instance, fieldMap.get(optionName));
+                    //injectValueIntoField(instance, fieldMap.get(optionName), cl.getOptionValue(optionName));
                 else if(optionInt.getOptionType() == OptionType.GROUP)
                     injectPropertyValuesIntoField(instance, fieldMap.get(optionName), cl.getOption(optionName));
                 else if(optionInt.getOptionType() == OptionType.LIST)

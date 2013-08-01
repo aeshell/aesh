@@ -6,6 +6,9 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.converter.CLConverter;
+import org.jboss.aesh.cl.converter.StringCLConverter;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -39,4 +42,10 @@ public @interface Arguments {
      */
     char valueSeparator() default ' ';
 
+    /**
+     * Define a converter if the field is a type thats not java.lang and other
+     * common types, eg: File,++
+     * See ClConverterManager for whats added by default
+     */
+    Class<? extends CLConverter> converter() default StringCLConverter.class;
 }

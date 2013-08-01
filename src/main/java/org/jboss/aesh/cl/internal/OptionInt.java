@@ -10,6 +10,7 @@ import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.converter.CLConverterManager;
 import org.jboss.aesh.cl.exception.OptionParserException;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class OptionInt {
     private String argument;
     private String defaultValue;
     private Class<?> type;
-    private CLConverter converter;
+    private CLConverter<? extends CLConverter> converter;
     private OptionType optionType;
     private boolean required = false;
     private char valueSeparator;
@@ -39,7 +40,16 @@ public class OptionInt {
     public OptionInt(char shortName, String name, String description,
                      String argument, boolean required, char valueSeparator,
                      String defaultValue, Class<?> type,
-                     OptionType optionType) throws OptionParserException {
+                     OptionType optionType, CLConverter converter) throws OptionParserException {
+        this(shortName, name, description, argument, required, valueSeparator, defaultValue,
+                type, optionType, (Class<? extends CLConverter>) null);
+        this.converter = converter;
+    }
+
+    public OptionInt(char shortName, String name, String description,
+                     String argument, boolean required, char valueSeparator,
+                     String defaultValue, Class<?> type,
+                     OptionType optionType, Class<? extends CLConverter> converter) throws OptionParserException {
         this.shortName = String.valueOf(shortName);
         this.name = name;
         this.description = description;
@@ -49,6 +59,7 @@ public class OptionInt {
         this.type = type;
         this.defaultValue = defaultValue;
         this.optionType = optionType;
+        this.converter = initConverter(converter);
 
         properties = new HashMap<String, String>();
         values = new ArrayList<String>();
@@ -129,6 +140,10 @@ public class OptionInt {
         return optionType;
     }
 
+    public CLConverter<? extends CLConverter> getConverter() {
+        return converter;
+    }
+
     public void clear() {
         if(values != null)
             values.clear();
@@ -189,26 +204,36 @@ public class OptionInt {
         return sb.toString();
     }
 
+    private CLConverter initConverter(Class<? extends CLConverter> converterClass) {
+
+        if(converterClass != null && CLConverterManager.getInstance().hasConverter(converterClass)) {
+            return CLConverterManager.getInstance().getConverter(converterClass);
+        }
+        else
+            return CLConverterManager.getInstance().getConverter(type);
+    }
+
     public void injectValueIntoField(Object instance, String fieldName) {
+        if(converter == null)
+            return;
         try {
             Field field = instance.getClass().getDeclaredField(fieldName);
             if(Modifier.isPrivate(field.getModifiers()))
                 field.setAccessible(true);
-            if(optionType == OptionType.NORMAL) {
-                if(converter != null) {
-                    field.set(instance, converter.convert(getValue()));
-                }
-                else {
-                    if(CLConverterManager.getInstance().hasConverter(type))
-                        field.set(instance, CLConverterManager.getInstance().getConverter(type).convert(getValue()));
-                    else {
-                       //probably throw some error
-                    }
-                }
+            if(!Modifier.isPublic(instance.getClass().getModifiers())) {
+                Constructor constructor = instance.getClass().getDeclaredConstructor();
+                if(constructor != null)
+                    constructor.setAccessible(true);
+            }
+
+            if(optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN) {
+                field.set(instance, converter.convert(getValue()));
             }
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
 

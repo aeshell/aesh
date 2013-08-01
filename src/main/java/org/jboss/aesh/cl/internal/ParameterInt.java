@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl.internal;
 
+import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.console.Config;
 
@@ -62,7 +63,7 @@ public class ParameterInt {
     public void addOption(OptionInt opt) throws OptionParserException {
         this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                 opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
-                opt.getDefaultValue(), opt.getType(), opt.getOptionType()));
+                opt.getDefaultValue(), opt.getType(), opt.getOptionType(), opt.getConverter()));
     }
 
     /**
@@ -81,11 +82,11 @@ public class ParameterInt {
      */
     public void addOption(char name, String longName, String description,
                      String argument, boolean required, char valueSeparator,
-                     String defaultValue, Class<?> type,
-                     OptionType optionType) throws OptionParserException {
+                     String defaultValue, Class<?> type, OptionType optionType,
+                     Class<? extends CLConverter> converter) throws OptionParserException {
         options.add(new OptionInt(verifyThatNamesAreUnique(name, longName), longName, description,
                 argument, required, valueSeparator, defaultValue,
-                type, optionType));
+                type, optionType, converter));
     }
 
     /**
@@ -101,9 +102,10 @@ public class ParameterInt {
      * @param type what kind of type it is (not used)
      */
     public void addOption(char name, String longName, String description, String argument,
-                          boolean required, Class<?> type, OptionType optionType) throws OptionParserException {
+                          boolean required, Class<?> type, OptionType optionType,
+                          Class<? extends CLConverter> converter) throws OptionParserException {
         options.add(new OptionInt(verifyThatNamesAreUnique(name, longName), longName, description,
-                argument, required, '\u0000', "", type, optionType));
+                argument, required, '\u0000', "", type, optionType, converter));
     }
 
     /**
@@ -116,14 +118,14 @@ public class ParameterInt {
      */
     public void addOption(char name, String longName, String description) throws OptionParserException {
         addOption(verifyThatNamesAreUnique(name, longName), longName, description, null, false, null,
-                OptionType.NORMAL);
+                OptionType.NORMAL, null);
     }
 
     private void setOptions(List<OptionInt> options) throws OptionParserException {
         for(OptionInt opt : options) {
             this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                     opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
-                    opt.getDefaultValue(), opt.getType(), opt.getOptionType()));
+                    opt.getDefaultValue(), opt.getType(), opt.getOptionType(), opt.getConverter()));
         }
     }
 
