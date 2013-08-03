@@ -1,7 +1,5 @@
 package org.jboss.aesh.cl;
 
-import java.util.Map;
-
 @Command(name = "test", description = "a simple test")
 public class TestPopulator1 {
 

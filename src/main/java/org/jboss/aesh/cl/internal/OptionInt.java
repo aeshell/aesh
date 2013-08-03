@@ -15,8 +15,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -31,7 +33,7 @@ public class OptionInt {
     private String argument;
     private String defaultValue;
     private Class<?> type;
-    private CLConverter<? extends CLConverter> converter;
+    private CLConverter converter;
     private OptionType optionType;
     private boolean required = false;
     private char valueSeparator;
@@ -225,15 +227,47 @@ public class OptionInt {
                 if(constructor != null)
                     constructor.setAccessible(true);
             }
-
             if(optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN) {
                 field.set(instance, converter.convert(getValue()));
             }
-        } catch (NoSuchFieldException e) {
+            else if(optionType == OptionType.LIST) {
+                if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
+                    if(Set.class.isAssignableFrom(field.getType())) {
+                        Set foo = new HashSet<Object>();
+                        for(String in : values)
+                            foo.add(converter.convert(in));
+
+                        //field.set(instance, new HashSet());
+                    }
+                    else if(List.class.isAssignableFrom(field.getType())) {
+                        List list = new ArrayList();
+                        for(String in : values)
+                            list.add(converter.convert(in));
+
+                        //field.set(instance, new ArrayList());
+                        //todo: should change this
+                    }
+                    else
+                        field.set(instance, new ArrayList());
+                }
+                else
+                    field.set(instance, field.getClass().newInstance());
+
+            }
+            else if(optionType == OptionType.GROUP) {
+
+            }
+            else if(optionType == OptionType.ARGUMENT) {
+
+            }
+        }
+        catch (NoSuchFieldException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
             e.printStackTrace();
         }
 

@@ -9,6 +9,7 @@ package org.jboss.aesh.cl;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.junit.Test;
 
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -42,14 +43,25 @@ public class CommandLinePopulatorTest {
         catch (CommandLineParserException e) {
             e.printStackTrace();
         }
-
     }
 
-}
+    @Test
+    public void testListObjects() {
+        CommandLineParser parser = null;
+        try {
+            parser = ParserGenerator.generateCommandLineParser(TestPopulator2.class);
+            TestPopulator2 test2 = new TestPopulator2();
 
-@Command(name = "test", description = "a simple test")
-class TestClass1 {
+            parser.populateObject(test2, "test -b s1,s2,s3,s4");
 
-    public final TestPopulator1 testPopulator1 = new TestPopulator1();
+            assertNotNull(test2.getBasicList());
+            assertEquals(4, test2.getBasicList().size());
+        }
+        catch (CommandLineParserException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+
+    }
 
 }
