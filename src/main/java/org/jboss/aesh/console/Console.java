@@ -374,15 +374,19 @@ public class Console {
         search = null;
 
         if(pasteLines.size() > 0) {
-            buffer.write(pasteLines.get(0));
-            if(!buffer.isMasking())
-                pushToStdOut(pasteLines.get(0));
-            if(pasteLines.size() > 1) {
-                printNewline();
-                return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, pasteLines.remove(0)));
-            }
-            else
+            if(pasteLines.get(0).equals(Config.getLineSeparator()))
                 pasteLines.remove(0);
+            else {
+                buffer.write(pasteLines.get(0));
+                if(!buffer.isMasking())
+                    pushToStdOut(pasteLines.get(0));
+                if(pasteLines.size() > 1) {
+                    printNewline();
+                    return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, pasteLines.remove(0)));
+                }
+                else
+                    pasteLines.remove(0);
+            }
         }
 
         while(true) {
@@ -413,10 +417,12 @@ public class Console {
                 }
                 if(current.length() > 0)
                     lines.add(current.toString());
+                else
+                    lines.add(Config.getLineSeparator());
                 //the first line gets added to the prompt, the others are saved
                 //to the list and then pushed as soon as read(..) is called again
                 if(lines.size() > 0) {
-                String firstLine = lines.remove(0);
+                    String firstLine = lines.remove(0);
                     if(buffer.isMasking()) {
                        buffer.setLine(buffer.getLineNoMask()+firstLine);
                     }
