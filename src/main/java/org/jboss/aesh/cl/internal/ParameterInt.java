@@ -145,6 +145,10 @@ public class ParameterInt {
         this.usage = usage;
     }
 
+    public boolean hasArgument() {
+        return argument != null && argument.hasMultipleValues();
+    }
+
     public OptionInt getArgument() {
         return argument;
     }
@@ -219,6 +223,8 @@ public class ParameterInt {
    public void clear() {
        for(OptionInt optionInt : options)
            optionInt.clear();
+       if(argument != null)
+           argument.clear();
     }
 
     public List<String> getOptionLongNamesWithDash() {

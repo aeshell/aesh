@@ -14,6 +14,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -99,7 +100,7 @@ public class OptionInt {
     }
 
     public boolean hasMultipleValues() {
-        return optionType == OptionType.LIST;
+        return optionType == OptionType.LIST || optionType == OptionType.ARGUMENT;
     }
 
     public boolean isRequired() {
@@ -230,35 +231,43 @@ public class OptionInt {
             if(optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN) {
                 field.set(instance, converter.convert(getValue()));
             }
-            else if(optionType == OptionType.LIST) {
+            else if(optionType == OptionType.LIST || optionType == OptionType.ARGUMENT) {
                 if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
                     if(Set.class.isAssignableFrom(field.getType())) {
-                        Set foo = new HashSet<Object>();
+                        Set tmpSet = new HashSet<Object>();
                         for(String in : values)
-                            foo.add(converter.convert(in));
+                            tmpSet.add(converter.convert(in));
 
-                        //field.set(instance, new HashSet());
+                        field.set(instance, tmpSet);
                     }
                     else if(List.class.isAssignableFrom(field.getType())) {
-                        List list = new ArrayList();
+                        List tmpList = new ArrayList();
                         for(String in : values)
-                            list.add(converter.convert(in));
-
-                        //field.set(instance, new ArrayList());
-                        //todo: should change this
+                            tmpList.add(converter.convert(in));
+                        field.set(instance, tmpList);
                     }
-                    else
-                        field.set(instance, new ArrayList());
+                    //todo: should support more that List/Set
                 }
-                else
-                    field.set(instance, field.getClass().newInstance());
-
+                else {
+                    Collection tmpInstance = (Collection) field.getType().newInstance();
+                    for(String in : values)
+                        tmpInstance.add(converter.convert(in));
+                    field.set(instance, tmpInstance);
+                }
             }
             else if(optionType == OptionType.GROUP) {
-
-            }
-            else if(optionType == OptionType.ARGUMENT) {
-
+                if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
+                    Map<String, Object> tmpMap = newHashMap();
+                    for(String propertyKey : properties.keySet())
+                        tmpMap.put(propertyKey,converter.convert(properties.get(propertyKey)));
+                    field.set(instance, tmpMap);
+                 }
+                else {
+                    Map<String,Object> tmpMap = (Map<String,Object>) field.getType().newInstance();
+                    for(String propertyKey : properties.keySet())
+                        tmpMap.put(propertyKey,converter.convert(properties.get(propertyKey)));
+                    field.set(instance, tmpMap);
+                }
             }
         }
         catch (NoSuchFieldException e) {
@@ -270,7 +279,10 @@ public class OptionInt {
         } catch (InstantiationException e) {
             e.printStackTrace();
         }
+    }
 
+    private <String, T> Map<String, T> newHashMap() {
+        return new HashMap<String, T>();
     }
 
     @Override

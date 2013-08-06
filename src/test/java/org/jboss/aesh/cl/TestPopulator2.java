@@ -1,5 +1,6 @@
 package org.jboss.aesh.cl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -7,7 +8,13 @@ import java.util.Set;
 public class TestPopulator2 {
 
     @OptionList(shortName = 'b')
-    private Set<String> basicList;
+    private Set<String> basicSet;
+
+    @OptionList(shortName = 'a')
+    private List<Integer> basicList;
+
+    @OptionList(shortName = 'i')
+    private ArrayList<Short> implList;
 
     /*
     @OptionGroup(shortName = 'D', description = "define properties")
@@ -17,7 +24,15 @@ public class TestPopulator2 {
     public TestPopulator2() {
     }
 
-    public Set<String> getBasicList() {
+    public Set<String> getBasicSet() {
+        return basicSet;
+    }
+
+    public List<Integer> getBasicList() {
         return basicList;
+    }
+
+    public List<Short> getImplList() {
+        return implList;
     }
 }

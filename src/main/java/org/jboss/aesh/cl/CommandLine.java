@@ -18,18 +18,22 @@ import java.util.Map;
  * A parsed String based on the provided Command and Options defined
  * in a {@link CommandLineParser}.
  *
- * All found options and arguments can be queried after.
+ * All found options and argument can be queried after.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class CommandLine {
 
     private List<OptionInt> options;
-    private List<String> arguments;
+    private OptionInt argument;
 
     public CommandLine() {
         options = new ArrayList<OptionInt>();
-        arguments = new ArrayList<String>();
+    }
+
+    public CommandLine(OptionInt argument) {
+        options = new ArrayList<OptionInt>();
+        this.argument = argument;
     }
 
     public void addOption(OptionInt option) throws OptionParserException {
@@ -52,12 +56,16 @@ public class CommandLine {
         return options;
     }
 
-    public void addArgument(String arg) {
-        arguments.add(arg);
+    public void addArgumentValue(String arg) {
+        argument.addValue(arg);
     }
 
-    public List<String> getArguments() {
-        return arguments;
+    public void setArgument(OptionInt argument) {
+        this.argument = argument;
+    }
+
+    public OptionInt getArgument() {
+        return argument;
     }
 
     public boolean hasOption(char name) {

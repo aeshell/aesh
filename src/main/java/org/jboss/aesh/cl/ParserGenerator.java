@@ -158,6 +158,7 @@ public class ParserGenerator {
                     ParameterizedType listType = (ParameterizedType) field.getGenericType();
                     type = (Class) listType.getActualTypeArguments()[0];
                 }
+                fieldMap.put("aeshArgument", field.getName());
                 parameterInt.setArgument(new OptionInt('\u0000',"", a.description(), "", false, a.valueSeparator(),
                         "", type, OptionType.ARGUMENT, a.converter()));
             }

@@ -63,7 +63,7 @@ public class BuilderTest extends TestCase {
         assertTrue(cl.hasOption('V'));
         assertEquals("true", cl.getOptionValue('V'));
         assertFalse(cl.hasOption('v'));
-        assertEquals("test1.txt", cl.getArguments().get(0));
+        assertEquals("test1.txt", cl.getArgument().getValues().get(0));
 
         cl = clp.parse("less -V -Dfoo1=bar1 -Dfoo2=bar2 test1.txt");
         assertTrue(cl.hasOption('D'));
@@ -72,7 +72,7 @@ public class BuilderTest extends TestCase {
         cl = clp.parse("less -V -Dfoo1=bar1 -Dfoo2=bar2 --values f1,f2,f3 test1.txt");
         assertTrue(cl.hasOption("values"));
         assertEquals("f2", cl.getOptionValues("values").get(1));
-        assertEquals("test1.txt", cl.getArguments().get(0));
+        assertEquals("test1.txt", cl.getArgument().getValues().get(0));
     }
 
     public void testBuilder3() throws CommandLineParserException {

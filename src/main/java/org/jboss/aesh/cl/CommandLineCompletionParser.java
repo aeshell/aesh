@@ -94,20 +94,17 @@ public class CommandLineCompletionParser {
      */
     private ParsedCompleteObject findCompleteObjectValue(String line, boolean endsWithSpace) throws CommandLineParserException {
         CommandLine cl = parser.parse(line, true);
-        if(cl.getArguments().isEmpty()) {
+        //the last word is an argument
+        if(cl.getArgument() != null && !cl.getArgument().getValues().isEmpty()) {
+            return new ParsedCompleteObject("",
+                    cl.getArgument().getValues().get(cl.getArgument().getValues().size()-1),
+                    cl.getArgument().getType(), false);
+        }
+        //get the last option
+        else {
             OptionInt po = cl.getOptions().get(cl.getOptions().size()-1);
             return new ParsedCompleteObject( po.getName().isEmpty() ? po.getShortName() : po.getName(),
                     endsWithSpace ? "" : po.getValue(), po.getType(), true);
-        }
-        else {
-            if(parser.getParameter().getArgument() == null)
-                return new ParsedCompleteObject("",
-                        cl.getArguments().get(cl.getArguments().size()-1),
-                        String.class, false);
-            else
-                return new ParsedCompleteObject("",
-                        cl.getArguments().get(cl.getArguments().size()-1),
-                        parser.getParameter().getArgument().getType(), false);
         }
     }
 

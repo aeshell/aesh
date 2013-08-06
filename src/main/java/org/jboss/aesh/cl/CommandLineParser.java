@@ -11,18 +11,14 @@ import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.exception.RequiredOptionException;
 import org.jboss.aesh.cl.internal.OptionInt;
-import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.util.Parser;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * A simple command line parser.
@@ -111,6 +107,8 @@ public class CommandLineParser {
                                 boolean ignoreMissing) throws CommandLineParserException {
         param.clear();
         CommandLine commandLine = new CommandLine();
+        if(param.hasArgument())
+            commandLine.setArgument(param.getArgument());
         OptionInt active = null;
         boolean addedArgument = false;
         //skip first entry since that's the name of the command
@@ -133,6 +131,8 @@ public class CommandLineParser {
                             parseLine.substring(2+active.getName().length(),
                                     parseLine.indexOf(EQUALS));
                     String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
+                    if(value.length() < 1)
+                        throw new OptionParserException("Option "+active.getDisplayName()+", must have a value");
 
                     active.addProperty(name, value);
                     commandLine.addOption(active);
@@ -169,6 +169,8 @@ public class CommandLineParser {
                             parseLine.substring(2, // 2+char.length
                                     parseLine.indexOf(EQUALS));
                     String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
+                    if(value.length() < 1)
+                        throw new OptionParserException("Option "+active.getDisplayName()+", must have a value");
 
                     active.addProperty(name, value);
                     commandLine.addOption(active);
@@ -209,7 +211,7 @@ public class CommandLineParser {
                     throw new OptionParserException("An argument was given to a command that do not support it.");
                 }
                 else {
-                    commandLine.addArgument(parseLine);
+                    commandLine.addArgumentValue(parseLine);
                     addedArgument = true;
                 }
             }
@@ -284,59 +286,13 @@ public class CommandLineParser {
     public void populateObject(Object instance, String line) throws CommandLineParserException {
         CommandLine cl = parse(line);
         for(String optionName : fieldMap.keySet()) {
-            if(cl.hasOption(optionName)) {
-                OptionInt optionInt = cl.getOption(optionName);
-                if(optionInt.getOptionType() == OptionType.NORMAL ||
-                        optionInt.getOptionType() == OptionType.BOOLEAN)
-                    optionInt.injectValueIntoField(instance, fieldMap.get(optionName));
-                    //injectValueIntoField(instance, fieldMap.get(optionName), cl.getOptionValue(optionName));
-                else if(optionInt.getOptionType() == OptionType.GROUP)
-                    injectPropertyValuesIntoField(instance, fieldMap.get(optionName), cl.getOption(optionName));
-                else if(optionInt.getOptionType() == OptionType.LIST)
-                    injectListValuesIntoField(instance, fieldMap.get(optionName), cl.getOption(optionName));
-                //else if(optionInt.getOptionType() == OptionType.ARGUMENT)
-                //    injectListValuesIntoField(instance, fieldMap.get(optionName), cl.getOptionValues(optionName));
-
+            if(cl.hasOption(optionName))
+                cl.getOption(optionName).injectValueIntoField(instance, fieldMap.get(optionName));
+            else if(cl.getArgument() != null && optionName.equals("aeshArgument")) {
+                cl.getArgument().injectValueIntoField(instance, fieldMap.get("aeshArgument"));
             }
-            /*
-            if(cl.getOptionProperties(optionName) != null && cl.getOptionProperties(optionName).size() > 0)
-                injectPropertyValuesIntoField(instance, fieldMap.get(optionName), cl.getOptionProperties(optionName));
-            else if(cl.getOptionValues(optionName) != null && cl.getOptionValues(optionName).size() > 0)
-                injectListValuesIntoField(instance, fieldMap.get(optionName), cl.getOptionValues(optionName));
-            else if(cl.getOptionValue(optionName) != null) {
-                injectValueIntoField(instance, fieldMap.get(optionName), cl.getOptionValue(optionName));
-            }
-            */
             else
                 resetField(instance, fieldMap.get(optionName));
-        }
-    }
-
-    private void injectListValuesIntoField(Object instance, String fieldName, OptionInt option) {
-        try {
-            Field field = instance.getClass().getDeclaredField(fieldName);
-            if(Modifier.isPrivate(field.getModifiers()))
-                field.setAccessible(true);
-
-            //if its an interface, we just instantiate a HashMap
-            if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
-                if(Set.class.isAssignableFrom(field.getType()))
-                    field.set(instance, new HashSet());
-                else if(List.class.isAssignableFrom(field.getType()))
-                    field.set(instance, new ArrayList());
-                //todo: should change this
-                else
-                    field.set(instance, new ArrayList());
-            }
-            else
-                field.set(instance, field.getClass().newInstance());
-
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
         }
     }
 

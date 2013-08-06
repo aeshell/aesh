@@ -30,12 +30,12 @@ public class CommandLineParserTest extends TestCase {
             CommandLine cl = parser.parse("test -f -e bar -Df=g /tmp/file.txt");
             assertEquals("f", cl.getOptions().get(0).getShortName());
             assertEquals("e", cl.getOptions().get(1).getShortName());
-            assertEquals("/tmp/file.txt", cl.getArguments().get(0));
+            assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
 
             cl = parser.parse("test -e bar -DXms=128m -DXmx=512m --X /tmp/file.txt");
             assertEquals("e", cl.getOptions().get(0).getShortName());
             assertEquals("bar", cl.getOptions().get(0).getValue());
-            assertEquals("/tmp/file.txt", cl.getArguments().get(0));
+            assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
             assertNotNull(cl.hasOption("X"));
 
             Map<String,String> properties = cl.getOptionProperties("D");
@@ -67,7 +67,7 @@ public class CommandLineParserTest extends TestCase {
         try {
             CommandLine cl = parser.parse("test -a /tmp/file.txt");
             assertTrue(false);
-            cl.getArguments();
+            cl.getArgument();
         }
         catch (CommandLineParserException e) {
             assertTrue(true);
@@ -76,7 +76,7 @@ public class CommandLineParserTest extends TestCase {
         try {
             CommandLine cl = parser.parse("test -a /tmp/file.txt");
             assertTrue(false);
-            cl.getArguments();
+            cl.getArgument();
         }
         catch (CommandLineParserException e) {
             assertTrue(true);
@@ -84,7 +84,7 @@ public class CommandLineParserTest extends TestCase {
         try {
             CommandLine cl = parser.parse("test -e bar --equal bar2 -DXms=128m -DXmx=512m /tmp/file.txt");
             assertTrue(false);
-            cl.getArguments();
+            cl.getArgument();
         }
         catch (CommandLineParserException e) {
             assertTrue(true);
@@ -93,7 +93,7 @@ public class CommandLineParserTest extends TestCase {
         try {
             CommandLine cl = parser.parse("test -f -Dfoo:bar /tmp/file.txt");
             assertTrue(false);
-            cl.getArguments();
+            cl.getArgument();
         }
         catch (CommandLineParserException e) {
             assertTrue(true);
@@ -102,7 +102,7 @@ public class CommandLineParserTest extends TestCase {
         try {
             CommandLine cl = parser.parse("test -f foobar /tmp/file.txt");
             assertTrue(false);
-            cl.getArguments();
+            cl.getArgument();
         }
         catch (CommandLineParserException e) {
             assertTrue(true);
@@ -119,15 +119,15 @@ public class CommandLineParserTest extends TestCase {
             assertTrue(cl.hasOption('d'));
             assertFalse(cl.hasOption('V'));
             assertEquals("Foo.class", cl.getOptionValue("bar"));
-            assertEquals(new ArrayList<String>(), cl.getArguments());
+            assertEquals(new ArrayList<String>(), cl.getArgument());
 
             cl = parser.parse("test -V -d -b com.bar.Bar.class /tmp/file\\ foo.txt /tmp/bah.txt");
             assertTrue(cl.hasOption('V'));
             assertTrue(cl.hasOption('d'));
             assertTrue(cl.hasOption('b'));
             assertEquals("com.bar.Bar.class", cl.getOptionValue("b"));
-            assertEquals("/tmp/file foo.txt", cl.getArguments().get(0));
-            assertEquals("/tmp/bah.txt", cl.getArguments().get(1));
+            assertEquals("/tmp/file foo.txt", cl.getArgument().getValues().get(0));
+            assertEquals("/tmp/bah.txt", cl.getArgument().getValues().get(1));
 
         }
         catch (CommandLineParserException e) {
@@ -135,7 +135,7 @@ public class CommandLineParserTest extends TestCase {
         try {
             CommandLine cl = parser.parse("test -d /tmp/file.txt");
             assertTrue(false);
-            cl.getArguments();
+            cl.getArgument();
         }
         catch (CommandLineParserException e) {
             assertTrue(true);
