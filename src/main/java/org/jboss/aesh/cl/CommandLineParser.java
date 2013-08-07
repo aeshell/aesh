@@ -296,32 +296,6 @@ public class CommandLineParser {
         }
     }
 
-    private void injectPropertyValuesIntoField(Object instance, String fieldName, OptionInt option) {
-        try {
-            Field field = instance.getClass().getDeclaredField(fieldName);
-            if(Modifier.isPrivate(field.getModifiers()))
-                field.setAccessible(true);
-
-            //if its an interface, we just instantiate a HashMap
-            if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
-                field.set(instance, newHashMap());
-            }
-            else
-                field.set(instance, field.getClass().newInstance());
-
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public <K,V> Map<K,V> newHashMap() {
-        return new HashMap<K,V>();
-    }
-
     private void resetField(Object instance, String fieldName) {
         try {
             Field field = instance.getClass().getDeclaredField(fieldName);
@@ -352,38 +326,6 @@ public class CommandLineParser {
             e.printStackTrace();
         }
         catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void injectValueIntoField(Object instance, String fieldName, String optionValue) {
-        try {
-            Field field = instance.getClass().getDeclaredField(fieldName);
-            if(Modifier.isPrivate(field.getModifiers()))
-                field.setAccessible(true);
-
-            if(String.class.isAssignableFrom(field.getType()))
-                field.set(instance, optionValue);
-            else if(Boolean.class.isAssignableFrom(field.getType()) || boolean.class.isAssignableFrom(field.getType()))
-                field.set(instance, Boolean.valueOf(optionValue));
-            else if(Integer.class.isAssignableFrom(field.getType()) || int.class.isAssignableFrom(field.getType()))
-                field.set(instance, Integer.valueOf(optionValue));
-            else if(Float.class.isAssignableFrom(field.getType()) || float.class.isAssignableFrom(field.getType()))
-                field.set(instance, Float.valueOf(optionValue));
-            else if(Character.class.isAssignableFrom(field.getType()) || char.class.isAssignableFrom(field.getType()))
-                field.set(instance, optionValue.charAt(0));
-            else if(Short.class.isAssignableFrom(field.getType()) || short.class.isAssignableFrom(field.getType()))
-                field.set(instance, Short.valueOf(optionValue));
-            else if(Long.class.isAssignableFrom(field.getType()) || long.class.isAssignableFrom(field.getType()))
-                field.set(instance, Long.valueOf(optionValue));
-            else if(Double.class.isAssignableFrom(field.getType()) || double.class.isAssignableFrom(field.getType()))
-                field.set(instance, Double.valueOf(optionValue));
-            else if(Byte.class.isAssignableFrom(field.getType()) || byte.class.isAssignableFrom(field.getType()))
-                field.set(instance, Byte.valueOf(optionValue));
-
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
             e.printStackTrace();
         }
     }
