@@ -111,7 +111,8 @@ public class POSIXTerminal extends AbstractTerminal {
      */
     @Override
     public void writeToStdOut(String out) throws IOException {
-        logger.info("writing to out: "+out);
+        if(Settings.getInstance().isLogging())
+            logger.info("writing to out: "+out);
         if(out != null && out.length() > 0) {
             stdOut.write(out);
             stdOut.flush();

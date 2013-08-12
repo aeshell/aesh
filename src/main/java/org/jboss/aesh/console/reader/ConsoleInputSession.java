@@ -79,6 +79,10 @@ public class ConsoleInputSession {
                         if (read > 0) {
                             blockingQueue.put(new String(bBuf, 0, read));
                         }
+                        if(read == -1) {
+                            connected = false;
+                            blockingQueue.offer("");
+                        }
 
                         Thread.sleep(10);
                     }
