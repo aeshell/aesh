@@ -63,7 +63,7 @@ public class ParameterInt {
     public void addOption(OptionInt opt) throws OptionParserException {
         this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                 opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
-                opt.getDefaultValue(), opt.getType(), opt.getOptionType(), opt.getConverter()));
+                opt.getDefaultValue(), opt.getType(), opt.getFieldName(), opt.getOptionType(), opt.getConverter()));
     }
 
     /**
@@ -82,11 +82,11 @@ public class ParameterInt {
      */
     public void addOption(char name, String longName, String description,
                      String argument, boolean required, char valueSeparator,
-                     String defaultValue, Class<?> type, OptionType optionType,
+                     String defaultValue, Class<?> type, String fieldName, OptionType optionType,
                      Class<? extends CLConverter> converter) throws OptionParserException {
         options.add(new OptionInt(verifyThatNamesAreUnique(name, longName), longName, description,
                 argument, required, valueSeparator, defaultValue,
-                type, optionType, converter));
+                type, fieldName, optionType, converter));
     }
 
     /**
@@ -102,30 +102,17 @@ public class ParameterInt {
      * @param type what kind of type it is (not used)
      */
     public void addOption(char name, String longName, String description, String argument,
-                          boolean required, Class<?> type, OptionType optionType,
+                          boolean required, Class<?> type, String fieldName, OptionType optionType,
                           Class<? extends CLConverter> converter) throws OptionParserException {
         options.add(new OptionInt(verifyThatNamesAreUnique(name, longName), longName, description,
-                argument, required, '\u0000', "", type, optionType, converter));
-    }
-
-    /**
-     * Add an option
-     * Name or name can be null
-     *
-     * @param name name (short) one char
-     * @param longName multi character name
-     * @param description a description of the option
-     */
-    public void addOption(char name, String longName, String description) throws OptionParserException {
-        addOption(verifyThatNamesAreUnique(name, longName), longName, description, null, false, null,
-                OptionType.NORMAL, null);
+                argument, required, '\u0000', "", type, fieldName, optionType, converter));
     }
 
     private void setOptions(List<OptionInt> options) throws OptionParserException {
         for(OptionInt opt : options) {
             this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                     opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
-                    opt.getDefaultValue(), opt.getType(), opt.getOptionType(), opt.getConverter()));
+                    opt.getDefaultValue(), opt.getType(), opt.getFieldName(), opt.getOptionType(), opt.getConverter()));
         }
     }
 

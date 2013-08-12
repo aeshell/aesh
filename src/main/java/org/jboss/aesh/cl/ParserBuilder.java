@@ -18,7 +18,6 @@ import java.util.Map;
 public class ParserBuilder {
 
     private ParameterInt param;
-    private Map<String, String> fieldMap;
 
     public ParserBuilder() {
     }
@@ -32,13 +31,8 @@ public class ParserBuilder {
         return this;
     }
 
-    public ParserBuilder fieldMap(Map<String,String> fieldMap) {
-        this.fieldMap = fieldMap;
-        return this;
-    }
-
     public CommandLineParser generateParser() throws IllegalArgumentException {
-        return new CommandLineParser( param, fieldMap);
+        return new CommandLineParser( param);
     }
 
 }

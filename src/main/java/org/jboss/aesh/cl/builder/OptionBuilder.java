@@ -30,7 +30,8 @@ public class OptionBuilder {
     private boolean hasMultipleValues = false;
     private char valueSeparator = ',';
     private OptionType optionType;
-    private CLConverter<?> converter;
+    private Class<? extends CLConverter> converter;
+    private String fieldName;
 
     public OptionBuilder() {
     }
@@ -93,6 +94,11 @@ public class OptionBuilder {
         return this;
     }
 
+    public OptionBuilder fieldName(String fieldName) {
+        this.fieldName = fieldName;
+        return this;
+    }
+
     public OptionBuilder hasValue(boolean hasValue) {
         this.hasValue = hasValue;
         return this;
@@ -123,7 +129,7 @@ public class OptionBuilder {
         return this;
     }
 
-    public OptionBuilder converter(CLConverter<?> converter) {
+    public OptionBuilder converter(Class<? extends CLConverter> converter) {
         this.converter = converter;
         return this;
     }
@@ -140,13 +146,17 @@ public class OptionBuilder {
                 optionType = OptionType.NORMAL;
         }
 
-        if(name == null || (name.length() < 1 && optionType != OptionType.ARGUMENT))
-            throw new OptionParserException("Name must be defined to create an Option");
+        if(name == null || (name.length() < 1 && optionType != OptionType.ARGUMENT)) {
+            if(fieldName == null || fieldName.length() < 1)
+                throw new OptionParserException("Name must be defined to create an Option");
+            else
+                name = fieldName;
+        }
 
         if(shortName == '\u0000' && optionType != OptionType.ARGUMENT)
             shortName = name.charAt(0);
 
         return new OptionInt(shortName, name, description, argument, required,
-                valueSeparator, defaultValue, type, optionType, converter);
+                valueSeparator, defaultValue, type, fieldName, optionType, converter);
     }
 }

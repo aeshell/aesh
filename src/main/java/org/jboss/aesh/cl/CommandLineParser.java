@@ -32,15 +32,9 @@ import java.util.Map;
 public class CommandLineParser {
 
     private ParameterInt parameter;
-    private Map<String,String> fieldMap;
     private static final String EQUALS = "=";
 
     public CommandLineParser(ParameterInt parameter) {
-        this.parameter = parameter;
-    }
-
-    public CommandLineParser(ParameterInt parameter, Map<String,String> fieldMap) {
-        this.fieldMap = fieldMap;
         this.parameter = parameter;
     }
 
@@ -285,15 +279,28 @@ public class CommandLineParser {
 
     public void populateObject(Object instance, String line) throws CommandLineParserException {
         CommandLine cl = parse(line);
-        for(String optionName : fieldMap.keySet()) {
-            if(cl.hasOption(optionName))
-                cl.getOption(optionName).injectValueIntoField(instance, fieldMap.get(optionName));
-            else if(cl.getArgument() != null && optionName.equals("aeshArgument")) {
-                cl.getArgument().injectValueIntoField(instance, fieldMap.get("aeshArgument"));
+        for(OptionInt option: parameter.getOptions()) {
+            if(cl.hasOption(option.getName()))
+                cl.getOption(option.getName()).injectValueIntoField(instance);
+            else if(cl.getArgument() != null) {
+                cl.getArgument().injectValueIntoField(instance);
             }
             else
-                resetField(instance, fieldMap.get(optionName));
+                resetField(instance, option.getFieldName());
         }
+    }
+
+    /**
+     * Will parse the input line and populate the fields in the instance object specified by
+     * the given annotations.
+     * The instance object must be annotated with the Command annotation @see Command
+     *
+     * @param instance
+     * @param line
+     * @throws CommandLineParserException
+     */
+    public static void parseAndPopulate(Object instance, String line) throws CommandLineParserException {
+        ParserGenerator.generateCommandLineParser(instance.getClass()).populateObject(instance, line);
     }
 
     private void resetField(Object instance, String fieldName) {

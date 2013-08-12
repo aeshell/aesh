@@ -6,8 +6,11 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.builder.CommandBuilder;
+import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.internal.OptionInt;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -136,8 +139,68 @@ public class CommandLinePopulatorTest {
         }
         catch (CommandLineParserException e) {
         }
-
     }
 
+    @Test
+    public void testStaticPopulator() {
+        try {
+            TestPopulator3 test3 = new TestPopulator3();
+            ParserGenerator.generateCommandLineParser(test3.getClass()).populateObject(test3, "test -bX1=foo -bX2=bar");
+
+            assertNotNull(test3.getBasicMap());
+            assertNull(test3.getIntegerMap());
+            assertEquals(2, test3.getBasicMap().size());
+            assertTrue(test3.getBasicMap().containsKey("X2"));
+            assertEquals("foo", test3.getBasicMap().get("X1"));
+
+            ParserGenerator.generateCommandLineParser(test3.getClass()).populateObject(test3, "test -iI1=42 -iI12=43");
+            assertNotNull(test3.getIntegerMap());
+            assertEquals(2, test3.getIntegerMap().size());
+            assertEquals(new Integer("42"), test3.getIntegerMap().get("I1"));
+
+            ParserGenerator.generateCommandLineParser(test3.getClass()).populateObject(test3, "test -iI12");
+            exception.expect(OptionParserException.class);
+
+            ParserGenerator.generateCommandLineParser(test3.getClass()).populateObject(test3, "test --integerMapI12=");
+            exception.expect(OptionParserException.class);
+        }
+        catch (CommandLineParserException e) {
+        }
+    }
+
+    @Test
+    public void testSimpleObjectsBuilder() {
+        try {
+            CommandBuilder commandBuilder = new CommandBuilder().name("test").description("a simple test");
+            commandBuilder
+                    .addOption(new OptionBuilder().name("X").description("enable X").fieldName("enableX")
+                            .type(Boolean.class).create())
+                    .addOption(new OptionBuilder().shortName('f').name("foo").description("enable foo").fieldName("foo")
+                            .type(boolean.class).create())
+                    .addOption(new OptionBuilder().shortName('e').name("equal").description("enable equal").required(true).fieldName("equal")
+                            .type(String.class).create())
+                    .addOption(new OptionBuilder().shortName('i').name("int1").fieldName("int1").type(Integer.class).create())
+                    .addOption(new OptionBuilder().shortName('n').fieldName("int2").type(int.class).create());
+
+            CommandLineParser parser =  new CommandLineParser( commandBuilder.generateParameter());
+
+            TestPopulator1 test1 = new TestPopulator1();
+
+            parser.populateObject(test1, "test -e enable --X -f -i 2 -n=3");
+
+            assertEquals("enable", test1.equal);
+            assertTrue(test1.getEnableX());
+            assertTrue(test1.foo);
+            assertEquals(2, test1.getInt1().intValue());
+            assertEquals(3, test1.int2);
+
+            parser.populateObject(test1, "test -e enable2");
+            assertNull(test1.getEnableX());
+            assertFalse(test1.foo);
+        }
+        catch (CommandLineParserException e) {
+            e.printStackTrace();
+        }
+    }
 
 }

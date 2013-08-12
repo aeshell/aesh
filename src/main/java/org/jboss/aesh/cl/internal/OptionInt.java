@@ -38,20 +38,21 @@ public class OptionInt {
     private OptionType optionType;
     private boolean required = false;
     private char valueSeparator;
+    private String fieldName;
     private Map<String,String> properties;
 
     public OptionInt(char shortName, String name, String description,
                      String argument, boolean required, char valueSeparator,
-                     String defaultValue, Class<?> type,
+                     String defaultValue, Class<?> type, String fieldName,
                      OptionType optionType, CLConverter converter) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, defaultValue,
-                type, optionType, (Class<? extends CLConverter>) null);
+                type, fieldName, optionType, (Class<? extends CLConverter>) null);
         this.converter = converter;
     }
 
     public OptionInt(char shortName, String name, String description,
                      String argument, boolean required, char valueSeparator,
-                     String defaultValue, Class<?> type,
+                     String defaultValue, Class<?> type, String fieldName,
                      OptionType optionType, Class<? extends CLConverter> converter) throws OptionParserException {
         this.shortName = String.valueOf(shortName);
         this.name = name;
@@ -60,6 +61,7 @@ public class OptionInt {
         this.required = required;
         this.valueSeparator = valueSeparator;
         this.type = type;
+        this.fieldName = fieldName;
         this.defaultValue = defaultValue;
         this.optionType = optionType;
         this.converter = initConverter(converter);
@@ -143,6 +145,10 @@ public class OptionInt {
         return optionType;
     }
 
+    public String getFieldName() {
+        return fieldName;
+    }
+
     public CLConverter<? extends CLConverter> getConverter() {
         return converter;
     }
@@ -216,7 +222,7 @@ public class OptionInt {
             return CLConverterManager.getInstance().getConverter(type);
     }
 
-    public void injectValueIntoField(Object instance, String fieldName) {
+    public void injectValueIntoField(Object instance) {
         if(converter == null)
             return;
         try {
