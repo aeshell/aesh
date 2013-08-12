@@ -134,7 +134,7 @@ public class OptionInt {
     }
 
     public void addProperty(String name, String value) {
-        properties.put(name,value);
+        properties.put(name, value);
     }
 
     public Map<String,String> getProperties() {
@@ -215,8 +215,18 @@ public class OptionInt {
 
     private CLConverter initConverter(Class<? extends CLConverter> converterClass) {
 
-        if(converterClass != null && CLConverterManager.getInstance().hasConverter(converterClass)) {
-            return CLConverterManager.getInstance().getConverter(converterClass);
+        if(converterClass != null) {
+            if( CLConverterManager.getInstance().hasConverter(converterClass))
+                return CLConverterManager.getInstance().getConverter(converterClass);
+            else
+                try {
+                    return converterClass.newInstance();
+                } catch (InstantiationException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            return null;
         }
         else
             return CLConverterManager.getInstance().getConverter(type);

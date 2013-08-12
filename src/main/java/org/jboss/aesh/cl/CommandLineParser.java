@@ -282,12 +282,14 @@ public class CommandLineParser {
         for(OptionInt option: parameter.getOptions()) {
             if(cl.hasOption(option.getName()))
                 cl.getOption(option.getName()).injectValueIntoField(instance);
-            else if(cl.getArgument() != null) {
-                cl.getArgument().injectValueIntoField(instance);
-            }
             else
                 resetField(instance, option.getFieldName());
         }
+        if(cl.getArgument() != null && cl.getArgument().getValues().size() > 0) {
+            cl.getArgument().injectValueIntoField(instance);
+        }
+        else
+            resetField(instance, cl.getArgument().getFieldName());
     }
 
     /**

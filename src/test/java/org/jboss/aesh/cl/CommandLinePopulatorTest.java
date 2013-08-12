@@ -8,6 +8,7 @@ package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
+import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
@@ -15,6 +16,9 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.util.Calendar;
+import java.util.Currency;
 
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
@@ -202,5 +206,26 @@ public class CommandLinePopulatorTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testCustomConverter() {
+        try {
+            CommandLineParser  parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class);
+            TestPopulator5 test5 = new TestPopulator5();
+            parser.populateObject(test5, "test test2.txt test4.txt");
+
+            assertNotNull(test5.getArguments());
+            assertEquals(2, test5.getArguments().size());
+            assertTrue(test5.getArguments().contains("test4.txt"));
+
+            parser.populateObject(test5, "test --currency NOK");
+            assertNull(test5.getArguments());
+            assertEquals(Currency.getInstance("NOK"), test5.getCurrency());
+
+        }
+        catch (CommandLineParserException e) {
+        }
+    }
+
 
 }
