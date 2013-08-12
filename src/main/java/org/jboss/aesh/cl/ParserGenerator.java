@@ -14,7 +14,6 @@ import org.jboss.aesh.cl.internal.ParameterInt;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 /**

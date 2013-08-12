@@ -8,10 +8,6 @@ package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.internal.ParameterInt;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */

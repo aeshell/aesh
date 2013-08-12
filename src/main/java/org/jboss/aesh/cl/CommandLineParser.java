@@ -16,9 +16,7 @@ import org.jboss.aesh.util.Parser;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A simple command line parser.
