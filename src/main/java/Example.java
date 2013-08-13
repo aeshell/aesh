@@ -19,7 +19,6 @@ import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalCharacter;
-import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.IOException;
@@ -260,6 +259,7 @@ public class Example {
         };
 
         //show how we can change the prompt async
+        /*
         try {
             Thread.sleep(4000);
             exampleConsole.setPrompt(new Prompt(
@@ -268,6 +268,7 @@ public class Example {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        */
 
     }
 }

@@ -8,7 +8,6 @@ package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.helper.InterruptHook;
-import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.EmacsEditMode;
 import org.jboss.aesh.edit.KeyOperationFactory;
@@ -262,9 +261,6 @@ public class SettingsImpl implements Settings {
     @Override
     public InputStream getInputStream() {
         if(inputStream == null) {
-            if(Config.isOSPOSIXCompatible())
-                inputStream = new ConsoleInputSession(System.in).getExternalInputStream();
-            else
                 inputStream = System.in;
         }
         return inputStream;

@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -21,12 +22,20 @@ import java.util.concurrent.TimeUnit;
 public class ConsoleInputSession {
     private InputStream consoleStream;
     private InputStream externalInputStream;
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private ExecutorService executorService;
 
     private ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<String>(1000);
 
     public ConsoleInputSession(InputStream consoleStream) {
         this.consoleStream = consoleStream;
+        executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable runnable) {
+                Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
 
         this.externalInputStream = new InputStream() {
             private String b;
@@ -78,23 +87,22 @@ public class ConsoleInputSession {
                 while (!executorService.isShutdown()) {
                     try {
                         byte[] bBuf = new byte[20];
-                        if(consoleStream.available() > 0) {
-                            int read = consoleStream.read(bBuf);
-
-                            if (read > 0) {
-                                blockingQueue.put(new String(bBuf, 0, read));
-                            }
+                        int read = consoleStream.read(bBuf);
+                        if (read > 0) {
+                            blockingQueue.put(new String(bBuf, 0, read));
+                            Thread.sleep(10);
                         }
-                        Thread.sleep(10);
+                        else if(read < 0) {
+                            stop();
+                        }
                     }
                     catch (IOException e) {
                         if (!executorService.isShutdown()) {
                             executorService.shutdown();
-                            throw new RuntimeException("broken pipe");
+                            throw new RuntimeException(e.getMessage());
                         }
                     }
-                    catch (InterruptedException e) {
-                        //
+                    catch (InterruptedException ignored) {
                     }
                 }
             }
@@ -108,13 +116,9 @@ public class ConsoleInputSession {
     }
 
     public void stop() throws IOException, InterruptedException {
-        try {
-            executorService.shutdown();
-            blockingQueue.offer("");
-        }
-        finally {
-            consoleStream.close();
-        }
+        executorService.shutdown();
+        blockingQueue.offer("");
+        consoleStream.close();
     }
 
     public InputStream getExternalInputStream() {

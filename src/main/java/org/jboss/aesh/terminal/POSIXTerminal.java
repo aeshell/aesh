@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -70,7 +71,7 @@ public class POSIXTerminal extends AbstractTerminal {
             echoEnabled = false;
 
             //setting up input
-            input = inputStream;
+            input =  new ConsoleInputSession(inputStream).getExternalInputStream();
         }
         catch (IOException ioe) {
             if(settings.isLogging())
