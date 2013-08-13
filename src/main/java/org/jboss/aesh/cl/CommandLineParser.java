@@ -286,7 +286,7 @@ public class CommandLineParser {
         if(cl.getArgument() != null && cl.getArgument().getValues().size() > 0) {
             cl.getArgument().injectValueIntoField(instance);
         }
-        else
+        else if(cl.getArgument() != null)
             resetField(instance, cl.getArgument().getFieldName());
     }
 

@@ -87,7 +87,6 @@ public class BuilderTest extends TestCase {
 
         CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 
-        System.out.println(clp.getParameter());
         assertEquals("version", clp.getParameter().findOption("v").getName());
         assertEquals("verbose", clp.getParameter().findOption("e").getName());
 

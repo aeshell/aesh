@@ -8,16 +8,12 @@ package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
-import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
-import org.jboss.aesh.cl.internal.OptionInt;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.Calendar;
 import java.util.Currency;
 
 import static junit.framework.Assert.assertNotNull;

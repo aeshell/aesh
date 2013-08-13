@@ -8,6 +8,7 @@ package org.jboss.aesh.cl.internal;
 
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.converter.CLConverterManager;
+import org.jboss.aesh.cl.converter.NullConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
 
 import java.lang.reflect.Constructor;
@@ -214,8 +215,7 @@ public class OptionInt {
     }
 
     private CLConverter initConverter(Class<? extends CLConverter> converterClass) {
-
-        if(converterClass != null) {
+        if(converterClass != null && converterClass != NullConverter.class) {
             if( CLConverterManager.getInstance().hasConverter(converterClass))
                 return CLConverterManager.getInstance().getConverter(converterClass);
             else
