@@ -52,7 +52,7 @@ public class ParserGeneratorTest extends TestCase {
     }
 }
 
-@Command(name = "test", description = "a simple test")
+@CommandDefinition(name = "test", description = "a simple test")
 class Test1 {
     @Option(shortName = 'f', name = "foo", description = "enable foo")
     private String foo;
@@ -65,7 +65,7 @@ class Test1 {
 
 }
 
-@Command(name = "test", description = "more [options] file...")
+@CommandDefinition(name = "test", description = "more [options] file...")
 class Test2 {
 
     @Option(description = "display help instead of ring bell")
@@ -75,7 +75,7 @@ class Test2 {
     private String version;
 }
 
-@Command(name = "test", description = "more [options] file...")
+@CommandDefinition(name = "test", description = "more [options] file...")
 class Test3 {
 
     @Option(name = "target", description = "target directory")

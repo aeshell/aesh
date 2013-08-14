@@ -174,7 +174,7 @@ public class CommandLineParserTest extends TestCase {
     }
 }
 
-@Command(name = "test", description = "a simple test")
+@CommandDefinition(name = "test", description = "a simple test")
 class Parser1Test {
 
     @Option(name = "X", description = "enable X")
@@ -193,7 +193,7 @@ class Parser1Test {
     private List<String> arguments;
 }
 
-@Command(name = "test", description = "more [options] file...")
+@CommandDefinition(name = "test", description = "more [options] file...")
 class Parser2Test {
     @Option(shortName = 'd', name = "display", description = "display help instead of ring bell")
     private String display;
@@ -205,10 +205,10 @@ class Parser2Test {
     private String version;
 }
 
-@Command(name = "test", description = "this is a command without options")
+@CommandDefinition(name = "test", description = "this is a command without options")
 class Parser3Test {}
 
-@Command(name = "test", description = "testing multiple values")
+@CommandDefinition(name = "test", description = "testing multiple values")
 class Parser4Test {
     @OptionList(shortName = 'o', name="option", valueSeparator = ',')
     private List<String> option;

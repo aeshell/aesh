@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-@Command(name = "test", description = "a simple test")
+@CommandDefinition(name = "test", description = "a simple test")
 public class TestPopulator4 {
 
     @Option

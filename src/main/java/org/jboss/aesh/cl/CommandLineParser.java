@@ -293,7 +293,7 @@ public class CommandLineParser {
     /**
      * Will parse the input line and populate the fields in the instance object specified by
      * the given annotations.
-     * The instance object must be annotated with the Command annotation @see Command
+     * The instance object must be annotated with the CommandDefinition annotation @see CommandDefinition
      *
      * @param instance
      * @param line

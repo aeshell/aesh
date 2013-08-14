@@ -3,7 +3,7 @@ package org.jboss.aesh.cl;
 import java.util.Map;
 import java.util.TreeMap;
 
-@Command(name = "test", description = "a simple test")
+@CommandDefinition(name = "test", description = "a simple test")
 public class TestPopulator3 {
 
     @OptionGroup(shortName = 'b')

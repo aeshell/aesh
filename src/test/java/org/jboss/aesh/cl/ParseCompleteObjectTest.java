@@ -82,7 +82,7 @@ public class ParseCompleteObjectTest extends TestCase {
 
     }
 }
-@Command(name = "test", description = "a simple test")
+@CommandDefinition(name = "test", description = "a simple test")
 class ParseCompleteTest1 {
 
     @Option(name = "X", description = "enable X")
@@ -102,7 +102,7 @@ class ParseCompleteTest1 {
 
 }
 
-@Command(name = "test", description = "a simple test")
+@CommandDefinition(name = "test", description = "a simple test")
 class ParseCompleteTest2 {
 
     @Option(shortName = 'X', description = "enable X")

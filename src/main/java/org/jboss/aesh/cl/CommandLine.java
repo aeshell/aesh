@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A parsed String based on the provided Command and Options defined
+ * A parsed String based on the provided CommandDefinition and Options defined
  * in a {@link CommandLineParser}.
  *
  * All found options and argument can be queried after.

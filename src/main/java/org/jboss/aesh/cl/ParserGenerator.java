@@ -29,9 +29,9 @@ public class ParserGenerator {
     }
 
     public static CommandLineParser generateCommandLineParser(Class clazz) throws CommandLineParserException {
-        Command command = (Command) clazz.getAnnotation(Command.class);
+        CommandDefinition command = (CommandDefinition) clazz.getAnnotation(CommandDefinition.class);
         if(command == null)
-            throw new CommandLineParserException("Commands must be annotated with @Command");
+            throw new CommandLineParserException("Commands must be annotated with @CommandDefinition");
 
         ParameterInt parameterInt = new ParameterInt(command.name(), command.description());
 
