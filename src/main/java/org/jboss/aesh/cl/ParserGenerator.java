@@ -53,12 +53,12 @@ public class ParserGenerator {
                     if(o.shortName() == '\u0000') {
                         parameterInt.addOption(field.getName().charAt(0), field.getName(), o.description(),
                                 o.argument(), o.required(), ',', o.defaultValue(), field.getType(), field.getName(),
-                                optionType, o.converter());
+                                optionType, o.converter(), o.completer());
                     }
                     else {
                         parameterInt.addOption(o.shortName(), field.getName(), o.description(),
                                 o.argument(), o.required(), ',', o.defaultValue(),
-                                field.getType(), field.getName(), optionType, o.converter());
+                                field.getType(), field.getName(), optionType, o.converter(), o.completer());
                     }
 
                 }
@@ -66,12 +66,12 @@ public class ParserGenerator {
                     if(o.shortName() == '\u0000') {
                         parameterInt.addOption(o.name().charAt(0), o.name(), o.description(),
                                 o.argument(), o.required(), ',', o.defaultValue(),
-                                field.getType(), field.getName(), optionType, o.converter());
+                                field.getType(), field.getName(), optionType, o.converter(), o.completer());
                     }
                     else {
                         parameterInt.addOption(o.shortName(), o.name(), o.description(),
                                 o.argument(), o.required(), ',', o.defaultValue(),
-                                field.getType(), field.getName(), optionType, o.converter());
+                                field.getType(), field.getName(), optionType, o.converter(), o.completer());
                     }
                 }
 
@@ -88,23 +88,23 @@ public class ParserGenerator {
                     if(ol.shortName() == '\u0000') {
                         parameterInt.addOption(field.getName().charAt(0), field.getName(), ol.description(),
                                 "", ol.required(), ol.valueSeparator(), "", type, field.getName(), OptionType.LIST,
-                                ol.converter());
+                                ol.converter(), ol.completer());
                     }
                     else {
                         parameterInt.addOption(ol.shortName(), field.getName(), ol.description(), "",
                                 ol.required(), ol.valueSeparator(), "", type, field.getName(), OptionType.LIST,
-                                ol.converter());
+                                ol.converter(), ol.completer());
                     }
                 }
                 else {
                     if(ol.shortName() == '\u0000')
                         parameterInt.addOption(ol.name().charAt(0), ol.name(), ol.description(), "",
                                 ol.required(), ol.valueSeparator(), "", type, field.getName(),
-                                OptionType.LIST, ol.converter());
+                                OptionType.LIST, ol.converter(), ol.completer());
                     else
                         parameterInt.addOption(ol.shortName(), ol.name(), ol.description(), "",
                                 ol.required(), ol.valueSeparator(), "", type, field.getName(), OptionType.LIST,
-                                ol.converter());
+                                ol.converter(), ol.completer());
                 }
             }
             else if((og = field.getAnnotation(OptionGroup.class)) != null) {
@@ -119,23 +119,23 @@ public class ParserGenerator {
                     if(og.shortName() == '\u0000') {
                         parameterInt.addOption(field.getName().charAt(0), field.getName(), og.description(),
                                 "", og.required(), ',', "", type, field.getName(), OptionType.GROUP,
-                                og.converter());
+                                og.converter(), og.completer());
                     }
                     else {
                         parameterInt.addOption(og.shortName(), field.getName(), og.description(),
                                 "", og.required(), ',', "", type, field.getName(), OptionType.GROUP,
-                                og.converter());
+                                og.converter(), og.completer());
                     }
                 }
                 else {
                     if(og.shortName() == '\u0000')
                         parameterInt.addOption(og.name().charAt(0), og.name(), og.description(),
                                 "", og.required(), ',', "", type, field.getName(), OptionType.GROUP,
-                                og.converter());
+                                og.converter(), og.completer());
                     else
                         parameterInt.addOption(og.shortName(), og.name(), og.description(),
                                 "", og.required(), ',', "", type, field.getName(), OptionType.GROUP,
-                                og.converter());
+                                og.converter(), og.completer());
                 }
             }
 
@@ -148,7 +148,7 @@ public class ParserGenerator {
                     type = (Class) listType.getActualTypeArguments()[0];
                 }
                 parameterInt.setArgument(new OptionInt('\u0000',"", a.description(), "", false, a.valueSeparator(),
-                        "", type, field.getName(), OptionType.ARGUMENT, a.converter()));
+                        "", type, field.getName(), OptionType.ARGUMENT, a.converter(), a.completer()));
             }
         }
 

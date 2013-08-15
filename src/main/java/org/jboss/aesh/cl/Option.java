@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.completer.NullOptionCompleter;
+import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.converter.NullConverter;
 
@@ -72,4 +74,9 @@ public @interface Option {
      * See ClConverterManager for whats added by default
      */
     Class<? extends CLConverter> converter() default NullConverter.class;
+
+    /**
+     * Define a completer for this option.
+     */
+    Class<? extends OptionCompleter> completer() default NullOptionCompleter.class;
 }

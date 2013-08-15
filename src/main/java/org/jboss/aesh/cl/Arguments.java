@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.completer.NullOptionCompleter;
+import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.converter.StringCLConverter;
 
@@ -48,4 +50,9 @@ public @interface Arguments {
      * See ClConverterManager for whats added by default
      */
     Class<? extends CLConverter> converter() default StringCLConverter.class;
+
+    /**
+     * Define a completer for this option.
+     */
+    Class<? extends OptionCompleter> completer() default NullOptionCompleter.class;
 }

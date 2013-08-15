@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl.builder;
 
+import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
@@ -32,6 +33,7 @@ public class OptionBuilder {
     private OptionType optionType;
     private Class<? extends CLConverter> converter;
     private String fieldName;
+    private OptionCompleter completer;
 
     public OptionBuilder() {
     }
@@ -134,6 +136,12 @@ public class OptionBuilder {
         return this;
     }
 
+    public OptionBuilder completer(OptionCompleter completer) {
+        this.completer = completer;
+        return this;
+    }
+
+
     public OptionInt create() throws OptionParserException {
         if(optionType == null) {
             if(!hasValue || (type != null && (Boolean.class.isAssignableFrom(type) || boolean.class.isAssignableFrom(type))))
@@ -157,6 +165,6 @@ public class OptionBuilder {
             shortName = name.charAt(0);
 
         return new OptionInt(shortName, name, description, argument, required,
-                valueSeparator, defaultValue, type, fieldName, optionType, converter);
+                valueSeparator, defaultValue, type, fieldName, optionType, converter, completer);
     }
 }

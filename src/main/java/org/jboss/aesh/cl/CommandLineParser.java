@@ -343,4 +343,21 @@ public class CommandLineParser {
                 "parameter=" + parameter +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CommandLineParser)) return false;
+
+        CommandLineParser that = (CommandLineParser) o;
+
+        if (!parameter.equals(that.parameter)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return parameter.hashCode();
+    }
 }

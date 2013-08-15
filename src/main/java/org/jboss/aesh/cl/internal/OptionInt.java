@@ -6,10 +6,14 @@
  */
 package org.jboss.aesh.cl.internal;
 
+import org.jboss.aesh.cl.completer.BooleanOptionCompleter;
+import org.jboss.aesh.cl.completer.NullOptionCompleter;
+import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.converter.CLConverterManager;
 import org.jboss.aesh.cl.converter.NullConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.util.ReflectionUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -40,21 +44,36 @@ public class OptionInt {
     private boolean required = false;
     private char valueSeparator;
     private String fieldName;
+    private OptionCompleter completer;
     private Map<String,String> properties;
+
+     public OptionInt(char shortName, String name, String description,
+                     String argument, boolean required, char valueSeparator,
+                     String defaultValue, Class<?> type, String fieldName,
+                     OptionType optionType, CLConverter converter, OptionCompleter completer) throws OptionParserException {
+        this(shortName, name, description, argument, required, valueSeparator, defaultValue,
+                type, fieldName, optionType,
+                (Class<? extends CLConverter>) null,(Class<? extends OptionCompleter>) null);
+        this.converter = converter;
+        this.completer = completer;
+    }
+
 
     public OptionInt(char shortName, String name, String description,
                      String argument, boolean required, char valueSeparator,
                      String defaultValue, Class<?> type, String fieldName,
-                     OptionType optionType, CLConverter converter) throws OptionParserException {
+                     OptionType optionType, Class<? extends CLConverter> converter,
+                     OptionCompleter completer) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, defaultValue,
-                type, fieldName, optionType, (Class<? extends CLConverter>) null);
-        this.converter = converter;
+                type, fieldName, optionType, converter, (Class<? extends OptionCompleter>) null);
+        this.completer = completer;
     }
 
     public OptionInt(char shortName, String name, String description,
                      String argument, boolean required, char valueSeparator,
                      String defaultValue, Class<?> type, String fieldName,
-                     OptionType optionType, Class<? extends CLConverter> converter) throws OptionParserException {
+                     OptionType optionType, Class<? extends CLConverter> converter,
+                     Class<? extends OptionCompleter> completer) throws OptionParserException {
         this.shortName = String.valueOf(shortName);
         this.name = name;
         this.description = description;
@@ -66,6 +85,7 @@ public class OptionInt {
         this.defaultValue = defaultValue;
         this.optionType = optionType;
         this.converter = initConverter(converter);
+        this.completer = initCompleter(completer);
 
         properties = new HashMap<String, String>();
         values = new ArrayList<String>();
@@ -150,8 +170,12 @@ public class OptionInt {
         return fieldName;
     }
 
-    public CLConverter<? extends CLConverter> getConverter() {
+    public CLConverter getConverter() {
         return converter;
+    }
+
+    public OptionCompleter getCompleter() {
+        return completer;
     }
 
     public void clear() {
@@ -219,17 +243,31 @@ public class OptionInt {
             if( CLConverterManager.getInstance().hasConverter(converterClass))
                 return CLConverterManager.getInstance().getConverter(converterClass);
             else
-                try {
-                    return converterClass.newInstance();
-                } catch (InstantiationException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            return null;
+                return ReflectionUtil.newInstance(converterClass);
         }
         else
             return CLConverterManager.getInstance().getConverter(type);
+    }
+
+    private OptionCompleter initCompleter(Class<? extends OptionCompleter> completerClass) {
+
+        if(completerClass != null && completerClass != NullOptionCompleter.class) {
+                return ReflectionUtil.newInstance(completerClass);
+        }
+        else {
+            try {
+                if(type == Boolean.class || type == boolean.class)
+                    return BooleanOptionCompleter.class.newInstance();
+                else
+                    return null;
+
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
     }
 
     public void injectValueIntoField(Object instance) {
@@ -237,7 +275,7 @@ public class OptionInt {
             return;
         try {
             Field field = instance.getClass().getDeclaredField(fieldName);
-            if(Modifier.isPrivate(field.getModifiers()))
+            if(!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
             if(!Modifier.isPublic(instance.getClass().getModifiers())) {
                 Constructor constructor = instance.getClass().getDeclaredConstructor();
