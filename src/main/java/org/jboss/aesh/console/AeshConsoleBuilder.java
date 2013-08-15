@@ -45,7 +45,8 @@ public class AeshConsoleBuilder {
         for(Class<? extends Command> command : commands)
             aeshConsole.addCommand(command);
 
-        aeshConsole.setPrompt(prompt);
+        if(prompt != null)
+            aeshConsole.setPrompt(prompt);
 
         return aeshConsole;
     }

@@ -22,21 +22,21 @@ public class ParseCompleteObjectTest extends TestCase {
         assertEquals(String.class, pco.getType());
         assertTrue(pco.isOption());
 
-        pco = completeParser.findCompleteObject("test -f --equal tru");
+        pco = completeParser.findCompleteObject("test -f false --equal tru");
         assertEquals("tru", pco.getValue());
         assertEquals(String.class, pco.getType());
         assertEquals("equal", pco.getName());
         assertTrue(pco.isOption());
         assertFalse(pco.doDisplayOptions());
 
-        pco = completeParser.findCompleteObject("test -f --equal ");
+        pco = completeParser.findCompleteObject("test -f=true --equal ");
         assertEquals("", pco.getValue());
         assertEquals(String.class, pco.getType());
         assertEquals("equal", pco.getName());
         assertTrue(pco.isOption());
         assertFalse(pco.doDisplayOptions());
 
-        pco = completeParser.findCompleteObject("test -f --equ ");
+        pco = completeParser.findCompleteObject("test -f true --equ ");
         assertFalse(pco.isArgument());
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());

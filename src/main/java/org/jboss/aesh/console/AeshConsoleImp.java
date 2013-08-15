@@ -152,14 +152,24 @@ public class AeshConsoleImp implements AeshConsole {
         @Override
         public void complete(CompleteOperation completeOperation) {
             List<String> completedCommands = completeCommandName(completeOperation.getBuffer());
-            if(completedCommands.size() > 0)
+            if(completedCommands.size() > 0) {
+                logger.info("displaying commands..");
                 completeOperation.addCompletionCandidates(completedCommands);
+            }
             else {
                 CommandLineParser currentCommand = findCommand(completeOperation.getBuffer());
                 if(currentCommand != null) {
+                    CommandLineCompletionParser completionParser = new CommandLineCompletionParser(currentCommand);
                     try {
-                        completeCommand(new CommandLineCompletionParser(currentCommand).findCompleteObject(completeOperation.getBuffer()),
-                                completeOperation, currentCommand);
+
+                        ParsedCompleteObject completeObject = completionParser.findCompleteObject(completeOperation.getBuffer());
+                        completeOperation.addCompletionCandidates(
+                                completionParser.injectValuesAndComplete(completeObject, commands.get(currentCommand),
+                                        completeOperation.getBuffer()));
+
+                        if(completeOperation.getCompletionCandidates().size() == 1)
+                            completeOperation.setOffset(completeOperation.getCursor() - completeObject.getOffset());
+
                     } catch (CommandLineParserException e) {
                         e.printStackTrace();
                     }
@@ -168,14 +178,6 @@ public class AeshConsoleImp implements AeshConsole {
             }
         }
 
-        private void completeCommand(ParsedCompleteObject completionObject, CompleteOperation completeOperation,
-                                     CommandLineParser currentCommand) {
-            if(completionObject.doDisplayOptions()) {
-                logger.info("displaying options..");
-                completeOperation.addCompletionCandidates(currentCommand.getParameter().getOptionLongNamesWithDash());
-            }
-
-        }
     }
 
     class AeshConsoleCallback implements ConsoleCallback {

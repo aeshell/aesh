@@ -40,12 +40,9 @@ public class ParserGenerator {
             OptionGroup og;
             OptionList ol;
             Arguments a;
-            boolean hasValue = true;
-            if(field.getType().equals(Boolean.class) || field.getType().equals(boolean.class))
-                hasValue = false;
             if((o = field.getAnnotation(Option.class)) != null) {
                 OptionType optionType;
-                if(hasValue)
+                if(o.hasValue())
                     optionType = OptionType.NORMAL;
                 else
                     optionType = OptionType.BOOLEAN;

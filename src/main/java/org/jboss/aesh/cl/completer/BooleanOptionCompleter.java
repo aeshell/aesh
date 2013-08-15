@@ -6,17 +6,21 @@
  */
 package org.jboss.aesh.cl.completer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class BooleanOptionCompleter implements OptionCompleter {
     @Override
-    public String complete(String completeValue) {
+    public List<String> complete(String completeValue) {
+        List<String> completeList = new ArrayList<String>();
         if("true".startsWith( completeValue.toLowerCase()))
-            return "true";
+             completeList.add("true");
         else if("false".startsWith( completeValue.toLowerCase()))
-            return "false";
-        else
-            return null;
+            completeList.add("false");
+
+        return completeList;
     }
 }

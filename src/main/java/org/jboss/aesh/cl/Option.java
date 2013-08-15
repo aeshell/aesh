@@ -69,6 +69,12 @@ public @interface Option {
     String defaultValue() default "";
 
     /**
+     * Specify if this option accept values.
+     * Only accepted to be false for Boolean/boolean
+     */
+    boolean hasValue() default true;
+
+    /**
      * Define a converter if the field is a type thats not java.lang and other
      * common types, eg: File,++
      * See ClConverterManager for whats added by default

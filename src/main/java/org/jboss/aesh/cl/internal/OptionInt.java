@@ -7,6 +7,7 @@
 package org.jboss.aesh.cl.internal;
 
 import org.jboss.aesh.cl.completer.BooleanOptionCompleter;
+import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.aesh.cl.completer.NullOptionCompleter;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
@@ -15,6 +16,7 @@ import org.jboss.aesh.cl.converter.NullConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.util.ReflectionUtil;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -258,6 +260,8 @@ public class OptionInt {
             try {
                 if(type == Boolean.class || type == boolean.class)
                     return BooleanOptionCompleter.class.newInstance();
+                else if(type == File.class)
+                    return FileOptionCompleter.class.newInstance();
                 else
                     return null;
 

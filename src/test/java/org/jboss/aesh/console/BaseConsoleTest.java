@@ -24,7 +24,7 @@ import java.io.InputStream;
  */
 public abstract class BaseConsoleTest {
 
-    private Settings getDefaultSettings(InputStream is, SettingsBuilder builder) {
+    public Settings getDefaultSettings(InputStream is, SettingsBuilder builder) {
         if(builder == null) {
             builder = new SettingsBuilder();
             builder.enableAlias(false);

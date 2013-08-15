@@ -60,7 +60,7 @@ class Test1 {
     @Option(shortName = 'e', description = "enable e", required = true)
     private String e;
 
-    @Option(description = "has enabled bar")
+    @Option(description = "has enabled bar", hasValue = false)
     private Boolean bar;
 
 }

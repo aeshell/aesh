@@ -144,7 +144,7 @@ public class OptionBuilder {
 
     public OptionInt create() throws OptionParserException {
         if(optionType == null) {
-            if(!hasValue || (type != null && (Boolean.class.isAssignableFrom(type) || boolean.class.isAssignableFrom(type))))
+            if(!hasValue)
                 optionType = OptionType.BOOLEAN;
             else if(isProperty)
                 optionType = OptionType.GROUP;
