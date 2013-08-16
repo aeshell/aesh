@@ -6,6 +6,16 @@
  */
 package org.jboss.aesh.console;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.CommandLineCompletionParser;
 import org.jboss.aesh.cl.CommandLineParser;
@@ -20,15 +30,6 @@ import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.aesh.util.Parser;
 import org.jboss.aesh.util.ReflectionUtil;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -36,7 +37,7 @@ public class AeshConsoleImp implements AeshConsole {
 
     private Map<CommandLineParser, Command> commands;
     private Console console;
-
+    
     Logger logger = LoggerUtil.getLogger(AeshConsoleImp.class.getName());
 
     AeshConsoleImp(Settings settings) {
@@ -80,23 +81,15 @@ public class AeshConsoleImp implements AeshConsole {
     public void removeCommand(Class<? extends Command> command) {
 
     }
-
+    
     @Override
-    public void printToStdOut(String out) {
-        try {
-            console.pushToStdOut(out+Config.getLineSeparator());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public PrintWriter err() {
+    	return console.getStdErr();
     }
-
+    
     @Override
-    public void printToStdErr(String err) {
-        try {
-            console.pushToStdErr(err+Config.getLineSeparator());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public PrintWriter out() {
+    	return console.getStdOut();
     }
 
     @Override

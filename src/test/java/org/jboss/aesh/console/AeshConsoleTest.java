@@ -57,7 +57,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
         @Override
         public void execute() throws IOException {
-            console.printToStdOut("FOO");
+            console.out().println("FOO");
         }
     }
 

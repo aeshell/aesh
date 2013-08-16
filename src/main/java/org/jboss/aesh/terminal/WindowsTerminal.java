@@ -6,20 +6,19 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.fusesource.jansi.AnsiOutputStream;
-import org.fusesource.jansi.WindowsAnsiOutputStream;
-import org.fusesource.jansi.internal.WindowsSupport;
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.util.LoggerUtil;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.fusesource.jansi.AnsiOutputStream;
+import org.fusesource.jansi.WindowsAnsiOutputStream;
+import org.fusesource.jansi.internal.WindowsSupport;
+import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.util.LoggerUtil;
 
 /**
  *
@@ -27,11 +26,9 @@ import java.util.logging.Logger;
  */
 public class WindowsTerminal extends AbstractTerminal {
 
-    private Writer stdOut;
-    private Writer stdErr;
+    private PrintWriter stdOut;
+    private PrintWriter stdErr;
     private InputStream input;
-    private int width;
-    private int height;
     private TerminalSize size;
 
     private long ttyPropsLastFetched;
@@ -50,12 +47,12 @@ public class WindowsTerminal extends AbstractTerminal {
         //setting up reader
         try {
             //AnsiConsole.systemInstall();
-            this.stdOut = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(stdOut)));
-            this.stdErr = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(stdErr)));
+            this.stdOut = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(stdOut)), true);
+            this.stdErr = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(stdErr)), true);
         }
         catch (Exception ioe) {
-            this.stdOut = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(stdOut)));
-            this.stdErr = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(stdErr)));
+            this.stdOut = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(stdOut)), true);
+            this.stdErr = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(stdErr)), true);
         }
 
         this.input = inputStream;
@@ -186,6 +183,16 @@ public class WindowsTerminal extends AbstractTerminal {
 
     private boolean propertiesTimedOut() {
         return (System.currentTimeMillis() -ttyPropsLastFetched) > TIMEOUT_PERIOD;
+    }
+    
+    @Override
+    public PrintWriter getStdErr() {
+    	return stdErr;
+    }
+    
+    @Override
+    public PrintWriter getStdOut() {
+    	return stdOut;
     }
 }
 
