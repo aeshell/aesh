@@ -6,19 +6,18 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.jboss.aesh.console.reader.ConsoleInputSession;
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.util.LoggerUtil;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.jboss.aesh.console.reader.ConsoleInputSession;
+import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.util.LoggerUtil;
 
 /**
  * Terminal that should work on most POSIX systems
@@ -35,8 +34,8 @@ public class POSIXTerminal extends AbstractTerminal {
     private boolean restored = false;
 
     private InputStream input;
-    private Writer stdOut;
-    private Writer stdErr;
+    private PrintWriter stdOut;
+    private PrintWriter stdErr;
 
     private static long TIMEOUT_PERIOD = 2000;
 
@@ -83,8 +82,8 @@ public class POSIXTerminal extends AbstractTerminal {
             e.printStackTrace();
         }
 
-        this.stdOut = new PrintWriter( new OutputStreamWriter(stdOut));
-        this.stdErr = new PrintWriter( new OutputStreamWriter(stdErr));
+        this.stdOut = new PrintWriter( new OutputStreamWriter(stdOut), true);
+        this.stdErr = new PrintWriter( new OutputStreamWriter(stdErr), true);
         size = new TerminalSize(getHeight(), getWidth());
     }
 
@@ -356,6 +355,16 @@ public class POSIXTerminal extends AbstractTerminal {
         }
 
         return new String(bout.toByteArray());
+    }
+    
+    @Override
+    public PrintWriter getStdErr() {
+    	return stdErr;
+    }
+    
+    @Override
+    public PrintWriter getStdOut() {
+    	return stdOut;
     }
 
 }

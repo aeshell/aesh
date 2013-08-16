@@ -67,9 +67,9 @@ public class AeshExample {
         @Override
         public void execute() throws IOException {
            if(bar == null)
-               console.printToStdOut("NO BAR!");
+               console.out().println("NO BAR!");
             else
-               console.printToStdOut("you set bar to: "+bar);
+               console.out().println("you set bar to: "+bar);
         }
     }
 
@@ -91,9 +91,9 @@ public class AeshExample {
         @Override
         public void execute() throws IOException {
            if(foo == null)
-               console.printToStdOut("NO FOO!");
+               console.out().println("NO FOO!");
             else
-               console.printToStdOut("you set foo to: "+foo);
+               console.out().println("you set foo to: "+foo);
 
             if(files != null) {
 

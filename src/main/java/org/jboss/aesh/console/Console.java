@@ -16,7 +16,6 @@ import org.jboss.aesh.console.helper.Search;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
-
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.Mode;
@@ -28,7 +27,6 @@ import org.jboss.aesh.edit.actions.EditActionManager;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.edit.actions.PrevWordAction;
 import org.jboss.aesh.edit.actions.Movement;
-
 import org.jboss.aesh.history.FileHistory;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.InMemoryHistory;
@@ -47,6 +45,8 @@ import org.jboss.aesh.util.Parser;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -82,8 +82,8 @@ public class Console {
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
     private volatile boolean running = false;
-    private StringBuilder redirectPipeOutBuffer;
-    private StringBuilder redirectPipeErrBuffer;
+    private StringWriter redirectPipeOutBuffer;
+    private StringWriter redirectPipeErrBuffer;
     private List<ConsoleOperation> operations;
     private ConsoleOperation currentOperation;
     private AliasManager aliasManager;
@@ -97,18 +97,6 @@ public class Console {
     //used to optimize text deletion
     private char[] resetLineAndSetCursorToStart =
             (ANSI.saveCursor()+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
-
-    //create a holder for console, it will not be called before the getInstance()
-    //method is called
-    /*
-    private static class ConsoleHolder {
-        static final Console INSTANCE = new Console();
-    }
-
-    public static Console getInstance() {
-        return ConsoleHolder.INSTANCE;
-    }
-    */
 
     public Console(final Settings settings) {
         this.settings = settings;
@@ -200,8 +188,8 @@ public class Console {
         operations = new ArrayList<ConsoleOperation>();
         currentOperation = null;
 
-        redirectPipeOutBuffer = new StringBuilder();
-        redirectPipeErrBuffer = new StringBuilder();
+        redirectPipeOutBuffer = new StringWriter();
+        redirectPipeErrBuffer = new StringWriter();
         setPrompt(new Prompt(""));
     }
 
@@ -286,7 +274,7 @@ public class Console {
             //if redirection enabled, put it into a buffer
             if(currentOperation != null &&
                     ControlOperator.isRedirectionOut(currentOperation.getControlOperator()))
-                redirectPipeOutBuffer.append(input);
+                redirectPipeOutBuffer.write(input);
             else
                 getTerminal().writeToStdOut(input);
         }
@@ -337,7 +325,7 @@ public class Console {
         if(input != null && input.length > 0) {
             if(currentOperation != null &&
                     ControlOperator.isRedirectionErr(currentOperation.getControlOperator()))
-                redirectPipeErrBuffer.append(input);
+                redirectPipeErrBuffer.write(input);
             else
                 getTerminal().writeToStdErr(input);
         }
@@ -1422,14 +1410,14 @@ public class Console {
             ConsoleOperation nextOperation = operations.remove(0);
             persistRedirection(nextOperation.getBuffer(), currentOperation.getControlOperator());
             if(nextOperation.getControlOperator() == ControlOperator.NONE) {
-                redirectPipeErrBuffer = new StringBuilder();
-                redirectPipeOutBuffer = new StringBuilder();
+                redirectPipeErrBuffer = new StringWriter();
+                redirectPipeOutBuffer = new StringWriter();
                 currentOperation = null;
                 return null;
             }
             else {
-                redirectPipeErrBuffer = new StringBuilder();
-                redirectPipeOutBuffer = new StringBuilder();
+                redirectPipeErrBuffer = new StringWriter();
+                redirectPipeOutBuffer = new StringWriter();
                 currentOperation = nextOperation;
                 return parseCurrentOperation();
             }
@@ -1521,10 +1509,10 @@ public class Console {
                     redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString());
         }
 
-        if(redirectPipeOutBuffer.length() > 0)
-            redirectPipeOutBuffer = new StringBuilder();
-        if(redirectPipeErrBuffer.length() > 0)
-            redirectPipeErrBuffer = new StringBuilder();
+        if(redirectPipeOutBuffer.toString().length() > 0)
+            redirectPipeOutBuffer = new StringWriter();
+        if(redirectPipeErrBuffer.toString().length() > 0)
+            redirectPipeErrBuffer = new StringWriter();
 
         return findAliases(output);
     }
@@ -1609,8 +1597,28 @@ public class Console {
                 logger.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
             pushToStdErr(e.getMessage());
         }
-        redirectPipeOutBuffer = new StringBuilder();
-        redirectPipeErrBuffer = new StringBuilder();
+        redirectPipeOutBuffer = new StringWriter();
+        redirectPipeErrBuffer = new StringWriter();
+    }
+    
+    public PrintWriter getStdOut() {
+        //if redirection enabled, put it into a buffer
+        if(currentOperation != null &&
+                ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
+        	return new PrintWriter(redirectPipeOutBuffer, true);
+        } else {
+        	return getTerminal().getStdOut();
+        }
+    }
+    
+    public PrintWriter getStdErr(){ 
+        //if redirection enabled, put it into a buffer
+        if(currentOperation != null &&
+                ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
+        	return new PrintWriter(redirectPipeErrBuffer, true);
+        } else {
+        	return getTerminal().getStdErr();
+        }
     }
 
 }
