@@ -1245,14 +1245,12 @@ public class Console {
         }
         if(ControlOperatorParser.findLastRedirectionPositionBeforeCursor(buffer.getLine(), buffer.getCursor()) > pipeLinePos) {
             pipeLinePos = 0;
-            logger.info("setting redirect = true");
             redirect = true;
 
         }
 
         for(Completion completion : completionList) {
             if(redirect && !completion.getClass().equals(RedirectionCompletion.class)) {
-                logger.info("breaking out of loop with: "+completion);
                 break;
             }
             CompleteOperation co;

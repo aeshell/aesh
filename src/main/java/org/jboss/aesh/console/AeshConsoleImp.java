@@ -167,7 +167,8 @@ public class AeshConsoleImp implements AeshConsole {
                                 completeOperation.getBuffer());
                         completeOperation.addCompletionCandidates(completerData.getCompleterValues());
                         if(completerData.getCompleterValues().size() == 1 && completerData.getOffset() > 0)
-                            completeOperation.setOffset( completeOperation.getCursor());
+                            completeOperation.setOffset( completerData.getOffset());
+                        //completeOperation.setOffset( completeOperation.getCursor());
                         if(!completerData.isAppendSpace())
                             completeOperation.doAppendSeparator(false);
 

@@ -50,15 +50,16 @@ public class CommandLineCompletionParser {
             //else we try to complete an option,an option value or arguments
             String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line.trim());
             if(lastWord.startsWith("-")) {
+                int offset = lastWord.length();
                 while(lastWord.startsWith("-"))
                     lastWord = lastWord.substring(1);
                 if(lastWord.length() == 0)
-                    return new ParsedCompleteObject(false, null, 0);
+                    return new ParsedCompleteObject(false, null, offset);
                 else if(parser.getParameter().findOption(lastWord) != null ||
                         parser.getParameter().findLongOption(lastWord) != null)
                     return findCompleteObjectValue(line, true);
                 else
-                    return new ParsedCompleteObject(false, null, 0);
+                    return new ParsedCompleteObject(false, null, offset);
             }
             else
                 return new ParsedCompleteObject(true);
@@ -122,14 +123,17 @@ public class CommandLineCompletionParser {
         CompleterData completions = new CompleterData();
         if(completeObject.doDisplayOptions()) {
             logger.info("displayOptions");
+            logger.info("CompleteObject: "+completeObject);
             //we have partial/full name
+            logger.info("Name: "+completeObject.getName());
             if(completeObject.getName() != null && completeObject.getName().length() > 0) {
                 if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() > 0) {
                     //only one param
                     if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() == 1) {
-                        completions.addCompleterValue(parser.getParameter().findPossibleLongNamesWitdDash(
-                                completeObject.getName()).get(0));
-                        //completeOperation.setOffset(completeOperation.getCursor() - completeObject.getOffset());
+                        completions.addCompleterValue(buffer.substring(0, buffer.length()-completeObject.getOffset())+
+                                parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).get(0));
+                        //completions.setOffset( completeObject.getOffset());
+                        //completions.setOffset( completions.getCompleterValues().get(0).length());
                     }
                     //multiple params
                     else {
@@ -150,10 +154,12 @@ public class CommandLineCompletionParser {
         }
         //complete option value
         else if(completeObject.isOption()) {
+            logger.info("buffer: "+buffer);
+            logger.info("completeObject.getName(): "+completeObject.getName());
             //split the line on the option name. populate the object, then call the options completer
             String rest = buffer.substring(0, buffer.lastIndexOf(completeObject.getName()));
-            while(rest.endsWith("-"))
-                rest = rest.substring(0, rest.length()-1);
+            //while(rest.endsWith("-"))
+            //    rest = rest.substring(0, rest.length()-1);
             try {
                 parser.populateObject(command, rest);
             } catch (CommandLineParserException e) {
@@ -163,6 +169,10 @@ public class CommandLineCompletionParser {
             OptionInt currentOption = parser.getParameter().findLongOption(completeObject.getName());
             if(currentOption != null && currentOption.getCompleter() != null) {
                 completions = currentOption.getCompleter().complete(completeObject.getValue());
+            }
+            if(completions.getCompleterValues().size() == 1 && completions.getOffset() > 0) {
+                //completions.setOffset( completions.getOffset() + rest.length());
+                completions.setOffset( completions.getOffset() + buffer.length() - rest.length());
             }
 
         }
