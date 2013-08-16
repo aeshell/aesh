@@ -1239,13 +1239,22 @@ public class Console {
 
         List<CompleteOperation> possibleCompletions = new ArrayList<CompleteOperation>();
         int pipeLinePos = 0;
+        boolean redirect = false;
         if(ControlOperatorParser.doStringContainPipeline(buffer.getLine())) {
             pipeLinePos =  ControlOperatorParser.findLastPipelinePositionBeforeCursor(buffer.getLine(), buffer.getCursor());
-            if(ControlOperatorParser.findLastRedirectionPositionBeforeCursor(buffer.getLine(), buffer.getCursor()) > pipeLinePos)
-                pipeLinePos = 0;
+        }
+        if(ControlOperatorParser.findLastRedirectionPositionBeforeCursor(buffer.getLine(), buffer.getCursor()) > pipeLinePos) {
+            pipeLinePos = 0;
+            logger.info("setting redirect = true");
+            redirect = true;
+
         }
 
         for(Completion completion : completionList) {
+            if(redirect && !completion.getClass().equals(RedirectionCompletion.class)) {
+                logger.info("breaking out of loop with: "+completion);
+                break;
+            }
             CompleteOperation co;
             if(pipeLinePos > 0) {
                 co = findAliases(buffer.getLine().substring(pipeLinePos, buffer.getCursor()), buffer.getCursor() - pipeLinePos);

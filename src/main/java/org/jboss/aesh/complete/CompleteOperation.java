@@ -42,7 +42,7 @@ public class CompleteOperation {
     }
 
     private void setBuffer(String buffer) {
-        if(buffer.startsWith(" ")) {
+        if(buffer != null && buffer.startsWith(" ")) {
             trimmed = true;
             this.buffer = Parser.trimInFront(buffer);
             nonTrimmedBuffer = buffer;

@@ -7,6 +7,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -41,6 +42,8 @@ public class AeshConsoleBuilder {
 
 
     public AeshConsole create() {
+        if(settings == null)
+            settings = new SettingsBuilder().create();
         AeshConsole aeshConsole = new AeshConsoleImp(settings);
         for(Class<? extends Command> command : commands)
             aeshConsole.addCommand(command);

@@ -6,8 +6,6 @@
  */
 package org.jboss.aesh.cl.completer;
 
-import java.util.List;
-
 /**
  * Complete the given input for an option value.
  *
@@ -21,5 +19,5 @@ public interface OptionCompleter {
      *
      * @return completion value
      */
-    List<String> complete(String completeValue);
+    CompleterData complete(String completeValue);
 }

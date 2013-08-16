@@ -6,15 +6,12 @@
  */
 package org.jboss.aesh.cl.completer;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class NullOptionCompleter implements OptionCompleter {
     @Override
-    public List<String> complete(String completeValue) {
-        return new ArrayList<String>();
+    public CompleterData complete(String completeValue) {
+        return new CompleterData();
     }
 }

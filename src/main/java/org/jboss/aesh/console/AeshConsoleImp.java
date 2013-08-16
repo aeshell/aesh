@@ -11,6 +11,7 @@ import org.jboss.aesh.cl.CommandLineCompletionParser;
 import org.jboss.aesh.cl.CommandLineParser;
 import org.jboss.aesh.cl.ParsedCompleteObject;
 import org.jboss.aesh.cl.ParserGenerator;
+import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
@@ -153,7 +154,6 @@ public class AeshConsoleImp implements AeshConsole {
         public void complete(CompleteOperation completeOperation) {
             List<String> completedCommands = completeCommandName(completeOperation.getBuffer());
             if(completedCommands.size() > 0) {
-                logger.info("displaying commands..");
                 completeOperation.addCompletionCandidates(completedCommands);
             }
             else {
@@ -163,12 +163,13 @@ public class AeshConsoleImp implements AeshConsole {
                     try {
 
                         ParsedCompleteObject completeObject = completionParser.findCompleteObject(completeOperation.getBuffer());
-                        completeOperation.addCompletionCandidates(
-                                completionParser.injectValuesAndComplete(completeObject, commands.get(currentCommand),
-                                        completeOperation.getBuffer()));
-
-                        if(completeOperation.getCompletionCandidates().size() == 1)
-                            completeOperation.setOffset(completeOperation.getCursor() - completeObject.getOffset());
+                        CompleterData completerData = completionParser.injectValuesAndComplete(completeObject, commands.get(currentCommand),
+                                completeOperation.getBuffer());
+                        completeOperation.addCompletionCandidates(completerData.getCompleterValues());
+                        if(completerData.getCompleterValues().size() == 1 && completerData.getOffset() > 0)
+                            completeOperation.setOffset( completeOperation.getCursor());
+                        if(!completerData.isAppendSpace())
+                            completeOperation.doAppendSeparator(false);
 
                     } catch (CommandLineParserException e) {
                         e.printStackTrace();
@@ -183,7 +184,7 @@ public class AeshConsoleImp implements AeshConsole {
     class AeshConsoleCallback implements ConsoleCallback {
         @Override
         public int readConsoleOutput(ConsoleOutput output) throws IOException {
-            if(output != null) {
+            if(output != null && output.getBuffer().trim().length() > 0) {
                 CommandLineParser calledCommand = findCommand(output.getBuffer());
                 if(calledCommand != null) {
                     try {
@@ -192,11 +193,14 @@ public class AeshConsoleImp implements AeshConsole {
                     catch (CommandLineParserException e) {
                         e.printStackTrace();
                     }
-                    //console.pushToStdOut("RUNNING "+calledCommand.getParameter().getName());
                     commands.get(calledCommand).execute();
                 }
                 else
                     console.pushToStdOut("Command not found: "+Parser.findFirstWord(output.getBuffer())+Config.getLineSeparator());
+            }
+            //empty line
+            else if(output != null) {
+                return 0;
             }
             else {
                 stop();

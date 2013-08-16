@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
@@ -116,9 +117,9 @@ public class CommandLineCompletionParser {
         }
     }
 
-    public List<String> injectValuesAndComplete(ParsedCompleteObject completeObject, Command command,
+    public CompleterData injectValuesAndComplete(ParsedCompleteObject completeObject, Command command,
                                                 String buffer) {
-        List<String> completions = new ArrayList<String>();
+        CompleterData completions = new CompleterData();
         if(completeObject.doDisplayOptions()) {
             logger.info("displayOptions");
             //we have partial/full name
@@ -126,22 +127,22 @@ public class CommandLineCompletionParser {
                 if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() > 0) {
                     //only one param
                     if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() == 1) {
-                        completions.add(parser.getParameter().findPossibleLongNamesWitdDash(
+                        completions.addCompleterValue(parser.getParameter().findPossibleLongNamesWitdDash(
                                 completeObject.getName()).get(0));
                         //completeOperation.setOffset(completeOperation.getCursor() - completeObject.getOffset());
                     }
                     //multiple params
                     else {
-                        completions.addAll(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()));
+                        completions.addAllCompleterValues(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()));
                     }
 
                 }
             }
             else {
                 if(parser.getParameter().getOptionLongNamesWithDash().size() > 1)
-                    completions.addAll(parser.getParameter().getOptionLongNamesWithDash());
+                    completions.addAllCompleterValues(parser.getParameter().getOptionLongNamesWithDash());
                 else {
-                    completions.addAll(parser.getParameter().getOptionLongNamesWithDash());
+                    completions.addAllCompleterValues(parser.getParameter().getOptionLongNamesWithDash());
                     //completeOperation.setOffset(completeOperation.getCursor() - completeObject.getOffset());
                 }
 
@@ -161,7 +162,7 @@ public class CommandLineCompletionParser {
 
             OptionInt currentOption = parser.getParameter().findLongOption(completeObject.getName());
             if(currentOption != null && currentOption.getCompleter() != null) {
-                completions.addAll(currentOption.getCompleter().complete(completeObject.getValue()));
+                completions = currentOption.getCompleter().complete(completeObject.getValue());
             }
 
         }
@@ -175,7 +176,7 @@ public class CommandLineCompletionParser {
             }
             if(parser.getParameter().getArgument() != null &&
                     parser.getParameter().getArgument().getCompleter() != null) {
-                completions.addAll(parser.getParameter().getArgument().getCompleter().complete(completeObject.getValue()));
+                completions = parser.getParameter().getArgument().getCompleter().complete(completeObject.getValue());
             }
         }
 

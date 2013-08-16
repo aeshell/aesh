@@ -10,18 +10,29 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.util.FileLister;
 
 import java.io.File;
-import java.util.List;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class FileOptionCompleter implements OptionCompleter {
     @Override
-    public List<String> complete(String completeValue) {
+    public CompleterData complete(String completeValue) {
 
-        CompleteOperation completeOperation = new CompleteOperation(completeValue, completeValue.length());
+        CompleteOperation completeOperation = new CompleteOperation(completeValue, 0);
 
         new FileLister(completeValue, new File(System.getProperty("user.dir"))).findMatchingDirectories(completeOperation);
-        return completeOperation.getCompletionCandidates();
+        CompleterData completerData = new CompleterData();
+
+        if(completeOperation.getCompletionCandidates().size() > 1) {
+            completeOperation.removeEscapedSpacesFromCompletionCandidates();
+        }
+
+        completerData.setCompleterValues( completeOperation.getCompletionCandidates());
+        if(completeValue != null && completerData.getCompleterValues().size() == 1) {
+            completerData.setOffset(completeValue.length());
+            completerData.setAppendSpace(false);
+        }
+
+        return completerData;
     }
 }

@@ -8,6 +8,7 @@
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
@@ -103,7 +104,7 @@ public class AeshExample {
     public static class LessCompleter implements OptionCompleter {
 
         @Override
-        public List<String> complete(String completeValue) {
+        public CompleterData complete(String completeValue) {
             List<String> completeList = new ArrayList<String>();
             if(completeValue == null || completeValue.length() == 0)
                 completeList.add("1");
@@ -115,7 +116,7 @@ public class AeshExample {
                     completeList.add(completeValue+i);
                 }
             }
-            return completeList;
+            return new CompleterData(completeList);
         }
     }
 

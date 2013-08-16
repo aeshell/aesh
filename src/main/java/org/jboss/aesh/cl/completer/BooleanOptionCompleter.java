@@ -14,13 +14,13 @@ import java.util.List;
  */
 public class BooleanOptionCompleter implements OptionCompleter {
     @Override
-    public List<String> complete(String completeValue) {
+    public CompleterData complete(String completeValue) {
         List<String> completeList = new ArrayList<String>();
         if("true".startsWith( completeValue.toLowerCase()))
              completeList.add("true");
         else if("false".startsWith( completeValue.toLowerCase()))
             completeList.add("false");
 
-        return completeList;
+        return new CompleterData(completeList);
     }
 }
