@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.console;
 
+import java.io.PrintWriter;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -19,9 +21,9 @@ public interface AeshConsole {
 
     void removeCommand(Class<? extends Command> command);
 
-    void printToStdOut(String out);
+    PrintWriter out();
 
-    void printToStdErr(String err);
+    PrintWriter err();
 
     void setPrompt(Prompt prompt);
 }

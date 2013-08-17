@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.List;
 
 /**
@@ -22,13 +21,13 @@ import java.util.List;
 public class TestTerminal implements Terminal {
 
     private InputStream input;
-    private Writer writer;
+    private PrintWriter writer;
     private TerminalSize size;
 
     @Override
     public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
         input = inputStream;
-        writer = new PrintWriter(new OutputStreamWriter(stdOut));
+        writer = new PrintWriter(new OutputStreamWriter(stdOut), true);
         size = new TerminalSize(24,80);
     }
 
@@ -138,4 +137,15 @@ public class TestTerminal implements Terminal {
     @Override
     public void clear() throws IOException {
     }
+    
+    @Override
+    public PrintWriter getStdErr() {
+    	return writer;
+    }
+    
+    @Override
+    public PrintWriter getStdOut() {
+    	return writer;
+    }
+
 }

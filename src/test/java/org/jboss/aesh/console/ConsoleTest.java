@@ -11,6 +11,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.PrintWriter;
 
 import static org.junit.Assert.assertEquals;
 
@@ -45,6 +46,36 @@ public class ConsoleTest extends BaseConsoleTest {
         Thread.sleep(100);
         console.stop();
     }
+    
+    
+    @Test
+    public void testPrintWriter() throws IOException, InterruptedException {
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+
+        Console console = getTestConsole(pipedInputStream);
+        console.setConsoleCallback(new ConsoleCallback() {
+            @Override
+            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+                assertEquals("ls foo bar", output.getBuffer());
+                return 0;
+            }
+        });
+        console.start();
+
+        PrintWriter out = console.getStdOut();
+
+        out.print("ls \\");
+        out.print("\n");
+        out.print("foo \\");
+        out.print("\n");
+        out.println("bar");
+        outputStream.flush();
+
+        Thread.sleep(100);
+        console.stop();
+    }
+
 
 
 }
