@@ -72,7 +72,7 @@ public class Example {
             @Override
             public void handleInterrupt(Console console) {
                 try {
-                    console.pushToStdOut("KILLED!\n");
+                    console.out().print("KILLED!\n");
                     console.stop();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -87,7 +87,7 @@ public class Example {
             @Override
             protected void afterAttach() throws IOException {
                 if(!hasRedirectOut()) {
-                    console.pushToStdOut(ANSI.getAlternateBufferScreen());
+                    console.out().print(ANSI.getAlternateBufferScreen());
                 }
 
                 readFromFile();
@@ -101,16 +101,16 @@ public class Example {
             @Override
             protected void afterDetach() throws IOException {
                 if(!hasRedirectOut())
-                    console.pushToStdOut(ANSI.getMainBufferScreen());
+                    console.out().print(ANSI.getMainBufferScreen());
             }
 
             private void readFromFile() throws IOException {
                 if(getConsoleOutput().getStdOut() != null &&
                         getConsoleOutput().getStdOut().length() > 0) {
-                    console.pushToStdOut("FROM STDOUT: "+getConsoleOutput().getStdOut());
+                    console.out().print("FROM STDOUT: " + getConsoleOutput().getStdOut());
                 }
                 else
-                    console.pushToStdOut("here should we present some text... press 'q' to quit");
+                    console.out().print("here should we present some text... press 'q' to quit");
             }
 
             @Override
@@ -202,9 +202,9 @@ public class Example {
             public int readConsoleOutput(ConsoleOutput output) throws IOException{
                 //To change body of implemented methods use File | Settings | File Templates.
 
-                exampleConsole.pushToStdOut("======>\"" + output.getBuffer() + "\"\n");
+                exampleConsole.out().print("======>\"" + output.getBuffer() + "\"\n");
                 if(masking) {
-                    exampleConsole.pushToStdOut("got password: "+output.getBuffer()+", stopping masking");
+                    exampleConsole.out().print("got password: " + output.getBuffer() + ", stopping masking");
                     masking = false;
                     exampleConsole.setPrompt(prompt);
                 }
@@ -217,8 +217,8 @@ public class Example {
                     exampleConsole.setPrompt(new Prompt("password: ", (char) 0));
                 }
                 else if(output.getBuffer().startsWith("blah")) {
-                    exampleConsole.pushToStdErr("blah. command not found.\n");
-                    exampleConsole.pushToStdOut("BAH"+ Config.getLineSeparator());
+                    exampleConsole.err().print("blah. command not found.\n");
+                    exampleConsole.out().print("BAH" + Config.getLineSeparator());
                 }
                 else if(output.getBuffer().equals("clear"))
                     exampleConsole.clear();
@@ -245,7 +245,7 @@ public class Example {
                 if(hasUsername) {
                     password = output.getBuffer();
                     hasPassword = true;
-                    exampleConsole.pushToStdOut("Username: "+username+", password: "+password+Config.getLineSeparator());
+                    exampleConsole.out().print("Username: " + username + ", password: " + password + Config.getLineSeparator());
                     exampleConsole.setPrompt(prompt);
                     exampleConsole.setConsoleCallback(consoleCallback);
                 }

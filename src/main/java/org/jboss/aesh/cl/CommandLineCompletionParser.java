@@ -14,8 +14,6 @@ import org.jboss.aesh.console.Command;
 import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.aesh.util.Parser;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 /**

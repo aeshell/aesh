@@ -107,7 +107,7 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
                 assertEquals(" find *. -print", output.getBuffer());
             else if(count == 2) {
                 assertEquals("ls ", output.getBuffer());
-                console.pushToStdOut("CONTENT OF FILE");
+                console.out().print("CONTENT OF FILE");
             }
             else if(count == 3) {
                 assertEquals("", output.getBuffer());

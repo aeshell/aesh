@@ -6,10 +6,11 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.console.reader.AeshPrintWriter;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.List;
 
 /**
@@ -35,7 +36,7 @@ public interface Terminal {
      * @throws IOException
      */
     int[] read(boolean readAhead) throws IOException;
-    
+
     /**
      * Write to the standard output stream
      *
@@ -135,12 +136,12 @@ public interface Terminal {
     void clear() throws IOException;
 
     /**
-     * Returns the {@link PrintWriter} associated with the std out
+     * Returns the {@link AeshPrintWriter} associated with the std out
      */
-    PrintWriter getStdOut();
-    
+    AeshPrintWriter getStdOut();
+
     /**
-     * Returns the {@link PrintWriter} associated with the std err
+     * Returns the {@link AeshPrintWriter} associated with the std err
      */
-    PrintWriter getStdErr();
+    AeshPrintWriter getStdErr();
 }

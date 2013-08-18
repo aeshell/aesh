@@ -16,6 +16,7 @@ import org.jboss.aesh.console.helper.Search;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
+import org.jboss.aesh.console.reader.AeshPrintWriter;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.Mode;
@@ -33,9 +34,7 @@ import org.jboss.aesh.history.InMemoryHistory;
 import org.jboss.aesh.history.SearchDirection;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Terminal;
-import org.jboss.aesh.terminal.TerminalCharacter;
 import org.jboss.aesh.terminal.TerminalSize;
-import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.undo.UndoManager;
 import org.jboss.aesh.util.ANSI;
@@ -45,7 +44,6 @@ import org.jboss.aesh.util.Parser;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -154,7 +152,7 @@ public class Console {
 
         executorService = Executors.newSingleThreadExecutor();
 
-         if(settings.doReadInputrc())
+        if(settings.doReadInputrc())
             settings = Config.parseInputrc(settings);
 
         settings = Config.readRuntimeProperties(settings);
@@ -224,7 +222,7 @@ public class Console {
             if(running) {
                 displayPrompt(prompt);
                 if(buffer.getLine().length() > 0) {
-                    pushToStdOut(buffer.getLine());
+                    out().print(buffer.getLine());
                     buffer.setCursor(buffer.getLine().length());
                 }
             }
@@ -245,89 +243,23 @@ public class Console {
         startReader();
     }
 
-    /**
-     * Push text to the console, note that this will not update the internal
-     * cursor position.
-     *
-     * @param input text
-     * @throws IOException stream
-     */
-    public void pushToStdOut(String input) throws IOException {
-        if(input != null && input.length() > 0) {
-            //if redirection enabled, put it into a buffer
-            if(currentOperation != null &&
-                    ControlOperator.isRedirectionOut(currentOperation.getControlOperator()))
-                redirectPipeOutBuffer.append(input);
-            else
-                getTerminal().writeToStdOut(input);
+    public AeshPrintWriter out() {
+        //if redirection enabled, put it into a buffer
+        if(currentOperation != null &&
+                ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
+            return new AeshPrintWriter(redirectPipeOutBuffer, true);
+        } else {
+            return getTerminal().getStdOut();
         }
     }
 
-    /**
-     * @see #pushToStdOut
-     *
-     * @param input chars
-     * @throws IOException stream
-     */
-    public void pushToStdOut(char[] input) throws IOException {
-        if(input != null && input.length > 0) {
-            //if redirection enabled, put it into a buffer
-            if(currentOperation != null &&
-                    ControlOperator.isRedirectionOut(currentOperation.getControlOperator()))
-                redirectPipeOutBuffer.write(input);
-            else
-                getTerminal().writeToStdOut(input);
-        }
-    }
-
-    public void pushToStdOut(List<TerminalCharacter> termChars) throws IOException {
-        if(termChars != null && termChars.size() > 0) {
-            if(currentOperation != null &&
-                    ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
-                StringBuilder builder = new StringBuilder();
-                TerminalCharacter prev = null;
-                for(TerminalCharacter c : termChars) {
-                    if(prev == null)
-                        builder.append(c.getAsString());
-                    else
-                        builder.append(c.getAsString(prev));
-                    prev = c;
-                }
-                redirectPipeOutBuffer.append(builder.toString());
-            }
-            else
-                getTerminal().writeToStdOut(termChars);
-        }
-    }
-
-    public void pushToStdOut(TerminalString terminalString) throws IOException {
-        if(terminalString != null) {
-            if(currentOperation != null &&
-                    ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
-                redirectPipeOutBuffer.append(terminalString.getAsString());
-            }
-            else
-                getTerminal().writeStdOut(terminalString);
-        }
-    }
-
-    public void pushToStdErr(String input) throws IOException {
-        if(input != null && input.length() > 0) {
-            if(currentOperation != null &&
-                    ControlOperator.isRedirectionErr(currentOperation.getControlOperator()))
-                redirectPipeErrBuffer.append(input);
-            else
-                getTerminal().writeToStdErr(input);
-        }
-    }
-
-    public void pushToStdErr(char[] input) throws IOException {
-        if(input != null && input.length > 0) {
-            if(currentOperation != null &&
-                    ControlOperator.isRedirectionErr(currentOperation.getControlOperator()))
-                redirectPipeErrBuffer.write(input);
-            else
-                getTerminal().writeToStdErr(input);
+    public AeshPrintWriter err(){
+        //if redirection enabled, put it into a buffer
+        if(currentOperation != null &&
+                ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
+            return new AeshPrintWriter(redirectPipeErrBuffer, true);
+        } else {
+            return getTerminal().getStdErr();
         }
     }
 
@@ -465,13 +397,13 @@ public class Console {
                 for(String line : lines) {
                     //if we're masking the cursor is always at first pos.
                     if(buffer.isMasking()) {
-                       StringBuilder builder = new StringBuilder(buffer.getLineNoMask());
+                        StringBuilder builder = new StringBuilder(buffer.getLineNoMask());
                         builder.append(line);
                         buffer.setLine(builder.toString());
                     }
                     else {
                         buffer.write(line);
-                        pushToStdOut(line);
+                        out().print(line);
                         addToHistory(buffer.getLine());
                     }
                     printNewline();
@@ -486,7 +418,7 @@ public class Console {
                     }
                     else {
                         buffer.write(current.toString());
-                        pushToStdOut(buffer.getLine());
+                        out().print(buffer.getLine());
                     }
                 }
             }
@@ -841,9 +773,9 @@ public class Console {
         String fromHistory;
         if(first)
             fromHistory = history.getNextFetch();
-        // get previous
+            // get previous
         else
-           fromHistory = history.getPreviousFetch();
+            fromHistory = history.getPreviousFetch();
 
         if(fromHistory != null) {
             setBufferLine(fromHistory);
@@ -883,7 +815,7 @@ public class Console {
 
     private void insertBufferLine(String insert, int position) throws IOException {
         if((insert.length()+buffer.totalLength()) >= getTerminal().getSize().getWidth()) { //&&
-                //(insert.length()+buffer.totalLength()) > buffer.getLine().length()) {
+            //(insert.length()+buffer.totalLength()) > buffer.getLine().length()) {
             int currentRow = getTerminal().getCursor().getRow();
             if(currentRow > -1) {
                 int newLine = insert.length()+buffer.totalLength();
@@ -1094,7 +1026,7 @@ public class Console {
     }
 
     private void drawLine(String line) throws IOException {
-       //need to clear more than one line
+        //need to clear more than one line
         if(line.length() > getTerminal().getSize().getWidth() ||
                 (line.length()+ Math.abs(buffer.getDelta()) > getTerminal().getSize().getWidth())) {
 
@@ -1186,14 +1118,14 @@ public class Console {
         getTerminal().writeToStdOut(Config.getLineSeparator());
     }
 
-      /**
+    /**
      * Switch case if the character is a letter
      *
      * @throws java.io.IOException stream
      */
     private void changeCase() throws IOException {
         if(buffer.changeCase()) {
-           moveCursor(1);
+            moveCursor(1);
             redrawLine();
         }
     }
@@ -1374,7 +1306,7 @@ public class Console {
      * @throws IOException stream
      */
     public void clear() throws IOException {
-       clear(false);
+        clear(false);
     }
 
     /**
@@ -1430,7 +1362,7 @@ public class Console {
         else if(currentOperation.getControlOperator() == ControlOperator.OVERWRITE_IN) {
             if(settings.isLogging())
                 logger.info(settings.getName()+": syntax error while reading token: \'<\'");
-            pushToStdErr(settings.getName()+": syntax error while reading token: \'<\'");
+            err().print(settings.getName() + ": syntax error while reading token: \'<\'");
             return null;
         }
         //ControlOperator.NONE
@@ -1482,7 +1414,7 @@ public class Console {
                     }
                     //if we get any io error reading the file:
                     catch (IOException ioe) {
-                        pushToStdErr(settings.getName()+": "+ioe.getMessage()+Config.getLineSeparator());
+                        err().print(settings.getName() + ": " + ioe.getMessage() + Config.getLineSeparator());
                         currentOperation = null;
                         output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
                     }
@@ -1490,7 +1422,7 @@ public class Console {
                 else {
                     if(settings.isLogging())
                         logger.info(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
-                    pushToStdErr(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
+                    err().print(settings.getName() + ": syntax error near unexpected token '<'" + Config.getLineSeparator());
                     currentOperation = null;
                     output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
                 }
@@ -1498,7 +1430,7 @@ public class Console {
             else {
                 if(settings.isLogging())
                     logger.info(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
-                pushToStdErr(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
+                err().print(settings.getName() + ": syntax error near unexpected token 'newline'" + Config.getLineSeparator());
                 currentOperation = null;
                 output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
             }
@@ -1523,7 +1455,7 @@ public class Console {
                     output.getBuffer().startsWith(InternalCommands.ALIAS.getCommand())) {
                 String out = aliasManager.parseAlias(output.getBuffer().trim());
                 if(out != null) {
-                    pushToStdOut(out);
+                    out().print(out);
                 }
                 //empty output, will result
                 return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, null));
@@ -1532,7 +1464,7 @@ public class Console {
                     output.getBuffer().startsWith(InternalCommands.UNALIAS.getCommand())) {
                 String out = aliasManager.removeAlias(output.getBuffer().trim());
                 if(out != null)
-                    pushToStdOut(out);
+                    out().print(out);
 
                 return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, null));
             }
@@ -1571,7 +1503,7 @@ public class Console {
         if(fileNames.size() > 1) {
             if(settings.isLogging())
                 logger.info(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
-            pushToStdErr(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
+            err().print(settings.getName() + ": can't redirect to more than one file." + Config.getLineSeparator());
             return;
         }
         //this is safe since we check that buffer do contain text earlier
@@ -1595,30 +1527,10 @@ public class Console {
         catch (IOException e) {
             if(settings.isLogging())
                 logger.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
-            pushToStdErr(e.getMessage());
+            err().print(e.getMessage());
         }
         redirectPipeOutBuffer = new StringWriter();
         redirectPipeErrBuffer = new StringWriter();
-    }
-    
-    public PrintWriter getStdOut() {
-        //if redirection enabled, put it into a buffer
-        if(currentOperation != null &&
-                ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
-        	return new PrintWriter(redirectPipeOutBuffer, true);
-        } else {
-        	return getTerminal().getStdOut();
-        }
-    }
-    
-    public PrintWriter getStdErr(){ 
-        //if redirection enabled, put it into a buffer
-        if(currentOperation != null &&
-                ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
-        	return new PrintWriter(redirectPipeErrBuffer, true);
-        } else {
-        	return getTerminal().getStdErr();
-        }
     }
 
 }

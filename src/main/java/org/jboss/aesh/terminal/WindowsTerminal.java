@@ -10,13 +10,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.fusesource.jansi.AnsiOutputStream;
 import org.fusesource.jansi.WindowsAnsiOutputStream;
 import org.fusesource.jansi.internal.WindowsSupport;
+import org.jboss.aesh.console.reader.AeshPrintWriter;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -26,8 +26,8 @@ import org.jboss.aesh.util.LoggerUtil;
  */
 public class WindowsTerminal extends AbstractTerminal {
 
-    private PrintWriter stdOut;
-    private PrintWriter stdErr;
+    private AeshPrintWriter stdOut;
+    private AeshPrintWriter stdErr;
     private InputStream input;
     private TerminalSize size;
 
@@ -47,12 +47,12 @@ public class WindowsTerminal extends AbstractTerminal {
         //setting up reader
         try {
             //AnsiConsole.systemInstall();
-            this.stdOut = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(stdOut)), true);
-            this.stdErr = new PrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(stdErr)), true);
+            this.stdOut = new AeshPrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(stdOut)), true);
+            this.stdErr = new AeshPrintWriter( new OutputStreamWriter(new WindowsAnsiOutputStream(stdErr)), true);
         }
         catch (Exception ioe) {
-            this.stdOut = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(stdOut)), true);
-            this.stdErr = new PrintWriter( new OutputStreamWriter(new AnsiOutputStream(stdErr)), true);
+            this.stdOut = new AeshPrintWriter( new OutputStreamWriter(new AnsiOutputStream(stdOut)), true);
+            this.stdErr = new AeshPrintWriter( new OutputStreamWriter(new AnsiOutputStream(stdErr)), true);
         }
 
         this.input = inputStream;
@@ -184,15 +184,15 @@ public class WindowsTerminal extends AbstractTerminal {
     private boolean propertiesTimedOut() {
         return (System.currentTimeMillis() -ttyPropsLastFetched) > TIMEOUT_PERIOD;
     }
-    
+
     @Override
-    public PrintWriter getStdErr() {
-    	return stdErr;
+    public AeshPrintWriter getStdErr() {
+        return stdErr;
     }
-    
+
     @Override
-    public PrintWriter getStdOut() {
-    	return stdOut;
+    public AeshPrintWriter getStdOut() {
+        return stdOut;
     }
 }
 

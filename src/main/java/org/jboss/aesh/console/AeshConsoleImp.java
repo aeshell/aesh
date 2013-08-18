@@ -7,7 +7,6 @@
 package org.jboss.aesh.console;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -25,6 +24,7 @@ import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
+import org.jboss.aesh.console.reader.AeshPrintWriter;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.aesh.util.Parser;
@@ -37,7 +37,7 @@ public class AeshConsoleImp implements AeshConsole {
 
     private Map<CommandLineParser, Command> commands;
     private Console console;
-    
+
     Logger logger = LoggerUtil.getLogger(AeshConsoleImp.class.getName());
 
     AeshConsoleImp(Settings settings) {
@@ -81,15 +81,15 @@ public class AeshConsoleImp implements AeshConsole {
     public void removeCommand(Class<? extends Command> command) {
 
     }
-    
+
     @Override
-    public PrintWriter err() {
-    	return console.getStdErr();
+    public AeshPrintWriter err() {
+        return console.err();
     }
-    
+
     @Override
-    public PrintWriter out() {
-    	return console.getStdOut();
+    public AeshPrintWriter out() {
+        return console.out();
     }
 
     @Override
@@ -190,7 +190,7 @@ public class AeshConsoleImp implements AeshConsole {
                     commands.get(calledCommand).execute();
                 }
                 else
-                    console.pushToStdOut("Command not found: "+Parser.findFirstWord(output.getBuffer())+Config.getLineSeparator());
+                    console.out().print("Command not found: " + Parser.findFirstWord(output.getBuffer()) + Config.getLineSeparator());
             }
             //empty line
             else if(output != null) {

@@ -46,8 +46,8 @@ public class ConsoleTest extends BaseConsoleTest {
         Thread.sleep(100);
         console.stop();
     }
-    
-    
+
+
     @Test
     public void testPrintWriter() throws IOException, InterruptedException {
         PipedOutputStream outputStream = new PipedOutputStream();
@@ -63,7 +63,7 @@ public class ConsoleTest extends BaseConsoleTest {
         });
         console.start();
 
-        PrintWriter out = console.getStdOut();
+        PrintWriter out = console.out();
 
         out.print("ls \\");
         out.print("\n");
@@ -75,7 +75,5 @@ public class ConsoleTest extends BaseConsoleTest {
         Thread.sleep(100);
         console.stop();
     }
-
-
 
 }
