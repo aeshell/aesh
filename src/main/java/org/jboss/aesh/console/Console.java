@@ -8,6 +8,7 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
+import org.jboss.aesh.complete.CompletionRegistration;
 import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasCompletion;
 import org.jboss.aesh.console.alias.AliasManager;
@@ -268,8 +269,14 @@ public class Console {
      *
      * @param completion comp
      */
-    public void addCompletion(Completion completion) {
+    public CompletionRegistration addCompletion(final Completion completion) {
         completionList.add(completion);
+        return new CompletionRegistration() {
+            @Override
+            public void removeCompletion() {
+                completionList.remove(completion);
+            }
+        };
     }
 
     /**
@@ -277,8 +284,14 @@ public class Console {
      *
      * @param completionList comps
      */
-    public void addCompletions(List<Completion> completionList) {
+    public CompletionRegistration addCompletions(final List<Completion> completionList) {
         this.completionList.addAll(completionList);
+        return new CompletionRegistration() {
+            @Override
+            public void removeCompletion() {
+                completionList.removeAll(completionList);
+            }
+        };
     }
 
     /**

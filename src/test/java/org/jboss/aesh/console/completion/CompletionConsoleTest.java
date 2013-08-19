@@ -14,6 +14,7 @@ import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
+import org.jboss.aesh.complete.CompletionRegistration;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
@@ -77,6 +78,64 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         console.addCompletion(completion3);
 
         console.setConsoleCallback(new CompletionConsoleCallback(console, outputStream));
+        console.start();
+
+        outputStream.write("foo".getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.write("\n".getBytes());
+
+        outputStream.write("bar".getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.write("\n".getBytes());
+
+        outputStream.write("le".getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.write("\n".getBytes());
+
+        Thread.sleep(100);
+        console.stop();
+    }
+
+    @Test
+    public void removeCompletion() throws IOException, InterruptedException {
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+
+        Console console = getTestConsole(pipedInputStream);
+
+        Completion completion = new Completion() {
+            @Override
+            public void complete(CompleteOperation co) {
+                if(co.getBuffer().equals("foo"))
+                    co.addCompletionCandidate("foobar");
+            }
+        };
+        CompletionRegistration completionRegistration = console.addCompletion(completion);
+
+        Completion completion2 = new Completion() {
+            @Override
+            public void complete(CompleteOperation co) {
+                if(co.getBuffer().equals("bar")) {
+                    co.addCompletionCandidate("barfoo");
+                    co.doAppendSeparator(false);
+                }
+            }
+        };
+        console.addCompletion(completion2);
+
+        Completion completion3 = new Completion() {
+            @Override
+            public void complete(CompleteOperation co) {
+                if(co.getBuffer().equals("le")) {
+                    co.addCompletionCandidate("less");
+                    co.setSeparator(':');
+                }
+            }
+        };
+        console.addCompletion(completion3);
+        completionRegistration.removeCompletion();
+
+        console.setConsoleCallback(new CompletionConsoleCallback3(console, outputStream));
         console.start();
 
         outputStream.write("foo".getBytes());
@@ -190,6 +249,31 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         public int readConsoleOutput(ConsoleOutput output) throws IOException {
             if(count == 0) {
                 assertEquals("less ", output.getBuffer());
+                console.stop();
+            }
+
+            count++;
+            return 0;
+        }
+    }
+
+    class CompletionConsoleCallback3 implements ConsoleCallback {
+        private int count = 0;
+        Console console;
+        OutputStream outputStream;
+        CompletionConsoleCallback3(Console console, OutputStream outputStream) {
+            this.outputStream = outputStream;
+            this.console = console;
+        }
+        @Override
+        public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            if(count == 0) {
+                assertEquals("foo", output.getBuffer());
+            }
+            else if(count == 1)
+                assertEquals("barfoo", output.getBuffer());
+            else if(count == 2) {
+                assertEquals("less:", output.getBuffer());
                 console.stop();
             }
 
