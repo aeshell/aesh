@@ -134,16 +134,12 @@ public class CommandLineCompletionParser {
                                                  CompleteOperation completeOperation) {
 
         if(completeObject.doDisplayOptions()) {
-            logger.info("displayOptions");
             //got the whole name, just add a space
             if(completeObject.isCompleteOptionName()) {
                 completeOperation.addCompletionCandidate("");
             }
             else {
-                logger.info("displayOptions");
-                logger.info("CompleteObject: "+completeObject);
                 //we have partial/full name
-                logger.info("Name: "+completeObject.getName());
                 if(completeObject.getName() != null && completeObject.getName().length() > 0) {
                     if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() > 0) {
                         //only one param
@@ -152,14 +148,6 @@ public class CommandLineCompletionParser {
                             completeOperation.addCompletionCandidate(
                                     parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).get(0));
                             completeOperation.setOffset( completeOperation.getCursor() - 2 - completeObject.getName().length());
-
-                            /*
-                            completeOperation.addCompletionCandidate(completeOperation.getBuffer().substring(0,
-                                    completeOperation.getBuffer().length() - completeObject.getOffset()) +
-                                    parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).get(0));
-                                    */
-                            //completions.setOffset( completeObject.getOffset());
-                            //completions.setOffset( completions.getCompleterValues().get(0).length());
                         }
                         //multiple params
                         else {
@@ -177,7 +165,6 @@ public class CommandLineCompletionParser {
                             count++;
                         completeOperation.addCompletionCandidate(parser.getParameter().getOptionLongNamesWithDash().get(0));
                         completeOperation.setOffset( completeOperation.getCursor() - count);
-                        //completeOperation.setOffset(completeOperation.getCursor() - completeObject.getOffset());
                     }
 
                 }
@@ -185,13 +172,10 @@ public class CommandLineCompletionParser {
         }
         //complete option value
         else if(completeObject.isOption()) {
-            logger.info("isOption");
             OptionInt currentOption = parser.getParameter().findOption(completeObject.getName());
             if(currentOption == null)
                 currentOption = parser.getParameter().findLongOption(completeObject.getName());
 
-            logger.info("buffer: "+completeOperation.getBuffer());
-            logger.info("completeObject.getName(): "+completeObject.getName());
             //split the line on the option name. populate the object, then call the options completer
 
             String displayName = currentOption.getDisplayName();
@@ -211,25 +195,17 @@ public class CommandLineCompletionParser {
             }
 
             CompleterData completions = null;
-            logger.info("current option: "+currentOption);
-            logger.info("current option completer: "+currentOption.getCompleter());
             if(currentOption != null && currentOption.getCompleter() != null) {
                 completions = currentOption.getCompleter().complete(completeObject.getValue());
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
                 if(completions.getCompleterValues().size() == 1 && completions.getOffset() > 0) {
-                    logger.info("BUFFER LENGTH: "+completeOperation.getBuffer().length());
-                    logger.info("REST LENGTH: "+rest.length());
-                    logger.info("OFFSET : "+completions.getOffset());
-
                     completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
             }
-
         }
         else if(completeObject.isArgument()) {
-            logger.info("isArgument");
             String lastWord = Parser.findEscapedSpaceWordCloseToEnd(completeOperation.getBuffer());
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length() - lastWord.length());
             try {
@@ -245,7 +221,6 @@ public class CommandLineCompletionParser {
                 completeOperation.doAppendSeparator( completions.isAppendSpace());
             }
         }
-
     }
 
 }

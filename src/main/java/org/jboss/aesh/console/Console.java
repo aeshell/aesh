@@ -359,6 +359,18 @@ public class Console {
     }
 
     /**
+     * Get the current console buffer line (no masking)
+     *
+     * @return current buffer
+     */
+    public String getBuffer() {
+        if(buffer == null)
+            return "";
+        else
+            return buffer.getLineNoMask();
+    }
+
+    /**
      * Read from the input stream, perform action according to mapped
      * operations/completions/etc
      */
