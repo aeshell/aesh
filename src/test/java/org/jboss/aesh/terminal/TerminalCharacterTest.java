@@ -20,6 +20,6 @@ public class TerminalCharacterTest extends TestCase {
                 Color.DEFAULT_TEXT.getValue()+";"+
                 Color.DEFAULT_BG.getValue()+
                 "mc",
-                character.getAsString());
+                character.toString());
     }
 }

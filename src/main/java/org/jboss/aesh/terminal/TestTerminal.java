@@ -123,7 +123,7 @@ public class TestTerminal implements Terminal {
 
     @Override
     public void writeStdOut(TerminalString termString) throws IOException {
-        writeToStdOut(termString.getAsString());
+        writeToStdOut(termString.toString());
     }
 
     @Override

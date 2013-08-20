@@ -61,7 +61,7 @@ public class TerminalCharacter {
     /**
      * type, text color, background color
      */
-    public String getAsString(TerminalCharacter prev) {
+    public String toString(TerminalCharacter prev) {
         if(equalsIgnoreCharacter(prev))
             return String.valueOf(character);
         else {
@@ -81,7 +81,8 @@ public class TerminalCharacter {
         }
     }
 
-    public String getAsString() {
+    @Override
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(ANSI.getStart());
         builder.append(type.getValue()).append(';');
@@ -122,16 +123,6 @@ public class TerminalCharacter {
         result = 31 * result + textColor.hashCode();
         result = 31 * result + type.hashCode();
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return "TerminalCharacter{" +
-                "character=" + character +
-                ", backgroundColor=" + backgroundColor +
-                ", textColor=" + textColor +
-                ", type=" + type +
-                '}';
     }
 
  }

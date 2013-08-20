@@ -44,7 +44,6 @@ public class TerminalString {
         return characters;
     }
 
-
     public CharacterType getType() {
         return type;
     }
@@ -60,7 +59,7 @@ public class TerminalString {
     /**
      * type, text color, background color
      */
-    public String getAsString(TerminalString prev) {
+    public String toString(TerminalString prev) {
         if(equalsIgnoreCharacter(prev))
             return characters;
         else {
@@ -80,7 +79,8 @@ public class TerminalString {
         }
     }
 
-    public String getAsString() {
+    @Override
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(ANSI.getStart());
         builder.append(type.getValue()).append(';');
@@ -123,13 +123,4 @@ public class TerminalString {
         return result;
     }
 
-    @Override
-    public String toString() {
-        return "TerminalString{" +
-                "characters='" + characters + '\'' +
-                ", backgroundColor=" + backgroundColor +
-                ", textColor=" + textColor +
-                ", type=" + type +
-                '}';
-    }
 }
