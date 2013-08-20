@@ -177,13 +177,11 @@ public class CommandLineCompletionParser {
                 currentOption = parser.getParameter().findLongOption(completeObject.getName());
 
             //split the line on the option name. populate the object, then call the options completer
-
             String displayName = currentOption.getDisplayName();
             //this shouldnt happen
             if(displayName == null) {
                 return;
             }
-
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( displayName));
 
             try {
