@@ -161,9 +161,6 @@ public class OptionBuilder {
                 name = fieldName;
         }
 
-        if(shortName == '\u0000' && optionType != OptionType.ARGUMENT)
-            shortName = name.charAt(0);
-
         return new OptionInt(shortName, name, description, argument, required,
                 valueSeparator, defaultValue, type, fieldName, optionType, converter, completer);
     }
