@@ -53,8 +53,9 @@ public class AeshConsoleTest extends BaseConsoleTest {
         private String bar;
 
         @Override
-        public void execute(AeshConsole console) throws IOException {
+        public CommandResult execute(AeshConsole console) throws IOException {
             console.out().println("FOO");
+            return CommandResult.SUCCESS;
         }
     }
 

@@ -6,11 +6,10 @@
  */
 package org.jboss.aesh.console;
 
-import java.io.IOException;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface Command {
-    CommandResult execute(AeshConsole aeshConsole) throws IOException;
+public enum CommandResult {
+    SUCCESS,
+    FAILURE
 }

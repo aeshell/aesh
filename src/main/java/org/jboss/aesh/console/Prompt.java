@@ -42,7 +42,7 @@ public class Prompt {
 
     public Prompt(TerminalString terminalString) {
         if(terminalString != null) {
-            ansiString = terminalString.getAsString();
+            ansiString = terminalString.toString();
             this.prompt = terminalString.getCharacters();
         }
         else
@@ -64,9 +64,9 @@ public class Prompt {
         TerminalCharacter prev = null;
         for(TerminalCharacter c : chars) {
             if(prev == null)
-                builder.append(c.getAsString());
+                builder.append(c.toString());
             else
-                builder.append(c.getAsString(prev));
+                builder.append(c.toString(prev));
             prev = c;
             promptBuilder.append(c.getCharacter());
         }

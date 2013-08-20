@@ -86,12 +86,21 @@ public class AeshConsoleImp implements AeshConsole {
 
     @Override
     public void removeCommand(Class<? extends Command> command) {
+        if(verifyCommand(command)) {
+            String commandName = command.getAnnotation(CommandDefinition.class).name();
 
+            for(CommandLineParser parser : commands.keySet()) {
+                if(parser.getParameter().getName().equals(commandName)) {
+                    commands.remove(parser);
+                    return;
+                }
+            }
+        }
     }
 
     @Override
     public void removeCommand(Command command) {
-
+        removeCommand(command.getClass());
     }
 
     @Override
@@ -162,7 +171,9 @@ public class AeshConsoleImp implements AeshConsole {
 
                     }
                     catch (CommandLineParserException e) {
-                        e.printStackTrace();
+                        logger.warning(e.getMessage());
+                        //if(e instanceof ArgumentParserException)
+                        //    logger.info("User trying to complete a command without arguments");
                     }
                 }
             }
@@ -178,29 +189,37 @@ public class AeshConsoleImp implements AeshConsole {
         }
         @Override
         public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            CommandResult result = CommandResult.SUCCESS;
             if(output != null && output.getBuffer().trim().length() > 0) {
                 CommandLineParser calledCommand = findCommand(output.getBuffer());
                 if(calledCommand != null) {
                     try {
                         calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
+                        result = commands.get(calledCommand).execute(console);
                     }
                     catch (CommandLineParserException e) {
-                        e.printStackTrace();
+                        console.out().println("Command failed because of error in input values: "+e.getMessage());
+                        result = CommandResult.FAILURE;
                     }
-                    commands.get(calledCommand).execute(console);
                 }
-                else
+                else {
                     console.out().print("Command not found: " + Parser.findFirstWord(output.getBuffer()) + Config.getLineSeparator());
+                    result = CommandResult.FAILURE;
+                }
             }
             //empty line
             else if(output != null) {
-                return 0;
+                result = CommandResult.FAILURE;
             }
             else {
                 stop();
+                result = CommandResult.FAILURE;
             }
 
-            return 0;
+            if(result == CommandResult.SUCCESS)
+                return 0;
+            else
+                return 1;
         }
     }
 }

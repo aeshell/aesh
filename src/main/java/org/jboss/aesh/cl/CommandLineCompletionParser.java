@@ -7,9 +7,9 @@
 package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.completer.CompleterData;
+import org.jboss.aesh.cl.exception.ArgumentParserException;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
-import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Command;
 import org.jboss.aesh.util.LoggerUtil;
@@ -44,7 +44,7 @@ public class CommandLineCompletionParser {
             //check if we try to complete just after the command name
             if(line.trim().equals(parser.getParameter().getName())) {
                 if(parser.getParameter().getArgument() == null)
-                    throw new CommandLineParserException("Trying to complete arguments when none are defined.");
+                    throw new ArgumentParserException("Trying to complete arguments when none are defined.");
                 return new ParsedCompleteObject(null, "", parser.getParameter().getArgument().getType(), false);
             }
 
@@ -148,9 +148,16 @@ public class CommandLineCompletionParser {
                     if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() > 0) {
                         //only one param
                         if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() == 1) {
+
+                            completeOperation.addCompletionCandidate(
+                                    parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).get(0));
+                            completeOperation.setOffset( completeOperation.getCursor() - 2 - completeObject.getName().length());
+
+                            /*
                             completeOperation.addCompletionCandidate(completeOperation.getBuffer().substring(0,
                                     completeOperation.getBuffer().length() - completeObject.getOffset()) +
                                     parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).get(0));
+                                    */
                             //completions.setOffset( completeObject.getOffset());
                             //completions.setOffset( completions.getCompleterValues().get(0).length());
                         }
@@ -164,8 +171,12 @@ public class CommandLineCompletionParser {
                 else {
                     if(parser.getParameter().getOptionLongNamesWithDash().size() > 1)
                         completeOperation.addCompletionCandidates(parser.getParameter().getOptionLongNamesWithDash());
-                    else {
-                        completeOperation.addCompletionCandidates(parser.getParameter().getOptionLongNamesWithDash());
+                    else if(parser.getParameter().getOptionLongNamesWithDash().size() == 1) {
+                        int count = 0;
+                        while(completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length()-count).endsWith("-"))
+                            count++;
+                        completeOperation.addCompletionCandidate(parser.getParameter().getOptionLongNamesWithDash().get(0));
+                        completeOperation.setOffset( completeOperation.getCursor() - count);
                         //completeOperation.setOffset(completeOperation.getCursor() - completeObject.getOffset());
                     }
 

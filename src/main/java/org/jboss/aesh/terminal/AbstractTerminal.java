@@ -30,7 +30,7 @@ public abstract class AbstractTerminal implements Terminal {
 
     @Override
     public void writeToStdOut(TerminalCharacter character) throws IOException {
-        writeToStdOut(character.getAsString());
+        writeToStdOut(character.toString());
     }
 
     @Override
@@ -39,9 +39,9 @@ public abstract class AbstractTerminal implements Terminal {
         TerminalCharacter prev = null;
         for(TerminalCharacter c : chars) {
             if(prev == null)
-                builder.append(c.getAsString());
+                builder.append(c.toString());
             else
-                builder.append(c.getAsString(prev));
+                builder.append(c.toString(prev));
             prev = c;
         }
         writeToStdOut(builder.toString());
@@ -49,7 +49,7 @@ public abstract class AbstractTerminal implements Terminal {
 
     @Override
     public void writeStdOut(TerminalString termString) throws IOException {
-        writeToStdOut(termString.getAsString());
+        writeToStdOut(termString.toString());
     }
 
     /**

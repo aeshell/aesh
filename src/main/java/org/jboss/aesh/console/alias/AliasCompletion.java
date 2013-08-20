@@ -27,7 +27,7 @@ public class AliasCompletion implements Completion {
 
     @Override
     public void complete(CompleteOperation completeOperation) {
-        completeOperation.addCompletionCandidates(manager.findAllMatchingNames(completeOperation.getBuffer().trim()));
+        completeOperation.addCompletionCandidates(manager.findAllMatchingNames(completeOperation.getBuffer()));
 
         if(completeOperation.getBuffer() == null || completeOperation.getBuffer().length() < 1) {
             completeOperation.addCompletionCandidate(ALIAS);

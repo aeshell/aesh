@@ -264,7 +264,7 @@ public class Example {
             Thread.sleep(4000);
             exampleConsole.setPrompt(new Prompt(
                     new TerminalString("[FOO]» ", Color.DEFAULT_BG, Color.RED_TEXT, CharacterType.BOLD)));
-            //exampleConsole.pushToStdOut(new TerminalString("PUSHING", Color.DEFAULT_BG, Color.BLUE_TEXT).getAsString());
+            //exampleConsole.pushToStdOut(new TerminalString("PUSHING", Color.DEFAULT_BG, Color.BLUE_TEXT).toString());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

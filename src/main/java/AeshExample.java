@@ -13,6 +13,7 @@ import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Command;
+import org.jboss.aesh.console.CommandResult;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -46,8 +47,9 @@ public class AeshExample {
     public static class ExitCommand implements Command {
 
         @Override
-        public void execute(AeshConsole console) throws IOException {
+        public CommandResult execute(AeshConsole console) throws IOException {
             console.stop();
+            return CommandResult.SUCCESS;
         }
     }
 
@@ -58,11 +60,12 @@ public class AeshExample {
         private String bar;
 
         @Override
-        public void execute(AeshConsole console) throws IOException {
+        public CommandResult execute(AeshConsole console) throws IOException {
            if(bar == null)
                console.out().println("NO BAR!");
             else
-               console.out().println("you set bar to: "+bar);
+               console.out().println("you set bar to: " + bar);
+            return CommandResult.SUCCESS;
         }
     }
 
@@ -79,15 +82,16 @@ public class AeshExample {
         private List<File> files;
 
         @Override
-        public void execute(AeshConsole console) throws IOException {
+        public CommandResult execute(AeshConsole console) throws IOException {
            if(foo == null)
                console.out().println("NO FOO!");
             else
-               console.out().println("you set foo to: "+foo);
+               console.out().println("you set foo to: " + foo);
 
             if(files != null) {
 
             }
+            return CommandResult.SUCCESS;
         }
     }
 
