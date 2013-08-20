@@ -12,5 +12,5 @@ import java.io.IOException;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface Command {
-    void execute() throws IOException;
+    void execute(AeshConsole aeshConsole) throws IOException;
 }

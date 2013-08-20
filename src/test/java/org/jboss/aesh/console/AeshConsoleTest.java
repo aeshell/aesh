@@ -49,14 +49,11 @@ public class AeshConsoleTest extends BaseConsoleTest {
     @CommandDefinition(name="foo", description = "")
     public static class FooTestCommand implements Command {
 
-        @InjectConsole
-        AeshConsole console;
-
         @Option
         private String bar;
 
         @Override
-        public void execute() throws IOException {
+        public void execute(AeshConsole console) throws IOException {
             console.out().println("FOO");
         }
     }

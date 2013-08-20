@@ -7,8 +7,6 @@
 package org.jboss.aesh.console;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +18,6 @@ import org.jboss.aesh.cl.CommandLineCompletionParser;
 import org.jboss.aesh.cl.CommandLineParser;
 import org.jboss.aesh.cl.ParsedCompleteObject;
 import org.jboss.aesh.cl.ParserGenerator;
-import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
@@ -43,7 +40,7 @@ public class AeshConsoleImp implements AeshConsole {
     AeshConsoleImp(Settings settings) {
         commands = new HashMap<CommandLineParser, Command>();
         console = new Console(settings);
-        console.setConsoleCallback(new AeshConsoleCallback());
+        console.setConsoleCallback(new AeshConsoleCallback(this));
         console.addCompletion(new AeshCompletion());
     }
 
@@ -69,16 +66,31 @@ public class AeshConsoleImp implements AeshConsole {
     public void addCommand(Class<? extends Command> command) {
         if(verifyCommand(command)) {
             try {
-                commands.put(ParserGenerator.generateCommandLineParser(command), checkForInjectConsole( ReflectionUtil.newInstance(command)));
+                commands.put(ParserGenerator.generateCommandLineParser(command), ReflectionUtil.newInstance(command));
             } catch (CommandLineParserException e) {
                 e.printStackTrace();
             }
         }
+    }
 
+    @Override
+    public void addCommand(Command command) {
+        if(verifyCommand(command)) {
+            try {
+                commands.put(ParserGenerator.generateCommandLineParser(command), command);
+            } catch (CommandLineParserException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
     public void removeCommand(Class<? extends Command> command) {
+
+    }
+
+    @Override
+    public void removeCommand(Command command) {
 
     }
 
@@ -126,19 +138,8 @@ public class AeshConsoleImp implements AeshConsole {
         return command.getAnnotation(CommandDefinition.class) != null;
     }
 
-    private Command checkForInjectConsole(Command command) {
-        for(Field field : command.getClass().getDeclaredFields()) {
-            if(field.getType().equals(AeshConsole.class) && field.getAnnotation(InjectConsole.class) != null) {
-                if(!Modifier.isPublic(field.getModifiers()))
-                    field.setAccessible(true);
-                try {
-                    field.set(command, this);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return command;
+    private boolean verifyCommand(Command command) {
+        return command.getClass().getAnnotation(CommandDefinition.class) != null;
     }
 
     class AeshCompletion implements Completion {
@@ -159,24 +160,22 @@ public class AeshConsoleImp implements AeshConsole {
                         logger.info("completeObject: "+completeObject);
                         completionParser.injectValuesAndComplete(completeObject, commands.get(currentCommand), completeOperation);
 
-                        //completeOperation.addCompletionCandidates(completerData.getCompleterValues());
-                        //if(completerData.getCompleterValues().size() == 1 && completerData.getOffset() > 0)
-                        //    completeOperation.setOffset( completerData.getOffset());
-                        //completeOperation.setOffset( completeOperation.getCursor());
-                        //if(!completerData.isAppendSpace())
-                        //    completeOperation.doAppendSeparator(false);
-
-                    } catch (CommandLineParserException e) {
+                    }
+                    catch (CommandLineParserException e) {
                         e.printStackTrace();
                     }
                 }
-                //try to complete the current command
             }
         }
 
     }
 
     class AeshConsoleCallback implements ConsoleCallback {
+
+        private AeshConsole console;
+        AeshConsoleCallback(AeshConsole aeshConsole) {
+            this.console = aeshConsole;
+        }
         @Override
         public int readConsoleOutput(ConsoleOutput output) throws IOException {
             if(output != null && output.getBuffer().trim().length() > 0) {
@@ -188,7 +187,7 @@ public class AeshConsoleImp implements AeshConsole {
                     catch (CommandLineParserException e) {
                         e.printStackTrace();
                     }
-                    commands.get(calledCommand).execute();
+                    commands.get(calledCommand).execute(console);
                 }
                 else
                     console.out().print("Command not found: " + Parser.findFirstWord(output.getBuffer()) + Config.getLineSeparator());

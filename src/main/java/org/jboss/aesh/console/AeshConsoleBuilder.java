@@ -18,15 +18,22 @@ import java.util.Set;
 public class AeshConsoleBuilder {
 
     private Set<Class<? extends Command>> commands;
+    private Set<Command> commands2;
     private Settings settings;
     private Prompt prompt;
 
     public AeshConsoleBuilder() {
         commands = new HashSet<Class<? extends Command>>();
+        commands2 = new HashSet<Command>();
     }
 
     public AeshConsoleBuilder command(Class<? extends Command> command) {
         commands.add(command);
+        return this;
+    }
+
+    public AeshConsoleBuilder command(Command command) {
+        commands2.add(command);
         return this;
     }
 
@@ -40,12 +47,13 @@ public class AeshConsoleBuilder {
         return this;
     }
 
-
     public AeshConsole create() {
         if(settings == null)
             settings = new SettingsBuilder().create();
         AeshConsole aeshConsole = new AeshConsoleImp(settings);
         for(Class<? extends Command> command : commands)
+            aeshConsole.addCommand(command);
+        for(Command command : commands2)
             aeshConsole.addCommand(command);
 
         if(prompt != null)

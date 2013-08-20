@@ -19,7 +19,11 @@ public interface AeshConsole {
 
     void addCommand(Class<? extends Command> command);
 
+    void addCommand(Command command);
+
     void removeCommand(Class<? extends Command> command);
+
+    void removeCommand(Command command);
 
     AeshPrintWriter out();
 

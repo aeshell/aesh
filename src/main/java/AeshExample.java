@@ -13,7 +13,6 @@ import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Command;
-import org.jboss.aesh.console.InjectConsole;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -46,11 +45,8 @@ public class AeshExample {
     @CommandDefinition(name="exit", description = "exit the program")
     public static class ExitCommand implements Command {
 
-        @InjectConsole
-        private AeshConsole console;
-
         @Override
-        public void execute() throws IOException {
+        public void execute(AeshConsole console) throws IOException {
             console.stop();
         }
     }
@@ -61,11 +57,8 @@ public class AeshExample {
         @Option
         private String bar;
 
-        @InjectConsole
-        private AeshConsole console;
-
         @Override
-        public void execute() throws IOException {
+        public void execute(AeshConsole console) throws IOException {
            if(bar == null)
                console.out().println("NO BAR!");
             else
@@ -85,11 +78,8 @@ public class AeshExample {
         @Arguments
         private List<File> files;
 
-        @InjectConsole
-        private AeshConsole console;
-
         @Override
-        public void execute() throws IOException {
+        public void execute(AeshConsole console) throws IOException {
            if(foo == null)
                console.out().println("NO FOO!");
             else
