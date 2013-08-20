@@ -40,6 +40,7 @@ public class ParseCompleteObjectTest extends TestCase {
         assertFalse(pco.isArgument());
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());
+        assertFalse(pco.isCompleteOptionName());
 
         pco = completeParser.findCompleteObject("test --equal true foo.txt");
         assertEquals("foo.txt", pco.getValue());
@@ -48,11 +49,13 @@ public class ParseCompleteObjectTest extends TestCase {
 
         pco = completeParser.findCompleteObject("test -e");
         assertTrue(pco.doDisplayOptions());
+        assertTrue(pco.isCompleteOptionName());
         assertEquals("e", pco.getName());
         assertEquals("--equal", clp.getParameter().findPossibleLongNamesWitdDash(pco.getName()).get(0));
 
         pco = completeParser.findCompleteObject("test --eq");
         assertTrue(pco.doDisplayOptions());
+        assertFalse(pco.isCompleteOptionName());
         assertEquals("eq", pco.getName());
         assertEquals(4, pco.getOffset());
         assertEquals("--equal", clp.getParameter().findPossibleLongNamesWitdDash(pco.getName()).get(0));
@@ -66,8 +69,20 @@ public class ParseCompleteObjectTest extends TestCase {
         pco = completeParser.findCompleteObject("test --equal true  ");
         assertTrue(pco.isArgument());
 
+        pco = completeParser.findCompleteObject("test -f");
+        assertTrue(pco.doDisplayOptions());
+        assertTrue(pco.isCompleteOptionName());
+
+        pco = completeParser.findCompleteObject("test --equal");
+        assertTrue(pco.doDisplayOptions());
+        assertTrue(pco.isCompleteOptionName());
+
+        pco = completeParser.findCompleteObject("test --f");
+        assertTrue(pco.doDisplayOptions());
+        assertFalse(pco.isCompleteOptionName());
+
         pco = completeParser.findCompleteObject("test ");
-        assertFalse(pco.isArgument());
+        assertTrue(pco.isArgument());
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());
     }

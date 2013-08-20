@@ -10,6 +10,7 @@ import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.ParameterInt;
+import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Command;
 import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.aesh.util.Parser;
@@ -41,9 +42,11 @@ public class CommandLineCompletionParser {
         //first we check if it could be a param
         if(Parser.findIfWordEndWithSpace(line)) {
             //check if we try to complete just after the command name
-            ParameterInt param = parser.getParameter();
-            if(line.trim().equals(param.getName()))
-                return new ParsedCompleteObject(false, null, 0);
+            if(line.trim().equals(parser.getParameter().getName())) {
+                if(parser.getParameter().getArgument() == null)
+                    throw new CommandLineParserException("Trying to complete arguments when none are defined.");
+                return new ParsedCompleteObject(null, "", parser.getParameter().getArgument().getType(), false);
+            }
 
             //else we try to complete an option,an option value or arguments
             String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line.trim());
@@ -87,8 +90,17 @@ public class CommandLineCompletionParser {
                     return new ParsedCompleteObject(true, "", 2);
                 }
                 else {
-                    return new ParsedCompleteObject(true,
-                            Parser.trimOptionName(lastWord), lastWord.length());
+                    //we have a complete shortName
+                    if(!lastWord.startsWith("--") && lastWord.length() == 2)
+                        return new ParsedCompleteObject(true,
+                                Parser.trimOptionName(lastWord), lastWord.length(), true);
+                    else {
+                        String optionName = Parser.trimOptionName(lastWord);
+                        if(parser.getParameter().hasLongOption(optionName))
+                            return new ParsedCompleteObject(true, optionName, lastWord.length(), true);
+                        else
+                            return new ParsedCompleteObject(true, optionName, lastWord.length(), false);
+                    }
                 }
             }
         }
@@ -111,72 +123,104 @@ public class CommandLineCompletionParser {
         //get the last option
         else {
             OptionInt po = cl.getOptions().get(cl.getOptions().size()-1);
-            return new ParsedCompleteObject( po.getName().isEmpty() ? po.getShortName() : po.getName(),
-                    endsWithSpace ? "" : po.getValue(), po.getType(), true);
+            if(po.isLongNameUsed() || (po.getShortName() == null || po.getShortName().length() < 1))
+                return new ParsedCompleteObject(po.getName(), endsWithSpace ? "" : po.getValue(), po.getType(), true);
+            else
+                return new ParsedCompleteObject( po.getShortName(), endsWithSpace ? "" : po.getValue(), po.getType(), true);
         }
     }
 
-    public CompleterData injectValuesAndComplete(ParsedCompleteObject completeObject, Command command,
-                                                String buffer) {
-        CompleterData completions = new CompleterData();
+    public void injectValuesAndComplete(ParsedCompleteObject completeObject, Command command,
+                                                 CompleteOperation completeOperation) {
+
         if(completeObject.doDisplayOptions()) {
             logger.info("displayOptions");
-            logger.info("CompleteObject: "+completeObject);
-            //we have partial/full name
-            logger.info("Name: "+completeObject.getName());
-            if(completeObject.getName() != null && completeObject.getName().length() > 0) {
-                if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() > 0) {
-                    //only one param
-                    if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() == 1) {
-                        completions.addCompleterValue(buffer.substring(0, buffer.length()-completeObject.getOffset())+
-                                parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).get(0));
-                        //completions.setOffset( completeObject.getOffset());
-                        //completions.setOffset( completions.getCompleterValues().get(0).length());
-                    }
-                    //multiple params
-                    else {
-                        completions.addAllCompleterValues(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()));
-                    }
-
-                }
+            //got the whole name, just add a space
+            if(completeObject.isCompleteOptionName()) {
+                completeOperation.addCompletionCandidate("");
             }
             else {
-                if(parser.getParameter().getOptionLongNamesWithDash().size() > 1)
-                    completions.addAllCompleterValues(parser.getParameter().getOptionLongNamesWithDash());
-                else {
-                    completions.addAllCompleterValues(parser.getParameter().getOptionLongNamesWithDash());
-                    //completeOperation.setOffset(completeOperation.getCursor() - completeObject.getOffset());
-                }
+                logger.info("displayOptions");
+                logger.info("CompleteObject: "+completeObject);
+                //we have partial/full name
+                logger.info("Name: "+completeObject.getName());
+                if(completeObject.getName() != null && completeObject.getName().length() > 0) {
+                    if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() > 0) {
+                        //only one param
+                        if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() == 1) {
+                            completeOperation.addCompletionCandidate(completeOperation.getBuffer().substring(0,
+                                    completeOperation.getBuffer().length() - completeObject.getOffset()) +
+                                    parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).get(0));
+                            //completions.setOffset( completeObject.getOffset());
+                            //completions.setOffset( completions.getCompleterValues().get(0).length());
+                        }
+                        //multiple params
+                        else {
+                            completeOperation.addCompletionCandidates(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()));
+                        }
 
+                    }
+                }
+                else {
+                    if(parser.getParameter().getOptionLongNamesWithDash().size() > 1)
+                        completeOperation.addCompletionCandidates(parser.getParameter().getOptionLongNamesWithDash());
+                    else {
+                        completeOperation.addCompletionCandidates(parser.getParameter().getOptionLongNamesWithDash());
+                        //completeOperation.setOffset(completeOperation.getCursor() - completeObject.getOffset());
+                    }
+
+                }
             }
         }
         //complete option value
         else if(completeObject.isOption()) {
-            logger.info("buffer: "+buffer);
+            logger.info("isOption");
+            OptionInt currentOption = parser.getParameter().findOption(completeObject.getName());
+            if(currentOption == null)
+                currentOption = parser.getParameter().findLongOption(completeObject.getName());
+
+            logger.info("buffer: "+completeOperation.getBuffer());
             logger.info("completeObject.getName(): "+completeObject.getName());
             //split the line on the option name. populate the object, then call the options completer
-            String rest = buffer.substring(0, buffer.lastIndexOf(completeObject.getName()));
-            //while(rest.endsWith("-"))
-            //    rest = rest.substring(0, rest.length()-1);
+
+            String displayName = currentOption.getDisplayName();
+            //this shouldnt happen
+            if(displayName == null) {
+                return;
+            }
+
+            String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( displayName));
+
             try {
                 parser.populateObject(command, rest);
-            } catch (CommandLineParserException e) {
+            }
+            //this should be ignored at some point
+            catch (CommandLineParserException e) {
                 e.printStackTrace();
             }
 
-            OptionInt currentOption = parser.getParameter().findLongOption(completeObject.getName());
+            CompleterData completions = null;
+            logger.info("current option: "+currentOption);
+            logger.info("current option completer: "+currentOption.getCompleter());
             if(currentOption != null && currentOption.getCompleter() != null) {
                 completions = currentOption.getCompleter().complete(completeObject.getValue());
-            }
-            if(completions.getCompleterValues().size() == 1 && completions.getOffset() > 0) {
-                //completions.setOffset( completions.getOffset() + rest.length());
-                completions.setOffset( completions.getOffset() + buffer.length() - rest.length());
+                completeOperation.addCompletionCandidates(completions.getCompleterValues());
+
+                if(completions.getCompleterValues().size() == 1 && completions.getOffset() > 0) {
+                    logger.info("BUFFER LENGTH: "+completeOperation.getBuffer().length());
+                    logger.info("REST LENGTH: "+rest.length());
+                    logger.info("OFFSET : "+completions.getOffset());
+
+                    completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
+                    completeOperation.doAppendSeparator( completions.isAppendSpace());
+                }
             }
 
         }
         else if(completeObject.isArgument()) {
-            String lastWord = Parser.findEscapedSpaceWordCloseToEnd(buffer);
-            String rest = buffer.substring(0, buffer.length()-lastWord.length());
+            logger.info("isArgument");
+            String lastWord = Parser.findEscapedSpaceWordCloseToEnd(completeOperation.getBuffer());
+            String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length() - lastWord.length());
             try {
                 parser.populateObject(command, rest);
             } catch (CommandLineParserException e) {
@@ -184,11 +228,13 @@ public class CommandLineCompletionParser {
             }
             if(parser.getParameter().getArgument() != null &&
                     parser.getParameter().getArgument().getCompleter() != null) {
-                completions = parser.getParameter().getArgument().getCompleter().complete(completeObject.getValue());
+                CompleterData completions = parser.getParameter().getArgument().getCompleter().complete(completeObject.getValue());
+                completeOperation.addCompletionCandidates(completions.getCompleterValues());
+                completeOperation.setOffset( completions.getOffset() + rest.length());
+                completeOperation.doAppendSeparator( completions.isAppendSpace());
             }
         }
 
-        return completions;
     }
 
 }

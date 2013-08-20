@@ -48,6 +48,7 @@ public class OptionInt {
     private String fieldName;
     private OptionCompleter completer;
     private Map<String,String> properties;
+    private boolean longNameUsed = true;
 
      public OptionInt(char shortName, String name, String description,
                      String argument, boolean required, char valueSeparator,
@@ -180,19 +181,30 @@ public class OptionInt {
         return completer;
     }
 
+    public boolean isLongNameUsed() {
+        return longNameUsed;
+    }
+
+    public void setLongNameUsed(boolean longNameUsed) {
+        this.longNameUsed = longNameUsed;
+    }
+
     public void clear() {
         if(values != null)
             values.clear();
         if(properties != null)
             properties.clear();
+        longNameUsed = true;
     }
 
     public String getDisplayName() {
-        if(name != null) {
+        if(isLongNameUsed() && name != null) {
             return "--"+ name;
         }
-        else
+        else if(shortName != null)
             return "-"+ shortName;
+        else
+            return null;
     }
 
     public int getFormattedLength() {

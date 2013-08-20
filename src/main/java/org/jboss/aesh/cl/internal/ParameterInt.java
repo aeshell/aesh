@@ -282,4 +282,12 @@ public class ParameterInt {
         result = 31 * result + (usage != null ? usage.hashCode() : 0);
         return result;
     }
+
+    public boolean hasLongOption(String optionName) {
+        for(OptionInt o : getOptions()) {
+            if (o.getName().equals(optionName))
+                return true;
+        }
+        return false;
+    }
 }

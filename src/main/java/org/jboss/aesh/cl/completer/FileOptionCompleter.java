@@ -19,6 +19,8 @@ public class FileOptionCompleter implements OptionCompleter {
     public CompleterData complete(String completeValue) {
 
         CompleteOperation completeOperation = new CompleteOperation(completeValue, 0);
+        if(completeValue == null)
+            completeValue = "";
 
         new FileLister(completeValue, new File(System.getProperty("user.dir"))).findMatchingDirectories(completeOperation);
         CompleterData completerData = new CompleterData();

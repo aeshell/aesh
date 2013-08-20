@@ -45,8 +45,8 @@ public class CommandLinePopulatorTest {
             assertEquals(2, test1.getInt1().intValue());
             assertEquals(3, test1.int2);
 
-            parser.populateObject(test1, "test -e enable2 --X false");
-            assertFalse(test1.getEnableX());
+            parser.populateObject(test1, "test -e enable2 --X");
+            assertTrue(test1.getEnableX());
             assertFalse(test1.foo);
         }
         catch (CommandLineParserException e) {
@@ -174,9 +174,9 @@ public class CommandLinePopulatorTest {
             CommandBuilder commandBuilder = new CommandBuilder().name("test").description("a simple test");
             commandBuilder
                     .addOption(new OptionBuilder().name("X").description("enable X").fieldName("enableX")
-                            .type(Boolean.class).create())
+                            .type(Boolean.class).hasValue(false).create())
                     .addOption(new OptionBuilder().shortName('f').name("foo").description("enable foo").fieldName("foo")
-                            .type(boolean.class).create())
+                            .type(boolean.class).hasValue(false).create())
                     .addOption(new OptionBuilder().shortName('e').name("equal").description("enable equal").required(true).fieldName("equal")
                             .type(String.class).create())
                     .addOption(new OptionBuilder().shortName('i').name("int1").fieldName("int1").type(Integer.class).create())

@@ -3,10 +3,10 @@ package org.jboss.aesh.cl;
 @CommandDefinition(name = "test", description = "a simple test")
 public class TestPopulator1 {
 
-    @Option(name = "X", description = "enable X")
+    @Option(name = "X", description = "enable X", hasValue = false)
     private Boolean enableX;
 
-    @Option(shortName = 'f', name = "foo", description = "enable foo")
+    @Option(shortName = 'f', name = "foo", description = "enable foo", hasValue = false)
     public boolean foo;
 
     @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)

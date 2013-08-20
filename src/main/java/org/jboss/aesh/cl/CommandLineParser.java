@@ -113,6 +113,8 @@ public class CommandLineParser {
                     throw new OptionParserException("Option: "+active.getDisplayName()+" must be given a value");
 
                 active = findLongOption(param, parseLine.substring(2));
+                if(active != null)
+                    active.setLongNameUsed(true);
                 if(active != null && active.isProperty()) {
                     if(parseLine.length() <= (2+active.getName().length()) ||
                         !parseLine.contains(EQUALS))
@@ -151,6 +153,8 @@ public class CommandLineParser {
                     throw new OptionParserException("Option: - must be followed by a valid operator");
 
                 active = findOption(param, parseLine.substring(1));
+                if(active != null)
+                    active.setLongNameUsed(false);
 
                 if(active != null && active.isProperty()) {
                     if(parseLine.length() <= 2 ||

@@ -14,6 +14,7 @@ public class ParsedCompleteObject {
     private boolean displayOptions = false;
     private boolean argument = false;
     private boolean displayArguments = false;
+    private boolean completeOptionName = false;
     private int offset = 0;
 
     public ParsedCompleteObject(boolean displayArguments) {
@@ -28,6 +29,17 @@ public class ParsedCompleteObject {
         this.value = "";
         this.type = null;
         this.option = false;
+    }
+
+    public ParsedCompleteObject(boolean displayOptions, String name, int offset, boolean completeOptionName) {
+        this(displayOptions, name, offset);
+        this.completeOptionName = completeOptionName;
+    }
+
+    public ParsedCompleteObject(String name, String value,
+                                Class<?> type, boolean option, boolean completeOptionName) {
+        this(name, value, type, option);
+        this.completeOptionName = completeOptionName;
     }
 
     public ParsedCompleteObject(String name, String value,
@@ -68,6 +80,10 @@ public class ParsedCompleteObject {
         return displayOptions;
     }
 
+    public boolean isCompleteOptionName() {
+        return completeOptionName;
+    }
+
     @Override
     public String toString() {
         return "ParsedCompleteObject{" +
@@ -78,6 +94,7 @@ public class ParsedCompleteObject {
                 ", argument=" + argument +
                 ", displayOptions=" + displayOptions +
                 ", displayArguments=" + displayArguments +
+                ", completeOptionName=" + completeOptionName +
                 ", offset=" + offset +
                 '}';
     }

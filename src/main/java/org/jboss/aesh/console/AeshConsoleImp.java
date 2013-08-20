@@ -156,14 +156,15 @@ public class AeshConsoleImp implements AeshConsole {
                     try {
 
                         ParsedCompleteObject completeObject = completionParser.findCompleteObject(completeOperation.getBuffer());
-                        CompleterData completerData = completionParser.injectValuesAndComplete(completeObject, commands.get(currentCommand),
-                                completeOperation.getBuffer());
-                        completeOperation.addCompletionCandidates(completerData.getCompleterValues());
-                        if(completerData.getCompleterValues().size() == 1 && completerData.getOffset() > 0)
-                            completeOperation.setOffset( completerData.getOffset());
+                        logger.info("completeObject: "+completeObject);
+                        completionParser.injectValuesAndComplete(completeObject, commands.get(currentCommand), completeOperation);
+
+                        //completeOperation.addCompletionCandidates(completerData.getCompleterValues());
+                        //if(completerData.getCompleterValues().size() == 1 && completerData.getOffset() > 0)
+                        //    completeOperation.setOffset( completerData.getOffset());
                         //completeOperation.setOffset( completeOperation.getCursor());
-                        if(!completerData.isAppendSpace())
-                            completeOperation.doAppendSeparator(false);
+                        //if(!completerData.isAppendSpace())
+                        //    completeOperation.doAppendSeparator(false);
 
                     } catch (CommandLineParserException e) {
                         e.printStackTrace();
