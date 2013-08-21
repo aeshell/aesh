@@ -66,7 +66,7 @@ public @interface Option {
      * If this options has a value the default will be auto completed if it matches
      * the value already typed
      */
-    String defaultValue() default "";
+    String[] defaultValue() default {};
 
     /**
      * Specify if this option accept values.

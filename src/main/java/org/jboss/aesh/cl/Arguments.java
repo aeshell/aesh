@@ -45,6 +45,12 @@ public @interface Arguments {
     char valueSeparator() default ' ';
 
     /**
+     * If this options has a value the default will be auto completed if it matches
+     * the value already typed
+     */
+    String[] defaultValue() default {};
+
+    /**
      * Define a converter if the field is a type thats not java.lang and other
      * common types, eg: File,++
      * See ClConverterManager for whats added by default

@@ -12,6 +12,9 @@ import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.cl.internal.OptionType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Build a {@link OptionInt} object using the Builder pattern.
  *
@@ -23,7 +26,6 @@ public class OptionBuilder {
     private String name;
     private String description;
     private String argument;
-    private String defaultValue;
     private Class<?> type;
     private boolean hasValue = true;
     private boolean required = false;
@@ -34,8 +36,10 @@ public class OptionBuilder {
     private Class<? extends CLConverter> converter;
     private String fieldName;
     private OptionCompleter completer;
+    private List<String> defaultValues;
 
     public OptionBuilder() {
+        defaultValues = new ArrayList<String>();
     }
 
     /**
@@ -116,8 +120,8 @@ public class OptionBuilder {
         return this;
     }
 
-    public OptionBuilder defaultValue(String defaultValue) {
-        this.defaultValue = defaultValue;
+    public OptionBuilder addDefaultValue(String defaultValue) {
+        this.defaultValues.add(defaultValue);
         return this;
     }
 
@@ -162,6 +166,6 @@ public class OptionBuilder {
         }
 
         return new OptionInt(shortName, name, description, argument, required,
-                valueSeparator, defaultValue, type, fieldName, optionType, converter, completer);
+                valueSeparator, defaultValues, type, fieldName, optionType, converter, completer);
     }
 }

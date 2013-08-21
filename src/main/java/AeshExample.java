@@ -56,7 +56,7 @@ public class AeshExample {
     @CommandDefinition(name="foo", description = "fooing")
     public static class FooCommand implements Command {
 
-        @Option
+        @Option(defaultValue = {"en","to"})
         private String bar;
 
         @Override
@@ -77,6 +77,9 @@ public class AeshExample {
 
         @Option(completer = LessCompleter.class)
         private String less;
+
+        @Option
+        File file;
 
         @Arguments
         private List<File> files;

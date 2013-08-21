@@ -329,7 +329,7 @@ public class CommandLineParser {
     private void resetField(Object instance, String fieldName) {
         try {
             Field field = instance.getClass().getDeclaredField(fieldName);
-            if(Modifier.isPrivate(field.getModifiers()))
+            if(!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
             if(field.getType().isPrimitive()) {
                 if(boolean.class.isAssignableFrom(field.getType()))

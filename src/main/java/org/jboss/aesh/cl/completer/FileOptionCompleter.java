@@ -31,8 +31,8 @@ public class FileOptionCompleter implements OptionCompleter {
 
         completerData.setCompleterValues( completeOperation.getCompletionCandidates());
         if(completeValue != null && completerData.getCompleterValues().size() == 1) {
-            completerData.setOffset(completeValue.length());
-            completerData.setAppendSpace(false);
+            completerData.setOffset(0);
+            completerData.setAppendSpace(completeOperation.hasAppendSeparator());
         }
 
         return completerData;

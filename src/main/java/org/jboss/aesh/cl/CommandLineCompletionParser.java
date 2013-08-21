@@ -7,6 +7,7 @@
 package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.completer.CompleterData;
+import org.jboss.aesh.cl.completer.DefaultValueOptionCompleter;
 import org.jboss.aesh.cl.exception.ArgumentParserException;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
@@ -192,13 +193,38 @@ public class CommandLineCompletionParser {
                 e.printStackTrace();
             }
 
-            CompleterData completions = null;
             if(currentOption != null && currentOption.getCompleter() != null) {
-                completions = currentOption.getCompleter().complete(completeObject.getValue());
+                CompleterData completions = currentOption.getCompleter().complete(completeObject.getValue());
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
+                /*
                 if(completions.getCompleterValues().size() == 1 && completions.getOffset() > 0) {
                     completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
+                    completeOperation.doAppendSeparator( completions.isAppendSpace());
+                }
+                */
+
+                if(completions.getCompleterValues().size() == 1) {
+                    if(completions.getOffset() > 0)
+                       completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
+                    else
+                        completeOperation.setOffset( completeOperation.getCursor());
+
+                    completeOperation.doAppendSeparator( completions.isAppendSpace());
+                }
+            }
+            //only try to complete default values if completer is null
+            else if(currentOption.getDefaultValues().size() > 0) {
+                CompleterData completions =
+                        new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completeObject.getValue());
+                completeOperation.addCompletionCandidates(completions.getCompleterValues());
+
+                if(completions.getCompleterValues().size() == 1) {
+                    if(completions.getOffset() > 0)
+                       completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
+                    else
+                        completeOperation.setOffset( completeOperation.getCursor());
+
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
             }
@@ -215,7 +241,25 @@ public class CommandLineCompletionParser {
                     parser.getCommand().getArgument().getCompleter() != null) {
                 CompleterData completions = parser.getCommand().getArgument().getCompleter().complete(completeObject.getValue());
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
-                completeOperation.setOffset( completions.getOffset() + rest.length());
+
+                if(completions.getCompleterValues().size() == 1) {
+                    if(completions.getOffset() > 0)
+                        completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
+                    else
+                        completeOperation.setOffset( completeOperation.getCursor());
+
+                    //completeOperation.setOffset( completions.getOffset() + rest.length());
+                    completeOperation.doAppendSeparator( completions.isAppendSpace());
+                }
+
+            }
+            else if(parser.getCommand().getArgument() != null &&
+                    parser.getCommand().getArgument().getDefaultValues().size() > 0) {
+                CompleterData completions =
+                        new DefaultValueOptionCompleter(
+                                parser.getCommand().getArgument().getDefaultValues()).complete(completeObject.getValue());
+                completeOperation.addCompletionCandidates(completions.getCompleterValues());
+                completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
                 completeOperation.doAppendSeparator( completions.isAppendSpace());
             }
         }

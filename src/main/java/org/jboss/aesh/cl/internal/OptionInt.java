@@ -21,6 +21,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,7 +40,7 @@ public class OptionInt {
     private String description;
     private List<String> values;
     private String argument;
-    private String defaultValue;
+    private List<String> defaultValues;
     private Class<?> type;
     private CLConverter converter;
     private OptionType optionType;
@@ -52,7 +53,7 @@ public class OptionInt {
 
      public OptionInt(char shortName, String name, String description,
                      String argument, boolean required, char valueSeparator,
-                     String defaultValue, Class<?> type, String fieldName,
+                     List<String> defaultValue, Class<?> type, String fieldName,
                      OptionType optionType, CLConverter converter, OptionCompleter completer) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, defaultValue,
                 type, fieldName, optionType,
@@ -64,17 +65,25 @@ public class OptionInt {
 
     public OptionInt(char shortName, String name, String description,
                      String argument, boolean required, char valueSeparator,
-                     String defaultValue, Class<?> type, String fieldName,
+                     List<String> defaultValue, Class<?> type, String fieldName,
                      OptionType optionType, Class<? extends CLConverter> converter,
                      OptionCompleter completer) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, defaultValue,
                 type, fieldName, optionType, converter, (Class<? extends OptionCompleter>) null);
         this.completer = completer;
     }
+    public OptionInt(char shortName, String name, String description,
+                     String argument, boolean required, char valueSeparator,
+                     String[] defaultValue, Class<?> type, String fieldName,
+                     OptionType optionType, Class<? extends CLConverter> converter,
+                     Class<? extends OptionCompleter> completer) throws OptionParserException {
+        this(shortName, name, description, argument, required, valueSeparator, Arrays.asList(defaultValue),
+                type, fieldName, optionType, converter, completer);
+    }
 
     public OptionInt(char shortName, String name, String description,
                      String argument, boolean required, char valueSeparator,
-                     String defaultValue, Class<?> type, String fieldName,
+                     List<String> defaultValue, Class<?> type, String fieldName,
                      OptionType optionType, Class<? extends CLConverter> converter,
                      Class<? extends OptionCompleter> completer) throws OptionParserException {
         this.shortName = String.valueOf(shortName);
@@ -85,10 +94,13 @@ public class OptionInt {
         this.valueSeparator = valueSeparator;
         this.type = type;
         this.fieldName = fieldName;
-        this.defaultValue = defaultValue;
         this.optionType = optionType;
         this.converter = initConverter(converter);
         this.completer = initCompleter(completer);
+
+        this.defaultValues = new ArrayList<String>();
+        if(defaultValue != null)
+            defaultValues.addAll(defaultValue);
 
         properties = new HashMap<String, String>();
         values = new ArrayList<String>();
@@ -153,8 +165,8 @@ public class OptionInt {
         return argument;
     }
 
-    public String getDefaultValue() {
-        return defaultValue;
+    public List<String> getDefaultValues() {
+        return defaultValues;
     }
 
     public void addProperty(String name, String value) {
