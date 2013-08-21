@@ -11,7 +11,7 @@ import org.jboss.aesh.cl.CommandLineParser;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
-import org.jboss.aesh.cl.internal.ParameterInt;
+import org.jboss.aesh.cl.internal.CommandInt;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.complete.CompletionRegistration;
@@ -157,7 +157,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
     @Test
     public void completionWithOptions() throws IOException, InterruptedException, CommandLineParserException {
 
-        final ParameterInt param = new CommandBuilder().name("less")
+        final CommandInt param = new CommandBuilder().name("less")
                 .description("less -options <files>")
                 .generateParameter();
 
@@ -170,20 +170,20 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         Completion completion = new Completion() {
             @Override
             public void complete(CompleteOperation co) {
-                if(parser.getParameter().getName().startsWith(co.getBuffer())) {
-                    co.addCompletionCandidate(parser.getParameter().getName());
+                if(parser.getCommand().getName().startsWith(co.getBuffer())) {
+                    co.addCompletionCandidate(parser.getCommand().getName());
                 }
                 // commandline longer than the name
-                else if(co.getBuffer().startsWith(parser.getParameter().getName())){
-                   if(co.getBuffer().length() > parser.getParameter().getName().length())  {
+                else if(co.getBuffer().startsWith(parser.getCommand().getName())){
+                   if(co.getBuffer().length() > parser.getCommand().getName().length())  {
                       if(co.getBuffer().endsWith(" --")) {
-                         for(OptionInt o : parser.getParameter().getOptions()) {
+                         for(OptionInt o : parser.getCommand().getOptions()) {
                              co.addCompletionCandidate("--"+o.getName());
                              builder.append("--"+o.getName()+" ");
                          }
                       }
                       else if(co.getBuffer().endsWith(" -")) {
-                          for(OptionInt o : parser.getParameter().getOptions()) {
+                          for(OptionInt o : parser.getCommand().getOptions()) {
                               co.addCompletionCandidate("-"+o.getShortName());
                               builder.append("-"+o.getShortName()+" ");
                           }

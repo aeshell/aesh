@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ParameterInt {
+public class CommandInt {
 
     private String name;
     private String usage;
@@ -26,21 +26,21 @@ public class ParameterInt {
     private List<OptionInt> options;
     private OptionInt argument;
 
-    public ParameterInt(String name, String usage) {
+    public CommandInt(String name, String usage) {
         setName(name);
         setUsage(usage);
         options = new ArrayList<OptionInt>();
     }
 
-    public ParameterInt(String name, String usage, OptionInt argument) {
+    public CommandInt(String name, String usage, OptionInt argument) {
         setName(name);
         setUsage(usage);
         this.argument = argument;
         options = new ArrayList<OptionInt>();
     }
 
-    public ParameterInt(String name, String usage,
-                         OptionInt argument, OptionInt[] options) throws OptionParserException {
+    public CommandInt(String name, String usage,
+                      OptionInt argument, OptionInt[] options) throws OptionParserException {
         setName(name);
         setUsage(usage);
         this.argument = argument;
@@ -48,8 +48,8 @@ public class ParameterInt {
         setOptions(Arrays.asList(options));
     }
 
-    public ParameterInt(String name, String usage,
-                        OptionInt argument, List<OptionInt> options) throws OptionParserException {
+    public CommandInt(String name, String usage,
+                      OptionInt argument, List<OptionInt> options) throws OptionParserException {
         setName(name);
         setUsage(usage);
         this.argument = argument;
@@ -237,7 +237,7 @@ public class ParameterInt {
     }
 
     /**
-     * Returns a usage String based on the defined parameter and options.
+     * Returns a usage String based on the defined command and options.
      * Useful when printing "help" info etc.
      *
      */
@@ -256,7 +256,7 @@ public class ParameterInt {
 
     @Override
     public String toString() {
-        return "ParameterInt{" +
+        return "CommandInt{" +
                 "name='" + name + '\'' +
                 ", description='" + usage + '\'' +
                 ", options=" + options +
@@ -266,9 +266,9 @@ public class ParameterInt {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ParameterInt)) return false;
+        if (!(o instanceof CommandInt)) return false;
 
-        ParameterInt that = (ParameterInt) o;
+        CommandInt that = (CommandInt) o;
 
         if (!name.equals(that.name)) return false;
         if (usage != null ? !usage.equals(that.usage) : that.usage != null) return false;

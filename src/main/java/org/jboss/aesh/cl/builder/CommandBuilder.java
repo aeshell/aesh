@@ -8,13 +8,13 @@ package org.jboss.aesh.cl.builder;
 
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
-import org.jboss.aesh.cl.internal.ParameterInt;
+import org.jboss.aesh.cl.internal.CommandInt;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Build a {@link ParameterInt} object using the Builder pattern.
+ * Build a {@link org.jboss.aesh.cl.internal.CommandInt} object using the Builder pattern.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -55,9 +55,9 @@ public class CommandBuilder {
         return this;
     }
 
-    public ParameterInt generateParameter() throws CommandLineParserException {
+    public CommandInt generateParameter() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
-        return  new ParameterInt(name, description, argument, options);
+        return  new CommandInt(name, description, argument, options);
     }
 }

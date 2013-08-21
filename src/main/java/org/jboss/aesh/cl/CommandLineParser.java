@@ -10,8 +10,8 @@ import org.jboss.aesh.cl.exception.ArgumentParserException;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.exception.RequiredOptionException;
+import org.jboss.aesh.cl.internal.CommandInt;
 import org.jboss.aesh.cl.internal.OptionInt;
-import org.jboss.aesh.cl.internal.ParameterInt;
 import org.jboss.aesh.util.Parser;
 
 import java.lang.reflect.Field;
@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * A simple command line parser.
- * It parses a given string based on the Parameter given and
+ * It parses a given string based on the Command given and
  * returns a {@link CommandLine}
  *
  * It can also print a formatted usage/help information.
@@ -29,33 +29,33 @@ import java.util.List;
  */
 public class CommandLineParser {
 
-    private ParameterInt parameter;
+    private CommandInt command;
     private static final String EQUALS = "=";
 
-    public CommandLineParser(ParameterInt parameter) {
-        this.parameter = parameter;
+    public CommandLineParser(CommandInt command) {
+        this.command = command;
     }
 
     public CommandLineParser(String name, String usage) {
-        parameter = new ParameterInt(name, usage);
+        command = new CommandInt(name, usage);
     }
 
-    public ParameterInt getParameter() {
-        return parameter;
+    public CommandInt getCommand() {
+        return command;
     }
 
     /**
-     * Returns a usage String based on the defined parameter and options.
+     * Returns a usage String based on the defined command and options.
      * Useful when printing "help" info etc.
      *
      */
     public String printHelp() {
-        return parameter.printHelp();
+        return command.printHelp();
     }
 
     /**
-     * Parse a command line with the defined parameter as base of the rules.
-     * If any options are found, but not defined in the parameter object an
+     * Parse a command line with the defined command as base of the rules.
+     * If any options are found, but not defined in the command object an
      * CommandLineParserException will be thrown.
      * Also, if a required option is not found or options specified with value,
      * but is not given any value an OptionParserException will be thrown.
@@ -72,8 +72,8 @@ public class CommandLineParser {
     }
 
     /**
-     * Parse a command line with the defined parameter as base of the rules.
-     * If any options are found, but not defined in the parameter object an
+     * Parse a command line with the defined command as base of the rules.
+     * If any options are found, but not defined in the command object an
      * CommandLineParserException will be thrown.
      * Also, if a required option is not found or options specified with value,
      * but is not given any value an CommandLineParserException will be thrown.
@@ -89,28 +89,28 @@ public class CommandLineParser {
     public CommandLine parse(String line, boolean ignoreMissingRequirements) throws CommandLineParserException {
         List<String> lines = Parser.findAllWords(line);
         if(lines.size() > 0) {
-            if(parameter.getName().equals(lines.get(0)))
-                return doParse(parameter, lines, ignoreMissingRequirements, false);
+            if(command.getName().equals(lines.get(0)))
+                return doParse(lines, ignoreMissingRequirements, false);
         }
-        throw new CommandLineParserException("Parameter:"+ parameter +", not found in: "+line);
+        throw new CommandLineParserException("Command:"+ command +", not found in: "+line);
     }
 
     public CommandLine parse(String line, boolean ignoreMissingRequirements,
                              boolean ignoreExceptions) throws CommandLineParserException {
         List<String> lines = Parser.findAllWords(line);
         if(lines.size() > 0) {
-            if(parameter.getName().equals(lines.get(0)))
-                return doParse(parameter, lines, ignoreMissingRequirements, ignoreExceptions);
+            if(command.getName().equals(lines.get(0)))
+                return doParse(lines, ignoreMissingRequirements, ignoreExceptions);
         }
-        throw new CommandLineParserException("Parameter:"+ parameter +", not found in: "+line);
+        throw new CommandLineParserException("Command:"+ command +", not found in: "+line);
     }
 
-    private CommandLine doParse(ParameterInt param, List<String> lines,
+    private CommandLine doParse(List<String> lines,
                                 boolean ignoreMissing, boolean ignoreException) throws CommandLineParserException {
-        param.clear();
+        command.clear();
         CommandLine commandLine = new CommandLine();
-        if(param.hasArgument())
-            commandLine.setArgument(param.getArgument());
+        if(command.hasArgument())
+            commandLine.setArgument(command.getArgument());
         OptionInt active = null;
         boolean addedArgument = false;
         try {
@@ -123,7 +123,7 @@ public class CommandLineParser {
                     if(active != null)
                         throw new OptionParserException("Option: "+active.getDisplayName()+" must be given a value");
 
-                    active = findLongOption(param, parseLine.substring(2));
+                    active = findLongOption(command, parseLine.substring(2));
                     if(active != null)
                         active.setLongNameUsed(true);
                     if(active != null && active.isProperty()) {
@@ -163,7 +163,7 @@ public class CommandLineParser {
                     if(parseLine.length() != 2 && !parseLine.contains("="))
                         throw new OptionParserException("Option: - must be followed by a valid operator");
 
-                    active = findOption(param, parseLine.substring(1));
+                    active = findOption(command, parseLine.substring(1));
                     if(active != null)
                         active.setLongNameUsed(false);
 
@@ -212,9 +212,9 @@ public class CommandLineParser {
                     if(addedArgument)
                         throw new OptionParserException("An argument was given to an option that do not support it.");
                 }
-                //if no parameter is "active", we add it as an argument
+                //if no command is "active", we add it as an argument
                 else {
-                    if(param.getArgument() == null) {
+                    if(command.getArgument() == null) {
                         throw new OptionParserException("An argument was given to a command that do not support it.");
                     }
                     else {
@@ -237,13 +237,13 @@ public class CommandLineParser {
 
         //this will throw and CommandLineParserException if needed
         if(!ignoreMissing)
-            checkForMissingRequiredOptions(param, commandLine);
+            checkForMissingRequiredOptions(command, commandLine);
 
         return commandLine;
     }
 
-    private void checkForMissingRequiredOptions(ParameterInt param, CommandLine commandLine) throws CommandLineParserException {
-        for(OptionInt o : param.getOptions())
+    private void checkForMissingRequiredOptions(CommandInt command, CommandLine commandLine) throws CommandLineParserException {
+        for(OptionInt o : command.getOptions())
             if(o.isRequired()) {
                 boolean found = false;
                 for(OptionInt po : commandLine.getOptions()) {
@@ -256,13 +256,13 @@ public class CommandLineParser {
             }
     }
 
-    private OptionInt findOption(ParameterInt param, String line) {
-        OptionInt option = param.findOption(line);
+    private OptionInt findOption(CommandInt command, String line) {
+        OptionInt option = command.findOption(line);
         //simplest case
         if(option != null)
             return option;
 
-        option = param.startWithOption(line);
+        option = command.startWithOption(line);
         //if its a property, we'll parse it later
         if(option != null && option.isProperty())
             return option;
@@ -277,13 +277,13 @@ public class CommandLineParser {
         return null;
     }
 
-    private OptionInt findLongOption(ParameterInt param, String line) {
-        OptionInt option = param.findLongOption(line);
+    private OptionInt findLongOption(CommandInt command, String line) {
+        OptionInt option = command.findLongOption(line);
         //simplest case
         if(option != null)
             return option;
 
-        option = param.startWithLongOption(line);
+        option = command.startWithLongOption(line);
         //if its a property, we'll parse it later
         if(option != null && option.isProperty())
             return option;
@@ -300,7 +300,7 @@ public class CommandLineParser {
 
     public void populateObject(Object instance, String line) throws CommandLineParserException {
         CommandLine cl = parse(line);
-        for(OptionInt option: parameter.getOptions()) {
+        for(OptionInt option: command.getOptions()) {
             if(cl.hasOption(option.getName()))
                 cl.getOption(option.getName()).injectValueIntoField(instance);
             else
@@ -363,7 +363,7 @@ public class CommandLineParser {
     @Override
     public String toString() {
         return "CommandLineParser{" +
-                "parameter=" + parameter +
+                "command=" + command +
                 '}';
     }
 
@@ -374,13 +374,13 @@ public class CommandLineParser {
 
         CommandLineParser that = (CommandLineParser) o;
 
-        if (!parameter.equals(that.parameter)) return false;
+        if (!command.equals(that.command)) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return parameter.hashCode();
+        return command.hashCode();
     }
 }

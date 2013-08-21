@@ -51,20 +51,20 @@ public class ParseCompleteObjectTest extends TestCase {
         assertTrue(pco.doDisplayOptions());
         assertTrue(pco.isCompleteOptionName());
         assertEquals("e", pco.getName());
-        assertEquals("--equal", clp.getParameter().findPossibleLongNamesWitdDash(pco.getName()).get(0));
+        assertEquals("--equal", clp.getCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0));
 
         pco = completeParser.findCompleteObject("test --eq");
         assertTrue(pco.doDisplayOptions());
         assertFalse(pco.isCompleteOptionName());
         assertEquals("eq", pco.getName());
         assertEquals(4, pco.getOffset());
-        assertEquals("--equal", clp.getParameter().findPossibleLongNamesWitdDash(pco.getName()).get(0));
+        assertEquals("--equal", clp.getCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0));
 
         pco = completeParser.findCompleteObject("test --");
         assertTrue(pco.doDisplayOptions());
         assertEquals("", pco.getName());
         assertEquals(2, pco.getOffset());
-        assertEquals(4, clp.getParameter().getOptionLongNamesWithDash().size());
+        assertEquals(4, clp.getCommand().getOptionLongNamesWithDash().size());
 
         pco = completeParser.findCompleteObject("test --equal true  ");
         assertTrue(pco.isArgument());

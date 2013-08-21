@@ -6,23 +6,23 @@
  */
 package org.jboss.aesh.cl;
 
-import org.jboss.aesh.cl.internal.ParameterInt;
+import org.jboss.aesh.cl.internal.CommandInt;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ParserBuilder {
 
-    private ParameterInt param;
+    private CommandInt param;
 
     public ParserBuilder() {
     }
 
-    public ParserBuilder(ParameterInt param) {
+    public ParserBuilder(CommandInt param) {
         this.param = param;
     }
 
-    public ParserBuilder parameter(ParameterInt param) {
+    public ParserBuilder parameter(CommandInt param) {
         this.param = param;
         return this;
     }

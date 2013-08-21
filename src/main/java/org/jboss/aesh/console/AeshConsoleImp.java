@@ -90,7 +90,7 @@ public class AeshConsoleImp implements AeshConsole {
             String commandName = command.getAnnotation(CommandDefinition.class).name();
 
             for(CommandLineParser parser : commands.keySet()) {
-                if(parser.getParameter().getName().equals(commandName)) {
+                if(parser.getCommand().getName().equals(commandName)) {
                     commands.remove(parser);
                     return;
                 }
@@ -125,8 +125,8 @@ public class AeshConsoleImp implements AeshConsole {
     private CommandLineParser findCommand(String input) {
         String name = Parser.findFirstWord(input);
         for(CommandLineParser parser : commands.keySet()) {
-            logger.info("findCommand, commandName: "+parser.getParameter().getName()+", firstName: "+name);
-            if(parser.getParameter().getName().equals(name))
+            logger.info("findCommand, commandName: "+parser.getCommand().getName()+", firstName: "+name);
+            if(parser.getCommand().getName().equals(name))
                 return parser;
         }
 
@@ -136,8 +136,8 @@ public class AeshConsoleImp implements AeshConsole {
     private List<String> completeCommandName(String input) {
         List<String> matchedCommands = new ArrayList<String>();
         for(CommandLineParser parser : commands.keySet()) {
-            if(parser.getParameter().getName().startsWith(input))
-                matchedCommands.add(parser.getParameter().getName());
+            if(parser.getCommand().getName().startsWith(input))
+                matchedCommands.add(parser.getCommand().getName());
         }
 
         return matchedCommands;

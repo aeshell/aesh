@@ -11,8 +11,8 @@ import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.internal.CommandInt;
 import org.jboss.aesh.cl.internal.OptionType;
-import org.jboss.aesh.cl.internal.ParameterInt;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -89,8 +89,8 @@ public class BuilderTest extends TestCase {
 
         CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 
-        assertEquals("version", clp.getParameter().findOption("v").getName());
-        assertEquals("verbose", clp.getParameter().findOption("e").getName());
+        assertEquals("version", clp.getCommand().findOption("v").getName());
+        assertEquals("verbose", clp.getCommand().findOption("e").getName());
 
         CommandLine cl = clp.parse("less -v -e test1.txt");
         assertTrue(cl.hasOption('v'));
@@ -98,14 +98,14 @@ public class BuilderTest extends TestCase {
     }
 
     public void testParameterInt() throws OptionParserException {
-        ParameterInt parameterInt = new ParameterInt("foo", "");
-        parameterInt.addOption(new OptionBuilder().name("foo1").create());
-        parameterInt.addOption(new OptionBuilder().name("foo2").create());
-        parameterInt.addOption(new OptionBuilder().name("foo3").create());
+        CommandInt commandInt = new CommandInt("foo", "");
+        commandInt.addOption(new OptionBuilder().name("foo1").create());
+        commandInt.addOption(new OptionBuilder().name("foo2").create());
+        commandInt.addOption(new OptionBuilder().name("foo3").create());
 
-        assertEquals("f", parameterInt.getOptions().get(0).getShortName());
-        assertEquals("o", parameterInt.getOptions().get(1).getShortName());
-        assertEquals("3", parameterInt.getOptions().get(2).getShortName());
+        assertEquals("f", commandInt.getOptions().get(0).getShortName());
+        assertEquals("o", commandInt.getOptions().get(1).getShortName());
+        assertEquals("3", commandInt.getOptions().get(2).getShortName());
     }
 
 }

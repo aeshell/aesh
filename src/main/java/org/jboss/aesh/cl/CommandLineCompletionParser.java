@@ -42,10 +42,10 @@ public class CommandLineCompletionParser {
         //first we check if it could be a param
         if(Parser.findIfWordEndWithSpace(line)) {
             //check if we try to complete just after the command name
-            if(line.trim().equals(parser.getParameter().getName())) {
-                if(parser.getParameter().getArgument() == null)
+            if(line.trim().equals(parser.getCommand().getName())) {
+                if(parser.getCommand().getArgument() == null)
                     throw new ArgumentParserException("Trying to complete arguments when none are defined.");
-                return new ParsedCompleteObject(null, "", parser.getParameter().getArgument().getType(), false);
+                return new ParsedCompleteObject(null, "", parser.getCommand().getArgument().getType(), false);
             }
 
             //else we try to complete an option,an option value or arguments
@@ -56,8 +56,8 @@ public class CommandLineCompletionParser {
                     lastWord = lastWord.substring(1);
                 if(lastWord.length() == 0)
                     return new ParsedCompleteObject(false, null, offset);
-                else if(parser.getParameter().findOption(lastWord) != null ||
-                        parser.getParameter().findLongOption(lastWord) != null)
+                else if(parser.getCommand().findOption(lastWord) != null ||
+                        parser.getCommand().findLongOption(lastWord) != null)
                     return findCompleteObjectValue(line, true);
                 else
                     return new ParsedCompleteObject(false, null, offset);
@@ -96,7 +96,7 @@ public class CommandLineCompletionParser {
                                 Parser.trimOptionName(lastWord), lastWord.length(), true);
                     else {
                         String optionName = Parser.trimOptionName(lastWord);
-                        if(parser.getParameter().hasLongOption(optionName))
+                        if(parser.getCommand().hasLongOption(optionName))
                             return new ParsedCompleteObject(true, optionName, lastWord.length(), true);
                         else
                             return new ParsedCompleteObject(true, optionName, lastWord.length(), false);
@@ -141,29 +141,29 @@ public class CommandLineCompletionParser {
             else {
                 //we have partial/full name
                 if(completeObject.getName() != null && completeObject.getName().length() > 0) {
-                    if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() > 0) {
+                    if(parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName()).size() > 0) {
                         //only one param
-                        if(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).size() == 1) {
+                        if(parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName()).size() == 1) {
 
                             completeOperation.addCompletionCandidate(
-                                    parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()).get(0));
+                                    parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName()).get(0));
                             completeOperation.setOffset( completeOperation.getCursor() - 2 - completeObject.getName().length());
                         }
                         //multiple params
                         else {
-                            completeOperation.addCompletionCandidates(parser.getParameter().findPossibleLongNamesWitdDash(completeObject.getName()));
+                            completeOperation.addCompletionCandidates(parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName()));
                         }
 
                     }
                 }
                 else {
-                    if(parser.getParameter().getOptionLongNamesWithDash().size() > 1)
-                        completeOperation.addCompletionCandidates(parser.getParameter().getOptionLongNamesWithDash());
-                    else if(parser.getParameter().getOptionLongNamesWithDash().size() == 1) {
+                    if(parser.getCommand().getOptionLongNamesWithDash().size() > 1)
+                        completeOperation.addCompletionCandidates(parser.getCommand().getOptionLongNamesWithDash());
+                    else if(parser.getCommand().getOptionLongNamesWithDash().size() == 1) {
                         int count = 0;
                         while(completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length()-count).endsWith("-"))
                             count++;
-                        completeOperation.addCompletionCandidate(parser.getParameter().getOptionLongNamesWithDash().get(0));
+                        completeOperation.addCompletionCandidate(parser.getCommand().getOptionLongNamesWithDash().get(0));
                         completeOperation.setOffset( completeOperation.getCursor() - count);
                     }
 
@@ -172,9 +172,9 @@ public class CommandLineCompletionParser {
         }
         //complete option value
         else if(completeObject.isOption()) {
-            OptionInt currentOption = parser.getParameter().findOption(completeObject.getName());
+            OptionInt currentOption = parser.getCommand().findOption(completeObject.getName());
             if(currentOption == null)
-                currentOption = parser.getParameter().findLongOption(completeObject.getName());
+                currentOption = parser.getCommand().findLongOption(completeObject.getName());
 
             //split the line on the option name. populate the object, then call the options completer
             String displayName = currentOption.getDisplayName();
@@ -211,9 +211,9 @@ public class CommandLineCompletionParser {
             } catch (CommandLineParserException e) {
                 e.printStackTrace();
             }
-            if(parser.getParameter().getArgument() != null &&
-                    parser.getParameter().getArgument().getCompleter() != null) {
-                CompleterData completions = parser.getParameter().getArgument().getCompleter().complete(completeObject.getValue());
+            if(parser.getCommand().getArgument() != null &&
+                    parser.getCommand().getArgument().getCompleter() != null) {
+                CompleterData completions = parser.getCommand().getArgument().getCompleter().complete(completeObject.getValue());
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
                 completeOperation.setOffset( completions.getOffset() + rest.length());
                 completeOperation.doAppendSeparator( completions.isAppendSpace());
