@@ -19,6 +19,7 @@ import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalCharacter;
+import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.IOException;
@@ -107,10 +108,10 @@ public class Example {
             private void readFromFile() throws IOException {
                 if(getConsoleOutput().getStdOut() != null &&
                         getConsoleOutput().getStdOut().length() > 0) {
-                    console.out().print("FROM STDOUT: " + getConsoleOutput().getStdOut());
+                    console.out().println("FROM STDOUT: " + getConsoleOutput().getStdOut());
                 }
                 else
-                    console.out().print("here should we present some text... press 'q' to quit");
+                    console.out().println("here should we present some text... press 'q' to quit");
             }
 
             @Override
@@ -259,7 +260,6 @@ public class Example {
         };
 
         //show how we can change the prompt async
-        /*
         try {
             Thread.sleep(4000);
             exampleConsole.setPrompt(new Prompt(
@@ -268,7 +268,6 @@ public class Example {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        */
 
     }
 }

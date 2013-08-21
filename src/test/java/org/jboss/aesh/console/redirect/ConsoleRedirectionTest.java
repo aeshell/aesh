@@ -63,6 +63,32 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
 
         Console console = getTestConsole(pipedInputStream);
         console.setConsoleCallback(new ConsoleCallback() {
+            @Override
+            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+                assertEquals("ls ", output.getBuffer());
+                assertTrue(output.getStdOut().contains("CONTENT OF FILE"));
+                assertEquals(ControlOperator.NONE, output.getControlOperator());
+                return 0;
+            }
+        });
+        console.start();
+
+        if(Config.isOSPOSIXCompatible())
+            outputStream.write(("ls < "+Config.getTmpDir()+"/foo\\ bar.txt \n").getBytes());
+        else
+            outputStream.write(("ls < "+Config.getTmpDir()+"\\foo\\ bar.txt \n").getBytes());
+
+        Thread.sleep(200);
+        console.stop();
+    }
+
+    @Test
+    public void redirectIn2() throws IOException, InterruptedException {
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+
+        Console console = getTestConsole(pipedInputStream);
+        console.setConsoleCallback(new ConsoleCallback() {
             private int count = 0;
             @Override
             public int readConsoleOutput(ConsoleOutput output) throws IOException {

@@ -1393,6 +1393,7 @@ public class Console {
         //ControlOperator.NONE
         else {
             //do nothing
+            currentOperation = null;
             return null;
         }
     }
@@ -1439,7 +1440,7 @@ public class Console {
                     }
                     //if we get any io error reading the file:
                     catch (IOException ioe) {
-                        err().print(settings.getName() + ": " + ioe.getMessage() + Config.getLineSeparator());
+                        err().println(settings.getName() + ": " + ioe.getMessage());
                         currentOperation = null;
                         output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
                     }
