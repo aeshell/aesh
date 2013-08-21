@@ -60,6 +60,7 @@ public class ParseCompleteObjectTest extends TestCase {
         assertEquals(4, pco.getOffset());
         assertEquals("--equal", clp.getCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0));
 
+        clp.getCommand().clear();
         pco = completeParser.findCompleteObject("test --");
         assertTrue(pco.doDisplayOptions());
         assertEquals("", pco.getName());

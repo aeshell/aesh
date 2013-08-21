@@ -140,6 +140,12 @@ public class CommandLineCompletionParser {
                 completeOperation.addCompletionCandidate("");
             }
             else {
+                try {
+                    parser.parse(completeOperation.getBuffer(), true, true);
+                }
+                catch (CommandLineParserException e) {
+                   //ignored, shouldnt happen
+                }
                 //we have partial/full name
                 if(completeObject.getName() != null && completeObject.getName().length() > 0) {
                     if(parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName()).size() > 0) {
@@ -193,16 +199,9 @@ public class CommandLineCompletionParser {
                 e.printStackTrace();
             }
 
-            if(currentOption != null && currentOption.getCompleter() != null) {
+            if(currentOption.getCompleter() != null) {
                 CompleterData completions = currentOption.getCompleter().complete(completeObject.getValue());
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
-
-                /*
-                if(completions.getCompleterValues().size() == 1 && completions.getOffset() > 0) {
-                    completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
-                    completeOperation.doAppendSeparator( completions.isAppendSpace());
-                }
-                */
 
                 if(completions.getCompleterValues().size() == 1) {
                     if(completions.getOffset() > 0)

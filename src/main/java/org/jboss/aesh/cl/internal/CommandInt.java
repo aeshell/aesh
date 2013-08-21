@@ -201,10 +201,15 @@ public class CommandInt {
            argument.clear();
     }
 
+    /**
+     * Return all option names that not already have a value
+     */
     public List<String> getOptionLongNamesWithDash() {
         List<String> names = new ArrayList<String>(options.size());
-        for(OptionInt o : options)
-            names.add("--"+o.getName());
+        for(OptionInt o : options) {
+            if(o.getValues().size() == 0)
+                names.add("--"+o.getName());
+        }
 
         return names;
     }
