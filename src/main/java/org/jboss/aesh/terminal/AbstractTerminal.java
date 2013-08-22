@@ -11,7 +11,6 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,29 +27,6 @@ public abstract class AbstractTerminal implements Terminal {
         this.logger = logger;
     }
 
-    @Override
-    public void writeToStdOut(TerminalCharacter character) throws IOException {
-        writeToStdOut(character.toString());
-    }
-
-    @Override
-    public void writeToStdOut(List<TerminalCharacter> chars) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        TerminalCharacter prev = null;
-        for(TerminalCharacter c : chars) {
-            if(prev == null)
-                builder.append(c.toString());
-            else
-                builder.append(c.toString(prev));
-            prev = c;
-        }
-        writeToStdOut(builder.toString());
-    }
-
-    @Override
-    public void writeStdOut(TerminalString termString) throws IOException {
-        writeToStdOut(termString.toString());
-    }
 
     /**
      * Return the row position if we use a ansi terminal
@@ -62,7 +38,8 @@ public abstract class AbstractTerminal implements Terminal {
     public CursorPosition getCursor() {
         if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
             try {
-                writeToStdOut(ANSI.getCurrentCursorPos());
+                out().print(ANSI.getCurrentCursorPos());
+                out().flush();
                 StringBuilder builder = new StringBuilder(8);
                 int row;
                 while((row = read(false)[0]) > -1 && row != 'R') {
@@ -85,7 +62,8 @@ public abstract class AbstractTerminal implements Terminal {
     @Override
     public void setCursor(CursorPosition position) throws IOException {
         if(getSize().isPositionWithinSize(position)) {
-            writeToStdOut(position.asAnsi());
+            out().print(position.asAnsi());
+            out().flush();
         }
     }
 
@@ -100,7 +78,8 @@ public abstract class AbstractTerminal implements Terminal {
 
     @Override
     public void clear() throws IOException {
-        writeToStdOut(ANSI.clearScreen());
+        out().print(ANSI.clearScreen());
+        out().flush();
     }
 
 }

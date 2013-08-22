@@ -11,7 +11,6 @@ import org.jboss.aesh.console.reader.AeshPrintWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.List;
 
 /**
  * Generic interface for Terminals
@@ -36,69 +35,6 @@ public interface Terminal {
      * @throws IOException
      */
     int[] read(boolean readAhead) throws IOException;
-
-    /**
-     * Write to the standard output stream
-     *
-     * @param out what goes into the stream
-     * @throws IOException stream
-     */
-    void writeToStdOut(String out) throws IOException;
-
-    /**
-     * Write to the standard output stream
-     *
-     * @param out what goes into the stream
-     * @throws IOException stream
-     */
-    void writeToStdOut(char[] out) throws IOException;
-
-    /**
-     * Write to the standard output stream
-     *
-     * @param out what goes into the stream
-     * @throws IOException stream
-     */
-    void writeToStdOut(char out) throws IOException;
-
-    /**
-     * Write a TerminalCharacter to std out
-     */
-    void writeToStdOut(TerminalCharacter c) throws IOException;
-
-    /**
-     * Write a list of TerminalCharacters to std out
-     */
-    void writeToStdOut(List<TerminalCharacter> chars) throws IOException;
-
-    /**
-     * Write a TerminalString to std out
-     */
-    void writeStdOut(TerminalString string) throws IOException;
-
-    /**
-     * Write to the standard error stream
-     *
-     * @param err what goes into the stream
-     * @throws IOException stream
-     */
-    void writeToStdErr(String err) throws IOException;
-
-    /**
-     * Write to the standard error stream
-     *
-     * @param err what goes into the stream
-     * @throws IOException stream
-     */
-    void writeToStdErr(char[] err) throws IOException;
-
-    /**
-     * Write to the standard error stream
-     *
-     * @param err what goes into the stream
-     * @throws IOException stream
-     */
-    void writeToStdErr(char err) throws IOException;
 
     /**
      * @return terminal size
@@ -138,10 +74,10 @@ public interface Terminal {
     /**
      * Returns the {@link AeshPrintWriter} associated with the std out
      */
-    AeshPrintWriter getStdOut();
+    AeshPrintWriter out();
 
     /**
      * Returns the {@link AeshPrintWriter} associated with the std err
      */
-    AeshPrintWriter getStdErr();
+    AeshPrintWriter err();
 }

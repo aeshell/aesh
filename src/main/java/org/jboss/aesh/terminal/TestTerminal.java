@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.List;
 
 /**
  * A dummy terminal used for tests
@@ -49,50 +48,6 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
-    public void writeToStdOut(String out) throws IOException {
-        if(out != null && out.length() > 0) {
-            writer.write(out);
-            writer.flush();
-        }
-    }
-
-    @Override
-    public void writeToStdOut(char[] out) throws IOException {
-        if(out != null && out.length > 0) {
-            writer.write(out);
-            writer.flush();
-        }
-    }
-
-    @Override
-    public void writeToStdOut(char out) throws IOException {
-        writer.write(out);
-        writer.flush();
-    }
-
-    @Override
-    public void writeToStdErr(String err) throws IOException {
-        if(err != null && err.length() > 0) {
-            writer.write(err);
-            writer.flush();
-        }
-    }
-
-    @Override
-    public void writeToStdErr(char[] err) throws IOException {
-        if(err != null && err.length > 0) {
-            writer.write(err);
-            writer.flush();
-        }
-    }
-
-    @Override
-    public void writeToStdErr(char err) throws IOException {
-        writer.write(err);
-        writer.flush();
-    }
-
-    @Override
     public TerminalSize getSize() {
         return size;
     }
@@ -111,22 +66,6 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
-    public void writeToStdOut(TerminalCharacter character) throws IOException {
-        writeToStdOut(character.getCharacter());
-    }
-
-    @Override
-    public void writeToStdOut(List<TerminalCharacter> chars) throws IOException {
-        for(TerminalCharacter c : chars)
-            writeToStdOut(c.getCharacter());
-    }
-
-    @Override
-    public void writeStdOut(TerminalString termString) throws IOException {
-        writeToStdOut(termString.toString());
-    }
-
-    @Override
     public boolean isEchoEnabled() {
         return false;
     }
@@ -140,12 +79,12 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
-    public AeshPrintWriter getStdErr() {
+    public AeshPrintWriter err() {
         return writer;
     }
 
     @Override
-    public AeshPrintWriter getStdOut() {
+    public AeshPrintWriter out() {
         return writer;
     }
 

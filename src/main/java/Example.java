@@ -61,9 +61,9 @@ public class Example {
                 CharacterType.BOLD));
         chars.add(new TerminalCharacter(']', Color.DEFAULT_BG, Color.BLUE_TEXT,
                 CharacterType.PLAIN));
-        chars.add(new TerminalCharacter('$', Color.DEFAULT_BG, Color.WHITE_TEXT,
+        chars.add(new TerminalCharacter('$', Color.DEFAULT_BG, Color.GREEN_TEXT,
                 CharacterType.UNDERLINE));
-        chars.add(new TerminalCharacter(' ', Color.DEFAULT_BG, Color.WHITE_TEXT));
+        chars.add(new TerminalCharacter(' ', Color.DEFAULT_BG, Color.DEFAULT_TEXT));
 
         final Prompt prompt = new Prompt(chars);
         //String prompt = ANSI.redText()+"[test@foo]"+ANSI.reset()+"$ ";

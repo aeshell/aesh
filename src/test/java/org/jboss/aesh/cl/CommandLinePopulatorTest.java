@@ -145,7 +145,7 @@ public class CommandLinePopulatorTest {
     public void testStaticPopulator() {
         try {
             TestPopulator3 test3 = new TestPopulator3();
-            ParserGenerator.generateCommandLineParser(test3.getClass()).populateObject(test3, "test -bX1=foo -bX2=bar");
+            ParserGenerator.parseAndPopulate(test3, "test -bX1=foo -bX2=bar");
 
             assertNotNull(test3.getBasicMap());
             assertNull(test3.getIntegerMap());
@@ -153,15 +153,15 @@ public class CommandLinePopulatorTest {
             assertTrue(test3.getBasicMap().containsKey("X2"));
             assertEquals("foo", test3.getBasicMap().get("X1"));
 
-            ParserGenerator.generateCommandLineParser(test3.getClass()).populateObject(test3, "test -iI1=42 -iI12=43");
+            ParserGenerator.parseAndPopulate(test3, "test -iI1=42 -iI12=43");
             assertNotNull(test3.getIntegerMap());
             assertEquals(2, test3.getIntegerMap().size());
             assertEquals(new Integer("42"), test3.getIntegerMap().get("I1"));
 
-            ParserGenerator.generateCommandLineParser(test3.getClass()).populateObject(test3, "test -iI12");
+            ParserGenerator.parseAndPopulate(test3, "test -iI12");
             exception.expect(OptionParserException.class);
 
-            ParserGenerator.generateCommandLineParser(test3.getClass()).populateObject(test3, "test --integerMapI12=");
+            ParserGenerator.parseAndPopulate(test3, "test --integerMapI12=");
             exception.expect(OptionParserException.class);
         }
         catch (CommandLineParserException e) {

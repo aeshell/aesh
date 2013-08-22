@@ -36,16 +36,19 @@ public class TerminalHandler {
     }
 
     public void clearScreen() throws IOException {
-        terminal.writeToStdOut(ANSI.clearScreen());
+        terminal.out().print(ANSI.clearScreen());
+        terminal.out().flush();
 
     }
 
     public void enableAlternateScreen() throws IOException {
-        terminal.writeToStdOut(ANSI.getAlternateBufferScreen());
+        terminal.out().print(ANSI.getAlternateBufferScreen());
+        terminal.out().flush();
     }
 
     public void enableMainScreen() throws IOException {
-        terminal.writeToStdOut(ANSI.getMainBufferScreen());
+        terminal.out().print(ANSI.getMainBufferScreen());
+        terminal.out().flush();
     }
 
     public Color getBackgroundColor() {

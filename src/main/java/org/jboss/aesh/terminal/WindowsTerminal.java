@@ -78,62 +78,6 @@ public class WindowsTerminal extends AbstractTerminal {
         }
     }
 
-    @Override
-    public void writeToStdOut(String out) throws IOException {
-        if(out != null && out.length() > 0) {
-            synchronized (lock) {
-                stdOut.write(out);
-                stdOut.flush();
-            }
-        }
-    }
-
-    @Override
-    public void writeToStdOut(char[] out) throws IOException {
-        if(out != null && out.length > 0) {
-            synchronized (lock) {
-                stdOut.write(out);
-                stdOut.flush();
-            }
-        }
-    }
-
-    @Override
-    public void writeToStdOut(char out) throws IOException {
-        synchronized (lock) {
-            stdOut.write(out);
-            stdOut.flush();
-        }
-    }
-
-    @Override
-    public void writeToStdErr(String err) throws IOException {
-        if(err != null && err.length() > 0) {
-            synchronized (lock) {
-                stdOut.write(err);
-                stdOut.flush();
-            }
-        }
-    }
-
-    @Override
-    public void writeToStdErr(char[] err) throws IOException {
-        if(err != null && err.length > 0) {
-            synchronized (lock) {
-                stdOut.write(err);
-                stdOut.flush();
-            }
-        }
-    }
-
-    @Override
-    public void writeToStdErr(char err) throws IOException {
-        synchronized (lock) {
-            stdOut.write(err);
-            stdOut.flush();
-        }
-    }
-
     private int getHeight() {
         int height;
         height = WindowsSupport.getWindowsTerminalHeight();
@@ -186,12 +130,12 @@ public class WindowsTerminal extends AbstractTerminal {
     }
 
     @Override
-    public AeshPrintWriter getStdErr() {
+    public AeshPrintWriter err() {
         return stdErr;
     }
 
     @Override
-    public AeshPrintWriter getStdOut() {
+    public AeshPrintWriter out() {
         return stdOut;
     }
 }

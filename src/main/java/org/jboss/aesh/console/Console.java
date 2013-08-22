@@ -225,6 +225,7 @@ public class Console {
                 if(buffer.getLine().length() > 0) {
                     out().print(buffer.getLine());
                     buffer.setCursor(buffer.getLine().length());
+                    out().flush();
                 }
             }
         }
@@ -250,7 +251,7 @@ public class Console {
                 ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
             return new AeshPrintWriter(redirectPipeOutBuffer, true);
         } else {
-            return getTerminal().getStdOut();
+            return getTerminal().out();
         }
     }
 
@@ -260,7 +261,7 @@ public class Console {
                 ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
             return new AeshPrintWriter(redirectPipeErrBuffer, true);
         } else {
-            return getTerminal().getStdErr();
+            return getTerminal().err();
         }
     }
 
@@ -429,6 +430,7 @@ public class Console {
                     else {
                         buffer.write(line);
                         out().print(line);
+                        out().flush();
                         addToHistory(buffer.getLine());
                     }
                     printNewline();
@@ -444,6 +446,7 @@ public class Console {
                     else {
                         buffer.write(current.toString());
                         out().print(buffer.getLine());
+                        out().flush();
                     }
                 }
             }
@@ -544,9 +547,10 @@ public class Console {
             //do not display complete, but make sure that the previous line
             // is restored correctly
             else {
-                getTerminal().writeToStdOut(Config.getLineSeparator());
+                out().println();
                 displayPrompt();
-                getTerminal().writeToStdOut(buffer.getLine());
+                out().print(buffer.getLine());
+                out().flush();
                 syncCursor();
             }
         }
@@ -765,7 +769,8 @@ public class Console {
         // otherwise, restore the line
         else {
             redrawLine();
-            getTerminal().writeToStdOut(Buffer.printAnsi((buffer.getPrompt().getLength() + 1) + "G"));
+            out().println(Buffer.printAnsi((buffer.getPrompt().getLength() + 1) + "G"));
+            out().flush();
         }
     }
 
@@ -829,8 +834,9 @@ public class Console {
                             logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
                                     ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
                         }
-                        getTerminal().writeToStdOut(Buffer.printAnsi(numNewRows + "S"));
-                        getTerminal().writeToStdOut(Buffer.printAnsi(numNewRows + "A"));
+                        out().print(Buffer.printAnsi(numNewRows + "S"));
+                        out().print(Buffer.printAnsi(numNewRows + "A"));
+                        out().flush();
                     }
                 }
             }
@@ -851,8 +857,9 @@ public class Console {
                     if((insert.length()+buffer.totalLength()) % getTerminal().getSize().getWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
-                        getTerminal().writeToStdOut(Buffer.printAnsi(numNewRows + "S"));
-                        getTerminal().writeToStdOut(Buffer.printAnsi(numNewRows + "A"));
+                        out().print(Buffer.printAnsi(numNewRows + "S"));
+                        out().print(Buffer.printAnsi(numNewRows + "A"));
+                        out().flush();
                     }
                 }
             }
@@ -871,11 +878,12 @@ public class Console {
 
     private void displayPrompt(Prompt prompt) throws IOException {
         if(prompt.hasANSI()) {
-            getTerminal().writeToStdOut(ANSI.getStart()+"0G"+ANSI.getStart()+"2K");
-            getTerminal().writeToStdOut(prompt.getANSI());
+            out().print(ANSI.getStart() + "0G" + ANSI.getStart() + "2K");
+            out().print(prompt.getANSI());
         }
         else
-            getTerminal().writeToStdOut(ANSI.getStart()+"0G"+ANSI.getStart()+"2K"+prompt.getPromptAsString());
+            out().print(ANSI.getStart() + "0G" + ANSI.getStart() + "2K" + prompt.getPromptAsString());
+        out().flush();
     }
 
     private void writeChars(int[] chars, Character mask) throws IOException {
@@ -890,17 +898,17 @@ public class Console {
         //the masked char. if masked is set to 0 we write nothing
         if(mask != null) {
             if(mask != 0)
-                getTerminal().writeToStdOut(mask);
+                out().print(mask);
         }
         else {
-            getTerminal().writeToStdOut((char) c);
+            out().print((char) c);
         }
 
         // add a 'fake' new line when inserting at the edge of terminal
         if(buffer.getCursorWithPrompt() > getTerminal().getSize().getWidth() &&
                 buffer.getCursorWithPrompt() % getTerminal().getSize().getWidth() == 1) {
-            getTerminal().writeToStdOut((char) 32);
-            getTerminal().writeToStdOut((char) 13);
+            out().print((char) 32);
+            out().print((char) 13);
         }
 
         // if we insert somewhere other than the end of the line we need to redraw from cursor
@@ -918,12 +926,13 @@ public class Console {
                     totalRows--;
 
                 if(ansiCurrentRow+(totalRows-currentRow) > getTerminal().getSize().getHeight()) {
-                    getTerminal().writeToStdOut(Buffer.printAnsi("1S")); //adding a line
-                    getTerminal().writeToStdOut(Buffer.printAnsi("1A")); // moving up a line
+                    out().print(Buffer.printAnsi("1S")); //adding a line
+                    out().print(Buffer.printAnsi("1A")); // moving up a line
                 }
             }
             redrawLine();
         }
+        out().flush();
     }
 
     /**
@@ -1038,12 +1047,12 @@ public class Console {
         if(editMode.getMode() == Mode.VI &&
                 (editMode.getCurrentAction() == Action.MOVE ||
                         editMode.getCurrentAction() == Action.DELETE)) {
-
-            getTerminal().writeToStdOut(buffer.move(where, getTerminal().getSize().getWidth(), true));
+            out().print(buffer.move(where, getTerminal().getSize().getWidth(), true));
         }
         else {
-            getTerminal().writeToStdOut(buffer.move(where, getTerminal().getSize().getWidth()));
+            out().print(buffer.move(where, getTerminal().getSize().getWidth()));
         }
+        out().flush();
     }
 
     private void redrawLine() throws IOException {
@@ -1068,29 +1077,28 @@ public class Console {
                         +", delta:"+buffer.getDelta() +", buffer:"+buffer.getLine());
             }
 
-            getTerminal().writeToStdOut(ANSI.saveCursor()); //save cursor
+            out().print(ANSI.saveCursor()); //save cursor
 
             if(currentRow > 0)
                 for(int i=0; i<currentRow; i++)
-                    getTerminal().writeToStdOut(Buffer.printAnsi("A")); //move to top
+                    out().print(Buffer.printAnsi("A")); //move to top
 
-            getTerminal().writeToStdOut(Buffer.printAnsi("0G")); //clear
+            out().print(Buffer.printAnsi("0G")); //clear
 
-            //getTerminal().writeToStdOut(line);
             if(!buffer.isPromptDisabled())
                 displayPrompt();
-            getTerminal().writeToStdOut(buffer.getLine());
+            out().print(buffer.getLine());
             //if the current line.length < compared to previous we add spaces to the end
             // to overwrite the old chars (wtb a better way of doing this)
             if(buffer.getDelta() < 0) {
                 StringBuilder sb = new StringBuilder();
                 for(int i=0; i > buffer.getDelta(); i--)
                     sb.append(' ');
-                getTerminal().writeToStdOut(sb.toString());
+                out().print(sb.toString());
             }
 
             // move cursor to saved pos
-            getTerminal().writeToStdOut(ANSI.restoreCursor());
+            out().print(ANSI.restoreCursor());
         }
         // only clear the current line
         else {
@@ -1103,12 +1111,13 @@ public class Console {
             }
             */
             //save cursor, move the cursor to the beginning, reset line
-            getTerminal().writeToStdOut(resetLineAndSetCursorToStart);
+            out().print(resetLineAndSetCursorToStart);
             if(!buffer.isPromptDisabled())
                 displayPrompt();
             //write line and restore cursor
-            getTerminal().writeToStdOut(buffer.getLine()+ANSI.restoreCursor());
+            out().print(buffer.getLine()+ANSI.restoreCursor());
         }
+        out().flush();
     }
 
     private void printSearch(String searchTerm, String result) throws IOException {
@@ -1125,12 +1134,13 @@ public class Console {
         out.append(result);
         buffer.disablePrompt(true);
         moveCursor(-buffer.getCursor());
-        getTerminal().writeToStdOut(ANSI.moveCursorToBeginningOfLine());
-        getTerminal().writeToStdOut(ANSI.getStart() + "2K");
+        out().print(ANSI.moveCursorToBeginningOfLine());
+        out().print(ANSI.getStart() + "2K");
         setBufferLine(out.toString());
         moveCursor(cursor);
         drawLine(buffer.getLine());
         buffer.disablePrompt(false);
+        out().flush();
     }
 
     /**
@@ -1140,7 +1150,7 @@ public class Console {
      */
     private void printNewline() throws IOException {
         moveCursor(buffer.totalLength());
-        getTerminal().writeToStdOut(Config.getLineSeparator());
+        out().println();
     }
 
     /**
@@ -1249,7 +1259,8 @@ public class Console {
                     }
                     else {
                         askDisplayCompletion = true;
-                        getTerminal().writeToStdOut(Config.getLineSeparator() + "Display all " + completions.size() + " possibilities? (y or n)");
+                        out().print(Config.getLineSeparator() + "Display all " + completions.size() + " possibilities? (y or n)");
+                        out().flush();
                     }
                 }
                 // display all
@@ -1275,17 +1286,17 @@ public class Console {
         if(completion.startsWith(buffer.getLine())) {
             performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
             buffer.write(completion);
-            getTerminal().writeToStdOut(completion);
+            out().print(completion);
 
             //only append space if its an actual complete, not a partial
         }
         else {
             buffer.write(completion);
-            getTerminal().writeToStdOut(completion);
+            out().print(completion);
         }
         if(appendSpace) { // && fullCompletion.startsWith(buffer.getLine())) {
             buffer.write(separator);
-            getTerminal().writeToStdOut(separator);
+            out().print(separator);
         }
 
         redrawLine();
@@ -1302,20 +1313,24 @@ public class Console {
         int oldCursorPos = buffer.getCursor();
         printNewline();
         buffer.setCursor(oldCursorPos);
-        getTerminal().writeToStdOut(Parser.formatDisplayList(completions,
+        out().print(Parser.formatDisplayList(completions,
                 getTerminal().getSize().getHeight(), getTerminal().getSize().getWidth()));
         displayPrompt();
-        getTerminal().writeToStdOut(buffer.getLine());
+        out().print(buffer.getLine());
+        out().flush();
         //if we do a complete and the cursor is not at the end of the
         //buffer we need to move it to the correct place
+        out().flush();
         syncCursor();
     }
 
     private void syncCursor() throws IOException {
-        if(buffer.getCursor() != buffer.getLine().length())
-            getTerminal().writeToStdOut(Buffer.printAnsi((
+        if(buffer.getCursor() != buffer.getLine().length()) {
+            out().print(Buffer.printAnsi((
                     Math.abs(buffer.getCursor() -
                             buffer.getLine().length()) + "D")));
+            out().flush();
+        }
 
     }
 
@@ -1347,14 +1362,15 @@ public class Console {
         if(!Config.isOSPOSIXCompatible())
             printNewline();
         //first clear console
-        getTerminal().writeToStdOut(ANSI.clearScreen());
+        out().print(ANSI.clearScreen());
         //move cursor to correct position
-        getTerminal().writeToStdOut(Buffer.printAnsi("1;1H"));
-        //then writeToStdOut prompt
+        out().print(Buffer.printAnsi("1;1H"));
+        //then write prompt
         if(includeBuffer) {
             displayPrompt();
-            getTerminal().writeToStdOut(buffer.getLine());
+            out().print(buffer.getLine());
         }
+        out().flush();
     }
 
     private ConsoleOutput parseCurrentOperation() throws IOException {
@@ -1482,6 +1498,7 @@ public class Console {
                 String out = aliasManager.parseAlias(output.getBuffer().trim());
                 if(out != null) {
                     out().print(out);
+                    out().flush();
                 }
                 //empty output, will result
                 return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, null));
@@ -1489,8 +1506,10 @@ public class Console {
             else if(settings.isAliasEnabled() &&
                     output.getBuffer().startsWith(InternalCommands.UNALIAS.getCommand())) {
                 String out = aliasManager.removeAlias(output.getBuffer().trim());
-                if(out != null)
+                if(out != null) {
                     out().print(out);
+                    out().flush();
+                }
 
                 return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, null));
             }
