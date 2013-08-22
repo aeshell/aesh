@@ -31,9 +31,6 @@ public class DefaultValueOptionCompleter implements OptionCompleter {
             }
         }
 
-        if(completerData.getCompleterValues().size() == 1 && completeValue.length() > 0)
-            completerData.setOffset(completeValue.length());
-
         return completerData;
     }
 }

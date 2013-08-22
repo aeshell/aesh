@@ -21,7 +21,6 @@ import java.util.List;
 public class CompleterData {
 
     private List<String> completerValues;
-    private int offset;
     private boolean appendSpace = true;
 
     public CompleterData() {
@@ -32,13 +31,8 @@ public class CompleterData {
         this.completerValues = completerValues;
     }
 
-    public CompleterData(List<String> completerValues, int offset) {
+    public CompleterData(List<String> completerValues, boolean appendSpace) {
         this(completerValues);
-        this.offset = offset;
-    }
-
-    public CompleterData(List<String> completerValues, int offset, boolean appendSpace) {
-        this(completerValues, offset);
         this.appendSpace = appendSpace;
     }
 
@@ -56,14 +50,6 @@ public class CompleterData {
 
     public void addCompleterValue(String value) {
         this.completerValues.add(value);
-    }
-
-    public int getOffset() {
-        return offset;
-    }
-
-    public void setOffset(int offset) {
-        this.offset = offset;
     }
 
     public boolean isAppendSpace() {

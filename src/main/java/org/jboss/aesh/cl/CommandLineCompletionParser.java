@@ -8,6 +8,7 @@ package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.DefaultValueOptionCompleter;
+import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.aesh.cl.exception.ArgumentParserException;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
@@ -204,10 +205,10 @@ public class CommandLineCompletionParser {
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
                 if(completions.getCompleterValues().size() == 1) {
-                    if(completions.getOffset() > 0)
-                       completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
-                    else
+                    if(currentOption.getCompleter() instanceof FileOptionCompleter)
                         completeOperation.setOffset( completeOperation.getCursor());
+                    else
+                        completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -219,10 +220,10 @@ public class CommandLineCompletionParser {
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
                 if(completions.getCompleterValues().size() == 1) {
-                    if(completions.getOffset() > 0)
-                       completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
-                    else
+                    if(currentOption.getCompleter() instanceof FileOptionCompleter)
                         completeOperation.setOffset( completeOperation.getCursor());
+                    else
+                        completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -242,12 +243,11 @@ public class CommandLineCompletionParser {
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
                 if(completions.getCompleterValues().size() == 1) {
-                    if(completions.getOffset() > 0)
-                        completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
-                    else
+                    if(parser.getCommand().getArgument().getCompleter() instanceof FileOptionCompleter)
                         completeOperation.setOffset( completeOperation.getCursor());
+                    else
+                        completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
 
-                    //completeOperation.setOffset( completions.getOffset() + rest.length());
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
 
@@ -258,7 +258,15 @@ public class CommandLineCompletionParser {
                         new DefaultValueOptionCompleter(
                                 parser.getCommand().getArgument().getDefaultValues()).complete(completeObject.getValue());
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
-                completeOperation.setOffset( (completeOperation.getBuffer().length()-completeObject.getValue().length()));
+
+                if(completions.getCompleterValues().size() == 1) {
+                    if(parser.getCommand().getArgument().getCompleter() instanceof FileOptionCompleter)
+                        completeOperation.setOffset( completeOperation.getCursor());
+                    else
+                        completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
+
+                    completeOperation.doAppendSeparator( completions.isAppendSpace());
+                }
                 completeOperation.doAppendSeparator( completions.isAppendSpace());
             }
         }

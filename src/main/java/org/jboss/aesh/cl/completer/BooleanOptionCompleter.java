@@ -20,12 +20,10 @@ public class BooleanOptionCompleter implements OptionCompleter {
         }
         else if("true".startsWith( completeValue.toLowerCase())) {
             completerData.addCompleterValue("true");
-            completerData.setOffset(completeValue.length());
 
         }
         else if("false".startsWith( completeValue.toLowerCase())) {
             completerData.addCompleterValue("false");
-            completerData.setOffset(completeValue.length());
         }
 
         return completerData;
