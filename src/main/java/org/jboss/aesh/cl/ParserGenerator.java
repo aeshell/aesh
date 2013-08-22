@@ -113,6 +113,10 @@ public class ParserGenerator {
         return new ParserBuilder().parameter(commandInt).generateParser();
     }
 
+    public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException {
+        generateCommandLineParser(instance.getClass()).populateObject(instance, input);
+    }
+
     private boolean inheritCollection(Class clazz) {
         if(clazz.getSuperclass() == null) {
         }
