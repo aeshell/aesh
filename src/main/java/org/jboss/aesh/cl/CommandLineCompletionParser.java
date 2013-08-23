@@ -40,13 +40,14 @@ public class CommandLineCompletionParser {
      * @return ParsedCompleteObject
      */
     public ParsedCompleteObject findCompleteObject(String line) throws CommandLineParserException {
-
         //first we check if it could be a param
         if(Parser.findIfWordEndWithSpace(line)) {
             //check if we try to complete just after the command name
             if(line.trim().equals(parser.getCommand().getName())) {
-                if(parser.getCommand().getArgument() == null)
-                    throw new ArgumentParserException("Trying to complete arguments when none are defined.");
+                if(parser.getCommand().getArgument() == null) {
+                    //basically an empty string except command name
+                    return new ParsedCompleteObject(false, "", 0);
+                }
                 return new ParsedCompleteObject(null, "", parser.getCommand().getArgument().getType(), false);
             }
 

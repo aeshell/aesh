@@ -96,6 +96,13 @@ public class ParseCompleteObjectTest extends TestCase {
         assertEquals(Boolean.class, pco.getType());
         assertTrue(pco.isOption());
 
+        pco = completeParser.findCompleteObject("test ");
+        assertFalse(pco.isOption());
+        assertFalse(pco.isCompleteOptionName());
+        assertFalse(pco.isArgument());
+        assertFalse(pco.doDisplayOptions());
+
+
     }
 }
 @CommandDefinition(name = "test", description = "a simple test")
