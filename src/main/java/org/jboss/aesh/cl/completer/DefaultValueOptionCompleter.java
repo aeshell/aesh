@@ -23,7 +23,7 @@ public class DefaultValueOptionCompleter implements OptionCompleter {
     public CompleterData complete(String completeValue) {
         CompleterData completerData = new CompleterData();
         if(completeValue == null || completeValue.length() == 0)
-            completerData.addCompleterValue(defaultValues.get(0));
+            completerData.addAllCompleterValues(defaultValues);
         else {
             for(String value : defaultValues) {
                 if(value.startsWith(completeValue))

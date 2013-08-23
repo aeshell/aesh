@@ -100,7 +100,7 @@ public class ParseCompleteObjectTest extends TestCase {
         assertFalse(pco.isOption());
         assertFalse(pco.isCompleteOptionName());
         assertFalse(pco.isArgument());
-        assertFalse(pco.doDisplayOptions());
+        assertTrue(pco.doDisplayOptions());
 
 
     }

@@ -9,7 +9,6 @@ package org.jboss.aesh.cl;
 import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.DefaultValueOptionCompleter;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;
-import org.jboss.aesh.cl.exception.ArgumentParserException;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.complete.CompleteOperation;
@@ -46,7 +45,7 @@ public class CommandLineCompletionParser {
             if(line.trim().equals(parser.getCommand().getName())) {
                 if(parser.getCommand().getArgument() == null) {
                     //basically an empty string except command name
-                    return new ParsedCompleteObject(false, "", 0);
+                    return new ParsedCompleteObject(true, "", 0);
                 }
                 return new ParsedCompleteObject(null, "", parser.getCommand().getArgument().getType(), false);
             }
