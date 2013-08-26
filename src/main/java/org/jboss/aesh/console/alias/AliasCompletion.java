@@ -8,7 +8,7 @@ package org.jboss.aesh.console.alias;
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
-import org.jboss.aesh.util.Parser;
+import org.jboss.aesh.parser.Parser;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

@@ -4,7 +4,7 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.util;
+package org.jboss.aesh.parser;
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Config;
@@ -252,7 +252,7 @@ public class Parser {
         return originalText;
     }
 
-    public static List<String> findAllWords(String text) {
+    public static AeshLine findAllWords(String text) {
         List<String> textList = new ArrayList<String>();
         Matcher matcher = lineBreakerPattern.matcher(text);
         String buffer = null;
@@ -284,11 +284,11 @@ public class Parser {
                 matcher = lineBreakerPattern.matcher(text);
             }
             else if(matcher.group(3) != null) {
-                throw new IllegalArgumentException("Parser error: unclosed quote");
+                return new AeshLine(null, true, "Parser error: unclosed quote");
 
             }
             else if(matcher.group(4) != null) {
-                throw new IllegalArgumentException("Parser error: unclosed quote");
+                return new AeshLine(null, true, "Parser error: unclosed quote");
             }
             // space
             else if(matcher.group(5) != null) {
@@ -335,7 +335,7 @@ public class Parser {
                 textList.add(text);
         }
 
-        return textList;
+        return new AeshLine(textList, false, null);
     }
 
     public static boolean doWordContainOnlyEscapedSpace(String word) {

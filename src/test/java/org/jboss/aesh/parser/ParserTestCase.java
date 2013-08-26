@@ -4,10 +4,12 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.util;
+package org.jboss.aesh.parser;
 
 import junit.framework.TestCase;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.parser.AeshLine;
+import org.jboss.aesh.parser.Parser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,53 +92,43 @@ public class ParserTestCase extends TestCase {
     }
 
     public void testFindAllWords() {
-        List<String> words = Parser.findAllWords("   foo bar\\ baz 12345 ");
-        assertEquals("foo", words.get(0));
-        assertEquals("bar baz", words.get(1));
-        assertEquals("12345", words.get(2));
+        AeshLine line = Parser.findAllWords("   foo bar\\ baz 12345 ");
+        assertEquals("foo", line.getWords().get(0));
+        assertEquals("bar baz", line.getWords().get(1));
+        assertEquals("12345", line.getWords().get(2));
 
-        words = Parser.findAllWords("man < foo\\ bar ");
-        assertEquals("man", words.get(0));
-        assertEquals("<", words.get(1));
-        assertEquals("foo bar", words.get(2));
+        line = Parser.findAllWords("man < foo\\ bar ");
+        assertEquals("man", line.getWords().get(0));
+        assertEquals("<", line.getWords().get(1));
+        assertEquals("foo bar", line.getWords().get(2));
     }
 
     public void testFindAllQuotedWords() {
-        List<String> words = Parser.findAllWords("foo bar \"baz 12345\"");
-        assertEquals("foo", words.get(0));
-        assertEquals("bar", words.get(1));
-        assertEquals("baz 12345", words.get(2));
+        AeshLine line = Parser.findAllWords("foo bar \"baz 12345\"");
+        assertEquals("foo", line.getWords().get(0));
+        assertEquals("bar", line.getWords().get(1));
+        assertEquals("baz 12345", line.getWords().get(2));
 
-        words = Parser.findAllWords("java -cp \"foo/bar\" \"Example\"");
-        assertEquals("foo/bar", words.get(2));
-        assertEquals("Example", words.get(3));
+        line = Parser.findAllWords("java -cp \"foo/bar\" \"Example\"");
+        assertEquals("foo/bar", line.getWords().get(2));
+        assertEquals("Example", line.getWords().get(3));
 
-        words = Parser.findAllWords("'foo/bar/' Example\\ 1");
-        assertEquals("foo/bar/", words.get(0));
-        assertEquals("Example 1", words.get(1));
+        line = Parser.findAllWords("'foo/bar/' Example\\ 1");
+        assertEquals("foo/bar/", line.getWords().get(0));
+        assertEquals("Example 1", line.getWords().get(1));
 
-        words = Parser.findAllWords("man -f='foo/bar/' Example\\ 1 foo");
-        assertEquals("man", words.get(0));
-        assertEquals("-f=foo/bar/", words.get(1));
-        assertEquals("Example 1", words.get(2));
-        assertEquals("foo", words.get(3));
+        line = Parser.findAllWords("man -f='foo/bar/' Example\\ 1 foo");
+        assertEquals("man", line.getWords().get(0));
+        assertEquals("-f=foo/bar/", line.getWords().get(1));
+        assertEquals("Example 1", line.getWords().get(2));
+        assertEquals("foo", line.getWords().get(3));
 
 
-        try {
-            Parser.findAllWords("man -f='foo/bar/ Example\\ 1");
-            assertTrue(false);
-        }
-        catch (IllegalArgumentException iae) {
-            assertTrue(true);
-        }
+        line = Parser.findAllWords("man -f='foo/bar/ Example\\ 1");
+        assertTrue(line.hasError());
 
-        try {
-            Parser.findAllWords("man -f='foo/bar/' Example\\ 1\"");
-            assertTrue(false);
-        }
-        catch (IllegalArgumentException iae) {
-            assertTrue(true);
-        }
+        line = Parser.findAllWords("man -f='foo/bar/' Example\\ 1\"");
+        assertTrue(line.hasError());
     }
 
     public void testSplitBySizeKeepWords() {

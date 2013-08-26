@@ -8,6 +8,7 @@ package org.jboss.aesh.util;
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.parser.Parser;
 
 import java.io.File;
 import java.io.FileFilter;
