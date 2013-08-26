@@ -14,7 +14,7 @@ import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Command;
 import org.jboss.aesh.util.LoggerUtil;
-import org.jboss.aesh.util.Parser;
+import org.jboss.aesh.parser.Parser;
 
 import java.util.logging.Logger;
 
@@ -123,13 +123,16 @@ public class CommandLineCompletionParser {
                     cl.getArgument().getType(), false);
         }
         //get the last option
-        else {
+        else if (cl.getOptions() != null && cl.getOptions().size() > 0) {
             OptionInt po = cl.getOptions().get(cl.getOptions().size()-1);
             if(po.isLongNameUsed() || (po.getShortName() == null || po.getShortName().length() < 1))
                 return new ParsedCompleteObject(po.getName(), endsWithSpace ? "" : po.getValue(), po.getType(), true);
             else
                 return new ParsedCompleteObject( po.getShortName(), endsWithSpace ? "" : po.getValue(), po.getType(), true);
         }
+        //probably something wrong with the parser
+        else
+            return new ParsedCompleteObject(true, "", 0);
     }
 
     public void injectValuesAndComplete(ParsedCompleteObject completeObject, Command command,
@@ -141,12 +144,7 @@ public class CommandLineCompletionParser {
                 completeOperation.addCompletionCandidate("");
             }
             else {
-                try {
-                    parser.parse(completeOperation.getBuffer(), true, true);
-                }
-                catch (CommandLineParserException e) {
-                   //ignored, shouldnt happen
-                }
+                parser.parse(completeOperation.getBuffer(), true);
                 //we have partial/full name
                 if(completeObject.getName() != null && completeObject.getName().length() > 0) {
                     if(parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName()).size() > 0) {

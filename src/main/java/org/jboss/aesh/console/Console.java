@@ -33,6 +33,7 @@ import org.jboss.aesh.history.FileHistory;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.InMemoryHistory;
 import org.jboss.aesh.history.SearchDirection;
+import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.terminal.TerminalSize;
@@ -41,11 +42,9 @@ import org.jboss.aesh.undo.UndoManager;
 import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.FileUtils;
 import org.jboss.aesh.util.LoggerUtil;
-import org.jboss.aesh.util.Parser;
+import org.jboss.aesh.parser.Parser;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -265,6 +264,11 @@ public class Console {
         }
     }
 
+    //TODO:
+    public OutputStream in() {
+        return null;
+    }
+
     /**
      * Add a Completion to the completion list
      *
@@ -338,7 +342,7 @@ public class Console {
      * @param cc command
      * @throws IOException stream
      */
-    protected void attachProcess(ConsoleCommand cc) throws IOException {
+    protected void attachProcess(ConsoleCommand cc) {
         command = cc;
     }
 
@@ -1447,11 +1451,11 @@ public class Console {
             if(operations.size() > 0) {
                 ConsoleOperation nextOperation = operations.remove(0);
                 if( nextOperation.getBuffer().length() > 0) {
-                    List<String> files = Parser.findAllWords(nextOperation.getBuffer());
+                    AeshLine line = Parser.findAllWords(nextOperation.getBuffer());
                     currentOperation = new ConsoleOperation(nextOperation.getControlOperator(), op.getBuffer());
                     try {
                         output = new ConsoleOutput(new ConsoleOperation(nextOperation.getControlOperator(),op.getBuffer()),
-                                FileUtils.readFile(new File(Parser.switchEscapedSpacesToSpacesInWord(files.get(0)))),
+                                FileUtils.readFile(new File(Parser.switchEscapedSpacesToSpacesInWord(line.getWords().get(0)))),
                                 redirectPipeErrBuffer.toString());
                     }
                     //if we get any io error reading the file:
@@ -1544,8 +1548,8 @@ public class Console {
     }
 
     private void persistRedirection(String fileName, ControlOperator redirection) throws IOException {
-        List<String> fileNames = Parser.findAllWords(fileName);
-        if(fileNames.size() > 1) {
+        AeshLine line = Parser.findAllWords(fileName);
+        if(line.getWords().size() > 1) {
             if(settings.isLogging())
                 logger.info(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
             err().print(settings.getName() + ": can't redirect to more than one file." + Config.getLineSeparator());
@@ -1553,7 +1557,7 @@ public class Console {
         }
         //this is safe since we check that buffer do contain text earlier
         else {
-            fileName = fileNames.get(0);
+            fileName = line.getWords().get(0);
             if(fileName.startsWith("~/")) {
                 fileName = Config.getHomeDir()+fileName.substring(1);
             }

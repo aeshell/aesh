@@ -14,6 +14,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.File;
 import java.util.Currency;
 
 import static junit.framework.Assert.assertNotNull;
@@ -135,7 +136,7 @@ public class CommandLinePopulatorTest {
 
             assertNotNull(test4.getArguments());
             assertEquals(2, test4.getArguments().size());
-            assertTrue(test4.getArguments().contains("test4.txt"));
+            assertTrue(test4.getArguments().contains(new File("test2.txt")));
         }
         catch (CommandLineParserException e) {
         }

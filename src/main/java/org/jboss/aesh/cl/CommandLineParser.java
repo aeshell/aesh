@@ -12,7 +12,8 @@ import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.exception.RequiredOptionException;
 import org.jboss.aesh.cl.internal.CommandInt;
 import org.jboss.aesh.cl.internal.OptionInt;
-import org.jboss.aesh.util.Parser;
+import org.jboss.aesh.parser.AeshLine;
+import org.jboss.aesh.parser.Parser;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -65,9 +66,8 @@ public class CommandLineParser {
      *
      * @param line input
      * @return CommandLine
-     * @throws CommandLineParserException
      */
-    public CommandLine parse(String line) throws CommandLineParserException {
+    public CommandLine parse(String line) {
         return parse(line, false);
     }
 
@@ -86,42 +86,35 @@ public class CommandLineParser {
      * @return CommandLine
      * @throws CommandLineParserException
      */
-    public CommandLine parse(String line, boolean ignoreMissingRequirements) throws CommandLineParserException {
-        List<String> lines = Parser.findAllWords(line);
-        if(lines.size() > 0) {
-            if(command.getName().equals(lines.get(0)))
-                return doParse(lines, ignoreMissingRequirements, false);
+    public CommandLine parse(String line, boolean ignoreMissingRequirements) {
+        AeshLine aeshLine = Parser.findAllWords(line);
+        if(aeshLine.getWords().size() > 0) {
+            if(command.getName().equals(aeshLine.getWords().get(0)))
+                return doParse(aeshLine.getWords(), ignoreMissingRequirements);
         }
-        throw new CommandLineParserException("Command:"+ command +", not found in: "+line);
+        else if(aeshLine.hasError())
+            return new CommandLine(new CommandLineParserException(aeshLine.getErrorMessage()));
+
+        return new CommandLine(new CommandLineParserException("Command:"+ command +", not found in: "+line));
     }
 
-    public CommandLine parse(String line, boolean ignoreMissingRequirements,
-                             boolean ignoreExceptions) throws CommandLineParserException {
-        List<String> lines = Parser.findAllWords(line);
-        if(lines.size() > 0) {
-            if(command.getName().equals(lines.get(0)))
-                return doParse(lines, ignoreMissingRequirements, ignoreExceptions);
-        }
-        throw new CommandLineParserException("Command:"+ command +", not found in: "+line);
-    }
-
-    private CommandLine doParse(List<String> lines,
-                                boolean ignoreMissing, boolean ignoreException) throws CommandLineParserException {
+    private CommandLine doParse(List<String> lines, boolean ignoreMissing) {
         command.clear();
         CommandLine commandLine = new CommandLine();
         if(command.hasArgument())
             commandLine.setArgument(command.getArgument());
         OptionInt active = null;
         boolean addedArgument = false;
-        try {
             //skip first entry since that's the name of the command
             for(int i=1; i < lines.size(); i++) {
                 String parseLine = lines.get(i);
                 //name
                 if(parseLine.startsWith("--")) {
                     //make sure that we dont have any "active" options lying around
-                    if(active != null)
-                        throw new OptionParserException("Option: "+active.getDisplayName()+" must be given a value");
+                    if(active != null) {
+                        commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
+                        break;
+                    }
 
                     active = findLongOption(command, parseLine.substring(2));
                     if(active != null)
@@ -129,72 +122,78 @@ public class CommandLineParser {
                     if(active != null && active.isProperty()) {
                         if(parseLine.length() <= (2+active.getName().length()) ||
                                 !parseLine.contains(EQUALS))
-                            throw new OptionParserException(
-                                    "Option "+active.getDisplayName()+", must be part of a property");
-
-                        String name =
-                                parseLine.substring(2+active.getName().length(),
-                                        parseLine.indexOf(EQUALS));
-                        String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
-                        if(value.length() < 1)
-                            throw new OptionParserException("Option "+active.getDisplayName()+", must have a value");
-
-                        active.addProperty(name, value);
-                        commandLine.addOption(active);
-                        active = null;
-                        if(addedArgument)
-                            throw new ArgumentParserException("An argument was given to an option that do not support it.");
+                            commandLine.setParserException(new OptionParserException(
+                                    "Option "+active.getDisplayName()+", must be part of a property"));
+                        else {
+                            String name =
+                                    parseLine.substring(2+active.getName().length(),
+                                            parseLine.indexOf(EQUALS));
+                            String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
+                            if(value.length() < 1)
+                                commandLine.setParserException(new OptionParserException("Option "+active.getDisplayName()+", must have a value"));
+                            else {
+                                active.addProperty(name, value);
+                                commandLine.addOption(active);
+                                active = null;
+                                if(addedArgument)
+                                    commandLine.setParserException(new ArgumentParserException("An argument was given to an option that do not support it."));
+                            }
+                        }
                     }
                     else if(active != null && (!active.hasValue() || active.getValue() != null)) {
                         active.addValue("true");
                         commandLine.addOption(active);
                         active = null;
                         if(addedArgument)
-                            throw new ArgumentParserException("An argument was given to an option that do not support it.");
+                            commandLine.setParserException(new ArgumentParserException("An argument was given to an option that do not support it."));
                     }
                     else if(active == null)
-                        throw new OptionParserException("Option: "+parseLine+" is not a valid option for this command");
+                        commandLine.setParserException(new OptionParserException("Option: "+parseLine+" is not a valid option for this command"));
                 }
                 //name
                 else if(parseLine.startsWith("-")) {
                     //make sure that we dont have any "active" options lying around
                     if(active != null)
-                        throw new OptionParserException("Option: "+active.getDisplayName()+" must be given a value");
-                    if(parseLine.length() != 2 && !parseLine.contains("="))
-                        throw new OptionParserException("Option: - must be followed by a valid operator");
+                        commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
+                    else if(parseLine.length() != 2 && !parseLine.contains("="))
+                        commandLine.setParserException(new OptionParserException("Option: - must be followed by a valid operator"));
+                    else {
+                        active = findOption(command, parseLine.substring(1));
+                        if(active != null)
+                            active.setLongNameUsed(false);
 
-                    active = findOption(command, parseLine.substring(1));
-                    if(active != null)
-                        active.setLongNameUsed(false);
+                        if(active != null && active.isProperty()) {
+                            if(parseLine.length() <= 2 ||
+                                    !parseLine.contains(EQUALS))
+                                commandLine.setParserException(new OptionParserException(
+                                        "Option "+active.getDisplayName()+", must be part of a property"));
+                            else {
+                                String name =
+                                        parseLine.substring(2, // 2+char.length
+                                                parseLine.indexOf(EQUALS));
+                                String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
+                                if(value.length() < 1)
+                                    commandLine.setParserException( new OptionParserException("Option "+active.getDisplayName()+", must have a value"));
+                                else {
+                                    active.addProperty(name, value);
+                                    commandLine.addOption(active);
+                                    active = null;
+                                    if(addedArgument)
+                                        commandLine.setParserException( new OptionParserException("An argument was given to an option that do not support it."));
+                                }
+                            }
+                        }
 
-                    if(active != null && active.isProperty()) {
-                        if(parseLine.length() <= 2 ||
-                                !parseLine.contains(EQUALS))
-                            throw new OptionParserException(
-                                    "Option "+active.getDisplayName()+", must be part of a property");
-                        String name =
-                                parseLine.substring(2, // 2+char.length
-                                        parseLine.indexOf(EQUALS));
-                        String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
-                        if(value.length() < 1)
-                            throw new OptionParserException("Option "+active.getDisplayName()+", must have a value");
-
-                        active.addProperty(name, value);
-                        commandLine.addOption(active);
-                        active = null;
-                        if(addedArgument)
-                            throw new OptionParserException("An argument was given to an option that do not support it.");
+                        else if(active != null && (!active.hasValue() || active.getValue() != null)) {
+                            active.addValue("true");
+                            commandLine.addOption(active);
+                            active = null;
+                            if(addedArgument)
+                                commandLine.setParserException(new OptionParserException("An argument was given to an option that do not support it."));
+                        }
+                        else if(active == null)
+                            commandLine.setParserException(new OptionParserException("Option: "+parseLine+" is not a valid option for this command"));
                     }
-
-                    else if(active != null && (!active.hasValue() || active.getValue() != null)) {
-                        active.addValue("true");
-                        commandLine.addOption(active);
-                        active = null;
-                        if(addedArgument)
-                            throw new OptionParserException("An argument was given to an option that do not support it.");
-                    }
-                    else if(active == null)
-                        throw new OptionParserException("Option: "+parseLine+" is not a valid option for this command");
                 }
                 else if(active != null) {
                     if(active.hasMultipleValues()) {
@@ -210,12 +209,12 @@ public class CommandLineParser {
                     commandLine.addOption(active);
                     active = null;
                     if(addedArgument)
-                        throw new OptionParserException("An argument was given to an option that do not support it.");
+                        commandLine.setParserException(new OptionParserException("An argument was given to an option that do not support it."));
                 }
                 //if no command is "active", we add it as an argument
                 else {
                     if(command.getArgument() == null) {
-                        throw new OptionParserException("An argument was given to a command that do not support it.");
+                        commandLine.setParserException(new OptionParserException("An argument was given to a command that do not support it."));
                     }
                     else {
                         commandLine.addArgumentValue(parseLine);
@@ -223,26 +222,22 @@ public class CommandLineParser {
                     }
                 }
             }
-        }
-        catch(CommandLineParserException clipe) {
-            if(ignoreException)
-                return commandLine;
-            else
-                throw clipe;
-        }
 
         if(active != null && ignoreMissing) {
             commandLine.addOption(active);
         }
 
         //this will throw and CommandLineParserException if needed
-        if(!ignoreMissing)
-            checkForMissingRequiredOptions(command, commandLine);
+        if(!ignoreMissing) {
+            RequiredOptionException re = checkForMissingRequiredOptions(command, commandLine);
+            if(re != null)
+                commandLine.setParserException(re);
+        }
 
         return commandLine;
     }
 
-    private void checkForMissingRequiredOptions(CommandInt command, CommandLine commandLine) throws CommandLineParserException {
+    private RequiredOptionException checkForMissingRequiredOptions(CommandInt command, CommandLine commandLine) {
         for(OptionInt o : command.getOptions())
             if(o.isRequired()) {
                 boolean found = false;
@@ -252,8 +247,9 @@ public class CommandLineParser {
                         found = true;
                 }
                 if(!found)
-                    throw new RequiredOptionException("Option: "+o.getDisplayName()+" is required for this command.");
+                    return new RequiredOptionException("Option: "+o.getDisplayName()+" is required for this command.");
             }
+        return null;
     }
 
     private OptionInt findOption(CommandInt command, String line) {
@@ -300,6 +296,8 @@ public class CommandLineParser {
 
     public void populateObject(Object instance, String line) throws CommandLineParserException {
         CommandLine cl = parse(line);
+        if(cl.hasParserError())
+            throw cl.getParserException();
         for(OptionInt option: command.getOptions()) {
             if(cl.hasOption(option.getName()))
                 cl.getOption(option.getName()).injectValueIntoField(instance);

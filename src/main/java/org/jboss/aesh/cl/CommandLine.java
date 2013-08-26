@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.OptionInt;
 
@@ -26,9 +27,17 @@ public class CommandLine {
 
     private List<OptionInt> options;
     private OptionInt argument;
+    private boolean parserError;
+    private CommandLineParserException parserException;
 
     public CommandLine() {
         options = new ArrayList<OptionInt>();
+    }
+
+    public CommandLine(CommandLineParserException parserException) {
+        this();
+        if(parserException != null)
+            setParserException(parserException);
     }
 
     public CommandLine(OptionInt argument) {
@@ -36,7 +45,7 @@ public class CommandLine {
         this.argument = argument;
     }
 
-    public void addOption(OptionInt option) throws OptionParserException {
+    public void addOption(OptionInt option) {
         OptionInt existingOption = getOption(option.getShortName());
         if (existingOption == null) {
             options.add(option);
@@ -44,8 +53,10 @@ public class CommandLine {
         else {
             if((existingOption.getProperties() == null ||
                     existingOption.getProperties().size() == 0) ||
-            (option.getProperties() == null || existingOption.getProperties().size() == 0))
-                throw new OptionParserException("Not allowed to specify the same option ("+option.getDisplayName()+") twice");
+            (option.getProperties() == null || existingOption.getProperties().size() == 0)) {
+                setParserError(true);
+                setParserException( new OptionParserException("Not allowed to specify the same option ("+option.getDisplayName()+") twice"));
+            }
             else
                 existingOption.getProperties().putAll(option.getProperties());
         }
@@ -133,6 +144,24 @@ public class CommandLine {
         }
 
         return new HashMap<String, String>();
+    }
+
+    public boolean hasParserError() {
+        return parserError;
+    }
+
+    public void setParserError(boolean error) {
+        this.parserError = error;
+    }
+
+    public CommandLineParserException getParserException() {
+        return parserException;
+    }
+
+    public void setParserException(CommandLineParserException e) {
+        this.parserException = e;
+        if(parserException != null)
+            this.parserError = true;
     }
 }
 

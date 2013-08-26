@@ -24,7 +24,7 @@ import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.reader.AeshPrintWriter;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
-import org.jboss.aesh.util.Parser;
+import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.util.ReflectionUtil;
 
 /**
@@ -122,6 +122,16 @@ public class AeshConsoleImp implements AeshConsole {
         }
     }
 
+    @Override
+    public void attachConsoleCommand(ConsoleCommand consoleCommand) {
+        console.attachProcess(consoleCommand);
+    }
+
+    @Override
+    public AeshInputStream in() {
+        return null;
+    }
+
     private CommandLineParser findCommand(String input) {
         String name = Parser.findFirstWord(input);
         for(CommandLineParser parser : commands.keySet()) {
@@ -189,7 +199,7 @@ public class AeshConsoleImp implements AeshConsole {
         }
         @Override
         public int readConsoleOutput(ConsoleOutput output) throws IOException {
-            CommandResult result = CommandResult.SUCCESS;
+            CommandResult result;
             if(output != null && output.getBuffer().trim().length() > 0) {
                 CommandLineParser calledCommand = findCommand(output.getBuffer());
                 if(calledCommand != null) {
@@ -198,7 +208,7 @@ public class AeshConsoleImp implements AeshConsole {
                         result = commands.get(calledCommand).execute(console);
                     }
                     catch (CommandLineParserException e) {
-                        console.out().println("Command failed because of error in input values: "+e.getMessage());
+                        console.out().println(e.getMessage());
                         result = CommandResult.FAILURE;
                     }
                 }

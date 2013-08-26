@@ -86,12 +86,12 @@ public class AeshExample {
 
         @Override
         public CommandResult execute(AeshConsole console) throws IOException {
-           if(foo == null)
-               console.out().println("NO FOO!");
-            else
+           if(foo != null)
                console.out().println("you set foo to: " + foo);
 
             if(files != null) {
+                for(File f : files)
+                    console.out().println(f.toString());
 
             }
             return CommandResult.SUCCESS;

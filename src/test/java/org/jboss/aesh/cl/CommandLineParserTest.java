@@ -26,87 +26,56 @@ public class CommandLineParserTest extends TestCase {
 
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(Parser1Test.class);
 
-        try {
-            CommandLine cl = parser.parse("test -f -e bar -Df=g /tmp/file.txt");
-            assertEquals("f", cl.getOptions().get(0).getShortName());
-            assertEquals("e", cl.getOptions().get(1).getShortName());
-            assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
+        CommandLine cl = parser.parse("test -f -e bar -Df=g /tmp/file.txt");
+        assertEquals("f", cl.getOptions().get(0).getShortName());
+        assertEquals("e", cl.getOptions().get(1).getShortName());
+        assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
 
-            cl = parser.parse("test -e bar -DXms=128m -DXmx=512m --X /tmp/file.txt");
-            assertEquals("e", cl.getOptions().get(0).getShortName());
-            assertEquals("bar", cl.getOptions().get(0).getValue());
-            assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
-            assertNotNull(cl.hasOption("X"));
+        cl = parser.parse("test -e bar -DXms=128m -DXmx=512m --X /tmp/file.txt");
+        assertEquals("e", cl.getOptions().get(0).getShortName());
+        assertEquals("bar", cl.getOptions().get(0).getValue());
+        assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
+        assertNotNull(cl.hasOption("X"));
 
-            Map<String,String> properties = cl.getOptionProperties("D");
-            assertEquals("128m", properties.get("Xms"));
-            assertEquals("512m", properties.get("Xmx"));
+        Map<String,String> properties = cl.getOptionProperties("D");
+        assertEquals("128m", properties.get("Xms"));
+        assertEquals("512m", properties.get("Xmx"));
 
-            cl = parser.parse("test -e=bar -DXms=128m -DXmx=512m /tmp/file.txt");
-            assertEquals("e", cl.getOptions().get(0).getShortName());
-            assertEquals("bar", cl.getOptions().get(0).getValue());
+        cl = parser.parse("test -e=bar -DXms=128m -DXmx=512m /tmp/file.txt");
+        assertEquals("e", cl.getOptions().get(0).getShortName());
+        assertEquals("bar", cl.getOptions().get(0).getValue());
 
-            cl = parser.parse("test --equal=bar -DXms=128m -DXmx=512m /tmp/file.txt");
-            assertEquals("e", cl.getOptions().get(0).getShortName());
-            assertEquals("equal", cl.getOptions().get(0).getName());
-            assertEquals("bar", cl.getOptions().get(0).getValue());
+        cl = parser.parse("test --equal=bar -DXms=128m -DXmx=512m /tmp/file.txt");
+        assertEquals("e", cl.getOptions().get(0).getShortName());
+        assertEquals("equal", cl.getOptions().get(0).getName());
+        assertEquals("bar", cl.getOptions().get(0).getValue());
 
-            cl = parser.parse("test --equal \"bar bar2\" -DXms=\"128g \" -DXmx=512g\\ m /tmp/file.txt");
-            assertEquals("bar bar2", cl.getOptionValue("equal"));
+        cl = parser.parse("test --equal \"bar bar2\" -DXms=\"128g \" -DXmx=512g\\ m /tmp/file.txt");
+        assertEquals("bar bar2", cl.getOptionValue("equal"));
 
-            assertTrue(cl.getOptionProperties("D").containsKey("Xms"));
-            assertEquals("128g ", cl.getOptionProperties("D").get("Xms"));
-            assertTrue(cl.getOptionProperties("D").containsKey("Xmx"));
-            assertEquals("512g m", cl.getOptionProperties("D").get("Xmx"));
+        assertTrue(cl.getOptionProperties("D").containsKey("Xms"));
+        assertEquals("128g ", cl.getOptionProperties("D").get("Xms"));
+        assertTrue(cl.getOptionProperties("D").containsKey("Xmx"));
+        assertEquals("512g m", cl.getOptionProperties("D").get("Xmx"));
 
-        }
-        catch (CommandLineParserException e) {
-            e.printStackTrace();
-            assertTrue(false);
-        }
-        try {
-            CommandLine cl = parser.parse("test -a /tmp/file.txt");
-            assertTrue(false);
-            cl.getArgument();
-        }
-        catch (CommandLineParserException e) {
-            assertTrue(true);
-        }
+        cl = parser.parse("test -a /tmp/file.txt");
+        assertTrue(cl.hasParserError());
 
-        try {
-            CommandLine cl = parser.parse("test -a /tmp/file.txt");
-            assertTrue(false);
-            cl.getArgument();
-        }
-        catch (CommandLineParserException e) {
-            assertTrue(true);
-        }
-        try {
-            CommandLine cl = parser.parse("test -e bar --equal bar2 -DXms=128m -DXmx=512m /tmp/file.txt");
-            assertTrue(false);
-            cl.getArgument();
-        }
-        catch (CommandLineParserException e) {
-            assertTrue(true);
-        }
+        cl = parser.parse("test -a /tmp/file.txt");
+        assertTrue(cl.hasParserError());
+        cl.getArgument();
 
-        try {
-            CommandLine cl = parser.parse("test -f -Dfoo:bar /tmp/file.txt");
-            assertTrue(false);
-            cl.getArgument();
-        }
-        catch (CommandLineParserException e) {
-            assertTrue(true);
-        }
+        cl = parser.parse("test -e bar --equal bar2 -DXms=128m -DXmx=512m /tmp/file.txt");
+        assertTrue(cl.hasParserError());
+        cl.getArgument();
 
-        try {
-            CommandLine cl = parser.parse("test -f foobar /tmp/file.txt");
-            assertTrue(false);
-            cl.getArgument();
-        }
-        catch (CommandLineParserException e) {
-            assertTrue(true);
-        }
+        cl = parser.parse("test -f -Dfoo:bar /tmp/file.txt");
+        assertTrue(cl.hasParserError());
+        cl.getArgument();
+
+        cl = parser.parse("test -f foobar /tmp/file.txt");
+        assertTrue(cl.hasParserError());
+        cl.getArgument();
 
     }
 
@@ -114,32 +83,23 @@ public class CommandLineParserTest extends TestCase {
 
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(Parser2Test.class);
 
-        try {
-            CommandLine cl = parser.parse("test -d --bar Foo.class");
-            assertTrue(cl.hasOption('d'));
-            assertFalse(cl.hasOption('V'));
-            assertEquals("Foo.class", cl.getOptionValue("bar"));
-            assertEquals(new ArrayList<String>(), cl.getArgument());
+        CommandLine cl = parser.parse("test -d true --bar Foo.class");
+        assertTrue(cl.hasOption('d'));
+        assertFalse(cl.hasOption('V'));
+        assertEquals("Foo.class", cl.getOptionValue("bar"));
+        assertNotNull(cl.getArgument());
 
-            cl = parser.parse("test -V -d -b com.bar.Bar.class /tmp/file\\ foo.txt /tmp/bah.txt");
-            assertTrue(cl.hasOption('V'));
-            assertTrue(cl.hasOption('d'));
-            assertTrue(cl.hasOption('b'));
-            assertEquals("com.bar.Bar.class", cl.getOptionValue("b"));
-            assertEquals("/tmp/file foo.txt", cl.getArgument().getValues().get(0));
-            assertEquals("/tmp/bah.txt", cl.getArgument().getValues().get(1));
+        cl = parser.parse("test -V verbose -d false -b com.bar.Bar.class /tmp/file\\ foo.txt /tmp/bah.txt");
+        assertTrue(cl.hasOption('V'));
+        assertTrue(cl.hasOption('d'));
+        assertTrue(cl.hasOption('b'));
+        assertEquals("com.bar.Bar.class", cl.getOptionValue("b"));
+        assertEquals("/tmp/file foo.txt", cl.getArgument().getValues().get(0));
+        assertEquals("/tmp/bah.txt", cl.getArgument().getValues().get(1));
 
-        }
-        catch (CommandLineParserException e) {
-        }
-        try {
-            CommandLine cl = parser.parse("test -d /tmp/file.txt");
-            assertTrue(false);
-            cl.getArgument();
-        }
-        catch (CommandLineParserException e) {
-            assertTrue(true);
-        }
+        cl = parser.parse("test -d /tmp/file.txt");
+        assertTrue(cl.hasParserError());
+        cl.getArgument();
 
     }
 
@@ -203,6 +163,9 @@ class Parser2Test {
 
     @Option(shortName = 'V', name = "version", description = "output version information and exit")
     private String version;
+
+    @Arguments
+    private List<String> arguments;
 }
 
 @CommandDefinition(name = "test", description = "this is a command without options")

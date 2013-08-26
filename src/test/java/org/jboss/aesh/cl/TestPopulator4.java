@@ -1,5 +1,6 @@
 package org.jboss.aesh.cl;
 
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -17,7 +18,7 @@ public class TestPopulator4 {
     private TreeMap<String, Integer> define;
 
     @Arguments
-    private Set<String> arguments;
+    private Set<File> arguments;
 
     public TestPopulator4() {
     }
@@ -30,7 +31,7 @@ public class TestPopulator4 {
         return define;
     }
 
-    public Set<String> getArguments() {
+    public Set<File> getArguments() {
         return arguments;
     }
 }

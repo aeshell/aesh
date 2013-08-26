@@ -9,7 +9,7 @@ package org.jboss.aesh.cl;
 import org.jboss.aesh.cl.completer.NullOptionCompleter;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
-import org.jboss.aesh.cl.converter.StringCLConverter;
+import org.jboss.aesh.cl.converter.NullConverter;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -55,7 +55,7 @@ public @interface Arguments {
      * common types, eg: File,++
      * See ClConverterManager for whats added by default
      */
-    Class<? extends CLConverter> converter() default StringCLConverter.class;
+    Class<? extends CLConverter> converter() default NullConverter.class;
 
     /**
      * Define a completer for this option.
