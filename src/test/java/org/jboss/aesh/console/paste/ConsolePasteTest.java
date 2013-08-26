@@ -6,11 +6,7 @@
  */
 package org.jboss.aesh.console.paste;
 
-import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.ConsoleOutput;
-import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.*;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -41,7 +37,7 @@ public class ConsolePasteTest extends BaseConsoleTest{
         console.setConsoleCallback(new ConsoleCallback() {
             boolean password = false;
             @Override
-            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) throws IOException {
                 if (output.getBuffer().equals("admin")) {
                     console.setPrompt(new Prompt("", new Character('\u0000')));
                     password = true;

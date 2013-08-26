@@ -29,7 +29,7 @@ public class ConsoleTest extends BaseConsoleTest {
         Console console = getTestConsole(pipedInputStream);
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) throws IOException {
                 assertEquals("ls foo bar", output.getBuffer());
                 return 0;
             }
@@ -56,7 +56,7 @@ public class ConsoleTest extends BaseConsoleTest {
         Console console = getTestConsole(pipedInputStream);
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) throws IOException {
                 assertEquals("ls foo bar", output.getBuffer());
                 return 0;
             }

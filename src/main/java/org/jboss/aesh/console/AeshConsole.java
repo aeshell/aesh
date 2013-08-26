@@ -7,6 +7,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.reader.AeshPrintWriter;
+import org.jboss.aesh.console.reader.AeshStandardStream;
 
 import java.io.StringReader;
 
@@ -44,5 +45,5 @@ public interface AeshConsole {
 
     void setPrompt(Prompt prompt);
 
-    //AeshInputStream in();
+    AeshStandardStream in();
 }

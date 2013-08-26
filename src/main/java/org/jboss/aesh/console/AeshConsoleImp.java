@@ -22,6 +22,7 @@ import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.reader.AeshPrintWriter;
+import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.aesh.parser.Parser;
@@ -127,12 +128,10 @@ public class AeshConsoleImp implements AeshConsole {
         console.attachProcess(consoleCommand);
     }
 
-    /*
     @Override
-    public AeshInputStream in() {
-        return null;
+    public AeshStandardStream in() {
+        return console.in();
     }
-    */
 
     private CommandLineParser findCommand(String input) {
         String name = Parser.findFirstWord(input);
@@ -200,7 +199,7 @@ public class AeshConsoleImp implements AeshConsole {
             this.console = aeshConsole;
         }
         @Override
-        public int readConsoleOutput(ConsoleOutput output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) throws IOException {
             CommandResult result;
             if(output != null && output.getBuffer().trim().length() > 0) {
                 CommandLineParser calledCommand = findCommand(output.getBuffer());

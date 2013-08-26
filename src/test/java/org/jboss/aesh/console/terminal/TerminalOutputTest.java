@@ -6,11 +6,7 @@
  */
 package org.jboss.aesh.console.terminal;
 
-import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.ConsoleOutput;
-import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.*;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalString;
@@ -38,7 +34,7 @@ public class TerminalOutputTest extends BaseConsoleTest {
         console.setPrompt(new Prompt(new TerminalString("[test]", Color.BLACK_BG, Color.WHITE_TEXT, CharacterType.PLAIN)));
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) throws IOException {
                 assertEquals("FOO", output.getBuffer());
                 return 0;
             }

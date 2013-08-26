@@ -6,11 +6,7 @@
  */
 package org.jboss.aesh.console.masking;
 
-import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.ConsoleOutput;
-import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.*;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
@@ -40,7 +36,7 @@ public class ConsoleMaskingTest extends BaseConsoleTest {
         console.setPrompt(new Prompt("", new Character('\u0000')));
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) throws IOException {
                 assertEquals("mypasswor", output.getBuffer());
                 return 0;
             }

@@ -6,11 +6,7 @@
  */
 package org.jboss.aesh.console.edit;
 
-import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.*;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -33,7 +29,7 @@ public class EmacsEditingTest extends BaseConsoleTest {
 
             console.setConsoleCallback(new ConsoleCallback() {
                 @Override
-                public int readConsoleOutput(ConsoleOutput output) throws IOException {
+                public int readConsoleOutput(ConsoleOperation output) throws IOException {
                     assertEquals("1234", output.getBuffer());
                     return 0;
                 }

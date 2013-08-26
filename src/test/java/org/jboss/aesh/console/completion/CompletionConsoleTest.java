@@ -15,10 +15,7 @@ import org.jboss.aesh.cl.internal.CommandInt;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.complete.CompletionRegistration;
-import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.*;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
@@ -223,7 +220,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
             this.console = console;
         }
         @Override
-        public int readConsoleOutput(ConsoleOutput output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) throws IOException {
             if(count == 0) {
                 assertEquals("foobar ", output.getBuffer());
             }
@@ -246,7 +243,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
             this.console = console;
         }
         @Override
-        public int readConsoleOutput(ConsoleOutput output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) throws IOException {
             if(count == 0) {
                 assertEquals("less ", output.getBuffer());
                 console.stop();
@@ -266,7 +263,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
             this.console = console;
         }
         @Override
-        public int readConsoleOutput(ConsoleOutput output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) throws IOException {
             if(count == 0) {
                 assertEquals("foo", output.getBuffer());
             }

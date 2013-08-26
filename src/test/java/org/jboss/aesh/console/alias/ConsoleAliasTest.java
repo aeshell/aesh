@@ -6,11 +6,7 @@
  */
 package org.jboss.aesh.console.alias;
 
-import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.*;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.junit.Test;
 
@@ -57,7 +53,7 @@ public class ConsoleAliasTest extends BaseConsoleTest {
         }
 
         @Override
-        public int readConsoleOutput(ConsoleOutput output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) throws IOException {
             if(count == 0)
                 assertEquals("ls -alF", output.getBuffer());
             else if(count == 1) {

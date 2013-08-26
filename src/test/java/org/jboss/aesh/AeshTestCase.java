@@ -7,10 +7,7 @@
 package org.jboss.aesh;
 
 import junit.framework.TestCase;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.*;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.terminal.TestTerminal;
@@ -49,7 +46,7 @@ public abstract class AeshTestCase extends TestCase {
         String tmpString = null;
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) throws IOException {
                 if(lastOnly) {
                     assertEquals(expected, output.getBuffer());
                 }
@@ -80,7 +77,7 @@ public abstract class AeshTestCase extends TestCase {
         Console console = new Console(builder.create());
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) throws IOException {
                 assertEquals(expected, output.getBuffer());
                 return 0;
             }

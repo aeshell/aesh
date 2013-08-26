@@ -18,6 +18,7 @@ import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
 import org.jboss.aesh.console.reader.AeshPrintWriter;
+import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.Mode;
@@ -95,6 +96,8 @@ public class Console {
     //used to optimize text deletion
     private char[] resetLineAndSetCursorToStart =
             (ANSI.saveCursor()+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
+
+    private AeshStandardStream standardStream;
 
     public Console(final Settings settings) {
         this.settings = settings;
@@ -186,6 +189,8 @@ public class Console {
         operations = new ArrayList<ConsoleOperation>();
         currentOperation = null;
 
+        standardStream = new AeshStandardStream();
+
         redirectPipeOutBuffer = new StringWriter();
         redirectPipeErrBuffer = new StringWriter();
         setPrompt(new Prompt(""));
@@ -265,8 +270,8 @@ public class Console {
     }
 
     //TODO:
-    public OutputStream in() {
-        return null;
+    public AeshStandardStream in() {
+        return standardStream;
     }
 
     /**
@@ -497,7 +502,7 @@ public class Console {
                     operations.add(new ConsoleOperation(ControlOperator.NONE, result));
                 }
 
-                ConsoleOutput output = parseOperations();
+                ConsoleOperation output = parseOperations();
                 output = processInternalCommands(output);
                 if(output.getBuffer() != null) {
                     //return output;
@@ -507,7 +512,7 @@ public class Console {
                         return;
 
                     while(currentOperation != null) {
-                        ConsoleOutput tmpOutput = parseCurrentOperation();
+                        ConsoleOperation tmpOutput = parseCurrentOperation();
                         if(tmpOutput != null && !executorService.isShutdown())
                             consoleCallback.readConsoleOutput(tmpOutput);
                     }
@@ -1377,7 +1382,7 @@ public class Console {
         out().flush();
     }
 
-    private ConsoleOutput parseCurrentOperation() throws IOException {
+    private ConsoleOperation parseCurrentOperation() throws IOException {
         if(currentOperation.getControlOperator() == ControlOperator.OVERWRITE_OUT
                 || currentOperation.getControlOperator() == ControlOperator.OVERWRITE_ERR
                 || currentOperation.getControlOperator() == ControlOperator.APPEND_OUT
@@ -1423,9 +1428,9 @@ public class Console {
      *
      * @return next ConsoleOutput
      */
-    private ConsoleOutput parseOperations() throws IOException {
+    private ConsoleOperation parseOperations() throws IOException {
 
-        ConsoleOutput output = null;
+        ConsoleOperation output = null;
         ConsoleOperation op = operations.remove(0);
 
         if(op.getControlOperator() == ControlOperator.OVERWRITE_OUT
@@ -1440,8 +1445,14 @@ public class Console {
             }
             else {
                 currentOperation = op;
-                output = new ConsoleOutput(op,
-                        redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString());
+                standardStream.setStdIn(new BufferedInputStream(
+                        new ByteArrayInputStream(redirectPipeOutBuffer.toString().getBytes())));
+                standardStream.setStdError(new BufferedInputStream(
+                        new ByteArrayInputStream(redirectPipeErrBuffer.toString().getBytes())));
+
+                //output = new ConsoleOutput(op, null, null);
+                output = op;
+                        //redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString());
             }
         }
         else if(op.getControlOperator() == ControlOperator.OVERWRITE_IN) {
@@ -1454,15 +1465,20 @@ public class Console {
                     AeshLine line = Parser.findAllWords(nextOperation.getBuffer());
                     currentOperation = new ConsoleOperation(nextOperation.getControlOperator(), op.getBuffer());
                     try {
+                         standardStream.setStdIn(new BufferedInputStream(
+                                new FileInputStream(new File(Parser.switchEscapedSpacesToSpacesInWord(line.getWords().get(0))))));
+                        output = new ConsoleOperation(nextOperation.getControlOperator(),op.getBuffer());
+                        /*
                         output = new ConsoleOutput(new ConsoleOperation(nextOperation.getControlOperator(),op.getBuffer()),
                                 FileUtils.readFile(new File(Parser.switchEscapedSpacesToSpacesInWord(line.getWords().get(0)))),
                                 redirectPipeErrBuffer.toString());
+                                */
                     }
                     //if we get any io error reading the file:
                     catch (IOException ioe) {
                         err().println(settings.getName() + ": " + ioe.getMessage());
                         currentOperation = null;
-                        output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
+                        output = new ConsoleOperation(ControlOperator.NONE, "");
                     }
                 }
                 else {
@@ -1470,7 +1486,7 @@ public class Console {
                         logger.info(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
                     err().print(settings.getName() + ": syntax error near unexpected token '<'" + Config.getLineSeparator());
                     currentOperation = null;
-                    output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
+                    output = new ConsoleOperation(ControlOperator.NONE, "");
                 }
             }
             else {
@@ -1478,13 +1494,17 @@ public class Console {
                     logger.info(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
                 err().print(settings.getName() + ": syntax error near unexpected token 'newline'" + Config.getLineSeparator());
                 currentOperation = null;
-                output = new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, ""));
+                output = new ConsoleOperation(ControlOperator.NONE, "");
             }
         }
         else {
             currentOperation = null;
-            output = new ConsoleOutput(op,
-                    redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString());
+            standardStream.setStdIn(new BufferedInputStream(
+                    new ByteArrayInputStream(redirectPipeOutBuffer.toString().getBytes())));
+            standardStream.setStdError(new BufferedInputStream(
+                    new ByteArrayInputStream(redirectPipeErrBuffer.toString().getBytes())));
+            output = op;
+                    //redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString());
         }
 
         if(redirectPipeOutBuffer.toString().length() > 0)
@@ -1495,7 +1515,7 @@ public class Console {
         return findAliases(output);
     }
 
-    private ConsoleOutput processInternalCommands(ConsoleOutput output) throws IOException {
+    private ConsoleOperation processInternalCommands(ConsoleOperation output) throws IOException {
         if(output.getBuffer() != null) {
             if(settings.isAliasEnabled() &&
                     output.getBuffer().startsWith(InternalCommands.ALIAS.getCommand())) {
@@ -1505,7 +1525,7 @@ public class Console {
                     out().flush();
                 }
                 //empty output, will result
-                return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, null));
+                return new ConsoleOperation(ControlOperator.NONE, null);
             }
             else if(settings.isAliasEnabled() &&
                     output.getBuffer().startsWith(InternalCommands.UNALIAS.getCommand())) {
@@ -1515,20 +1535,20 @@ public class Console {
                     out().flush();
                 }
 
-                return new ConsoleOutput(new ConsoleOperation(ControlOperator.NONE, null));
+                return new ConsoleOperation(ControlOperator.NONE, null);
             }
         }
         return output;
     }
 
-    private ConsoleOutput findAliases(ConsoleOutput operation) {
+    private ConsoleOperation findAliases(ConsoleOperation operation) {
         if(settings.isAliasEnabled()) {
             String command = Parser.findFirstWord(operation.getBuffer());
             Alias alias = aliasManager.getAlias(command);
 
             if(alias != null) {
-                operation.setConsoleOperation( new ConsoleOperation(operation.getControlOperator(),
-                        alias.getValue() + operation.getBuffer().substring(command.length())));
+                operation = new ConsoleOperation(operation.getControlOperator(),
+                        alias.getValue() + operation.getBuffer().substring(command.length()));
             }
         }
         return operation;

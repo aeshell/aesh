@@ -7,11 +7,7 @@
 package org.jboss.aesh.history;
 
 import org.jboss.aesh.TestBuffer;
-import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.*;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -35,7 +31,7 @@ public class HistoryTest extends BaseConsoleTest {
         console.setConsoleCallback(new ConsoleCallback() {
             private int count = 0;
             @Override
-            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) throws IOException {
                 if(count == 0)
                     assertEquals("1234", output.getBuffer());
                 else if(count == 1)

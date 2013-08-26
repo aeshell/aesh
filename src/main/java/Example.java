@@ -5,14 +5,9 @@
  * http://www.eclipse.org/legal/epl-v10.html
  */
 
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.ConsoleCommand;
+import org.jboss.aesh.console.*;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleOutput;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.actions.Operation;
@@ -91,6 +86,17 @@ public class Example {
                     console.out().print(ANSI.getAlternateBufferScreen());
                 }
 
+                if(console.in().getStdIn().available() > 0) {
+                    java.util.Scanner s = new java.util.Scanner(console.in().getStdIn()).useDelimiter("\\A");
+                    String fileContent = s.hasNext() ? s.next() : "";
+                    console.out().println("FILECONTENT: ");
+                    console.out().print(fileContent);
+                    console.out().flush();
+                }
+                else
+                    console.out().println("console.in() == null");
+
+
                 readFromFile();
 
                 //detach after init if hasRedirectOut()
@@ -106,9 +112,8 @@ public class Example {
             }
 
             private void readFromFile() throws IOException {
-                if(getConsoleOutput().getStdOut() != null &&
-                        getConsoleOutput().getStdOut().length() > 0) {
-                    console.out().println("FROM STDOUT: " + getConsoleOutput().getStdOut());
+                if(console.in().getStdIn().available() > 0) {
+                    console.out().println("FROM STDOUT: ");
                 }
                 else
                     console.out().println("here should we present some text... press 'q' to quit");
@@ -197,12 +202,10 @@ public class Example {
 
         exampleConsole.addCompletion(completer);
 
-        final ConsoleOutput line;
         final ConsoleCallback consoleCallback = new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOutput output) throws IOException{
+            public int readConsoleOutput(ConsoleOperation output) throws IOException{
                 //To change body of implemented methods use File | Settings | File Templates.
-
                 exampleConsole.out().print("======>\"" + output.getBuffer() + "\"\n");
                 if(masking) {
                     exampleConsole.out().print("got password: " + output.getBuffer() + ", stopping masking");
@@ -242,7 +245,7 @@ public class Example {
             private boolean hasUsername = false;
 
             @Override
-            public int readConsoleOutput(ConsoleOutput output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) throws IOException {
                 if(hasUsername) {
                     password = output.getBuffer();
                     hasPassword = true;
