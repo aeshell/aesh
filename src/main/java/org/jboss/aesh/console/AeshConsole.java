@@ -44,5 +44,5 @@ public interface AeshConsole {
 
     void setPrompt(Prompt prompt);
 
-    AeshInputStream in();
+    //AeshInputStream in();
 }

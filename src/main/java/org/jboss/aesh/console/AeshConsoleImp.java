@@ -127,10 +127,12 @@ public class AeshConsoleImp implements AeshConsole {
         console.attachProcess(consoleCommand);
     }
 
+    /*
     @Override
     public AeshInputStream in() {
         return null;
     }
+    */
 
     private CommandLineParser findCommand(String input) {
         String name = Parser.findFirstWord(input);

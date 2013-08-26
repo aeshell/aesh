@@ -302,9 +302,17 @@ public class Parser {
                             matcher = lineBreakerPattern.matcher(text);
                         }
                         else {
-                            buffer = text.substring(0, matcher.start(5)-1) +
-                                    text.substring(matcher.start(5), matcher.end(5));
-                            text = text.substring(buffer.length());
+                            if(buffer == null) {
+                                buffer = text.substring(0, matcher.start(5)-1) +
+                                        text.substring(matcher.start(5), matcher.end(5));
+                                text = text.substring(buffer.length());
+                            }
+                            else {
+                                String tmp = text.substring(0, matcher.start(5)-1) +
+                                        text.substring(matcher.start(5), matcher.end(5));
+                                text = text.substring(tmp.length());
+                                buffer = buffer + tmp;
+                            }
                             matcher = lineBreakerPattern.matcher(text);
                         }
                     }
