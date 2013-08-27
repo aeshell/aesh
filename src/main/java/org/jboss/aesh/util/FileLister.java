@@ -169,6 +169,8 @@ public class FileLister {
         //try to find if more than one filename start with the same word
         if(returnFiles.size() > 1) {
             String startsWith = Parser.findStartsWith(returnFiles);
+            if(startsWith.contains(" "))
+                startsWith = Parser.switchEscapedSpacesToSpacesInWord(startsWith);
             if(startsWith != null && startsWith.length() > 0 &&
                     startsWith.length() > rest.length()) {
                 completion.addCompletionCandidate(Parser.switchSpacesToEscapedSpacesInWord( startsWith.substring(rest.length())));

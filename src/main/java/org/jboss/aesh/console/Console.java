@@ -1592,7 +1592,7 @@ public class Console {
         catch (IOException e) {
             if(settings.isLogging())
                 logger.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
-            err().print(e.getMessage());
+            getTerminal().err().println(e.getMessage());
         }
         redirectPipeOutBuffer = new StringWriter();
         redirectPipeErrBuffer = new StringWriter();

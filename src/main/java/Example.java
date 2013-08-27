@@ -203,6 +203,9 @@ public class Example {
                     commands.add("value 10");
                     commands.add("value 20");
                 }
+                if(co.getBuffer().equals("valu"))
+                    commands.add("value 10");
+
                 co.setCompletionCandidates(commands);
             }
         };
