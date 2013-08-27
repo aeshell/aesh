@@ -347,7 +347,7 @@ public class Console {
      * @param cc command
      * @throws IOException stream
      */
-    protected void attachProcess(ConsoleCommand cc) {
+    public void attachProcess(ConsoleCommand cc) {
         command = cc;
     }
 

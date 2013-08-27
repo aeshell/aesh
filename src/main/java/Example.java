@@ -9,6 +9,7 @@ import org.jboss.aesh.console.*;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.helper.InterruptHook;
+import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.CharacterType;
@@ -77,61 +78,6 @@ public class Example {
         });
 
         final Console exampleConsole = new Console(builder.create());
-
-        final ConsoleCommand test = new ConsoleCommand(exampleConsole) {
-
-            @Override
-            protected void afterAttach() throws IOException {
-                if(!hasRedirectOut()) {
-                    console.out().print(ANSI.getAlternateBufferScreen());
-                }
-
-                if(console.in().getStdIn().available() > 0) {
-                    java.util.Scanner s = new java.util.Scanner(console.in().getStdIn()).useDelimiter("\\A");
-                    String fileContent = s.hasNext() ? s.next() : "";
-                    console.out().println("FILECONTENT: ");
-                    console.out().print(fileContent);
-                    console.out().flush();
-                }
-                else
-                    console.out().println("console.in() == null");
-
-
-                readFromFile();
-
-                //detach after init if hasRedirectOut()
-                if(hasRedirectOut()) {
-                    detach();
-                }
-            }
-
-            @Override
-            protected void afterDetach() throws IOException {
-                if(!hasRedirectOut())
-                    console.out().print(ANSI.getMainBufferScreen());
-            }
-
-            private void readFromFile() throws IOException {
-                if(console.in().getStdIn().available() > 0) {
-                    console.out().println("FROM STDOUT: ");
-                }
-                else
-                    console.out().println("here should we present some text... press 'q' to quit");
-            }
-
-            @Override
-            public void processOperation(Operation operation) throws IOException {
-                if(operation.getInput()[0] == 'q') {
-                    detach();
-                }
-                else if(operation.getInput()[0] == 'a') {
-                    readFromFile();
-                }
-                else {
-
-                }
-            }
-        };
 
         Completion completer = new Completion() {
             @Override
@@ -238,7 +184,9 @@ public class Example {
                     exampleConsole.clear();
                 else if(output.getBuffer().startsWith("man")) {
                     //exampleConsole.attachProcess(test);
-                    test.attach(output);
+                    ConsoleCommand test =
+                            new ExampleConsoleCommand(exampleConsole, output);
+                    exampleConsole.attachProcess(test);
                 }
                 else if(output.getBuffer().startsWith("login")) {
                     exampleConsole.setConsoleCallback(passwordCallback);
@@ -280,6 +228,82 @@ public class Example {
             //exampleConsole.pushToStdOut(new TerminalString("PUSHING", Color.DEFAULT_BG, Color.BLUE_TEXT).toString());
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+
+    }
+
+    public static class ExampleConsoleCommand implements ConsoleCommand {
+
+        private Console console;
+        private ConsoleOperation operation;
+        private boolean attached = true;
+
+        public ExampleConsoleCommand(Console console, ConsoleOperation operation) {
+            this.console = console;
+            this.operation = operation;
+
+            init();
+        }
+
+        private boolean hasRedirectOut() {
+            return ControlOperator.isRedirectionOut(operation.getControlOperator());
+        }
+
+        private void init() {
+            try {
+                if(!hasRedirectOut()) {
+                    console.out().println("print alternate screen...");
+                    console.out().print(ANSI.getAlternateBufferScreen());
+                }
+
+                if(console.in().getStdIn().available() > 0) {
+                    java.util.Scanner s = new java.util.Scanner(console.in().getStdIn()).useDelimiter("\\A");
+                    String fileContent = s.hasNext() ? s.next() : "";
+                    console.out().println("FILECONTENT: ");
+                    console.out().print(fileContent);
+                    console.out().flush();
+                }
+                else
+                    console.out().println("console.in() == null");
+
+
+                readFromFile();
+
+                //detach after init if hasRedirectOut()
+                if(hasRedirectOut()) {
+                    attached = false;
+                }
+            }
+            catch(IOException ioe) {
+
+            }
+        }
+
+        private void readFromFile() throws IOException {
+            if(console.in().getStdIn().available() > 0) {
+                console.out().println("FROM STDOUT: ");
+            }
+            else
+                console.out().println("here should we present some text... press 'q' to quit");
+        }
+
+        @Override
+        public void processOperation(Operation operation) throws IOException {
+            if(operation.getInput()[0] == 'q') {
+                console.out().print(ANSI.getMainBufferScreen());
+                attached = false;
+            }
+            else if(operation.getInput()[0] == 'a') {
+                readFromFile();
+            }
+            else {
+
+            }
+        }
+
+        @Override
+        public boolean isAttached() {
+            return attached;
         }
 
     }

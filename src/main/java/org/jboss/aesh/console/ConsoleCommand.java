@@ -6,7 +6,6 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.edit.actions.Operation;
 
 import java.io.IOException;
@@ -14,74 +13,10 @@ import java.io.IOException;
 /**
  * A ConsoleCommand is the base of any "external" commands that will run
  * in the foreground of aesh.
- * Call attach() to set a command in the foreground of aesh.
- *
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public abstract class ConsoleCommand {
-
-    boolean attached = false;
-    protected Console console = null;
-    ConsoleOperation consoleOperation;
-
-    public ConsoleCommand(Console console) {
-        this.console = console;
-    }
-
-    /**
-     * Called by creator of the process
-     * Calls afterAttach()
-     *
-     * @throws IOException stream
-     */
-    public final void attach(ConsoleOperation output) throws IOException {
-        attached = true;
-        this.console.attachProcess(this);
-        this.consoleOperation = output;
-        afterAttach();
-    }
-
-    public ConsoleOperation getConsoleOperation() {
-        return consoleOperation;
-    }
-
-    /**
-     *
-     * @return true if the process is attached to console. eg. its "running".
-     */
-    public final boolean isAttached() {
-        return attached;
-    }
-
-    /**
-     * Mark this process ready to be detached from console.
-     * Calls afterDetach
-     *
-     * @throws IOException stream
-     */
-    public final void detach() throws IOException {
-        attached = false;
-        afterDetach();
-    }
-
-    public final boolean hasRedirectOut() {
-        return ControlOperator.isRedirectionOut(consoleOperation.getControlOperator());
-    }
-
-    /**
-     * Called after attach(..) is called.
-     *
-     * @throws IOException stream
-     */
-    protected abstract void afterAttach() throws IOException;
-
-    /**
-     * Called after detach() is called
-     *
-     * @throws IOException stream
-     */
-    protected abstract void afterDetach() throws IOException;
+public interface ConsoleCommand {
 
     /**
      * Called after every operation made by the user
@@ -90,4 +25,6 @@ public abstract class ConsoleCommand {
      * @throws IOException stream
      */
     public abstract void processOperation(Operation operation) throws IOException;
+
+    public boolean isAttached();
 }
