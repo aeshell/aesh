@@ -196,6 +196,13 @@ public class Example {
                 if(co.getBuffer().equals("testing")) {
                     commands.add("testing YAY");
                 }
+                if(co.getBuffer().equals("val") ||
+                        co.getBuffer().equals("value ")) {
+                    commands.add("value 1");
+                    commands.add("value 2");
+                    commands.add("value 10");
+                    commands.add("value 20");
+                }
                 co.setCompletionCandidates(commands);
             }
         };

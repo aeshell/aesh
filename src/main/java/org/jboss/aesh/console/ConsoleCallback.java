@@ -19,7 +19,7 @@ import java.io.IOException;
 public interface ConsoleCallback {
 
     /**
-     * @param output the consoleOutput
+     * @param output the consoleOperation
      * @return 0 for success or 1/-1 for failure.
      * @throws IOException
      */

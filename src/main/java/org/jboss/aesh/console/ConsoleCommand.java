@@ -23,7 +23,7 @@ public abstract class ConsoleCommand {
 
     boolean attached = false;
     protected Console console = null;
-    ConsoleOperation consoleOutput;
+    ConsoleOperation consoleOperation;
 
     public ConsoleCommand(Console console) {
         this.console = console;
@@ -38,8 +38,12 @@ public abstract class ConsoleCommand {
     public final void attach(ConsoleOperation output) throws IOException {
         attached = true;
         this.console.attachProcess(this);
-        this.consoleOutput = output;
+        this.consoleOperation = output;
         afterAttach();
+    }
+
+    public ConsoleOperation getConsoleOperation() {
+        return consoleOperation;
     }
 
     /**
@@ -62,7 +66,7 @@ public abstract class ConsoleCommand {
     }
 
     public final boolean hasRedirectOut() {
-        return ControlOperator.isRedirectionOut(consoleOutput.getControlOperator());
+        return ControlOperator.isRedirectionOut(consoleOperation.getControlOperator());
     }
 
     /**

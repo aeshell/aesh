@@ -1464,19 +1464,15 @@ public class Console {
                 if( nextOperation.getBuffer().length() > 0) {
                     AeshLine line = Parser.findAllWords(nextOperation.getBuffer());
                     currentOperation = new ConsoleOperation(nextOperation.getControlOperator(), op.getBuffer());
-                    try {
-                         standardStream.setStdIn(new BufferedInputStream(
-                                new FileInputStream(new File(Parser.switchEscapedSpacesToSpacesInWord(line.getWords().get(0))))));
+
+                    File readFile = new File(Parser.switchEscapedSpacesToSpacesInWord(line.getWords().get(0)));
+                    if(readFile.isFile()) {
+                        standardStream.setStdIn(new BufferedInputStream(
+                                new FileInputStream(readFile)));
                         output = new ConsoleOperation(nextOperation.getControlOperator(),op.getBuffer());
-                        /*
-                        output = new ConsoleOutput(new ConsoleOperation(nextOperation.getControlOperator(),op.getBuffer()),
-                                FileUtils.readFile(new File(Parser.switchEscapedSpacesToSpacesInWord(line.getWords().get(0)))),
-                                redirectPipeErrBuffer.toString());
-                                */
                     }
-                    //if we get any io error reading the file:
-                    catch (IOException ioe) {
-                        err().println(settings.getName() + ": " + ioe.getMessage());
+                    else {
+                        err().println(settings.getName() + ": " + readFile.toString()+ " no such file.");
                         currentOperation = null;
                         output = new ConsoleOperation(ControlOperator.NONE, "");
                     }
