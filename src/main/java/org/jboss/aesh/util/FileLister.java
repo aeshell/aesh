@@ -180,8 +180,12 @@ public class FileLister {
                 completion.addCompletionCandidates(returnFiles);
             }
         }
-        else if(returnFiles.size() == 1)
-            completion.addCompletionCandidate(returnFiles.get(0).substring(rest.length()));
+        else if(returnFiles.size() == 1) {
+            if(rest.contains(" "))
+                completion.addCompletionCandidate(returnFiles.get(0).substring(Parser.switchSpacesToEscapedSpacesInWord(rest).length()));
+            else
+                completion.addCompletionCandidate(returnFiles.get(0).substring(rest.length()));
+        }
 
         if(completion.getCompletionCandidates().size() > 1 && rest != null && rest.length() > 0)
             completion.setOffset(completion.getCursor()-rest.length());
