@@ -127,18 +127,19 @@ public class ParserTestCase extends TestCase {
         assertEquals("foo/bar/", line.getWords().get(0));
         assertEquals("Example 1", line.getWords().get(1));
 
-        line = Parser.findAllWords("man -f='foo/bar/' Example\\ 1 foo");
+        line = Parser.findAllWords("man -f='foo bar/' Example\\ 1 foo");
         assertEquals("man", line.getWords().get(0));
-        assertEquals("-f=foo/bar/", line.getWords().get(1));
+        assertEquals("-f=foo bar/", line.getWords().get(1));
         assertEquals("Example 1", line.getWords().get(2));
         assertEquals("foo", line.getWords().get(3));
 
 
         line = Parser.findAllWords("man -f='foo/bar/ Example\\ 1");
-        assertTrue(line.hasError());
+        assertEquals(ParserStatus.UNCLOSED_QUOTE, line.getStatus());
 
         line = Parser.findAllWords("man -f='foo/bar/' Example\\ 1\"");
-        assertTrue(line.hasError());
+        assertEquals(ParserStatus.UNCLOSED_QUOTE, line.getStatus());
+        //assertTrue(line.hasError());
     }
 
     public void testSplitBySizeKeepWords() {

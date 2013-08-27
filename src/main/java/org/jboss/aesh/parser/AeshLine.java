@@ -1,5 +1,6 @@
 package org.jboss.aesh.parser;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +14,11 @@ import java.util.List;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshLine {
-    private boolean error;
     private String errorMessage;
     private List<String> words;
+    private ParserStatus status;
 
-    public AeshLine(List<String> words, boolean error, String errorMessage) {
+    public AeshLine(List<String> words, ParserStatus status, String errorMessage) {
         if(words == null)
             this.words = new ArrayList<String>(0);
         else {
@@ -25,12 +26,8 @@ public class AeshLine {
             this.words.addAll(words);
         }
 
-        this.error = error;
+        this.status = status;
         this.errorMessage = errorMessage;
-    }
-
-    public boolean hasError() {
-        return error;
     }
 
     public String getErrorMessage() {
@@ -39,5 +36,9 @@ public class AeshLine {
 
     public List<String> getWords() {
         return words;
+    }
+
+    public ParserStatus getStatus() {
+        return status;
     }
 }

@@ -14,6 +14,7 @@ import org.jboss.aesh.cl.internal.CommandInt;
 import org.jboss.aesh.cl.internal.OptionInt;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.parser.ParserStatus;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -92,13 +93,23 @@ public class CommandLineParser {
             if(command.getName().equals(aeshLine.getWords().get(0)))
                 return doParse(aeshLine.getWords(), ignoreMissingRequirements);
         }
-        else if(aeshLine.hasError())
+        else if(aeshLine.getStatus() != ParserStatus.OK)
             return new CommandLine(new CommandLineParserException(aeshLine.getErrorMessage()));
 
         return new CommandLine(new CommandLineParserException("Command:"+ command +", not found in: "+line));
     }
 
-    private CommandLine doParse(List<String> lines, boolean ignoreMissing) {
+    /**
+     * Parse a command line with the defined command as base of the rules.
+     * This method is useful when parsing a command line program thats not
+     * in aesh, but rather a standalone command that want to parse input
+     * parameters.
+     *
+     * @param lines input
+     * @param ignoreMissing if we should ignore
+     * @return CommandLine
+     */
+    public CommandLine doParse(List<String> lines, boolean ignoreMissing) {
         command.clear();
         CommandLine commandLine = new CommandLine();
         if(command.hasArgument())

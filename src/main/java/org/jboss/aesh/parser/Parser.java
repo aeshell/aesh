@@ -28,7 +28,6 @@ public class Parser {
     private static final char SLASH = '\\';
     private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
     private static final Pattern spacePattern = Pattern.compile(" ");
-    private static final Pattern lineBreakerPattern = Pattern.compile("(\".+?\")|('.+?')|(\".*)|('.*)|( )");
 
     /**
      * Format completions so that they look similar to GNU Readline
@@ -254,98 +253,65 @@ public class Parser {
 
     public static AeshLine findAllWords(String text) {
         List<String> textList = new ArrayList<String>();
-        Matcher matcher = lineBreakerPattern.matcher(text);
-        String buffer = null;
-        while(matcher.find()) {
+        boolean haveEscape = false;
+        boolean haveSingleQuote = false;
+        boolean haveDoubleQuote = false;
+        StringBuilder builder = new StringBuilder();
 
-            // \".+?\"
-            if(matcher.group(1) != null) {
-                if(matcher.start(1) > 0) {
-                    textList.add(text.substring(0, matcher.start(1))+
-                            text.substring(matcher.start(1)+1, matcher.end(1)-1));
+        for(char c : text.toCharArray()) {
+            if(c == ' ') {
+                if(haveEscape) {
+                    builder.append(c);
+                    haveEscape = false;
+                }
+                else if(haveSingleQuote || haveDoubleQuote) {
+                    builder.append(c);
+                }
+                else if(builder.length() > 0) {
+                    textList.add(builder.toString());
+                    builder = new StringBuilder();
+                }
+            }
+            else if(c == '\\') {
+                if(haveEscape) {
+                    builder.append(c);
+                    haveEscape = false;
                 }
                 else
-                    textList.add(text.substring(matcher.start(1)+1, matcher.end(1)-1));
-
-                text = text.substring(matcher.end(1));
-                matcher = lineBreakerPattern.matcher(text);
-
+                    haveEscape = true;
             }
-            // '.+?'
-            else if(matcher.group(2) != null) {
-                if(matcher.start(2) > 0) {
-                    textList.add(text.substring(0, matcher.start(2))+
-                            text.substring(matcher.start(2)+1, matcher.end(2)-1));
+            else if(c == '\'') {
+                if(haveEscape) {
+                    builder.append(c);
+                    haveEscape = false;
                 }
                 else
-                    textList.add(text.substring(matcher.start(2)+1, matcher.end(2)-1));
-
-                text = text.substring(matcher.end(2));
-                matcher = lineBreakerPattern.matcher(text);
+                    haveSingleQuote = !haveSingleQuote;
             }
-            else if(matcher.group(3) != null) {
-                return new AeshLine(null, true, "Parser error: unclosed quote");
-
-            }
-            else if(matcher.group(4) != null) {
-                return new AeshLine(null, true, "Parser error: unclosed quote");
-            }
-            // space
-            else if(matcher.group(5) != null) {
-                if(matcher.start() > 0) {
-                    //do we have an escaped space?
-                    if(text.charAt(matcher.start(5)-1) == SLASH) {
-                        //if word is \\  bla we remove the first
-                        if(matcher.end(5)+1 < text.length() &&
-                                text.charAt(matcher.end(5)) == SPACE_CHAR) {
-                            text = text.substring(matcher.end(5)+1);
-                            matcher = lineBreakerPattern.matcher(text);
-                        }
-                        else {
-                            if(buffer == null) {
-                                buffer = text.substring(0, matcher.start(5)-1) +
-                                        text.substring(matcher.start(5), matcher.end(5));
-                                text = text.substring(buffer.length());
-                            }
-                            else {
-                                String tmp = text.substring(0, matcher.start(5)-1) +
-                                        text.substring(matcher.start(5), matcher.end(5));
-                                text = text.substring(tmp.length());
-                                buffer = buffer + tmp;
-                            }
-                            matcher = lineBreakerPattern.matcher(text);
-                        }
-                    }
-                    //just a normal space
-                    else {
-                        if(buffer != null) {
-                            textList.add(buffer+text.substring(0,matcher.start(5)));
-                            buffer = null;
-                        }
-                        else
-                            textList.add(text.substring(0,matcher.start(5)));
-                        text = text.substring(matcher.end(5));
-                        matcher = lineBreakerPattern.matcher(text);
-                    }
-                }                //word starts with a space
-                else {
-                    text = text.substring(1);
-                    matcher = lineBreakerPattern.matcher(text);
+            else if(c == '\"') {
+                if(haveEscape) {
+                    builder.append(c);
+                    haveEscape = false;
                 }
-            }
-        }
-        if(text.length() > 0) {
-            if(buffer != null) {
-                textList.add(buffer+text);
-                buffer = null;
+                else
+                    haveDoubleQuote = !haveDoubleQuote;
             }
             else
-                textList.add(text);
+                builder.append(c);
         }
-        if(buffer != null && buffer.length() > 0)
-            textList.add(buffer);
 
-        return new AeshLine(textList, false, null);
+        if(builder.length() > 0)
+            textList.add(builder.toString());
+
+        ParserStatus status = ParserStatus.OK;
+        if(haveSingleQuote && haveDoubleQuote)
+            status = ParserStatus.DOUBLE_UNCLOSED_QUOTE;
+        else  if(haveSingleQuote || haveDoubleQuote)
+            status = ParserStatus.UNCLOSED_QUOTE;
+
+        AeshLine aeshLine = new AeshLine(textList, status, "");
+
+        return aeshLine;
     }
 
     public static boolean doWordContainOnlyEscapedSpace(String word) {
