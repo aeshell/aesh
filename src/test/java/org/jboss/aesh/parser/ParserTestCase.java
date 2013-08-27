@@ -106,6 +106,11 @@ public class ParserTestCase extends TestCase {
         assertEquals("cd", line.getWords().get(0));
         assertEquals("A Directory With Spaces", line.getWords().get(1));
 
+
+        line = Parser.findAllWords("cd A\\ ");
+        assertEquals("cd", line.getWords().get(0));
+        assertEquals("A ", line.getWords().get(1));
+
     }
 
     public void testFindAllQuotedWords() {

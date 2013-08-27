@@ -342,6 +342,8 @@ public class Parser {
             else
                 textList.add(text);
         }
+        if(buffer != null && buffer.length() > 0)
+            textList.add(buffer);
 
         return new AeshLine(textList, false, null);
     }
