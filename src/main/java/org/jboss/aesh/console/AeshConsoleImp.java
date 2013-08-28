@@ -24,6 +24,7 @@ import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.reader.AeshPrintWriter;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.util.ReflectionUtil;
@@ -131,6 +132,11 @@ public class AeshConsoleImp implements AeshConsole {
     @Override
     public AeshStandardStream in() {
         return console.in();
+    }
+
+    @Override
+    public TerminalSize getTerminalSize() {
+        return console.getTerminalSize();
     }
 
     private CommandLineParser findCommand(String input) {

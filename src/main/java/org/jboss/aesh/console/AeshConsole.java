@@ -8,6 +8,7 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.reader.AeshPrintWriter;
 import org.jboss.aesh.console.reader.AeshStandardStream;
+import org.jboss.aesh.terminal.TerminalSize;
 
 /**
  * A Console that manages Commands and properly execute them.
@@ -73,4 +74,9 @@ public interface AeshConsole {
      * Get the possible input stream
      */
     AeshStandardStream in();
+
+    /**
+     * Get the terminal size
+     */
+    TerminalSize getTerminalSize();
 }

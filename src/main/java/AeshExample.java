@@ -40,9 +40,7 @@ public class AeshExample {
                 .create();
 
         aeshConsole.start();
-
     }
-
 
     @CommandDefinition(name="exit", description = "exit the program")
     public static class ExitCommand implements Command {
