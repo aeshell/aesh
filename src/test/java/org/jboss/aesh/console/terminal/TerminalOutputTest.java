@@ -6,7 +6,11 @@
  */
 package org.jboss.aesh.console.terminal;
 
-import org.jboss.aesh.console.*;
+import org.jboss.aesh.console.BaseConsoleTest;
+import org.jboss.aesh.console.Console;
+import org.jboss.aesh.console.ConsoleCallback;
+import org.jboss.aesh.console.ConsoleOperation;
+import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalString;

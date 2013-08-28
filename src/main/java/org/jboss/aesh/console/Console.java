@@ -45,7 +45,12 @@ import org.jboss.aesh.util.FileUtils;
 import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.aesh.parser.Parser;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

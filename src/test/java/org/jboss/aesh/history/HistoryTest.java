@@ -7,7 +7,11 @@
 package org.jboss.aesh.history;
 
 import org.jboss.aesh.TestBuffer;
-import org.jboss.aesh.console.*;
+import org.jboss.aesh.console.BaseConsoleTest;
+import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.Console;
+import org.jboss.aesh.console.ConsoleCallback;
+import org.jboss.aesh.console.ConsoleOperation;
 import org.junit.Test;
 
 import java.io.IOException;

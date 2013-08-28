@@ -24,11 +24,11 @@ public interface ConsoleCommand {
      * @param operation operation
      * @throws IOException stream
      */
-    public abstract void processOperation(Operation operation) throws IOException;
+    void processOperation(Operation operation) throws IOException;
 
     /**
      * Returns true if the command should still be "attached" to the console.
      * The console will only detach the command when this method returns false.
      */
-    public boolean isAttached();
+    boolean isAttached();
 }

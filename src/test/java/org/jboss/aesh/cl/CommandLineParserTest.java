@@ -9,7 +9,6 @@ package org.jboss.aesh.cl;
 import junit.framework.TestCase;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 

@@ -6,7 +6,11 @@
  */
 package org.jboss.aesh.console.masking;
 
-import org.jboss.aesh.console.*;
+import org.jboss.aesh.console.BaseConsoleTest;
+import org.jboss.aesh.console.Console;
+import org.jboss.aesh.console.ConsoleCallback;
+import org.jboss.aesh.console.ConsoleOperation;
+import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;

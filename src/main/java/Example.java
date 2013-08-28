@@ -5,9 +5,14 @@
  * http://www.eclipse.org/legal/epl-v10.html
  */
 
-import org.jboss.aesh.console.*;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
+import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.Console;
+import org.jboss.aesh.console.ConsoleCallback;
+import org.jboss.aesh.console.ConsoleCommand;
+import org.jboss.aesh.console.ConsoleOperation;
+import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.SettingsBuilder;

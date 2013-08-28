@@ -8,8 +8,6 @@ package org.jboss.aesh.parser;
 
 import junit.framework.TestCase;
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.parser.AeshLine;
-import org.jboss.aesh.parser.Parser;
 
 import java.util.ArrayList;
 import java.util.List;
