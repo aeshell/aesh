@@ -1450,10 +1450,14 @@ public class Console {
             }
             else {
                 currentOperation = op;
-                standardStream.setStdIn(new BufferedInputStream(
-                        new ByteArrayInputStream(redirectPipeOutBuffer.toString().getBytes())));
-                standardStream.setStdError(new BufferedInputStream(
-                        new ByteArrayInputStream(redirectPipeErrBuffer.toString().getBytes())));
+                if(ControlOperator.isRedirectionOut(op.getControlOperator())) {
+                    standardStream.setStdIn(new BufferedInputStream(
+                            new ByteArrayInputStream(redirectPipeOutBuffer.toString().getBytes())));
+                }
+                if(ControlOperator.isRedirectionErr(op.getControlOperator())) {
+                    standardStream.setStdError(new BufferedInputStream(
+                            new ByteArrayInputStream(redirectPipeErrBuffer.toString().getBytes())));
+                }
 
                 //output = new ConsoleOutput(op, null, null);
                 output = op;

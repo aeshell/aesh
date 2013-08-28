@@ -14,10 +14,13 @@ import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Command;
 import org.jboss.aesh.console.CommandResult;
+import org.jboss.aesh.console.ConsoleCommand;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.util.ANSI;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +40,7 @@ public class AeshExample {
                 .command(ExitCommand.class)
                 .command(FooCommand.class)
                 .command(LsCommand.class)
+                .command(TestConsoleCommand.class)
                 .create();
 
         aeshConsole.start();
@@ -70,10 +74,53 @@ public class AeshExample {
         }
     }
 
+    @CommandDefinition(name = "test", description = "testing")
+    public static class TestConsoleCommand implements Command, ConsoleCommand {
+
+        private boolean attached = true;
+        private AeshConsole console;
+
+        @Override
+        public CommandResult execute(AeshConsole aeshConsole, ControlOperator operator) throws IOException {
+            this.console = aeshConsole;
+            console.attachConsoleCommand(this);
+            display();
+
+            return CommandResult.SUCCESS;
+        }
+
+        private void display() {
+            console.out().print(ANSI.getAlternateBufferScreen());
+            console.out().print("press q to stop.....");
+            console.out().flush();
+        }
+
+        private void stop() {
+            console.out().print(ANSI.getMainBufferScreen());
+            attached = false;
+        }
+
+        @Override
+        public void processOperation(Operation operation) throws IOException {
+            if(operation.getInput()[0] == 'q') {
+                stop();
+            }
+            else {
+                console.out().print((char) operation.getInput()[0]);
+                console.out().flush();
+            }
+        }
+
+        @Override
+        public boolean isAttached() {
+            return attached;
+        }
+    }
+
     @CommandDefinition(name="ls", description = "fooing")
     public static class LsCommand implements Command {
 
-        @Option
+        @Option(hasValue = false)
         private Boolean foo;
 
         @Option(completer = LessCompleter.class)

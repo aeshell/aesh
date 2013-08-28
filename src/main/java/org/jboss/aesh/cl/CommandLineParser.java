@@ -313,13 +313,13 @@ public class CommandLineParser {
             if(cl.hasOption(option.getName()))
                 cl.getOption(option.getName()).injectValueIntoField(instance);
             else
-                resetField(instance, option.getFieldName());
+                resetField(instance, option.getFieldName(), option.hasValue());
         }
         if(cl.getArgument() != null && cl.getArgument().getValues().size() > 0) {
             cl.getArgument().injectValueIntoField(instance);
         }
         else if(cl.getArgument() != null)
-            resetField(instance, cl.getArgument().getFieldName());
+            resetField(instance, cl.getArgument().getFieldName(), true);
     }
 
     /**
@@ -335,7 +335,7 @@ public class CommandLineParser {
         ParserGenerator.generateCommandLineParser(instance.getClass()).populateObject(instance, line);
     }
 
-    private void resetField(Object instance, String fieldName) {
+    private void resetField(Object instance, String fieldName, boolean hasValue) {
         try {
             Field field = instance.getClass().getDeclaredField(fieldName);
             if(!Modifier.isPublic(field.getModifiers()))
@@ -357,6 +357,9 @@ public class CommandLineParser {
                     field.set(instance, 0.0f);
                 else if(double.class.isAssignableFrom(field.getType()))
                     field.set(instance, 0.0d);
+            }
+            else if(!hasValue && field.getType().equals(Boolean.class)) {
+               field.set(instance, Boolean.FALSE);
             }
             else
                 field.set(instance, null);
