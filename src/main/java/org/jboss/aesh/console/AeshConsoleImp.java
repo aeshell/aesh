@@ -206,7 +206,8 @@ public class AeshConsoleImp implements AeshConsole {
                 if(calledCommand != null) {
                     try {
                         calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
-                        result = commands.get(calledCommand).execute(console);
+                        result = commands.get(calledCommand).execute(console,
+                                output.getControlOperator());
                     }
                     catch (CommandLineParserException e) {
                         console.out().println(e.getMessage());

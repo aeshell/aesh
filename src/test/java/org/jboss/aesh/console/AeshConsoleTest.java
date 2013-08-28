@@ -8,6 +8,7 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
@@ -53,7 +54,8 @@ public class AeshConsoleTest extends BaseConsoleTest {
         private String bar;
 
         @Override
-        public CommandResult execute(AeshConsole console) throws IOException {
+        public CommandResult execute(AeshConsole console,
+                                     ControlOperator operator) throws IOException {
             console.out().println("FOO");
             return CommandResult.SUCCESS;
         }

@@ -15,6 +15,7 @@ import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Command;
 import org.jboss.aesh.console.CommandResult;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 
@@ -47,7 +48,8 @@ public class AeshExample {
     public static class ExitCommand implements Command {
 
         @Override
-        public CommandResult execute(AeshConsole console) throws IOException {
+        public CommandResult execute(AeshConsole console,
+                                     ControlOperator operator) throws IOException {
             console.stop();
             return CommandResult.SUCCESS;
         }
@@ -60,7 +62,8 @@ public class AeshExample {
         private String bar;
 
         @Override
-        public CommandResult execute(AeshConsole console) throws IOException {
+        public CommandResult execute(AeshConsole console,
+                                     ControlOperator operator) throws IOException {
            if(bar == null)
                console.out().println("NO BAR!");
             else
@@ -85,7 +88,8 @@ public class AeshExample {
         private List<File> files;
 
         @Override
-        public CommandResult execute(AeshConsole console) throws IOException {
+        public CommandResult execute(AeshConsole console,
+                                     ControlOperator operator) throws IOException {
            if(foo != null)
                console.out().println("you set foo to: " + foo);
 
