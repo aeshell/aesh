@@ -196,7 +196,7 @@ public class CommandLinePopulatorTest {
             assertEquals(3, test1.int2);
 
             parser.populateObject(test1, "test -e enable2");
-            assertNull(test1.getEnableX());
+            assertFalse(test1.getEnableX());
             assertFalse(test1.foo);
         }
         catch (CommandLineParserException e) {
