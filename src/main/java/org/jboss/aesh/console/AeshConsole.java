@@ -79,4 +79,9 @@ public interface AeshConsole {
      * Get the terminal size
      */
     TerminalSize getTerminalSize();
+
+    /**
+     * Clear the terminal screen
+     */
+    void clear();
 }

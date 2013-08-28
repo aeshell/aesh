@@ -139,6 +139,15 @@ public class AeshConsoleImp implements AeshConsole {
         return console.getTerminalSize();
     }
 
+    @Override
+    public void clear() {
+        try {
+            console.clear();
+        }
+        catch (IOException ignored) {
+        }
+    }
+
     private CommandLineParser findCommand(String input) {
         String name = Parser.findFirstWord(input);
         for(CommandLineParser parser : commands.keySet()) {
