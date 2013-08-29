@@ -10,6 +10,8 @@ import junit.framework.TestCase;
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.cl.parser.ParserBuilder;
 import org.jboss.aesh.console.Config;
 
 /**

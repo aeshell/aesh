@@ -9,6 +9,8 @@ package org.jboss.aesh.cl;
 import junit.framework.TestCase;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.cl.parser.ParserGenerator;
 
 import java.util.List;
 

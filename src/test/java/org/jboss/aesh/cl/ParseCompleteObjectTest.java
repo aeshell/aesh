@@ -1,6 +1,10 @@
 package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
+import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
+import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.cl.parser.ParsedCompleteObject;
+import org.jboss.aesh.cl.parser.ParserGenerator;
 
 import java.util.List;
 

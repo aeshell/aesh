@@ -4,8 +4,9 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.cl;
+package org.jboss.aesh.cl.parser;
 
+import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.ArgumentParserException;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
@@ -23,7 +24,7 @@ import java.util.List;
 /**
  * A simple command line parser.
  * It parses a given string based on the Command given and
- * returns a {@link CommandLine}
+ * returns a {@link org.jboss.aesh.cl.CommandLine}
  *
  * It can also print a formatted usage/help information.
  *
@@ -62,7 +63,7 @@ public class CommandLineParser {
      * Also, if a required option is not found or options specified with value,
      * but is not given any value an OptionParserException will be thrown.
      *
-     * The options found will be returned as a {@link CommandLine} object where
+     * The options found will be returned as a {@link org.jboss.aesh.cl.CommandLine} object where
      * they can be queried after.
      *
      * @param line input

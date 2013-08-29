@@ -1,4 +1,4 @@
-package org.jboss.aesh.cl;
+package org.jboss.aesh.cl.parser;
 
 /**
  * A value object designed to show on which option a complete operation

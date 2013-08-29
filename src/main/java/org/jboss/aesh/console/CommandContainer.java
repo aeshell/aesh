@@ -1,7 +1,7 @@
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.cl.CommandLineParser;
-import org.jboss.aesh.cl.ParserGenerator;
+import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.cl.parser.ParserGenerator;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.util.ReflectionUtil;
 

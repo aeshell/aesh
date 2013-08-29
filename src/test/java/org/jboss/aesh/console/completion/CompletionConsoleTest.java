@@ -7,7 +7,7 @@
 package org.jboss.aesh.console.completion;
 
 import org.jboss.aesh.cl.builder.CommandBuilder;
-import org.jboss.aesh.cl.CommandLineParser;
+import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;

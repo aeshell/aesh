@@ -17,7 +17,7 @@ import java.util.Map;
 
 /**
  * A parsed String based on the provided CommandDefinition and Options defined
- * in a {@link CommandLineParser}.
+ * in a {@link org.jboss.aesh.cl.parser.CommandLineParser}.
  *
  * All found options and argument can be queried after.
  *
@@ -63,7 +63,7 @@ public class CommandLine {
 
     }
 
-    protected List<ProcessedOption> getOptions() {
+    public List<ProcessedOption> getOptions() {
         return options;
     }
 
@@ -83,7 +83,7 @@ public class CommandLine {
        return hasOption(String.valueOf(name));
     }
 
-    protected ProcessedOption getOption(String name) {
+    public ProcessedOption getOption(String name) {
         for(ProcessedOption po : options) {
             if((po.getShortName() != null && po.getShortName().equals(name)) ||
                     (po.getName() != null && po.getName().equals(name)))

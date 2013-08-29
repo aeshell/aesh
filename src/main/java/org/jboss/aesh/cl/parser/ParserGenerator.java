@@ -4,8 +4,13 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.cl;
+package org.jboss.aesh.cl.parser;
 
+import org.jboss.aesh.cl.Arguments;
+import org.jboss.aesh.cl.CommandDefinition;
+import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.cl.OptionGroup;
+import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.OptionType;

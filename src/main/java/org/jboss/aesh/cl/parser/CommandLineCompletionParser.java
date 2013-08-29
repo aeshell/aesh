@@ -4,8 +4,9 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.cl;
+package org.jboss.aesh.cl.parser;
 
+import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.DefaultValueOptionCompleter;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;

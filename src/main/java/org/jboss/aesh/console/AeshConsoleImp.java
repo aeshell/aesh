@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.CommandLineCompletionParser;
-import org.jboss.aesh.cl.CommandLineParser;
-import org.jboss.aesh.cl.ParsedCompleteObject;
+import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
+import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
