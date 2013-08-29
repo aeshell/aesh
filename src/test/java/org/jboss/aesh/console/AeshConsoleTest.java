@@ -34,7 +34,8 @@ public class AeshConsoleTest extends BaseConsoleTest {
         Settings settings = getDefaultSettings(pipedInputStream, null);
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder().settings(settings);
-        consoleBuilder.command(FooTestCommand.class);
+
+        consoleBuilder.commandRegistry( new AeshCommandRegistryBuilder().command(FooTestCommand.class).create());
 
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();

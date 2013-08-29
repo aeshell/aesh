@@ -240,6 +240,10 @@ public class Console {
         }
     }
 
+    public Prompt getPrompt() {
+        return buffer.getPrompt();
+    }
+
     public void setConsoleCallback(ConsoleCallback consoleCallback) {
         this.consoleCallback = consoleCallback;
     }

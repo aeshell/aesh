@@ -28,27 +28,6 @@ public interface AeshConsole {
     void stop();
 
     /**
-     * Add a Command to the AeshConsole
-     */
-    void addCommand(Class<? extends Command> command);
-
-    /**
-     * Add a Command to the AeshConsole
-     */
-    void addCommand(Command command);
-
-    /**
-     * Remove the given command from the Console
-     * @param command
-     */
-    void removeCommand(Class<? extends Command> command);
-
-    /**
-     * Remove the given command from the Console.
-     */
-    void removeCommand(Command command);
-
-    /**
      * Attach a ConsoleCommand to the console. All input received
      * to the console will be sent directly to the
      * ConsoleCommand.processOperation(..)
@@ -69,6 +48,11 @@ public interface AeshConsole {
      * Specify the prompt
      */
     void setPrompt(Prompt prompt);
+
+    /**
+     * Get the current Prompt
+     */
+    Prompt getPrompt();
 
     /**
      * Get the possible input stream

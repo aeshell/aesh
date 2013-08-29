@@ -8,16 +8,13 @@ package org.jboss.aesh.console;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.CommandLineCompletionParser;
 import org.jboss.aesh.cl.CommandLineParser;
 import org.jboss.aesh.cl.ParsedCompleteObject;
-import org.jboss.aesh.cl.ParserGenerator;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
@@ -27,20 +24,20 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.aesh.parser.Parser;
-import org.jboss.aesh.util.ReflectionUtil;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshConsoleImp implements AeshConsole {
 
-    private Map<CommandLineParser, Command> commands;
     private Console console;
+    private CommandRegistry registry;
 
     Logger logger = LoggerUtil.getLogger(AeshConsoleImp.class.getName());
 
-    AeshConsoleImp(Settings settings) {
-        commands = new HashMap<CommandLineParser, Command>();
+    AeshConsoleImp(Settings settings, CommandRegistry registry) {
+        this.registry = registry;
+        //commands = new HashMap<CommandLineParser, Command>();
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallback(this));
         console.addCompletion(new AeshCompletion());
@@ -65,47 +62,6 @@ public class AeshConsoleImp implements AeshConsole {
     }
 
     @Override
-    public void addCommand(Class<? extends Command> command) {
-        if(verifyCommand(command)) {
-            try {
-                commands.put(ParserGenerator.generateCommandLineParser(command), ReflectionUtil.newInstance(command));
-            } catch (CommandLineParserException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public void addCommand(Command command) {
-        if(verifyCommand(command)) {
-            try {
-                commands.put(ParserGenerator.generateCommandLineParser(command), command);
-            } catch (CommandLineParserException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public void removeCommand(Class<? extends Command> command) {
-        if(verifyCommand(command)) {
-            String commandName = command.getAnnotation(CommandDefinition.class).name();
-
-            for(CommandLineParser parser : commands.keySet()) {
-                if(parser.getCommand().getName().equals(commandName)) {
-                    commands.remove(parser);
-                    return;
-                }
-            }
-        }
-    }
-
-    @Override
-    public void removeCommand(Command command) {
-        removeCommand(command.getClass());
-    }
-
-    @Override
     public AeshPrintWriter err() {
         return console.err();
     }
@@ -122,6 +78,11 @@ public class AeshConsoleImp implements AeshConsole {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public Prompt getPrompt() {
+        return console.getPrompt();
     }
 
     @Override
@@ -150,10 +111,10 @@ public class AeshConsoleImp implements AeshConsole {
 
     private CommandLineParser findCommand(String input) {
         String name = Parser.findFirstWord(input);
-        for(CommandLineParser parser : commands.keySet()) {
-            logger.info("findCommand, commandName: "+parser.getCommand().getName()+", firstName: "+name);
-            if(parser.getCommand().getName().equals(name))
-                return parser;
+        for(String commandName : registry.asMap().keySet()) {
+            logger.info("findCommand, commandName: "+commandName+", firstName: "+name);
+            if(commandName.equals(name))
+                return registry.asMap().get(commandName).getParser();
         }
 
         return null;
@@ -161,9 +122,9 @@ public class AeshConsoleImp implements AeshConsole {
 
     private List<String> completeCommandName(String input) {
         List<String> matchedCommands = new ArrayList<String>();
-        for(CommandLineParser parser : commands.keySet()) {
-            if(parser.getCommand().getName().startsWith(input))
-                matchedCommands.add(parser.getCommand().getName());
+        for(String commandName : registry.asMap().keySet()) {
+            if(commandName.startsWith(input))
+                matchedCommands.add(commandName);
         }
 
         return matchedCommands;
@@ -193,13 +154,16 @@ public class AeshConsoleImp implements AeshConsole {
 
                         ParsedCompleteObject completeObject = completionParser.findCompleteObject(completeOperation.getBuffer());
                         logger.info("completeObject: "+completeObject);
-                        completionParser.injectValuesAndComplete(completeObject, commands.get(currentCommand), completeOperation);
+                        completionParser.injectValuesAndComplete(completeObject, registry.getCommand(currentCommand.getCommand().getName()), completeOperation);
+                        //completionParser.injectValuesAndComplete(completeObject, commands.get(currentCommand), completeOperation);
 
                     }
                     catch (CommandLineParserException e) {
                         logger.warning(e.getMessage());
                         //if(e instanceof ArgumentParserException)
                         //    logger.info("User trying to complete a command without arguments");
+                    } catch (CommandNotFoundException e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -215,18 +179,21 @@ public class AeshConsoleImp implements AeshConsole {
         }
         @Override
         public int readConsoleOutput(ConsoleOperation output) throws IOException {
-            CommandResult result;
+            CommandResult result = CommandResult.SUCCESS;
             if(output != null && output.getBuffer().trim().length() > 0) {
                 CommandLineParser calledCommand = findCommand(output.getBuffer());
                 if(calledCommand != null) {
                     try {
-                        calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
-                        result = commands.get(calledCommand).execute(console,
+                        //calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
+                        calledCommand.populateObject(registry.getCommand(calledCommand.getCommand().getName()), output.getBuffer());
+                        result = registry.getCommand(calledCommand.getCommand().getName()).execute(console,
                                 output.getControlOperator());
                     }
                     catch (CommandLineParserException e) {
                         console.out().println(e.getMessage());
                         result = CommandResult.FAILURE;
+                    } catch (CommandNotFoundException e) {
+                        e.printStackTrace();
                     }
                 }
                 else {

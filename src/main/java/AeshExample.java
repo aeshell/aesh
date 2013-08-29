@@ -10,9 +10,11 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.OptionCompleter;
+import org.jboss.aesh.console.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Command;
+import org.jboss.aesh.console.CommandRegistry;
 import org.jboss.aesh.console.CommandResult;
 import org.jboss.aesh.console.ConsoleCommand;
 import org.jboss.aesh.console.Prompt;
@@ -35,12 +37,16 @@ public class AeshExample {
     public static void main(String[] args) {
 
         Settings settings = new SettingsBuilder().logging(true).create();
-        AeshConsole aeshConsole = new AeshConsoleBuilder().settings(settings)
-                .prompt(new Prompt("[aesh@rules]$ "))
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
                 .command(FooCommand.class)
                 .command(LsCommand.class)
                 .command(TestConsoleCommand.class)
+                .create();
+        AeshConsole aeshConsole = new AeshConsoleBuilder()
+                .commandRegistry(registry)
+                .settings(settings)
+                .prompt(new Prompt("[aesh@rules]$ "))
                 .create();
 
         aeshConsole.start();

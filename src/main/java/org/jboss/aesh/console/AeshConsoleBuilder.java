@@ -9,31 +9,20 @@ package org.jboss.aesh.console;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshConsoleBuilder {
 
-    private Set<Class<? extends Command>> commands;
-    private Set<Command> commands2;
     private Settings settings;
     private Prompt prompt;
+    private CommandRegistry registry;
 
     public AeshConsoleBuilder() {
-        commands = new HashSet<Class<? extends Command>>();
-        commands2 = new HashSet<Command>();
     }
 
-    public AeshConsoleBuilder command(Class<? extends Command> command) {
-        commands.add(command);
-        return this;
-    }
-
-    public AeshConsoleBuilder command(Command command) {
-        commands2.add(command);
+    public AeshConsoleBuilder commandRegistry(CommandRegistry registry) {
+        this.registry = registry;
         return this;
     }
 
@@ -50,11 +39,10 @@ public class AeshConsoleBuilder {
     public AeshConsole create() {
         if(settings == null)
             settings = new SettingsBuilder().create();
-        AeshConsole aeshConsole = new AeshConsoleImp(settings);
-        for(Class<? extends Command> command : commands)
-            aeshConsole.addCommand(command);
-        for(Command command : commands2)
-            aeshConsole.addCommand(command);
+        if(registry == null) {
+            registry = new MutableCommandRegistry();
+        }
+        AeshConsole aeshConsole = new AeshConsoleImp(settings, registry);
 
         if(prompt != null)
             aeshConsole.setPrompt(prompt);
