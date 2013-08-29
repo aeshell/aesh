@@ -6,12 +6,9 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.console.operator.ControlOperator;
@@ -23,6 +20,7 @@ import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -44,6 +42,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
         Settings settings = new SettingsBuilder()
                 .terminal(new TestTerminal())
                 .inputStream(pipedInputStream)
+                .outputStream(new ByteArrayOutputStream())
                 .logging(true)
                 .create();
 

@@ -161,8 +161,8 @@ public class CompletionConsoleTest extends BaseConsoleTest {
                 .description("less -options <files>")
                 .generateParameter();
 
-        param.addOption(new OptionBuilder().shortName('f').name("foo").hasValue(true).create());
-        param.addOption(new OptionBuilder().shortName('b').name("bar").hasValue(true).create());
+        param.addOption(new OptionBuilder().shortName('f').name("foo").hasValue(true).type(String.class).create());
+        param.addOption(new OptionBuilder().shortName('b').name("bar").hasValue(true).type(String.class).create());
 
         final CommandLineParser parser = new CommandLineParser(param);
         final StringBuilder builder = new StringBuilder();

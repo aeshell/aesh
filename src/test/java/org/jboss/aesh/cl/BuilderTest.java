@@ -30,7 +30,7 @@ public class BuilderTest extends TestCase {
         pb.name("foo").description("foo is bar");
         pb.addOption(
                 new OptionBuilder().description("filename given").shortName('f').name("filename")
-                        .hasValue(true).create());
+                        .type(String.class).hasValue(true).create());
 
         CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
 
@@ -45,18 +45,18 @@ public class BuilderTest extends TestCase {
         CommandBuilder pb = new CommandBuilder().name("less").description("less is more");
         pb.addOption(
                 new OptionBuilder().description("version").shortName('V').name("version")
-                        .hasValue(false).required(true).create());
+                        .hasValue(false).required(true).type(String.class).create());
         pb.addOption(
                 new OptionBuilder().description("is verbose").shortName('v').name("verbose")
-                        .hasValue(false).create());
+                        .hasValue(false).type(String.class).create());
 
         pb.addOption(
                 new OptionBuilder().description("attributes").shortName('D').name("attributes")
-                        .isProperty(true).create());
+                        .isProperty(true).type(String.class).create());
 
         pb.addOption(
                 new OptionBuilder().description("values").name("values").shortName('a')
-                        .hasMultipleValues(true).create());
+                        .hasMultipleValues(true).type(String.class).create());
 
         pb.argument(new OptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENT).type(String.class).create());
@@ -82,9 +82,9 @@ public class BuilderTest extends TestCase {
     public void testBuilder3() throws CommandLineParserException {
         CommandBuilder pb = new CommandBuilder().name("less").description("less is more");
         pb.addOption(
-                new OptionBuilder().description("version").name("version").hasValue(false).required(true).create());
+                new OptionBuilder().description("version").name("version").hasValue(false).required(true).type(String.class).create());
         pb.addOption(
-                new OptionBuilder().description("is verbose").name("verbose").hasValue(false).shortName('e').create());
+                new OptionBuilder().description("is verbose").name("verbose").hasValue(false).shortName('e').type(String.class).create());
 
         pb.argument(new OptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENT).type(String.class).create());
@@ -101,9 +101,9 @@ public class BuilderTest extends TestCase {
 
     public void testParameterInt() throws OptionParserException {
         ProcessedCommand processedCommand = new ProcessedCommand("foo", "");
-        processedCommand.addOption(new OptionBuilder().name("foo1").create());
-        processedCommand.addOption(new OptionBuilder().name("foo2").create());
-        processedCommand.addOption(new OptionBuilder().name("foo3").create());
+        processedCommand.addOption(new OptionBuilder().name("foo1").type(String.class).create());
+        processedCommand.addOption(new OptionBuilder().name("foo2").type(String.class).create());
+        processedCommand.addOption(new OptionBuilder().name("foo3").type(String.class).create());
 
         assertEquals("f", processedCommand.getOptions().get(0).getShortName());
         assertEquals("o", processedCommand.getOptions().get(1).getShortName());

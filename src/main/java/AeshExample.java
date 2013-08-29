@@ -13,7 +13,6 @@ import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.console.AeshCommandRegistryBuilder;

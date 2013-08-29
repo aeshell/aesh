@@ -31,6 +31,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .shortName('d')
                         .name("debug")
                         .description("emit debugging messages")
+                        .type(String.class)
                         .create());
 
         pb.addOption(
@@ -38,6 +39,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .shortName('D')
                         .name("default")
                         .description("reset all options to their default values")
+                        .type(String.class)
                         .create());
 
         CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
@@ -56,6 +58,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .shortName('d')
                         .name("debug")
                         .description("emit debugging messages")
+                        .type(String.class)
                         .create());
 
         pb.addOption(
@@ -63,6 +66,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .shortName('D')
                         .name("default")
                         .description("reset all options to their default values")
+                        .type(String.class)
                         .create());
 
         pb.addOption(
@@ -72,6 +76,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .hasValue(true)
                         .argument("filename")
                         .description("set the filename")
+                        .type(String.class)
                         .create());
 
 
