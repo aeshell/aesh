@@ -10,8 +10,8 @@ import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.CommandLineParser;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.internal.OptionInt;
-import org.jboss.aesh.cl.internal.CommandInt;
+import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.complete.CompletionRegistration;
@@ -157,7 +157,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
     @Test
     public void completionWithOptions() throws IOException, InterruptedException, CommandLineParserException {
 
-        final CommandInt param = new CommandBuilder().name("less")
+        final ProcessedCommand param = new CommandBuilder().name("less")
                 .description("less -options <files>")
                 .generateParameter();
 
@@ -177,13 +177,13 @@ public class CompletionConsoleTest extends BaseConsoleTest {
                 else if(co.getBuffer().startsWith(parser.getCommand().getName())){
                    if(co.getBuffer().length() > parser.getCommand().getName().length())  {
                       if(co.getBuffer().endsWith(" --")) {
-                         for(OptionInt o : parser.getCommand().getOptions()) {
+                         for(ProcessedOption o : parser.getCommand().getOptions()) {
                              co.addCompletionCandidate("--"+o.getName());
                              builder.append("--"+o.getName()+" ");
                          }
                       }
                       else if(co.getBuffer().endsWith(" -")) {
-                          for(OptionInt o : parser.getCommand().getOptions()) {
+                          for(ProcessedOption o : parser.getCommand().getOptions()) {
                               co.addCompletionCandidate("-"+o.getShortName());
                               builder.append("-"+o.getShortName()+" ");
                           }

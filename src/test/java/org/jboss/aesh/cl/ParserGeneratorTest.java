@@ -8,7 +8,7 @@ package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.internal.OptionInt;
+import org.jboss.aesh.cl.internal.ProcessedOption;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class ParserGeneratorTest extends TestCase {
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(test1);
 
         assertEquals("a simple test", parser.getCommand().getUsage());
-        List<OptionInt> options = parser.getCommand().getOptions();
+        List<ProcessedOption> options = parser.getCommand().getOptions();
         assertEquals("f", options.get(0).getShortName());
         assertEquals("foo", options.get(0).getName());
         assertEquals("e", options.get(1).getShortName());

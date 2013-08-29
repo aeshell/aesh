@@ -11,7 +11,7 @@ import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
-import org.jboss.aesh.cl.internal.CommandInt;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.OptionType;
 
 /**
@@ -98,14 +98,14 @@ public class BuilderTest extends TestCase {
     }
 
     public void testParameterInt() throws OptionParserException {
-        CommandInt commandInt = new CommandInt("foo", "");
-        commandInt.addOption(new OptionBuilder().name("foo1").create());
-        commandInt.addOption(new OptionBuilder().name("foo2").create());
-        commandInt.addOption(new OptionBuilder().name("foo3").create());
+        ProcessedCommand processedCommand = new ProcessedCommand("foo", "");
+        processedCommand.addOption(new OptionBuilder().name("foo1").create());
+        processedCommand.addOption(new OptionBuilder().name("foo2").create());
+        processedCommand.addOption(new OptionBuilder().name("foo3").create());
 
-        assertEquals("f", commandInt.getOptions().get(0).getShortName());
-        assertEquals("o", commandInt.getOptions().get(1).getShortName());
-        assertEquals("3", commandInt.getOptions().get(2).getShortName());
+        assertEquals("f", processedCommand.getOptions().get(0).getShortName());
+        assertEquals("o", processedCommand.getOptions().get(1).getShortName());
+        assertEquals("3", processedCommand.getOptions().get(2).getShortName());
     }
 
 }

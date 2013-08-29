@@ -7,9 +7,9 @@
 package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.internal.OptionInt;
+import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.OptionType;
-import org.jboss.aesh.cl.internal.CommandInt;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -33,7 +33,7 @@ public class ParserGenerator {
         if(command == null)
             throw new CommandLineParserException("Commands must be annotated with @CommandDefinition");
 
-        CommandInt commandInt = new CommandInt(command.name(), command.description());
+        ProcessedCommand processedCommand = new ProcessedCommand(command.name(), command.description());
 
         for(Field field : clazz.getDeclaredFields()) {
             Option o;
@@ -47,12 +47,12 @@ public class ParserGenerator {
                 else
                     optionType = OptionType.BOOLEAN;
                 if(o.name() == null || o.name().length() < 1) {
-                    commandInt.addOption(o.shortName(), field.getName(), o.description(),
+                    processedCommand.addOption(o.shortName(), field.getName(), o.description(),
                             o.argument(), o.required(), ',', o.defaultValue(),
                             field.getType(), field.getName(), optionType, o.converter(), o.completer());
                 }
                 else {
-                    commandInt.addOption(o.shortName(), o.name(), o.description(),
+                    processedCommand.addOption(o.shortName(), o.name(), o.description(),
                             o.argument(), o.required(), ',', o.defaultValue(),
                             field.getType(), field.getName(), optionType, o.converter(), o.completer());
                 }
@@ -67,12 +67,12 @@ public class ParserGenerator {
                     type = (Class) listType.getActualTypeArguments()[0];
                 }
                 if(ol.name() == null || ol.name().length() < 1) {
-                    commandInt.addOption(ol.shortName(), field.getName(), ol.description(), "",
+                    processedCommand.addOption(ol.shortName(), field.getName(), ol.description(), "",
                             ol.required(), ol.valueSeparator(), ol.defaultValue(), type, field.getName(), OptionType.LIST,
                             ol.converter(), ol.completer());
                 }
                 else {
-                    commandInt.addOption(ol.shortName(), ol.name(), ol.description(), "",
+                    processedCommand.addOption(ol.shortName(), ol.name(), ol.description(), "",
                             ol.required(), ol.valueSeparator(), ol.defaultValue(), type, field.getName(), OptionType.LIST,
                             ol.converter(), ol.completer());
                 }
@@ -86,12 +86,12 @@ public class ParserGenerator {
                     type = (Class) listType.getActualTypeArguments()[1];
                 }
                 if(og.name() == null || og.name().length() < 1) {
-                    commandInt.addOption(og.shortName(), field.getName(), og.description(),
+                    processedCommand.addOption(og.shortName(), field.getName(), og.description(),
                             "", og.required(), ',', og.defaultValue(), type, field.getName(), OptionType.GROUP,
                             og.converter(), og.completer());
                 }
                 else {
-                    commandInt.addOption(og.shortName(), og.name(), og.description(),
+                    processedCommand.addOption(og.shortName(), og.name(), og.description(),
                             "", og.required(), ',', og.defaultValue(), type, field.getName(), OptionType.GROUP,
                             og.converter(), og.completer());
                 }
@@ -105,12 +105,12 @@ public class ParserGenerator {
                     ParameterizedType listType = (ParameterizedType) field.getGenericType();
                     type = (Class) listType.getActualTypeArguments()[0];
                 }
-                commandInt.setArgument(new OptionInt('\u0000',"", a.description(), "", false, a.valueSeparator(),
+                processedCommand.setArgument(new ProcessedOption('\u0000',"", a.description(), "", false, a.valueSeparator(),
                         a.defaultValue(), type, field.getName(), OptionType.ARGUMENT, a.converter(), a.completer()));
             }
         }
 
-        return new ParserBuilder().parameter(commandInt).generateParser();
+        return new ParserBuilder().parameter(processedCommand).generateParser();
     }
 
     public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException {

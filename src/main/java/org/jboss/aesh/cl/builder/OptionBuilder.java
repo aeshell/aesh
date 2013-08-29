@@ -9,14 +9,14 @@ package org.jboss.aesh.cl.builder;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
-import org.jboss.aesh.cl.internal.OptionInt;
+import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.OptionType;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Build a {@link OptionInt} object using the Builder pattern.
+ * Build a {@link org.jboss.aesh.cl.internal.ProcessedOption} object using the Builder pattern.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -146,7 +146,7 @@ public class OptionBuilder {
     }
 
 
-    public OptionInt create() throws OptionParserException {
+    public ProcessedOption create() throws OptionParserException {
         if(optionType == null) {
             if(!hasValue)
                 optionType = OptionType.BOOLEAN;
@@ -165,7 +165,7 @@ public class OptionBuilder {
                 name = fieldName;
         }
 
-        return new OptionInt(shortName, name, description, argument, required,
+        return new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, defaultValues, type, fieldName, optionType, converter, completer);
     }
 }

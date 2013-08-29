@@ -10,7 +10,7 @@ import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.DefaultValueOptionCompleter;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.internal.OptionInt;
+import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Command;
 import org.jboss.aesh.util.LoggerUtil;
@@ -124,7 +124,7 @@ public class CommandLineCompletionParser {
         }
         //get the last option
         else if (cl.getOptions() != null && cl.getOptions().size() > 0) {
-            OptionInt po = cl.getOptions().get(cl.getOptions().size()-1);
+            ProcessedOption po = cl.getOptions().get(cl.getOptions().size()-1);
             if(po.isLongNameUsed() || (po.getShortName() == null || po.getShortName().length() < 1))
                 return new ParsedCompleteObject(po.getName(), endsWithSpace ? "" : po.getValue(), po.getType(), true);
             else
@@ -178,7 +178,7 @@ public class CommandLineCompletionParser {
         }
         //complete option value
         else if(completeObject.isOption()) {
-            OptionInt currentOption = parser.getCommand().findOption(completeObject.getName());
+            ProcessedOption currentOption = parser.getCommand().findOption(completeObject.getName());
             if(currentOption == null)
                 currentOption = parser.getCommand().findLongOption(completeObject.getName());
 

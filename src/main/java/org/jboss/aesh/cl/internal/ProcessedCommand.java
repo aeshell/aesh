@@ -18,51 +18,51 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CommandInt {
+public class ProcessedCommand {
 
     private String name;
     private String usage;
 
-    private List<OptionInt> options;
-    private OptionInt argument;
+    private List<ProcessedOption> options;
+    private ProcessedOption argument;
 
-    public CommandInt(String name, String usage) {
+    public ProcessedCommand(String name, String usage) {
         setName(name);
         setUsage(usage);
-        options = new ArrayList<OptionInt>();
+        options = new ArrayList<ProcessedOption>();
     }
 
-    public CommandInt(String name, String usage, OptionInt argument) {
+    public ProcessedCommand(String name, String usage, ProcessedOption argument) {
         setName(name);
         setUsage(usage);
         this.argument = argument;
-        options = new ArrayList<OptionInt>();
+        options = new ArrayList<ProcessedOption>();
     }
 
-    public CommandInt(String name, String usage,
-                      OptionInt argument, OptionInt[] options) throws OptionParserException {
+    public ProcessedCommand(String name, String usage,
+                            ProcessedOption argument, ProcessedOption[] options) throws OptionParserException {
         setName(name);
         setUsage(usage);
         this.argument = argument;
-        this.options = new ArrayList<OptionInt>();
+        this.options = new ArrayList<ProcessedOption>();
         setOptions(Arrays.asList(options));
     }
 
-    public CommandInt(String name, String usage,
-                      OptionInt argument, List<OptionInt> options) throws OptionParserException {
+    public ProcessedCommand(String name, String usage,
+                            ProcessedOption argument, List<ProcessedOption> options) throws OptionParserException {
         setName(name);
         setUsage(usage);
         this.argument = argument;
-        this.options = new ArrayList<OptionInt>();
+        this.options = new ArrayList<ProcessedOption>();
         setOptions(options);
     }
 
-    public List<OptionInt> getOptions() {
+    public List<ProcessedOption> getOptions() {
         return options;
     }
 
-    public void addOption(OptionInt opt) throws OptionParserException {
-        this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
+    public void addOption(ProcessedOption opt) throws OptionParserException {
+        this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                 opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                 opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(), opt.getConverter(),
                 opt.getCompleter()));
@@ -89,14 +89,14 @@ public class CommandInt {
                      Class<? extends OptionCompleter> completer) throws OptionParserException {
         List<String> defaultValues = new ArrayList<String>();
         defaultValues.addAll(Arrays.asList(defaultValue));
-        options.add(new OptionInt(verifyThatNamesAreUnique(name, longName), longName, description,
+        options.add(new ProcessedOption(verifyThatNamesAreUnique(name, longName), longName, description,
                 argument, required, valueSeparator, defaultValues,
                 type, fieldName, optionType, converter, completer));
     }
 
-    private void setOptions(List<OptionInt> options) throws OptionParserException {
-        for(OptionInt opt : options) {
-            this.options.add(new OptionInt(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
+    private void setOptions(List<ProcessedOption> options) throws OptionParserException {
+        for(ProcessedOption opt : options) {
+            this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                     opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                     opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(),
                     opt.getConverter(), opt.getCompleter()));
@@ -123,11 +123,11 @@ public class CommandInt {
         return argument != null && argument.hasMultipleValues();
     }
 
-    public OptionInt getArgument() {
+    public ProcessedOption getArgument() {
         return argument;
     }
 
-    public void setArgument(OptionInt argument) {
+    public void setArgument(ProcessedOption argument) {
         this.argument = argument;
     }
 
@@ -162,32 +162,32 @@ public class CommandInt {
         throw new OptionParserException("All option names are taken, please specify a unique name");
     }
 
-    public OptionInt findOption(String name) {
-        for(OptionInt option : options)
+    public ProcessedOption findOption(String name) {
+        for(ProcessedOption option : options)
             if(option.getShortName() != null && option.getShortName().equals(name))
                 return option;
 
         return null;
     }
 
-    public OptionInt findLongOption(String name) {
-        for(OptionInt option : options)
+    public ProcessedOption findLongOption(String name) {
+        for(ProcessedOption option : options)
             if(option.getName() != null && option.getName().equals(name))
                 return option;
 
         return null;
     }
 
-    public OptionInt startWithOption(String name) {
-        for(OptionInt option : options)
+    public ProcessedOption startWithOption(String name) {
+        for(ProcessedOption option : options)
             if(name.startsWith(option.getShortName()))
                 return option;
 
         return null;
     }
 
-    public OptionInt startWithLongOption(String name) {
-        for(OptionInt option : options)
+    public ProcessedOption startWithLongOption(String name) {
+        for(ProcessedOption option : options)
             if(name.startsWith(option.getName()))
                 return option;
 
@@ -195,8 +195,8 @@ public class CommandInt {
     }
 
    public void clear() {
-       for(OptionInt optionInt : options)
-           optionInt.clear();
+       for(ProcessedOption processedOption : options)
+           processedOption.clear();
        if(argument != null)
            argument.clear();
     }
@@ -206,7 +206,7 @@ public class CommandInt {
      */
     public List<String> getOptionLongNamesWithDash() {
         List<String> names = new ArrayList<String>(options.size());
-        for(OptionInt o : options) {
+        for(ProcessedOption o : options) {
             if(o.getValues().size() == 0)
                 names.add("--"+o.getName());
         }
@@ -216,7 +216,7 @@ public class CommandInt {
 
     public List<String> findPossibleLongNamesWitdDash(String name) {
         List<String> names = new ArrayList<String>(options.size());
-        for(OptionInt o : options) {
+        for(ProcessedOption o : options) {
            if(o.getShortName().equals(name) || o.getName().startsWith(name))
                names.add("--"+o.getName());
         }
@@ -231,19 +231,19 @@ public class CommandInt {
     public String printHelp() {
         int maxLength = 0;
         int width = 80;
-        for(OptionInt o : getOptions())
+        for(ProcessedOption o : getOptions())
             if(o.getFormattedLength() > maxLength)
                 maxLength = o.getFormattedLength();
 
         StringBuilder sb = new StringBuilder();
-        for(OptionInt o : getOptions())
+        for(ProcessedOption o : getOptions())
             sb.append(o.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
         return "Usage: "+getName()+" "+getUsage()+ Config.getLineSeparator()+sb.toString();
     }
 
     @Override
     public String toString() {
-        return "CommandInt{" +
+        return "ProcessedCommand{" +
                 "name='" + name + '\'' +
                 ", description='" + usage + '\'' +
                 ", options=" + options +
@@ -253,9 +253,9 @@ public class CommandInt {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CommandInt)) return false;
+        if (!(o instanceof ProcessedCommand)) return false;
 
-        CommandInt that = (CommandInt) o;
+        ProcessedCommand that = (ProcessedCommand) o;
 
         if (!name.equals(that.name)) return false;
         if (usage != null ? !usage.equals(that.usage) : that.usage != null) return false;
@@ -271,7 +271,7 @@ public class CommandInt {
     }
 
     public boolean hasLongOption(String optionName) {
-        for(OptionInt o : getOptions()) {
+        for(ProcessedOption o : getOptions()) {
             if (o.getName().equals(optionName))
                 return true;
         }

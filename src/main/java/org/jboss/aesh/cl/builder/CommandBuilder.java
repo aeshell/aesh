@@ -7,14 +7,14 @@
 package org.jboss.aesh.cl.builder;
 
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.internal.OptionInt;
-import org.jboss.aesh.cl.internal.CommandInt;
+import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Build a {@link org.jboss.aesh.cl.internal.CommandInt} object using the Builder pattern.
+ * Build a {@link org.jboss.aesh.cl.internal.ProcessedCommand} object using the Builder pattern.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -22,12 +22,12 @@ public class CommandBuilder {
 
     private String name;
     private String description;
-    private OptionInt argument;
-    private List<OptionInt> options;
+    private ProcessedOption argument;
+    private List<ProcessedOption> options;
 
 
     public CommandBuilder() {
-        options = new ArrayList<OptionInt>();
+        options = new ArrayList<ProcessedOption>();
     }
 
     public CommandBuilder name(String name) {
@@ -40,24 +40,24 @@ public class CommandBuilder {
         return this;
     }
 
-    public CommandBuilder argument(OptionInt argument) {
+    public CommandBuilder argument(ProcessedOption argument) {
         this.argument = argument;
         return this;
     }
 
-    public CommandBuilder addOption(OptionInt option) {
+    public CommandBuilder addOption(ProcessedOption option) {
         this.options.add(option);
         return this;
     }
 
-    public CommandBuilder addOptions(List<OptionInt> options) {
+    public CommandBuilder addOptions(List<ProcessedOption> options) {
         this.options.addAll(options);
         return this;
     }
 
-    public CommandInt generateParameter() throws CommandLineParserException {
+    public ProcessedCommand generateParameter() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
-        return  new CommandInt(name, description, argument, options);
+        return  new ProcessedCommand(name, description, argument, options);
     }
 }

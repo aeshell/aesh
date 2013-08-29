@@ -32,7 +32,7 @@ import java.util.Set;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class OptionInt {
+public class ProcessedOption {
 
     private String shortName;
     private String name;
@@ -51,10 +51,10 @@ public class OptionInt {
     private Map<String,String> properties;
     private boolean longNameUsed = true;
 
-     public OptionInt(char shortName, String name, String description,
-                     String argument, boolean required, char valueSeparator,
-                     List<String> defaultValue, Class<?> type, String fieldName,
-                     OptionType optionType, CLConverter converter, OptionCompleter completer) throws OptionParserException {
+     public ProcessedOption(char shortName, String name, String description,
+                            String argument, boolean required, char valueSeparator,
+                            List<String> defaultValue, Class<?> type, String fieldName,
+                            OptionType optionType, CLConverter converter, OptionCompleter completer) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, defaultValue,
                 type, fieldName, optionType,
                 (Class<? extends CLConverter>) null,(Class<? extends OptionCompleter>) null);
@@ -63,29 +63,29 @@ public class OptionInt {
     }
 
 
-    public OptionInt(char shortName, String name, String description,
-                     String argument, boolean required, char valueSeparator,
-                     List<String> defaultValue, Class<?> type, String fieldName,
-                     OptionType optionType, Class<? extends CLConverter> converter,
-                     OptionCompleter completer) throws OptionParserException {
+    public ProcessedOption(char shortName, String name, String description,
+                           String argument, boolean required, char valueSeparator,
+                           List<String> defaultValue, Class<?> type, String fieldName,
+                           OptionType optionType, Class<? extends CLConverter> converter,
+                           OptionCompleter completer) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, defaultValue,
                 type, fieldName, optionType, converter, (Class<? extends OptionCompleter>) null);
         this.completer = completer;
     }
-    public OptionInt(char shortName, String name, String description,
-                     String argument, boolean required, char valueSeparator,
-                     String[] defaultValue, Class<?> type, String fieldName,
-                     OptionType optionType, Class<? extends CLConverter> converter,
-                     Class<? extends OptionCompleter> completer) throws OptionParserException {
+    public ProcessedOption(char shortName, String name, String description,
+                           String argument, boolean required, char valueSeparator,
+                           String[] defaultValue, Class<?> type, String fieldName,
+                           OptionType optionType, Class<? extends CLConverter> converter,
+                           Class<? extends OptionCompleter> completer) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, Arrays.asList(defaultValue),
                 type, fieldName, optionType, converter, completer);
     }
 
-    public OptionInt(char shortName, String name, String description,
-                     String argument, boolean required, char valueSeparator,
-                     List<String> defaultValue, Class<?> type, String fieldName,
-                     OptionType optionType, Class<? extends CLConverter> converter,
-                     Class<? extends OptionCompleter> completer) throws OptionParserException {
+    public ProcessedOption(char shortName, String name, String description,
+                           String argument, boolean required, char valueSeparator,
+                           List<String> defaultValue, Class<?> type, String fieldName,
+                           OptionType optionType, Class<? extends CLConverter> converter,
+                           Class<? extends OptionCompleter> completer) throws OptionParserException {
         this.shortName = String.valueOf(shortName);
         this.name = name;
         this.description = description;
@@ -369,7 +369,7 @@ public class OptionInt {
 
     @Override
     public String toString() {
-        return "OptionInt{" +
+        return "ProcessedOption{" +
                 "shortName='" + shortName + '\'' +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +

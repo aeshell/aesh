@@ -8,7 +8,7 @@ package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
-import org.jboss.aesh.cl.internal.OptionInt;
+import org.jboss.aesh.cl.internal.ProcessedOption;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,13 +25,13 @@ import java.util.Map;
  */
 public class CommandLine {
 
-    private List<OptionInt> options;
-    private OptionInt argument;
+    private List<ProcessedOption> options;
+    private ProcessedOption argument;
     private boolean parserError;
     private CommandLineParserException parserException;
 
     public CommandLine() {
-        options = new ArrayList<OptionInt>();
+        options = new ArrayList<ProcessedOption>();
     }
 
     public CommandLine(CommandLineParserException parserException) {
@@ -40,13 +40,13 @@ public class CommandLine {
             setParserException(parserException);
     }
 
-    public CommandLine(OptionInt argument) {
-        options = new ArrayList<OptionInt>();
+    public CommandLine(ProcessedOption argument) {
+        options = new ArrayList<ProcessedOption>();
         this.argument = argument;
     }
 
-    public void addOption(OptionInt option) {
-        OptionInt existingOption = getOption(option.getShortName());
+    public void addOption(ProcessedOption option) {
+        ProcessedOption existingOption = getOption(option.getShortName());
         if (existingOption == null) {
             options.add(option);
         }
@@ -63,7 +63,7 @@ public class CommandLine {
 
     }
 
-    protected List<OptionInt> getOptions() {
+    protected List<ProcessedOption> getOptions() {
         return options;
     }
 
@@ -71,11 +71,11 @@ public class CommandLine {
         argument.addValue(arg);
     }
 
-    public void setArgument(OptionInt argument) {
+    public void setArgument(ProcessedOption argument) {
         this.argument = argument;
     }
 
-    public OptionInt getArgument() {
+    public ProcessedOption getArgument() {
         return argument;
     }
 
@@ -83,8 +83,8 @@ public class CommandLine {
        return hasOption(String.valueOf(name));
     }
 
-    protected OptionInt getOption(String name) {
-        for(OptionInt po : options) {
+    protected ProcessedOption getOption(String name) {
+        for(ProcessedOption po : options) {
             if((po.getShortName() != null && po.getShortName().equals(name)) ||
                     (po.getName() != null && po.getName().equals(name)))
                 return po;
@@ -93,7 +93,7 @@ public class CommandLine {
     }
 
     public boolean hasOption(String name) {
-        for(OptionInt po : options) {
+        for(ProcessedOption po : options) {
             if(po.getShortName().equals(name) ||
                     po.getName().equals(name))
                 return true;
@@ -110,7 +110,7 @@ public class CommandLine {
     }
 
     public String getOptionValue(String name, String fallback) {
-        for(OptionInt po : options) {
+        for(ProcessedOption po : options) {
             if((po.getShortName() != null && po.getShortName().equals(name)) ||
                     (po.getName() != null && po.getName().equals(name)))
                 return po.getValue();
@@ -127,7 +127,7 @@ public class CommandLine {
     }
 
     public List<String> getOptionValues(String name, List<String> fallback) {
-        for(OptionInt po : options) {
+        for(ProcessedOption po : options) {
             if((po.getShortName() != null && po.getShortName().equals(name)) ||
                     (po.getName() != null && po.getName().equals(name)))
                 return po.getValues();
@@ -137,7 +137,7 @@ public class CommandLine {
     }
 
     public Map<String,String> getOptionProperties(String name) {
-        for(OptionInt po : options) {
+        for(ProcessedOption po : options) {
             if((po.getShortName() != null && po.getShortName().equals(name)) ||
                     (po.getName() != null && po.getName().equals(name)))
                 return po.getProperties();

@@ -10,8 +10,8 @@ import org.jboss.aesh.cl.exception.ArgumentParserException;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.exception.RequiredOptionException;
-import org.jboss.aesh.cl.internal.CommandInt;
-import org.jboss.aesh.cl.internal.OptionInt;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.parser.ParserStatus;
@@ -31,18 +31,18 @@ import java.util.List;
  */
 public class CommandLineParser {
 
-    private CommandInt command;
+    private ProcessedCommand command;
     private static final String EQUALS = "=";
 
-    public CommandLineParser(CommandInt command) {
+    public CommandLineParser(ProcessedCommand command) {
         this.command = command;
     }
 
     public CommandLineParser(String name, String usage) {
-        command = new CommandInt(name, usage);
+        command = new ProcessedCommand(name, usage);
     }
 
-    public CommandInt getCommand() {
+    public ProcessedCommand getCommand() {
         return command;
     }
 
@@ -114,7 +114,7 @@ public class CommandLineParser {
         CommandLine commandLine = new CommandLine();
         if(command.hasArgument())
             commandLine.setArgument(command.getArgument());
-        OptionInt active = null;
+        ProcessedOption active = null;
         boolean addedArgument = false;
             //skip first entry since that's the name of the command
             for(int i=1; i < lines.size(); i++) {
@@ -248,11 +248,11 @@ public class CommandLineParser {
         return commandLine;
     }
 
-    private RequiredOptionException checkForMissingRequiredOptions(CommandInt command, CommandLine commandLine) {
-        for(OptionInt o : command.getOptions())
+    private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand command, CommandLine commandLine) {
+        for(ProcessedOption o : command.getOptions())
             if(o.isRequired()) {
                 boolean found = false;
-                for(OptionInt po : commandLine.getOptions()) {
+                for(ProcessedOption po : commandLine.getOptions()) {
                     if(po.getShortName().equals(o.getShortName()) ||
                             po.getShortName().equals(o.getName()))
                         found = true;
@@ -263,8 +263,8 @@ public class CommandLineParser {
         return null;
     }
 
-    private OptionInt findOption(CommandInt command, String line) {
-        OptionInt option = command.findOption(line);
+    private ProcessedOption findOption(ProcessedCommand command, String line) {
+        ProcessedOption option = command.findOption(line);
         //simplest case
         if(option != null)
             return option;
@@ -284,8 +284,8 @@ public class CommandLineParser {
         return null;
     }
 
-    private OptionInt findLongOption(CommandInt command, String line) {
-        OptionInt option = command.findLongOption(line);
+    private ProcessedOption findLongOption(ProcessedCommand command, String line) {
+        ProcessedOption option = command.findLongOption(line);
         //simplest case
         if(option != null)
             return option;
@@ -309,7 +309,7 @@ public class CommandLineParser {
         CommandLine cl = parse(line);
         if(cl.hasParserError())
             throw cl.getParserException();
-        for(OptionInt option: command.getOptions()) {
+        for(ProcessedOption option: command.getOptions()) {
             if(cl.hasOption(option.getName()))
                 cl.getOption(option.getName()).injectValueIntoField(instance);
             else
