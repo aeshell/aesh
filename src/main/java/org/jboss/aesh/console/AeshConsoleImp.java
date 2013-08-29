@@ -62,6 +62,11 @@ public class AeshConsoleImp implements AeshConsole {
     }
 
     @Override
+    public CommandRegistry getCommandRegistry() {
+        return registry;
+    }
+
+    @Override
     public AeshPrintWriter err() {
         return console.err();
     }

@@ -28,6 +28,11 @@ public interface AeshConsole {
     void stop();
 
     /**
+     * Get the CommandRegistry
+     */
+    CommandRegistry getCommandRegistry();
+
+    /**
      * Attach a ConsoleCommand to the console. All input received
      * to the console will be sent directly to the
      * ConsoleCommand.processOperation(..)
