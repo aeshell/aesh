@@ -25,13 +25,15 @@ public class MutableCommandRegistry implements CommandRegistry {
 
     public void addCommand(Command command) {
         CommandContainer commandContainer = new CommandContainer(command);
-        if(!registry.containsKey(commandContainer.getParser().getCommand().getName()))
+        if(!commandContainer.hasError() &&
+                !registry.containsKey(commandContainer.getParser().getCommand().getName()))
             registry.put(commandContainer.getParser().getCommand().getName(), commandContainer);
     }
 
     public void addCommand(Class<? extends Command> command) {
         CommandContainer commandContainer = new CommandContainer(command);
-        if(!registry.containsKey(commandContainer.getParser().getCommand().getName()))
+        if(!commandContainer.hasError() &&
+                !registry.containsKey(commandContainer.getParser().getCommand().getName()))
             registry.put(commandContainer.getParser().getCommand().getName(), commandContainer);
     }
 

@@ -1,6 +1,5 @@
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.CommandLineParser;
 import org.jboss.aesh.cl.ParserGenerator;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
@@ -13,6 +12,7 @@ public class CommandContainer {
 
     private Command command;
     private CommandLineParser parser;
+    private String errorMessage;
 
     public CommandContainer(Command command) {
         addCommand(command);
@@ -23,33 +23,23 @@ public class CommandContainer {
     }
 
     private void addCommand(Class<? extends Command> command) {
-        if(verifyCommand(command)) {
-            try {
-                parser = ParserGenerator.generateCommandLineParser(command);
-                this.command = ReflectionUtil.newInstance(command);
-            } catch (CommandLineParserException e) {
-                e.printStackTrace();
-            }
+        try {
+            parser = ParserGenerator.generateCommandLineParser(command);
+            this.command = ReflectionUtil.newInstance(command);
+        }
+        catch (CommandLineParserException e) {
+            errorMessage = e.getMessage();
         }
     }
 
     private void addCommand(Command command) {
-        if(verifyCommand(command)) {
-            try {
-                parser = ParserGenerator.generateCommandLineParser(command);
-                this.command = command;
-            } catch (CommandLineParserException e) {
-                e.printStackTrace();
-            }
+        try {
+            parser = ParserGenerator.generateCommandLineParser(command);
+            this.command = command;
         }
-    }
-
-    private boolean verifyCommand(Class<? extends Command> command) {
-        return command.getAnnotation(CommandDefinition.class) != null;
-    }
-
-    private boolean verifyCommand(Command command) {
-        return command.getClass().getAnnotation(CommandDefinition.class) != null;
+        catch (CommandLineParserException e) {
+            errorMessage = e.getMessage();
+        }
     }
 
     public Command getCommand() {
@@ -58,5 +48,13 @@ public class CommandContainer {
 
     public CommandLineParser getParser() {
         return parser;
+    }
+
+    public boolean hasError() {
+        return errorMessage != null;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
     }
 }
