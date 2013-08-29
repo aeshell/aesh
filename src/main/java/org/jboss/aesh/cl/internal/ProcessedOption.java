@@ -311,29 +311,51 @@ public class ProcessedOption {
                     constructor.setAccessible(true);
             }
             if(optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN) {
-                field.set(instance, converter.convert(getValue()));
+                if(getValue() != null)
+                    field.set(instance, converter.convert(getValue()));
+                else if(defaultValues.size() > 0) {
+                    field.set(instance, converter.convert(defaultValues.get(0)));
+                }
             }
             else if(optionType == OptionType.LIST || optionType == OptionType.ARGUMENT) {
                 if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
                     if(Set.class.isAssignableFrom(field.getType())) {
                         Set tmpSet = new HashSet<Object>();
-                        for(String in : values)
-                            tmpSet.add(converter.convert(in));
+                        if(values.size() > 0) {
+                            for(String in : values)
+                                tmpSet.add(converter.convert(in));
+                        }
+                        else if(defaultValues.size() > 0) {
+                            for(String in : defaultValues)
+                                tmpSet.add(converter.convert(in));
+                        }
 
                         field.set(instance, tmpSet);
                     }
                     else if(List.class.isAssignableFrom(field.getType())) {
                         List tmpList = new ArrayList();
-                        for(String in : values)
-                            tmpList.add(converter.convert(in));
+                        if(values.size() > 0) {
+                            for(String in : values)
+                                tmpList.add(converter.convert(in));
+                        }
+                        else if(defaultValues.size() > 0) {
+                            for(String in : values)
+                                tmpList.add(converter.convert(in));
+                        }
                         field.set(instance, tmpList);
                     }
                     //todo: should support more that List/Set
                 }
                 else {
                     Collection tmpInstance = (Collection) field.getType().newInstance();
-                    for(String in : values)
-                        tmpInstance.add(converter.convert(in));
+                    if(values.size() > 0) {
+                        for(String in : values)
+                            tmpInstance.add(converter.convert(in));
+                    }
+                    else if(defaultValues.size() > 0) {
+                        for(String in : defaultValues)
+                            tmpInstance.add(converter.convert(in));
+                    }
                     field.set(instance, tmpInstance);
                 }
             }
@@ -374,6 +396,7 @@ public class ProcessedOption {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", values=" + values +
+                ", defaultValues=" + defaultValues +
                 ", argument='" + argument + '\'' +
                 ", type=" + type +
                 ", required=" + required +

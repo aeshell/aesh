@@ -12,7 +12,7 @@ public class TestPopulator1 {
     @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
     public String equal;
 
-    @Option(shortName = 'i', name = "int1")
+    @Option(shortName = 'i', name = "int1", defaultValue = {"42"})
     private Integer int1;
 
     @Option(shortName = 'n')

@@ -313,6 +313,9 @@ public class CommandLineParser {
         for(ProcessedOption option: command.getOptions()) {
             if(cl.hasOption(option.getName()))
                 cl.getOption(option.getName()).injectValueIntoField(instance);
+            else if(option.getDefaultValues().size() > 0) {
+                option.injectValueIntoField(instance);
+            }
             else
                 resetField(instance, option.getFieldName(), option.hasValue());
         }

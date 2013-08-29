@@ -22,6 +22,21 @@ public class CommandContainer {
         addCommand(command);
     }
 
+    public CommandContainer(CommandLineParser parser, Command command) {
+        if(parser != null && parser.getCommand() != null) {
+            this.parser = parser;
+            this.command = command;
+        }
+    }
+
+    public CommandContainer(CommandLineParser parser,
+                            Class<? extends Command> command) {
+        if(parser != null && parser.getCommand() != null) {
+            this.parser = parser;
+            this.command = ReflectionUtil.newInstance(command);
+        }
+    }
+
     private void addCommand(Class<? extends Command> command) {
         try {
             parser = ParserGenerator.generateCommandLineParser(command);

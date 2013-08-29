@@ -8,8 +8,14 @@
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.cl.builder.CommandBuilder;
+import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.OptionCompleter;
+import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.console.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
@@ -34,12 +40,24 @@ import java.util.List;
  */
 public class AeshExample {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws CommandLineParserException {
+
+        ProcessedCommand fooCommand = new CommandBuilder()
+                .name("foo")
+                .description("fooing")
+                .addOption(new OptionBuilder()
+                        .name("bar")
+                        .addDefaultValue("en")
+                        .addDefaultValue("to")
+                        .fieldName("bar")
+                        .type(String.class)
+                        .create())
+                .generateParameter();
 
         Settings settings = new SettingsBuilder().logging(true).create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
-                .command(FooCommand.class)
+                .command(new CommandLineParser(fooCommand), FooCommand.class)
                 .command(LsCommand.class)
                 .command(TestConsoleCommand.class)
                 .create();
@@ -63,10 +81,8 @@ public class AeshExample {
         }
     }
 
-    @CommandDefinition(name="foo", description = "fooing")
     public static class FooCommand implements Command {
 
-        @Option(defaultValue = {"en","to"})
         private String bar;
 
         @Override
@@ -129,10 +145,10 @@ public class AeshExample {
         @Option(hasValue = false)
         private Boolean foo;
 
-        @Option(completer = LessCompleter.class)
+        @Option(completer = LessCompleter.class, defaultValue = {"MORE"})
         private String less;
 
-        @Option
+        @Option(defaultValue = "/tmp")
         File file;
 
         @Arguments
@@ -143,6 +159,10 @@ public class AeshExample {
                                      ControlOperator operator) throws IOException {
            if(foo != null)
                console.out().println("you set foo to: " + foo);
+            if(less != null)
+                console.out().println("you set less to: " + less);
+            if(file != null)
+                console.out().println("you set file to: " + file);
 
             if(files != null) {
                 for(File f : files)

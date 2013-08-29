@@ -164,6 +164,8 @@ public class OptionBuilder {
             else
                 name = fieldName;
         }
+        if(type == null)
+            throw new OptionParserException("Type must be defined to create an Option");
 
         return new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, defaultValues, type, fieldName, optionType, converter, completer);

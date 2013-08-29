@@ -8,16 +8,26 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.cl.builder.CommandBuilder;
+import org.jboss.aesh.cl.builder.OptionBuilder;
+import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -27,37 +37,55 @@ public class AeshConsoleTest extends BaseConsoleTest {
     private KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
 
     @Test
-    public void testAeshConsole() throws IOException, InterruptedException {
+    public void testAeshConsole() throws IOException, InterruptedException, CommandLineParserException {
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
-        Settings settings = getDefaultSettings(pipedInputStream, null);
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .inputStream(pipedInputStream)
+                .logging(true)
+                .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder().settings(settings);
+        ProcessedCommand fooCommand = new CommandBuilder()
+                .name("foo")
+                .description("fooing")
+                .addOption(new OptionBuilder()
+                        .name("bar")
+                        .addDefaultValue("en")
+                        .addDefaultValue("to")
+                        .type(String.class)
+                        .fieldName("bar")
+                        .create())
+                .generateParameter();
 
-        consoleBuilder.commandRegistry( new AeshCommandRegistryBuilder().command(FooTestCommand.class).create());
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(new CommandLineParser(fooCommand), FooTestCommand.class)
+                .create();
+
+        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
+                .settings(settings)
+                .commandRegistry(registry);
 
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
-        outputStream.write(("foo ").getBytes());
-        outputStream.write(completeChar.getFirstValue());
+        outputStream.write(("foo").getBytes());
+        //outputStream.write(completeChar.getFirstValue());
 
         outputStream.write("\n".getBytes());
 
-
+        Thread.sleep(100);
+        aeshConsole.stop();
     }
 
-    @CommandDefinition(name="foo", description = "")
     public static class FooTestCommand implements Command {
 
-        @Option
         private String bar;
 
-        @Override
         public CommandResult execute(AeshConsole console,
                                      ControlOperator operator) throws IOException {
-            console.out().println("FOO");
+            assertEquals("en", bar);
             return CommandResult.SUCCESS;
         }
     }

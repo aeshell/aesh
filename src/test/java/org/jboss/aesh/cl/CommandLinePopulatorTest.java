@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl;
 
+import junit.framework.Assert;
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
@@ -51,6 +52,12 @@ public class CommandLinePopulatorTest {
             parser.populateObject(test1, "test -e enable2 --X");
             assertTrue(test1.getEnableX());
             assertFalse(test1.foo);
+            assertEquals(42, test1.getInt1().intValue());
+
+            parser.populateObject(test1, "test -e enable2 --X -i 5");
+            assertTrue(test1.getEnableX());
+            assertFalse(test1.foo);
+            assertEquals(5, test1.getInt1().intValue());
         }
         catch (CommandLineParserException e) {
             e.printStackTrace();
@@ -64,9 +71,14 @@ public class CommandLinePopulatorTest {
             TestPopulator2 test2 = new TestPopulator2();
 
             parser.populateObject(test2, "test -b s1,s2,s3,s4");
-
             assertNotNull(test2.getBasicSet());
             assertEquals(4, test2.getBasicSet().size());
+            assertTrue(test2.getBasicSet().contains("s3"));
+
+            parser.populateObject(test2, "test -b s1 s2 s3,s4");
+            assertNotNull(test2.getBasicSet());
+            assertEquals(4, test2.getBasicSet().size());
+            assertTrue(test2.getBasicSet().contains("s3"));
 
             parser.populateObject(test2, "test -a 1,2,3,4");
             assertNull(test2.getBasicSet());
@@ -176,20 +188,20 @@ public class CommandLinePopulatorTest {
         try {
             CommandBuilder commandBuilder = new CommandBuilder().name("test").description("a simple test");
             commandBuilder
-                    .addOption(new OptionBuilder().name("X").description("enable X").fieldName("enableX")
+                    .addOption(new OptionBuilder().name("XX").description("enable X").fieldName("enableX")
                             .type(Boolean.class).hasValue(false).create())
                     .addOption(new OptionBuilder().shortName('f').name("foo").description("enable foo").fieldName("foo")
                             .type(boolean.class).hasValue(false).create())
-                    .addOption(new OptionBuilder().shortName('e').name("equal").description("enable equal").required(true).fieldName("equal")
-                            .type(String.class).create())
+                    .addOption(new OptionBuilder().shortName('e').name("equal").description("enable equal").fieldName("equal")
+                            .type(String.class).addDefaultValue("en").addDefaultValue("to").create())
                     .addOption(new OptionBuilder().shortName('i').name("int1").fieldName("int1").type(Integer.class).create())
-                    .addOption(new OptionBuilder().shortName('n').fieldName("int2").type(int.class).create());
+                    .addOption(new OptionBuilder().shortName('n').fieldName("int2").type(int.class).addDefaultValue("12345").create());
 
             CommandLineParser parser =  new CommandLineParser( commandBuilder.generateParameter());
 
-            TestPopulator1 test1 = new TestPopulator1();
+            TestPopulator1A test1 = new TestPopulator1A();
 
-            parser.populateObject(test1, "test -e enable --X -f -i 2 -n=3");
+            parser.populateObject(test1, "test -e enable --XX -f -i 2 -n=3");
 
             assertEquals("enable", test1.equal);
             assertTrue(test1.getEnableX());
@@ -200,6 +212,10 @@ public class CommandLinePopulatorTest {
             parser.populateObject(test1, "test -e enable2");
             assertFalse(test1.getEnableX());
             assertFalse(test1.foo);
+
+            parser.populateObject(test1, "test");
+            Assert.assertEquals("en", test1.equal);
+            Assert.assertEquals(12345, test1.int2);
         }
         catch (CommandLineParserException e) {
             e.printStackTrace();
