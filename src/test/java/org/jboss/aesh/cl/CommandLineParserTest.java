@@ -129,6 +129,11 @@ public class CommandLineParserTest extends TestCase {
         assertEquals("bar4", cl.getOptionValues("help").get(0));
         assertEquals("bar6", cl.getOptionValues("h").get(2));
 
+        cl = clp.parse("test --help2 bar4 bar5 bar6");
+        assertTrue(cl.hasOption("help2"));
+        assertEquals("bar4", cl.getOptionValues("help2").get(0));
+        assertEquals("bar6", cl.getOptionValues("e").get(2));
+
         cl = clp.parse("test --bar 1,2,3");
         assertTrue(cl.hasOption("bar"));
         assertEquals(Integer.class, cl.getOption("bar").getType());
@@ -182,6 +187,9 @@ class Parser4Test {
 
     @OptionList(valueSeparator = ':')
     private List<String> help;
+
+    @OptionList(valueSeparator = ' ')
+    private List<String> help2;
 
     @Arguments
     private List<String> arguments;

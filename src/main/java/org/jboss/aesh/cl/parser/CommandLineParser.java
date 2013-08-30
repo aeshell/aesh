@@ -11,6 +11,7 @@ import org.jboss.aesh.cl.exception.ArgumentParserException;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.exception.RequiredOptionException;
+import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.parser.AeshLine;
@@ -123,10 +124,17 @@ public class CommandLineParser {
                 //name
                 if(parseLine.startsWith("--")) {
                     //make sure that we dont have any "active" options lying around
-                    if(active != null) {
+                    if(active != null &&
+                            (active.getOptionType() != OptionType.LIST ||
+                                    active.getOptionType() != OptionType.GROUP)) {
                         commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
                         break;
                     }
+                    else if(active != null) {
+                        commandLine.addOption(active);
+                        active = null;
+                    }
+
 
                     active = findLongOption(command, parseLine.substring(2));
                     if(active != null)
@@ -165,8 +173,15 @@ public class CommandLineParser {
                 //name
                 else if(parseLine.startsWith("-")) {
                     //make sure that we dont have any "active" options lying around
-                    if(active != null)
+                    if(active != null &&
+                            (active.getOptionType() != OptionType.LIST ||
+                                    active.getOptionType() != OptionType.GROUP)) {
                         commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
+                    }
+                    else if(active != null) {
+                        commandLine.addOption(active);
+                        active = null;
+                    }
                     else if(parseLine.length() != 2 && !parseLine.contains("="))
                         commandLine.setParserException(new OptionParserException("Option: - must be followed by a valid operator"));
                     else {
@@ -213,13 +228,21 @@ public class CommandLineParser {
                             for(String value : parseLine.split(String.valueOf(active.getValueSeparator()))) {
                                 active.addValue(value.trim());
                             }
+                            commandLine.addOption(active);
+                            active = null;
                         }
+                        else
+                            active.addValue(parseLine.trim());
                     }
                     else
                         active.addValue(parseLine);
 
-                    commandLine.addOption(active);
-                    active = null;
+                    if(active != null &&
+                            (active.getOptionType() == OptionType.NORMAL ||
+                            active.getOptionType() == OptionType.BOOLEAN)) {
+                        commandLine.addOption(active);
+                        active = null;
+                    }
                     if(addedArgument)
                         commandLine.setParserException(new OptionParserException("An argument was given to an option that do not support it."));
                 }
@@ -235,7 +258,8 @@ public class CommandLineParser {
                 }
             }
 
-        if(active != null && ignoreMissing) {
+        if(active != null && (ignoreMissing ||
+                (active.getOptionType() == OptionType.LIST || active.getOptionType() == OptionType.GROUP))) {
             commandLine.addOption(active);
         }
 

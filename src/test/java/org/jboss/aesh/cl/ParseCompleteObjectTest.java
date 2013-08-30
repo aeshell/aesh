@@ -115,9 +115,23 @@ public class ParseCompleteObjectTest extends TestCase {
         assertFalse(pco.isCompleteOptionName());
         assertFalse(pco.isArgument());
         assertTrue(pco.doDisplayOptions());
-
-
     }
+
+    public void testParseCompleteObject3() throws Exception {
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest3.class);
+        CommandLineCompletionParser completeParser = new CommandLineCompletionParser(clp);
+
+        ParsedCompleteObject pco = completeParser.findCompleteObject("test -v 1 2 3 ");
+        assertEquals(String.class, pco.getType());
+        assertTrue(pco.isOption());
+        assertEquals("",pco.getValue());
+
+        pco = completeParser.findCompleteObject("test -v 1 2 3");
+        assertEquals(String.class, pco.getType());
+        assertTrue(pco.isOption());
+        assertEquals("3",pco.getValue());
+    }
+
 }
 @CommandDefinition(name = "test", description = "a simple test")
 class ParseCompleteTest1 {
@@ -154,5 +168,18 @@ class ParseCompleteTest2 {
     @Option(shortName = 'D', description = "define properties",
             required = true)
     private String define;
+}
 
+@CommandDefinition(name = "test", description = "a simple test")
+class ParseCompleteTest3 {
+
+    @Option(shortName = 'X', description = "enable X")
+    private String X;
+
+    @OptionList(shortName = 'v', name = "value", description = "enable equal")
+    private List<String> values;
+
+    @Option(shortName = 'D', description = "define properties",
+            required = true)
+    private String define;
 }

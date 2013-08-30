@@ -11,6 +11,7 @@ import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.DefaultValueOptionCompleter;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Command;
@@ -65,8 +66,11 @@ public class CommandLineCompletionParser {
                 else
                     return new ParsedCompleteObject(false, null, offset);
             }
-            else
-                return new ParsedCompleteObject(true);
+            //last word is a value, need to find out what option its a value for
+            else {
+
+                return findCompleteObjectValue(line, true);
+            }
         }
         else
             return optionFinder(line);
@@ -126,10 +130,18 @@ public class CommandLineCompletionParser {
         //get the last option
         else if (cl.getOptions() != null && cl.getOptions().size() > 0) {
             ProcessedOption po = cl.getOptions().get(cl.getOptions().size()-1);
-            if(po.isLongNameUsed() || (po.getShortName() == null || po.getShortName().length() < 1))
-                return new ParsedCompleteObject(po.getName(), endsWithSpace ? "" : po.getValue(), po.getType(), true);
+            if(endsWithSpace && po.getValue() != null &&  po.getValue().length() > 0 &&
+                    (po.getOptionType() == OptionType.NORMAL || po.getOptionType() == OptionType.BOOLEAN)) {
+                return new ParsedCompleteObject(true);
+            }
+            else if(po.isLongNameUsed() || (po.getShortName() == null || po.getShortName().length() < 1))
+                return new ParsedCompleteObject(po.getName(),
+                        endsWithSpace ? "" : po.getValues().get(po.getValues().size()-1),
+                        po.getType(), true);
             else
-                return new ParsedCompleteObject( po.getShortName(), endsWithSpace ? "" : po.getValue(), po.getType(), true);
+                return new ParsedCompleteObject( po.getShortName(),
+                        endsWithSpace ? "" : po.getValues().get(po.getValues().size()-1),
+                        po.getType(), true);
         }
         //probably something wrong with the parser
         else

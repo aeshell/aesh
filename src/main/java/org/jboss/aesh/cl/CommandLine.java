@@ -46,7 +46,7 @@ public class CommandLine {
     }
 
     public void addOption(ProcessedOption option) {
-        ProcessedOption existingOption = getOption(option.getShortName());
+        ProcessedOption existingOption = getOption(option.getName());
         if (existingOption == null) {
             options.add(option);
         }
