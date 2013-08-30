@@ -31,6 +31,12 @@ public class CompleterData {
         this.completerValues = completerValues;
     }
 
+    public CompleterData(String completerValue, boolean appendSpace) {
+        this();
+        addCompleterValue(completerValue);
+        this.appendSpace = appendSpace;
+    }
+
     public CompleterData(List<String> completerValues, boolean appendSpace) {
         this(completerValues);
         this.appendSpace = appendSpace;

@@ -46,14 +46,14 @@ public class AeshExample {
                 .description("fooing")
                 .addOption(new OptionBuilder()
                         .name("bar")
-                        .addDefaultValue("en 1")
-                        .addDefaultValue("to 2")
+                        .addDefaultValue("en 1 0")
+                        .addDefaultValue("to 2 0")
                         .fieldName("bar")
                         .type(String.class)
                         .create())
                 .generateParameter();
 
-        Settings settings = new SettingsBuilder().logging(true).create();
+        Settings settings = new SettingsBuilder().logging(false).create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
                 .command(new CommandLineParser(fooCommand), FooCommand.class)

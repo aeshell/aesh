@@ -25,6 +25,8 @@ public class Parser {
     private static final String SPACE = " ";
     private static final char SPACE_CHAR = ' ';
     private static final char SLASH = '\\';
+    private static final char SINGLE_QUOTE = '\'';
+    private static final char DOUBLE_QUOTE = '\"';
     private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
     private static final Pattern spacePattern = Pattern.compile(" ");
 
@@ -258,7 +260,7 @@ public class Parser {
         StringBuilder builder = new StringBuilder();
 
         for(char c : text.toCharArray()) {
-            if(c == ' ') {
+            if(c == SPACE_CHAR) {
                 if(haveEscape) {
                     builder.append(c);
                     haveEscape = false;
@@ -271,7 +273,7 @@ public class Parser {
                     builder = new StringBuilder();
                 }
             }
-            else if(c == '\\') {
+            else if(c == SLASH) {
                 if(haveEscape) {
                     builder.append(c);
                     haveEscape = false;
@@ -279,25 +281,42 @@ public class Parser {
                 else
                     haveEscape = true;
             }
-            else if(c == '\'') {
+            else if(c == SINGLE_QUOTE) {
                 if(haveEscape) {
                     builder.append(c);
                     haveEscape = false;
                 }
+                else if(haveSingleQuote) {
+                    if(builder.length() > 0) {
+                        textList.add(builder.toString());
+                        builder = new StringBuilder();
+                    }
+                    haveSingleQuote = false;
+                }
                 else
-                    haveSingleQuote = !haveSingleQuote;
+                    haveSingleQuote = true;
             }
-            else if(c == '\"') {
+            else if(c == DOUBLE_QUOTE) {
                 if(haveEscape) {
                     builder.append(c);
                     haveEscape = false;
                 }
+                else if(haveDoubleQuote) {
+                    if(builder.length() > 0) {
+                        textList.add(builder.toString());
+                        builder = new StringBuilder();
+                    }
+                    haveDoubleQuote = false;
+                }
                 else
-                    haveDoubleQuote = !haveDoubleQuote;
+                    haveDoubleQuote = true;
             }
             else
                 builder.append(c);
         }
+        //if the escape was the last char, add it to the builder
+        if(haveEscape)
+            builder.append(SLASH);
 
         if(builder.length() > 0)
             textList.add(builder.toString());
@@ -319,6 +338,15 @@ public class Parser {
 
     public static boolean doWordContainEscapedSpace(String word) {
         return spaceEscapedPattern.matcher(word).find();
+    }
+
+    public static int findNumberOfSpacesInWord(String word) {
+        int count = 0;
+        for(char c : word.toCharArray())
+            if(c == SPACE_CHAR)
+                count++;
+
+        return count;
     }
 
     public static int findAllOccurrences(String word, String pattern) {

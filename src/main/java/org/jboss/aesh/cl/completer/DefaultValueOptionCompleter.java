@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl.completer;
 
+import org.jboss.aesh.parser.Parser;
+
 import java.util.List;
 
 /**
@@ -31,6 +33,13 @@ public class DefaultValueOptionCompleter implements OptionCompleter {
             }
         }
 
-        return completerData;
+        if(completerData.getCompleterValues().size() == 1 &&
+                completerData.getCompleterValues().get(0).contains(" ")) {
+            return new CompleterData(
+                    Parser.switchSpacesToEscapedSpacesInWord(completerData.getCompleterValues().get(0)),
+                    completerData.isAppendSpace());
+        }
+        else
+            return completerData;
     }
 }

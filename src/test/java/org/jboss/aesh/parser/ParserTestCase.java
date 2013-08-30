@@ -109,6 +109,10 @@ public class ParserTestCase extends TestCase {
         assertEquals("cd", line.getWords().get(0));
         assertEquals("A ", line.getWords().get(1));
 
+        line = Parser.findAllWords("cd A\\");
+        assertEquals("cd", line.getWords().get(0));
+        assertEquals("A\\", line.getWords().get(1));
+
     }
 
     public void testFindAllQuotedWords() {
@@ -130,7 +134,6 @@ public class ParserTestCase extends TestCase {
         assertEquals("-f=foo bar/", line.getWords().get(1));
         assertEquals("Example 1", line.getWords().get(2));
         assertEquals("foo", line.getWords().get(3));
-
 
         line = Parser.findAllWords("man -f='foo/bar/ Example\\ 1");
         assertEquals(ParserStatus.UNCLOSED_QUOTE, line.getStatus());
