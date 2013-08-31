@@ -73,4 +73,9 @@ public interface AeshConsole {
      * Clear the terminal screen
      */
     void clear();
+
+    /**
+     * Get a formatted usage/help info from the specified command
+     */
+    String getHelpInfo(String commandName);
 }

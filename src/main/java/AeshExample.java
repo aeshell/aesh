@@ -138,17 +138,20 @@ public class AeshExample {
         }
     }
 
-    @CommandDefinition(name="ls", description = "fooing")
+    @CommandDefinition(name="ls", description = "[OPTION]... [FILE]...")
     public static class LsCommand implements Command {
 
-        @Option(hasValue = false)
+        @Option(hasValue = false, description = "set foo to true/false")
         private Boolean foo;
 
         @Option(completer = LessCompleter.class, defaultValue = {"MORE"})
         private String less;
 
-        @Option(defaultValue = "/tmp")
+        @Option(defaultValue = "/tmp", description = "file location")
         File file;
+
+        @Option(hasValue = false)
+        private boolean help;
 
         @Arguments
         private List<File> files;
@@ -156,17 +159,21 @@ public class AeshExample {
         @Override
         public CommandResult execute(AeshConsole console,
                                      ControlOperator operator) throws IOException {
-           if(foo != null)
-               console.out().println("you set foo to: " + foo);
-            if(less != null)
-                console.out().println("you set less to: " + less);
-            if(file != null)
-                console.out().println("you set file to: " + file);
+            if(help) {
+                console.out().println(console.getHelpInfo("ls"));
+            }
+            else {
+                if(foo != null)
+                    console.out().println("you set foo to: " + foo);
+                if(less != null)
+                    console.out().println("you set less to: " + less);
+                if(file != null)
+                    console.out().println("you set file to: " + file);
 
-            if(files != null) {
-                for(File f : files)
-                    console.out().println(f.toString());
-
+                if(files != null) {
+                    for(File f : files)
+                        console.out().println(f.toString());
+                }
             }
             return CommandResult.SUCCESS;
         }

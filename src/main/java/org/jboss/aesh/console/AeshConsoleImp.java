@@ -114,6 +114,15 @@ public class AeshConsoleImp implements AeshConsole {
         }
     }
 
+    @Override
+    public String getHelpInfo(String commandName) {
+        CommandContainer commandContainer = registry.asMap().get(commandName);
+        if(commandContainer != null)
+            return commandContainer.getParser().printHelp();
+        else
+            return "";
+    }
+
     private CommandLineParser findCommand(String input) {
         String name = Parser.findFirstWord(input);
         for(String commandName : registry.asMap().keySet()) {
