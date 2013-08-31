@@ -8,8 +8,8 @@ apply plugin: 'checkstyle'
 group = 'org.jboss.aesh'
 version = '0.41-SNAPSHOT'
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
 
 jar {
     manifest {
@@ -37,7 +37,7 @@ mainClassName = "Example"
 
 idea {
     project {
-        jdkName = "1.7"
+        jdkName = "1.6"
         ipr {
             withXml { provider ->
                 provider.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
