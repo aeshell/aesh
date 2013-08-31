@@ -135,14 +135,6 @@ public class AeshConsoleImp implements AeshConsole {
         return matchedCommands;
     }
 
-    private boolean verifyCommand(Class<? extends Command> command) {
-        return command.getAnnotation(CommandDefinition.class) != null;
-    }
-
-    private boolean verifyCommand(Command command) {
-        return command.getClass().getAnnotation(CommandDefinition.class) != null;
-    }
-
     class AeshCompletion implements Completion {
 
         @Override

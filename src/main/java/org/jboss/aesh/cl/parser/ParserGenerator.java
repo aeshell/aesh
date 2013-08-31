@@ -122,10 +122,4 @@ public class ParserGenerator {
         generateCommandLineParser(instance.getClass()).populateObject(instance, input);
     }
 
-    private boolean inheritCollection(Class clazz) {
-        if(clazz.getSuperclass() == null) {
-        }
-        return false;
-    }
-
 }
