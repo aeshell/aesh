@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;

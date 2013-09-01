@@ -173,6 +173,7 @@ public class CommandLineParser {
                 //name
                 else if(parseLine.startsWith("-")) {
                     //make sure that we dont have any "active" options lying around
+                    //except list and group
                     if(active != null &&
                             (active.getOptionType() != OptionType.LIST ||
                                     active.getOptionType() != OptionType.GROUP)) {
@@ -182,8 +183,31 @@ public class CommandLineParser {
                         commandLine.addOption(active);
                         active = null;
                     }
-                    else if(parseLine.length() != 2 && !parseLine.contains("="))
-                        commandLine.setParserException(new OptionParserException("Option: - must be followed by a valid operator"));
+                    else if(parseLine.length() != 2 && !parseLine.contains("=")) {
+                        //we might have two or more options in a group
+                        //if so, we only allow options (boolean) without value
+                        if(parseLine.length() > 2) {
+                            for(char shortName : parseLine.substring(1).toCharArray()) {
+                                active = findOption(command, String.valueOf(shortName));
+                                if(active != null) {
+                                    if(!active.hasValue()) {
+                                        active.setLongNameUsed(false);
+                                        active.addValue("true");
+                                        commandLine.addOption(active);
+                                    }
+                                    else
+                                        commandLine.setParserException( new OptionParserException("Option: -"+shortName+
+                                                        " can not be grouped with other options since it need to be given a value"));
+                                }
+                                else
+                                    commandLine.setParserException(new OptionParserException("Option: -"+shortName+" was not found."));
+                            }
+                            //make sure to reset active
+                            active = null;
+                        }
+                        else
+                            commandLine.setParserException(new OptionParserException("Option: - must be followed by a valid operator"));
+                    }
                     else {
                         active = findOption(command, parseLine.substring(1));
                         if(active != null)
@@ -330,6 +354,13 @@ public class CommandLineParser {
         return null;
     }
 
+    /**
+     * Populate a Command instance with the values parsed from a command line
+     * If any parser errors are detected it will throw an exception
+     * @param instance command
+     * @param line command line
+     * @throws CommandLineParserException
+     */
     public void populateObject(Object instance, String line) throws CommandLineParserException {
         CommandLine cl = parse(line);
         if(cl.hasParserError())
@@ -354,9 +385,10 @@ public class CommandLineParser {
      * Will parse the input line and populate the fields in the instance object specified by
      * the given annotations.
      * The instance object must be annotated with the CommandDefinition annotation @see CommandDefinition
+     * Any parser errors will throw an exception
      *
-     * @param instance
-     * @param line
+     * @param instance command
+     * @param line command line
      * @throws CommandLineParserException
      */
     public static void parseAndPopulate(Object instance, String line) throws CommandLineParserException {

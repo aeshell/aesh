@@ -6,6 +6,9 @@ public class TestPopulator1 {
     @Option(name = "X", description = "enable X", hasValue = false)
     private Boolean enableX;
 
+    @Option(hasValue = false)
+    public boolean bar;
+
     @Option(shortName = 'f', name = "foo", description = "enable foo", hasValue = false)
     public boolean foo;
 

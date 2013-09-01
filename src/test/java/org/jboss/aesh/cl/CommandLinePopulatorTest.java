@@ -58,6 +58,13 @@ public class CommandLinePopulatorTest {
             assertTrue(test1.getEnableX());
             assertFalse(test1.foo);
             assertEquals(5, test1.getInt1().intValue());
+
+            parser.populateObject(test1, "test -e enable2 -Xb");
+            assertTrue(test1.getEnableX());
+            assertTrue(test1.bar);
+            assertFalse(test1.foo);
+            assertEquals(42, test1.getInt1().intValue());
+
         }
         catch (CommandLineParserException e) {
             e.printStackTrace();

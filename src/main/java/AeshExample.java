@@ -80,6 +80,7 @@ public class AeshExample {
         }
     }
 
+    //this command use a builder defined above to specify the meta data needed
     public static class FooCommand implements Command {
 
         private String bar;
@@ -144,13 +145,16 @@ public class AeshExample {
         @Option(hasValue = false, description = "set foo to true/false")
         private Boolean foo;
 
-        @Option(completer = LessCompleter.class, defaultValue = {"MORE"})
+        @Option(hasValue = false, description = "set the bar")
+        private boolean bar;
+
+        @Option(completer = LessCompleter.class, defaultValue = {"MORE"}, argument = "SIZE")
         private String less;
 
         @Option(defaultValue = "/tmp", description = "file location")
         File file;
 
-        @Option(hasValue = false)
+        @Option(hasValue = false, description = "display this help and exit")
         private boolean help;
 
         @Arguments
@@ -163,8 +167,10 @@ public class AeshExample {
                 console.out().println(console.getHelpInfo("ls"));
             }
             else {
-                if(foo != null)
+                if(foo)
                     console.out().println("you set foo to: " + foo);
+                if(bar)
+                    console.out().println("you set bar to: " + bar);
                 if(less != null)
                     console.out().println("you set less to: " + less);
                 if(file != null)
