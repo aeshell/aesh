@@ -208,6 +208,10 @@ public enum Key {
                 ((keyValues[0] > 63 && keyValues[0] < 91) || (keyValues[0] > 96 && keyValues[0] < 123)));
     }
 
+    public boolean isNumber() {
+        return (keyValues.length == 1 && ((keyValues[0] > 47) && (keyValues[0] < 58)));
+    }
+
     public char getAsChar() {
         return (char) keyValues[0];
     }
