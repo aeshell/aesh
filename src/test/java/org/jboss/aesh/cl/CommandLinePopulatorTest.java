@@ -275,6 +275,26 @@ public class CommandLinePopulatorTest {
 
             parser.populateObject(test5, "test --veryLong 101");
             exception.expect(OptionValidatorException.class);
+        }
+        catch (CommandLineParserException e) {
+        }
+        catch (OptionValidatorException e) {
+        }
+    }
+
+
+    @Test
+    public void testValidator2() {
+        try {
+            CommandLineParser  parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class);
+            TestPopulator5 test5 = new TestPopulator5();
+
+            parser.populateObject(test5, "test --longs 42,43,44");
+
+            assertEquals(3, test5.getLongs().size());
+
+            parser.populateObject(test5, "test --longs 42,43,132");
+            exception.expect(OptionValidatorException.class);
 
         }
         catch (CommandLineParserException e) {

@@ -4,6 +4,7 @@ import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 
 import java.util.Currency;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -22,6 +23,9 @@ public class TestPopulator5 {
 
     @Option(shortName = 'c', converter = CurrencyConverter.class)
     private Currency currency;
+
+    @OptionList(validator = LongOptionValidator.class)
+    private List<Long> longs;
 
     @Arguments
     private Set<String> arguments;
@@ -47,6 +51,10 @@ public class TestPopulator5 {
 
     public Long getVeryLong() {
         return veryLong;
+    }
+
+    public List<Long> getLongs() {
+        return longs;
     }
 
     public class LongOptionValidator implements OptionValidator<Long> {
