@@ -15,6 +15,7 @@ import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.reader.AeshPrintWriter;
@@ -186,19 +187,24 @@ public class AeshConsoleImp implements AeshConsole {
         public int readConsoleOutput(ConsoleOperation output) throws IOException {
             CommandResult result = CommandResult.SUCCESS;
             if(output != null && output.getBuffer().trim().length() > 0) {
-                CommandLineParser calledCommand = findCommand(output.getBuffer());
-                if(calledCommand != null) {
+                CommandLineParser calledCommandParser = findCommand(output.getBuffer());
+                if(calledCommandParser != null) {
                     try {
                         //calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
-                        calledCommand.populateObject(registry.getCommand(calledCommand.getCommand().getName()), output.getBuffer());
-                        result = registry.getCommand(calledCommand.getCommand().getName()).execute(console,
+                        calledCommandParser.populateObject(registry.getCommand(calledCommandParser.getCommand().getName()), output.getBuffer());
+                        result = registry.getCommand(calledCommandParser.getCommand().getName()).execute(console,
                                 output.getControlOperator());
                     }
                     catch (CommandLineParserException e) {
                         console.out().println(e.getMessage());
                         result = CommandResult.FAILURE;
-                    } catch (CommandNotFoundException e) {
+                    }
+                    catch (CommandNotFoundException e) {
                         e.printStackTrace();
+                    }
+                    catch (OptionValidatorException e) {
+                        console.out().println(e.getMessage());
+                        result = CommandResult.FAILURE;
                     }
                 }
                 else {

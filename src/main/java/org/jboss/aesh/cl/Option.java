@@ -10,6 +10,8 @@ import org.jboss.aesh.cl.completer.NullOptionCompleter;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.converter.NullConverter;
+import org.jboss.aesh.cl.validator.NullValidator;
+import org.jboss.aesh.cl.validator.OptionValidator;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -85,4 +87,9 @@ public @interface Option {
      * Define a completer for this option.
      */
     Class<? extends OptionCompleter> completer() default NullOptionCompleter.class;
+
+    /**
+     * Define a validator for this option.
+     */
+    Class<? extends OptionValidator> validator() default NullValidator.class;
 }

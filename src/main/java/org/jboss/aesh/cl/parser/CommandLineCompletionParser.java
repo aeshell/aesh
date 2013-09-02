@@ -13,6 +13,7 @@ import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Command;
 import org.jboss.aesh.util.LoggerUtil;
@@ -204,12 +205,11 @@ public class CommandLineCompletionParser {
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( displayName));
 
             try {
-                parser.populateObject(command, rest);
+                parser.populateObject(command, rest, false);
             }
             //this should be ignored at some point
-            catch (CommandLineParserException e) {
-                e.printStackTrace();
-            }
+            catch (CommandLineParserException ignored) { }
+            catch (OptionValidatorException ignored) { }
 
             if(currentOption.getCompleter() != null) {
                 CompleterData completions = currentOption.getCompleter().complete(completeObject.getValue());
@@ -260,10 +260,11 @@ public class CommandLineCompletionParser {
             String lastWord = Parser.findEscapedSpaceWordCloseToEnd(completeOperation.getBuffer());
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length() - lastWord.length());
             try {
-                parser.populateObject(command, rest);
-            } catch (CommandLineParserException e) {
-                e.printStackTrace();
+                parser.populateObject(command, rest, false);
             }
+            catch (CommandLineParserException ignored) { }
+            catch (OptionValidatorException ignored) { }
+
             if(parser.getCommand().getArgument() != null &&
                     parser.getCommand().getArgument().getCompleter() != null) {
                 CompleterData completions = parser.getCommand().getArgument().getCompleter().complete(completeObject.getValue());

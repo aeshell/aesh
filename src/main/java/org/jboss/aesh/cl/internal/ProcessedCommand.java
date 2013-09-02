@@ -9,6 +9,7 @@ package org.jboss.aesh.cl.internal;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.console.Config;
 
 import java.util.ArrayList;
@@ -65,7 +66,7 @@ public class ProcessedCommand {
         this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                 opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                 opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(), opt.getConverter(),
-                opt.getCompleter()));
+                opt.getCompleter(), opt.getValidator()));
     }
 
     /**
@@ -86,12 +87,12 @@ public class ProcessedCommand {
                      String argument, boolean required, char valueSeparator,
                      String[] defaultValue, Class<?> type, String fieldName, OptionType optionType,
                      Class<? extends CLConverter> converter,
-                     Class<? extends OptionCompleter> completer) throws OptionParserException {
+                     Class<? extends OptionCompleter> completer, Class<? extends OptionValidator> validator) throws OptionParserException {
         List<String> defaultValues = new ArrayList<String>();
         defaultValues.addAll(Arrays.asList(defaultValue));
         options.add(new ProcessedOption(verifyThatNamesAreUnique(name, longName), longName, description,
                 argument, required, valueSeparator, defaultValues,
-                type, fieldName, optionType, converter, completer));
+                type, fieldName, optionType, converter, completer, validator));
     }
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
@@ -99,7 +100,7 @@ public class ProcessedCommand {
             this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                     opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                     opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(),
-                    opt.getConverter(), opt.getCompleter()));
+                    opt.getConverter(), opt.getCompleter(), opt.getValidator()));
         }
     }
 

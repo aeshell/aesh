@@ -15,6 +15,8 @@ import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.cl.validator.OptionValidator;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
@@ -151,7 +153,7 @@ public class AeshExample {
         @Option(completer = LessCompleter.class, defaultValue = {"MORE"}, argument = "SIZE")
         private String less;
 
-        @Option(defaultValue = "/tmp", description = "file location")
+        @Option(defaultValue = "/tmp", description = "file location", validator = DirectoryValidator.class)
         File file;
 
         @Option(hasValue = false, description = "display this help and exit")
@@ -201,6 +203,15 @@ public class AeshExample {
                 }
             }
             return new CompleterData(completeList);
+        }
+    }
+
+    public static class DirectoryValidator implements OptionValidator<File> {
+        @Override
+        public void validate(File value) throws OptionValidatorException {
+            if(!value.isDirectory()) {
+                throw new OptionValidatorException("File validation failed, must be a directory.");
+            }
         }
     }
 

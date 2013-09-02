@@ -1,5 +1,8 @@
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.validator.OptionValidator;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
+
 import java.util.Currency;
 import java.util.Map;
 import java.util.Set;
@@ -8,7 +11,7 @@ import java.util.TreeMap;
 @CommandDefinition(name = "test", description = "a simple test")
 public class TestPopulator5 {
 
-    @Option
+    @Option(validator = LongOptionValidator.class)
     private Long veryLong;
 
     @OptionList
@@ -42,6 +45,18 @@ public class TestPopulator5 {
         return currency;
     }
 
+    public Long getVeryLong() {
+        return veryLong;
+    }
+
+    public class LongOptionValidator implements OptionValidator<Long> {
+
+        @Override
+        public void validate(Long value) throws OptionValidatorException {
+            if(value < 0 || value > 100)
+                throw new OptionValidatorException("value must be between 0 and 100");
+        }
+    }
 
 }
 

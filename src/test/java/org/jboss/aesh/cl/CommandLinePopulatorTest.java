@@ -13,6 +13,7 @@ import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -68,6 +69,8 @@ public class CommandLinePopulatorTest {
         }
         catch (CommandLineParserException e) {
             e.printStackTrace();
+        } catch (OptionValidatorException e) {
+            e.printStackTrace();
         }
     }
 
@@ -117,6 +120,8 @@ public class CommandLinePopulatorTest {
 
         }
         catch (CommandLineParserException e) {
+        } catch (OptionValidatorException e) {
+            e.printStackTrace();
         }
     }
 
@@ -145,6 +150,8 @@ public class CommandLinePopulatorTest {
             exception.expect(OptionParserException.class);
         }
         catch (CommandLineParserException e) {
+        } catch (OptionValidatorException e) {
+            e.printStackTrace();
         }
     }
 
@@ -160,6 +167,8 @@ public class CommandLinePopulatorTest {
             assertTrue(test4.getArguments().contains(new File("test2.txt")));
         }
         catch (CommandLineParserException e) {
+        }
+        catch (OptionValidatorException e) {
         }
     }
 
@@ -187,6 +196,8 @@ public class CommandLinePopulatorTest {
             exception.expect(OptionParserException.class);
         }
         catch (CommandLineParserException e) {
+        }
+        catch (OptionValidatorException e) {
         }
     }
 
@@ -226,6 +237,8 @@ public class CommandLinePopulatorTest {
         }
         catch (CommandLineParserException e) {
             e.printStackTrace();
+        } catch (OptionValidatorException e) {
+            e.printStackTrace();
         }
     }
 
@@ -246,8 +259,27 @@ public class CommandLinePopulatorTest {
 
         }
         catch (CommandLineParserException e) {
+        } catch (OptionValidatorException e) {
+            e.printStackTrace();
         }
     }
 
+    @Test
+    public void testValidator() {
+        try {
+            CommandLineParser  parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class);
+            TestPopulator5 test5 = new TestPopulator5();
+            parser.populateObject(test5, "test -v 42");
 
+            assertEquals(new Long(42), test5.getVeryLong());
+
+            parser.populateObject(test5, "test --veryLong 101");
+            exception.expect(OptionValidatorException.class);
+
+        }
+        catch (CommandLineParserException e) {
+        }
+        catch (OptionValidatorException e) {
+        }
+    }
 }

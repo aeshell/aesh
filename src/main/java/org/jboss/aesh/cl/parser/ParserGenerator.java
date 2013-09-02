@@ -15,6 +15,7 @@ import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -54,12 +55,12 @@ public class ParserGenerator {
                 if(o.name() == null || o.name().length() < 1) {
                     processedCommand.addOption(o.shortName(), field.getName(), o.description(),
                             o.argument(), o.required(), ',', o.defaultValue(),
-                            field.getType(), field.getName(), optionType, o.converter(), o.completer());
+                            field.getType(), field.getName(), optionType, o.converter(), o.completer(), o.validator());
                 }
                 else {
                     processedCommand.addOption(o.shortName(), o.name(), o.description(),
                             o.argument(), o.required(), ',', o.defaultValue(),
-                            field.getType(), field.getName(), optionType, o.converter(), o.completer());
+                            field.getType(), field.getName(), optionType, o.converter(), o.completer(), o.validator());
                 }
 
             }
@@ -74,12 +75,12 @@ public class ParserGenerator {
                 if(ol.name() == null || ol.name().length() < 1) {
                     processedCommand.addOption(ol.shortName(), field.getName(), ol.description(), "",
                             ol.required(), ol.valueSeparator(), ol.defaultValue(), type, field.getName(), OptionType.LIST,
-                            ol.converter(), ol.completer());
+                            ol.converter(), ol.completer(), ol.validator());
                 }
                 else {
                     processedCommand.addOption(ol.shortName(), ol.name(), ol.description(), "",
                             ol.required(), ol.valueSeparator(), ol.defaultValue(), type, field.getName(), OptionType.LIST,
-                            ol.converter(), ol.completer());
+                            ol.converter(), ol.completer(), ol.validator());
                 }
             }
             else if((og = field.getAnnotation(OptionGroup.class)) != null) {
@@ -93,12 +94,12 @@ public class ParserGenerator {
                 if(og.name() == null || og.name().length() < 1) {
                     processedCommand.addOption(og.shortName(), field.getName(), og.description(),
                             "", og.required(), ',', og.defaultValue(), type, field.getName(), OptionType.GROUP,
-                            og.converter(), og.completer());
+                            og.converter(), og.completer(), og.validator());
                 }
                 else {
                     processedCommand.addOption(og.shortName(), og.name(), og.description(),
                             "", og.required(), ',', og.defaultValue(), type, field.getName(), OptionType.GROUP,
-                            og.converter(), og.completer());
+                            og.converter(), og.completer(), og.validator());
                 }
             }
 
@@ -111,14 +112,14 @@ public class ParserGenerator {
                     type = (Class) listType.getActualTypeArguments()[0];
                 }
                 processedCommand.setArgument(new ProcessedOption('\u0000',"", a.description(), "", false, a.valueSeparator(),
-                        a.defaultValue(), type, field.getName(), OptionType.ARGUMENT, a.converter(), a.completer()));
+                        a.defaultValue(), type, field.getName(), OptionType.ARGUMENT, a.converter(), a.completer(), a.validator()));
             }
         }
 
         return new ParserBuilder().parameter(processedCommand).generateParser();
     }
 
-    public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException {
+    public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException, OptionValidatorException {
         generateCommandLineParser(instance.getClass()).populateObject(instance, input);
     }
 

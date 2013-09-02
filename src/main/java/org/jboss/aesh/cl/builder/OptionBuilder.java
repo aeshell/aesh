@@ -8,9 +8,12 @@ package org.jboss.aesh.cl.builder;
 
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
+import org.jboss.aesh.cl.converter.CLConverterManager;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.OptionType;
+import org.jboss.aesh.cl.validator.NullValidator;
+import org.jboss.aesh.cl.validator.OptionValidator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,10 +36,11 @@ public class OptionBuilder {
     private boolean hasMultipleValues = false;
     private char valueSeparator = ',';
     private OptionType optionType;
-    private Class<? extends CLConverter> converter;
+    private CLConverter converter;
     private String fieldName;
     private OptionCompleter completer;
     private List<String> defaultValues;
+    private OptionValidator validator;
 
     public OptionBuilder() {
         defaultValues = new ArrayList<String>();
@@ -135,7 +139,7 @@ public class OptionBuilder {
         return this;
     }
 
-    public OptionBuilder converter(Class<? extends CLConverter> converter) {
+    public OptionBuilder converter(CLConverter converter) {
         this.converter = converter;
         return this;
     }
@@ -145,6 +149,10 @@ public class OptionBuilder {
         return this;
     }
 
+    public OptionBuilder validator(OptionValidator validator) {
+        this.validator = validator;
+        return this;
+    }
 
     public ProcessedOption create() throws OptionParserException {
         if(optionType == null) {
@@ -167,7 +175,13 @@ public class OptionBuilder {
         if(type == null)
             throw new OptionParserException("Type must be defined to create an Option");
 
+        if(validator == null)
+            validator = new NullValidator();
+
+        if(converter == null)
+            converter = CLConverterManager.getInstance().getConverter(type);
+
         return new ProcessedOption(shortName, name, description, argument, required,
-                valueSeparator, defaultValues, type, fieldName, optionType, converter, completer);
+                valueSeparator, defaultValues, type, fieldName, optionType, converter, completer, validator);
     }
 }

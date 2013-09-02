@@ -14,6 +14,7 @@ import org.jboss.aesh.cl.exception.RequiredOptionException;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.parser.ParserStatus;
@@ -361,21 +362,35 @@ public class CommandLineParser {
      * @param line command line
      * @throws CommandLineParserException
      */
-    public void populateObject(Object instance, String line) throws CommandLineParserException {
+    public void populateObject(Object instance, String line)
+            throws CommandLineParserException, OptionValidatorException {
+        populateObject(instance, line, true);
+    }
+
+    /**
+     * Populate a Command instance with the values parsed from a command line
+     * If any parser errors are detected it will throw an exception
+     * @param instance command
+     * @param line command line
+     * @param validate do validation or not
+     * @throws CommandLineParserException
+     */
+    public void populateObject(Object instance, String line, boolean validate)
+            throws CommandLineParserException, OptionValidatorException {
         CommandLine cl = parse(line);
         if(cl.hasParserError())
             throw cl.getParserException();
         for(ProcessedOption option: command.getOptions()) {
             if(cl.hasOption(option.getName()))
-                cl.getOption(option.getName()).injectValueIntoField(instance);
+                cl.getOption(option.getName()).injectValueIntoField(instance, validate);
             else if(option.getDefaultValues().size() > 0) {
-                option.injectValueIntoField(instance);
+                option.injectValueIntoField(instance, validate);
             }
             else
                 resetField(instance, option.getFieldName(), option.hasValue());
         }
         if(cl.getArgument() != null && cl.getArgument().getValues().size() > 0) {
-            cl.getArgument().injectValueIntoField(instance);
+            cl.getArgument().injectValueIntoField(instance, validate);
         }
         else if(cl.getArgument() != null)
             resetField(instance, cl.getArgument().getFieldName(), true);
@@ -391,7 +406,8 @@ public class CommandLineParser {
      * @param line command line
      * @throws CommandLineParserException
      */
-    public static void parseAndPopulate(Object instance, String line) throws CommandLineParserException {
+    public static void parseAndPopulate(Object instance, String line)
+            throws CommandLineParserException, OptionValidatorException {
         ParserGenerator.generateCommandLineParser(instance.getClass()).populateObject(instance, line);
     }
 
