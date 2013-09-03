@@ -7,7 +7,7 @@ import java.util.Map;
  */
 public interface CommandRegistry {
 
-    Command getCommand(String name) throws CommandNotFoundException;
+    CommandContainer getCommand(String name) throws CommandNotFoundException;
 
     Map<String, CommandContainer> asMap();
 }

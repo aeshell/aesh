@@ -11,9 +11,9 @@ public class MutableCommandRegistry implements CommandRegistry {
     private Map<String,CommandContainer> registry = new HashMap<String, CommandContainer>();
 
     @Override
-    public Command getCommand(String name) throws CommandNotFoundException {
+    public CommandContainer getCommand(String name) throws CommandNotFoundException {
         if(registry.containsKey(name))
-            return registry.get(name).getCommand();
+            return registry.get(name);
         else
             throw new CommandNotFoundException("Command: "+name+" was not found.");
     }

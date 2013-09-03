@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
-import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
@@ -123,17 +122,6 @@ public class AeshConsoleImp implements AeshConsole {
             return "";
     }
 
-    private CommandLineParser findCommand(String input) {
-        String name = Parser.findFirstWord(input);
-        for(String commandName : registry.asMap().keySet()) {
-            logger.info("findCommand, commandName: "+commandName+", firstName: "+name);
-            if(commandName.equals(name))
-                return registry.asMap().get(commandName).getParser();
-        }
-
-        return null;
-    }
-
     private List<String> completeCommandName(String input) {
         List<String> matchedCommands = new ArrayList<String>();
         for(String commandName : registry.asMap().keySet()) {
@@ -153,24 +141,20 @@ public class AeshConsoleImp implements AeshConsole {
                 completeOperation.addCompletionCandidates(completedCommands);
             }
             else {
-                CommandLineParser currentCommand = findCommand(completeOperation.getBuffer());
-                if(currentCommand != null) {
-                    CommandLineCompletionParser completionParser = new CommandLineCompletionParser(currentCommand);
-                    try {
+                try {
+                    CommandContainer commandContainer = registry.getCommand(Parser.findFirstWord(completeOperation.getBuffer()));
+                    CommandLineCompletionParser completionParser = new CommandLineCompletionParser(commandContainer.getParser());
 
-                        ParsedCompleteObject completeObject = completionParser.findCompleteObject(completeOperation.getBuffer());
-                        logger.info("completeObject: "+completeObject);
-                        completionParser.injectValuesAndComplete(completeObject, registry.getCommand(currentCommand.getCommand().getName()), completeOperation);
-                        //completionParser.injectValuesAndComplete(completeObject, commands.get(currentCommand), completeOperation);
-
-                    }
-                    catch (CommandLineParserException e) {
-                        logger.warning(e.getMessage());
-                        //if(e instanceof ArgumentParserException)
-                        //    logger.info("User trying to complete a command without arguments");
-                    } catch (CommandNotFoundException e) {
-                        e.printStackTrace();
-                    }
+                    ParsedCompleteObject completeObject = completionParser.findCompleteObject(completeOperation.getBuffer());
+                    logger.info("completeObject: "+completeObject);
+                    completionParser.injectValuesAndComplete(completeObject, commandContainer.getCommand(), completeOperation);
+                }
+                catch (CommandLineParserException e) {
+                    logger.warning(e.getMessage());
+                    //if(e instanceof ArgumentParserException)
+                    //    logger.info("User trying to complete a command without arguments");
+                } catch (CommandNotFoundException e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -187,28 +171,23 @@ public class AeshConsoleImp implements AeshConsole {
         public int readConsoleOutput(ConsoleOperation output) throws IOException {
             CommandResult result = CommandResult.SUCCESS;
             if(output != null && output.getBuffer().trim().length() > 0) {
-                CommandLineParser calledCommandParser = findCommand(output.getBuffer());
-                if(calledCommandParser != null) {
-                    try {
-                        //calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
-                        calledCommandParser.populateObject(registry.getCommand(calledCommandParser.getCommand().getName()), output.getBuffer());
-                        result = registry.getCommand(calledCommandParser.getCommand().getName()).execute(console,
-                                output.getControlOperator());
-                    }
-                    catch (CommandLineParserException e) {
-                        console.out().println(e.getMessage());
-                        result = CommandResult.FAILURE;
-                    }
-                    catch (CommandNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                    catch (OptionValidatorException e) {
-                        console.out().println(e.getMessage());
-                        result = CommandResult.FAILURE;
-                    }
+                //CommandLineParser calledCommandParser = findCommand(output.getBuffer());
+                try {
+                    CommandContainer commandContainer = registry.getCommand(Parser.findFirstWord(output.getBuffer()));
+                    //calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
+                    commandContainer.getParser().populateObject(commandContainer.getCommand(), output.getBuffer());
+                    result = commandContainer.getCommand().execute(console, output.getControlOperator());
                 }
-                else {
+                catch (CommandLineParserException e) {
+                    console.out().println(e.getMessage());
+                    result = CommandResult.FAILURE;
+                }
+                catch (CommandNotFoundException e) {
                     console.out().print("Command not found: " + Parser.findFirstWord(output.getBuffer()) + Config.getLineSeparator());
+                    result = CommandResult.FAILURE;
+                }
+                catch (OptionValidatorException e) {
+                    console.out().println(e.getMessage());
                     result = CommandResult.FAILURE;
                 }
             }
