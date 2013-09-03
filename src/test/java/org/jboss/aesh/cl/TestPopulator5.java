@@ -24,7 +24,7 @@ public class TestPopulator5 {
     @Option(shortName = 'c', converter = CurrencyConverter.class)
     private Currency currency;
 
-    @OptionList(validator = LongOptionValidator.class)
+    @OptionList(validator = LongOptionValidator.class, valueSeparator = ';')
     private List<Long> longs;
 
     @Arguments

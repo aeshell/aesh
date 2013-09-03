@@ -295,11 +295,13 @@ public class CommandLinePopulatorTest {
             CommandLineParser  parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class);
             TestPopulator5 test5 = new TestPopulator5();
 
-            parser.populateObject(test5, "test --longs 42,43,44");
+            parser.populateObject(test5, "test --longs 42;43;44");
 
             assertEquals(3, test5.getLongs().size());
+            assertEquals(new Long(42), test5.getLongs().get(0));
+            assertEquals(new Long(44), test5.getLongs().get(2));
 
-            parser.populateObject(test5, "test --longs 42,43,132");
+            parser.populateObject(test5, "test --longs 42;43;132");
             exception.expect(OptionValidatorException.class);
 
         }

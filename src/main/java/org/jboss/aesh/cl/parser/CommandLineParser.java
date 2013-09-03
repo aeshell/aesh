@@ -253,6 +253,8 @@ public class CommandLineParser {
                             for(String value : parseLine.split(String.valueOf(active.getValueSeparator()))) {
                                 active.addValue(value.trim());
                             }
+                            if(parseLine.endsWith(String.valueOf(active.getValueSeparator())))
+                                active.setEndsWithSeparator(true);
                             commandLine.addOption(active);
                             active = null;
                         }

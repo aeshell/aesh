@@ -69,7 +69,6 @@ public class CommandLineCompletionParser {
             }
             //last word is a value, need to find out what option its a value for
             else {
-
                 return findCompleteObjectValue(line, true);
             }
         }
@@ -131,6 +130,10 @@ public class CommandLineCompletionParser {
         //get the last option
         else if (cl.getOptions() != null && cl.getOptions().size() > 0) {
             ProcessedOption po = cl.getOptions().get(cl.getOptions().size()-1);
+            //options ends with a separator and thus status should be set accordingly
+            if(po.getEndsWithSeparator())
+                endsWithSpace = true;
+
             if(endsWithSpace && po.getValue() != null &&  po.getValue().length() > 0 &&
                     (po.getOptionType() == OptionType.NORMAL || po.getOptionType() == OptionType.BOOLEAN)) {
                 return new ParsedCompleteObject(true);

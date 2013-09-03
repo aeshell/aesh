@@ -1213,8 +1213,8 @@ public class Console {
         List<CompleteOperation> possibleCompletions = new ArrayList<CompleteOperation>();
         int pipeLinePos = 0;
         boolean redirect = false;
-        if(ControlOperatorParser.doStringContainPipeline(buffer.getLine())) {
-            pipeLinePos =  ControlOperatorParser.findLastPipelinePositionBeforeCursor(buffer.getLine(), buffer.getCursor());
+        if(ControlOperatorParser.doStringContainPipelineOrEnd(buffer.getLine())) {
+            pipeLinePos =  ControlOperatorParser.findLastPipelineAndEndPositionBeforeCursor(buffer.getLine(), buffer.getCursor());
         }
         if(ControlOperatorParser.findLastRedirectionPositionBeforeCursor(buffer.getLine(), buffer.getCursor()) > pipeLinePos) {
             pipeLinePos = 0;
@@ -1417,6 +1417,16 @@ public class Console {
                 || currentOperation.getControlOperator() == ControlOperator.PIPE_OUT_AND_ERR) {
             return parseOperations();
         }
+        else if(currentOperation.getControlOperator() == ControlOperator.END) {
+            if(operations.size() > 0) {
+                currentOperation = operations.remove(0);
+                return currentOperation;
+            }
+            else {
+                currentOperation = null;
+                return null;
+            }
+        }
         //this should never happen (all overwrite_in should be parsed in parseOperations())
         else if(currentOperation.getControlOperator() == ControlOperator.OVERWRITE_IN) {
             if(settings.isLogging())
@@ -1506,6 +1516,10 @@ public class Console {
                 output = new ConsoleOperation(ControlOperator.NONE, "");
             }
         }
+        else if(op.getControlOperator() == ControlOperator.END) {
+            currentOperation = op;
+            output = op;
+        }
         else {
             currentOperation = null;
             standardStream.setStdIn(new BufferedInputStream(
@@ -1521,7 +1535,10 @@ public class Console {
         if(redirectPipeErrBuffer.toString().length() > 0)
             redirectPipeErrBuffer = new StringWriter();
 
-        return findAliases(output);
+        if(output != null)
+            return findAliases(output);
+        else
+            return new ConsoleOperation(ControlOperator.NONE, "");
     }
 
     private ConsoleOperation processInternalCommands(ConsoleOperation output) throws IOException {

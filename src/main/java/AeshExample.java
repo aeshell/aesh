@@ -8,6 +8,7 @@
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.completer.CompleterData;
@@ -153,14 +154,15 @@ public class AeshExample {
         @Option(completer = LessCompleter.class, defaultValue = {"MORE"}, argument = "SIZE")
         private String less;
 
-        @Option(defaultValue = "/tmp", description = "file location", validator = DirectoryValidator.class)
-        File file;
+        @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':',
+                validator = DirectoryValidator.class)
+        List<File> files;
 
         @Option(hasValue = false, description = "display this help and exit")
         private boolean help;
 
         @Arguments
-        private List<File> files;
+        private List<File> arguments;
 
         @Override
         public CommandResult execute(AeshConsole console,
@@ -175,11 +177,11 @@ public class AeshExample {
                     console.out().println("you set bar to: " + bar);
                 if(less != null)
                     console.out().println("you set less to: " + less);
-                if(file != null)
-                    console.out().println("you set file to: " + file);
+                if(files != null)
+                    console.out().println("you set file to: " + files);
 
-                if(files != null) {
-                    for(File f : files)
+                if(arguments != null) {
+                    for(File f : arguments)
                         console.out().println(f.toString());
                 }
             }

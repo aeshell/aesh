@@ -23,6 +23,7 @@ public class ControlOperatorParser {
     private static Pattern controlOperatorPattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)|(\\|&)|(\\|)|(;)|(&&)|(&)");
     private static Pattern redirectionNoPipelinePattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)");
     private static Pattern pipelinePattern = Pattern.compile("(\\|&)|(\\|)");
+    private static Pattern pipelineAndEndPattern = Pattern.compile("(\\|&)|(\\|)|(;)");
     private static char escape = '\\';
     private static char equals = '=';
 
@@ -36,8 +37,8 @@ public class ControlOperatorParser {
      * @param buffer text
      * @return true if it contains pipeline
      */
-    public static boolean doStringContainPipeline(String buffer) {
-        return pipelinePattern.matcher(buffer).find();
+    public static boolean doStringContainPipelineOrEnd(String buffer) {
+        return pipelineAndEndPattern.matcher(buffer).find();
     }
 
     public static int getPositionOfFirstRedirection(String buffer) {
@@ -55,8 +56,8 @@ public class ControlOperatorParser {
      * @param cursor position
      * @return last pipeline pos before cursor
      */
-    public static int findLastPipelinePositionBeforeCursor(String buffer, int cursor) {
-        return findLastRedirectionOrPipelinePositionBeforeCursor(pipelinePattern, buffer, cursor);
+    public static int findLastPipelineAndEndPositionBeforeCursor(String buffer, int cursor) {
+        return findLastRedirectionOrPipelinePositionBeforeCursor(pipelineAndEndPattern, buffer, cursor);
     }
 
     /**
@@ -123,8 +124,9 @@ public class ControlOperatorParser {
                 if(matcher.start(5) > 0 &&
                         buffer.charAt(matcher.start(5)-1) != escape &&
                         buffer.charAt(matcher.start(5)-1) != equals &&
-                        ( matcher.start(5)+1 <= buffer.length() &&
-                        buffer.charAt(matcher.start(5)+1) != equals)) {
+                        ((matcher.start(5)+1 < buffer.length() &&
+                                buffer.charAt(matcher.start(5)+1) != equals)
+                                || matcher.start(5)+1 == buffer.length())) {
                     reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_OUT,
                             buffer.substring(0, matcher.start(5))));
                     buffer = buffer.substring(matcher.end(5));
@@ -135,8 +137,10 @@ public class ControlOperatorParser {
                 if(matcher.start(6) > 0 &&
                         buffer.charAt(matcher.start(6)-1) != escape &&
                         buffer.charAt(matcher.start(6)-1) != equals &&
-                        ( matcher.start(6)+1 <= buffer.length() &&
-                                buffer.charAt(matcher.start(6)+1) != equals)) {
+                        (( matcher.start(6)+1 < buffer.length() &&
+                                buffer.charAt(matcher.start(6)+1) != equals) ||
+                                matcher.start(6)+1 == buffer.length())) {
+
                     reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_IN,
                             buffer.substring(0, matcher.start(6))));
                     buffer = buffer.substring(matcher.end(6));

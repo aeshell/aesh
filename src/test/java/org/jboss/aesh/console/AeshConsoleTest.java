@@ -6,11 +6,17 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.cl.Arguments;
+import org.jboss.aesh.cl.CommandDefinition;
+import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.cl.validator.OptionValidator;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -21,9 +27,11 @@ import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -60,6 +68,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(new CommandLineParser(fooCommand), FooTestCommand.class)
+                .command(LsCommand.class)
                 .create();
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
@@ -71,7 +80,9 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
         outputStream.write(("foo").getBytes());
         //outputStream.write(completeChar.getFirstValue());
+        outputStream.write("\n".getBytes());
 
+        outputStream.write("ls --files /home:/tmp".getBytes());
         outputStream.write("\n".getBytes());
 
         Thread.sleep(100);
@@ -89,4 +100,42 @@ public class AeshConsoleTest extends BaseConsoleTest {
         }
     }
 
+    @CommandDefinition(name="ls", description = "[OPTION]... [FILE]...")
+    public class LsCommand implements Command {
+
+        @Option(hasValue = false, description = "set foo to true/false")
+        private Boolean foo;
+
+        @Option(hasValue = false, description = "set the bar")
+        private boolean bar;
+
+        @Option(defaultValue = {"MORE"}, argument = "SIZE")
+        private String less;
+
+        @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':',
+                validator = DirectoryValidator.class)
+        List<File> files;
+
+        @Option(hasValue = false, description = "display this help and exit")
+        private boolean help;
+
+        @Arguments
+        private java.util.List<File> arguments;
+
+        @Override
+        public CommandResult execute(AeshConsole console,
+                                     ControlOperator operator) throws IOException {
+            assertEquals(2, files.size());
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public class DirectoryValidator implements OptionValidator<File> {
+        @Override
+        public void validate(File value) throws OptionValidatorException {
+            if(!value.isDirectory()) {
+                throw new OptionValidatorException("File validation failed, must be a directory.");
+            }
+        }
+    }
 }

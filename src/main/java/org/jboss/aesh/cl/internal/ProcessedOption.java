@@ -54,6 +54,7 @@ public class ProcessedOption {
     private Map<String,String> properties;
     private boolean longNameUsed = true;
     private OptionValidator validator;
+    private boolean endsWithSeparator = false;
 
      public ProcessedOption(char shortName, String name, String description,
                             String argument, boolean required, char valueSeparator,
@@ -216,12 +217,21 @@ public class ProcessedOption {
         this.longNameUsed = longNameUsed;
     }
 
+    public void setEndsWithSeparator(boolean endsWithSeparator) {
+        this.endsWithSeparator = endsWithSeparator;
+    }
+
+    public boolean getEndsWithSeparator() {
+        return endsWithSeparator;
+    }
+
     public void clear() {
         if(values != null)
             values.clear();
         if(properties != null)
             properties.clear();
         longNameUsed = true;
+        endsWithSeparator = false;
     }
 
     public String getDisplayName() {
