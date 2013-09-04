@@ -115,7 +115,13 @@ public class AeshConsoleImp implements AeshConsole {
 
     @Override
     public String getHelpInfo(String commandName) {
-        CommandContainer commandContainer = registry.asMap().get(commandName);
+        CommandContainer commandContainer = null;
+        try {
+            commandContainer = registry.getCommand(commandName, "");
+        }
+        catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
         if(commandContainer != null)
             return commandContainer.getParser().printHelp();
         else
@@ -124,7 +130,7 @@ public class AeshConsoleImp implements AeshConsole {
 
     private List<String> completeCommandName(String input) {
         List<String> matchedCommands = new ArrayList<String>();
-        for(String commandName : registry.asMap().keySet()) {
+        for(String commandName : registry.getAllCommandNames()) {
             if(commandName.startsWith(input))
                 matchedCommands.add(commandName);
         }
@@ -142,7 +148,8 @@ public class AeshConsoleImp implements AeshConsole {
             }
             else {
                 try {
-                    CommandContainer commandContainer = registry.getCommand(Parser.findFirstWord(completeOperation.getBuffer()));
+                    CommandContainer commandContainer = registry.getCommand(
+                            Parser.findFirstWord(completeOperation.getBuffer()), completeOperation.getBuffer());
                     CommandLineCompletionParser completionParser = new CommandLineCompletionParser(commandContainer.getParser());
 
                     ParsedCompleteObject completeObject = completionParser.findCompleteObject(completeOperation.getBuffer());
@@ -173,7 +180,8 @@ public class AeshConsoleImp implements AeshConsole {
             if(output != null && output.getBuffer().trim().length() > 0) {
                 //CommandLineParser calledCommandParser = findCommand(output.getBuffer());
                 try {
-                    CommandContainer commandContainer = registry.getCommand(Parser.findFirstWord(output.getBuffer()));
+                    CommandContainer commandContainer = registry.getCommand(
+                            Parser.findFirstWord(output.getBuffer()), output.getBuffer());
                     //calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
                     commandContainer.getParser().populateObject(commandContainer.getCommand(), output.getBuffer());
                     result = commandContainer.getCommand().execute(console, output.getControlOperator());

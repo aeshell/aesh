@@ -2,6 +2,7 @@ package org.jboss.aesh.console;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -11,7 +12,7 @@ public class MutableCommandRegistry implements CommandRegistry {
     private Map<String,CommandContainer> registry = new HashMap<String, CommandContainer>();
 
     @Override
-    public CommandContainer getCommand(String name) throws CommandNotFoundException {
+    public CommandContainer getCommand(String name, String completeLine) throws CommandNotFoundException {
         if(registry.containsKey(name))
             return registry.get(name);
         else
@@ -19,8 +20,8 @@ public class MutableCommandRegistry implements CommandRegistry {
     }
 
     @Override
-    public Map<String, CommandContainer> asMap() {
-        return registry;
+    public Set<String> getAllCommandNames() {
+        return registry.keySet();
     }
 
     public void addCommand(CommandContainer container) {

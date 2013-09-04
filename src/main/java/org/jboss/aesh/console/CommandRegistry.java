@@ -1,13 +1,13 @@
 package org.jboss.aesh.console;
 
-import java.util.Map;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface CommandRegistry {
 
-    CommandContainer getCommand(String name) throws CommandNotFoundException;
+    CommandContainer getCommand(String name, String completeLine) throws CommandNotFoundException;
 
-    Map<String, CommandContainer> asMap();
+    Set<String> getAllCommandNames();
 }
