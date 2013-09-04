@@ -215,7 +215,8 @@ public class CommandLineCompletionParser {
             catch (OptionValidatorException ignored) { }
 
             if(currentOption.getCompleter() != null) {
-                CompleterData completions = currentOption.getCompleter().complete(completeObject.getValue());
+                CompleterData completions = new CompleterData(completeObject.getValue(), command);
+                currentOption.getCompleter().complete(completions);
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
                 if(completions.getCompleterValues().size() == 1) {
@@ -237,8 +238,8 @@ public class CommandLineCompletionParser {
             }
             //only try to complete default values if completer is null
             else if(currentOption.getDefaultValues().size() > 0) {
-                CompleterData completions =
-                        new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completeObject.getValue());
+                CompleterData completions = new CompleterData(completeObject.getValue(), command);
+                new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
                 if(completions.getCompleterValues().size() == 1) {
@@ -270,7 +271,8 @@ public class CommandLineCompletionParser {
 
             if(parser.getCommand().getArgument() != null &&
                     parser.getCommand().getArgument().getCompleter() != null) {
-                CompleterData completions = parser.getCommand().getArgument().getCompleter().complete(completeObject.getValue());
+                CompleterData completions = new CompleterData(completeObject.getValue(), command);
+                parser.getCommand().getArgument().getCompleter().complete(completions);
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
                 if(completions.getCompleterValues().size() == 1) {
@@ -285,9 +287,8 @@ public class CommandLineCompletionParser {
             }
             else if(parser.getCommand().getArgument() != null &&
                     parser.getCommand().getArgument().getDefaultValues().size() > 0) {
-                CompleterData completions =
-                        new DefaultValueOptionCompleter(
-                                parser.getCommand().getArgument().getDefaultValues()).complete(completeObject.getValue());
+                CompleterData completions = new CompleterData(completeObject.getValue(), command);
+                new DefaultValueOptionCompleter( parser.getCommand().getArgument().getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
                 if(completions.getCompleterValues().size() == 1) {

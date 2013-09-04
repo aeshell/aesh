@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl.completer;
 
+import org.jboss.aesh.console.Command;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,24 +24,21 @@ public class CompleterData {
 
     private List<String> completerValues;
     private boolean appendSpace = true;
+    private String completeValue;
+    private Command command;
 
-    public CompleterData() {
+    public CompleterData(String completeValue, Command command) {
+        this.completeValue = completeValue;
+        this.command = command;
         completerValues = new ArrayList<String>();
     }
 
-    public CompleterData(List<String> completerValues) {
-        this.completerValues = completerValues;
+    public String getGivenCompleteValue() {
+        return completeValue;
     }
 
-    public CompleterData(String completerValue, boolean appendSpace) {
-        this();
-        addCompleterValue(completerValue);
-        this.appendSpace = appendSpace;
-    }
-
-    public CompleterData(List<String> completerValues, boolean appendSpace) {
-        this(completerValues);
-        this.appendSpace = appendSpace;
+    public Command getCommand() {
+        return command;
     }
 
     public List<String> getCompleterValues() {
@@ -48,6 +47,10 @@ public class CompleterData {
 
     public void setCompleterValues(List<String> completerValues) {
         this.completerValues = completerValues;
+    }
+
+    public void clearCompleterValues() {
+        this.completerValues.clear();
     }
 
     public void addAllCompleterValues(List<String> completerValues) {

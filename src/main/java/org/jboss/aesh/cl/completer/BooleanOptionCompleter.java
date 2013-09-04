@@ -12,20 +12,17 @@ package org.jboss.aesh.cl.completer;
  */
 public class BooleanOptionCompleter implements OptionCompleter {
     @Override
-    public CompleterData complete(String completeValue) {
-        CompleterData completerData = new CompleterData();
-        if(completeValue.length() == 0) {
+    public void complete(CompleterData completerData) {
+        if(completerData.getGivenCompleteValue().length() == 0) {
             completerData.addCompleterValue("true");
             completerData.addCompleterValue("false");
         }
-        else if("true".startsWith( completeValue.toLowerCase())) {
+        else if("true".startsWith( completerData.getGivenCompleteValue().toLowerCase())) {
             completerData.addCompleterValue("true");
 
         }
-        else if("false".startsWith( completeValue.toLowerCase())) {
+        else if("false".startsWith( completerData.getGivenCompleteValue().toLowerCase())) {
             completerData.addCompleterValue("false");
         }
-
-        return completerData;
     }
 }

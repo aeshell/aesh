@@ -192,19 +192,18 @@ public class AeshExample {
     public static class LessCompleter implements OptionCompleter {
 
         @Override
-        public CompleterData complete(String completeValue) {
+        public void complete(CompleterData completerData) {
             List<String> completeList = new ArrayList<String>();
-            if(completeValue == null || completeValue.length() == 0)
+            if(completerData.getGivenCompleteValue() == null || completerData.getGivenCompleteValue().length() == 0)
                 completeList.add("1");
             else {
-                char lastChar = completeValue.charAt(completeValue.length()-1);
+                char lastChar = completerData.getGivenCompleteValue().charAt(completerData.getGivenCompleteValue().length()-1);
                 if(Character.isDigit(lastChar)) {
                     int i = (int) lastChar;
                     i++;
-                    completeList.add(completeValue+i);
+                    completeList.add(completerData.getGivenCompleteValue()+i);
                 }
             }
-            return new CompleterData(completeList);
         }
     }
 

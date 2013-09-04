@@ -22,24 +22,23 @@ public class DefaultValueOptionCompleter implements OptionCompleter {
     }
 
     @Override
-    public CompleterData complete(String completeValue) {
-        CompleterData completerData = new CompleterData();
-        if(completeValue == null || completeValue.length() == 0)
+    public void complete(CompleterData completerData) {
+        if(completerData.getGivenCompleteValue() == null ||
+                completerData.getGivenCompleteValue().length() == 0)
             completerData.addAllCompleterValues(defaultValues);
         else {
             for(String value : defaultValues) {
-                if(value.startsWith(completeValue))
+                if(value.startsWith(completerData.getGivenCompleteValue()))
                     completerData.addCompleterValue(value);
             }
         }
-
         if(completerData.getCompleterValues().size() == 1 &&
                 completerData.getCompleterValues().get(0).contains(" ")) {
-            return new CompleterData(
-                    Parser.switchSpacesToEscapedSpacesInWord(completerData.getCompleterValues().get(0)),
-                    completerData.isAppendSpace());
+
+            String tmpData = Parser.switchSpacesToEscapedSpacesInWord(completerData.getCompleterValues().get(0));
+            completerData.clearCompleterValues();
+            completerData.addCompleterValue(tmpData);
+            completerData.setAppendSpace(true);
         }
-        else
-            return completerData;
     }
 }

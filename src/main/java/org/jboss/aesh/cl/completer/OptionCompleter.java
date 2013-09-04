@@ -15,9 +15,7 @@ public interface OptionCompleter {
 
     /**
      * Complete the given input for an option value.
-     * Return null if completeValue do not match the expected value
-     *
-     * @return completion value
+     * The current value to be completed is completerData.getGivenCompleteValue()
      */
-    CompleterData complete(String completeValue);
+    void complete(CompleterData completerData);
 }

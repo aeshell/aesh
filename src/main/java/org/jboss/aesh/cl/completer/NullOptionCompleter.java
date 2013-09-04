@@ -11,7 +11,6 @@ package org.jboss.aesh.cl.completer;
  */
 public class NullOptionCompleter implements OptionCompleter {
     @Override
-    public CompleterData complete(String completeValue) {
-        return new CompleterData();
+    public void complete(CompleterData completerData) {
     }
 }

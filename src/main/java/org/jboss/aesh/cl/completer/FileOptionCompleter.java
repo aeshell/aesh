@@ -16,24 +16,24 @@ import java.io.File;
  */
 public class FileOptionCompleter implements OptionCompleter {
     @Override
-    public CompleterData complete(String completeValue) {
+    public void complete(CompleterData completerData) {
 
-        CompleteOperation completeOperation = new CompleteOperation(completeValue, 0);
-        if(completeValue == null)
-            completeValue = "";
+        CompleteOperation completeOperation = new CompleteOperation(completerData.getGivenCompleteValue(), 0);
+        if(completerData.getGivenCompleteValue() == null)
+            new FileLister("", new File(System.getProperty("user.dir"))).findMatchingDirectories(completeOperation);
+        else
+            new FileLister(completerData.getGivenCompleteValue(),
+                    new File(System.getProperty("user.dir"))).findMatchingDirectories(completeOperation);
 
-        new FileLister(completeValue, new File(System.getProperty("user.dir"))).findMatchingDirectories(completeOperation);
-        CompleterData completerData = new CompleterData();
 
         if(completeOperation.getCompletionCandidates().size() > 1) {
             completeOperation.removeEscapedSpacesFromCompletionCandidates();
         }
 
         completerData.setCompleterValues( completeOperation.getCompletionCandidates());
-        if(completeValue != null && completerData.getCompleterValues().size() == 1) {
+        if(completerData.getGivenCompleteValue() != null && completerData.getCompleterValues().size() == 1) {
             completerData.setAppendSpace(completeOperation.hasAppendSeparator());
         }
 
-        return completerData;
     }
 }
