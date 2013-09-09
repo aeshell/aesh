@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -37,6 +38,8 @@ public class FileLister {
     private String rest;
     private String lastDir;
     private FileFilter fileFilter;
+
+    private Logger logger = LoggerUtil.getLogger("FileLister.class");
 
     public FileLister(String incDir, File cwd) {
         if(incDir == null)
@@ -79,13 +82,13 @@ public class FileLister {
 
         //if incDir is empty, just list cwd
         if(incDir.trim().isEmpty()) {
-            completion.addCompletionCandidates( listDirectory(cwd, null));
+            completion.addCompletionCandidates( listDirectory(cwd, null, false));
         }
         else if(startWithHome()) {
             if(isHomeAndIncDirADirectory()) {
                 if(endWithSlash()) {
                     completion.addCompletionCandidates(
-                            listDirectory(new File(Config.getHomeDir()+incDir.substring(1)), null));
+                            listDirectory(new File(Config.getHomeDir()+incDir.substring(1)), null, false));
                 }
                 else
                     completion.addCompletionCandidate(Config.getPathSeparator());
@@ -105,10 +108,10 @@ public class FileLister {
                 if(endWithSlash()) {
                     completion.addCompletionCandidates(
                             listDirectory(new File(cwd.getAbsolutePath() +
-                                    Config.getPathSeparator()+incDir), null));
+                                    Config.getPathSeparator()+incDir), null, true));
                 }
                 else
-                    completion.addCompletionCandidate(Config.getPathSeparator());
+                    completion.addCompletionCandidate(incDir+Config.getPathSeparator());
             }
             else if(isCwdAndIncDirAFile()) {
                 completion.addCompletionCandidate("");
@@ -124,10 +127,10 @@ public class FileLister {
             if(isIncDirADirectory()) {
                 if(endWithSlash()) {
                     completion.addCompletionCandidates(
-                            listDirectory(new File(incDir), null));
+                            listDirectory(new File(incDir), null, true));
                 }
                 else
-                    completion.addCompletionCandidate(Config.getPathSeparator());
+                    completion.addCompletionCandidate(incDir+Config.getPathSeparator());
             }
             else if(isIncDirAFile()) {
                 completion.addCompletionCandidate("");
@@ -140,6 +143,12 @@ public class FileLister {
             }
         }
 
+        if(incDir != null && incDir.length() > 0 && completion.getCompletionCandidates().size() == 1)
+            completion.setOffset(completion.getCursor() - incDir.length());
+        else if(rest != null)
+            completion.setOffset(completion.getCursor() - rest.length());
+        else
+            completion.setOffset(completion.getCursor());
     }
 
     private void listPossibleDirectories(CompleteOperation completion) {
@@ -147,26 +156,27 @@ public class FileLister {
 
         if(startWithSlash()) {
             if(lastDir != null && lastDir.startsWith(Config.getPathSeparator()))
-                returnFiles =  listDirectory(new File(lastDir), rest);
+                returnFiles =  listDirectory(new File(lastDir), rest, true);
             else
-                returnFiles =  listDirectory(new File(Config.getPathSeparator()+lastDir), rest);
+                returnFiles =  listDirectory(new File(Config.getPathSeparator()+lastDir), rest, true);
         }
         else if(startWithHome()) {
             //if(lastDir != null && lastDir.startsWith(Config.getPathSeparator()))
             if(lastDir != null) {
-                returnFiles =  listDirectory(new File(Config.getHomeDir()+lastDir.substring(1)), rest);
+                returnFiles =  listDirectory(new File(Config.getHomeDir()+lastDir.substring(1)), rest, true);
             }
             else
-                returnFiles =  listDirectory(new File(Config.getHomeDir()+Config.getPathSeparator()), rest);
+                returnFiles =  listDirectory(new File(Config.getHomeDir()+Config.getPathSeparator()), rest, false);
         }
         else if(lastDir != null) {
             returnFiles =  listDirectory(new File(cwd+
-                    Config.getPathSeparator()+lastDir), rest);
+                    Config.getPathSeparator()+lastDir), rest, true);
         }
         else
-            returnFiles =  listDirectory(cwd, rest);
+            returnFiles =  listDirectory(cwd, rest, false);
 
         //try to find if more than one filename start with the same word
+        /*
         if(returnFiles.size() > 1) {
             String startsWith = Parser.findStartsWith(returnFiles);
             if(startsWith.contains(" "))
@@ -181,14 +191,15 @@ public class FileLister {
             }
         }
         else if(returnFiles.size() == 1) {
-            if(rest.contains(" "))
-                completion.addCompletionCandidate(returnFiles.get(0).substring(Parser.switchSpacesToEscapedSpacesInWord(rest).length()));
-            else
-                completion.addCompletionCandidate(returnFiles.get(0).substring(rest.length()));
+            //if(rest.contains(" "))
+            //    completion.addCompletionCandidate(returnFiles.get(0).substring(Parser.switchSpacesToEscapedSpacesInWord(rest).length()));
+            //else
+            completion.addCompletionCandidate(returnFiles.get(0));
         }
+        */
+        completion.addCompletionCandidates(returnFiles);
 
-        if(completion.getCompletionCandidates().size() > 1 && rest != null && rest.length() > 0)
-            completion.setOffset(completion.getCursor()-rest.length());
+
     }
 
     private void findRestAndLastDir() {
@@ -249,17 +260,33 @@ public class FileLister {
         return endsWithSlash.matcher(incDir).matches();
     }
 
-    private List<String> listDirectory(File path, String rest) {
+    private List<String> listDirectory(File path, String rest, boolean appendPath) {
         List<String> fileNames = new ArrayList<String>();
         if(path != null && path.isDirectory()) {
+            logger.info("path: "+path.getAbsolutePath());
             for(File file : path.listFiles(fileFilter)) {
-                if(rest == null || rest.length() == 0)
-                    fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
-                else {
-                    if(file.getName().startsWith(rest))
+                if(rest == null || rest.length() == 0) {
+                    if(file.isDirectory())
+                        fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()+Config.getPathSeparator()));
+                    else
                         fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
                 }
+                else {
+                    if(file.getName().startsWith(rest)) {
+                        if(file.isDirectory())
+                            fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()+Config.getPathSeparator()));
+                        else
+                            fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
+                    }
+                }
             }
+            if(appendPath && fileNames.size() == 1) {
+                if(path.getAbsolutePath().equals(Config.getPathSeparator()))
+                    fileNames.set(0, path.getPath()+fileNames.get(0));
+                else
+                    fileNames.set(0, path.getPath()+Config.getPathSeparator()+fileNames.get(0));
+            }
+
         }
 
         return fileNames;
