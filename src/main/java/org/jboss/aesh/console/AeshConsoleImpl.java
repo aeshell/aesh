@@ -27,14 +27,14 @@ import org.jboss.aesh.parser.Parser;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshConsoleImp implements AeshConsole {
+public class AeshConsoleImpl implements AeshConsole {
 
     private Console console;
     private CommandRegistry registry;
 
-    Logger logger = LoggerUtil.getLogger(AeshConsoleImp.class.getName());
+    Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
 
-    AeshConsoleImp(Settings settings, CommandRegistry registry) {
+    AeshConsoleImpl(Settings settings, CommandRegistry registry) {
         this.registry = registry;
         //commands = new HashMap<CommandLineParser, Command>();
         console = new Console(settings);
@@ -159,8 +159,8 @@ public class AeshConsoleImp implements AeshConsole {
                     logger.warning(e.getMessage());
                     //if(e instanceof ArgumentParserException)
                     //    logger.info("User trying to complete a command without arguments");
-                } catch (CommandNotFoundException e) {
-                    e.printStackTrace();
+                }
+                catch (CommandNotFoundException ignored) {
                 }
             }
         }

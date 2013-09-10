@@ -42,7 +42,7 @@ public class AeshConsoleBuilder {
         if(registry == null) {
             registry = new MutableCommandRegistry();
         }
-        AeshConsole aeshConsole = new AeshConsoleImp(settings, registry);
+        AeshConsole aeshConsole = new AeshConsoleImpl(settings, registry);
 
         if(prompt != null)
             aeshConsole.setPrompt(prompt);
