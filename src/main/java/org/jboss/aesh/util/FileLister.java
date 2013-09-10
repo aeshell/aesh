@@ -147,6 +147,18 @@ public class FileLister {
             }
         }
 
+        //try to find if more than one filename start with the same word
+        if(completion.getCompletionCandidates().size() > 1) {
+            String startsWith = Parser.findStartsWith(completion.getCompletionCandidates());
+            if(startsWith.contains(" "))
+                startsWith = Parser.switchEscapedSpacesToSpacesInWord(startsWith);
+            if(startsWith != null && startsWith.length() > 0 &&
+                    startsWith.length() > rest.length()) {
+                completion.getCompletionCandidates().clear();
+                completion.addCompletionCandidate(Parser.switchSpacesToEscapedSpacesInWord(startsWith));
+            }
+        }
+
         //new offset tweaking to match the "common" way of returning completions
         if(completion.getCompletionCandidates().size() == 1) {
             if(isIncDirADirectory() && !endWithSlash()) {
@@ -165,20 +177,22 @@ public class FileLister {
             else if(incDir != null) {
                 if(rest != null && incDir.length() > rest.length()) {
                     completion.getCompletionCandidates().set(0,
-                            incDir.substring(0, incDir.length()-rest.length() ) +
+                            Parser.switchSpacesToEscapedSpacesInWord(
+                            incDir.substring(0, incDir.length()-rest.length() )) +
                                     completion.getCompletionCandidates().get(0));
 
                     completion.setOffset(completion.getCursor()-incDir.length());
                 }
                 else if(rest != null && incDir.length() == rest.length()) {
-                    completion.setOffset(completion.getCursor()-incDir.length());
+                    completion.setOffset(completion.getCursor()-(rest.length()+Parser.findNumberOfSpacesInWord(rest)));
                 }
                 else {
                     if(incDir.endsWith(Config.getPathSeparator()))
-                        completion.getCompletionCandidates().set(0, incDir +
+                        completion.getCompletionCandidates().set(0, Parser.switchSpacesToEscapedSpacesInWord(incDir) +
                                 completion.getCompletionCandidates().get(0));
                     else
-                        completion.getCompletionCandidates().set(0, incDir + Config.getPathSeparator()+
+                        completion.getCompletionCandidates().set(0, Parser.switchSpacesToEscapedSpacesInWord(incDir) +
+                                Config.getPathSeparator()+
                                 completion.getCompletionCandidates().get(0));
 
                     completion.setOffset(completion.getCursor()-incDir.length());
@@ -204,8 +218,6 @@ public class FileLister {
                 returnFiles =  listDirectory(new File(Config.getPathSeparator()+lastDir), rest);
         }
         else if(startWithHome()) {
-            //if(lastDir != null && 
-            //lastDir.startsWith(Config.getPathSeparator()))
             if(lastDir != null) {
                 returnFiles =  listDirectory(new File(Config.getHomeDir()+lastDir.substring(1)), rest);
             }
@@ -219,34 +231,8 @@ public class FileLister {
         else
             returnFiles =  listDirectory(cwd, rest);
 
-        //try to find if more than one filename start with the same word
-        if(returnFiles.size() > 1) {
-            String startsWith = Parser.findStartsWith(returnFiles);
-            if(startsWith.contains(" "))
-                startsWith = Parser.switchEscapedSpacesToSpacesInWord(startsWith);
-            if(startsWith != null && startsWith.length() > 0 &&
-                    startsWith.length() > rest.length()) {
-                completion.addCompletionCandidate(Parser.switchSpacesToEscapedSpacesInWord( startsWith));
-            }
-            //need to list complete filenames
-            else {
-                completion.addCompletionCandidates(returnFiles);
-            }
-        }
-        else
-            completion.addCompletionCandidates(returnFiles);
-        /*
-        else if(returnFiles.size() == 1) {
-            if(rest.contains(" "))
-                completion.addCompletionCandidate(returnFiles.get(0).substring(Parser.switchSpacesToEscapedSpacesInWord(rest).length()));
-            else
-                completion.addCompletionCandidate(returnFiles.get(0).substring(rest.length()));
-        }
-        */
-        //completion.addCompletionCandidates(returnFiles);
 
-        //if(completion.getCompletionCandidates().size() > 1 && rest != null && rest.length() > 0)
-        //    completion.setOffset(completion.getCursor()-rest.length());
+        completion.addCompletionCandidates(returnFiles);
     }
 
     private void findRestAndLastDir() {
@@ -312,10 +298,17 @@ public class FileLister {
         if(path != null && path.isDirectory()) {
             for(File file : path.listFiles(fileFilter)) {
                 if(rest == null || rest.length() == 0)
-                    fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
-                else {
-                    if(file.getName().startsWith(rest))
+                    if(file.isDirectory())
+                        fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName())+Config.getPathSeparator());
+                    else
                         fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
+                else {
+                    if(file.getName().startsWith(rest)) {
+                        if(file.isDirectory())
+                            fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName())+Config.getPathSeparator());
+                        else
+                            fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
+                    }
                 }
             }
         }

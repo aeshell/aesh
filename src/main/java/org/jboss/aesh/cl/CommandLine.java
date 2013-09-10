@@ -163,5 +163,15 @@ public class CommandLine {
         if(parserException != null)
             this.parserError = true;
     }
+
+    @Override
+    public String toString() {
+        return "CommandLine{" +
+                "options=" + options +
+                ", argument=" + argument +
+                ", parserError=" + parserError +
+                ", parserException=" + parserException +
+                '}';
+    }
 }
 

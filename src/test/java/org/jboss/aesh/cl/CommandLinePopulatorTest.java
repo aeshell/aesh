@@ -69,7 +69,8 @@ public class CommandLinePopulatorTest {
             parser.populateObject(test1, "test -e enable2 -X");
             assertTrue(test1.getEnableX());
 
-            parser.populateObject(test1, "test -e enable2 ");
+            parser.populateObject(test1, "test -e enable2\\ ");
+            Assert.assertEquals("enable2 ", test1.getEqual());
             assertFalse(test1.getEnableX());
 
         }

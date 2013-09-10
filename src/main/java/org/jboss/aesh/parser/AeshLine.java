@@ -41,4 +41,13 @@ public class AeshLine {
     public ParserStatus getStatus() {
         return status;
     }
+
+    @Override
+    public String toString() {
+        return "AeshLine{" +
+                "errorMessage='" + errorMessage + '\'' +
+                ", words=" + words +
+                ", status=" + status +
+                '}';
+    }
 }

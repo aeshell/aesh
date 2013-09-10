@@ -9,17 +9,13 @@ package org.jboss.aesh.cl.parser;
 import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.DefaultValueOptionCompleter;
-import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Command;
-import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.aesh.parser.Parser;
-
-import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -27,8 +23,6 @@ import java.util.logging.Logger;
 public class CommandLineCompletionParser {
 
     private CommandLineParser parser;
-
-    private static Logger logger = LoggerUtil.getLogger(CommandLineCompletionParser.class.getName());
 
     public CommandLineCompletionParser(CommandLineParser parser) {
         this.parser = parser;
@@ -121,6 +115,7 @@ public class CommandLineCompletionParser {
      */
     private ParsedCompleteObject findCompleteObjectValue(String line, boolean endsWithSpace) throws CommandLineParserException {
         CommandLine cl = parser.parse(line, true);
+
         //the last word is an argument
         if(cl.getArgument() != null && !cl.getArgument().getValues().isEmpty()) {
             return new ParsedCompleteObject("",
@@ -220,18 +215,14 @@ public class CommandLineCompletionParser {
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
                 if(completions.getCompleterValues().size() == 1) {
-                    //if(currentOption.getCompleter() instanceof FileOptionCompleter)
-                    //    completeOperation.setOffset( completeOperation.getCursor());
-                    //else {
-                        //if the contain spaces we need to add the number of spaces to the size
-                        // of the value.length since they are chopped off during parsing
-                        if(completeObject.getValue().contains(" ")) {
-                            completeOperation.setOffset( completeOperation.getCursor() -
-                                    (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
-                        }
-                        else
-                            completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
-                    //}
+                    //if the contain spaces we need to add the number of spaces to the size
+                    // of the value.length since they are chopped off during parsing
+                    if(completeObject.getValue().contains(" ")) {
+                        completeOperation.setOffset( completeOperation.getCursor() -
+                                (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                    }
+                    else
+                        completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -241,22 +232,15 @@ public class CommandLineCompletionParser {
                 CompleterData completions = new CompleterData(completeObject.getValue(), command);
                 new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
-                logger.info("COMPLETER: "+completeOperation.toString());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
-                    //if(currentOption.getCompleter() instanceof FileOptionCompleter)
-                    //    completeOperation.setOffset( completeOperation.getCursor());
-                    //else {
-                        //if the contain spaces we need to add the number of spaces to the size
-                        // of the value.length since they are chopped off during parsing
-                        if(completeObject.getValue().contains(" ")) {
-                            completeOperation.setOffset( completeOperation.getCursor() -
-                                    (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
-                        }
-                        //else
-                        //    completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
-                    //}
+                    //if the contain spaces we need to add the number of spaces to the size
+                    // of the value.length since they are chopped off during parsing
+                    if(completeObject.getValue().contains(" ")) {
+                        completeOperation.setOffset( completeOperation.getCursor() -
+                                (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                    }
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -278,10 +262,10 @@ public class CommandLineCompletionParser {
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
                 if(completions.getCompleterValues().size() == 1) {
-                    //if(parser.getCommand().getArgument().getCompleter() instanceof FileOptionCompleter)
-                    //    completeOperation.setOffset( completeOperation.getCursor());
-                    //else
-                        completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
+                    if(completeObject.getValue().contains(" ")) {
+                        completeOperation.setOffset( completeOperation.getCursor() -
+                                (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                    }
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -294,12 +278,12 @@ public class CommandLineCompletionParser {
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
 
                 if(completions.getCompleterValues().size() == 1) {
-                    //if(parser.getCommand().getArgument().getCompleter() instanceof FileOptionCompleter)
-                    //    completeOperation.setOffset( completeOperation.getCursor());
-                    //else
-                        completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
+                    if(completeObject.getValue().contains(" ")) {
+                        completeOperation.setOffset( completeOperation.getCursor() -
+                                (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                    }
+                    completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
-                    completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
                 completeOperation.doAppendSeparator( completions.isAppendSpace());
             }

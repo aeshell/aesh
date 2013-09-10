@@ -33,6 +33,13 @@ public class ParseCompleteObjectTest extends TestCase {
         assertTrue(pco.isOption());
         assertFalse(pco.doDisplayOptions());
 
+        pco = completeParser.findCompleteObject("test -f false --equal file\\ with\\ spaces\\ ");
+        assertEquals("file with spaces ", pco.getValue());
+        assertEquals(String.class, pco.getType());
+        assertEquals("equal", pco.getName());
+        assertTrue(pco.isOption());
+        assertFalse(pco.doDisplayOptions());
+
         pco = completeParser.findCompleteObject("test -f=true --equal ");
         assertEquals("", pco.getValue());
         assertEquals(String.class, pco.getType());
@@ -100,6 +107,7 @@ public class ParseCompleteObjectTest extends TestCase {
         assertTrue(pco.isArgument());
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());
+        assertEquals("a ",  pco.getValue());
     }
 
     public void testParseCompleteObject2() throws Exception {

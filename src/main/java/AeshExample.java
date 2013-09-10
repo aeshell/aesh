@@ -56,7 +56,7 @@ public class AeshExample {
                         .create())
                 .generateParameter();
 
-        Settings settings = new SettingsBuilder().logging(false).create();
+        Settings settings = new SettingsBuilder().logging(true).create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
                 .command(new CommandLineParser(fooCommand), FooCommand.class)

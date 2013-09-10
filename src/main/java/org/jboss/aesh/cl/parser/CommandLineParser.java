@@ -259,7 +259,7 @@ public class CommandLineParser {
                             active = null;
                         }
                         else
-                            active.addValue(parseLine.trim());
+                            active.addValue(parseLine);
                     }
                     else
                         active.addValue(parseLine);

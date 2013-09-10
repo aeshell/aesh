@@ -59,12 +59,12 @@ public class CommandLineParserTest extends TestCase {
         assertTrue(cl.getOptionProperties("D").containsKey("Xmx"));
         assertEquals("512g m", cl.getOptionProperties("D").get("Xmx"));
 
-        cl = parser.parse("test -fX -e bar -Df=g /tmp/file.txt");
+        cl = parser.parse("test -fX -e bar -Df=g /tmp/file.txt\\ ");
         assertEquals("f", cl.getOptions().get(0).getShortName());
         assertEquals("X", cl.getOptions().get(1).getShortName());
         assertEquals("e", cl.getOptions().get(2).getShortName());
         assertEquals("D", cl.getOptions().get(3).getShortName());
-        assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
+        assertEquals("/tmp/file.txt ", cl.getArgument().getValues().get(0));
         assertFalse(cl.hasParserError());
 
         cl = parser.parse("test -f -e bar -Df=g -X");

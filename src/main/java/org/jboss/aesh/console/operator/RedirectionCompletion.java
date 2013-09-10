@@ -10,10 +10,8 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.util.FileLister;
 import org.jboss.aesh.parser.Parser;
-import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.File;
-import java.util.logging.Logger;
 
 /**
  * ControlOperator completor
@@ -21,8 +19,6 @@ import java.util.logging.Logger;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class RedirectionCompletion implements Completion {
-
-    private Logger logger = LoggerUtil.getLogger(this.getClass().getName());
 
     @Override
     public void complete(CompleteOperation completeOperation) {
@@ -36,7 +32,6 @@ public class RedirectionCompletion implements Completion {
             completeOperation.setOffset(completeOperation.getCursor());
             FileLister lister = new FileLister(word, new File(System.getProperty("user.dir")));
             lister.findMatchingDirectories(completeOperation);
-            logger.info("FILELISTER: "+lister.toString());
             //if we only have one complete candidate, leave the escaped space be
             if(completeOperation.getCompletionCandidates().size() > 1)
                 completeOperation.removeEscapedSpacesFromCompletionCandidates();

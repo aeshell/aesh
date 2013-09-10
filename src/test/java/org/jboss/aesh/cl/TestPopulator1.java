@@ -29,6 +29,10 @@ public class TestPopulator1 {
     public TestPopulator1() {
     }
 
+    public String getEqual() {
+        return equal;
+    }
+
     public Boolean getEnableX() {
         return enableX;
     }

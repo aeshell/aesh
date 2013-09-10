@@ -113,6 +113,10 @@ public class ParserTestCase extends TestCase {
         assertEquals("cd", line.getWords().get(0));
         assertEquals("A\\", line.getWords().get(1));
 
+        line = Parser.findAllWords("ls --files /tmp/A\\ ");
+        assertEquals("ls", line.getWords().get(0));
+        assertEquals("--files", line.getWords().get(1));
+        assertEquals("/tmp/A ", line.getWords().get(2));
     }
 
     public void testFindAllQuotedWords() {
