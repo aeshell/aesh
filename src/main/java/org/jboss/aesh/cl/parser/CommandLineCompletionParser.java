@@ -213,6 +213,7 @@ public class CommandLineCompletionParser {
                 CompleterData completions = new CompleterData(completeObject.getValue(), command);
                 currentOption.getCompleter().complete(completions);
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
+                completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
                     //if the contain spaces we need to add the number of spaces to the size
@@ -260,6 +261,7 @@ public class CommandLineCompletionParser {
                 CompleterData completions = new CompleterData(completeObject.getValue(), command);
                 parser.getCommand().getArgument().getCompleter().complete(completions);
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
+                completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
                     if(completeObject.getValue().contains(" ")) {
@@ -276,13 +278,13 @@ public class CommandLineCompletionParser {
                 CompleterData completions = new CompleterData(completeObject.getValue(), command);
                 new DefaultValueOptionCompleter( parser.getCommand().getArgument().getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidates(completions.getCompleterValues());
+                completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
                     if(completeObject.getValue().contains(" ")) {
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
                     }
-                    completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                 }
                 completeOperation.doAppendSeparator( completions.isAppendSpace());
