@@ -152,7 +152,7 @@ public class FileLister {
             String startsWith = Parser.findStartsWith(completion.getCompletionCandidates());
             if(startsWith.contains(" "))
                 startsWith = Parser.switchEscapedSpacesToSpacesInWord(startsWith);
-            if(startsWith != null && startsWith.length() > 0 &&
+            if(startsWith != null && startsWith.length() > 0 && rest != null &&
                     startsWith.length() > rest.length()) {
                 completion.getCompletionCandidates().clear();
                 completion.addCompletionCandidate(Parser.switchSpacesToEscapedSpacesInWord(startsWith));
