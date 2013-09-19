@@ -12,6 +12,8 @@ import org.jboss.aesh.complete.CompletionRegistration;
 import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasCompletion;
 import org.jboss.aesh.console.alias.AliasManager;
+import org.jboss.aesh.console.command.ConsoleCommand;
+import org.jboss.aesh.console.command.InternalCommands;
 import org.jboss.aesh.console.helper.InterruptHandler;
 import org.jboss.aesh.console.helper.Search;
 import org.jboss.aesh.console.operator.ControlOperator;
@@ -36,6 +38,7 @@ import org.jboss.aesh.history.InMemoryHistory;
 import org.jboss.aesh.history.SearchDirection;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.undo.UndoAction;
@@ -206,7 +209,7 @@ public class Console {
      * @return get the terminal size
      */
     public TerminalSize getTerminalSize() {
-        return getTerminal().getSize();
+        return getShell().getSize();
     }
 
     /**
@@ -264,7 +267,7 @@ public class Console {
                 currentOperation.getControlOperator().isRedirectionOut()) {
             return new AeshPrintWriter(redirectPipeOutBuffer, true);
         } else {
-            return getTerminal().out();
+            return getShell().out();
         }
     }
 
@@ -274,7 +277,7 @@ public class Console {
                 currentOperation.getControlOperator().isRedirectionErr()) {
             return new AeshPrintWriter(redirectPipeErrBuffer, true);
         } else {
-            return getTerminal().err();
+            return getShell().err();
         }
     }
 
@@ -371,9 +374,13 @@ public class Console {
     }
 
     /**
-     * @return get the specified terminal
+     * @return get the current shell
      */
-    public Terminal getTerminal() {
+    public Shell getShell() {
+        return settings.getTerminal().getShell();
+    }
+
+    private Terminal getTerminal() {
         return settings.getTerminal();
     }
 
@@ -788,7 +795,6 @@ public class Console {
         else {
             redrawLine();
             out().println(Buffer.printAnsi((buffer.getPrompt().getLength() + 1) + "G"));
-            out().flush();
         }
     }
 
@@ -836,19 +842,19 @@ public class Console {
     private void setBufferLine(String newLine) throws IOException {
         //must make sure that there are enough space for the
         // line thats about to be injected
-        if((newLine.length()+buffer.getPrompt().getLength()) >= getTerminal().getSize().getWidth() &&
+        if((newLine.length()+buffer.getPrompt().getLength()) >= getShell().getSize().getWidth() &&
                 newLine.length() >= buffer.getLine().length()) {
-            int currentRow = getTerminal().getCursor().getRow();
+            int currentRow = getShell().getCursor().getRow();
             if(currentRow > -1) {
-                int cursorRow = buffer.getCursorWithPrompt() / getTerminal().getSize().getWidth();
-                if(currentRow + (newLine.length() / getTerminal().getSize().getWidth()) - cursorRow >= getTerminal().getSize().getHeight()) {
-                    int numNewRows = currentRow + ((newLine.length()+buffer.getPrompt().getLength()) / getTerminal().getSize().getWidth()) - cursorRow - getTerminal().getSize().getHeight();
+                int cursorRow = buffer.getCursorWithPrompt() / getShell().getSize().getWidth();
+                if(currentRow + (newLine.length() / getShell().getSize().getWidth()) - cursorRow >= getShell().getSize().getHeight()) {
+                    int numNewRows = currentRow + ((newLine.length()+buffer.getPrompt().getLength()) / getShell().getSize().getWidth()) - cursorRow - getShell().getSize().getHeight();
                     //if the line is exactly equal to termWidth we need to add another row
-                    if((newLine.length()+buffer.getPrompt().getLength()) % getTerminal().getSize().getWidth() == 0)
+                    if((newLine.length()+buffer.getPrompt().getLength()) % getShell().getSize().getWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
                         if(settings.isLogging()) {
-                            int totalRows = (newLine.length()+buffer.getPrompt().getLength()) / getTerminal().getSize().getWidth() +1;
+                            int totalRows = (newLine.length()+buffer.getPrompt().getLength()) / getShell().getSize().getWidth() +1;
                             logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
                                     ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
                         }
@@ -863,16 +869,16 @@ public class Console {
     }
 
     private void insertBufferLine(String insert, int position) throws IOException {
-        if((insert.length()+buffer.totalLength()) >= getTerminal().getSize().getWidth()) { //&&
+        if((insert.length()+buffer.totalLength()) >= getShell().getSize().getWidth()) { //&&
             //(insert.length()+buffer.totalLength()) > buffer.getLine().length()) {
-            int currentRow = getTerminal().getCursor().getRow();
+            int currentRow = getShell().getCursor().getRow();
             if(currentRow > -1) {
                 int newLine = insert.length()+buffer.totalLength();
-                int cursorRow = buffer.getCursorWithPrompt() / getTerminal().getSize().getWidth();
-                if(currentRow + (newLine / getTerminal().getSize().getWidth()) - cursorRow >= getTerminal().getSize().getHeight()) {
-                    int numNewRows = currentRow + (newLine / getTerminal().getSize().getWidth()) - cursorRow - getTerminal().getSize().getHeight();
+                int cursorRow = buffer.getCursorWithPrompt() / getShell().getSize().getWidth();
+                if(currentRow + (newLine / getShell().getSize().getWidth()) - cursorRow >= getShell().getSize().getHeight()) {
+                    int numNewRows = currentRow + (newLine / getShell().getSize().getWidth()) - cursorRow - getShell().getSize().getHeight();
                     //if the line is exactly equal to termWidth we need to add another row
-                    if((insert.length()+buffer.totalLength()) % getTerminal().getSize().getWidth() == 0)
+                    if((insert.length()+buffer.totalLength()) % getShell().getSize().getWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
                         out().print(Buffer.printAnsi(numNewRows + "S"));
@@ -923,8 +929,8 @@ public class Console {
         }
 
         // add a 'fake' new line when inserting at the edge of terminal
-        if(buffer.getCursorWithPrompt() > getTerminal().getSize().getWidth() &&
-                buffer.getCursorWithPrompt() % getTerminal().getSize().getWidth() == 1) {
+        if(buffer.getCursorWithPrompt() > getShell().getSize().getWidth() &&
+                buffer.getCursorWithPrompt() % getShell().getSize().getWidth() == 1) {
             out().print((char) 32);
             out().print((char) 13);
         }
@@ -932,18 +938,18 @@ public class Console {
         // if we insert somewhere other than the end of the line we need to redraw from cursor
         if(buffer.getCursor() < buffer.length()) {
             //check if we just started a new line, if we did we need to make sure that we add one
-            if(buffer.totalLength() > getTerminal().getSize().getWidth() &&
-                    (buffer.totalLength()-1) % getTerminal().getSize().getWidth() == 1) {
-                int ansiCurrentRow = getTerminal().getCursor().getRow();
-                int currentRow = (buffer.getCursorWithPrompt() / getTerminal().getSize().getWidth());
-                if(currentRow > 0 && buffer.getCursorWithPrompt() % getTerminal().getSize().getWidth() == 0)
+            if(buffer.totalLength() > getShell().getSize().getWidth() &&
+                    (buffer.totalLength()-1) % getShell().getSize().getWidth() == 1) {
+                int ansiCurrentRow = getShell().getCursor().getRow();
+                int currentRow = (buffer.getCursorWithPrompt() / getShell().getSize().getWidth());
+                if(currentRow > 0 && buffer.getCursorWithPrompt() % getShell().getSize().getWidth() == 0)
                     currentRow--;
 
-                int totalRows = buffer.totalLength() / getTerminal().getSize().getWidth();
-                if(totalRows > 0 && buffer.totalLength() % getTerminal().getSize().getWidth() == 0)
+                int totalRows = buffer.totalLength() / getShell().getSize().getWidth();
+                if(totalRows > 0 && buffer.totalLength() % getShell().getSize().getWidth() == 0)
                     totalRows--;
 
-                if(ansiCurrentRow+(totalRows-currentRow) > getTerminal().getSize().getHeight()) {
+                if(ansiCurrentRow+(totalRows-currentRow) > getShell().getSize().getHeight()) {
                     out().print(Buffer.printAnsi("1S")); //adding a line
                     out().print(Buffer.printAnsi("1A")); // moving up a line
                 }
@@ -1065,10 +1071,10 @@ public class Console {
         if(editMode.getMode() == Mode.VI &&
                 (editMode.getCurrentAction() == Action.MOVE ||
                         editMode.getCurrentAction() == Action.DELETE)) {
-            out().print(buffer.move(where, getTerminal().getSize().getWidth(), true));
+            out().print(buffer.move(where, getShell().getSize().getWidth(), true));
         }
         else {
-            out().print(buffer.move(where, getTerminal().getSize().getWidth()));
+            out().print(buffer.move(where, getShell().getSize().getWidth()));
         }
         out().flush();
     }
@@ -1079,19 +1085,19 @@ public class Console {
 
     private void drawLine(String line) throws IOException {
         //need to clear more than one line
-        if(line.length() > getTerminal().getSize().getWidth() ||
-                (line.length()+ Math.abs(buffer.getDelta()) > getTerminal().getSize().getWidth())) {
+        if(line.length() > getShell().getSize().getWidth() ||
+                (line.length()+ Math.abs(buffer.getDelta()) > getShell().getSize().getWidth())) {
 
             int currentRow = 0;
             if(buffer.getCursorWithPrompt() > 0)
-                currentRow = buffer.getCursorWithPrompt() / getTerminal().getSize().getWidth();
-            if(currentRow > 0 && buffer.getCursorWithPrompt() % getTerminal().getSize().getWidth() == 0)
+                currentRow = buffer.getCursorWithPrompt() / getShell().getSize().getWidth();
+            if(currentRow > 0 && buffer.getCursorWithPrompt() % getShell().getSize().getWidth() == 0)
                 currentRow--;
 
             if(settings.isLogging()) {
-                logger.info("actual position: "+getTerminal().getCursor());
+                logger.info("actual position: "+ getShell().getCursor());
                 logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
-                        +", width:"+getTerminal().getSize().getWidth()+", height:"+getTerminal().getSize().getHeight()
+                        +", width:"+ getShell().getSize().getWidth()+", height:"+ getShell().getSize().getHeight()
                         +", delta:"+buffer.getDelta() +", buffer:"+buffer.getLine());
             }
 
@@ -1125,7 +1131,7 @@ public class Console {
             //NOTE: this doesnt work with history, need to find a better solution
             /*
             if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length()) {
-                getTerminal().writeToStdOut(' ' + ANSI.getStart() + "1D"); //move cursor to left
+                getShell().writeToStdOut(' ' + ANSI.getStart() + "1D"); //move cursor to left
             }
             */
             //save cursor, move the cursor to the beginning, reset line
@@ -1332,7 +1338,7 @@ public class Console {
         printNewline();
         buffer.setCursor(oldCursorPos);
         out().print(Parser.formatDisplayList(completions,
-                getTerminal().getSize().getHeight(), getTerminal().getSize().getWidth()));
+                getShell().getSize().getHeight(), getShell().getSize().getWidth()));
         displayPrompt();
         out().print(buffer.getLine());
         out().flush();
@@ -1622,7 +1628,7 @@ public class Console {
         catch (IOException e) {
             if(settings.isLogging())
                 logger.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
-            getTerminal().err().println(e.getMessage());
+            getShell().err().println(e.getMessage());
         }
         redirectPipeOutBuffer = new StringWriter();
         redirectPipeErrBuffer = new StringWriter();

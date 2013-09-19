@@ -17,10 +17,11 @@ import java.util.logging.Logger;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public abstract class AbstractTerminal implements Terminal {
+public abstract class AbstractTerminal implements Terminal, Shell {
 
     private Logger logger;
     protected final Settings settings;
+    private boolean mainBuffer = true;
 
     AbstractTerminal(Settings settings, Logger logger) {
         this.settings = settings;
@@ -82,4 +83,31 @@ public abstract class AbstractTerminal implements Terminal {
         out().flush();
     }
 
+    @Override
+    public boolean isMainBuffer() {
+        return mainBuffer;
+    }
+
+    @Override
+    public void enableAlternateBuffer() throws IOException {
+        if(isMainBuffer()) {
+            out().print(ANSI.getAlternateBufferScreen());
+            out().flush();
+            mainBuffer = false;
+        }
+    }
+
+    @Override
+    public void enableMainBuffer() throws IOException {
+        if(!isMainBuffer()) {
+            out().print(ANSI.getMainBufferScreen());
+            out().flush();
+            mainBuffer = true;
+        }
+    }
+
+    @Override
+    public Shell getShell() {
+        return this;
+    }
 }

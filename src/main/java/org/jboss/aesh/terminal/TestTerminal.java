@@ -18,7 +18,7 @@ import java.io.OutputStreamWriter;
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
-public class TestTerminal implements Terminal {
+public class TestTerminal implements Terminal, Shell {
 
     private InputStream input;
     private AeshPrintWriter writer;
@@ -66,12 +66,32 @@ public class TestTerminal implements Terminal {
     }
 
     @Override
+    public boolean isMainBuffer() {
+        return true;
+    }
+
+    @Override
+    public void enableAlternateBuffer() throws IOException {
+        //do nothing
+    }
+
+    @Override
+    public void enableMainBuffer() throws IOException {
+        //do nothing
+    }
+
+    @Override
     public boolean isEchoEnabled() {
         return false;
     }
 
     @Override
     public void reset() throws IOException {
+    }
+
+    @Override
+    public Shell getShell() {
+        return this;
     }
 
     @Override

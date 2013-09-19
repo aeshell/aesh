@@ -6,8 +6,6 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.jboss.aesh.console.reader.AeshPrintWriter;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -36,27 +34,6 @@ public interface Terminal {
      */
     int[] read(boolean readAhead) throws IOException;
 
-    /**
-     * @return terminal size
-     */
-    TerminalSize getSize();
-
-    /**
-     * @return get the cursor position
-     */
-    CursorPosition getCursor();
-
-    /**
-     * Set cursor position
-     */
-    void setCursor(CursorPosition position) throws IOException;
-
-    /**
-     * Move the cursor relative to the current position
-     * Will not move outside of TerminalSize boundaries
-     */
-    void moveCursor(int rows, int columns) throws IOException;
-
     boolean isEchoEnabled();
 
     /**
@@ -66,18 +43,6 @@ public interface Terminal {
      */
     void reset() throws IOException;
 
-    /**
-     * clears the screen
-     */
-    void clear() throws IOException;
+    Shell getShell();
 
-    /**
-     * Returns the {@link AeshPrintWriter} associated with the std out
-     */
-    AeshPrintWriter out();
-
-    /**
-     * Returns the {@link AeshPrintWriter} associated with the std err
-     */
-    AeshPrintWriter err();
 }
