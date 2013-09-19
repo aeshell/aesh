@@ -261,7 +261,7 @@ public class Console {
     public AeshPrintWriter out() {
         //if redirection enabled, put it into a buffer
         if(currentOperation != null &&
-                ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
+                currentOperation.getControlOperator().isRedirectionOut()) {
             return new AeshPrintWriter(redirectPipeOutBuffer, true);
         } else {
             return getTerminal().out();
@@ -271,7 +271,7 @@ public class Console {
     public AeshPrintWriter err(){
         //if redirection enabled, put it into a buffer
         if(currentOperation != null &&
-                ControlOperator.isRedirectionOut(currentOperation.getControlOperator())) {
+                currentOperation.getControlOperator().isRedirectionErr()) {
             return new AeshPrintWriter(redirectPipeErrBuffer, true);
         } else {
             return getTerminal().err();
@@ -1464,11 +1464,11 @@ public class Console {
             }
             else {
                 currentOperation = op;
-                if(ControlOperator.isRedirectionOut(op.getControlOperator())) {
+                if(op.getControlOperator().isRedirectionOut()) {
                     standardStream.setStdIn(new BufferedInputStream(
                             new ByteArrayInputStream(redirectPipeOutBuffer.toString().getBytes())));
                 }
-                if(ControlOperator.isRedirectionErr(op.getControlOperator())) {
+                if(op.getControlOperator().isRedirectionErr()) {
                     standardStream.setStdError(new BufferedInputStream(
                             new ByteArrayInputStream(redirectPipeErrBuffer.toString().getBytes())));
                 }

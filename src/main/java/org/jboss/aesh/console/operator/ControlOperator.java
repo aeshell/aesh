@@ -25,13 +25,33 @@ public enum ControlOperator {
     AND, // &&
     NONE;
 
-    public static boolean isRedirectionOut(ControlOperator r) {
-        return (r == PIPE || r == PIPE_OUT_AND_ERR || r == OVERWRITE_OUT
-                || r == OVERWRITE_OUT_AND_ERR || r == APPEND_OUT);
+    public boolean isRedirectionOut() {
+        return (this == PIPE || this == PIPE_OUT_AND_ERR || this == OVERWRITE_OUT
+                || this == OVERWRITE_OUT_AND_ERR || this == APPEND_OUT);
     }
 
-    public static boolean isRedirectionErr(ControlOperator r) {
-        return (r == PIPE_OUT_AND_ERR || r == OVERWRITE_ERR
-                || r == OVERWRITE_OUT_AND_ERR || r == APPEND_ERR);
+    public boolean isRedirectionErr() {
+        return (this == PIPE_OUT_AND_ERR || this == OVERWRITE_ERR
+                || this == OVERWRITE_OUT_AND_ERR || this == APPEND_ERR);
+    }
+
+    public boolean isRedirect() {
+        return !(this == END || this == AMP || this == AND || this == NONE || this == OVERWRITE_IN);
+    }
+
+    public boolean isPipe() {
+        return this == PIPE || this == PIPE_OUT_AND_ERR;
+    }
+
+    public boolean isOut() {
+        return this == APPEND_OUT || this == OVERWRITE_OUT || this == OVERWRITE_OUT_AND_ERR;
+    }
+
+    public boolean isErr() {
+        return this == APPEND_ERR || this == OVERWRITE_ERR || this == OVERWRITE_OUT_AND_ERR;
+    }
+
+    private boolean isNone() {
+        return this == NONE;
     }
 }

@@ -250,15 +250,12 @@ public class Example {
             init();
         }
 
-        private boolean hasRedirectOut() {
-            return ControlOperator.isRedirectionOut(operation.getControlOperator());
-        }
-
         private void init() {
             try {
-                if(!hasRedirectOut()) {
-                    console.out().println("print alternate screen...");
+                if(!operation.getControlOperator().isRedirectionOut()) {
                     console.out().print(ANSI.getAlternateBufferScreen());
+                    console.out().println("print alternate screen...");
+                    console.out().flush();
                 }
 
                 if(console.in().getStdIn().available() > 0) {
@@ -275,7 +272,7 @@ public class Example {
                 readFromFile();
 
                 //detach after init if hasRedirectOut()
-                if(hasRedirectOut()) {
+                if(operation.getControlOperator().isRedirectionOut()) {
                     attached = false;
                 }
             }
