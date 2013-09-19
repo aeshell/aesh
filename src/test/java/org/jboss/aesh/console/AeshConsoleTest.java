@@ -17,6 +17,11 @@ import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.command.AeshCommandRegistryBuilder;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandInvocation;
+import org.jboss.aesh.console.command.CommandRegistry;
+import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -93,8 +98,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
         private String bar;
 
-        public CommandResult execute(AeshConsole console,
-                                     ControlOperator operator) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             assertEquals("en", bar);
             return CommandResult.SUCCESS;
         }
@@ -123,8 +127,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
         private java.util.List<File> arguments;
 
         @Override
-        public CommandResult execute(AeshConsole console,
-                                     ControlOperator operator) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             assertEquals(2, files.size());
             return CommandResult.SUCCESS;
         }

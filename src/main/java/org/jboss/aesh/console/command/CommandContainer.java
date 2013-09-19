@@ -1,4 +1,4 @@
-package org.jboss.aesh.console;
+package org.jboss.aesh.console.command;
 
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;

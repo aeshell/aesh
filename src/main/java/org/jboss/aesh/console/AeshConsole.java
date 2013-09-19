@@ -6,8 +6,11 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.console.command.CommandRegistry;
+import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.reader.AeshPrintWriter;
 import org.jboss.aesh.console.reader.AeshStandardStream;
+import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
 
 /**
@@ -65,9 +68,10 @@ public interface AeshConsole {
     AeshStandardStream in();
 
     /**
-     * Get the terminal size
+     *
+     * @return get shell
      */
-    TerminalSize getTerminalSize();
+    Shell getShell();
 
     /**
      * Clear the terminal screen

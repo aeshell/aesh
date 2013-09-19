@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.console.command.CommandRegistry;
+import org.jboss.aesh.console.command.MutableCommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 

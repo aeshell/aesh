@@ -6,7 +6,7 @@
  */
 package org.jboss.aesh.cl.completer;
 
-import org.jboss.aesh.console.Command;
+import org.jboss.aesh.console.command.Command;
 
 import java.util.ArrayList;
 import java.util.List;

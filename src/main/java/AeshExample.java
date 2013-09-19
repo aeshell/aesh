@@ -18,18 +18,20 @@ import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.console.AeshCommandRegistryBuilder;
+import org.jboss.aesh.console.command.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.Command;
-import org.jboss.aesh.console.CommandRegistry;
-import org.jboss.aesh.console.CommandResult;
-import org.jboss.aesh.console.ConsoleCommand;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandInvocation;
+import org.jboss.aesh.console.command.CommandRegistry;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.File;
@@ -76,9 +78,8 @@ public class AeshExample {
     public static class ExitCommand implements Command {
 
         @Override
-        public CommandResult execute(AeshConsole console,
-                                     ControlOperator operator) throws IOException {
-            console.stop();
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+            commandInvocation.stop();
             return CommandResult.SUCCESS;
         }
     }
@@ -89,12 +90,11 @@ public class AeshExample {
         private String bar;
 
         @Override
-        public CommandResult execute(AeshConsole console,
-                                     ControlOperator operator) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
            if(bar == null)
-               console.out().println("NO BAR!");
+               commandInvocation.getShell().out().println("NO BAR!");
             else
-               console.out().println("you set bar to: " + bar);
+               commandInvocation.getShell().out().println("you set bar to: " + bar);
             return CommandResult.SUCCESS;
         }
     }
@@ -103,25 +103,25 @@ public class AeshExample {
     public static class TestConsoleCommand implements Command, ConsoleCommand {
 
         private boolean attached = true;
-        private AeshConsole console;
+        private Shell shell;
 
         @Override
-        public CommandResult execute(AeshConsole aeshConsole, ControlOperator operator) throws IOException {
-            this.console = aeshConsole;
-            console.attachConsoleCommand(this);
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+            this.shell = commandInvocation.getShell();
+            commandInvocation.attachConsoleCommand(this);
             display();
 
             return CommandResult.SUCCESS;
         }
 
         private void display() {
-            console.out().print(ANSI.getAlternateBufferScreen());
-            console.out().print("press q to stop.....");
-            console.out().flush();
+            shell.out().print(ANSI.getAlternateBufferScreen());
+            shell.out().print("press q to stop.....");
+            shell.out().flush();
         }
 
         private void stop() {
-            console.out().print(ANSI.getMainBufferScreen());
+            shell.out().print(ANSI.getMainBufferScreen());
             attached = false;
         }
 
@@ -131,8 +131,8 @@ public class AeshExample {
                 stop();
             }
             else {
-                console.out().print((char) operation.getInput()[0]);
-                console.out().flush();
+                shell.out().print((char) operation.getInput()[0]);
+                shell.out().flush();
             }
         }
 
@@ -165,24 +165,23 @@ public class AeshExample {
         private List<File> arguments;
 
         @Override
-        public CommandResult execute(AeshConsole console,
-                                     ControlOperator operator) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             if(help) {
-                console.out().println(console.getHelpInfo("ls"));
+                commandInvocation.getShell().out().println(commandInvocation.getHelpInfo("ls"));
             }
             else {
                 if(foo)
-                    console.out().println("you set foo to: " + foo);
+                    commandInvocation.getShell().out().println("you set foo to: " + foo);
                 if(bar)
-                    console.out().println("you set bar to: " + bar);
+                    commandInvocation.getShell().out().println("you set bar to: " + bar);
                 if(less != null)
-                    console.out().println("you set less to: " + less);
+                    commandInvocation.getShell().out().println("you set less to: " + less);
                 if(files != null)
-                    console.out().println("you set file to: " + files);
+                    commandInvocation.getShell().out().println("you set file to: " + files);
 
                 if(arguments != null) {
                     for(File f : arguments)
-                        console.out().println(f.toString());
+                        commandInvocation.getShell().out().println(f.toString());
                 }
             }
             return CommandResult.SUCCESS;

@@ -1,4 +1,4 @@
-package org.jboss.aesh.console;
+package org.jboss.aesh.console.command;
 
 import java.util.Set;
 

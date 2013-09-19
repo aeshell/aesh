@@ -17,9 +17,16 @@ import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
+import org.jboss.aesh.console.command.CommandContainer;
+import org.jboss.aesh.console.command.CommandInvocationImpl;
+import org.jboss.aesh.console.command.CommandNotFoundException;
+import org.jboss.aesh.console.command.CommandRegistry;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.reader.AeshPrintWriter;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.aesh.parser.Parser;
@@ -100,8 +107,8 @@ public class AeshConsoleImpl implements AeshConsole {
     }
 
     @Override
-    public TerminalSize getTerminalSize() {
-        return console.getTerminalSize();
+    public Shell getShell() {
+        return console.getShell();
     }
 
     @Override
@@ -183,7 +190,8 @@ public class AeshConsoleImpl implements AeshConsole {
                             Parser.findFirstWord(output.getBuffer()), output.getBuffer());
                     //calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
                     commandContainer.getParser().populateObject(commandContainer.getCommand(), output.getBuffer());
-                    result = commandContainer.getCommand().execute(console, output.getControlOperator());
+                    result = commandContainer.getCommand().execute(
+                            new CommandInvocationImpl( console, output.getControlOperator()));
                 }
                 catch (CommandLineParserException e) {
                     console.out().println(e.getMessage());
