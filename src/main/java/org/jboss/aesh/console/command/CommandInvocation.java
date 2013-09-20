@@ -63,3 +63,9 @@ public interface CommandInvocation {
      */
     void stop();
 }
+
+interface CommandContext<T extends CommandInvocation> {
+
+    T enhanceCommandInvocation(CommandInvocation commandInvocation);
+
+}

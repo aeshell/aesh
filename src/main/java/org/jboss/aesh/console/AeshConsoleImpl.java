@@ -19,6 +19,7 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.command.CommandContainer;
 import org.jboss.aesh.console.command.CommandInvocationImpl;
+import org.jboss.aesh.console.command.CommandInvocationServices;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
@@ -37,11 +38,14 @@ public class AeshConsoleImpl implements AeshConsole {
 
     private Console console;
     private CommandRegistry registry;
+    private CommandInvocationServices commandInvocationServices;
 
     Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
 
-    AeshConsoleImpl(Settings settings, CommandRegistry registry) {
+    AeshConsoleImpl(Settings settings, CommandRegistry registry,
+                    CommandInvocationServices commandInvocationServices) {
         this.registry = registry;
+        this.commandInvocationServices = commandInvocationServices;
         //commands = new HashMap<CommandLineParser, Command>();
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallback(this));
@@ -190,7 +194,8 @@ public class AeshConsoleImpl implements AeshConsole {
                     //calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
                     commandContainer.getParser().populateObject(commandContainer.getCommand(), output.getBuffer());
                     result = commandContainer.getCommand().execute(
-                            new CommandInvocationImpl( console, output.getControlOperator()));
+                            commandInvocationServices.getDefaultCommandInvocationProvider().enhanceCommandInvocation(
+                                    new CommandInvocationImpl( console, output.getControlOperator())));
                 }
                 catch (CommandLineParserException e) {
                     console.out().println(e.getMessage());
