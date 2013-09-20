@@ -11,7 +11,6 @@ import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.reader.AeshPrintWriter;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.terminal.TerminalSize;
 
 /**
  * A Console that manages Commands and properly execute them.

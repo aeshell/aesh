@@ -27,7 +27,6 @@ import org.jboss.aesh.console.reader.AeshPrintWriter;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.util.LoggerUtil;
 import org.jboss.aesh.parser.Parser;
 

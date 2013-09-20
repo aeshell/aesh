@@ -22,7 +22,6 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandInvocation;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;

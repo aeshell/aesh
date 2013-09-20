@@ -27,7 +27,6 @@ import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.actions.Operation;
