@@ -16,7 +16,7 @@ public class CommandInvocationServices {
 
     private final Map<String, CommandInvocationProvider> providers =
             new ConcurrentHashMap<String, CommandInvocationProvider>();
-    private static final String DEFAULT_PROVIDER_NAME = "default";
+    public static final String DEFAULT_PROVIDER_NAME = "default";
 
     public void registerProvider(String name, CommandInvocationProvider provider) {
         providers.put(name, provider);

@@ -60,7 +60,7 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
                 .create();
 
         CommandInvocationServices services = new CommandInvocationServices();
-        services.registerDefaultProvider(new FooCommandInvocationProvider());
+        services.registerProvider("FOO", new FooCommandInvocationProvider());
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
                 .settings(settings)
@@ -69,6 +69,7 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
                 .prompt(new Prompt(""));
 
         AeshConsole aeshConsole = consoleBuilder.create();
+        aeshConsole.setCurrentCommandInvocationProvider("FOO");
         aeshConsole.start();
 
         outputStream.write(("bar\n").getBytes());

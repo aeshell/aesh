@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.console.command.CommandInvocationProvider;
+import org.jboss.aesh.console.command.CommandInvocationServices;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.reader.AeshPrintWriter;
@@ -81,4 +83,8 @@ public interface AeshConsole {
      * Get a formatted usage/help info from the specified command
      */
     String getHelpInfo(String commandName);
+
+    void setCurrentCommandInvocationProvider(String name);
+
+    void registerCommandInvocationProvider(String name, CommandInvocationProvider commandInvocationProvider);
 }

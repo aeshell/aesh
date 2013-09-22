@@ -19,6 +19,7 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.command.CommandContainer;
 import org.jboss.aesh.console.command.CommandInvocationImpl;
+import org.jboss.aesh.console.command.CommandInvocationProvider;
 import org.jboss.aesh.console.command.CommandInvocationServices;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandRegistry;
@@ -41,6 +42,7 @@ public class AeshConsoleImpl implements AeshConsole {
     private CommandInvocationServices commandInvocationServices;
 
     Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
+    private String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
 
     AeshConsoleImpl(Settings settings, CommandRegistry registry,
                     CommandInvocationServices commandInvocationServices) {
@@ -138,6 +140,16 @@ public class AeshConsoleImpl implements AeshConsole {
             return "";
     }
 
+    @Override
+    public void setCurrentCommandInvocationProvider(String name) {
+        this.commandInvocationProvider = name;
+    }
+
+    @Override
+    public void registerCommandInvocationProvider(String name, CommandInvocationProvider commandInvocationProvider) {
+        commandInvocationServices.registerProvider(name, commandInvocationProvider);
+    }
+
     private List<String> completeCommandName(String input) {
         List<String> matchedCommands = new ArrayList<String>();
         for(String commandName : registry.getAllCommandNames()) {
@@ -194,8 +206,8 @@ public class AeshConsoleImpl implements AeshConsole {
                     //calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
                     commandContainer.getParser().populateObject(commandContainer.getCommand(), output.getBuffer());
                     result = commandContainer.getCommand().execute(
-                            commandInvocationServices.getDefaultCommandInvocationProvider().enhanceCommandInvocation(
-                                    new CommandInvocationImpl( console, output.getControlOperator())));
+                            commandInvocationServices.getCommandInvocationProvider(commandInvocationProvider)
+                                    .enhanceCommandInvocation( new CommandInvocationImpl( console, output.getControlOperator())));
                 }
                 catch (CommandLineParserException e) {
                     console.out().println(e.getMessage());
