@@ -15,12 +15,12 @@ import org.jboss.aesh.terminal.Shell;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public final class CommandInvocationImpl implements CommandInvocation {
+public final class AeshCommandInvocation implements CommandInvocation {
 
     private final AeshConsole aeshConsole;
     private final ControlOperator controlOperator;
 
-    public CommandInvocationImpl(AeshConsole aeshConsole, ControlOperator controlOperator) {
+    public AeshCommandInvocation(AeshConsole aeshConsole, ControlOperator controlOperator) {
         this.aeshConsole = aeshConsole;
         this.controlOperator = controlOperator;
     }

@@ -13,6 +13,11 @@ public class AeshCommandRegistryBuilder {
         commandRegistry = new MutableCommandRegistry();
     }
 
+    public AeshCommandRegistryBuilder containerBuilder(CommandContainerBuilder builder) {
+        commandRegistry.setCommandContainerBuilder(builder);
+        return this;
+    }
+
     public AeshCommandRegistryBuilder command(Class<? extends Command> command) {
         commandRegistry.addCommand(command);
         return this;
@@ -20,13 +25,13 @@ public class AeshCommandRegistryBuilder {
 
     public AeshCommandRegistryBuilder command(CommandLineParser parser,
             Class<? extends Command> command) {
-        commandRegistry.addCommand(new CommandContainer(parser, command));
+        commandRegistry.addCommand(new AeshCommandContainer(parser, command));
         return this;
     }
 
     public AeshCommandRegistryBuilder command(CommandLineParser parser,
             Command command) {
-        commandRegistry.addCommand(new CommandContainer(parser, command));
+        commandRegistry.addCommand(new AeshCommandContainer(parser, command));
         return this;
     }
 

@@ -144,7 +144,7 @@ public class ParserTestCase extends TestCase {
 
         line = Parser.findAllWords("man -f='foo/bar/' Example\\ 1\"");
         assertEquals(ParserStatus.UNCLOSED_QUOTE, line.getStatus());
-        //assertTrue(line.hasError());
+        //assertTrue(line.haveBuildError());
     }
 
     public void testSplitBySizeKeepWords() {

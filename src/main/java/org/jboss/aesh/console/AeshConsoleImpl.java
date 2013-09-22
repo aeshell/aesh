@@ -17,8 +17,8 @@ import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
+import org.jboss.aesh.console.command.AeshCommandInvocation;
 import org.jboss.aesh.console.command.CommandContainer;
-import org.jboss.aesh.console.command.CommandInvocationImpl;
 import org.jboss.aesh.console.command.CommandInvocationProvider;
 import org.jboss.aesh.console.command.CommandInvocationServices;
 import org.jboss.aesh.console.command.CommandNotFoundException;
@@ -207,7 +207,7 @@ public class AeshConsoleImpl implements AeshConsole {
                     commandContainer.getParser().populateObject(commandContainer.getCommand(), output.getBuffer());
                     result = commandContainer.getCommand().execute(
                             commandInvocationServices.getCommandInvocationProvider(commandInvocationProvider)
-                                    .enhanceCommandInvocation( new CommandInvocationImpl( console, output.getControlOperator())));
+                                    .enhanceCommandInvocation(new AeshCommandInvocation(console, output.getControlOperator())));
                 }
                 catch (CommandLineParserException e) {
                     console.out().println(e.getMessage());

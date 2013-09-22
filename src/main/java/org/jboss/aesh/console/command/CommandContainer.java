@@ -1,75 +1,41 @@
+/*
+ * Copyright 2012 Red Hat, Inc. and/or its affiliates.
+ *
+ * Licensed under the Eclipse Public License version 1.0, available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ */
 package org.jboss.aesh.console.command;
 
 import org.jboss.aesh.cl.parser.CommandLineParser;
-import org.jboss.aesh.cl.parser.ParserGenerator;
-import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.util.ReflectionUtil;
 
 /**
+ * A CommandContainer hold reference to the Command and
+ * the CommandLineParser generated from the Command.
+ *
+ * CommandRegistry will not put any CommandContainer objects in the registry
+ * if it have any build errors.
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CommandContainer {
+public interface CommandContainer {
 
-    private Command command;
-    private CommandLineParser parser;
-    private String errorMessage;
+    /**
+     * @return command
+     */
+    Command getCommand();
 
-    public CommandContainer(Command command) {
-        addCommand(command);
-    }
+    /**
+     * @return parser generated from Command
+     */
+    CommandLineParser getParser();
 
-    public CommandContainer(Class<? extends Command> command) {
-        addCommand(command);
-    }
+    /**
+     * @return true if the CommandLineParser or Command generation generated any errors
+     */
+    boolean haveBuildError();
 
-    public CommandContainer(CommandLineParser parser, Command command) {
-        if(parser != null && parser.getCommand() != null) {
-            this.parser = parser;
-            this.command = command;
-        }
-    }
-
-    public CommandContainer(CommandLineParser parser,
-                            Class<? extends Command> command) {
-        if(parser != null && parser.getCommand() != null) {
-            this.parser = parser;
-            this.command = ReflectionUtil.newInstance(command);
-        }
-    }
-
-    private void addCommand(Class<? extends Command> command) {
-        try {
-            parser = ParserGenerator.generateCommandLineParser(command);
-            this.command = ReflectionUtil.newInstance(command);
-        }
-        catch (CommandLineParserException e) {
-            errorMessage = e.getMessage();
-        }
-    }
-
-    private void addCommand(Command command) {
-        try {
-            parser = ParserGenerator.generateCommandLineParser(command);
-            this.command = command;
-        }
-        catch (CommandLineParserException e) {
-            errorMessage = e.getMessage();
-        }
-    }
-
-    public Command getCommand() {
-        return command;
-    }
-
-    public CommandLineParser getParser() {
-        return parser;
-    }
-
-    public boolean hasError() {
-        return errorMessage != null;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
+    /**
+     * @return error message
+     */
+    String getBuildErrorMessage();
 }

@@ -11,8 +11,15 @@ public class MutableCommandRegistry implements CommandRegistry {
 
     private Map<String,CommandContainer> registry = new HashMap<String, CommandContainer>();
 
+    private CommandContainerBuilder containerBuilder;
+
     @Override
-    public CommandContainer getCommand(String name, String completeLine) throws CommandNotFoundException {
+    public void setCommandContainerBuilder(CommandContainerBuilder containerBuilder) {
+        this.containerBuilder = containerBuilder;
+    }
+
+    @Override
+    public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
         if(registry.containsKey(name))
             return registry.get(name);
         else
@@ -29,15 +36,15 @@ public class MutableCommandRegistry implements CommandRegistry {
     }
 
     public void addCommand(Command command) {
-        putIntoRegistry(new CommandContainer(command));
+        putIntoRegistry(getBuilder().build(command));
     }
 
     public void addCommand(Class<? extends Command> command) {
-        putIntoRegistry(new CommandContainer(command));
+        putIntoRegistry(getBuilder().build(command));
     }
 
     private void putIntoRegistry(CommandContainer commandContainer) {
-        if(!commandContainer.hasError() &&
+        if(!commandContainer.haveBuildError() &&
                 !registry.containsKey(commandContainer.getParser().getCommand().getName()))
             registry.put(commandContainer.getParser().getCommand().getName(), commandContainer);
     }
@@ -45,6 +52,12 @@ public class MutableCommandRegistry implements CommandRegistry {
     public void removeCommand(String name) {
         if(registry.containsKey(name))
             registry.remove(name);
+    }
+
+    private CommandContainerBuilder getBuilder() {
+        if(containerBuilder == null)
+            containerBuilder = new AeshCommandContainerBuilder();
+        return containerBuilder;
     }
 
 }
