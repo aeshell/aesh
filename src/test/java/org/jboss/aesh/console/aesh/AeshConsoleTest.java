@@ -14,7 +14,7 @@ import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
-import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsole;
@@ -74,7 +74,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
                 .generateParameter();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(new CommandLineParser(fooCommand), FooTestCommand.class)
+                .command(new AeshCommandLineParser(fooCommand), FooTestCommand.class)
                 .command(LsCommand.class)
                 .create();
 

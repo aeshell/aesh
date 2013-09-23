@@ -1,5 +1,7 @@
 package org.jboss.aesh.console.command;
 
+import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
@@ -35,6 +37,16 @@ public class AeshCommandContainer implements CommandContainer {
             this.parser = parser;
             this.command = ReflectionUtil.newInstance(command);
         }
+    }
+
+    public AeshCommandContainer(ProcessedCommand processedCommand, Class<? extends Command> command) {
+        parser = new AeshCommandLineParser(processedCommand);
+        this.command = ReflectionUtil.newInstance(command);
+    }
+
+    public AeshCommandContainer(ProcessedCommand processedCommand, Command command) {
+        parser = new AeshCommandLineParser(processedCommand);
+        this.command = command;
     }
 
     private void addCommand(Class<? extends Command> command) {

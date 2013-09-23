@@ -1,0 +1,38 @@
+/*
+ * Copyright 2012 Red Hat, Inc. and/or its affiliates.
+ *
+ * Licensed under the Eclipse Public License version 1.0, available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ */
+package org.jboss.aesh.cl.parser;
+
+import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
+
+/**
+ * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ */
+public interface CommandPopulator {
+
+    /**
+     * Populate a Command instance with the values parsed from a command line
+     * If any parser errors are detected it will throw an exception
+     * @param instance command
+     * @param line command line
+     * @throws CommandLineParserException
+     */
+    void populateObject(Object instance, String line)
+            throws CommandLineParserException, OptionValidatorException;
+
+    /**
+     * Populate a Command instance with the values parsed from a command line
+     * If any parser errors are detected it will throw an exception
+     * @param instance command
+     * @param line command line
+     * @param validate do validation or not
+     * @throws CommandLineParserException
+     */
+    void populateObject(Object instance, String line, boolean validate)
+                    throws CommandLineParserException, OptionValidatorException;
+
+}

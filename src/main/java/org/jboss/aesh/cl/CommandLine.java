@@ -17,7 +17,7 @@ import java.util.Map;
 
 /**
  * A parsed String based on the provided CommandDefinition and Options defined
- * in a {@link org.jboss.aesh.cl.parser.CommandLineParser}.
+ * in a {@link org.jboss.aesh.cl.parser.AeshCommandLineParser}.
  *
  * All found options and argument can be queried after.
  *

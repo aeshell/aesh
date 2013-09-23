@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * Generates a {@link CommandLineParser} based on annotations defined in
+ * Generates a {@link AeshCommandLineParser} based on annotations defined in
  * the specified class.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -120,7 +120,7 @@ public class ParserGenerator {
     }
 
     public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException, OptionValidatorException {
-        generateCommandLineParser(instance.getClass()).populateObject(instance, input);
+        generateCommandLineParser(instance.getClass()).getCommandPopulator().populateObject(instance, input);
     }
 
 }

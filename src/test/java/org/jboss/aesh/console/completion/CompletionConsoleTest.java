@@ -7,6 +7,7 @@
 package org.jboss.aesh.console.completion;
 
 import org.jboss.aesh.cl.builder.CommandBuilder;
+import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
@@ -164,7 +165,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         param.addOption(new OptionBuilder().shortName('f').name("foo").hasValue(true).type(String.class).create());
         param.addOption(new OptionBuilder().shortName('b').name("bar").hasValue(true).type(String.class).create());
 
-        final CommandLineParser parser = new CommandLineParser(param);
+        final CommandLineParser parser = new AeshCommandLineParser(param);
         final StringBuilder builder = new StringBuilder();
 
         Completion completion = new Completion() {

@@ -19,7 +19,7 @@ public class ParseCompleteObjectTest extends TestCase {
 
     public void testParseCompleteObject() throws Exception {
         CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class);
-        CommandLineCompletionParser completeParser = new CommandLineCompletionParser(clp);
+        CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1");
         assertEquals("foo1", pco.getValue());
@@ -112,7 +112,7 @@ public class ParseCompleteObjectTest extends TestCase {
 
     public void testParseCompleteObject2() throws Exception {
         CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class);
-        CommandLineCompletionParser completeParser = new CommandLineCompletionParser(clp);
+        CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e ");
         assertEquals(Boolean.class, pco.getType());
@@ -127,7 +127,7 @@ public class ParseCompleteObjectTest extends TestCase {
 
     public void testParseCompleteObject3() throws Exception {
         CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest3.class);
-        CommandLineCompletionParser completeParser = new CommandLineCompletionParser(clp);
+        CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -v 1 2 3 ");
         assertEquals(String.class, pco.getType());

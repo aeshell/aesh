@@ -28,7 +28,7 @@ public class ParserBuilder {
     }
 
     public CommandLineParser generateParser() throws IllegalArgumentException {
-        return new CommandLineParser( param);
+        return new AeshCommandLineParser( param);
     }
 
 }

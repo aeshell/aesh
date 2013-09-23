@@ -172,7 +172,7 @@ public class AeshConsoleImpl implements AeshConsole {
                 try {
                     CommandContainer commandContainer = registry.getCommand(
                             Parser.findFirstWord(completeOperation.getBuffer()), completeOperation.getBuffer());
-                    CommandLineCompletionParser completionParser = new CommandLineCompletionParser(commandContainer.getParser());
+                    CommandLineCompletionParser completionParser = commandContainer.getParser().getCompletionParser();
 
                     ParsedCompleteObject completeObject = completionParser.findCompleteObject(completeOperation.getBuffer());
                     completionParser.injectValuesAndComplete(completeObject, commandContainer.getCommand(), completeOperation);
@@ -204,7 +204,7 @@ public class AeshConsoleImpl implements AeshConsole {
                     CommandContainer commandContainer = registry.getCommand(
                             Parser.findFirstWord(output.getBuffer()), output.getBuffer());
                     //calledCommand.populateObject(commands.get(calledCommand), output.getBuffer());
-                    commandContainer.getParser().populateObject(commandContainer.getCommand(), output.getBuffer());
+                    commandContainer.getParser().getCommandPopulator().populateObject(commandContainer.getCommand(), output.getBuffer());
                     result = commandContainer.getCommand().execute(
                             commandInvocationServices.getCommandInvocationProvider(commandInvocationProvider)
                                     .enhanceCommandInvocation(new AeshCommandInvocation(console, output.getControlOperator())));

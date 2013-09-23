@@ -15,7 +15,6 @@ import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
-import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.command.AeshCommandRegistryBuilder;
@@ -60,7 +59,7 @@ public class AeshExample {
         Settings settings = new SettingsBuilder().logging(true).create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
-                .command(new CommandLineParser(fooCommand), FooCommand.class)
+                .command(fooCommand, FooCommand.class)
                 .command(LsCommand.class)
                 .command(TestConsoleCommand.class)
                 .create();

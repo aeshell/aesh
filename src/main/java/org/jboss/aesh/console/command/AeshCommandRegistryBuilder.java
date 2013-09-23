@@ -1,5 +1,6 @@
 package org.jboss.aesh.console.command;
 
+import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 
 /**
@@ -23,7 +24,19 @@ public class AeshCommandRegistryBuilder {
         return this;
     }
 
-    public AeshCommandRegistryBuilder command(CommandLineParser parser,
+    public AeshCommandRegistryBuilder command(ProcessedCommand processedCommand,
+            Class<? extends Command> command) {
+        commandRegistry.addCommand(new AeshCommandContainer(processedCommand, command));
+        return this;
+    }
+
+    public AeshCommandRegistryBuilder command(ProcessedCommand processedCommand,
+            Command command) {
+        commandRegistry.addCommand(new AeshCommandContainer(processedCommand, command));
+        return this;
+    }
+
+     public AeshCommandRegistryBuilder command(CommandLineParser parser,
             Class<? extends Command> command) {
         commandRegistry.addCommand(new AeshCommandContainer(parser, command));
         return this;
@@ -43,6 +56,5 @@ public class AeshCommandRegistryBuilder {
     public CommandRegistry create() {
         return commandRegistry;
     }
-
 
 }
