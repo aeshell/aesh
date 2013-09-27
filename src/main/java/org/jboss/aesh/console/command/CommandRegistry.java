@@ -10,14 +10,6 @@ import java.util.Set;
 public interface CommandRegistry {
 
     /**
-     * Specify the builder to be used.
-     * Each implementation need to handle the possiblity of getCommand being called before the
-     * builder is specified.
-     * @param builder CommandContainerBuilder
-     */
-    void setCommandContainerBuilder(CommandContainerBuilder builder);
-
-    /**
      * @param name command name
      * @param line current terminal buffer line
      * @return the matching CommandContainer's name

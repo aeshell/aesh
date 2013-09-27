@@ -13,7 +13,6 @@ public class MutableCommandRegistry implements CommandRegistry {
 
     private CommandContainerBuilder containerBuilder;
 
-    @Override
     public void setCommandContainerBuilder(CommandContainerBuilder containerBuilder) {
         this.containerBuilder = containerBuilder;
     }
