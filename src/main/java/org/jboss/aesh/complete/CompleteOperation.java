@@ -173,8 +173,11 @@ public class CompleteOperation {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Buffer: ").append(buffer).append(", Cursor:").append(cursor).append(", Offset:").append(offset);
-        sb.append(", candidates:").append(completionCandidates);
+        sb.append("Buffer: ").append(buffer)
+                .append(", Cursor:").append(cursor)
+                .append(", Offset:").append(offset)
+                .append(", Append separator: ").append(appendSeparator)
+                .append(", Candidates:").append(completionCandidates);
 
         return sb.toString();
     }

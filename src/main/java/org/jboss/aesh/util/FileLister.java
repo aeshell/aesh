@@ -117,6 +117,11 @@ public class FileLister {
                     //append when we have a file
                     completion.doAppendSeparator(true);
                 }
+                else if(completion.getCompletionCandidates().size() == 0) {
+                    completion.addCompletionCandidate("");
+                    //append when we have a file
+                    completion.doAppendSeparator(true);
+                }
             }
             //not a directory or file, list what we find
             else {

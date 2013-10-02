@@ -43,7 +43,7 @@ public class CommandLinePopulatorTest {
 
             TestPopulator1 test1 = new TestPopulator1();
 
-            parser.getCommandPopulator().populateObject(test1, "test -e enable --X -f -i 2 -n=3");
+            parser.getCommandPopulator().populateObject(test1, parser.parse("test -e enable --X -f -i 2 -n=3"));
 
             assertEquals("enable", test1.equal);
             assertTrue(test1.getEnableX());
@@ -51,26 +51,26 @@ public class CommandLinePopulatorTest {
             assertEquals(2, test1.getInt1().intValue());
             assertEquals(3, test1.int2);
 
-            parser.getCommandPopulator().populateObject(test1, "test -e enable2 --X");
+            parser.getCommandPopulator().populateObject(test1, parser.parse("test -e enable2 --X"));
             assertTrue(test1.getEnableX());
             assertFalse(test1.foo);
             assertEquals(42, test1.getInt1().intValue());
 
-            parser.getCommandPopulator().populateObject(test1, "test -e enable2 --X -i 5");
+            parser.getCommandPopulator().populateObject(test1, parser.parse("test -e enable2 --X -i 5"));
             assertTrue(test1.getEnableX());
             assertFalse(test1.foo);
             assertEquals(5, test1.getInt1().intValue());
 
-            parser.getCommandPopulator().populateObject(test1, "test -e enable2 -Xb");
+            parser.getCommandPopulator().populateObject(test1, parser.parse("test -e enable2 -Xb"));
             assertTrue(test1.getEnableX());
             assertTrue(test1.bar);
             assertFalse(test1.foo);
             assertEquals(42, test1.getInt1().intValue());
 
-            parser.getCommandPopulator().populateObject(test1, "test -e enable2 -X");
+            parser.getCommandPopulator().populateObject(test1, parser.parse("test -e enable2 -X"));
             assertTrue(test1.getEnableX());
 
-            parser.getCommandPopulator().populateObject(test1, "test -e enable2\\ ");
+            parser.getCommandPopulator().populateObject(test1, parser.parse("test -e enable2\\ "));
             Assert.assertEquals("enable2 ", test1.getEqual());
             assertFalse(test1.getEnableX());
 
@@ -88,24 +88,24 @@ public class CommandLinePopulatorTest {
             CommandLineParser parser = ParserGenerator.generateCommandLineParser(TestPopulator2.class);
             TestPopulator2 test2 = new TestPopulator2();
 
-            parser.getCommandPopulator().populateObject(test2, "test -b s1,s2,s3,s4");
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test -b s1,s2,s3,s4"));
             assertNotNull(test2.getBasicSet());
             assertEquals(4, test2.getBasicSet().size());
             assertTrue(test2.getBasicSet().contains("s3"));
 
-            parser.getCommandPopulator().populateObject(test2, "test -b s1 s2 s3,s4");
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test -b s1 s2 s3,s4"));
             assertNotNull(test2.getBasicSet());
             assertEquals(4, test2.getBasicSet().size());
             assertTrue(test2.getBasicSet().contains("s3"));
 
-            parser.getCommandPopulator().populateObject(test2, "test -a 1,2,3,4");
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test -a 1,2,3,4"));
             assertNull(test2.getBasicSet());
             assertNotNull(test2.getBasicList());
             assertEquals(4, test2.getBasicList().size());
             assertEquals((Object) 1, test2.getBasicList().get(0));
 
 
-            parser.getCommandPopulator().populateObject(test2, "test -a 3,4 --basicSet foo,bar");
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test -a 3,4 --basicSet foo,bar"));
 
             assertNotNull(test2.getBasicList());
             assertNotNull(test2.getBasicSet());
@@ -113,17 +113,17 @@ public class CommandLinePopulatorTest {
             assertEquals(2, test2.getBasicSet().size());
             assertTrue(test2.getBasicSet().contains("foo"));
 
-            parser.getCommandPopulator().populateObject(test2, "test ");
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test "));
             assertNull(test2.getBasicList());
             assertNull(test2.getBasicSet());
 
-            parser.getCommandPopulator().populateObject(test2, "test -i 10,12,0");
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test -i 10,12,0"));
             assertNotNull(test2.getImplList());
             assertEquals(3, test2.getImplList().size());
             assertEquals(Short.valueOf("12"), test2.getImplList().get(1));
 
             //just to verify that we dont accept arguments
-            parser.getCommandPopulator().populateObject(test2, "test text.txt");
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test text.txt"));
             exception.expect(OptionParserException.class);
 
         }
@@ -134,11 +134,28 @@ public class CommandLinePopulatorTest {
     }
 
     @Test
+    public void testListObjects2() {
+        CommandLineParser parser = null;
+        try {
+            parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class);
+            TestPopulator5 test5 = new TestPopulator5();
+            parser.getCommandPopulator().populateObject(test5, parser.parse("test --strings foo1 --bar "));
+
+            assertEquals("foo1", test5.getStrings().get(0));
+
+        } catch (CommandLineParserException e) {
+            e.printStackTrace();
+        } catch (OptionValidatorException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
     public void testGroupObjects() {
         try {
             CommandLineParser parser = ParserGenerator.generateCommandLineParser(TestPopulator3.class);
             TestPopulator3 test3 = new TestPopulator3();
-            parser.getCommandPopulator().populateObject(test3, "test -bX1=foo -bX2=bar");
+            parser.getCommandPopulator().populateObject(test3, parser.parse("test -bX1=foo -bX2=bar"));
 
             assertNotNull(test3.getBasicMap());
             assertNull(test3.getIntegerMap());
@@ -146,15 +163,15 @@ public class CommandLinePopulatorTest {
             assertTrue(test3.getBasicMap().containsKey("X2"));
             assertEquals("foo", test3.getBasicMap().get("X1"));
 
-            parser.getCommandPopulator().populateObject(test3, "test -iI1=42 -iI12=43");
+            parser.getCommandPopulator().populateObject(test3, parser.parse("test -iI1=42 -iI12=43"));
             assertNotNull(test3.getIntegerMap());
             assertEquals(2, test3.getIntegerMap().size());
             assertEquals(new Integer("42"), test3.getIntegerMap().get("I1"));
 
-            parser.getCommandPopulator().populateObject(test3, "test -iI12");
+            parser.getCommandPopulator().populateObject(test3, parser.parse("test -iI12"));
             exception.expect(OptionParserException.class);
 
-            parser.getCommandPopulator().populateObject(test3, "test --integerMapI12=");
+            parser.getCommandPopulator().populateObject(test3, parser.parse("test --integerMapI12="));
             exception.expect(OptionParserException.class);
         }
         catch (CommandLineParserException e) {
@@ -168,7 +185,7 @@ public class CommandLinePopulatorTest {
         try {
             CommandLineParser  parser = ParserGenerator.generateCommandLineParser(TestPopulator4.class);
             TestPopulator4 test4 = new TestPopulator4();
-            parser.getCommandPopulator().populateObject(test4, "test test2.txt test4.txt");
+            parser.getCommandPopulator().populateObject(test4, parser.parse("test test2.txt test4.txt"));
 
             assertNotNull(test4.getArguments());
             assertEquals(2, test4.getArguments().size());
@@ -227,7 +244,7 @@ public class CommandLinePopulatorTest {
 
             TestPopulator1A test1 = new TestPopulator1A();
 
-            parser.getCommandPopulator().populateObject(test1, "test -e enable --XX -f -i 2 -n=3");
+            parser.getCommandPopulator().populateObject(test1, parser.parse("test -e enable --XX -f -i 2 -n=3"));
 
             assertEquals("enable", test1.equal);
             assertTrue(test1.getEnableX());
@@ -235,11 +252,11 @@ public class CommandLinePopulatorTest {
             assertEquals(2, test1.getInt1().intValue());
             assertEquals(3, test1.int2);
 
-            parser.getCommandPopulator().populateObject(test1, "test -e enable2");
+            parser.getCommandPopulator().populateObject(test1, parser.parse("test -e enable2"));
             assertFalse(test1.getEnableX());
             assertFalse(test1.foo);
 
-            parser.getCommandPopulator().populateObject(test1, "test");
+            parser.getCommandPopulator().populateObject(test1, parser.parse("test"));
             Assert.assertEquals("en", test1.equal);
             Assert.assertEquals(12345, test1.int2);
         }
@@ -255,13 +272,13 @@ public class CommandLinePopulatorTest {
         try {
             CommandLineParser  parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class);
             TestPopulator5 test5 = new TestPopulator5();
-            parser.getCommandPopulator().populateObject(test5, "test test2.txt test4.txt");
+            parser.getCommandPopulator().populateObject(test5, parser.parse("test test2.txt test4.txt"));
 
             assertNotNull(test5.getArguments());
             assertEquals(2, test5.getArguments().size());
             assertTrue(test5.getArguments().contains("test4.txt"));
 
-            parser.getCommandPopulator().populateObject(test5, "test --currency NOK");
+            parser.getCommandPopulator().populateObject(test5, parser.parse("test --currency NOK"));
             assertNull(test5.getArguments());
             assertEquals(Currency.getInstance("NOK"), test5.getCurrency());
 
@@ -277,11 +294,11 @@ public class CommandLinePopulatorTest {
         try {
             CommandLineParser  parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class);
             TestPopulator5 test5 = new TestPopulator5();
-            parser.getCommandPopulator().populateObject(test5, "test -v 42");
+            parser.getCommandPopulator().populateObject(test5, parser.parse("test -v 42"));
 
             assertEquals(new Long(42), test5.getVeryLong());
 
-            parser.getCommandPopulator().populateObject(test5, "test --veryLong 101");
+            parser.getCommandPopulator().populateObject(test5, parser.parse("test --veryLong 101"));
             exception.expect(OptionValidatorException.class);
         }
         catch (CommandLineParserException e) {
@@ -297,18 +314,18 @@ public class CommandLinePopulatorTest {
             CommandLineParser  parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class);
             TestPopulator5 test5 = new TestPopulator5();
 
-            parser.getCommandPopulator().populateObject(test5, "test --longs 42;43;44 -v 42");
+            parser.getCommandPopulator().populateObject(test5, parser.parse("test --longs 42;43;44 -v 42"));
             assertEquals(3, test5.getLongs().size());
             assertEquals(new Long(42), test5.getLongs().get(0));
             assertEquals(new Long(44), test5.getLongs().get(2));
             assertEquals(new Long(42), test5.getVeryLong());
 
-            parser.getCommandPopulator().populateObject(test5, "test --longs 42 --veryLong 42");
+            parser.getCommandPopulator().populateObject(test5, parser.parse("test --longs 42 --veryLong 42"));
             assertEquals(1, test5.getLongs().size());
             assertEquals(new Long(42), test5.getLongs().get(0));
             assertEquals(new Long(42), test5.getVeryLong());
 
-            parser.getCommandPopulator().populateObject(test5, "test --longs 42;43;132");
+            parser.getCommandPopulator().populateObject(test5, parser.parse("test --longs 42;43;132"));
             exception.expect(OptionValidatorException.class);
 
         }

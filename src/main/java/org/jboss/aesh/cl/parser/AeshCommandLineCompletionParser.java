@@ -119,7 +119,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
 
         //the last word is an argument
         if(cl.getArgument() != null && !cl.getArgument().getValues().isEmpty()) {
-            return new ParsedCompleteObject("",
+            return new ParsedCompleteObject("", endsWithSpace ? "" :
                     cl.getArgument().getValues().get(cl.getArgument().getValues().size() - 1),
                     cl.getArgument().getType(), false);
         }
@@ -205,7 +205,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( displayName));
 
             try {
-                parser.getCommandPopulator().populateObject(command, rest, false);
+                parser.getCommandPopulator().populateObject(command, parser.parse(rest), false);
             }
             //this should be ignored at some point
             catch (CommandLineParserException ignored) { }
@@ -253,7 +253,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             String lastWord = Parser.findEscapedSpaceWordCloseToEnd(completeOperation.getBuffer());
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length() - lastWord.length());
             try {
-                parser.getCommandPopulator().populateObject(command, rest, false);
+                parser.getCommandPopulator().populateObject(command, parser.parse(rest), false);
             }
             catch (CommandLineParserException ignored) { }
             catch (OptionValidatorException ignored) { }

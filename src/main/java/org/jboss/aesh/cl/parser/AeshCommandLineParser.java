@@ -131,17 +131,17 @@ public class AeshCommandLineParser implements CommandLineParser {
                 //name
                 if(parseLine.startsWith("--")) {
                     //make sure that we dont have any "active" options lying around
-                    if(active != null &&
-                            (active.getOptionType() != OptionType.LIST ||
-                                    active.getOptionType() != OptionType.GROUP)) {
-                        commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
-                        break;
+                    if(active != null) {
+                        if(active.getOptionType() == OptionType.LIST ||
+                                active.getOptionType() == OptionType.GROUP) {
+                            commandLine.addOption(active);
+                            active = null;
+                        }
+                        else {
+                            commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
+                            break;
+                        }
                     }
-                    else if(active != null) {
-                        commandLine.addOption(active);
-                        active = null;
-                    }
-
 
                     active = findLongOption(command, parseLine.substring(2));
                     if(active != null)
@@ -181,14 +181,16 @@ public class AeshCommandLineParser implements CommandLineParser {
                 else if(parseLine.startsWith("-")) {
                     //make sure that we dont have any "active" options lying around
                     //except list and group
-                    if(active != null &&
-                            (active.getOptionType() != OptionType.LIST ||
-                                    active.getOptionType() != OptionType.GROUP)) {
-                        commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
-                    }
-                    else if(active != null) {
-                        commandLine.addOption(active);
-                        active = null;
+                    if(active != null) {
+                        if(active.getOptionType() == OptionType.LIST ||
+                                active.getOptionType() == OptionType.GROUP) {
+                            commandLine.addOption(active);
+                            active = null;
+                        }
+                        else {
+                            commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
+                            break;
+                        }
                     }
                     else if(parseLine.length() != 2 && !parseLine.contains("=")) {
                         //we might have two or more options in a group

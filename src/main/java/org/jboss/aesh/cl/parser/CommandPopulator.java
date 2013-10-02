@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl.parser;
 
+import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 
@@ -21,7 +22,7 @@ public interface CommandPopulator {
      * @param line command line
      * @throws CommandLineParserException
      */
-    void populateObject(Object instance, String line)
+    void populateObject(Object instance, CommandLine line)
             throws CommandLineParserException, OptionValidatorException;
 
     /**
@@ -29,10 +30,10 @@ public interface CommandPopulator {
      * If any parser errors are detected it will throw an exception
      * @param instance command
      * @param line command line
-     * @param validate do validation or not
+     * @param validate based on rules given to the parser
      * @throws CommandLineParserException
      */
-    void populateObject(Object instance, String line, boolean validate)
+    void populateObject(Object instance, CommandLine line, boolean validate)
                     throws CommandLineParserException, OptionValidatorException;
 
 }

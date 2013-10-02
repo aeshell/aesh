@@ -97,11 +97,18 @@ public class ParseCompleteObjectTest extends TestCase {
         assertTrue(pco.isArgument());
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());
+        assertTrue(pco.getValue().length() == 0);
 
         pco = completeParser.findCompleteObject("test a");
         assertTrue(pco.isArgument());
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());
+
+        pco = completeParser.findCompleteObject("test a1 b1 ");
+        assertTrue(pco.isArgument());
+        assertFalse(pco.doDisplayOptions());
+        assertFalse(pco.isOption());
+        assertTrue(pco.getValue() == null || pco.getValue().length() == 0);
 
         pco = completeParser.findCompleteObject("test a\\ ");
         assertTrue(pco.isArgument());

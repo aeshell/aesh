@@ -120,7 +120,8 @@ public class ParserGenerator {
     }
 
     public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException, OptionValidatorException {
-        generateCommandLineParser(instance.getClass()).getCommandPopulator().populateObject(instance, input);
+        CommandLineParser cl = generateCommandLineParser(instance.getClass());
+        cl.getCommandPopulator().populateObject(instance,  cl.parse(input));
     }
 
 }

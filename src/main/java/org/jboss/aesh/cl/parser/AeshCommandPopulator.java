@@ -25,7 +25,7 @@ public class AeshCommandPopulator implements CommandPopulator {
         this.commandLineParser = commandLineParser;
     }
 
-        /**
+    /**
      * Populate a Command instance with the values parsed from a command line
      * If any parser errors are detected it will throw an exception
      * @param instance command
@@ -33,7 +33,7 @@ public class AeshCommandPopulator implements CommandPopulator {
      * @throws CommandLineParserException
      */
     @Override
-    public void populateObject(Object instance, String line)
+    public void populateObject(Object instance, CommandLine line)
             throws CommandLineParserException, OptionValidatorException {
         populateObject(instance, line, true);
     }
@@ -47,25 +47,24 @@ public class AeshCommandPopulator implements CommandPopulator {
      * @throws CommandLineParserException
      */
     @Override
-    public void populateObject(Object instance, String line, boolean validate)
+    public void populateObject(Object instance, CommandLine line, boolean validate)
             throws CommandLineParserException, OptionValidatorException {
-        CommandLine cl = commandLineParser.parse(line);
-        if(cl.hasParserError())
-            throw cl.getParserException();
+        if(line.hasParserError())
+            throw line.getParserException();
         for(ProcessedOption option: commandLineParser.getCommand().getOptions()) {
-            if(cl.hasOption(option.getName()))
-                cl.getOption(option.getName()).injectValueIntoField(instance, validate);
+            if(line.hasOption(option.getName()))
+                line.getOption(option.getName()).injectValueIntoField(instance, validate);
             else if(option.getDefaultValues().size() > 0) {
                 option.injectValueIntoField(instance, validate);
             }
             else
                 resetField(instance, option.getFieldName(), option.hasValue());
         }
-        if(cl.getArgument() != null && cl.getArgument().getValues().size() > 0) {
-            cl.getArgument().injectValueIntoField(instance, validate);
+        if(line.getArgument() != null && line.getArgument().getValues().size() > 0) {
+            line.getArgument().injectValueIntoField(instance, validate);
         }
-        else if(cl.getArgument() != null)
-            resetField(instance, cl.getArgument().getFieldName(), true);
+        else if(line.getArgument() != null)
+            resetField(instance, line.getArgument().getFieldName(), true);
     }
 
     /*

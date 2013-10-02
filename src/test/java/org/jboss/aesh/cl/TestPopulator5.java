@@ -27,6 +27,12 @@ public class TestPopulator5 {
     @OptionList(validator = LongOptionValidator.class, valueSeparator = ';')
     private List<Long> longs;
 
+    @OptionList(name = "strings")
+    private List<String> strings;
+
+    @Option(name = "bar", hasValue = false)
+    private Boolean bar;
+
     @Arguments
     private Set<String> arguments;
 
@@ -55,6 +61,14 @@ public class TestPopulator5 {
 
     public List<Long> getLongs() {
         return longs;
+    }
+
+    public List<String> getStrings() {
+        return strings;
+    }
+
+    public Boolean getBar() {
+        return bar;
     }
 
     public class LongOptionValidator implements OptionValidator<Long> {
