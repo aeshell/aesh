@@ -550,8 +550,11 @@ public class Console {
             complete();
         }
         else if(action == Action.EXIT) {
-            if(Settings.getInstance().hasInterruptHook())
-                Settings.getInstance().getInterruptHook().handleInterrupt(this);
+            //only do this if we're on windows
+            if(!Config.isOSPOSIXCompatible()) {
+                if(Settings.getInstance().hasInterruptHook())
+                    Settings.getInstance().getInterruptHook().handleInterrupt(this);
+            }
             stop();
             System.exit(0);
         }
