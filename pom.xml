@@ -16,7 +16,7 @@
     <groupId>org.jboss.aesh</groupId>
     <artifactId>aesh</artifactId>
     <packaging>jar</packaging>
-    <version>0.33.8</version>
+    <version>0.33.9-SNAPSHOT</version>
     <name>Æsh</name>
     <description>Æsh (Another Extendable SHell)</description>
 
