@@ -11,7 +11,7 @@ import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineParser;
-import org.jboss.aesh.cl.parser.ParserBuilder;
+import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
 import org.jboss.aesh.console.Config;
 
 /**
@@ -42,7 +42,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .type(String.class)
                         .create());
 
-        CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
+        CommandLineParser clp = new CommandLineParserBuilder(pb.generateParameter()).generateParser();
 
         assertEquals("Usage: man [OPTION...]"+ Config.getLineSeparator()+
                 "  -d, --debug    emit debugging messages"+Config.getLineSeparator()+
@@ -80,7 +80,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .create());
 
 
-        CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
+        CommandLineParser clp = new CommandLineParserBuilder(pb.generateParameter()).generateParser();
 
         assertEquals("Usage: man [OPTION...]"+Config.getLineSeparator()+
                 "  -d, --debug            emit debugging messages"+Config.getLineSeparator()+

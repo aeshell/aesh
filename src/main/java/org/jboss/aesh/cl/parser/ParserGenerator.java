@@ -116,7 +116,7 @@ public class ParserGenerator {
             }
         }
 
-        return new ParserBuilder().parameter(processedCommand).generateParser();
+        return new CommandLineParserBuilder().parameter(processedCommand).generateParser();
     }
 
     public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException, OptionValidatorException {

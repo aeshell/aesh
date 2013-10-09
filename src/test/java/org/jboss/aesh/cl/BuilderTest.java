@@ -14,7 +14,7 @@ import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.parser.CommandLineParser;
-import org.jboss.aesh.cl.parser.ParserBuilder;
+import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -32,7 +32,7 @@ public class BuilderTest extends TestCase {
                 new OptionBuilder().description("filename given").shortName('f').name("filename")
                         .type(String.class).hasValue(true).create());
 
-        CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
+        CommandLineParser clp = new CommandLineParserBuilder(pb.generateParameter()).generateParser();
 
         CommandLine cl = clp.parse("foo -f test1.txt");
         assertTrue(cl.hasOption('f'));
@@ -61,7 +61,7 @@ public class BuilderTest extends TestCase {
         pb.argument(new OptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENT).type(String.class).create());
 
-        CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
+        CommandLineParser clp = new CommandLineParserBuilder(pb.generateParameter()).generateParser();
 
         CommandLine cl = clp.parse("less -V test1.txt");
         assertTrue(cl.hasOption('V'));
@@ -89,7 +89,7 @@ public class BuilderTest extends TestCase {
         pb.argument(new OptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENT).type(String.class).create());
 
-        CommandLineParser clp = new ParserBuilder(pb.generateParameter()).generateParser();
+        CommandLineParser clp = new CommandLineParserBuilder(pb.generateParameter()).generateParser();
 
         assertEquals("version", clp.getCommand().findOption("v").getName());
         assertEquals("verbose", clp.getCommand().findOption("e").getName());

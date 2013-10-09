@@ -11,18 +11,18 @@ import org.jboss.aesh.cl.internal.ProcessedCommand;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ParserBuilder {
+public class CommandLineParserBuilder {
 
     private ProcessedCommand param;
 
-    public ParserBuilder() {
+    public CommandLineParserBuilder() {
     }
 
-    public ParserBuilder(ProcessedCommand param) {
+    public CommandLineParserBuilder(ProcessedCommand param) {
         this.param = param;
     }
 
-    public ParserBuilder parameter(ProcessedCommand param) {
+    public CommandLineParserBuilder parameter(ProcessedCommand param) {
         this.param = param;
         return this;
     }
