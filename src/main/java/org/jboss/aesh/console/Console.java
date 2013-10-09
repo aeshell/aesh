@@ -618,8 +618,12 @@ public class Console {
             complete();
         }
         else if(action == Action.EXIT) {
-            if(settings.hasInterruptHook())
-                settings.getInterruptHook().handleInterrupt(this);
+            //atm Action.EXIT will only be called on windows
+            //so make sure we call interruptHook first
+            if(!Config.isOSPOSIXCompatible()) {
+                if(settings.hasInterruptHook())
+                    settings.getInterruptHook().handleInterrupt(this);
+            }
             stop();
             System.exit(0);
         }

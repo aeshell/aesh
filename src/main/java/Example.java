@@ -73,8 +73,9 @@ public class Example {
             @Override
             public void handleInterrupt(Console console) {
                 try {
-                    console.out().print("KILLED!\n");
+                    console.out().println("KILLED!");
                     console.stop();
+                    System.exit(1);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

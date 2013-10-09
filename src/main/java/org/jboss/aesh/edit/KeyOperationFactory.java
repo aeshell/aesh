@@ -27,6 +27,7 @@ public class KeyOperationFactory {
 
         keys.add(new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING));
         keys.add(new KeyOperation(Key.CTRL_B, Operation.MOVE_PREV_CHAR));
+        keys.add(new KeyOperation(Key.CTRL_C, Operation.EXIT));
         //ctrl-d, if pressed on a line with chars it will cause the
         //action delete_next_char else exit
         keys.add(new KeyOperation(Key.CTRL_D, Operation.EXIT));
@@ -87,6 +88,7 @@ public class KeyOperationFactory {
         List<KeyOperation> keys = new ArrayList<KeyOperation>();
 
         keys.add(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
+        keys.add(new KeyOperation(Key.CTRL_C, Operation.EXIT));
         //ctrl-d, if pressed on a line with chars it will cause the
         //action delete_next_char else exit
         keys.add(new KeyOperation(Key.CTRL_D, Operation.EXIT));
