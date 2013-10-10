@@ -6,6 +6,9 @@
  */
 package org.jboss.aesh.edit;
 
+import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Key;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -63,12 +66,55 @@ public class KeyOperationManager {
         }
     }
 
+    public KeyOperation findOperation(Key key) {
+        for(KeyOperation operation : operations)
+            if(operation.getKey() == key)
+                return operation;
+
+        return null;
+    }
+
     public KeyOperation findOperation(int[] input) {
         for(KeyOperation operation : operations) {
             if(operation.getKey().equalTo(input))
                 return operation;
         }
-        return null;
+
+        return findOtherOperations(input);
+    }
+
+    /**
+     * If we cant find an operation in Key we its either a char we havent mapped
+     * or possibly a block that contains several identical chars.
+     * @param input
+     * @return
+     */
+    private KeyOperation findOtherOperations(int[] input) {
+        if(Key.startsWithEscape(input)) {
+            if(Key.UP.inputStartsWithKey(input) && input.length % Key.UP.getKeyValues().length == 0)
+                return findOperation(Key.UP);
+            else if(Key.UP_2.inputStartsWithKey(input) && input.length % Key.UP_2.getKeyValues().length == 0)
+                return findOperation(Key.UP_2);
+            if(Key.DOWN.inputStartsWithKey(input) && input.length % Key.DOWN.getKeyValues().length == 0)
+                return findOperation(Key.DOWN);
+            else if(Key.DOWN_2.inputStartsWithKey(input) && input.length % Key.DOWN_2.getKeyValues().length == 0)
+                return findOperation(Key.DOWN_2);
+            if(Key.LEFT.inputStartsWithKey(input) && input.length % Key.LEFT.getKeyValues().length == 0)
+                return findOperation(Key.LEFT);
+            else if(Key.LEFT_2.inputStartsWithKey(input) && input.length % Key.LEFT_2.getKeyValues().length == 0)
+                return findOperation(Key.LEFT_2);
+            if(Key.RIGHT.inputStartsWithKey(input) && input.length % Key.RIGHT.getKeyValues().length == 0)
+                return findOperation(Key.RIGHT);
+            else if(Key.RIGHT_2.inputStartsWithKey(input) && input.length % Key.RIGHT_2.getKeyValues().length == 0)
+                return findOperation(Key.RIGHT_2);
+            else
+                return new KeyOperation(Key.ESC, Operation.NO_ACTION);
+        }
+        //doesnt start with esc, lets just say its an input
+        else {
+            return null;
+        }
+
     }
 
 }

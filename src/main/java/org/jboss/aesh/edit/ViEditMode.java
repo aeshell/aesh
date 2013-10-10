@@ -80,7 +80,7 @@ public class ViEditMode implements EditMode {
         int input = in[0];
 
         if(Config.isOSPOSIXCompatible() && in.length > 1) {
-            KeyOperation ko = KeyOperationFactory.findOperation(operationManager.getOperations(), in);
+            KeyOperation ko = operationManager.findOperation(in);
             if(ko != null) {
                 //clear current operations to make sure that everything works as expected
                 currentOperations.clear();

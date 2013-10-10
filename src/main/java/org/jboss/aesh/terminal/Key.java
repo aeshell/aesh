@@ -142,6 +142,8 @@ public enum Key {
     VERTICAL_BAR(new int[]{124}), // {
     RIGHT_CURLY_BRACKET(new int[]{125}), // {
     TILDE(new int[]{126}), // ~
+
+    WINDOWS_ESC(new int[]{224}), // just used to identify win special chars
     //movement
     UP(Config.isOSPOSIXCompatible() ?
             new int[]{27,91,65} : new int[]{224,72}),
@@ -234,12 +236,27 @@ public enum Key {
         return keyValues[0];
     }
 
+    public static boolean startsWithEscape(int[] input) {
+        return ((Config.isOSPOSIXCompatible() && input[0] == Key.ESC.getFirstValue()) ||
+                (!Config.isOSPOSIXCompatible() && input[0] == Key.WINDOWS_ESC.getFirstValue()));
+    }
+
     public static Key getKey(int[] otherValues) {
         for(Key key : Key.values()) {
             if(key.equalTo(otherValues))
                 return key;
         }
         return null;
+    }
+
+    public boolean inputStartsWithKey(int[] input) {
+        if(keyValues.length > input.length)
+            return false;
+        for(int i=0; i < keyValues.length; i++) {
+            if(keyValues[i] != input[i])
+                return false;
+        }
+        return true;
     }
 
     public boolean containKey(int[] input) {
