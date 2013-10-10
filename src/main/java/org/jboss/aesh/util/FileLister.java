@@ -32,30 +32,30 @@ public class FileLister {
     private static final Pattern endsWithSlash = Config.isOSPOSIXCompatible() ?
             Pattern.compile(".*\\"+Config.getPathSeparator()+"$") : Pattern.compile(".*\\\\$");
 
-    private String incDir;
+    private String token;
     private File cwd;
     private String rest;
     private String lastDir;
     private FileFilter fileFilter;
 
-    public FileLister(String incDir, File cwd) {
-        if(incDir == null)
+    public FileLister(String token, File cwd) {
+        if(token == null)
             throw new IllegalArgumentException("Incoming directory cannot be null");
         if(cwd == null)
             throw new IllegalArgumentException("Current working directory cannot be null");
-        this.incDir = Parser.switchEscapedSpacesToSpacesInWord(incDir);
+        this.token = Parser.switchEscapedSpacesToSpacesInWord(token);
         this.cwd = cwd;
         findRestAndLastDir();
         setFileFilter(Filter.ALL);
     }
 
-    public FileLister(String incDir, File cwd, Filter filter) {
-        this(incDir, cwd);
+    public FileLister(String token, File cwd, Filter filter) {
+        this(token, cwd);
         setFileFilter(filter);
     }
 
-    public FileLister(String incDir, File cwd, FileFilter fileFilter) {
-        this(incDir, cwd);
+    public FileLister(String token, File cwd, FileFilter fileFilter) {
+        this(token, cwd);
         this.fileFilter = fileFilter;
     }
 
@@ -77,20 +77,20 @@ public class FileLister {
     public void findMatchingDirectories(CompleteOperation completion) {
        completion.doAppendSeparator(false);
 
-        //if incDir is empty, just list cwd
-        if(incDir.trim().isEmpty()) {
+        //if token is empty, just list cwd
+        if(token.trim().isEmpty()) {
             completion.addCompletionCandidates( listDirectory(cwd, null));
         }
         else if(startWithHome()) {
-            if(isHomeAndIncDirADirectory()) {
-                if(endWithSlash()) {
+            if(isHomeAndTokenADirectory()) {
+                if(tokenEndsWithSlash()) {
                     completion.addCompletionCandidates(
-                            listDirectory(new File(Config.getHomeDir()+incDir.substring(1)), null));
+                            listDirectory(new File(Config.getHomeDir()+token.substring(1)), null));
                 }
                 else
                     completion.addCompletionCandidate(Config.getPathSeparator());
             }
-            else if(isHomeAndIncDirAFile()) {
+            else if(isHomeAndTokenAFile()) {
                 completion.addCompletionCandidate("");
                 //append when we have a file
                 completion.doAppendSeparator(true);
@@ -101,16 +101,17 @@ public class FileLister {
             }
         }
         else if(!startWithSlash()) {
-            if(isCwdAndIncDirADirectory()) {
-                if(endWithSlash()) {
+            if(isCwdAndTokenADirectory()) {
+                if(tokenEndsWithSlash()) {
                     completion.addCompletionCandidates(
                             listDirectory(new File(cwd.getAbsolutePath() +
-                                    Config.getPathSeparator()+incDir), null));
+                                    Config.getPathSeparator()+token), null));
                 }
-                else
-                    completion.addCompletionCandidate(Config.getPathSeparator());
+                else {
+                   completion.addCompletionCandidates( listDirectory(cwd, token));
+                }
             }
-            else if(isCwdAndIncDirAFile()) {
+            else if(isCwdAndTokenAFile()) {
                 listPossibleDirectories(completion);
                 if(completion.getCompletionCandidates().size() == 1) {
                     completion.getCompletionCandidates().set(0, "");
@@ -129,15 +130,15 @@ public class FileLister {
             }
         }
         else if(startWithSlash()) {
-            if(isIncDirADirectory()) {
-                if(endWithSlash()) {
+            if(isTokenADirectory()) {
+                if(tokenEndsWithSlash()) {
                     completion.addCompletionCandidates(
-                            listDirectory(new File(incDir), null));
+                            listDirectory(new File(token), null));
                 }
                 else
                     completion.addCompletionCandidate(Config.getPathSeparator());
             }
-            else if(isIncDirAFile()) {
+            else if(isTokenAFile()) {
                 listPossibleDirectories(completion);
                 if(completion.getCompletionCandidates().size() == 1) {
                     completion.getCompletionCandidates().set(0, "");
@@ -166,41 +167,37 @@ public class FileLister {
 
         //new offset tweaking to match the "common" way of returning completions
         if(completion.getCompletionCandidates().size() == 1) {
-            if(isIncDirADirectory() && !endWithSlash()) {
-                completion.getCompletionCandidates().set(0, incDir +
+            if(isTokenADirectory() && !tokenEndsWithSlash()) {
+                completion.getCompletionCandidates().set(0, token +
                         completion.getCompletionCandidates().get(0));
 
-                completion.setOffset(completion.getCursor()-incDir.length());
+                completion.setOffset(completion.getCursor()-token.length());
             }
-            else if(isIncDirAFile()) {
-                completion.getCompletionCandidates().set(0, incDir +
+            else if(isTokenAFile()) {
+                completion.getCompletionCandidates().set(0, token +
                         completion.getCompletionCandidates().get(0));
 
-                completion.setOffset(completion.getCursor()-incDir.length());
+                completion.setOffset(completion.getCursor()-token.length());
                 completion.doAppendSeparator(true);
             }
-            else if(incDir != null) {
-                if(rest != null && incDir.length() > rest.length()) {
+            else if(token != null) {
+                if(rest != null && token.length() > rest.length()) {
                     completion.getCompletionCandidates().set(0,
                             Parser.switchSpacesToEscapedSpacesInWord(
-                            incDir.substring(0, incDir.length()-rest.length() )) +
+                            token.substring(0, token.length()-rest.length() )) +
                                     completion.getCompletionCandidates().get(0));
 
-                    completion.setOffset(completion.getCursor()-incDir.length());
+                    completion.setOffset(completion.getCursor()-token.length());
                 }
-                else if(rest != null && incDir.length() == rest.length()) {
+                else if(rest != null && token.length() == rest.length()) {
                     completion.setOffset(completion.getCursor()-(rest.length()+Parser.findNumberOfSpacesInWord(rest)));
                 }
                 else {
-                    if(incDir.endsWith(Config.getPathSeparator()))
-                        completion.getCompletionCandidates().set(0, Parser.switchSpacesToEscapedSpacesInWord(incDir) +
-                                completion.getCompletionCandidates().get(0));
-                    else
-                        completion.getCompletionCandidates().set(0, Parser.switchSpacesToEscapedSpacesInWord(incDir) +
-                                Config.getPathSeparator()+
+                    if(token.endsWith(Config.getPathSeparator()))
+                        completion.getCompletionCandidates().set(0, Parser.switchSpacesToEscapedSpacesInWord(token) +
                                 completion.getCompletionCandidates().get(0));
 
-                    completion.setOffset(completion.getCursor()-incDir.length());
+                    completion.setOffset(completion.getCursor()-token.length());
                 }
             }
             else {
@@ -241,61 +238,61 @@ public class FileLister {
     }
 
     private void findRestAndLastDir() {
-        if(incDir.contains(Config.getPathSeparator())) {
-            lastDir = incDir.substring(0, incDir.lastIndexOf(Config.getPathSeparator()));
-            rest = incDir.substring(incDir.lastIndexOf(Config.getPathSeparator())+1);
+        if(token.contains(Config.getPathSeparator())) {
+            lastDir = token.substring(0, token.lastIndexOf(Config.getPathSeparator()));
+            rest = token.substring(token.lastIndexOf(Config.getPathSeparator())+1);
         }
         else {
-            if(new File(cwd+Config.getPathSeparator()+incDir).exists())
-                lastDir = incDir;
+            if(new File(cwd+Config.getPathSeparator()+token).exists())
+                lastDir = token;
             else {
-                rest = incDir;
+                rest = token;
             }
         }
     }
 
-    private boolean isIncDirADirectory() {
-        return new File(incDir).isDirectory();
+    private boolean isTokenADirectory() {
+        return new File(token).isDirectory();
     }
 
-    private boolean isIncDirAFile() {
-        return new File(incDir).isFile();
+    private boolean isTokenAFile() {
+        return new File(token).isFile();
     }
 
-    private boolean isCwdAndIncDirADirectory() {
+    private boolean isCwdAndTokenADirectory() {
         return new File(cwd.getAbsolutePath() +
-                Config.getPathSeparator() + incDir).isDirectory();
+                Config.getPathSeparator() + token).isDirectory();
     }
 
-    private boolean isCwdAndIncDirAFile() {
+    private boolean isCwdAndTokenAFile() {
         return new File(cwd.getAbsolutePath() +
-                Config.getPathSeparator() + incDir).isFile();
+                Config.getPathSeparator() + token).isFile();
     }
 
-    private boolean isHomeAndIncDirADirectory() {
+    private boolean isHomeAndTokenADirectory() {
         return new File(Config.getHomeDir()+
-                 incDir.substring(1)).isDirectory();
+                 token.substring(1)).isDirectory();
     }
 
-    private boolean isHomeAndIncDirAFile() {
+    private boolean isHomeAndTokenAFile() {
         return new File(Config.getHomeDir()+
-                incDir.substring(1)).isFile();
+                token.substring(1)).isFile();
     }
 
     private boolean startWithParent() {
-        return startsWithParent.matcher(incDir).matches();
+        return startsWithParent.matcher(token).matches();
     }
 
     private boolean startWithHome() {
-        return incDir.startsWith("~/");
+        return token.startsWith("~/");
     }
 
     private boolean startWithSlash() {
-        return startsWithSlash.matcher(incDir).matches();
+        return startsWithSlash.matcher(token).matches();
     }
 
-    private boolean endWithSlash() {
-        return endsWithSlash.matcher(incDir).matches();
+    private boolean tokenEndsWithSlash() {
+        return endsWithSlash.matcher(token).matches();
     }
 
     private List<String> listDirectory(File path, String rest) {
@@ -324,7 +321,7 @@ public class FileLister {
     @Override
     public String toString() {
         return "FileLister{" +
-                "incDir='" + incDir + '\'' +
+                "token='" + token + '\'' +
                 ", cwd=" + cwd +
                 ", rest='" + rest + '\'' +
                 ", lastDir='" + lastDir + '\'' +
