@@ -229,15 +229,6 @@ public class KeyOperationFactory {
         return keys;
     }
 
-    public static KeyOperation findOperation(List<KeyOperation> operations, int[] input) {
-        for(KeyOperation operation : operations) {
-            if(operation.equalValues(input))
-                return operation;
-        }
-        return null;
-
-    }
-
     public static boolean containNewLine(int[] input) {
         int newLine = getNewLine();
         for(int i : input)
