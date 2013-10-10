@@ -6,34 +6,66 @@
  */
 package org.jboss.aesh.cl.completer;
 
-import org.jboss.aesh.complete.CompleteOperation;
-import org.jboss.aesh.util.FileLister;
-
 import java.io.File;
 
+import org.jboss.aesh.complete.CompleteOperation;
+import org.jboss.aesh.util.FileLister;
+import org.jboss.aesh.util.FileLister.Filter;
+
 /**
+ * Completes {@link File} objects
+ * 
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class FileOptionCompleter implements OptionCompleter {
 
-    public void complete(CompleterData completerData) {
+	private final File cwd;
+	private final Filter filter;
 
-        CompleteOperation completeOperation = new CompleteOperation(completerData.getGivenCompleteValue(), 0);
-        if(completerData.getGivenCompleteValue() == null)
-            new FileLister("", new File(System.getProperty("user.dir"))).findMatchingDirectories(completeOperation);
-        else
-            new FileLister(completerData.getGivenCompleteValue(),
-                    new File(System.getProperty("user.dir"))).findMatchingDirectories(completeOperation);
+	public FileOptionCompleter() {
+		this(new File(System.getProperty("user.dir")), Filter.ALL);
+	}
 
+	public FileOptionCompleter(File baseDir) {
+		this(baseDir, Filter.ALL);
+	}
 
-        if(completeOperation.getCompletionCandidates().size() > 1) {
-            completeOperation.removeEscapedSpacesFromCompletionCandidates();
-        }
+	public FileOptionCompleter(File baseDir, Filter filter) {
+		if (!baseDir.isDirectory()) {
+			throw new IllegalArgumentException("Base Dir must be a directory");
+		}
+		if (filter == null) {
+			throw new IllegalArgumentException("A valid filter must be informed");
+		}
+		this.cwd = baseDir;
+		this.filter = filter;
+	}
 
-        completerData.setCompleterValues( completeOperation.getCompletionCandidates());
-        if(completerData.getGivenCompleteValue() != null && completerData.getCompleterValues().size() == 1) {
-            completerData.setAppendSpace(completeOperation.hasAppendSeparator());
-        }
+	@Override
+	public void complete(CompleterData completerData) {
 
-    }
+		CompleteOperation completeOperation = new CompleteOperation(completerData.getGivenCompleteValue(), 0);
+		if (completerData.getGivenCompleteValue() == null)
+			new FileLister("", cwd, filter).findMatchingDirectories(completeOperation);
+		else
+			new FileLister(completerData.getGivenCompleteValue(), cwd, filter)
+					.findMatchingDirectories(completeOperation);
+
+		if (completeOperation.getCompletionCandidates().size() > 1) {
+			completeOperation.removeEscapedSpacesFromCompletionCandidates();
+		}
+
+		completerData.setCompleterValues(completeOperation.getCompletionCandidates());
+		if (completerData.getGivenCompleteValue() != null && completerData.getCompleterValues().size() == 1) {
+			completerData.setAppendSpace(completeOperation.hasAppendSeparator());
+		}
+	}
+
+	public File getWorkingDirectory() {
+		return cwd;
+	}
+
+	public Filter getFilter() {
+		return filter;
+	}
 }
