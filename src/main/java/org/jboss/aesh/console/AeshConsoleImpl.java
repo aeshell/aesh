@@ -150,6 +150,13 @@ public class AeshConsoleImpl implements AeshConsole {
         commandInvocationServices.registerProvider(name, commandInvocationProvider);
     }
 
+    public String getBuffer() {
+        if(console != null)
+            return console.getBuffer();
+        else
+            return "";
+    }
+
     private List<String> completeCommandName(String input) {
         List<String> matchedCommands = new ArrayList<String>();
         for(String commandName : registry.getAllCommandNames()) {
