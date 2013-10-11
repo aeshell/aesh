@@ -80,6 +80,10 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.INSERT, Operation.NO_ACTION));        //insert
 
         keys.add(new KeyOperation(Key.META_CTRL_J, Operation.VI_EDIT_MODE)); //meta-ctrl-j
+        keys.add(new KeyOperation(Key.CTRL_DOWN, Operation.MOVE_BEGINNING));
+        keys.add(new KeyOperation(Key.CTRL_UP, Operation.MOVE_BEGINNING));
+        keys.add(new KeyOperation(Key.CTRL_LEFT, Operation.MOVE_PREV_BIG_WORD));
+        keys.add(new KeyOperation(Key.CTRL_RIGHT, Operation.MOVE_NEXT_BIG_WORD));
 
         return keys;
     }
@@ -163,6 +167,11 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.END, Operation.MOVE_END, Action.EDIT));        //end
         keys.add(new KeyOperation(Key.END_2, Operation.MOVE_END, Action.EDIT));        //end
         keys.add(new KeyOperation(Key.INSERT, Operation.NO_ACTION));        //insert
+
+        keys.add(new KeyOperation(Key.CTRL_DOWN, Operation.MOVE_BEGINNING, Action.EDIT));
+        keys.add(new KeyOperation(Key.CTRL_UP, Operation.MOVE_BEGINNING, Action.EDIT));
+        keys.add(new KeyOperation(Key.CTRL_LEFT, Operation.MOVE_PREV_BIG_WORD, Action.EDIT));
+        keys.add(new KeyOperation(Key.CTRL_RIGHT, Operation.MOVE_NEXT_BIG_WORD, Action.EDIT));
 
         return keys;
     }

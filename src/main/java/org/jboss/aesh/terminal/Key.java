@@ -193,6 +193,16 @@ public enum Key {
             new int[]{24,21} : new int[]{0,36}),
     BACKSPACE(Config.isOSPOSIXCompatible() ?
             new int[]{127} : new int[]{8}),
+
+    CTRL_LEFT(Config.isOSPOSIXCompatible() ?
+            new int[] {27,91,49,59,53,68} : new int[]{224, 115}),
+    CTRL_RIGHT(Config.isOSPOSIXCompatible() ?
+            new int[] {27,91,49,59,53,67} : new int[]{224, 116}),
+    CTRL_UP(Config.isOSPOSIXCompatible() ?
+            new int[] {27,91,49,59,53,65} : new int[]{224, 141}),
+    CTRL_DOWN(Config.isOSPOSIXCompatible() ?
+            new int[] {27,91,49,59,53,66} : new int[]{224, 145}),
+
     ENTER(Config.isOSPOSIXCompatible() ?
             new int[]{10} : new int[]{13});
 
