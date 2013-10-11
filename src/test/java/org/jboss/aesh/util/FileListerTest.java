@@ -12,124 +12,107 @@ import java.util.List;
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
- * 
  */
-public class FileListerTest
-{
-   private File workingDir;
+public class FileListerTest {
+    private File workingDir;
 
-   @Before
-   public void before() throws IOException
-   {
-      workingDir = File.createTempFile("aesh", ".FileListerTest");
-      workingDir.delete();
-      workingDir.mkdirs();
-   }
+    @Before
+    public void before() throws IOException {
+        workingDir = File.createTempFile("aesh", ".FileListerTest");
+        workingDir.delete();
+        workingDir.mkdirs();
+    }
 
-   @After
-   public void after()
-   {
-      delete(workingDir, true);
-   }
+    @After
+    public void after() {
+        delete(workingDir, true);
+    }
 
-   @Test
-   public void testFullCompletionWithSingleSubdirectory()
-   {
-      new File(workingDir, "child").mkdir();
-      CompleteOperation completion = new CompleteOperation("cd ", 2);
-      new FileLister("", workingDir).findMatchingDirectories(completion);
+    @Test
+    public void testFullCompletionWithSingleSubdirectory() {
+        new File(workingDir, "child").mkdir();
+        CompleteOperation completion = new CompleteOperation("cd ", 2);
+        new FileLister("", workingDir).findMatchingDirectories(completion);
 
-      List<String> candidates = completion.getCompletionCandidates();
-      Assert.assertEquals(1, candidates.size());
-      Assert.assertEquals("child/", candidates.get(0));
-   }
+        List<String> candidates = completion.getCompletionCandidates();
+        assertEquals(1, candidates.size());
+        assertEquals("child/", candidates.get(0));
+    }
 
-   @Test
-   public void testPartialCompletionWithSingleSubdirectory()
-   {
-      new File(workingDir, "child").mkdir();
-      CompleteOperation completion = new CompleteOperation("cd ch", 2);
-      new FileLister("ch", workingDir).findMatchingDirectories(completion);
+    @Test
+    public void testPartialCompletionWithSingleSubdirectory() {
+        new File(workingDir, "child").mkdir();
+        CompleteOperation completion = new CompleteOperation("cd ch", 2);
+        new FileLister("ch", workingDir).findMatchingDirectories(completion);
 
-      List<String> candidates = completion.getCompletionCandidates();
-      Assert.assertEquals(1, candidates.size());
-      Assert.assertEquals("child/", candidates.get(0));
-   }
+        List<String> candidates = completion.getCompletionCandidates();
+        assertEquals(1, candidates.size());
+        assertEquals("child/", candidates.get(0));
+    }
 
-   @Test
-   public void testFullCompletionWithMultipleSubdirectory()
-   {
-      new File(workingDir, "child").mkdir();
-      new File(workingDir, "child2").mkdir();
-      CompleteOperation completion = new CompleteOperation("cd ", 2);
-      new FileLister("", workingDir).findMatchingDirectories(completion);
+    @Test
+    public void testFullCompletionWithMultipleSubdirectory() {
+        new File(workingDir, "child").mkdir();
+        new File(workingDir, "child2").mkdir();
+        CompleteOperation completion = new CompleteOperation("cd ", 2);
+        new FileLister("", workingDir).findMatchingDirectories(completion);
 
-      List<String> candidates = completion.getCompletionCandidates();
-      Assert.assertEquals(2, candidates.size());
-      Assert.assertEquals("child/", candidates.get(0));
-      Assert.assertEquals("child2/", candidates.get(1));
-   }
+        List<String> candidates = completion.getCompletionCandidates();
+        assertEquals(2, candidates.size());
+        assertTrue("child/", candidates.contains("child/"));
+        assertTrue("child2/", candidates.contains("child2/"));
+    }
 
-   @Test
-   public void testPartialCompletionWithMultipleSubdirectory()
-   {
-      new File(workingDir, "child").mkdir();
-      new File(workingDir, "child2").mkdir();
-      CompleteOperation completion = new CompleteOperation("cd ch", 4);
-      new FileLister("ch", workingDir).findMatchingDirectories(completion);
+    @Test
+    public void testPartialCompletionWithMultipleSubdirectory() {
+        new File(workingDir, "child").mkdir();
+        new File(workingDir, "child2").mkdir();
+        CompleteOperation completion = new CompleteOperation("cd ch", 4);
+        new FileLister("ch", workingDir).findMatchingDirectories(completion);
 
-      List<String> candidates = completion.getCompletionCandidates();
-      Assert.assertEquals(1, candidates.size());
-      Assert.assertEquals("child", candidates.get(0));
-   }
+        List<String> candidates = completion.getCompletionCandidates();
+        assertEquals(1, candidates.size());
+        assertEquals("child", candidates.get(0));
+    }
 
-   public static boolean delete(File file, final boolean recursive)
-   {
-      boolean result = false;
-      if (recursive)
-      {
-         result = _deleteRecursive(file, true);
-      }
-      else
-      {
-         if ((file.listFiles() != null) && (file.listFiles().length != 0))
-         {
-            throw new RuntimeException("directory not empty");
-         }
-
-         result = file.delete();
-      }
-      return result;
-   }
-
-   private static boolean _deleteRecursive(final File file, final boolean collect)
-   {
-      boolean result = true;
-
-      File[] children = file.listFiles();
-      if (children != null)
-      {
-         for (File sf : children)
-         {
-            if (sf.isDirectory())
-            {
-               if (!_deleteRecursive(sf, false))
-                  result = false;
+    public static boolean delete(File file, final boolean recursive) {
+        boolean result = false;
+        if (recursive) {
+            result = _deleteRecursive(file, true);
+        } else {
+            if ((file.listFiles() != null) && (file.listFiles().length != 0)) {
+                throw new RuntimeException("directory not empty");
             }
-            else
-            {
-               if (!sf.delete())
-                  result = false;
-            }
-         }
-      }
 
-      return file.delete() && result;
-   }
+            result = file.delete();
+        }
+        return result;
+    }
+
+    private static boolean _deleteRecursive(final File file, final boolean collect) {
+        boolean result = true;
+
+        File[] children = file.listFiles();
+        if (children != null) {
+            for (File sf : children) {
+                if (sf.isDirectory()) {
+                    if (!_deleteRecursive(sf, false))
+                        result = false;
+                } else {
+                    if (!sf.delete())
+                        result = false;
+                }
+            }
+        }
+
+        return file.delete() && result;
+    }
 }

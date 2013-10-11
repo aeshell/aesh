@@ -14,58 +14,58 @@ import org.jboss.aesh.util.FileLister.Filter;
 
 /**
  * Completes {@link File} objects
- * 
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class FileOptionCompleter implements OptionCompleter {
 
-	private final File cwd;
-	private final Filter filter;
+    private final File cwd;
+    private final Filter filter;
 
-	public FileOptionCompleter() {
-		this(new File(System.getProperty("user.dir")), Filter.ALL);
-	}
+    public FileOptionCompleter() {
+        this(new File(System.getProperty("user.dir")), Filter.ALL);
+    }
 
-	public FileOptionCompleter(File baseDir) {
-		this(baseDir, Filter.ALL);
-	}
+    public FileOptionCompleter(File baseDir) {
+        this(baseDir, Filter.ALL);
+    }
 
-	public FileOptionCompleter(File baseDir, Filter filter) {
-		if (!baseDir.isDirectory()) {
-			throw new IllegalArgumentException("Base Dir must be a directory");
-		}
-		if (filter == null) {
-			throw new IllegalArgumentException("A valid filter must be informed");
-		}
-		this.cwd = baseDir;
-		this.filter = filter;
-	}
+    public FileOptionCompleter(File baseDir, Filter filter) {
+        if (!baseDir.isDirectory()) {
+            throw new IllegalArgumentException("Base Dir must be a directory");
+        }
+        if (filter == null) {
+            throw new IllegalArgumentException("A valid filter must be informed");
+        }
+        this.cwd = baseDir;
+        this.filter = filter;
+    }
 
-	@Override
-	public void complete(CompleterData completerData) {
+    @Override
+    public void complete(CompleterData completerData) {
 
-		CompleteOperation completeOperation = new CompleteOperation(completerData.getGivenCompleteValue(), 0);
-		if (completerData.getGivenCompleteValue() == null)
-			new FileLister("", cwd, filter).findMatchingDirectories(completeOperation);
-		else
-			new FileLister(completerData.getGivenCompleteValue(), cwd, filter)
-					.findMatchingDirectories(completeOperation);
+        CompleteOperation completeOperation = new CompleteOperation(completerData.getGivenCompleteValue(), 0);
+        if (completerData.getGivenCompleteValue() == null)
+            new FileLister("", cwd, filter).findMatchingDirectories(completeOperation);
+        else
+            new FileLister(completerData.getGivenCompleteValue(), cwd, filter)
+                    .findMatchingDirectories(completeOperation);
 
-		if (completeOperation.getCompletionCandidates().size() > 1) {
-			completeOperation.removeEscapedSpacesFromCompletionCandidates();
-		}
+        if (completeOperation.getCompletionCandidates().size() > 1) {
+            completeOperation.removeEscapedSpacesFromCompletionCandidates();
+        }
 
-		completerData.setCompleterValues(completeOperation.getCompletionCandidates());
-		if (completerData.getGivenCompleteValue() != null && completerData.getCompleterValues().size() == 1) {
-			completerData.setAppendSpace(completeOperation.hasAppendSeparator());
-		}
-	}
+        completerData.setCompleterValues(completeOperation.getCompletionCandidates());
+        if (completerData.getGivenCompleteValue() != null && completerData.getCompleterValues().size() == 1) {
+            completerData.setAppendSpace(completeOperation.hasAppendSeparator());
+        }
+    }
 
-	public File getWorkingDirectory() {
-		return cwd;
-	}
+    public File getWorkingDirectory() {
+        return cwd;
+    }
 
-	public Filter getFilter() {
-		return filter;
-	}
+    public Filter getFilter() {
+        return filter;
+    }
 }
