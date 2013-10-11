@@ -241,7 +241,8 @@ public class ViEditMode implements EditMode {
             //pgup / pgdown
             else if(operation == Operation.PGDOWN || operation == Operation.PGUP)
                 return Operation.NO_ACTION;
-
+            else if(operation == Operation.NO_ACTION)
+                return Operation.NO_ACTION;
 
             if(!isInEditMode())
                 return inCommandMode(operation, workingMode);
