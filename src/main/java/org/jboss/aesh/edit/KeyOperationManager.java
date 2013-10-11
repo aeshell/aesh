@@ -21,15 +21,6 @@ import java.util.List;
 public class KeyOperationManager {
 
     private List<KeyOperation> operations;
-    private static final int[] UP = new int[]{27,91,65};
-    private static final int[] DOWN = new int[]{27,91,66};
-    private static final int[] RIGHT = new int[]{27,91,67};
-    private static final int[] LEFT = new int[]{27,91,68};
-
-    private static final int[] UP2 = new int[]{27,79,65};
-    private static final int[] DOWN2 = new int[]{27,79,66};
-    private static final int[] RIGHT2 = new int[]{27,79,67};
-    private static final int[] LEFT2 = new int[]{27,79,68};
 
     public KeyOperationManager() {
        operations = new ArrayList<KeyOperation>();
@@ -93,30 +84,25 @@ public class KeyOperationManager {
     private KeyOperation findOtherOperations(int[] input) {
         if(startsWithEscape(input)) {
             if(Config.isOSPOSIXCompatible()) {
-                if(startsFirstArgWithSecond(input, UP) && input.length % UP.length == 0)
-                    return findOperation(UP);
-                else if(startsFirstArgWithSecond(input, UP2) && input.length % UP2.length == 0)
-                    return findOperation(UP2);
-                if(startsFirstArgWithSecond(input, DOWN) && input.length % DOWN.length == 0)
-                    return findOperation(UP);
-                else if(startsFirstArgWithSecond(input, DOWN2) && input.length % DOWN2.length == 0)
-                    return findOperation(DOWN2);
-                if(startsFirstArgWithSecond(input, LEFT) && input.length % LEFT.length == 0)
-                    return findOperation(LEFT);
-                else if(startsFirstArgWithSecond(input, LEFT2) && input.length % LEFT2.length == 0)
-                    return findOperation(LEFT2);
-                if(startsFirstArgWithSecond(input, DOWN) && input.length % DOWN.length == 0)
-                    return findOperation(DOWN);
-                else if(startsFirstArgWithSecond(input, DOWN2) && input.length % DOWN2.length == 0)
-                    return findOperation(DOWN2);
-                else
-                    return new KeyOperation(new int[]{27}, Operation.NO_ACTION);
+                for(KeyOperation operation : operations) {
+                    if(operation.isEscapeCommand() &&
+                           startsFirstArgWithSecond(input, operation.getKeyValues()) &&
+                            input.length % operation.getKeyValues().length == 0)
+                        return operation;
+                }
+                return new KeyOperation(new int[]{27}, Operation.NO_ACTION);
             }
             //we're lazy and doesnt do much for windows here
             else
                 return new KeyOperation(new int[]{224}, Operation.NO_ACTION);
         }
-        //doesnt start with esc, lets just say its an input
+        else if(startsWithBackspace(input)) {
+            if(Config.isOSPOSIXCompatible())
+                return findOtherOperations(new int[]{127});
+            else
+                return findOtherOperations(new int[]{8});
+        }
+        //doesnt start with esc/backspace, lets just say its an input
         else {
             return null;
         }
@@ -127,6 +113,13 @@ public class KeyOperationManager {
             return input[0] == 27;
         else
             return input[0] == 224;
+    }
+
+    private boolean startsWithBackspace(int[] input) {
+        if(Config.isOSPOSIXCompatible())
+            return input[0] == 127;
+        else
+            return input[0] == 8;
     }
 
     private boolean startsFirstArgWithSecond(int[] input1, int[] input2) {

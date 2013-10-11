@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.edit;
 
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
 
@@ -87,6 +88,16 @@ public class KeyOperation {
 
     public boolean equalValues(int[] values) {
         return Arrays.equals(keyValues, values);
+    }
+
+    /**
+     * @return true if the command start with an escape value
+     */
+    public boolean isEscapeCommand() {
+        if(Config.isOSPOSIXCompatible())
+            return keyValues[0] == 27;
+        else
+            return keyValues[0] == 224;
     }
 
 
