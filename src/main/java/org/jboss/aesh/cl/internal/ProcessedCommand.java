@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ProcessedCommand {
+public final class ProcessedCommand {
 
     private String name;
     private String usage;
@@ -165,7 +165,9 @@ public class ProcessedCommand {
 
     public ProcessedOption findOption(String name) {
         for(ProcessedOption option : options)
-            if(option.getShortName() != null && option.getShortName().equals(name))
+            if(option.getShortName() != null &&
+                    option.getShortName().equals(name) &&
+                    option.getValidator().isEnabled(this))
                 return option;
 
         return null;
@@ -173,7 +175,9 @@ public class ProcessedCommand {
 
     public ProcessedOption findLongOption(String name) {
         for(ProcessedOption option : options)
-            if(option.getName() != null && option.getName().equals(name))
+            if(option.getName() != null &&
+                    option.getName().equals(name) &&
+                    option.getValidator().isEnabled(this))
                 return option;
 
         return null;
@@ -181,7 +185,8 @@ public class ProcessedCommand {
 
     public ProcessedOption startWithOption(String name) {
         for(ProcessedOption option : options)
-            if(name.startsWith(option.getShortName()))
+            if(name.startsWith(option.getShortName()) &&
+                    option.getValidator().isEnabled(this))
                 return option;
 
         return null;
@@ -189,7 +194,8 @@ public class ProcessedCommand {
 
     public ProcessedOption startWithLongOption(String name) {
         for(ProcessedOption option : options)
-            if(name.startsWith(option.getName()))
+            if(name.startsWith(option.getName()) &&
+                option.getValidator().isEnabled(this))
                 return option;
 
         return null;
@@ -204,11 +210,13 @@ public class ProcessedCommand {
 
     /**
      * Return all option names that not already have a value
+     * and is enabled
      */
     public List<String> getOptionLongNamesWithDash() {
         List<String> names = new ArrayList<String>(options.size());
         for(ProcessedOption o : options) {
-            if(o.getValues().size() == 0)
+            if(o.getValues().size() == 0 &&
+                    o.getValidator().isEnabled(this))
                 names.add("--"+o.getName());
         }
 
@@ -218,7 +226,8 @@ public class ProcessedCommand {
     public List<String> findPossibleLongNamesWitdDash(String name) {
         List<String> names = new ArrayList<String>(options.size());
         for(ProcessedOption o : options) {
-           if(o.getShortName().equals(name) || o.getName().startsWith(name))
+           if((o.getShortName().equals(name) || o.getName().startsWith(name)) &&
+                   o.getValidator().isEnabled(this))
                names.add("--"+o.getName());
         }
         return names;

@@ -15,6 +15,7 @@ import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.command.AeshCommandRegistryBuilder;
@@ -210,6 +211,15 @@ public class AeshExample {
             if(!value.isDirectory()) {
                 throw new OptionValidatorException("File validation failed, must be a directory.");
             }
+        }
+
+        @Override
+        public boolean isEnabled(ProcessedCommand processedCommand) {
+            ProcessedOption bar = processedCommand.findLongOption("bar");
+            if(bar != null && bar.getValue() != null)
+                return true;
+            else
+                return false;
         }
     }
 

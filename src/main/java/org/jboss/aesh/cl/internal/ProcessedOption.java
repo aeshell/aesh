@@ -35,7 +35,7 @@ import java.util.Set;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ProcessedOption {
+public final class ProcessedOption {
 
     private String shortName;
     private String name;
@@ -68,6 +68,8 @@ public class ProcessedOption {
          this.converter = converter;
          this.completer = completer;
          this.validator = optionValidator;
+         if(this.validator == null)
+             this.validator = new NullValidator();
      }
 
 
@@ -327,7 +329,7 @@ public class ProcessedOption {
         if(validator != null && validator != NullValidator.class)
             return ReflectionUtil.newInstance(validator);
         else
-            return null;
+            return new NullValidator();
     }
 
     private Object doConvert(String inputValue,boolean doValidation) throws OptionValidatorException {
