@@ -193,4 +193,9 @@ public class ParserTestCase extends TestCase {
         assertEquals(s1+"  "+ Config.getLineSeparator(), Parser.formatDisplayList(list, 20, 20));
     }
 
+    public void testPadLeft() {
+        assertEquals(" foo", Parser.padLeft(4,"foo"));
+        assertEquals("   foo", Parser.padLeft(6,"foo"));
+    }
+
 }

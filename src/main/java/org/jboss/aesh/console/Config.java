@@ -62,6 +62,10 @@ public class Config {
         return System.getProperty("user.home");
     }
 
+    public static String getUserDir() {
+        return System.getProperty("user.dir");
+    }
+
     /**
      * TODO: clean this shit up!
      *

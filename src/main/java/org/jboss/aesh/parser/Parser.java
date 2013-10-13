@@ -91,8 +91,12 @@ public class Parser {
     }
 
 
-    private static String padRight(int n, String s) {
+    public static String padRight(int n, String s) {
         return String.format("%1$-" + n + "s", s);
+    }
+
+    public static String padLeft(int n, String s) {
+        return String.format("%1$" + n + "s", s);
     }
 
     public static List<String> splitBySizeKeepWords(String words, int size) {
