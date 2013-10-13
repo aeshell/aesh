@@ -1485,7 +1485,6 @@ public class Console {
 
                 //output = new ConsoleOutput(op, null, null);
                 output = op;
-                        //redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString());
             }
         }
         else if(op.getControlOperator() == ControlOperator.OVERWRITE_IN) {

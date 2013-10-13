@@ -39,7 +39,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
 
-
     @Test
     public void testCommandInvocationExtension() throws IOException, InterruptedException {
 

@@ -9,6 +9,7 @@ package org.jboss.aesh.console;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
@@ -193,6 +194,9 @@ public class AeshConsoleImpl implements AeshConsole {
                 }
                 catch (CommandNotFoundException ignored) {
                 }
+                catch (RuntimeException re) {
+                    logger.log(Level.SEVERE, "Runtime exception when completing: "+completeOperation, re);
+                }
             }
         }
 
@@ -208,6 +212,7 @@ public class AeshConsoleImpl implements AeshConsole {
         public int readConsoleOutput(ConsoleOperation output) throws IOException {
             CommandResult result = CommandResult.SUCCESS;
             if(output != null && output.getBuffer().trim().length() > 0) {
+                logger.info("ConsoleOperation: "+output);
                 //CommandLineParser calledCommandParser = findCommand(output.getBuffer());
                 try {
                     CommandContainer commandContainer = registry.getCommand(
@@ -229,6 +234,9 @@ public class AeshConsoleImpl implements AeshConsole {
                 catch (OptionValidatorException e) {
                     console.out().println(e.getMessage());
                     result = CommandResult.FAILURE;
+                }
+                catch(RuntimeException re) {
+                    logger.log(Level.SEVERE, "Runtime exception when parsing/running: "+output.getBuffer(), re);
                 }
             }
             //empty line
