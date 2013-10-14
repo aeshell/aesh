@@ -37,6 +37,7 @@ import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.InMemoryHistory;
 import org.jboss.aesh.history.SearchDirection;
 import org.jboss.aesh.parser.AeshLine;
+import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.Terminal;
@@ -94,6 +95,7 @@ public class Console {
     private List<ConsoleOperation> operations;
     private ConsoleOperation currentOperation;
     private AliasManager aliasManager;
+    private Shell shell;
 
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
 
@@ -202,6 +204,8 @@ public class Console {
         redirectPipeOutBuffer = new StringWriter();
         redirectPipeErrBuffer = new StringWriter();
         setPrompt(new Prompt(""));
+
+        shell = new ConsoleShell(getInternalShell(), this);
     }
 
     /**
@@ -209,7 +213,7 @@ public class Console {
      * @return get the terminal size
      */
     public TerminalSize getTerminalSize() {
-        return getShell().getSize();
+        return getInternalShell().getSize();
     }
 
     /**
@@ -267,7 +271,7 @@ public class Console {
                 currentOperation.getControlOperator().isRedirectionOut()) {
             return new AeshPrintWriter(redirectPipeOutBuffer, true);
         } else {
-            return getShell().out();
+            return getInternalShell().out();
         }
     }
 
@@ -277,7 +281,7 @@ public class Console {
                 currentOperation.getControlOperator().isRedirectionErr()) {
             return new AeshPrintWriter(redirectPipeErrBuffer, true);
         } else {
-            return getShell().err();
+            return getInternalShell().err();
         }
     }
 
@@ -376,8 +380,15 @@ public class Console {
     /**
      * @return get the current shell
      */
-    public Shell getShell() {
+    private Shell getInternalShell() {
         return settings.getTerminal().getShell();
+    }
+
+    /**
+     * @return get the current shell
+     */
+    public Shell getShell() {
+        return shell;
     }
 
     private Terminal getTerminal() {
@@ -846,19 +857,19 @@ public class Console {
     private void setBufferLine(String newLine) throws IOException {
         //must make sure that there are enough space for the
         // line thats about to be injected
-        if((newLine.length()+buffer.getPrompt().getLength()) >= getShell().getSize().getWidth() &&
+        if((newLine.length()+buffer.getPrompt().getLength()) >= getInternalShell().getSize().getWidth() &&
                 newLine.length() >= buffer.getLine().length()) {
-            int currentRow = getShell().getCursor().getRow();
+            int currentRow = getInternalShell().getCursor().getRow();
             if(currentRow > -1) {
-                int cursorRow = buffer.getCursorWithPrompt() / getShell().getSize().getWidth();
-                if(currentRow + (newLine.length() / getShell().getSize().getWidth()) - cursorRow >= getShell().getSize().getHeight()) {
-                    int numNewRows = currentRow + ((newLine.length()+buffer.getPrompt().getLength()) / getShell().getSize().getWidth()) - cursorRow - getShell().getSize().getHeight();
+                int cursorRow = buffer.getCursorWithPrompt() / getInternalShell().getSize().getWidth();
+                if(currentRow + (newLine.length() / getInternalShell().getSize().getWidth()) - cursorRow >= getInternalShell().getSize().getHeight()) {
+                    int numNewRows = currentRow + ((newLine.length()+buffer.getPrompt().getLength()) / getInternalShell().getSize().getWidth()) - cursorRow - getInternalShell().getSize().getHeight();
                     //if the line is exactly equal to termWidth we need to add another row
-                    if((newLine.length()+buffer.getPrompt().getLength()) % getShell().getSize().getWidth() == 0)
+                    if((newLine.length()+buffer.getPrompt().getLength()) % getInternalShell().getSize().getWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
                         if(settings.isLogging()) {
-                            int totalRows = (newLine.length()+buffer.getPrompt().getLength()) / getShell().getSize().getWidth() +1;
+                            int totalRows = (newLine.length()+buffer.getPrompt().getLength()) / getInternalShell().getSize().getWidth() +1;
                             logger.info("ADDING "+numNewRows+", totalRows:"+totalRows+
                                     ", currentRow:"+currentRow+", cursorRow:"+cursorRow);
                         }
@@ -873,16 +884,16 @@ public class Console {
     }
 
     private void insertBufferLine(String insert, int position) throws IOException {
-        if((insert.length()+buffer.totalLength()) >= getShell().getSize().getWidth()) { //&&
+        if((insert.length()+buffer.totalLength()) >= getInternalShell().getSize().getWidth()) { //&&
             //(insert.length()+buffer.totalLength()) > buffer.getLine().length()) {
-            int currentRow = getShell().getCursor().getRow();
+            int currentRow = getInternalShell().getCursor().getRow();
             if(currentRow > -1) {
                 int newLine = insert.length()+buffer.totalLength();
-                int cursorRow = buffer.getCursorWithPrompt() / getShell().getSize().getWidth();
-                if(currentRow + (newLine / getShell().getSize().getWidth()) - cursorRow >= getShell().getSize().getHeight()) {
-                    int numNewRows = currentRow + (newLine / getShell().getSize().getWidth()) - cursorRow - getShell().getSize().getHeight();
+                int cursorRow = buffer.getCursorWithPrompt() / getInternalShell().getSize().getWidth();
+                if(currentRow + (newLine / getInternalShell().getSize().getWidth()) - cursorRow >= getInternalShell().getSize().getHeight()) {
+                    int numNewRows = currentRow + (newLine / getInternalShell().getSize().getWidth()) - cursorRow - getInternalShell().getSize().getHeight();
                     //if the line is exactly equal to termWidth we need to add another row
-                    if((insert.length()+buffer.totalLength()) % getShell().getSize().getWidth() == 0)
+                    if((insert.length()+buffer.totalLength()) % getInternalShell().getSize().getWidth() == 0)
                         numNewRows++;
                     if(numNewRows > 0) {
                         out().print(Buffer.printAnsi(numNewRows + "S"));
@@ -933,8 +944,8 @@ public class Console {
         }
 
         // add a 'fake' new line when inserting at the edge of terminal
-        if(buffer.getCursorWithPrompt() > getShell().getSize().getWidth() &&
-                buffer.getCursorWithPrompt() % getShell().getSize().getWidth() == 1) {
+        if(buffer.getCursorWithPrompt() > getInternalShell().getSize().getWidth() &&
+                buffer.getCursorWithPrompt() % getInternalShell().getSize().getWidth() == 1) {
             out().print((char) 32);
             out().print((char) 13);
         }
@@ -942,18 +953,18 @@ public class Console {
         // if we insert somewhere other than the end of the line we need to redraw from cursor
         if(buffer.getCursor() < buffer.length()) {
             //check if we just started a new line, if we did we need to make sure that we add one
-            if(buffer.totalLength() > getShell().getSize().getWidth() &&
-                    (buffer.totalLength()-1) % getShell().getSize().getWidth() == 1) {
-                int ansiCurrentRow = getShell().getCursor().getRow();
-                int currentRow = (buffer.getCursorWithPrompt() / getShell().getSize().getWidth());
-                if(currentRow > 0 && buffer.getCursorWithPrompt() % getShell().getSize().getWidth() == 0)
+            if(buffer.totalLength() > getInternalShell().getSize().getWidth() &&
+                    (buffer.totalLength()-1) % getInternalShell().getSize().getWidth() == 1) {
+                int ansiCurrentRow = getInternalShell().getCursor().getRow();
+                int currentRow = (buffer.getCursorWithPrompt() / getInternalShell().getSize().getWidth());
+                if(currentRow > 0 && buffer.getCursorWithPrompt() % getInternalShell().getSize().getWidth() == 0)
                     currentRow--;
 
-                int totalRows = buffer.totalLength() / getShell().getSize().getWidth();
-                if(totalRows > 0 && buffer.totalLength() % getShell().getSize().getWidth() == 0)
+                int totalRows = buffer.totalLength() / getInternalShell().getSize().getWidth();
+                if(totalRows > 0 && buffer.totalLength() % getInternalShell().getSize().getWidth() == 0)
                     totalRows--;
 
-                if(ansiCurrentRow+(totalRows-currentRow) > getShell().getSize().getHeight()) {
+                if(ansiCurrentRow+(totalRows-currentRow) > getInternalShell().getSize().getHeight()) {
                     out().print(Buffer.printAnsi("1S")); //adding a line
                     out().print(Buffer.printAnsi("1A")); // moving up a line
                 }
@@ -1075,10 +1086,10 @@ public class Console {
         if(editMode.getMode() == Mode.VI &&
                 (editMode.getCurrentAction() == Action.MOVE ||
                         editMode.getCurrentAction() == Action.DELETE)) {
-            out().print(buffer.move(where, getShell().getSize().getWidth(), true));
+            out().print(buffer.move(where, getInternalShell().getSize().getWidth(), true));
         }
         else {
-            out().print(buffer.move(where, getShell().getSize().getWidth()));
+            out().print(buffer.move(where, getInternalShell().getSize().getWidth()));
         }
         out().flush();
     }
@@ -1089,19 +1100,19 @@ public class Console {
 
     private void drawLine(String line) throws IOException {
         //need to clear more than one line
-        if(line.length() > getShell().getSize().getWidth() ||
-                (line.length()+ Math.abs(buffer.getDelta()) > getShell().getSize().getWidth())) {
+        if(line.length() > getInternalShell().getSize().getWidth() ||
+                (line.length()+ Math.abs(buffer.getDelta()) > getInternalShell().getSize().getWidth())) {
 
             int currentRow = 0;
             if(buffer.getCursorWithPrompt() > 0)
-                currentRow = buffer.getCursorWithPrompt() / getShell().getSize().getWidth();
-            if(currentRow > 0 && buffer.getCursorWithPrompt() % getShell().getSize().getWidth() == 0)
+                currentRow = buffer.getCursorWithPrompt() / getInternalShell().getSize().getWidth();
+            if(currentRow > 0 && buffer.getCursorWithPrompt() % getInternalShell().getSize().getWidth() == 0)
                 currentRow--;
 
             if(settings.isLogging()) {
-                logger.info("actual position: "+ getShell().getCursor());
+                logger.info("actual position: "+ getInternalShell().getCursor());
                 logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
-                        +", width:"+ getShell().getSize().getWidth()+", height:"+ getShell().getSize().getHeight()
+                        +", width:"+ getInternalShell().getSize().getWidth()+", height:"+ getInternalShell().getSize().getHeight()
                         +", delta:"+buffer.getDelta() +", buffer:"+buffer.getLine());
             }
 
@@ -1135,7 +1146,7 @@ public class Console {
             //NOTE: this doesnt work with history, need to find a better solution
             /*
             if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length()) {
-                getShell().writeToStdOut(' ' + ANSI.getStart() + "1D"); //move cursor to left
+                getInternalShell().writeToStdOut(' ' + ANSI.getStart() + "1D"); //move cursor to left
             }
             */
             //save cursor, move the cursor to the beginning, reset line
@@ -1342,7 +1353,7 @@ public class Console {
         printNewline();
         buffer.setCursor(oldCursorPos);
         out().print(Parser.formatDisplayList(completions,
-                getShell().getSize().getHeight(), getShell().getSize().getWidth()));
+                getInternalShell().getSize().getHeight(), getInternalShell().getSize().getWidth()));
         displayPrompt();
         out().print(buffer.getLine());
         out().flush();
@@ -1631,10 +1642,69 @@ public class Console {
         catch (IOException e) {
             if(settings.isLogging())
                 logger.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
-            getShell().err().println(e.getMessage());
+            getInternalShell().err().println(e.getMessage());
         }
         redirectPipeOutBuffer = new StringWriter();
         redirectPipeErrBuffer = new StringWriter();
     }
 
+    private class ConsoleShell implements Shell {
+        private Console console;
+        private Shell shell;
+
+        ConsoleShell(Shell shell, Console console) {
+            this.shell = shell;
+            this.console = console;
+        }
+
+        @Override
+        public void clear() throws IOException {
+            shell.clear();
+        }
+
+        @Override
+        public AeshPrintWriter out() {
+            return console.out();
+        }
+
+        @Override
+        public AeshPrintWriter err() {
+            return console.err();
+        }
+
+        @Override
+        public TerminalSize getSize() {
+            return console.getTerminalSize();
+        }
+
+        @Override
+        public CursorPosition getCursor() {
+            return shell.getCursor();
+        }
+
+        @Override
+        public void setCursor(CursorPosition position) throws IOException {
+            shell.setCursor(position);
+        }
+
+        @Override
+        public void moveCursor(int rows, int columns) throws IOException {
+            shell.moveCursor(rows, columns);
+        }
+
+        @Override
+        public boolean isMainBuffer() {
+            return shell.isMainBuffer();
+        }
+
+        @Override
+        public void enableAlternateBuffer() throws IOException {
+            shell.enableAlternateBuffer();
+        }
+
+        @Override
+        public void enableMainBuffer() throws IOException {
+            shell.enableMainBuffer();
+        }
+    }
 }
