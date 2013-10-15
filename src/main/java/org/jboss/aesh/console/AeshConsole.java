@@ -6,10 +6,12 @@
  */
 package org.jboss.aesh.console;
 
+import java.io.PrintStream;
+
 import org.jboss.aesh.console.command.CommandInvocationProvider;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.ConsoleCommand;
-import org.jboss.aesh.console.reader.AeshPrintWriter;
+import org.jboss.aesh.console.reader.AeshPrintStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.Shell;
 
@@ -43,14 +45,14 @@ public interface AeshConsole {
     void attachConsoleCommand(ConsoleCommand consoleCommand);
 
     /**
-     * Get the standard out PrintWriter
+     * Get the standard out {@link PrintStream}
      */
-    AeshPrintWriter out();
+    AeshPrintStream out();
 
     /**
-     * Get the standard error PrintWriter
+     * Get the standard error {@link PrintStream}
      */
-    AeshPrintWriter err();
+    AeshPrintStream err();
 
     /**
      * Specify the prompt

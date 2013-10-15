@@ -6,14 +6,14 @@
  */
 package org.jboss.aesh.console;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.io.PrintWriter;
+import java.io.PrintStream;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -63,7 +63,7 @@ public class ConsoleTest extends BaseConsoleTest {
         });
         console.start();
 
-        PrintWriter out = console.out();
+        PrintStream out = console.out();
 
         out.print("ls \\");
         out.print("\n");

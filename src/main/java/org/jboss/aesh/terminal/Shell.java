@@ -6,7 +6,7 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.jboss.aesh.console.reader.AeshPrintWriter;
+import org.jboss.aesh.console.reader.AeshPrintStream;
 
 import java.io.IOException;
 
@@ -24,14 +24,14 @@ public interface Shell {
     void clear() throws IOException;
 
     /**
-     * Returns the {@link AeshPrintWriter} associated with the std out
+     * Returns the {@link AeshPrintStream} associated with the std out
      */
-    AeshPrintWriter out();
+    AeshPrintStream out();
 
     /**
-     * Returns the {@link AeshPrintWriter} associated with the std err
+     * Returns the {@link AeshPrintStream} associated with the std err
      */
-    AeshPrintWriter err();
+    AeshPrintStream err();
 
     /**
      * @return terminal size
