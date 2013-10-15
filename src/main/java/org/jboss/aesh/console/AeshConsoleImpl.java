@@ -26,7 +26,7 @@ import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
-import org.jboss.aesh.console.reader.AeshPrintWriter;
+import org.jboss.aesh.console.reader.AeshPrintStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.terminal.Shell;
@@ -78,12 +78,12 @@ public class AeshConsoleImpl implements AeshConsole {
     }
 
     @Override
-    public AeshPrintWriter err() {
+    public AeshPrintStream err() {
         return console.err();
     }
 
     @Override
-    public AeshPrintWriter out() {
+    public AeshPrintStream out() {
         return console.out();
     }
 
