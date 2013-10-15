@@ -101,6 +101,9 @@ public class AeshExample {
     @CommandDefinition(name = "test", description = "testing")
     public static class TestConsoleCommand implements Command, ConsoleCommand {
 
+        @Option(hasValue = false)
+        private boolean bar;
+
         private boolean attached = true;
         private Shell shell;
 

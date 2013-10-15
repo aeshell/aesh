@@ -1282,8 +1282,13 @@ public class Console {
 
             String startsWith = Parser.findStartsWithOperation(possibleCompletions);
 
-            if(startsWith.length() > 0)
-                displayCompletion("", startsWith, false, possibleCompletions.get(0).getSeparator());
+            if(startsWith.length() > 0) {
+                if(startsWith.contains(" "))
+                    displayCompletion("", Parser.switchSpacesToEscapedSpacesInWord(startsWith),
+                            false, possibleCompletions.get(0).getSeparator());
+                else
+                    displayCompletion("", startsWith, false, possibleCompletions.get(0).getSeparator());
+            }
                 // display all
                 // check size
             else {

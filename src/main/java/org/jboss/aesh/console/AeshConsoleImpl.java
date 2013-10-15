@@ -49,7 +49,6 @@ public class AeshConsoleImpl implements AeshConsole {
                     CommandInvocationServices commandInvocationServices) {
         this.registry = registry;
         this.commandInvocationServices = commandInvocationServices;
-        //commands = new HashMap<CommandLineParser, Command>();
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallback(this));
         console.addCompletion(new AeshCompletion());
@@ -186,6 +185,7 @@ public class AeshConsoleImpl implements AeshConsole {
                     ParsedCompleteObject completeObject = completionParser.findCompleteObject(completeOperation.getBuffer());
                     logger.info("ParsedCompleteObject: "+completeObject);
                     completionParser.injectValuesAndComplete(completeObject, commandContainer.getCommand(), completeOperation);
+                    logger.info("CompleteOperation before return: "+completeOperation);
                 }
                 catch (CommandLineParserException e) {
                     logger.warning(e.getMessage());
