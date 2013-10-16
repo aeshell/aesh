@@ -220,12 +220,13 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 if(completions.getCompleterValues().size() == 1) {
                     //if the contain spaces we need to add the number of spaces to the size
                     // of the value.length since they are chopped off during parsing
-                    if(completeObject.getValue().contains(" ")) {
+                    if(completeObject.getValue().indexOf(Parser.SPACE_CHAR) > 0) {
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                    }
+                    if(completeOperation.getCompletionCandidates().get(0).indexOf(Parser.SPACE_CHAR) > 0)
                         completeOperation.getCompletionCandidates().set(0,
                                 Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
-                    }
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -240,12 +241,13 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 if(completions.getCompleterValues().size() == 1) {
                     //if the contain spaces we need to add the number of spaces to the size
                     // of the value.length since they are chopped off during parsing
-                    if(completeObject.getValue().contains(" ")) {
+                    if(completeObject.getValue().indexOf(Parser.SPACE_CHAR) > 0) {
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                    }
+                    if(completeOperation.getCompletionCandidates().get(0).indexOf(Parser.SPACE_CHAR) > 0)
                         completeOperation.getCompletionCandidates().set(0,
                                 Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
-                    }
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -268,12 +270,13 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
-                    if(completeObject.getValue().contains(" ")) {
+                    if(completeObject.getValue().indexOf(Parser.SPACE_CHAR) > 0) {
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                    }
+                    if(completeOperation.getCompletionCandidates().get(0).indexOf(Parser.SPACE_CHAR) > 0)
                         completeOperation.getCompletionCandidates().set(0,
                                 Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
-                    }
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -287,12 +290,13 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
-                    if(completeObject.getValue().contains(" ")) {
+                    if(completeObject.getValue().indexOf(Parser.SPACE_CHAR) > 0) {
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                    }
+                    if(completeOperation.getCompletionCandidates().get(0).indexOf(Parser.SPACE_CHAR) > 0)
                         completeOperation.getCompletionCandidates().set(0,
                                 Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
-                    }
 
                 }
                 completeOperation.doAppendSeparator( completions.isAppendSpace());

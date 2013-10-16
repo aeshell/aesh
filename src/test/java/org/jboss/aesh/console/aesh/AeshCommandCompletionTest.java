@@ -77,6 +77,18 @@ public class AeshCommandCompletionTest {
 
         Thread.sleep(100);
         assertEquals("foo --bar bar\\ 2\\ 3\\ 4 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+
+        outputStream.write("\n".getBytes());
+        outputStream.flush();
+
+         outputStream.write(("foo --bar bar").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(100);
+        assertEquals("foo --bar bar\\ 2 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+
+
         aeshConsole.stop();
     }
 
@@ -99,8 +111,11 @@ public class AeshCommandCompletionTest {
             if(completerData.getGivenCompleteValue().equals("bar 2")) {
                 completerData.addCompleterValue("bar 2 3 4");
             }
-            if(completerData.getGivenCompleteValue().equals("bar 2 ")) {
+            else if(completerData.getGivenCompleteValue().equals("bar 2 ")) {
                 completerData.addCompleterValue("bar 2 3 4");
+            }
+            else if(completerData.getGivenCompleteValue().equals("bar")) {
+                completerData.addCompleterValue("bar 2");
             }
         }
     }

@@ -22,11 +22,11 @@ import java.util.regex.Pattern;
 public class Parser {
 
     private static final String spaceEscapedMatcher = "\\ ";
-    private static final String SPACE = " ";
-    private static final char SPACE_CHAR = ' ';
-    private static final char SLASH = '\\';
-    private static final char SINGLE_QUOTE = '\'';
-    private static final char DOUBLE_QUOTE = '\"';
+    public static final String SPACE = " ";
+    public static final char SPACE_CHAR = ' ';
+    public static final char SLASH = '\\';
+    public static final char SINGLE_QUOTE = '\'';
+    public static final char DOUBLE_QUOTE = '\"';
     private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
     private static final Pattern spacePattern = Pattern.compile("(?<!\\\\)\\s");
 
