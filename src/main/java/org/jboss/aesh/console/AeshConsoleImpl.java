@@ -42,7 +42,7 @@ public class AeshConsoleImpl implements AeshConsole {
     private CommandRegistry registry;
     private CommandInvocationServices commandInvocationServices;
 
-    Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
+    private Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
     private String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
 
     AeshConsoleImpl(Settings settings, CommandRegistry registry,
@@ -180,17 +180,12 @@ public class AeshConsoleImpl implements AeshConsole {
                     CommandContainer commandContainer = registry.getCommand(
                             Parser.findFirstWord(completeOperation.getBuffer()), completeOperation.getBuffer());
                     CommandLineCompletionParser completionParser = commandContainer.getParser().getCompletionParser();
-                    logger.info("CompletionParser: "+completionParser);
 
                     ParsedCompleteObject completeObject = completionParser.findCompleteObject(completeOperation.getBuffer());
-                    logger.info("ParsedCompleteObject: "+completeObject);
                     completionParser.injectValuesAndComplete(completeObject, commandContainer.getCommand(), completeOperation);
-                    logger.info("CompleteOperation before return: "+completeOperation);
                 }
                 catch (CommandLineParserException e) {
                     logger.warning(e.getMessage());
-                    //if(e instanceof ArgumentParserException)
-                    //    logger.info("User trying to complete a command without arguments");
                 }
                 catch (CommandNotFoundException ignored) {
                 }
@@ -212,7 +207,6 @@ public class AeshConsoleImpl implements AeshConsole {
         public int readConsoleOutput(ConsoleOperation output) throws IOException {
             CommandResult result = CommandResult.SUCCESS;
             if(output != null && output.getBuffer().trim().length() > 0) {
-                logger.info("ConsoleOperation: "+output);
                 //CommandLineParser calledCommandParser = findCommand(output.getBuffer());
                 try {
                     CommandContainer commandContainer = registry.getCommand(
