@@ -1,29 +1,19 @@
 package org.jboss.aesh.console.reader;
 
-import org.jboss.aesh.terminal.TerminalCharacter;
-
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.PrintStream;
 import java.util.List;
+
+import org.jboss.aesh.terminal.TerminalCharacter;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshPrintWriter extends PrintWriter {
+public class AeshPrintStream extends PrintStream {
 
-    public AeshPrintWriter(OutputStream out, boolean autoFlush) {
+    public AeshPrintStream(OutputStream out, boolean autoFlush) {
         super(out,autoFlush);
-    }
-
-    public AeshPrintWriter(OutputStreamWriter out, boolean autoFlush) {
-        super(out, autoFlush);
-    }
-
-    public AeshPrintWriter(StringWriter out, boolean autoFlush) {
-        super(out, autoFlush);
     }
 
     /**

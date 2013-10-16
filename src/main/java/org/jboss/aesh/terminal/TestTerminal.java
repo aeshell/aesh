@@ -6,12 +6,11 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.jboss.aesh.console.reader.AeshPrintWriter;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+
+import org.jboss.aesh.console.reader.AeshPrintStream;
 
 /**
  * A dummy terminal used for tests
@@ -21,13 +20,13 @@ import java.io.OutputStreamWriter;
 public class TestTerminal implements Terminal, Shell {
 
     private InputStream input;
-    private AeshPrintWriter writer;
+    private AeshPrintStream writer;
     private TerminalSize size;
 
     @Override
     public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
         input = inputStream;
-        writer = new AeshPrintWriter(new OutputStreamWriter(stdOut), true);
+        writer = new AeshPrintStream(stdOut, true);
         size = new TerminalSize(24,80);
     }
 
@@ -99,12 +98,12 @@ public class TestTerminal implements Terminal, Shell {
     }
 
     @Override
-    public AeshPrintWriter err() {
+    public AeshPrintStream err() {
         return writer;
     }
 
     @Override
-    public AeshPrintWriter out() {
+    public AeshPrintStream out() {
         return writer;
     }
 

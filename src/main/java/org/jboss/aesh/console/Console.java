@@ -6,6 +6,21 @@
  */
 package org.jboss.aesh.console;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.complete.CompletionRegistration;
@@ -19,7 +34,7 @@ import org.jboss.aesh.console.helper.Search;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
-import org.jboss.aesh.console.reader.AeshPrintWriter;
+import org.jboss.aesh.console.reader.AeshPrintStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.EditMode;
@@ -29,14 +44,15 @@ import org.jboss.aesh.edit.ViEditMode;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.EditAction;
 import org.jboss.aesh.edit.actions.EditActionManager;
+import org.jboss.aesh.edit.actions.Movement;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.edit.actions.PrevWordAction;
-import org.jboss.aesh.edit.actions.Movement;
 import org.jboss.aesh.history.FileHistory;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.InMemoryHistory;
 import org.jboss.aesh.history.SearchDirection;
 import org.jboss.aesh.parser.AeshLine;
+import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
@@ -47,22 +63,6 @@ import org.jboss.aesh.undo.UndoManager;
 import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.FileUtils;
 import org.jboss.aesh.util.LoggerUtil;
-import org.jboss.aesh.parser.Parser;
-
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 /**
  * A console reader.
@@ -90,8 +90,8 @@ public class Console {
     private boolean displayCompletion = false;
     private boolean askDisplayCompletion = false;
     private volatile boolean running = false;
-    private StringWriter redirectPipeOutBuffer;
-    private StringWriter redirectPipeErrBuffer;
+    private ByteArrayOutputStream redirectPipeOutBuffer;
+    private ByteArrayOutputStream redirectPipeErrBuffer;
     private List<ConsoleOperation> operations;
     private ConsoleOperation currentOperation;
     private AliasManager aliasManager;
@@ -201,8 +201,8 @@ public class Console {
 
         standardStream = new AeshStandardStream();
 
-        redirectPipeOutBuffer = new StringWriter();
-        redirectPipeErrBuffer = new StringWriter();
+        redirectPipeOutBuffer = new ByteArrayOutputStream();
+        redirectPipeErrBuffer = new ByteArrayOutputStream();
         setPrompt(new Prompt(""));
 
         shell = new ConsoleShell(getInternalShell(), this);
@@ -265,21 +265,21 @@ public class Console {
         startReader();
     }
 
-    public AeshPrintWriter out() {
+    public AeshPrintStream out() {
         //if redirection enabled, put it into a buffer
         if(currentOperation != null &&
                 currentOperation.getControlOperator().isRedirectionOut()) {
-            return new AeshPrintWriter(redirectPipeOutBuffer, true);
+            return new AeshPrintStream(redirectPipeOutBuffer, true);
         } else {
             return getInternalShell().out();
         }
     }
 
-    public AeshPrintWriter err(){
+    public AeshPrintStream err(){
         //if redirection enabled, put it into a buffer
         if(currentOperation != null &&
                 currentOperation.getControlOperator().isRedirectionErr()) {
-            return new AeshPrintWriter(redirectPipeErrBuffer, true);
+            return new AeshPrintStream(redirectPipeErrBuffer, true);
         } else {
             return getInternalShell().err();
         }
@@ -1427,14 +1427,14 @@ public class Console {
             ConsoleOperation nextOperation = operations.remove(0);
             persistRedirection(nextOperation.getBuffer(), currentOperation.getControlOperator());
             if(nextOperation.getControlOperator() == ControlOperator.NONE) {
-                redirectPipeErrBuffer = new StringWriter();
-                redirectPipeOutBuffer = new StringWriter();
+                redirectPipeErrBuffer = new ByteArrayOutputStream();
+                redirectPipeOutBuffer = new ByteArrayOutputStream();
                 currentOperation = null;
                 return null;
             }
             else {
-                redirectPipeErrBuffer = new StringWriter();
-                redirectPipeOutBuffer = new StringWriter();
+                redirectPipeErrBuffer = new ByteArrayOutputStream();
+                redirectPipeOutBuffer = new ByteArrayOutputStream();
                 currentOperation = nextOperation;
                 return parseCurrentOperation();
             }
@@ -1556,9 +1556,9 @@ public class Console {
         }
 
         if(redirectPipeOutBuffer.toString().length() > 0)
-            redirectPipeOutBuffer = new StringWriter();
+            redirectPipeOutBuffer = new ByteArrayOutputStream();
         if(redirectPipeErrBuffer.toString().length() > 0)
-            redirectPipeErrBuffer = new StringWriter();
+            redirectPipeErrBuffer = new ByteArrayOutputStream();
 
         if(output != null)
             return findAliases(output);
@@ -1649,8 +1649,8 @@ public class Console {
                 logger.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
             getInternalShell().err().println(e.getMessage());
         }
-        redirectPipeOutBuffer = new StringWriter();
-        redirectPipeErrBuffer = new StringWriter();
+        redirectPipeOutBuffer = new ByteArrayOutputStream();
+        redirectPipeErrBuffer = new ByteArrayOutputStream();
     }
 
     private class ConsoleShell implements Shell {
@@ -1668,12 +1668,12 @@ public class Console {
         }
 
         @Override
-        public AeshPrintWriter out() {
+        public AeshPrintStream out() {
             return console.out();
         }
 
         @Override
-        public AeshPrintWriter err() {
+        public AeshPrintStream err() {
             return console.err();
         }
 
