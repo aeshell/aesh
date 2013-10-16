@@ -1,6 +1,5 @@
 package org.jboss.aesh.cl;
 
-import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 
@@ -78,11 +77,6 @@ public class TestPopulator5 {
         public void validate(Long value) throws OptionValidatorException {
             if(value < 0 || value > 100)
                 throw new OptionValidatorException("value must be between 0 and 100");
-        }
-
-        @Override
-        public boolean isEnabled(ProcessedCommand processedCommand) {
-            return true;
         }
     }
 

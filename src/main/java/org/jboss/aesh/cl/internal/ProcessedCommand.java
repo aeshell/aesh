@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl.internal;
 
+import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
@@ -66,7 +67,7 @@ public final class ProcessedCommand {
         this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                 opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                 opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(), opt.getConverter(),
-                opt.getCompleter(), opt.getValidator()));
+                opt.getCompleter(), opt.getValidator(), opt.getActivator()));
     }
 
     /**
@@ -87,12 +88,14 @@ public final class ProcessedCommand {
                      String argument, boolean required, char valueSeparator,
                      String[] defaultValue, Class<?> type, String fieldName, OptionType optionType,
                      Class<? extends CLConverter> converter,
-                     Class<? extends OptionCompleter> completer, Class<? extends OptionValidator> validator) throws OptionParserException {
+                     Class<? extends OptionCompleter> completer,
+                     Class<? extends OptionValidator> validator,
+                     Class<? extends OptionActivator> activator) throws OptionParserException {
         List<String> defaultValues = new ArrayList<String>();
         defaultValues.addAll(Arrays.asList(defaultValue));
         options.add(new ProcessedOption(verifyThatNamesAreUnique(name, longName), longName, description,
                 argument, required, valueSeparator, defaultValues,
-                type, fieldName, optionType, converter, completer, validator));
+                type, fieldName, optionType, converter, completer, validator, activator));
     }
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
@@ -100,7 +103,7 @@ public final class ProcessedCommand {
             this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                     opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                     opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(),
-                    opt.getConverter(), opt.getCompleter(), opt.getValidator()));
+                    opt.getConverter(), opt.getCompleter(), opt.getValidator(), opt.getActivator()));
         }
     }
 
@@ -167,7 +170,7 @@ public final class ProcessedCommand {
         for(ProcessedOption option : options)
             if(option.getShortName() != null &&
                     option.getShortName().equals(name) &&
-                    option.getValidator().isEnabled(this))
+                    option.getActivator().isActivated(this))
                 return option;
 
         return null;
@@ -177,7 +180,7 @@ public final class ProcessedCommand {
         for(ProcessedOption option : options)
             if(option.getName() != null &&
                     option.getName().equals(name) &&
-                    option.getValidator().isEnabled(this))
+                    option.getActivator().isActivated(this))
                 return option;
 
         return null;
@@ -186,7 +189,7 @@ public final class ProcessedCommand {
     public ProcessedOption startWithOption(String name) {
         for(ProcessedOption option : options)
             if(name.startsWith(option.getShortName()) &&
-                    option.getValidator().isEnabled(this))
+                    option.getActivator().isActivated(this))
                 return option;
 
         return null;
@@ -195,7 +198,7 @@ public final class ProcessedCommand {
     public ProcessedOption startWithLongOption(String name) {
         for(ProcessedOption option : options)
             if(name.startsWith(option.getName()) &&
-                option.getValidator().isEnabled(this))
+                    option.getActivator().isActivated(this))
                 return option;
 
         return null;
@@ -216,7 +219,7 @@ public final class ProcessedCommand {
         List<String> names = new ArrayList<String>(options.size());
         for(ProcessedOption o : options) {
             if(o.getValues().size() == 0 &&
-                    o.getValidator().isEnabled(this))
+                    o.getActivator().isActivated(this))
                 names.add("--"+o.getName());
         }
 
@@ -227,7 +230,7 @@ public final class ProcessedCommand {
         List<String> names = new ArrayList<String>(options.size());
         for(ProcessedOption o : options) {
            if((o.getShortName().equals(name) || o.getName().startsWith(name)) &&
-                   o.getValidator().isEnabled(this))
+                   o.getActivator().isActivated(this))
                names.add("--"+o.getName());
         }
         return names;

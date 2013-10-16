@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl.builder;
 
+import org.jboss.aesh.cl.activation.NullActivator;
+import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.converter.CLConverterManager;
@@ -41,6 +43,7 @@ public class OptionBuilder {
     private OptionCompleter completer;
     private List<String> defaultValues;
     private OptionValidator validator;
+    private OptionActivator activator;
 
     public OptionBuilder() {
         defaultValues = new ArrayList<String>();
@@ -154,6 +157,11 @@ public class OptionBuilder {
         return this;
     }
 
+    public OptionBuilder activator(OptionActivator activator) {
+        this.activator = activator;
+        return this;
+    }
+
     public ProcessedOption create() throws OptionParserException {
         if(optionType == null) {
             if(!hasValue)
@@ -181,7 +189,11 @@ public class OptionBuilder {
         if(converter == null)
             converter = CLConverterManager.getInstance().getConverter(type);
 
+        if(activator == null)
+            activator = new NullActivator();
+
         return new ProcessedOption(shortName, name, description, argument, required,
-                valueSeparator, defaultValues, type, fieldName, optionType, converter, completer, validator);
+                valueSeparator, defaultValues, type, fieldName, optionType, converter,
+                completer, validator, activator);
     }
 }

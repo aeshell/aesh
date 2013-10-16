@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.activation.NullActivator;
+import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.completer.NullOptionCompleter;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
@@ -92,4 +94,9 @@ public @interface Option {
      * Define a validator for this option.
      */
     Class<? extends OptionValidator> validator() default NullValidator.class;
+
+    /**
+     * Define an activator for this option.
+     */
+    Class<? extends OptionActivator> activator() default NullActivator.class;
 }

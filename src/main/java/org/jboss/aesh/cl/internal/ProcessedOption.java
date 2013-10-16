@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl.internal;
 
+import org.jboss.aesh.cl.activation.NullActivator;
+import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.completer.BooleanOptionCompleter;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.aesh.cl.completer.NullOptionCompleter;
@@ -55,21 +57,27 @@ public final class ProcessedOption {
     private boolean longNameUsed = true;
     private OptionValidator validator;
     private boolean endsWithSeparator = false;
+    private OptionActivator activator;
 
      public ProcessedOption(char shortName, String name, String description,
                             String argument, boolean required, char valueSeparator,
                             List<String> defaultValue, Class<?> type, String fieldName,
                             OptionType optionType, CLConverter converter, OptionCompleter completer,
-                            OptionValidator optionValidator) throws OptionParserException {
+                            OptionValidator optionValidator,
+                            OptionActivator activator) throws OptionParserException {
          this(shortName, name, description, argument, required, valueSeparator, defaultValue,
                  type, fieldName, optionType,
                  (Class<? extends CLConverter>) null,(Class<? extends OptionCompleter>) null,
-                 (Class<? extends OptionValidator>) null);
+                 (Class<? extends OptionValidator>) null,
+                 (Class<? extends OptionActivator>) null);
          this.converter = converter;
          this.completer = completer;
          this.validator = optionValidator;
+         this.activator = activator;
          if(this.validator == null)
              this.validator = new NullValidator();
+         if(this.activator == null)
+             this.activator = new NullActivator();
      }
 
 
@@ -79,8 +87,7 @@ public final class ProcessedOption {
                            OptionType optionType, Class<? extends CLConverter> converter,
                            OptionCompleter completer) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, defaultValue,
-                type, fieldName, optionType, converter, (Class<? extends OptionCompleter>) null,
-                (Class<? extends OptionValidator>) null);
+                type, fieldName, optionType, converter, null, null, null);
         this.completer = completer;
     }
     public ProcessedOption(char shortName, String name, String description,
@@ -88,9 +95,10 @@ public final class ProcessedOption {
                            String[] defaultValue, Class<?> type, String fieldName,
                            OptionType optionType, Class<? extends CLConverter> converter,
                            Class<? extends OptionCompleter> completer,
-                           Class<? extends OptionValidator> optionValidator) throws OptionParserException {
+                           Class<? extends OptionValidator> optionValidator,
+                           Class<? extends OptionActivator> activator) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, Arrays.asList(defaultValue),
-                type, fieldName, optionType, converter, completer, optionValidator);
+                type, fieldName, optionType, converter, completer, optionValidator, activator);
     }
 
     public ProcessedOption(char shortName, String name, String description,
@@ -98,7 +106,8 @@ public final class ProcessedOption {
                            List<String> defaultValue, Class<?> type, String fieldName,
                            OptionType optionType, Class<? extends CLConverter> converter,
                            Class<? extends OptionCompleter> completer,
-                           Class<? extends OptionValidator> optionValidator) throws OptionParserException {
+                           Class<? extends OptionValidator> optionValidator,
+                           Class<? extends OptionActivator> optionActivator) throws OptionParserException {
         this.shortName = String.valueOf(shortName);
         this.name = name;
         this.description = description;
@@ -111,6 +120,7 @@ public final class ProcessedOption {
         this.converter = initConverter(converter);
         this.completer = initCompleter(completer);
         this.validator = initValidator(optionValidator);
+        this.activator = initActivator(optionActivator);
 
         this.defaultValues = new ArrayList<String>();
         if(defaultValue != null)
@@ -209,6 +219,10 @@ public final class ProcessedOption {
 
     public OptionValidator getValidator() {
         return validator;
+    }
+
+    public OptionActivator getActivator() {
+        return activator;
     }
 
     public boolean isLongNameUsed() {
@@ -323,6 +337,13 @@ public final class ProcessedOption {
             }
             return null;
         }
+    }
+
+    private OptionActivator initActivator(Class<? extends OptionActivator> activator) {
+        if(activator != null && activator != NullActivator.class)
+            return ReflectionUtil.newInstance(activator);
+        else
+            return new NullActivator();
     }
 
     private OptionValidator initValidator(Class<? extends OptionValidator> validator) {

@@ -142,10 +142,5 @@ public class AeshConsoleTest extends BaseConsoleTest {
                 throw new OptionValidatorException("File validation failed, must be a directory.");
             }
         }
-
-        @Override
-        public boolean isEnabled(ProcessedCommand processedCommand) {
-            return true;
-        }
     }
 }

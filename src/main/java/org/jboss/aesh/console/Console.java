@@ -516,6 +516,7 @@ public class Console {
 
     private void processOperationResult(String result) {
         try {
+            //if the input length is 0 we should exit quickly
             if(result.length() == 0) {
                 buffer.reset();
                 displayPrompt();
@@ -1276,12 +1277,8 @@ public class Console {
         if(settings.isLogging())
             logger.info("Found completions: "+possibleCompletions);
 
-        // not hits, just return (perhaps we should beep?)
-        if(possibleCompletions.size() < 1) {
-            //do nothing atm
-        }
         // only one hit, do a completion
-        else if(possibleCompletions.size() == 1 &&
+        if(possibleCompletions.size() == 1 &&
                 possibleCompletions.get(0).getCompletionCandidates().size() == 1) {
             //some formatted completions might not be valid and shouldnt be displayed
             displayCompletion(possibleCompletions.get(0).getCompletionCandidates().get(0),
@@ -1305,8 +1302,8 @@ public class Console {
                 // check size
             else {
                 List<String> completions = new ArrayList<String>();
-                for(CompleteOperation co : possibleCompletions)
-                    completions.addAll(co.getCompletionCandidates());
+                for(int i=0; i < possibleCompletions.size(); i++)
+                    completions.addAll(possibleCompletions.get(i).getCompletionCandidates());
 
                 if(completions.size() > 100) {
                     if(displayCompletion) {

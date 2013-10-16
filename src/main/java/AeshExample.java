@@ -9,6 +9,7 @@ import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
+import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.completer.CompleterData;
@@ -157,7 +158,8 @@ public class AeshExample {
         private String less;
 
         @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':',
-                validator = DirectoryValidator.class)
+                validator = DirectoryValidator.class,
+                activator = BarActivator.class)
         List<File> files;
 
         @Option(hasValue = false, description = "display this help and exit")
@@ -215,9 +217,12 @@ public class AeshExample {
                 throw new OptionValidatorException("File validation failed, must be a directory.");
             }
         }
+    }
+
+    public static class BarActivator implements OptionActivator {
 
         @Override
-        public boolean isEnabled(ProcessedCommand processedCommand) {
+        public boolean isActivated(ProcessedCommand processedCommand) {
             ProcessedOption bar = processedCommand.findLongOption("bar");
             if(bar != null && bar.getValue() != null)
                 return true;
