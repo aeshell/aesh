@@ -36,7 +36,7 @@ public class POSIXTerminal extends AbstractTerminal {
     private AeshPrintStream stdOut;
     private AeshPrintStream stdErr;
 
-    private static long TIMEOUT_PERIOD = 2000;
+    private static long TIMEOUT_PERIOD = 3000;
 
     private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 

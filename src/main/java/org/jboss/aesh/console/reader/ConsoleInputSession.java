@@ -90,17 +90,19 @@ public class ConsoleInputSession {
                         int read = consoleStream.read(bBuf);
                         if (read > 0) {
                             blockingQueue.put(new String(bBuf, 0, read));
-                            Thread.sleep(10);
-                        } else if (read < 0) {
+                        }
+                        else if (read < 0) {
                             stop();
                         }
                     }
-                } catch (RuntimeException e) {
+                }
+                catch (RuntimeException e) {
                     if (!executorService.isShutdown()) {
                         executorService.shutdown();
                         throw e;
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     if (!executorService.isShutdown()) {
                         executorService.shutdown();
                         throw new RuntimeException(e);

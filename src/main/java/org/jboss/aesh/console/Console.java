@@ -516,6 +516,12 @@ public class Console {
 
     private void processOperationResult(String result) {
         try {
+            if(result.length() == 0) {
+                buffer.reset();
+                displayPrompt();
+                search = null;
+                return;
+            }
             // if the line ends with: \ we create a new line
             if(!buffer.getPrompt().isMasking() && endsWithBackslashPattern.matcher(result).find()) {
                 buffer.setMultiLine(true);
@@ -1249,8 +1255,8 @@ public class Console {
 
         }
 
-        for(Completion completion : completionList) {
-            if(redirect && !completion.getClass().equals(RedirectionCompletion.class)) {
+        for(int i=0; i < completionList.size(); i++) {
+            if(redirect && !completionList.get(i).getClass().equals(RedirectionCompletion.class)) {
                 break;
             }
             CompleteOperation co;
@@ -1261,7 +1267,7 @@ public class Console {
                 co = findAliases(buffer.getLine(), buffer.getCursor());
             }
 
-            completion.complete(co);
+            completionList.get(i).complete(co);
 
             if(co.getCompletionCandidates() != null && co.getCompletionCandidates().size() > 0)
                 possibleCompletions.add(co);
