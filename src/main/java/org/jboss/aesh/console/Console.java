@@ -504,7 +504,13 @@ public class Console {
         }
         catch (IOException ioe) {
             if(settings.isLogging())
-                logger.severe("Stream failure: "+ioe);
+                logger.severe("Stream failure, stopping Aesh: "+ioe);
+            try {
+                //if we get an ioexception its either input or output failure
+                //lets just stop while we can...
+                stop();
+            }
+            catch (IOException ignored) { }
         }
     }
 
