@@ -15,9 +15,10 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
+ * 
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  * @author Mike Brock
+ * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
  */
 public class ConsoleInputSession {
     private InputStream consoleStream;
@@ -52,8 +53,7 @@ public class ConsoleInputSession {
                     if (b != null && !b.isEmpty()) {
                         return b.charAt(c++);
                     }
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     //
                 }
                 return -1;
@@ -61,7 +61,7 @@ public class ConsoleInputSession {
 
             @Override
             public int available() {
-                if(b != null)
+                if (b != null)
                     return b.length();
                 else
                     return 0;
@@ -84,25 +84,26 @@ public class ConsoleInputSession {
         Runnable reader = new Runnable() {
             @Override
             public void run() {
-                while (!executorService.isShutdown()) {
-                    try {
+                try {
+                    while (!executorService.isShutdown()) {
                         byte[] bBuf = new byte[20];
                         int read = consoleStream.read(bBuf);
                         if (read > 0) {
                             blockingQueue.put(new String(bBuf, 0, read));
-                            Thread.sleep(10);
-                        }
-                        else if(read < 0) {
+                            Thread.sleep(50);
+                        } else if (read < 0) {
                             stop();
                         }
                     }
-                    catch (IOException e) {
-                        if (!executorService.isShutdown()) {
-                            executorService.shutdown();
-                            throw new RuntimeException(e.getMessage());
-                        }
+                } catch (RuntimeException e) {
+                    if (!executorService.isShutdown()) {
+                        executorService.shutdown();
+                        throw e;
                     }
-                    catch (InterruptedException ignored) {
+                } catch (Exception e) {
+                    if (!executorService.isShutdown()) {
+                        executorService.shutdown();
+                        throw new RuntimeException(e);
                     }
                 }
             }
