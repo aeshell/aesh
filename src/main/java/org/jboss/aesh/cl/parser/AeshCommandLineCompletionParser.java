@@ -223,9 +223,9 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     if(completeObject.getValue().contains(" ")) {
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                        completeOperation.getCompletionCandidates().set(0,
+                                Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
                     }
-                    else
-                        completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -243,6 +243,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     if(completeObject.getValue().contains(" ")) {
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                        completeOperation.getCompletionCandidates().set(0,
+                                Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
                     }
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
@@ -269,6 +271,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     if(completeObject.getValue().contains(" ")) {
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                        completeOperation.getCompletionCandidates().set(0,
+                                Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
                     }
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
@@ -286,6 +290,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     if(completeObject.getValue().contains(" ")) {
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
+                        completeOperation.getCompletionCandidates().set(0,
+                                Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
                     }
 
                 }

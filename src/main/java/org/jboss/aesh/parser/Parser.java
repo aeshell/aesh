@@ -28,7 +28,7 @@ public class Parser {
     private static final char SINGLE_QUOTE = '\'';
     private static final char DOUBLE_QUOTE = '\"';
     private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
-    private static final Pattern spacePattern = Pattern.compile(" ");
+    private static final Pattern spacePattern = Pattern.compile("(?<!\\\\)\\s");
 
     /**
      * Format completions so that they look similar to GNU Readline
@@ -344,10 +344,16 @@ public class Parser {
         return spaceEscapedPattern.matcher(word).find();
     }
 
+    /**
+     * find number of spaces in the given word.
+     * escaped spaces are not counted
+     * @param word
+     * @return
+     */
     public static int findNumberOfSpacesInWord(String word) {
         int count = 0;
-        for(char c : word.toCharArray())
-            if(c == SPACE_CHAR)
+        for(int i=0; i < word.length();i++)
+            if(word.charAt(i) == SPACE_CHAR && (i == 0 || word.charAt(i-1) != SLASH))
                 count++;
 
         return count;

@@ -6,21 +6,22 @@
  */
 package org.jboss.aesh.parser;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.console.Config;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ParserTestCase extends TestCase {
+public class ParserTest {
 
-    public ParserTestCase(String name) {
-        super(name);
-    }
-
+    @Test
     public void testFindStartsWith() {
         List<String> completionList = new ArrayList<String>(3);
         completionList.add("foobar");
@@ -36,6 +37,7 @@ public class ParserTestCase extends TestCase {
         assertEquals("", Parser.findStartsWith(completionList));
     }
 
+    @Test
     public void testFindClosestWordToCursor() {
         assertEquals("", Parser.findWordClosestToCursor(" ", 1));
         assertEquals("foo", Parser.findWordClosestToCursor("foo bar", 3));
@@ -52,12 +54,14 @@ public class ParserTestCase extends TestCase {
         assertEquals("", Parser.findWordClosestToCursor("ls  org/jboss/aeshell/Shell.class", 3) );
     }
 
+    @Test
     public void testFindClosestWordWithEscapedSpaceToCursor() {
         assertEquals("foo bar", Parser.findWordClosestToCursor("foo\\ bar", 7));
         assertEquals("foo ba", Parser.findWordClosestToCursor("foo\\ bar", 6));
         assertEquals("foo bar", Parser.findWordClosestToCursor("ls  foo\\ bar", 11) );
     }
 
+    @Test
     public void testFindEscapedSpaceWordCloseToEnd() {
         assertEquals("ls\\ foo", Parser.findEscapedSpaceWordCloseToEnd(" ls\\ foo"));
         assertEquals("foo\\ bar", Parser.findEscapedSpaceWordCloseToEnd("ls foo\\ bar"));
@@ -69,6 +73,7 @@ public class ParserTestCase extends TestCase {
         assertEquals("", Parser.findEscapedSpaceWordCloseToEnd(" ls\\ foo\\ bar\\  "));
     }
 
+    @Test
     public void testFindEscapedSpaceWord() {
         assertTrue(Parser.doWordContainOnlyEscapedSpace("foo\\ bar"));
         assertTrue(Parser.doWordContainOnlyEscapedSpace("foo\\ bar\\ "));
@@ -78,6 +83,7 @@ public class ParserTestCase extends TestCase {
         assertFalse(Parser.doWordContainOnlyEscapedSpace("foo bar"));
     }
 
+    @Test
     public void testChangeWordWithSpaces() {
         assertEquals("foo bar", Parser.switchEscapedSpacesToSpacesInWord("foo\\ bar") );
         assertEquals(" foo bar", Parser.switchEscapedSpacesToSpacesInWord("\\ foo\\ bar") );
@@ -89,6 +95,7 @@ public class ParserTestCase extends TestCase {
         assertEquals("\\ foo\\ bar\\ ", Parser.switchSpacesToEscapedSpacesInWord(" foo bar "));
     }
 
+    @Test
     public void testFindAllWords() {
         AeshLine line = Parser.findAllWords("   foo bar\\ baz 12345 ");
         assertEquals("foo", line.getWords().get(0));
@@ -119,6 +126,7 @@ public class ParserTestCase extends TestCase {
         assertEquals("/tmp/A ", line.getWords().get(2));
     }
 
+    @Test
     public void testFindAllQuotedWords() {
         AeshLine line = Parser.findAllWords("foo bar \"baz 12345\"");
         assertEquals("foo", line.getWords().get(0));
@@ -147,6 +155,7 @@ public class ParserTestCase extends TestCase {
         //assertTrue(line.haveBuildError());
     }
 
+    @Test
     public void testSplitBySizeKeepWords() {
         String words = "foo to bar is how it is i guess";
         List<String> out = Parser.splitBySizeKeepWords(words, 10);
@@ -162,7 +171,7 @@ public class ParserTestCase extends TestCase {
         assertEquals("alphabetic", out.get(3));
     }
 
-
+    @Test
     public void testTrim() {
         assertEquals("foo", Parser.trim("  foo "));
         assertEquals("bar foo", Parser.trim("bar foo "));
@@ -170,6 +179,7 @@ public class ParserTestCase extends TestCase {
         assertEquals("\\ foo\\ ", Parser.trim("\\ foo\\  "));
     }
 
+    @Test
     public void testFindFirstWord() {
         assertEquals("foo", Parser.findFirstWord(" foo \\ bar"));
         assertEquals("foo", Parser.findFirstWord(" foo bar baz"));
@@ -178,6 +188,7 @@ public class ParserTestCase extends TestCase {
         assertEquals("foobarbaz", Parser.findFirstWord("foobarbaz"));
     }
 
+    @Test
     public void testTrimInFront() {
         assertEquals("foo ", Parser.trimInFront("  foo "));
         assertEquals("foo", Parser.trimInFront("  foo"));
@@ -185,6 +196,7 @@ public class ParserTestCase extends TestCase {
     }
 
     //verify divide by zero fix
+    @Test
     public void testFormatDisplayList() {
         List<String> list = new ArrayList<String>();
         String s1 = "this is a loooooong string thats longer than the terminal width";
@@ -193,9 +205,18 @@ public class ParserTestCase extends TestCase {
         assertEquals(s1+"  "+ Config.getLineSeparator(), Parser.formatDisplayList(list, 20, 20));
     }
 
+    @Test
     public void testPadLeft() {
         assertEquals(" foo", Parser.padLeft(4,"foo"));
         assertEquals("   foo", Parser.padLeft(6,"foo"));
+    }
+
+    @Test
+    public void testFindNumberOfSpaces() {
+        assertEquals(4, Parser.findNumberOfSpacesInWord("this is a word "));
+        assertEquals(4, Parser.findNumberOfSpacesInWord("this is a word !"));
+        assertEquals(5, Parser.findNumberOfSpacesInWord(" this is a word !"));
+        assertEquals(4, Parser.findNumberOfSpacesInWord(" this is a\\ word !"));
     }
 
 }
