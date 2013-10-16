@@ -229,7 +229,8 @@ public final class ProcessedCommand {
     public List<String> findPossibleLongNamesWitdDash(String name) {
         List<String> names = new ArrayList<String>(options.size());
         for(ProcessedOption o : options) {
-           if((o.getShortName().equals(name) || o.getName().startsWith(name)) &&
+           if(((o.getShortName().equals(name) && !o.isLongNameUsed()) ||
+                   o.getName().startsWith(name)) &&
                    o.getActivator().isActivated(this))
                names.add("--"+o.getName());
         }
