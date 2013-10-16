@@ -15,7 +15,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 
+ *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  * @author Mike Brock
  * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
@@ -85,12 +85,12 @@ public class ConsoleInputSession {
             @Override
             public void run() {
                 try {
+                    byte[] bBuf = new byte[1024];
                     while (!executorService.isShutdown()) {
-                        byte[] bBuf = new byte[20];
                         int read = consoleStream.read(bBuf);
                         if (read > 0) {
                             blockingQueue.put(new String(bBuf, 0, read));
-                            Thread.sleep(50);
+                            Thread.sleep(10);
                         } else if (read < 0) {
                             stop();
                         }
