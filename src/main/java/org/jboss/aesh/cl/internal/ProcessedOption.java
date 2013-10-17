@@ -108,7 +108,8 @@ public final class ProcessedOption {
                            Class<? extends OptionCompleter> completer,
                            Class<? extends OptionValidator> optionValidator,
                            Class<? extends OptionActivator> optionActivator) throws OptionParserException {
-        this.shortName = String.valueOf(shortName);
+        if(shortName != '\u0000')
+            this.shortName = String.valueOf(shortName);
         this.name = name;
         this.description = description;
         this.argument = argument;
@@ -130,7 +131,7 @@ public final class ProcessedOption {
         values = new ArrayList<String>();
 
         if((shortName == Character.MIN_VALUE) && name.equals("") && optionType != OptionType.ARGUMENT) {
-            throw new OptionParserException("Either shortName or long shortName must be set.");
+            throw new OptionParserException("Either shortName or name must be set.");
         }
     }
 

@@ -6,23 +6,24 @@
  */
 package org.jboss.aesh.cl;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;
+import org.junit.Test;
 
 import java.util.List;
+
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ParserGeneratorTest extends TestCase {
+public class ParserGeneratorTest {
 
-    public ParserGeneratorTest(String name) {
-        super(name);
-    }
-
+    @Test
     public void testClassGenerator() throws CommandLineParserException {
 
         Test1 test1 = new Test1();
@@ -70,7 +71,7 @@ class Test1 {
 @CommandDefinition(name = "test", description = "more [options] file...")
 class Test2 {
 
-    @Option(description = "display help instead of ring bell")
+    @Option(shortName = 'd', description = "display help instead of ring bell")
     private String display;
 
     @Option(shortName = 'V', description = "output version information and exit")
@@ -80,7 +81,7 @@ class Test2 {
 @CommandDefinition(name = "test", description = "more [options] file...")
 class Test3 {
 
-    @Option(name = "target", description = "target directory")
+    @Option(shortName = 't', name = "target", description = "target directory")
     private String target;
 
     @Option(shortName = 'e', description = "test run")

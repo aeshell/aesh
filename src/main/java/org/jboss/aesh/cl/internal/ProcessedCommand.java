@@ -136,24 +136,24 @@ public final class ProcessedCommand {
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {
-        return verifyThatNamesAreUnique(name.charAt(0), longName);
+        if(name != null)
+            return verifyThatNamesAreUnique(name.charAt(0), longName);
+        else
+            return verifyThatNamesAreUnique('\u0000', longName);
     }
 
     private char verifyThatNamesAreUnique(char name, String longName) throws OptionParserException {
         if(longName != null && longName.length() > 0 && findLongOption(longName) != null) {
             throw new OptionParserException("Option --"+longName+" is already added to Param: "+this.toString());
         }
-        if(name != '\u0000'&& findOption(String.valueOf(name)) != null) {
+        if(name != '\u0000' && findOption(String.valueOf(name)) != null) {
             throw new OptionParserException("Option -"+name+" is already added to Param: "+this.toString());
         }
 
         //if name is null, use one based on name
-        if(name == '\u0000') {
-            if(longName != null && longName.length() > 0)
-                return findPossibleName(longName);
-            else
-                throw new OptionParserException("Neither option name and option long name can be both null");
-        }
+        if(name == '\u0000' && (longName == null || longName.length() == 0))
+            throw new OptionParserException("Neither option name and option long name can be both null");
+
         return name;
     }
 
@@ -188,7 +188,7 @@ public final class ProcessedCommand {
 
     public ProcessedOption startWithOption(String name) {
         for(ProcessedOption option : options)
-            if(name.startsWith(option.getShortName()) &&
+            if(option.getShortName() != null && name.startsWith(option.getShortName()) &&
                     option.getActivator().isActivated(this))
                 return option;
 
@@ -229,8 +229,8 @@ public final class ProcessedCommand {
     public List<String> findPossibleLongNamesWitdDash(String name) {
         List<String> names = new ArrayList<String>(options.size());
         for(ProcessedOption o : options) {
-           if(((o.getShortName().equals(name) && !o.isLongNameUsed()) ||
-                   o.getName().startsWith(name)) &&
+           if(((o.getShortName() != null && o.getShortName().equals(name) &&
+                   !o.isLongNameUsed()) || o.getName().startsWith(name)) &&
                    o.getActivator().isActivated(this))
                names.add("--"+o.getName());
         }

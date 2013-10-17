@@ -313,8 +313,9 @@ public class AeshCommandLineParser implements CommandLineParser {
             if(o.isRequired()) {
                 boolean found = false;
                 for(ProcessedOption po : commandLine.getOptions()) {
-                    if(po.getShortName().equals(o.getShortName()) ||
-                            po.getShortName().equals(o.getName()))
+                    if(po.getShortName() != null && o.getShortName() != null &&
+                            po.getShortName().equals(o.getShortName()) ||
+                            (po.getShortName() != null && po.getShortName().equals(o.getName())))
                         found = true;
                 }
                 if(!found)

@@ -6,23 +6,25 @@
  */
 package org.jboss.aesh.cl;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;
+import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CommandLineParserTest extends TestCase {
+public class CommandLineParserTest {
 
-    public CommandLineParserTest(String name) {
-        super(name);
-    }
-
+    @Test
     public void testParseCommandLine1() throws CommandLineParserException {
 
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(Parser1Test.class);
@@ -103,6 +105,7 @@ public class CommandLineParserTest extends TestCase {
 
     }
 
+    @Test
     public void testParseCommandLine2() throws CommandLineParserException {
 
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(Parser2Test.class);
@@ -166,7 +169,7 @@ public class CommandLineParserTest extends TestCase {
 @CommandDefinition(name = "test", description = "a simple test")
 class Parser1Test {
 
-    @Option(name = "X", description = "enable X", hasValue = false)
+    @Option(shortName = 'X', name = "X", description = "enable X", hasValue = false)
     private Boolean enableX;
 
     @Option(shortName = 'f', name = "foo", description = "enable foo", hasValue = false)
@@ -208,10 +211,10 @@ class Parser4Test {
     @OptionList
     private List<Integer> bar;
 
-    @OptionList(valueSeparator = ':')
+    @OptionList(shortName = 'h', valueSeparator = ':')
     private List<String> help;
 
-    @OptionList(valueSeparator = ' ')
+    @OptionList(shortName = 'e', valueSeparator = ' ')
     private List<String> help2;
 
     @Arguments

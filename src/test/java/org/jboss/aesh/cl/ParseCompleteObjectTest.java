@@ -1,22 +1,24 @@
 package org.jboss.aesh.cl;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.cl.parser.ParserGenerator;
+import org.junit.Test;
 
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ParseCompleteObjectTest extends TestCase {
+public class ParseCompleteObjectTest {
 
-    public ParseCompleteObjectTest(String name) {
-        super(name);
-    }
 
+    @Test
     public void testParseCompleteObject() throws Exception {
         CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class);
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
@@ -117,6 +119,7 @@ public class ParseCompleteObjectTest extends TestCase {
         assertEquals("a ",  pco.getValue());
     }
 
+    @Test
     public void testParseCompleteObject2() throws Exception {
         CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class);
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
@@ -132,6 +135,7 @@ public class ParseCompleteObjectTest extends TestCase {
         assertTrue(pco.doDisplayOptions());
     }
 
+    @Test
     public void testParseCompleteObject3() throws Exception {
         CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest3.class);
         CommandLineCompletionParser completeParser = clp.getCompletionParser();

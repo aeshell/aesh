@@ -94,7 +94,7 @@ public class CommandLine {
 
     public boolean hasOption(String name) {
         for(ProcessedOption po : options) {
-            if(po.getShortName().equals(name) ||
+            if((po.getShortName() != null && po.getShortName().equals(name)) ||
                     po.getName().equals(name))
                 return true;
         }

@@ -82,9 +82,22 @@ public class BuilderTest extends TestCase {
     public void testBuilder3() throws CommandLineParserException {
         CommandBuilder pb = new CommandBuilder().name("less").description("less is more");
         pb.addOption(
-                new OptionBuilder().description("version").name("version").hasValue(false).required(true).type(String.class).create());
+                new OptionBuilder()
+                        .description("version")
+                        .name("version")
+                        .shortName('v')
+                        .hasValue(false)
+                        .required(true)
+                        .type(String.class)
+                        .create());
         pb.addOption(
-                new OptionBuilder().description("is verbose").name("verbose").hasValue(false).shortName('e').type(String.class).create());
+                new OptionBuilder()
+                        .description("is verbose")
+                        .name("verbose")
+                        .hasValue(false)
+                        .shortName('e')
+                        .type(String.class)
+                        .create());
 
         pb.argument(new OptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENT).type(String.class).create());
@@ -101,9 +114,9 @@ public class BuilderTest extends TestCase {
 
     public void testParameterInt() throws OptionParserException {
         ProcessedCommand processedCommand = new ProcessedCommand("foo", "");
-        processedCommand.addOption(new OptionBuilder().name("foo1").type(String.class).create());
-        processedCommand.addOption(new OptionBuilder().name("foo2").type(String.class).create());
-        processedCommand.addOption(new OptionBuilder().name("foo3").type(String.class).create());
+        processedCommand.addOption(new OptionBuilder().name("foo1").shortName('f').type(String.class).create());
+        processedCommand.addOption(new OptionBuilder().name("foo2").shortName('o').type(String.class).create());
+        processedCommand.addOption(new OptionBuilder().name("foo3").shortName('3').type(String.class).create());
 
         assertEquals("f", processedCommand.getOptions().get(0).getShortName());
         assertEquals("o", processedCommand.getOptions().get(1).getShortName());

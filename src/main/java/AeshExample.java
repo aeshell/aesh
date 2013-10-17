@@ -148,7 +148,7 @@ public class AeshExample {
     @CommandDefinition(name="ls", description = "[OPTION]... [FILE]...")
     public static class LsCommand implements Command {
 
-        @Option(hasValue = false, description = "set foo to true/false")
+        @Option(shortName = 'f', hasValue = false, description = "set foo to true/false")
         private Boolean foo;
 
         @Option(hasValue = false, description = "set the bar")
