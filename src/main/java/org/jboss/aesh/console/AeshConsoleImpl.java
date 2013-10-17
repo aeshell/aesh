@@ -189,8 +189,8 @@ public class AeshConsoleImpl implements AeshConsole {
                 }
                 catch (CommandNotFoundException ignored) {
                 }
-                catch (RuntimeException re) {
-                    logger.log(Level.SEVERE, "Runtime exception when completing: "+completeOperation, re);
+                catch (Exception ex) {
+                    logger.log(Level.SEVERE, "Runtime exception when completing: "+completeOperation, ex);
                 }
             }
         }
@@ -229,8 +229,9 @@ public class AeshConsoleImpl implements AeshConsole {
                     console.out().println(e.getMessage());
                     result = CommandResult.FAILURE;
                 }
-                catch(RuntimeException re) {
-                    logger.log(Level.SEVERE, "Runtime exception when parsing/running: "+output.getBuffer(), re);
+                catch (Exception e) {
+                    logger.log(Level.SEVERE, "Exception when parsing/running: "+output.getBuffer(), e);
+                    result = CommandResult.FAILURE;
                 }
             }
             //empty line
