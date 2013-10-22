@@ -7,6 +7,7 @@
 package org.jboss.aesh.complete;
 
 import junit.framework.TestCase;
+import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.List;
 
@@ -25,10 +26,10 @@ public class CompleteOperationTest extends TestCase {
         co.addCompletionCandidate("foobars");
         co.setOffset(3);
 
-        List<String> formattedCandidates = co.getFormattedCompletionCandidates();
+        List<TerminalString> formattedCandidates = co.getFormattedCompletionCandidates();
 
-        assertEquals("bar", formattedCandidates.get(0));
-        assertEquals("bars", formattedCandidates.get(1));
+        assertEquals(new TerminalString("bar"), formattedCandidates.get(0));
+        assertEquals(new TerminalString("bars"), formattedCandidates.get(1));
     }
 
     public void testRemoveEscapedSpacesFromCompletionCandidates() {
@@ -39,7 +40,7 @@ public class CompleteOperationTest extends TestCase {
 
         co.removeEscapedSpacesFromCompletionCandidates();
 
-        assertEquals("foo bar", co.getCompletionCandidates().get(0));
-        assertEquals("foo bars", co.getCompletionCandidates().get(1));
+        assertEquals(new TerminalString("foo bar"), co.getCompletionCandidates().get(0));
+        assertEquals(new TerminalString("foo bars"), co.getCompletionCandidates().get(1));
     }
 }

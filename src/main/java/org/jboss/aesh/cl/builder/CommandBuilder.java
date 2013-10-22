@@ -7,6 +7,7 @@
 package org.jboss.aesh.cl.builder;
 
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.internal.ProcessedCommandAppearance;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 
@@ -23,6 +24,7 @@ public class CommandBuilder {
     private String name;
     private String description;
     private ProcessedOption argument;
+    private ProcessedCommandAppearance appearance;
     private List<ProcessedOption> options;
 
 
@@ -45,6 +47,11 @@ public class CommandBuilder {
         return this;
     }
 
+    public CommandBuilder appearance(ProcessedCommandAppearance appearance) {
+        this.appearance = appearance;
+        return this;
+    }
+
     public CommandBuilder addOption(ProcessedOption option) {
         this.options.add(option);
         return this;
@@ -58,6 +65,8 @@ public class CommandBuilder {
     public ProcessedCommand generateParameter() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
-        return  new ProcessedCommand(name, description, argument, options);
+        if(appearance == null)
+            appearance = new ProcessedCommandAppearance();
+        return  new ProcessedCommand(name, description, argument, options, appearance);
     }
 }

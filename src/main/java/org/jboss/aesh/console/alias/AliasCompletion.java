@@ -27,7 +27,7 @@ public class AliasCompletion implements Completion {
 
     @Override
     public void complete(CompleteOperation completeOperation) {
-        completeOperation.addCompletionCandidates(manager.findAllMatchingNames(completeOperation.getBuffer()));
+        completeOperation.addCompletionCandidatesString(manager.findAllMatchingNames(completeOperation.getBuffer()));
 
         if(completeOperation.getBuffer() == null || completeOperation.getBuffer().length() < 1) {
             completeOperation.addCompletionCandidate(ALIAS);
@@ -39,13 +39,13 @@ public class AliasCompletion implements Completion {
             completeOperation.addCompletionCandidate(UNALIAS);
         else if(completeOperation.getBuffer().equals(ALIAS_SPACE) ||
                 completeOperation.getBuffer().equals(UNALIAS_SPACE)) {
-            completeOperation.addCompletionCandidates(manager.getAllNames());
+            completeOperation.addCompletionCandidatesString(manager.getAllNames());
             completeOperation.setOffset(completeOperation.getCursor());
         }
         else if(completeOperation.getBuffer().startsWith(ALIAS_SPACE) ||
                 completeOperation.getBuffer().startsWith(UNALIAS_SPACE)) {
             String word = Parser.findWordClosestToCursor(completeOperation.getBuffer(), completeOperation.getCursor());
-            completeOperation.addCompletionCandidates(manager.findAllMatchingNames(word));
+            completeOperation.addCompletionCandidatesString(manager.findAllMatchingNames(word));
             completeOperation.setOffset(completeOperation.getCursor()-word.length());
         }
     }

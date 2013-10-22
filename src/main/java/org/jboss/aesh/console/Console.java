@@ -58,6 +58,7 @@ import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.undo.UndoManager;
 import org.jboss.aesh.util.ANSI;
@@ -1289,21 +1290,34 @@ public class Console {
         // more than one hit...
         else {
 
+            logger.info("Found completions: before "+possibleCompletions);
+
             String startsWith = Parser.findStartsWithOperation(possibleCompletions);
 
+            logger.info("StartsWith: "+startsWith);
+
+            logger.info("Found completions: after "+possibleCompletions);
+
             if(startsWith.length() > 0) {
-                if(startsWith.contains(" "))
-                    displayCompletion("", Parser.switchSpacesToEscapedSpacesInWord(startsWith),
+                TerminalString startsWithTerminalString = possibleCompletions.get(0).getCompletionCandidates().get(0);
+                if(startsWith.contains(" ")) {
+                    startsWithTerminalString.setCharacters( Parser.switchSpacesToEscapedSpacesInWord(startsWith));
+                    displayCompletion(null, startsWithTerminalString,
                             false, possibleCompletions.get(0).getSeparator());
-                else
-                    displayCompletion("", startsWith, false, possibleCompletions.get(0).getSeparator());
+                }
+                else {
+                    startsWithTerminalString.setCharacters(startsWith);
+                    displayCompletion(null, startsWithTerminalString, false, possibleCompletions.get(0).getSeparator());
+                }
             }
                 // display all
                 // check size
             else {
-                List<String> completions = new ArrayList<String>();
+                List<TerminalString> completions = new ArrayList<TerminalString>();
                 for(int i=0; i < possibleCompletions.size(); i++)
                     completions.addAll(possibleCompletions.get(i).getCompletionCandidates());
+
+                logger.info("completions before display: "+completions);
 
                 if(completions.size() > 100) {
                     if(displayCompletion) {
@@ -1334,18 +1348,21 @@ public class Console {
      * @param appendSpace if its an actual complete
      * @throws java.io.IOException stream
      */
-    private void displayCompletion(String fullCompletion, String completion,
+    private void displayCompletion(TerminalString fullCompletion, TerminalString completion,
                                    boolean appendSpace, char separator) throws IOException {
-        if(completion.startsWith(buffer.getLine())) {
+        if(completion.getCharacters().startsWith(buffer.getLine())) {
             performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
-            buffer.write(completion);
-            out().print(completion);
+            buffer.write(completion.getCharacters());
+            //out().print(completion.getCharacters());
+
+            completion.write(out());
 
             //only append space if its an actual complete, not a partial
         }
         else {
-            buffer.write(completion);
-            out().print(completion);
+            buffer.write(completion.getCharacters());
+            //out().print(completion.getCharacters());
+            completion.write(out());
         }
         if(appendSpace) { // && fullCompletion.startsWith(buffer.getLine())) {
             buffer.write(separator);
@@ -1361,12 +1378,13 @@ public class Console {
      * @param completions all completion items
      * @throws IOException stream
      */
-    private void displayCompletions(List<String> completions) throws IOException {
+    private void displayCompletions(List<TerminalString> completions) throws IOException {
         //printNewline reset cursor pos, so we need to store it
+        logger.info("displaying: "+completions);
         int oldCursorPos = buffer.getCursor();
         printNewline();
         buffer.setCursor(oldCursorPos);
-        out().print(Parser.formatDisplayList(completions,
+        out().print(Parser.formatDisplayListTerminalString(completions,
                 getInternalShell().getSize().getHeight(), getInternalShell().getSize().getWidth()));
         displayPrompt();
         out().print(buffer.getLine());

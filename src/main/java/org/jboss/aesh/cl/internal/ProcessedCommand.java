@@ -12,6 +12,7 @@ import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +25,7 @@ public final class ProcessedCommand {
 
     private String name;
     private String usage;
+    private ProcessedCommandAppearance appearance;
 
     private List<ProcessedOption> options;
     private ProcessedOption argument;
@@ -32,6 +34,17 @@ public final class ProcessedCommand {
         setName(name);
         setUsage(usage);
         options = new ArrayList<ProcessedOption>();
+        this.appearance = new ProcessedCommandAppearance();
+    }
+
+    public ProcessedCommand(String name, String usage, ProcessedCommandAppearance appearance) {
+        setName(name);
+        setUsage(usage);
+        options = new ArrayList<ProcessedOption>();
+        if(appearance != null)
+            this.appearance = appearance;
+        else
+            this.appearance = new ProcessedCommandAppearance();
     }
 
     public ProcessedCommand(String name, String usage, ProcessedOption argument) {
@@ -51,10 +64,16 @@ public final class ProcessedCommand {
     }
 
     public ProcessedCommand(String name, String usage,
-                            ProcessedOption argument, List<ProcessedOption> options) throws OptionParserException {
+                            ProcessedOption argument, List<ProcessedOption> options,
+                            ProcessedCommandAppearance appearance) throws OptionParserException {
         setName(name);
         setUsage(usage);
         this.argument = argument;
+        if(appearance != null)
+            this.appearance = appearance;
+        else
+            this.appearance = new ProcessedCommandAppearance();
+
         this.options = new ArrayList<ProcessedOption>();
         setOptions(options);
     }
@@ -111,6 +130,12 @@ public final class ProcessedCommand {
         return name;
     }
 
+    public String getFormattedName() {
+        return new TerminalString(name, appearance.getBackgroundColor(),
+                appearance.getTextColor(), appearance.getTextType()).toString();
+
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -133,6 +158,10 @@ public final class ProcessedCommand {
 
     public void setArgument(ProcessedOption argument) {
         this.argument = argument;
+    }
+
+    public ProcessedCommandAppearance getAppearance() {
+        return appearance;
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {
@@ -215,24 +244,24 @@ public final class ProcessedCommand {
      * Return all option names that not already have a value
      * and is enabled
      */
-    public List<String> getOptionLongNamesWithDash() {
-        List<String> names = new ArrayList<String>(options.size());
+    public List<TerminalString> getOptionLongNamesWithDash() {
+        List<TerminalString> names = new ArrayList<TerminalString>(options.size());
         for(ProcessedOption o : options) {
             if(o.getValues().size() == 0 &&
                     o.getActivator().isActivated(this))
-                names.add("--"+o.getName());
+                names.add(o.getFormattedNameWithDash());
         }
 
         return names;
     }
 
-    public List<String> findPossibleLongNamesWitdDash(String name) {
-        List<String> names = new ArrayList<String>(options.size());
+    public List<TerminalString> findPossibleLongNamesWithDash(String name) {
+        List<TerminalString> names = new ArrayList<TerminalString>(options.size());
         for(ProcessedOption o : options) {
            if(((o.getShortName() != null && o.getShortName().equals(name) &&
                    !o.isLongNameUsed()) || o.getName().startsWith(name)) &&
                    o.getActivator().isActivated(this))
-               names.add("--"+o.getName());
+               names.add(o.getFormattedNameWithDash());
         }
         return names;
     }

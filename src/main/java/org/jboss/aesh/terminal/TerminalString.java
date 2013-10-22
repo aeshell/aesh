@@ -8,6 +8,8 @@ package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.util.ANSI;
 
+import java.io.PrintStream;
+
 /**
  * Value object that describe how a string should be displayed
  *
@@ -42,6 +44,10 @@ public class TerminalString {
 
     public String getCharacters() {
         return characters;
+    }
+
+    public void setCharacters(String characters) {
+        this.characters = characters;
     }
 
     public CharacterType getType() {
@@ -81,6 +87,8 @@ public class TerminalString {
 
     @Override
     public String toString() {
+        //Thread.dumpStack();
+        //return getCharacters();
         StringBuilder builder = new StringBuilder();
         builder.append(ANSI.getStart());
         builder.append(type.getValue()).append(';');
@@ -89,6 +97,18 @@ public class TerminalString {
         builder.append('m');
         builder.append(getCharacters());
         return builder.toString();
+    }
+
+    public void write(PrintStream out) {
+        out.print(ANSI.getStart());
+        out.print(type.getValue());
+        out.print(';');
+        out.print(this.getTextColor().getValue());
+        out.print(';');
+        out.print(this.getBackgroundColor().getValue());
+        out.print('m');
+        out.print(getCharacters());
+        out.flush();
     }
 
     public boolean equalsIgnoreCharacter(TerminalString that) {

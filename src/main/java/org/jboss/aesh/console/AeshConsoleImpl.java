@@ -173,7 +173,7 @@ public class AeshConsoleImpl implements AeshConsole {
         public void complete(CompleteOperation completeOperation) {
             List<String> completedCommands = completeCommandName(completeOperation.getBuffer());
             if(completedCommands.size() > 0) {
-                completeOperation.addCompletionCandidates(completedCommands);
+                completeOperation.addCompletionCandidatesString(completedCommands);
             }
             else {
                 try {

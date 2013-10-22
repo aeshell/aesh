@@ -19,6 +19,7 @@ import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.validator.NullValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ReflectionUtil;
 
 import java.io.File;
@@ -58,27 +59,52 @@ public final class ProcessedOption {
     private OptionValidator validator;
     private boolean endsWithSeparator = false;
     private OptionActivator activator;
+    private ProcessedCommandAppearance appearance;
 
-     public ProcessedOption(char shortName, String name, String description,
-                            String argument, boolean required, char valueSeparator,
-                            List<String> defaultValue, Class<?> type, String fieldName,
-                            OptionType optionType, CLConverter converter, OptionCompleter completer,
-                            OptionValidator optionValidator,
-                            OptionActivator activator) throws OptionParserException {
-         this(shortName, name, description, argument, required, valueSeparator, defaultValue,
-                 type, fieldName, optionType,
-                 (Class<? extends CLConverter>) null,(Class<? extends OptionCompleter>) null,
-                 (Class<? extends OptionValidator>) null,
-                 (Class<? extends OptionActivator>) null);
-         this.converter = converter;
-         this.completer = completer;
-         this.validator = optionValidator;
-         this.activator = activator;
-         if(this.validator == null)
-             this.validator = new NullValidator();
-         if(this.activator == null)
-             this.activator = new NullActivator();
-     }
+    public ProcessedOption(char shortName, String name, String description,
+                           String argument, boolean required, char valueSeparator,
+                           List<String> defaultValue, Class<?> type, String fieldName,
+                           OptionType optionType, CLConverter converter, OptionCompleter completer,
+                           OptionValidator optionValidator,
+                           OptionActivator activator,
+                           ProcessedCommandAppearance appearance) throws OptionParserException {
+        this(shortName, name, description, argument, required, valueSeparator, defaultValue,
+                type, fieldName, optionType,
+                (Class<? extends CLConverter>) null,(Class<? extends OptionCompleter>) null,
+                (Class<? extends OptionValidator>) null,
+                (Class<? extends OptionActivator>) null);
+        this.converter = converter;
+        this.completer = completer;
+        this.validator = optionValidator;
+        this.activator = activator;
+        if(this.validator == null)
+            this.validator = new NullValidator();
+        if(this.activator == null)
+            this.activator = new NullActivator();
+        this.appearance = appearance;
+    }
+
+    public ProcessedOption(char shortName, String name, String description,
+                           String argument, boolean required, char valueSeparator,
+                           List<String> defaultValue, Class<?> type, String fieldName,
+                           OptionType optionType, CLConverter converter, OptionCompleter completer,
+                           OptionValidator optionValidator,
+                           OptionActivator activator) throws OptionParserException {
+        this(shortName, name, description, argument, required, valueSeparator, defaultValue,
+                type, fieldName, optionType,
+                (Class<? extends CLConverter>) null,(Class<? extends OptionCompleter>) null,
+                (Class<? extends OptionValidator>) null,
+                (Class<? extends OptionActivator>) null);
+        this.converter = converter;
+        this.completer = completer;
+        this.validator = optionValidator;
+        this.activator = activator;
+        if(this.validator == null)
+            this.validator = new NullValidator();
+        if(this.activator == null)
+            this.activator = new NullActivator();
+        this.appearance = new ProcessedCommandAppearance();
+    }
 
 
     public ProcessedOption(char shortName, String name, String description,
@@ -130,6 +156,8 @@ public final class ProcessedOption {
         properties = new HashMap<String, String>();
         values = new ArrayList<String>();
 
+        appearance = new ProcessedCommandAppearance();
+
         if((shortName == Character.MIN_VALUE) && name.equals("") && optionType != OptionType.ARGUMENT) {
             throw new OptionParserException("Either shortName or name must be set.");
         }
@@ -141,6 +169,15 @@ public final class ProcessedOption {
 
     public String getName() {
         return name;
+    }
+
+    public TerminalString getFormattedNameWithDash() {
+        if(required)
+            return new TerminalString("--"+name, appearance.getOptionBackgroundColor(),
+                    appearance.getRequiredOptionTextColor(), appearance.getRequiredOptionTextType());
+        else
+            return new TerminalString("--"+name, appearance.getOptionBackgroundColor(),
+                    appearance.getOptionTextColor(), appearance.getOptionTextType());
     }
 
     public void addValue(String value) {

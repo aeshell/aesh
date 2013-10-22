@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.jboss.aesh.complete.CompleteOperation;
+import org.jboss.aesh.terminal.TerminalString;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,9 +43,9 @@ public class FileListerTest {
         CompleteOperation completion = new CompleteOperation("cd ", 2);
         new FileLister("", workingDir).findMatchingDirectories(completion);
 
-        List<String> candidates = completion.getCompletionCandidates();
+        List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(1, candidates.size());
-        assertEquals("child/", candidates.get(0));
+        assertEquals("child/", candidates.get(0).getCharacters());
     }
 
     @Test
@@ -53,9 +54,9 @@ public class FileListerTest {
         CompleteOperation completion = new CompleteOperation("cd ch", 2);
         new FileLister("ch", workingDir).findMatchingDirectories(completion);
 
-        List<String> candidates = completion.getCompletionCandidates();
+        List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(1, candidates.size());
-        assertEquals("child/", candidates.get(0));
+        assertEquals("child/", candidates.get(0).getCharacters());
     }
 
     @Test
@@ -65,10 +66,10 @@ public class FileListerTest {
         CompleteOperation completion = new CompleteOperation("cd ", 2);
         new FileLister("", workingDir).findMatchingDirectories(completion);
 
-        List<String> candidates = completion.getCompletionCandidates();
+        List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(2, candidates.size());
-        assertTrue("child/", candidates.contains("child/"));
-        assertTrue("child2/", candidates.contains("child2/"));
+        assertTrue("child/", candidates.contains(new TerminalString("child/")));
+        assertTrue("child2/", candidates.contains(new TerminalString("child2/")));
     }
 
     @Test
@@ -78,9 +79,9 @@ public class FileListerTest {
         CompleteOperation completion = new CompleteOperation("cd ch", 4);
         new FileLister("ch", workingDir).findMatchingDirectories(completion);
 
-        List<String> candidates = completion.getCompletionCandidates();
+        List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(1, candidates.size());
-        assertEquals("child", candidates.get(0));
+        assertEquals("child", candidates.get(0).getCharacters());
     }
 
     public static boolean delete(File file, final boolean recursive) {

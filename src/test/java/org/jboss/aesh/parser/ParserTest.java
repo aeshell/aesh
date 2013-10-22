@@ -7,6 +7,7 @@
 package org.jboss.aesh.parser;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.terminal.TerminalString;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -23,17 +24,17 @@ public class ParserTest {
 
     @Test
     public void testFindStartsWith() {
-        List<String> completionList = new ArrayList<String>(3);
-        completionList.add("foobar");
-        completionList.add("foobaz");
-        completionList.add("foobor");
-        completionList.add("foob");
+        List<TerminalString> completionList = new ArrayList<TerminalString>(3);
+        completionList.add(new TerminalString("foobar"));
+        completionList.add(new TerminalString("foobaz"));
+        completionList.add(new TerminalString("foobor"));
+        completionList.add(new TerminalString("foob"));
 
         assertEquals("foob", Parser.findStartsWith(completionList));
 
         completionList.clear();
-        completionList.add("foo");
-        completionList.add("bar");
+        completionList.add(new TerminalString("foo"));
+        completionList.add(new TerminalString("bar"));
         assertEquals("", Parser.findStartsWith(completionList));
     }
 

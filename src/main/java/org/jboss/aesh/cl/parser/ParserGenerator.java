@@ -7,11 +7,13 @@
 package org.jboss.aesh.cl.parser;
 
 import org.jboss.aesh.cl.Arguments;
+import org.jboss.aesh.cl.CommandAppearance;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionGroup;
 import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.internal.ProcessedCommandAppearance;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
@@ -39,7 +41,9 @@ public class ParserGenerator {
         if(command == null)
             throw new CommandLineParserException("Commands must be annotated with @CommandDefinition");
 
-        ProcessedCommand processedCommand = new ProcessedCommand(command.name(), command.description());
+        ProcessedCommandAppearance appearance = processAppearance((CommandAppearance) clazz.getAnnotation(CommandAppearance.class));
+
+        ProcessedCommand processedCommand = new ProcessedCommand(command.name(), command.description(), appearance);
 
         for(Field field : clazz.getDeclaredFields()) {
             Option o;
@@ -121,6 +125,16 @@ public class ParserGenerator {
         }
 
         return new CommandLineParserBuilder().parameter(processedCommand).generateParser();
+    }
+
+    private static ProcessedCommandAppearance processAppearance(CommandAppearance commandAppearance) {
+        if(commandAppearance == null)
+            return new ProcessedCommandAppearance();
+        else
+            return new ProcessedCommandAppearance(commandAppearance.textColor(), commandAppearance.backgroundColor(),
+                    commandAppearance.textType(), commandAppearance.optionTextColor(),
+                    commandAppearance.optionBackgroundColor(), commandAppearance.optionTextType(),
+                    commandAppearance.requiredOptionTextType(), commandAppearance.requiredOptionTextColor());
     }
 
     public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException, OptionValidatorException {

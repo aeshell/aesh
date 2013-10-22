@@ -4,13 +4,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.jboss.aesh.terminal.TerminalCharacter;
+import org.jboss.aesh.util.LoggerUtil;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshPrintStream extends PrintStream {
+
+    private Logger logger = LoggerUtil.getLogger(this.getClass().getName());
 
     public AeshPrintStream(OutputStream out, boolean autoFlush) {
         super(out,autoFlush);
@@ -21,6 +25,11 @@ public class AeshPrintStream extends PrintStream {
      */
     @Override
     public void close() {
+    }
+
+    public void print(String out) {
+        logger.info("printing: "+out);
+        super.print(out);
     }
 
     public void print(List<TerminalCharacter> chars) throws IOException {

@@ -6,6 +6,7 @@
  */
 
 import org.jboss.aesh.cl.Arguments;
+import org.jboss.aesh.cl.CommandAppearance;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
@@ -31,6 +32,8 @@ import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.CharacterType;
+import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.ANSI;
 
@@ -100,9 +103,10 @@ public class AeshExample {
     }
 
     @CommandDefinition(name = "test", description = "testing")
+    @CommandAppearance(textColor = Color.BLUE_TEXT, requiredOptionTextType = CharacterType.BOLD)
     public static class TestConsoleCommand implements Command, ConsoleCommand {
 
-        @Option(hasValue = false)
+        @Option(hasValue = false, required = true)
         private boolean bar;
 
         private boolean attached = true;
