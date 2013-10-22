@@ -71,9 +71,9 @@ public class ConsoleInputSession {
         Thread readerThread = new Thread() {
             @Override
             public void run() {
-                while (connected) {
-                    try {
-                        byte[] bBuf = new byte[20];
+                byte[] bBuf = new byte[1024];
+                try {
+                    while (connected) {
                         int read = consoleStream.read(bBuf);
 
                         if (read > 0) {
@@ -83,22 +83,21 @@ public class ConsoleInputSession {
                             connected = false;
                             blockingQueue.offer("");
                         }
-
-                        Thread.sleep(10);
                     }
-                    catch (IOException e) {
-                        if (connected) {
-                            connected = false;
-                            throw new RuntimeException("broken pipe");
-                        }
+                }
+                catch (IOException e) {
+                    if (connected) {
+                        connected = false;
+                        throw new RuntimeException("broken pipe");
                     }
-                    catch (InterruptedException e) {
-                        //
-                    }
+                }
+                catch (InterruptedException e) {
+                    connected = false;
                 }
             }
         };
 
+        readerThread.setDaemon(true);
         readerThread.start();
     }
 
