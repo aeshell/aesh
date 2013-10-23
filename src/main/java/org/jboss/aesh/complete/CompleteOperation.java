@@ -57,6 +57,11 @@ public class CompleteOperation {
         this.offset = offset;
     }
 
+    public void setValue(Object value, String fieldName) {
+        if(fieldName == "cursor")
+            cursor = (Integer) value;
+    }
+
     /**
      * Get the separator character, by default its space
      *

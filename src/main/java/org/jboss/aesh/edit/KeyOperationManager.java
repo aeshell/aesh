@@ -98,9 +98,9 @@ public class KeyOperationManager {
         }
         else if(startsWithBackspace(input)) {
             if(Config.isOSPOSIXCompatible())
-                return findOtherOperations(new int[]{127});
+                return findOperation(new int[]{127});
             else
-                return findOtherOperations(new int[]{8});
+                return findOperation(new int[]{8});
         }
         //doesnt start with esc/backspace, lets just say its an input
         else {
