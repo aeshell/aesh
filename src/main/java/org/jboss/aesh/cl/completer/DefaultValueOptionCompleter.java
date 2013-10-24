@@ -33,9 +33,10 @@ public class DefaultValueOptionCompleter implements OptionCompleter {
             }
         }
         if(completerData.getCompleterValues().size() == 1 &&
-                completerData.getCompleterValues().get(0).contains(" ")) {
+                completerData.getCompleterValues().get(0).containSpaces()) {
 
-            String tmpData = Parser.switchSpacesToEscapedSpacesInWord(completerData.getCompleterValues().get(0));
+            String tmpData = Parser.switchSpacesToEscapedSpacesInWord(
+                    completerData.getCompleterValues().get(0).getCharacters());
             completerData.clearCompleterValues();
             completerData.addCompleterValue(tmpData);
             completerData.setAppendSpace(true);

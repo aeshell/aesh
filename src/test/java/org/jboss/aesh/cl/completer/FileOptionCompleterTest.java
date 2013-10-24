@@ -10,6 +10,7 @@ package org.jboss.aesh.cl.completer;
 import java.io.File;
 import java.io.IOException;
 
+import org.jboss.aesh.terminal.TerminalString;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -58,7 +59,7 @@ public class FileOptionCompleterTest {
         completer.complete(data);
         assertNotNull(data.getCompleterValues());
         assertEquals(1, data.getCompleterValues().size());
-        assertEquals(child.getName(), data.getCompleterValues().get(0));
+        assertEquals(child.getName(), data.getCompleterValues().get(0).getCharacters());
     }
 
     @Test
@@ -78,8 +79,8 @@ public class FileOptionCompleterTest {
         completer.complete(data);
         assertNotNull(data.getCompleterValues());
         assertEquals(2, data.getCompleterValues().size());
-        assertTrue(data.getCompleterValues().contains(child.getName()));
-        assertTrue(data.getCompleterValues().contains(child.getName()));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child.getName(), true)));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child.getName(), true)));
     }
 
     @Test
@@ -100,21 +101,21 @@ public class FileOptionCompleterTest {
         completer.complete(data);
         assertNotNull(data.getCompleterValues());
         assertEquals(2, data.getCompleterValues().size());
-        assertTrue(data.getCompleterValues().contains(child.getName() + "/"));
-        assertTrue(data.getCompleterValues().contains(child2.getName() + "/"));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child.getName() + "/", true)));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child2.getName() + "/", true)));
 
         data = new CompleterData("ch", null);
         completer.complete(data);
         assertNotNull(data.getCompleterValues());
         assertEquals(1, data.getCompleterValues().size());
-        assertEquals(child.getName(), data.getCompleterValues().get(0));
+        assertEquals(child.getName(), data.getCompleterValues().get(0).getCharacters());
 
         data = new CompleterData("child", null);
         completer.complete(data);
         assertNotNull(data.getCompleterValues());
         assertEquals(2, data.getCompleterValues().size());
-        assertTrue(data.getCompleterValues().contains(child.getName() + "/"));
-        assertTrue(data.getCompleterValues().contains(child2.getName() + "/"));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child.getName() + "/", true)));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child2.getName() + "/", true)));
     }
 
 }

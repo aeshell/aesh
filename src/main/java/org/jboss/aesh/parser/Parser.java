@@ -8,6 +8,7 @@ package org.jboss.aesh.parser;
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,6 +91,54 @@ public class Parser {
         return completionOutput.toString();
     }
 
+    /**
+     * Format completions so that they look similar to GNU Readline
+     *
+     * @param displayList to format
+     * @param termHeight max height
+     * @param termWidth max width
+     * @return formatted string to be outputted
+     */
+    public static String formatDisplayListTerminalString(List<TerminalString> displayList, int termHeight, int termWidth) {
+        if(displayList == null || displayList.size() < 1)
+            return "";
+        //make sure that termWidth is > 0
+        if(termWidth < 1)
+            termWidth = 80; //setting it to default
+
+        int maxLength = 0;
+        for(TerminalString completion : displayList)
+            if(completion.getCharacters().length() > maxLength)
+                maxLength = completion.getCharacters().length();
+
+        maxLength = maxLength +2; //adding two spaces for better readability
+        int numColumns = termWidth / maxLength;
+        if(numColumns > displayList.size()) // we dont need more columns than items
+            numColumns = displayList.size();
+        if(numColumns < 1)
+            numColumns = 1;
+        int numRows = displayList.size() / numColumns;
+
+        // add a row if we cant display all the items
+        if(numRows * numColumns < displayList.size())
+            numRows++;
+
+        // build the completion listing
+        StringBuilder completionOutput = new StringBuilder();
+        for(int i=0; i < numRows; i++) {
+            for(int c=0; c < numColumns; c++) {
+                int fetch = i + (c * numRows);
+                if(fetch < displayList.size())
+                    completionOutput.append(padRight(maxLength+displayList.get(i + (c * numRows)).getANSILength(),
+                            displayList.get(i + (c * numRows)).toString())) ;
+                else
+                    break;
+            }
+            completionOutput.append(Config.getLineSeparator());
+        }
+
+        return completionOutput.toString();
+    }
 
     public static String padRight(int n, String s) {
         return String.format("%1$-" + n + "s", s);
@@ -180,6 +229,32 @@ public class Parser {
 
         return true;
     }
+
+    /**
+     * Return the biggest common startsWith string
+     *
+     * @param completionList list to compare
+     * @return biggest common startsWith string
+     */
+    public static String findStartsWithTerminalString(List<TerminalString> completionList) {
+        StringBuilder builder = new StringBuilder();
+        for(TerminalString completion : completionList)
+            while(builder.length() < completion.getCharacters().length() &&
+                  startsWithTerminalString(completion.getCharacters().substring(0, builder.length()+1), completionList))
+                builder.append(completion.getCharacters().charAt(builder.length()));
+
+        return builder.toString();
+    }
+
+    private static boolean startsWithTerminalString(String criteria, List<TerminalString> completionList) {
+        for(TerminalString completion : completionList)
+            if(!completion.getCharacters().startsWith(criteria))
+                return false;
+
+        return true;
+    }
+
+
 
     /**
      * Return the word "connected" to cursor
@@ -373,6 +448,11 @@ public class Parser {
         for(String s : list)
             newList.add(switchEscapedSpacesToSpacesInWord(s));
         return newList;
+    }
+
+    public static void switchEscapedSpacesToSpacesInTerminalStringList(List<TerminalString> list) {
+        for(TerminalString ts : list)
+            ts.setCharacters(switchEscapedSpacesToSpacesInWord(ts.getCharacters()));
     }
 
     public static String switchSpacesToEscapedSpacesInWord(String word) {

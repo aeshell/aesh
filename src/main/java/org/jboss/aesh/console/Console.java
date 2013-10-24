@@ -59,6 +59,7 @@ import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.undo.UndoManager;
 import org.jboss.aesh.util.ANSI;
@@ -1282,8 +1283,8 @@ public class Console {
         if(possibleCompletions.size() == 1 &&
                 possibleCompletions.get(0).getCompletionCandidates().size() == 1) {
             //some formatted completions might not be valid and shouldnt be displayed
-            displayCompletion(possibleCompletions.get(0).getCompletionCandidates().get(0),
-                    possibleCompletions.get(0).getFormattedCompletionCandidates().get(0),
+            displayCompletion(
+                    possibleCompletions.get(0).getFormattedCompletionCandidatesTerminalString().get(0),
                     possibleCompletions.get(0).hasAppendSeparator(),
                     possibleCompletions.get(0).getSeparator());
         }
@@ -1294,15 +1295,15 @@ public class Console {
 
             if(startsWith.length() > 0) {
                 if(startsWith.contains(" "))
-                    displayCompletion("", Parser.switchSpacesToEscapedSpacesInWord(startsWith),
+                    displayCompletion(new TerminalString(Parser.switchSpacesToEscapedSpacesInWord(startsWith), true),
                             false, possibleCompletions.get(0).getSeparator());
                 else
-                    displayCompletion("", startsWith, false, possibleCompletions.get(0).getSeparator());
+                    displayCompletion(new TerminalString(startsWith, true), false, possibleCompletions.get(0).getSeparator());
             }
                 // display all
                 // check size
             else {
-                List<String> completions = new ArrayList<String>();
+                List<TerminalString> completions = new ArrayList<TerminalString>();
                 for(int i=0; i < possibleCompletions.size(); i++)
                     completions.addAll(possibleCompletions.get(i).getCompletionCandidates());
 
@@ -1330,22 +1331,21 @@ public class Console {
      * If !completion.startsWith(buffer.getLine()) the completion will be added to the line,
      * else it will replace whats at the buffer line.
      *
-     * @param fullCompletion the while completion
      * @param completion partial completion
      * @param appendSpace if its an actual complete
      * @throws java.io.IOException stream
      */
-    private void displayCompletion(String fullCompletion, String completion,
+    private void displayCompletion(TerminalString completion,
                                    boolean appendSpace, char separator) throws IOException {
-        if(completion.startsWith(buffer.getLine())) {
+        if(completion.getCharacters().startsWith(buffer.getLine())) {
             performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
-            buffer.write(completion);
+            buffer.write(completion.getCharacters());
             out().print(completion);
 
             //only append space if its an actual complete, not a partial
         }
         else {
-            buffer.write(completion);
+            buffer.write(completion.getCharacters());
             out().print(completion);
         }
         if(appendSpace) { // && fullCompletion.startsWith(buffer.getLine())) {
@@ -1362,12 +1362,12 @@ public class Console {
      * @param completions all completion items
      * @throws IOException stream
      */
-    private void displayCompletions(List<String> completions) throws IOException {
+    private void displayCompletions(List<TerminalString> completions) throws IOException {
         //printNewline reset cursor pos, so we need to store it
         int oldCursorPos = buffer.getCursor();
         printNewline();
         buffer.setCursor(oldCursorPos);
-        out().print(Parser.formatDisplayList(completions,
+        out().print(Parser.formatDisplayListTerminalString(completions,
                 getInternalShell().getSize().getHeight(), getInternalShell().getSize().getWidth()));
         displayPrompt();
         out().print(buffer.getLine());

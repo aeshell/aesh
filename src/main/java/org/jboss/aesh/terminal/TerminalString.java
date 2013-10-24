@@ -6,7 +6,10 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.util.ANSI;
+
+import java.io.PrintStream;
 
 /**
  * Value object that describe how a string should be displayed
@@ -19,6 +22,7 @@ public class TerminalString {
     private Color backgroundColor;
     private Color textColor;
     private CharacterType type;
+    private boolean ignoreRendering;
 
     public TerminalString(String chars, Color backgroundColor, Color textColor,
                           CharacterType type) {
@@ -40,8 +44,25 @@ public class TerminalString {
         this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, CharacterType.NORMAL);
     }
 
+    public TerminalString(String chars, boolean ignoreRendering) {
+        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, CharacterType.NORMAL);
+        this.ignoreRendering = ignoreRendering;
+    }
+
     public String getCharacters() {
         return characters;
+    }
+
+    public void setCharacters(String chars) {
+        this.characters = chars;
+    }
+
+    public boolean containSpaces() {
+        return characters.indexOf(Parser.SPACE_CHAR) > 0;
+    }
+
+    public void switchSpacesToEscapedSpaces() {
+       characters = Parser.switchSpacesToEscapedSpacesInWord(characters);
     }
 
     public CharacterType getType() {
@@ -56,10 +77,26 @@ public class TerminalString {
         return textColor;
     }
 
+    public int getANSILength() {
+        if(ignoreRendering)
+            return 0;
+        else
+            return ANSI.getStart().length() + 8 + ANSI.reset().length();
+    }
+
+    public TerminalString cloneRenderingAttributes(String chars) {
+        if(ignoreRendering)
+            return new TerminalString(chars, true);
+        else
+            return new TerminalString(chars, backgroundColor, textColor, type);
+    }
+
     /**
      * type, text color, background color
      */
     public String toString(TerminalString prev) {
+        if(ignoreRendering)
+            return characters;
         if(equalsIgnoreCharacter(prev))
             return characters;
         else {
@@ -81,6 +118,8 @@ public class TerminalString {
 
     @Override
     public String toString() {
+        if(ignoreRendering)
+            return characters;
         StringBuilder builder = new StringBuilder();
         builder.append(ANSI.getStart());
         builder.append(type.getValue()).append(';');
@@ -88,11 +127,29 @@ public class TerminalString {
         builder.append(this.getBackgroundColor().getValue());
         builder.append('m');
         builder.append(getCharacters());
+        builder.append(ANSI.reset());
         return builder.toString();
+    }
+
+    public void write(PrintStream out) {
+        if(ignoreRendering) {
+            out.print(characters);
+        }
+        else {
+            out.print(ANSI.getStart());
+            out.print(type.getValue());
+            out.print(';');
+            out.print(this.getTextColor().getValue());
+            out.print(';');
+            out.print(this.getBackgroundColor().getValue());
+            out.print('m');
+            out.print(getCharacters());
+        }
     }
 
     public boolean equalsIgnoreCharacter(TerminalString that) {
         if (type != that.type) return false;
+        if (ignoreRendering != that.ignoreRendering) return false;
         if (backgroundColor != that.backgroundColor) return false;
         if (textColor != that.textColor) return false;
 
@@ -105,6 +162,10 @@ public class TerminalString {
         if (!(o instanceof TerminalString)) return false;
 
         TerminalString that = (TerminalString) o;
+
+        if(ignoreRendering) {
+            return characters.equals(that.characters);
+        }
 
         if (backgroundColor != that.backgroundColor) return false;
         if (!characters.equals(that.characters)) return false;

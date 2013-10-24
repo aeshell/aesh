@@ -12,6 +12,8 @@ import org.jboss.aesh.cl.completer.NullOptionCompleter;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.converter.NullConverter;
+import org.jboss.aesh.cl.renderer.NullOptionRenderer;
+import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.NullValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
 
@@ -82,4 +84,9 @@ public @interface OptionGroup {
      * Define an activator for this option.
      */
     Class<? extends OptionActivator> activator() default NullActivator.class;
+
+    /**
+     * Define a renderer
+     */
+    Class<? extends OptionRenderer> renderer() default NullOptionRenderer.class;
 }

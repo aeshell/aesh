@@ -56,13 +56,13 @@ public class ParserGenerator {
                     processedCommand.addOption(o.shortName(), field.getName(), o.description(),
                             o.argument(), o.required(), ',', o.defaultValue(),
                             field.getType(), field.getName(), optionType, o.converter(),
-                            o.completer(), o.validator(), o.activator());
+                            o.completer(), o.validator(), o.activator(), o.renderer());
                 }
                 else {
                     processedCommand.addOption(o.shortName(), o.name(), o.description(),
                             o.argument(), o.required(), ',', o.defaultValue(),
                             field.getType(), field.getName(), optionType, o.converter(),
-                            o.completer(), o.validator(), o.activator());
+                            o.completer(), o.validator(), o.activator(), o.renderer());
                 }
 
             }
@@ -77,12 +77,12 @@ public class ParserGenerator {
                 if(ol.name() == null || ol.name().length() < 1) {
                     processedCommand.addOption(ol.shortName(), field.getName(), ol.description(), "",
                             ol.required(), ol.valueSeparator(), ol.defaultValue(), type, field.getName(), OptionType.LIST,
-                            ol.converter(), ol.completer(), ol.validator(), ol.activator());
+                            ol.converter(), ol.completer(), ol.validator(), ol.activator(), ol.renderer());
                 }
                 else {
                     processedCommand.addOption(ol.shortName(), ol.name(), ol.description(), "",
                             ol.required(), ol.valueSeparator(), ol.defaultValue(), type, field.getName(), OptionType.LIST,
-                            ol.converter(), ol.completer(), ol.validator(), ol.activator());
+                            ol.converter(), ol.completer(), ol.validator(), ol.activator(), ol.renderer());
                 }
             }
             else if((og = field.getAnnotation(OptionGroup.class)) != null) {
@@ -96,12 +96,12 @@ public class ParserGenerator {
                 if(og.name() == null || og.name().length() < 1) {
                     processedCommand.addOption(og.shortName(), field.getName(), og.description(),
                             "", og.required(), ',', og.defaultValue(), type, field.getName(), OptionType.GROUP,
-                            og.converter(), og.completer(), og.validator(), og.activator());
+                            og.converter(), og.completer(), og.validator(), og.activator(), og.renderer());
                 }
                 else {
                     processedCommand.addOption(og.shortName(), og.name(), og.description(),
                             "", og.required(), ',', og.defaultValue(), type, field.getName(), OptionType.GROUP,
-                            og.converter(), og.completer(), og.validator(), og.activator());
+                            og.converter(), og.completer(), og.validator(), og.activator(), og.renderer());
                 }
             }
 
@@ -116,7 +116,7 @@ public class ParserGenerator {
                 processedCommand.setArgument(
                         new ProcessedOption('\u0000',"", a.description(), "", false, a.valueSeparator(),
                                 a.defaultValue(), type, field.getName(), OptionType.ARGUMENT, a.converter(),
-                                a.completer(), a.validator(), null));
+                                a.completer(), a.validator(), null, null));
             }
         }
 

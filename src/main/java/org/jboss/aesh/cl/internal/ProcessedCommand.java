@@ -10,8 +10,10 @@ import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +69,7 @@ public final class ProcessedCommand {
         this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                 opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                 opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(), opt.getConverter(),
-                opt.getCompleter(), opt.getValidator(), opt.getActivator()));
+                opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer()));
     }
 
     /**
@@ -90,12 +92,13 @@ public final class ProcessedCommand {
                      Class<? extends CLConverter> converter,
                      Class<? extends OptionCompleter> completer,
                      Class<? extends OptionValidator> validator,
-                     Class<? extends OptionActivator> activator) throws OptionParserException {
+                     Class<? extends OptionActivator> activator,
+                     Class<? extends OptionRenderer> renderer) throws OptionParserException {
         List<String> defaultValues = new ArrayList<String>();
         defaultValues.addAll(Arrays.asList(defaultValue));
         options.add(new ProcessedOption(verifyThatNamesAreUnique(name, longName), longName, description,
                 argument, required, valueSeparator, defaultValues,
-                type, fieldName, optionType, converter, completer, validator, activator));
+                type, fieldName, optionType, converter, completer, validator, activator, renderer));
     }
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
@@ -103,7 +106,7 @@ public final class ProcessedCommand {
             this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                     opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                     opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(),
-                    opt.getConverter(), opt.getCompleter(), opt.getValidator(), opt.getActivator()));
+                    opt.getConverter(), opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer()));
         }
     }
 
@@ -215,24 +218,24 @@ public final class ProcessedCommand {
      * Return all option names that not already have a value
      * and is enabled
      */
-    public List<String> getOptionLongNamesWithDash() {
-        List<String> names = new ArrayList<String>(options.size());
+    public List<TerminalString> getOptionLongNamesWithDash() {
+        List<TerminalString> names = new ArrayList<TerminalString>(options.size());
         for(ProcessedOption o : options) {
             if(o.getValues().size() == 0 &&
                     o.getActivator().isActivated(this))
-                names.add("--"+o.getName());
+                names.add(o.getRenderedNameWithDashes());
         }
 
         return names;
     }
 
-    public List<String> findPossibleLongNamesWitdDash(String name) {
-        List<String> names = new ArrayList<String>(options.size());
+    public List<TerminalString> findPossibleLongNamesWitdDash(String name) {
+        List<TerminalString> names = new ArrayList<TerminalString>(options.size());
         for(ProcessedOption o : options) {
            if(((o.getShortName() != null && o.getShortName().equals(name) &&
                    !o.isLongNameUsed()) || o.getName().startsWith(name)) &&
                    o.getActivator().isActivated(this))
-               names.add("--"+o.getName());
+               names.add(o.getRenderedNameWithDashes());
         }
         return names;
     }

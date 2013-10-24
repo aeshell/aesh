@@ -14,6 +14,8 @@ import org.jboss.aesh.cl.converter.CLConverterManager;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.OptionType;
+import org.jboss.aesh.cl.renderer.NullOptionRenderer;
+import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.NullValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
 
@@ -44,6 +46,7 @@ public class OptionBuilder {
     private List<String> defaultValues;
     private OptionValidator validator;
     private OptionActivator activator;
+    private OptionRenderer renderer;
 
     public OptionBuilder() {
         defaultValues = new ArrayList<String>();
@@ -162,6 +165,11 @@ public class OptionBuilder {
         return this;
     }
 
+    public OptionBuilder renderer(OptionRenderer renderer) {
+        this.renderer = renderer;
+        return this;
+    }
+
     public ProcessedOption create() throws OptionParserException {
         if(optionType == null) {
             if(!hasValue)
@@ -192,8 +200,11 @@ public class OptionBuilder {
         if(activator == null)
             activator = new NullActivator();
 
+        if(renderer == null)
+            renderer = new NullOptionRenderer();
+
         return new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, defaultValues, type, fieldName, optionType, converter,
-                completer, validator, activator);
+                completer, validator, activator, renderer);
     }
 }

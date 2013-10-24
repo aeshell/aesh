@@ -39,7 +39,7 @@ public class CompleteOperationTest extends TestCase {
 
         co.removeEscapedSpacesFromCompletionCandidates();
 
-        assertEquals("foo bar", co.getCompletionCandidates().get(0));
-        assertEquals("foo bars", co.getCompletionCandidates().get(1));
+        assertEquals("foo bar", co.getCompletionCandidates().get(0).getCharacters());
+        assertEquals("foo bars", co.getCompletionCandidates().get(1).getCharacters());
     }
 }

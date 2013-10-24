@@ -7,6 +7,7 @@
 package org.jboss.aesh.cl.completer;
 
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,7 @@ import java.util.List;
  */
 public class CompleterData {
 
-    private List<String> completerValues;
+    private List<TerminalString> completerValues;
     private boolean appendSpace = true;
     private String completeValue;
     private Command command;
@@ -30,7 +31,7 @@ public class CompleterData {
     public CompleterData(String completeValue, Command command) {
         this.completeValue = completeValue;
         this.command = command;
-        completerValues = new ArrayList<String>();
+        completerValues = new ArrayList<TerminalString>();
     }
 
     public String getGivenCompleteValue() {
@@ -41,11 +42,16 @@ public class CompleterData {
         return command;
     }
 
-    public List<String> getCompleterValues() {
+    public List<TerminalString> getCompleterValues() {
         return completerValues;
     }
 
     public void setCompleterValues(List<String> completerValues) {
+        for(String s : completerValues)
+            this.completerValues.add(new TerminalString(s, true));
+    }
+
+    public void setCompleterValuesTerminalString(List<TerminalString> completerValues) {
         this.completerValues = completerValues;
     }
 
@@ -54,10 +60,15 @@ public class CompleterData {
     }
 
     public void addAllCompleterValues(List<String> completerValues) {
-        this.completerValues.addAll(completerValues);
+        for(String s : completerValues)
+            this.completerValues.add(new TerminalString(s, true));
     }
 
     public void addCompleterValue(String value) {
+        this.completerValues.add(new TerminalString(value, true));
+    }
+
+    public void addCompleterValueTerminalString(TerminalString value) {
         this.completerValues.add(value);
     }
 

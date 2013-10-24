@@ -9,6 +9,7 @@ package org.jboss.aesh.util;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.terminal.TerminalString;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -114,7 +115,7 @@ public class FileLister {
             else if(isCwdAndTokenAFile()) {
                 listPossibleDirectories(completion);
                 if(completion.getCompletionCandidates().size() == 1) {
-                    completion.getCompletionCandidates().set(0, "");
+                    completion.getCompletionCandidates().set(0, new TerminalString("", true));
                     //append when we have a file
                     completion.doAppendSeparator(true);
                 }
@@ -141,7 +142,7 @@ public class FileLister {
             else if(isTokenAFile()) {
                 listPossibleDirectories(completion);
                 if(completion.getCompletionCandidates().size() == 1) {
-                    completion.getCompletionCandidates().set(0, "");
+                    completion.getCompletionCandidates().set(0, new TerminalString("", true));
                     //completion.addCompletionCandidate("");
                     //append when we have a file
                     completion.doAppendSeparator(true);
@@ -155,7 +156,7 @@ public class FileLister {
 
         //try to find if more than one filename start with the same word
         if(completion.getCompletionCandidates().size() > 1) {
-            String startsWith = Parser.findStartsWith(completion.getCompletionCandidates());
+            String startsWith = Parser.findStartsWithTerminalString(completion.getCompletionCandidates());
             if(startsWith.contains(" "))
                 startsWith = Parser.switchEscapedSpacesToSpacesInWord(startsWith);
             if(startsWith != null && startsWith.length() > 0 && rest != null &&
@@ -168,24 +169,24 @@ public class FileLister {
         //new offset tweaking to match the "common" way of returning completions
         if(completion.getCompletionCandidates().size() == 1) {
             if(isTokenADirectory() && !tokenEndsWithSlash()) {
-                completion.getCompletionCandidates().set(0, token +
-                        completion.getCompletionCandidates().get(0));
+                completion.getCompletionCandidates().get(0).setCharacters( token +
+                        completion.getCompletionCandidates().get(0).getCharacters());
 
                 completion.setOffset(completion.getCursor()-token.length());
             }
             else if(isTokenAFile()) {
-                completion.getCompletionCandidates().set(0, token +
-                        completion.getCompletionCandidates().get(0));
+                completion.getCompletionCandidates().get(0).setCharacters( token +
+                        completion.getCompletionCandidates().get(0).getCharacters());
 
                 completion.setOffset(completion.getCursor()-token.length());
                 completion.doAppendSeparator(true);
             }
             else if(token != null) {
                 if(rest != null && token.length() > rest.length()) {
-                    completion.getCompletionCandidates().set(0,
+                    completion.getCompletionCandidates().get(0).setCharacters(
                             Parser.switchSpacesToEscapedSpacesInWord(
                             token.substring(0, token.length()-rest.length() )) +
-                                    completion.getCompletionCandidates().get(0));
+                                    completion.getCompletionCandidates().get(0).getCharacters());
 
                     completion.setOffset(completion.getCursor()-token.length());
                 }
@@ -194,8 +195,9 @@ public class FileLister {
                 }
                 else {
                     if(token.endsWith(Config.getPathSeparator()))
-                        completion.getCompletionCandidates().set(0, Parser.switchSpacesToEscapedSpacesInWord(token) +
-                                completion.getCompletionCandidates().get(0));
+                        completion.getCompletionCandidates().get(0).setCharacters(
+                                Parser.switchSpacesToEscapedSpacesInWord(token) +
+                                completion.getCompletionCandidates().get(0).getCharacters());
 
                     completion.setOffset(completion.getCursor()-token.length());
                 }

@@ -7,6 +7,7 @@
 package org.jboss.aesh.complete;
 
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ public class CompleteOperation {
     private String buffer;
     private int cursor;
     private int offset;
-    private List<String> completionCandidates;
+    private List<TerminalString> completionCandidates;
     private boolean trimmed = false;
     private int trimmedSize = 0;
     private String nonTrimmedBuffer;
@@ -33,7 +34,7 @@ public class CompleteOperation {
         setCursor(cursor);
         setSeparator(' ');
         doAppendSeparator(true);
-        completionCandidates = new ArrayList<String>();
+        completionCandidates = new ArrayList<TerminalString>();
         setBuffer(buffer);
     }
 
@@ -122,40 +123,82 @@ public class CompleteOperation {
         this.appendSeparator = appendSeparator;
     }
 
-    public List<String> getCompletionCandidates() {
+    public List<TerminalString> getCompletionCandidates() {
         return completionCandidates;
     }
 
     public void setCompletionCandidates(List<String> completionCandidates) {
+        addCompletionCandidates(completionCandidates);
+    }
+
+    public void setCompletionCandidatesTerminalString(List<TerminalString> completionCandidates) {
         this.completionCandidates = completionCandidates;
     }
 
-    public void addCompletionCandidate(String completionCandidate) {
+    public void addCompletionCandidate(TerminalString completionCandidate) {
         this.completionCandidates.add(completionCandidate);
     }
 
+    public void addCompletionCandidate(String completionCandidate) {
+        addStringCandidate(completionCandidate);
+    }
+
     public void addCompletionCandidates(List<String> completionCandidates) {
+        addStringCandidates(completionCandidates);
+    }
+
+    public void addCompletionCandidatesTerminalString(List<TerminalString> completionCandidates) {
         this.completionCandidates.addAll(completionCandidates);
     }
 
-    public void removeEscapedSpacesFromCompletionCandidates() {
-        setCompletionCandidates(Parser.switchEscapedSpacesToSpacesInList(getCompletionCandidates()));
+     public void removeEscapedSpacesFromCompletionCandidates() {
+        Parser.switchEscapedSpacesToSpacesInTerminalStringList(getCompletionCandidates());
+    }
+
+    private void addStringCandidate(String completionCandidate) {
+        this.completionCandidates.add(new TerminalString(completionCandidate, true));
+    }
+
+    private void addStringCandidates(List<String> completionCandidates) {
+        for(String s : completionCandidates)
+            addStringCandidate(s);
     }
 
     public List<String> getFormattedCompletionCandidates() {
-        if(offset < cursor) {
-            List<String> fixedCandidates = new ArrayList<String>(completionCandidates.size());
-            int pos = cursor - offset;
-            for(String c : completionCandidates) {
-                if(c.length() >= pos)
-                    fixedCandidates.add(c.substring(pos));
+        List<String> fixedCandidates = new ArrayList<String>(completionCandidates.size());
+        for(TerminalString c : completionCandidates) {
+            if(offset < cursor) {
+                int pos = cursor - offset;
+                if(c.getCharacters().length() >= pos)
+                    fixedCandidates.add(c.getCharacters().substring(pos));
                 else
                     fixedCandidates.add("");
             }
-            return fixedCandidates;
+            else {
+                fixedCandidates.add(c.getCharacters());
+            }
         }
-        else
-            return completionCandidates;
+        return fixedCandidates;
+    }
+
+    public List<TerminalString> getFormattedCompletionCandidatesTerminalString() {
+        List<TerminalString> fixedCandidates = new ArrayList<TerminalString>(completionCandidates.size());
+        for(TerminalString c : completionCandidates) {
+            if(offset < cursor) {
+                int pos = cursor - offset;
+                if(c.getCharacters().length() >= pos) {
+                    TerminalString ts = c;
+                    ts.setCharacters(c.getCharacters().substring(pos));
+                    fixedCandidates.add(ts);
+                }
+                else
+                    fixedCandidates.add(new TerminalString("", true));
+            }
+            else {
+                fixedCandidates.add(c);
+            }
+        }
+        return fixedCandidates;
     }
 
     public String getFormattedCompletion(String completion) {

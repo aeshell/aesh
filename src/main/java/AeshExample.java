@@ -17,6 +17,7 @@ import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.command.AeshCommandRegistryBuilder;
@@ -31,6 +32,8 @@ import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.terminal.CharacterType;
+import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.ANSI;
 
@@ -151,7 +154,7 @@ public class AeshExample {
         @Option(shortName = 'f', hasValue = false, description = "set foo to true/false")
         private Boolean foo;
 
-        @Option(hasValue = false, description = "set the bar")
+        @Option(hasValue = false, description = "set the bar", renderer = BlueBoldRenderer.class)
         private boolean bar;
 
         @Option(completer = LessCompleter.class, defaultValue = {"MORE"}, argument = "SIZE")
@@ -228,6 +231,24 @@ public class AeshExample {
                 return true;
             else
                 return false;
+        }
+    }
+
+    public static class BlueBoldRenderer implements OptionRenderer {
+
+        @Override
+        public Color getTextColor() {
+            return Color.BLUE_TEXT;
+        }
+
+        @Override
+        public Color getBackgroundColor() {
+            return Color.DEFAULT_BG;
+        }
+
+        @Override
+        public CharacterType getTextType() {
+            return CharacterType.BOLD;
         }
     }
 

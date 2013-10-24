@@ -16,6 +16,9 @@ import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.terminal.TerminalString;
+
+import java.util.List;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -161,29 +164,30 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 parser.parse(completeOperation.getBuffer(), true);
                 //we have partial/full name
                 if(completeObject.getName() != null && completeObject.getName().length() > 0) {
-                    if(parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName()).size() > 0) {
+                    List<TerminalString> optionNamesWithDash = parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName());
+                    if(optionNamesWithDash.size() > 0) {
                         //only one param
-                        if(parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName()).size() == 1) {
-
-                            completeOperation.addCompletionCandidate(
-                                    parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName()).get(0));
+                        if(optionNamesWithDash.size() == 1) {
+                            completeOperation.addCompletionCandidate( optionNamesWithDash.get(0));
                             completeOperation.setOffset( completeOperation.getCursor() - 2 - completeObject.getName().length());
                         }
                         //multiple params
                         else {
-                            completeOperation.addCompletionCandidates(parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName()));
+                            completeOperation.addCompletionCandidatesTerminalString(optionNamesWithDash);
                         }
 
                     }
                 }
                 else {
-                    if(parser.getCommand().getOptionLongNamesWithDash().size() > 1)
-                        completeOperation.addCompletionCandidates(parser.getCommand().getOptionLongNamesWithDash());
-                    else if(parser.getCommand().getOptionLongNamesWithDash().size() == 1) {
+                    List<TerminalString> optionNamesWithDash = parser.getCommand().getOptionLongNamesWithDash();
+
+                    if(optionNamesWithDash.size() > 1)
+                        completeOperation.addCompletionCandidatesTerminalString(optionNamesWithDash);
+                    else if(optionNamesWithDash.size() == 1) {
                         int count = 0;
                         while(completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length()-count).endsWith("-"))
                             count++;
-                        completeOperation.addCompletionCandidate(parser.getCommand().getOptionLongNamesWithDash().get(0));
+                        completeOperation.addCompletionCandidate(optionNamesWithDash.get(0));
                         completeOperation.setOffset( completeOperation.getCursor() - count);
                     }
 
@@ -214,7 +218,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             if(currentOption.getCompleter() != null) {
                 CompleterData completions = new CompleterData(completeObject.getValue(), command);
                 currentOption.getCompleter().complete(completions);
-                completeOperation.addCompletionCandidates(completions.getCompleterValues());
+                completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
@@ -224,9 +228,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
                     }
-                    if(completeOperation.getCompletionCandidates().get(0).indexOf(Parser.SPACE_CHAR) > 0)
-                        completeOperation.getCompletionCandidates().set(0,
-                                Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
+                    if(completeOperation.getCompletionCandidates().get(0).containSpaces())
+                        completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -235,7 +238,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             else if(currentOption.getDefaultValues().size() > 0) {
                 CompleterData completions = new CompleterData(completeObject.getValue(), command);
                 new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
-                completeOperation.addCompletionCandidates(completions.getCompleterValues());
+                completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
@@ -245,9 +248,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
                     }
-                    if(completeOperation.getCompletionCandidates().get(0).indexOf(Parser.SPACE_CHAR) > 0)
-                        completeOperation.getCompletionCandidates().set(0,
-                                Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
+                    if(completeOperation.getCompletionCandidates().get(0).containSpaces())
+                        completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -266,7 +268,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     parser.getCommand().getArgument().getCompleter() != null) {
                 CompleterData completions = new CompleterData(completeObject.getValue(), command);
                 parser.getCommand().getArgument().getCompleter().complete(completions);
-                completeOperation.addCompletionCandidates(completions.getCompleterValues());
+                completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
@@ -274,9 +276,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
                     }
-                    if(completeOperation.getCompletionCandidates().get(0).indexOf(Parser.SPACE_CHAR) > 0)
-                        completeOperation.getCompletionCandidates().set(0,
-                                Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
+                    if(completeOperation.getCompletionCandidates().get(0).containSpaces())
+                        completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
 
                     completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
@@ -286,7 +287,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     parser.getCommand().getArgument().getDefaultValues().size() > 0) {
                 CompleterData completions = new CompleterData(completeObject.getValue(), command);
                 new DefaultValueOptionCompleter( parser.getCommand().getArgument().getDefaultValues()).complete(completions);
-                completeOperation.addCompletionCandidates(completions.getCompleterValues());
+                completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
@@ -294,9 +295,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                         completeOperation.setOffset( completeOperation.getCursor() -
                                 (completeObject.getOffset() + Parser.findNumberOfSpacesInWord(completeObject.getValue())));
                     }
-                    if(completeOperation.getCompletionCandidates().get(0).indexOf(Parser.SPACE_CHAR) > 0)
-                        completeOperation.getCompletionCandidates().set(0,
-                                Parser.switchSpacesToEscapedSpacesInWord(completeOperation.getCompletionCandidates().get(0)));
+                    if(completeOperation.getCompletionCandidates().get(0).containSpaces())
+                        completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
 
                 }
                 completeOperation.doAppendSeparator( completions.isAppendSpace());

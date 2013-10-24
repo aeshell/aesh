@@ -16,9 +16,12 @@ import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.converter.CLConverterManager;
 import org.jboss.aesh.cl.converter.NullConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.renderer.NullOptionRenderer;
+import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.NullValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ReflectionUtil;
 
 import java.io.File;
@@ -58,18 +61,21 @@ public final class ProcessedOption {
     private OptionValidator validator;
     private boolean endsWithSeparator = false;
     private OptionActivator activator;
+    private OptionRenderer renderer;
 
      public ProcessedOption(char shortName, String name, String description,
                             String argument, boolean required, char valueSeparator,
                             List<String> defaultValue, Class<?> type, String fieldName,
                             OptionType optionType, CLConverter converter, OptionCompleter completer,
                             OptionValidator optionValidator,
-                            OptionActivator activator) throws OptionParserException {
+                            OptionActivator activator,
+                            OptionRenderer renderer) throws OptionParserException {
          this(shortName, name, description, argument, required, valueSeparator, defaultValue,
                  type, fieldName, optionType,
                  (Class<? extends CLConverter>) null,(Class<? extends OptionCompleter>) null,
                  (Class<? extends OptionValidator>) null,
-                 (Class<? extends OptionActivator>) null);
+                 (Class<? extends OptionActivator>) null,
+                 (Class<? extends OptionRenderer>) null);
          this.converter = converter;
          this.completer = completer;
          this.validator = optionValidator;
@@ -78,6 +84,8 @@ public final class ProcessedOption {
              this.validator = new NullValidator();
          if(this.activator == null)
              this.activator = new NullActivator();
+         //if(this.renderer == null)
+         //    this.renderer = new NullOptionRenderer();
      }
 
 
@@ -87,7 +95,7 @@ public final class ProcessedOption {
                            OptionType optionType, Class<? extends CLConverter> converter,
                            OptionCompleter completer) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, defaultValue,
-                type, fieldName, optionType, converter, null, null, null);
+                type, fieldName, optionType, converter, null, null, null, null);
         this.completer = completer;
     }
     public ProcessedOption(char shortName, String name, String description,
@@ -96,9 +104,10 @@ public final class ProcessedOption {
                            OptionType optionType, Class<? extends CLConverter> converter,
                            Class<? extends OptionCompleter> completer,
                            Class<? extends OptionValidator> optionValidator,
-                           Class<? extends OptionActivator> activator) throws OptionParserException {
+                           Class<? extends OptionActivator> activator,
+                           Class<? extends OptionRenderer> renderer) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, Arrays.asList(defaultValue),
-                type, fieldName, optionType, converter, completer, optionValidator, activator);
+                type, fieldName, optionType, converter, completer, optionValidator, activator, renderer);
     }
 
     public ProcessedOption(char shortName, String name, String description,
@@ -107,7 +116,8 @@ public final class ProcessedOption {
                            OptionType optionType, Class<? extends CLConverter> converter,
                            Class<? extends OptionCompleter> completer,
                            Class<? extends OptionValidator> optionValidator,
-                           Class<? extends OptionActivator> optionActivator) throws OptionParserException {
+                           Class<? extends OptionActivator> optionActivator,
+                           Class<? extends OptionRenderer> optionRenderer) throws OptionParserException {
         if(shortName != '\u0000')
             this.shortName = String.valueOf(shortName);
         this.name = name;
@@ -122,6 +132,7 @@ public final class ProcessedOption {
         this.completer = initCompleter(completer);
         this.validator = initValidator(optionValidator);
         this.activator = initActivator(optionActivator);
+        this.renderer = initRenderer(optionRenderer);
 
         this.defaultValues = new ArrayList<String>();
         if(defaultValue != null)
@@ -226,6 +237,13 @@ public final class ProcessedOption {
         return activator;
     }
 
+    /**
+     * might return null if render is not specified
+     */
+    public OptionRenderer getRenderer() {
+        return renderer;
+    }
+
     public boolean isLongNameUsed() {
         return longNameUsed;
     }
@@ -259,6 +277,14 @@ public final class ProcessedOption {
             return "-"+ shortName;
         else
             return null;
+    }
+
+    public TerminalString getRenderedNameWithDashes() {
+        if(renderer == null)
+            return new TerminalString("--"+name, true);
+        else
+            return new TerminalString("--"+name,
+                    renderer.getBackgroundColor(), renderer.getTextColor(), renderer.getTextType());
     }
 
     public int getFormattedLength() {
@@ -352,6 +378,13 @@ public final class ProcessedOption {
             return ReflectionUtil.newInstance(validator);
         else
             return new NullValidator();
+    }
+
+    private OptionRenderer initRenderer(Class<? extends OptionRenderer> renderer) {
+        if(renderer != null && renderer != NullOptionRenderer.class)
+            return ReflectionUtil.newInstance(renderer);
+        else
+            return null;
     }
 
     private Object doConvert(String inputValue,boolean doValidation) throws OptionValidatorException {
