@@ -27,6 +27,7 @@ import org.jboss.aesh.complete.CompletionRegistration;
 import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasCompletion;
 import org.jboss.aesh.console.alias.AliasManager;
+import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.command.InternalCommands;
 import org.jboss.aesh.console.helper.InterruptHandler;
@@ -493,7 +494,7 @@ public class Console {
 
                 //if we have a command hooked in the input goes there
                 if(command != null)
-                    command.processOperation(operation);
+                    command.processOperation(new CommandOperation(in));
                     //the input is parsed by æsh
                 else {
                     String result = parseOperation(operation, buffer.getPrompt().getMask());

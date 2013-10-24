@@ -10,12 +10,12 @@ import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
+import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalCharacter;
@@ -290,7 +290,7 @@ public class Example {
         }
 
         @Override
-        public void processOperation(Operation operation) throws IOException {
+        public void processOperation(CommandOperation operation) throws IOException {
             if(operation.getInput()[0] == 'q') {
                 console.out().print(ANSI.getMainBufferScreen());
                 attached = false;

@@ -6,8 +6,6 @@
  */
 package org.jboss.aesh.console.command;
 
-import org.jboss.aesh.edit.actions.Operation;
-
 import java.io.IOException;
 
 /**
@@ -24,7 +22,7 @@ public interface ConsoleCommand {
      * @param operation operation
      * @throws IOException stream
      */
-    void processOperation(Operation operation) throws IOException;
+    void processOperation(CommandOperation operation) throws IOException;
 
     /**
      * Returns true if the command should still be "attached" to the console.

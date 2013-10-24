@@ -15,6 +15,7 @@ import org.jboss.aesh.console.Config;
  */
 public enum Key {
 
+    UNKNOWN(new int[]{0}),
     CTRL_A(new int[]{1}),
     CTRL_B(new int[]{2}),
     CTRL_C(new int[]{3}),
@@ -256,7 +257,7 @@ public enum Key {
             if(key.equalTo(otherValues))
                 return key;
         }
-        return null;
+        return Key.UNKNOWN;
     }
 
     public boolean inputStartsWithKey(int[] input) {

@@ -24,13 +24,13 @@ import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandInvocation;
+import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.ANSI;
 
@@ -129,7 +129,7 @@ public class AeshExample {
         }
 
         @Override
-        public void processOperation(Operation operation) throws IOException {
+        public void processOperation(CommandOperation operation) throws IOException {
             if(operation.getInput()[0] == 'q') {
                 stop();
             }
