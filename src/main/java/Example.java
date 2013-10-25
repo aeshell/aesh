@@ -19,6 +19,7 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalCharacter;
+import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.terminal.TerminalTextStyle;
 import org.jboss.aesh.util.ANSI;
@@ -51,20 +52,20 @@ public class Example {
         //Settings.getInstance().setHistoryDisabled(true);
         //Settings.getInstance().setHistoryPersistent(false);
         List<TerminalCharacter> chars = new ArrayList<TerminalCharacter>();
-        chars.add(new TerminalCharacter('[', Color.DEFAULT_BG, Color.BLUE_TEXT));
-        chars.add(new TerminalCharacter('t', Color.DEFAULT_BG, Color.RED_TEXT,
+        chars.add(new TerminalCharacter('[', new TerminalColor(Color.BLUE, Color.DEFAULT)));
+        chars.add(new TerminalCharacter('t', new TerminalColor(Color.RED, Color.DEFAULT),
                 CharacterType.ITALIC));
-        chars.add(new TerminalCharacter('e', Color.DEFAULT_BG, Color.RED_TEXT,
+        chars.add(new TerminalCharacter('e', new TerminalColor(Color.RED, Color.DEFAULT),
                 CharacterType.INVERT));
-        chars.add(new TerminalCharacter('s', Color.DEFAULT_BG, Color.RED_TEXT,
+        chars.add(new TerminalCharacter('s', new TerminalColor(Color.RED, Color.DEFAULT),
                 CharacterType.CROSSED_OUT));
-        chars.add(new TerminalCharacter('t', Color.DEFAULT_BG ,Color.RED_TEXT,
+        chars.add(new TerminalCharacter('t', new TerminalColor(Color.RED ,Color.DEFAULT),
                 CharacterType.BOLD));
-        chars.add(new TerminalCharacter(']', Color.DEFAULT_BG, Color.BLUE_TEXT,
+        chars.add(new TerminalCharacter(']', new TerminalColor(Color.BLUE, Color.DEFAULT),
                 CharacterType.FAINT));
-        chars.add(new TerminalCharacter('$', Color.DEFAULT_BG, Color.GREEN_TEXT,
+        chars.add(new TerminalCharacter('$', new TerminalColor(Color.GREEN, Color.DEFAULT),
                 CharacterType.UNDERLINE));
-        chars.add(new TerminalCharacter(' ', Color.DEFAULT_BG, Color.DEFAULT_TEXT));
+        chars.add(new TerminalCharacter(' ', new TerminalColor(Color.DEFAULT, Color.DEFAULT)));
 
         final Prompt prompt = new Prompt(chars);
         //String prompt = ANSI.redText()+"[test@foo]"+ANSI.reset()+"$ ";
@@ -230,8 +231,7 @@ public class Example {
         try {
             Thread.sleep(4000);
             exampleConsole.setPrompt(new Prompt(
-                    new TerminalString("[FOO]» ", Color.DEFAULT_BG, Color.RED_TEXT, new TerminalTextStyle(CharacterType.BOLD))));
-            //exampleConsole.pushToStdOut(new TerminalString("PUSHING", Color.DEFAULT_BG, Color.BLUE_TEXT).toString());
+                    new TerminalString("[FOO]» ", new TerminalColor( Color.RED, Color.DEFAULT), new TerminalTextStyle(CharacterType.BOLD))));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

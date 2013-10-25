@@ -19,33 +19,30 @@ import java.io.PrintStream;
 public class TerminalString {
 
     private String characters;
-    private Color backgroundColor;
-    private Color textColor;
     private TerminalTextStyle style;
+    private TerminalColor color;
     private boolean ignoreRendering;
 
-    public TerminalString(String chars, Color backgroundColor, Color textColor,
-                          TerminalTextStyle style) {
+    public TerminalString(String chars, TerminalColor color, TerminalTextStyle style) {
         this.characters = chars;
+        this.color = color;
         this.style = style;
-        this.backgroundColor = backgroundColor;
-        this.textColor = textColor;
     }
 
-    public TerminalString(String chars, Color backgroundColor, Color textColor) {
-        this(chars, backgroundColor, textColor, new TerminalTextStyle());
+    public TerminalString(String chars, TerminalColor color) {
+        this(chars, color, new TerminalTextStyle());
     }
 
     public TerminalString(String chars, TerminalTextStyle style) {
-        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, style);
+        this(chars, new TerminalColor(), style);
     }
 
     public TerminalString(String chars) {
-        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, new TerminalTextStyle());
+        this(chars, new TerminalColor(), new TerminalTextStyle());
     }
 
     public TerminalString(String chars, boolean ignoreRendering) {
-        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, new TerminalTextStyle());
+        this(chars, new TerminalColor(), new TerminalTextStyle());
         this.ignoreRendering = ignoreRendering;
     }
 
@@ -69,26 +66,18 @@ public class TerminalString {
         return style;
     }
 
-    public Color getBackgroundColor() {
-        return backgroundColor;
-    }
-
-    public Color getTextColor() {
-        return textColor;
-    }
-
     public int getANSILength() {
         if(ignoreRendering)
             return 0;
         else
-            return ANSI.getStart().length() + 8 + ANSI.reset().length();
+            return ANSI.getStart().length() + color.getLength() + style.getLength() + ANSI.reset().length();
     }
 
     public TerminalString cloneRenderingAttributes(String chars) {
         if(ignoreRendering)
             return new TerminalString(chars, true);
         else
-            return new TerminalString(chars, backgroundColor, textColor, style);
+            return new TerminalString(chars, color, style);
     }
 
     /**
@@ -101,15 +90,17 @@ public class TerminalString {
             return characters;
         else {
             StringBuilder builder = new StringBuilder();
-            builder.append(ANSI.getStart());
-            builder.append(style.getValueComparedToPrev(prev.getStyle()));
-            if(this.getTextColor() != prev.getTextColor() || prev.getStyle().isInvert())
-                builder.append(';').append(this.getTextColor().getValue());
-            if(this.getBackgroundColor() != prev.getBackgroundColor() || prev.getStyle().isInvert())
-                builder.append(';').append(this.getBackgroundColor().getValue());
+            builder.append(ANSI.getStart())
+                    .append(style.getValueComparedToPrev(prev.getStyle()));
 
-            builder.append('m');
-            builder.append(getCharacters());
+            if(!this.color.equals(prev.color)) {
+                if(prev.getStyle().isInvert())
+                    builder.append(';').append(this.color.toString());
+                else
+                    builder.append(';').append(this.color.toString(prev.color));
+            }
+
+            builder.append('m').append(getCharacters());
             return builder.toString();
         }
     }
@@ -119,14 +110,14 @@ public class TerminalString {
         if(ignoreRendering)
             return characters;
         StringBuilder builder = new StringBuilder();
-        builder.append(ANSI.getStart());
-        builder.append(style.toString()).append(';');
-        builder.append(this.getTextColor().getValue()).append(';');
-        builder.append(this.getBackgroundColor().getValue());
-        builder.append('m');
-        builder.append(getCharacters());
-        //reset it to plain
-        builder.append(ANSI.reset());
+        builder.append(ANSI.getStart())
+                .append(style.toString())
+                .append(';')
+                .append(this.color.toString())
+                .append('m')
+                .append(getCharacters())
+                        //reset it to plain
+                .append(ANSI.reset());
         return builder.toString();
     }
 
@@ -138,9 +129,7 @@ public class TerminalString {
             out.print(ANSI.getStart());
             out.print(style.toString());
             out.print(';');
-            out.print(this.getTextColor().getValue());
-            out.print(';');
-            out.print(this.getBackgroundColor().getValue());
+            this.color.write(out);
             out.print('m');
             out.print(getCharacters());
         }
@@ -149,8 +138,7 @@ public class TerminalString {
     public boolean equalsIgnoreCharacter(TerminalString that) {
         if (style != that.style) return false;
         if (ignoreRendering != that.ignoreRendering) return false;
-        if (backgroundColor != that.backgroundColor) return false;
-        if (textColor != that.textColor) return false;
+        if (!color.equals(that.color)) return false;
 
         return true;
     }
@@ -166,9 +154,8 @@ public class TerminalString {
             return characters.equals(that.characters);
         }
 
-        if (backgroundColor != that.backgroundColor) return false;
         if (!characters.equals(that.characters)) return false;
-        if (textColor != that.textColor) return false;
+        if (!color.equals(that.color)) return false;
         if (style != that.style) return false;
 
         return true;
@@ -177,8 +164,7 @@ public class TerminalString {
     @Override
     public int hashCode() {
         int result = characters.hashCode();
-        result = 31 * result + backgroundColor.hashCode();
-        result = 31 * result + textColor.hashCode();
+        result = 31 * result + color.hashCode();
         result = 31 * result + style.hashCode();
         return result;
     }

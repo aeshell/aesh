@@ -6,7 +6,7 @@
  */
 package org.jboss.aesh.cl.renderer;
 
-import org.jboss.aesh.terminal.Color;
+import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalTextStyle;
 
 /**
@@ -14,15 +14,11 @@ import org.jboss.aesh.terminal.TerminalTextStyle;
  */
 public class NullOptionRenderer implements OptionRenderer {
     private static TerminalTextStyle style = new TerminalTextStyle();
+    private static TerminalColor color = new TerminalColor();
 
     @Override
-    public Color getTextColor() {
-        return Color.DEFAULT_TEXT;
-    }
-
-    @Override
-    public Color getBackgroundColor() {
-        return Color.DEFAULT_BG;
+    public TerminalColor getColor() {
+        return color;
     }
 
     @Override

@@ -16,35 +16,31 @@ import org.jboss.aesh.util.ANSI;
 public class TerminalCharacter {
 
     private char character;
-    private Color backgroundColor;
-    private Color textColor;
     private TerminalTextStyle style;
+    private TerminalColor color;
 
     public TerminalCharacter(char c) {
         this(c, new TerminalTextStyle());
     }
 
     public TerminalCharacter(char c, TerminalTextStyle style) {
+        this(c, new TerminalColor(), style);
+    }
+
+    public TerminalCharacter(char c, TerminalColor color) {
+        this(c, color, new TerminalTextStyle());
+    }
+
+    public TerminalCharacter(char c, TerminalColor color,
+                             CharacterType type) {
+        this(c, color, new TerminalTextStyle(type));
+    }
+
+    public TerminalCharacter(char c, TerminalColor color,
+                             TerminalTextStyle style) {
         this.character = c;
         this.style = style;
-        textColor = Color.DEFAULT_TEXT;
-        backgroundColor = Color.DEFAULT_BG;
-    }
-
-    public TerminalCharacter(char c, Color background, Color text) {
-        this(c,background, text, new TerminalTextStyle());
-    }
-
-    public TerminalCharacter(char c, Color background, Color text,
-                             CharacterType type) {
-        this(c, background, text, new TerminalTextStyle(type));
-    }
-
-    public TerminalCharacter(char c, Color background, Color text,
-                             TerminalTextStyle style) {
-        this(c, style);
-        this.backgroundColor = background;
-        this.textColor = text;
+        this.color = color;
     }
 
     public char getCharacter() {
@@ -53,14 +49,6 @@ public class TerminalCharacter {
 
     public TerminalTextStyle getStyle() {
         return style;
-    }
-
-    public Color getBackgroundColor() {
-        return backgroundColor;
-    }
-
-    public Color getTextColor() {
-        return textColor;
     }
 
     /**
@@ -73,12 +61,12 @@ public class TerminalCharacter {
             StringBuilder builder = new StringBuilder();
             builder.append(ANSI.getStart());
             builder.append(style.getValueComparedToPrev(prev.getStyle()));
-            if(this.getTextColor() != prev.getTextColor() ||
-                    prev.getStyle().isInvert())
-                builder.append(';').append(this.getTextColor().getValue());
-            if(this.getBackgroundColor() != prev.getBackgroundColor() ||
-                    prev.getStyle().isInvert())
-                builder.append(';').append(this.getBackgroundColor().getValue());
+            if(!this.color.equals(prev.color)) {
+                if(prev.getStyle().isInvert())
+                    builder.append(';').append(this.color.toString());
+                else
+                    builder.append(';').append(this.color.toString(prev.color));
+            }
 
             builder.append('m');
             builder.append(getCharacter());
@@ -91,8 +79,7 @@ public class TerminalCharacter {
         StringBuilder builder = new StringBuilder();
         builder.append(ANSI.getStart());
         builder.append(style.toString()).append(';');
-        builder.append(this.getTextColor().getValue()).append(';');
-        builder.append(this.getBackgroundColor().getValue());
+        builder.append(this.color.toString());
         builder.append('m');
         builder.append(getCharacter());
         return builder.toString();
@@ -100,8 +87,7 @@ public class TerminalCharacter {
 
     public boolean equalsIgnoreCharacter(TerminalCharacter that) {
         if (style != that.style) return false;
-        if (backgroundColor != that.backgroundColor) return false;
-        if (textColor != that.textColor) return false;
+        if (!color.equals(that.color)) return false;
 
         return true;
     }
@@ -115,8 +101,7 @@ public class TerminalCharacter {
 
         if (style != that.style) return false;
         if (character != that.character) return false;
-        if (backgroundColor != that.backgroundColor) return false;
-        if (textColor != that.textColor) return false;
+        if (!color.equals(that.color)) return false;
 
         return true;
     }
@@ -124,8 +109,7 @@ public class TerminalCharacter {
     @Override
     public int hashCode() {
         int result = (int) character;
-        result = 31 * result + backgroundColor.hashCode();
-        result = 31 * result + textColor.hashCode();
+        result = 31 * result + color.hashCode();
         result = 31 * result + style.hashCode();
         return result;
     }

@@ -18,8 +18,8 @@ public class TerminalCharacterTest {
 
         assertEquals(ANSI.getStart()+
                 CharacterType.BOLD.getValue()+";"+
-                Color.DEFAULT_TEXT.getValue()+";"+
-                Color.DEFAULT_BG.getValue()+
+                3+ Color.DEFAULT.getValue()+";"+
+                4+Color.DEFAULT.getValue()+
                 "mc",
                 character.toString());
     }
@@ -30,18 +30,18 @@ public class TerminalCharacterTest {
 
         assertEquals(ANSI.getStart() +
                 CharacterType.BOLD.getValue() + ";" +
-                Color.DEFAULT_TEXT.getValue() + ";" +
-                Color.DEFAULT_BG.getValue() +
+                3+Color.DEFAULT.getValue() + ";" +
+                4+Color.DEFAULT.getValue() +
                 "mc",
                 c1.toString());
 
-        TerminalCharacter c2 = new TerminalCharacter('f', Color.DEFAULT_BG, Color.BLUE_TEXT,
+        TerminalCharacter c2 = new TerminalCharacter('f', new TerminalColor(Color.DEFAULT, Color.BLUE),
                 new TerminalTextStyle(CharacterType.CROSSED_OUT));
 
          assertEquals(ANSI.getStart() +
                  BOLD_OFF + ";" +
                 CharacterType.CROSSED_OUT.getValue() + ";" +
-                Color.BLUE_TEXT.getValue() +
+                4+Color.BLUE.getValue() +
                 "mf",
                 c2.toString(c1));
 

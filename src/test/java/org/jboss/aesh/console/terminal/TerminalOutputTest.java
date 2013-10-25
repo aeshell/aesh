@@ -13,6 +13,7 @@ import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
+import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.terminal.TerminalTextStyle;
 import org.junit.Test;
@@ -36,7 +37,8 @@ public class TerminalOutputTest extends BaseConsoleTest {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
         Console console = getTestConsole(pipedInputStream);
-        console.setPrompt(new Prompt(new TerminalString("[test]", Color.BLACK_BG, Color.WHITE_TEXT, new TerminalTextStyle(CharacterType.FAINT))));
+        console.setPrompt(new Prompt(new TerminalString("[test]", new TerminalColor(Color.WHITE, Color.BLACK),
+                new TerminalTextStyle(CharacterType.FAINT))));
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
             public int readConsoleOutput(ConsoleOperation output) throws IOException {

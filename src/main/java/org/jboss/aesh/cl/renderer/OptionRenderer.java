@@ -6,7 +6,7 @@
  */
 package org.jboss.aesh.cl.renderer;
 
-import org.jboss.aesh.terminal.Color;
+import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalTextStyle;
 
 /**
@@ -14,9 +14,7 @@ import org.jboss.aesh.terminal.TerminalTextStyle;
  */
 public interface OptionRenderer {
 
-    Color getTextColor();
-
-    Color getBackgroundColor();
+    TerminalColor getColor();
 
     TerminalTextStyle getTextType();
 }

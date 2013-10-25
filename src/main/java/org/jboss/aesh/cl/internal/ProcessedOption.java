@@ -283,8 +283,7 @@ public final class ProcessedOption {
         if(renderer == null)
             return new TerminalString("--"+name, true);
         else
-            return new TerminalString("--"+name,
-                    renderer.getBackgroundColor(), renderer.getTextColor(), renderer.getTextType());
+            return new TerminalString("--"+name, renderer.getColor(), renderer.getTextType());
     }
 
     public int getFormattedLength() {

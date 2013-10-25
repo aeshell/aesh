@@ -11,24 +11,15 @@ package org.jboss.aesh.terminal;
  */
 public enum Color {
 
-    DEFAULT_TEXT(39),
-    BLACK_TEXT(30),
-    RED_TEXT(31),
-    GREEN_TEXT(32),
-    YELLOW_TEXT(33),
-    BLUE_TEXT(34),
-    MAGENTA_TEXT(35),
-    CYAN_TEXT(36),
-    WHITE_TEXT(37),
-    DEFAULT_BG(49),
-    BLACK_BG(40),
-    RED_BG(41),
-    GREEN_BG(42),
-    YELLOW_BG(43),
-    BLUE_BG(44),
-    MAGENTA_BG(45),
-    CYAN_BG(46),
-    WHITE_BG(47);
+    BLACK(0),
+    RED(1),
+    GREEN(2),
+    YELLOW(3),
+    BLUE(4),
+    MAGENTA(5),
+    CYAN(6),
+    WHITE(7),
+    DEFAULT(9);
 
     private int value;
 
@@ -38,5 +29,30 @@ public enum Color {
 
     public int getValue() {
         return value;
+    }
+
+    public enum Intensity {
+        NORMAL,
+        BRIGHT;
+
+        public int getValue(Type type) {
+            if(this == NORMAL) {
+                if(type == Type.FOREGROUND)
+                    return 3;
+                else
+                    return 4;
+            }
+            else {
+               if(type == Type.FOREGROUND)
+                   return 9;
+                else
+                   return 10;
+            }
+        }
+    }
+
+    public enum Type {
+        FOREGROUND, // 3
+        BACKGROUND // 4
     }
 }

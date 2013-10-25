@@ -35,6 +35,7 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Shell;
+import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalTextStyle;
 import org.jboss.aesh.util.ANSI;
 
@@ -246,15 +247,11 @@ public class AeshExample {
     public static class BlueBoldRenderer implements OptionRenderer {
 
         private static TerminalTextStyle style = new TerminalTextStyle(CharacterType.UNDERLINE);
+        private static TerminalColor color = new TerminalColor(42, Color.DEFAULT);
 
         @Override
-        public Color getTextColor() {
-            return Color.BLUE_TEXT;
-        }
-
-        @Override
-        public Color getBackgroundColor() {
-            return Color.DEFAULT_BG;
+        public TerminalColor getColor() {
+            return color;
         }
 
         @Override

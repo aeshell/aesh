@@ -25,6 +25,8 @@ public class TerminalTextStyle {
     private boolean crossedOut;
     private boolean conceal;
 
+    private int length = -1;
+
     private static byte BOLD_OFF = 22;
     private static byte ITALIC_OFF = 23;
     private static byte UNDERLINE_OFF = 24;
@@ -170,7 +172,16 @@ public class TerminalTextStyle {
             builder.append(CharacterType.CONCEAL.getValue());
         }
 
+        if(length < 0)
+            length = builder.length();
+
         return builder.toString();
+    }
+
+    public int getLength() {
+        if(length < 0)
+            toString();
+        return length;
     }
 
     @Override
