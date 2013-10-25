@@ -6,13 +6,15 @@
  */
 package org.jboss.aesh.cl.renderer;
 
-import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
+import org.jboss.aesh.terminal.TerminalTextStyle;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class NullOptionRenderer implements OptionRenderer {
+    private static TerminalTextStyle style = new TerminalTextStyle();
+
     @Override
     public Color getTextColor() {
         return Color.DEFAULT_TEXT;
@@ -24,7 +26,7 @@ public class NullOptionRenderer implements OptionRenderer {
     }
 
     @Override
-    public CharacterType getTextType() {
-        return CharacterType.NORMAL;
+    public TerminalTextStyle getTextType() {
+        return style;
     }
 }

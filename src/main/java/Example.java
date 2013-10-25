@@ -20,6 +20,7 @@ import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalCharacter;
 import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.terminal.TerminalTextStyle;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.IOException;
@@ -60,7 +61,7 @@ public class Example {
         chars.add(new TerminalCharacter('t', Color.DEFAULT_BG ,Color.RED_TEXT,
                 CharacterType.BOLD));
         chars.add(new TerminalCharacter(']', Color.DEFAULT_BG, Color.BLUE_TEXT,
-                CharacterType.PLAIN));
+                CharacterType.FAINT));
         chars.add(new TerminalCharacter('$', Color.DEFAULT_BG, Color.GREEN_TEXT,
                 CharacterType.UNDERLINE));
         chars.add(new TerminalCharacter(' ', Color.DEFAULT_BG, Color.DEFAULT_TEXT));
@@ -229,7 +230,7 @@ public class Example {
         try {
             Thread.sleep(4000);
             exampleConsole.setPrompt(new Prompt(
-                    new TerminalString("[FOO]» ", Color.DEFAULT_BG, Color.RED_TEXT, CharacterType.BOLD)));
+                    new TerminalString("[FOO]» ", Color.DEFAULT_BG, Color.RED_TEXT, new TerminalTextStyle(CharacterType.BOLD))));
             //exampleConsole.pushToStdOut(new TerminalString("PUSHING", Color.DEFAULT_BG, Color.BLUE_TEXT).toString());
         } catch (InterruptedException e) {
             e.printStackTrace();

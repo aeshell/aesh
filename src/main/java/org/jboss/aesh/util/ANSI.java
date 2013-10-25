@@ -44,7 +44,7 @@ public class ANSI {
             InfocmpManager.invertBackground() : "\u001B[7m";
     private static String NORMAL_BACKGROUND = Config.isOSPOSIXCompatible() ?
             InfocmpManager.normalBackground() : "\u001B[27m";
-    private static String RESET = "\u001B[0;0m";
+    private static String RESET = "\u001B[0m";
     private static String BOLD = Config.isOSPOSIXCompatible() ?
             InfocmpManager.enableBold() : "\u001B[0;1m";
     private static String BOLD_OFF = "\u001B[0;22m";

@@ -18,26 +18,31 @@ public class TerminalCharacter {
     private char character;
     private Color backgroundColor;
     private Color textColor;
-    private CharacterType type;
+    private TerminalTextStyle style;
 
     public TerminalCharacter(char c) {
-        this(c, CharacterType.NORMAL);
+        this(c, new TerminalTextStyle());
     }
 
-    public TerminalCharacter(char c, CharacterType type) {
+    public TerminalCharacter(char c, TerminalTextStyle style) {
         this.character = c;
-        this.type = type;
+        this.style = style;
         textColor = Color.DEFAULT_TEXT;
         backgroundColor = Color.DEFAULT_BG;
     }
 
     public TerminalCharacter(char c, Color background, Color text) {
-        this(c,background, text, CharacterType.NORMAL);
+        this(c,background, text, new TerminalTextStyle());
     }
 
     public TerminalCharacter(char c, Color background, Color text,
                              CharacterType type) {
-        this(c, type);
+        this(c, background, text, new TerminalTextStyle(type));
+    }
+
+    public TerminalCharacter(char c, Color background, Color text,
+                             TerminalTextStyle style) {
+        this(c, style);
         this.backgroundColor = background;
         this.textColor = text;
     }
@@ -46,8 +51,8 @@ public class TerminalCharacter {
         return character;
     }
 
-    public CharacterType getType() {
-        return type;
+    public TerminalTextStyle getStyle() {
+        return style;
     }
 
     public Color getBackgroundColor() {
@@ -59,7 +64,7 @@ public class TerminalCharacter {
     }
 
     /**
-     * type, text color, background color
+     * style, text color, background color
      */
     public String toString(TerminalCharacter prev) {
         if(equalsIgnoreCharacter(prev))
@@ -67,12 +72,12 @@ public class TerminalCharacter {
         else {
             StringBuilder builder = new StringBuilder();
             builder.append(ANSI.getStart());
-            builder.append(type.getValueComparedToPrev(prev.getType()));
+            builder.append(style.getValueComparedToPrev(prev.getStyle()));
             if(this.getTextColor() != prev.getTextColor() ||
-                    prev.getType() == CharacterType.INVERT)
+                    prev.getStyle().isInvert())
                 builder.append(';').append(this.getTextColor().getValue());
             if(this.getBackgroundColor() != prev.getBackgroundColor() ||
-                    prev.getType() == CharacterType.INVERT)
+                    prev.getStyle().isInvert())
                 builder.append(';').append(this.getBackgroundColor().getValue());
 
             builder.append('m');
@@ -85,7 +90,7 @@ public class TerminalCharacter {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(ANSI.getStart());
-        builder.append(type.getValue()).append(';');
+        builder.append(style.toString()).append(';');
         builder.append(this.getTextColor().getValue()).append(';');
         builder.append(this.getBackgroundColor().getValue());
         builder.append('m');
@@ -94,7 +99,7 @@ public class TerminalCharacter {
     }
 
     public boolean equalsIgnoreCharacter(TerminalCharacter that) {
-        if (type != that.type) return false;
+        if (style != that.style) return false;
         if (backgroundColor != that.backgroundColor) return false;
         if (textColor != that.textColor) return false;
 
@@ -108,7 +113,7 @@ public class TerminalCharacter {
 
         TerminalCharacter that = (TerminalCharacter) o;
 
-        if (type != that.type) return false;
+        if (style != that.style) return false;
         if (character != that.character) return false;
         if (backgroundColor != that.backgroundColor) return false;
         if (textColor != that.textColor) return false;
@@ -121,7 +126,7 @@ public class TerminalCharacter {
         int result = (int) character;
         result = 31 * result + backgroundColor.hashCode();
         result = 31 * result + textColor.hashCode();
-        result = 31 * result + type.hashCode();
+        result = 31 * result + style.hashCode();
         return result;
     }
 

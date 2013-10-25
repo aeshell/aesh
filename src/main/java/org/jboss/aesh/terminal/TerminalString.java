@@ -21,31 +21,31 @@ public class TerminalString {
     private String characters;
     private Color backgroundColor;
     private Color textColor;
-    private CharacterType type;
+    private TerminalTextStyle style;
     private boolean ignoreRendering;
 
     public TerminalString(String chars, Color backgroundColor, Color textColor,
-                          CharacterType type) {
+                          TerminalTextStyle style) {
         this.characters = chars;
-        this.type = type;
+        this.style = style;
         this.backgroundColor = backgroundColor;
         this.textColor = textColor;
     }
 
     public TerminalString(String chars, Color backgroundColor, Color textColor) {
-        this(chars, backgroundColor, textColor, CharacterType.NORMAL);
+        this(chars, backgroundColor, textColor, new TerminalTextStyle());
     }
 
-    public TerminalString(String chars, CharacterType type) {
-        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, type);
+    public TerminalString(String chars, TerminalTextStyle style) {
+        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, style);
     }
 
     public TerminalString(String chars) {
-        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, CharacterType.NORMAL);
+        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, new TerminalTextStyle());
     }
 
     public TerminalString(String chars, boolean ignoreRendering) {
-        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, CharacterType.NORMAL);
+        this(chars, Color.DEFAULT_BG, Color.DEFAULT_TEXT, new TerminalTextStyle());
         this.ignoreRendering = ignoreRendering;
     }
 
@@ -65,8 +65,8 @@ public class TerminalString {
        characters = Parser.switchSpacesToEscapedSpacesInWord(characters);
     }
 
-    public CharacterType getType() {
-        return type;
+    public TerminalTextStyle getStyle() {
+        return style;
     }
 
     public Color getBackgroundColor() {
@@ -88,11 +88,11 @@ public class TerminalString {
         if(ignoreRendering)
             return new TerminalString(chars, true);
         else
-            return new TerminalString(chars, backgroundColor, textColor, type);
+            return new TerminalString(chars, backgroundColor, textColor, style);
     }
 
     /**
-     * type, text color, background color
+     * style, text color, background color
      */
     public String toString(TerminalString prev) {
         if(ignoreRendering)
@@ -102,12 +102,10 @@ public class TerminalString {
         else {
             StringBuilder builder = new StringBuilder();
             builder.append(ANSI.getStart());
-            builder.append(type.getValueComparedToPrev(prev.getType()));
-            if(this.getTextColor() != prev.getTextColor() ||
-                    prev.getType() == CharacterType.INVERT)
+            builder.append(style.getValueComparedToPrev(prev.getStyle()));
+            if(this.getTextColor() != prev.getTextColor() || prev.getStyle().isInvert())
                 builder.append(';').append(this.getTextColor().getValue());
-            if(this.getBackgroundColor() != prev.getBackgroundColor() ||
-                    prev.getType() == CharacterType.INVERT)
+            if(this.getBackgroundColor() != prev.getBackgroundColor() || prev.getStyle().isInvert())
                 builder.append(';').append(this.getBackgroundColor().getValue());
 
             builder.append('m');
@@ -122,11 +120,12 @@ public class TerminalString {
             return characters;
         StringBuilder builder = new StringBuilder();
         builder.append(ANSI.getStart());
-        builder.append(type.getValue()).append(';');
+        builder.append(style.toString()).append(';');
         builder.append(this.getTextColor().getValue()).append(';');
         builder.append(this.getBackgroundColor().getValue());
         builder.append('m');
         builder.append(getCharacters());
+        //reset it to plain
         builder.append(ANSI.reset());
         return builder.toString();
     }
@@ -137,7 +136,7 @@ public class TerminalString {
         }
         else {
             out.print(ANSI.getStart());
-            out.print(type.getValue());
+            out.print(style.toString());
             out.print(';');
             out.print(this.getTextColor().getValue());
             out.print(';');
@@ -148,7 +147,7 @@ public class TerminalString {
     }
 
     public boolean equalsIgnoreCharacter(TerminalString that) {
-        if (type != that.type) return false;
+        if (style != that.style) return false;
         if (ignoreRendering != that.ignoreRendering) return false;
         if (backgroundColor != that.backgroundColor) return false;
         if (textColor != that.textColor) return false;
@@ -170,7 +169,7 @@ public class TerminalString {
         if (backgroundColor != that.backgroundColor) return false;
         if (!characters.equals(that.characters)) return false;
         if (textColor != that.textColor) return false;
-        if (type != that.type) return false;
+        if (style != that.style) return false;
 
         return true;
     }
@@ -180,7 +179,7 @@ public class TerminalString {
         int result = characters.hashCode();
         result = 31 * result + backgroundColor.hashCode();
         result = 31 * result + textColor.hashCode();
-        result = 31 * result + type.hashCode();
+        result = 31 * result + style.hashCode();
         return result;
     }
 

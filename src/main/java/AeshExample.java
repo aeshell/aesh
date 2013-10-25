@@ -35,6 +35,7 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Shell;
+import org.jboss.aesh.terminal.TerminalTextStyle;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.File;
@@ -57,6 +58,12 @@ public class AeshExample {
                         .addDefaultValue("en 1 0")
                         .addDefaultValue("to 2 0")
                         .fieldName("bar")
+                        .type(String.class)
+                        .renderer(new BlueBoldRenderer())
+                        .create())
+                .addOption(new OptionBuilder()
+                        .name("foo")
+                        .fieldName("foo")
                         .type(String.class)
                         .create())
                 .generateParameter();
@@ -91,6 +98,8 @@ public class AeshExample {
     public static class FooCommand implements Command {
 
         private String bar;
+
+        private String foo;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
@@ -236,6 +245,8 @@ public class AeshExample {
 
     public static class BlueBoldRenderer implements OptionRenderer {
 
+        private static TerminalTextStyle style = new TerminalTextStyle(CharacterType.UNDERLINE);
+
         @Override
         public Color getTextColor() {
             return Color.BLUE_TEXT;
@@ -247,8 +258,8 @@ public class AeshExample {
         }
 
         @Override
-        public CharacterType getTextType() {
-            return CharacterType.BOLD;
+        public TerminalTextStyle getTextType() {
+            return style;
         }
     }
 

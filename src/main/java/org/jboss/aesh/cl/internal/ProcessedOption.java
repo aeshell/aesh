@@ -84,8 +84,8 @@ public final class ProcessedOption {
              this.validator = new NullValidator();
          if(this.activator == null)
              this.activator = new NullActivator();
-         //if(this.renderer == null)
-         //    this.renderer = new NullOptionRenderer();
+         if(renderer != null)
+             this.renderer = renderer;
      }
 
 

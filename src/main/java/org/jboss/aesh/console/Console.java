@@ -931,6 +931,7 @@ public class Console {
     }
 
     private void displayPrompt(Prompt prompt) throws IOException {
+        logger.info("prompt: _"+prompt.getANSI()+"_");
         if(prompt.hasANSI()) {
             out().print(ANSI.getStart() + "0G" + ANSI.getStart() + "2K");
             out().print(prompt.getANSI());

@@ -1,19 +1,20 @@
 package org.jboss.aesh.terminal;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.util.ANSI;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class TerminalCharacterTest extends TestCase {
+public class TerminalCharacterTest {
 
-    public TerminalCharacterTest(String name) {
-        super(name);
-    }
+    private static byte BOLD_OFF = 22;
 
+    @Test
     public void testTerminalCharacterAsString() {
-        TerminalCharacter character = new TerminalCharacter('c', CharacterType.BOLD);
+        TerminalCharacter character = new TerminalCharacter('c', new TerminalTextStyle(CharacterType.BOLD));
 
         assertEquals(ANSI.getStart()+
                 CharacterType.BOLD.getValue()+";"+
@@ -22,4 +23,29 @@ public class TerminalCharacterTest extends TestCase {
                 "mc",
                 character.toString());
     }
+
+    @Test
+    public void testPrevCharacterAsString() {
+        TerminalCharacter c1 = new TerminalCharacter('c', new TerminalTextStyle(CharacterType.BOLD));
+
+        assertEquals(ANSI.getStart() +
+                CharacterType.BOLD.getValue() + ";" +
+                Color.DEFAULT_TEXT.getValue() + ";" +
+                Color.DEFAULT_BG.getValue() +
+                "mc",
+                c1.toString());
+
+        TerminalCharacter c2 = new TerminalCharacter('f', Color.DEFAULT_BG, Color.BLUE_TEXT,
+                new TerminalTextStyle(CharacterType.CROSSED_OUT));
+
+         assertEquals(ANSI.getStart() +
+                 BOLD_OFF + ";" +
+                CharacterType.CROSSED_OUT.getValue() + ";" +
+                Color.BLUE_TEXT.getValue() +
+                "mf",
+                c2.toString(c1));
+
+    }
+
+
 }

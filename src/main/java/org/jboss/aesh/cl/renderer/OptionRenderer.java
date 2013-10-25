@@ -6,8 +6,8 @@
  */
 package org.jboss.aesh.cl.renderer;
 
-import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
+import org.jboss.aesh.terminal.TerminalTextStyle;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -18,5 +18,5 @@ public interface OptionRenderer {
 
     Color getBackgroundColor();
 
-    CharacterType getTextType();
+    TerminalTextStyle getTextType();
 }
