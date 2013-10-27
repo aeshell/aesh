@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl.converter;
 
+import org.jboss.aesh.cl.validator.OptionValidatorException;
+
 /**
  * A Command line converter
  * All implementations must have a public constructor with no arguments.
@@ -13,5 +15,5 @@ package org.jboss.aesh.cl.converter;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface CLConverter<T> {
-    T convert(String input);
+    T convert(String input) throws OptionValidatorException;
 }
