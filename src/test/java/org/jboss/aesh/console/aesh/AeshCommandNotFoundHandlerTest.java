@@ -1,19 +1,14 @@
 package org.jboss.aesh.console.aesh;
 
-import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.cl.validator.CommandValidator;
-import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.AeshCommandRegistryBuilder;
-import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandInvocation;
 import org.jboss.aesh.console.command.CommandRegistry;
-import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
@@ -27,10 +22,10 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandValidatorTest {
+public class AeshCommandNotFoundHandlerTest {
 
     @Test
-    public void testCommandValidator() throws IOException, InterruptedException {
+    public void testCommandNotFoundHandler() throws InterruptedException, IOException {
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -43,12 +38,12 @@ public class AeshCommandValidatorTest {
                 .create();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(FooCommand.class)
                 .create();
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
                 .settings(settings)
                 .commandRegistry(registry)
+                .commandNotFoundHandler(new HandlerCommandNotFound())
                 .prompt(new Prompt(""));
 
         AeshConsole aeshConsole = consoleBuilder.create();
@@ -56,41 +51,17 @@ public class AeshCommandValidatorTest {
 
         outputStream.write(("foo -l 12 -h 20\n").getBytes());
         Thread.sleep(100);
-        assertTrue(byteArrayOutputStream.toString().contains("Sum of high and"));
+        assertTrue(byteArrayOutputStream.toString().contains("DUUUUDE"));
 
         aeshConsole.stop();
 
     }
 
-    @CommandDefinition(name = "foo", description = "blah", validator = FooCommandValidator.class)
-    public static class FooCommand implements Command {
-
-        @Option(shortName = 'l')
-        private int low;
-        @Option(shortName = 'h')
-        private int high;
+    public static class HandlerCommandNotFound implements CommandNotFoundHandler {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
-            commandInvocation.getShell().out().println("you got foooed");
-            return CommandResult.SUCCESS;
-        }
-
-        public int getLow() {
-            return low;
-        }
-
-        public int getHigh() {
-            return high;
-        }
-    }
-
-    public static class FooCommandValidator implements CommandValidator {
-        @Override
-        public void validate(Command command) throws CommandValidatorException {
-            FooCommand foo = (FooCommand) command;
-            if(foo.getHigh() + foo.getLow() < 42)
-                throw new CommandValidatorException("Sum of high and low must be over 42!");
+        public void handleCommandNotFound(String line, Shell shell) {
+            shell.out().println("DUUUUDE, where is your command?");
         }
     }
 }

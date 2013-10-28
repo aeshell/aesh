@@ -11,6 +11,7 @@ import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.reader.AeshPrintStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
+import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.terminal.Shell;
 
 /**
@@ -86,4 +87,6 @@ public interface AeshConsole {
     void setCurrentCommandInvocationProvider(String name);
 
     void registerCommandInvocationProvider(String name, CommandInvocationProvider commandInvocationProvider);
+
+    void registerCommandNotFoundHandler(CommandNotFoundHandler handler);
 }

@@ -29,6 +29,7 @@ import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.reader.AeshPrintStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
+import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.LoggerUtil;
@@ -45,11 +46,14 @@ public class AeshConsoleImpl implements AeshConsole {
 
     private Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
     private String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
+    private CommandNotFoundHandler commandNotFoundHandler;
 
     AeshConsoleImpl(Settings settings, CommandRegistry registry,
-                    CommandInvocationServices commandInvocationServices) {
+                    CommandInvocationServices commandInvocationServices,
+                    CommandNotFoundHandler commandNotFoundHandler) {
         this.registry = registry;
         this.commandInvocationServices = commandInvocationServices;
+        this.commandNotFoundHandler = commandNotFoundHandler;
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallback(this));
         console.addCompletion(new AeshCompletion());
@@ -151,6 +155,11 @@ public class AeshConsoleImpl implements AeshConsole {
         commandInvocationServices.registerProvider(name, commandInvocationProvider);
     }
 
+    @Override
+    public void registerCommandNotFoundHandler(CommandNotFoundHandler handler) {
+        commandNotFoundHandler = handler;
+    }
+
     public String getBuffer() {
         if(console != null)
             return console.getBuffer();
@@ -189,6 +198,8 @@ public class AeshConsoleImpl implements AeshConsole {
                     logger.warning(e.getMessage());
                 }
                 catch (CommandNotFoundException ignored) {
+                    if(commandNotFoundHandler != null)
+                        commandNotFoundHandler.handleCommandNotFound(completeOperation.getBuffer(), getShell());
                 }
                 catch (Exception ex) {
                     logger.log(Level.SEVERE, "Runtime exception when completing: "+completeOperation, ex);
@@ -225,7 +236,12 @@ public class AeshConsoleImpl implements AeshConsole {
                     result = CommandResult.FAILURE;
                 }
                 catch (CommandNotFoundException e) {
-                    console.out().print("Command not found: " + Parser.findFirstWord(output.getBuffer()) + Config.getLineSeparator());
+                    if(commandNotFoundHandler != null) {
+                        commandNotFoundHandler.handleCommandNotFound(output.getBuffer(), getShell());
+                    }
+                    else {
+                        console.out().print("Command not found: " + Parser.findFirstWord(output.getBuffer()) + Config.getLineSeparator());
+                    }
                     result = CommandResult.FAILURE;
                 }
                 catch (OptionValidatorException e) {
