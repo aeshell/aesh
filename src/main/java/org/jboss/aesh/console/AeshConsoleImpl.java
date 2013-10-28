@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
@@ -213,6 +214,8 @@ public class AeshConsoleImpl implements AeshConsole {
                             Parser.findFirstWord(output.getBuffer()), output.getBuffer());
                     commandContainer.getParser().getCommandPopulator().populateObject(commandContainer.getCommand(),
                             commandContainer.getParser().parse(output.getBuffer()));
+                    //validate the command before execute
+                    commandContainer.getParser().getCommand().getValidator().validate(commandContainer.getCommand());
                     result = commandContainer.getCommand().execute(
                             commandInvocationServices.getCommandInvocationProvider(commandInvocationProvider)
                                     .enhanceCommandInvocation(new AeshCommandInvocation(console, output.getControlOperator())));
@@ -226,6 +229,10 @@ public class AeshConsoleImpl implements AeshConsole {
                     result = CommandResult.FAILURE;
                 }
                 catch (OptionValidatorException e) {
+                    console.out().println(e.getMessage());
+                    result = CommandResult.FAILURE;
+                }
+                catch(CommandValidatorException e) {
                     console.out().println(e.getMessage());
                     result = CommandResult.FAILURE;
                 }

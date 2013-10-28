@@ -6,6 +6,9 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.validator.CommandValidator;
+import org.jboss.aesh.cl.validator.NullCommandValidator;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -22,4 +25,6 @@ public @interface CommandDefinition {
     String name();
 
     String description();
+
+    Class<? extends CommandValidator> validator() default NullCommandValidator.class;
 }

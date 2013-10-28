@@ -11,9 +11,12 @@ import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.CLConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
+import org.jboss.aesh.cl.validator.CommandValidator;
+import org.jboss.aesh.cl.validator.NullCommandValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.util.ReflectionUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,13 +29,22 @@ public final class ProcessedCommand {
 
     private String name;
     private String usage;
+    private CommandValidator validator;
 
     private List<ProcessedOption> options;
     private ProcessedOption argument;
 
-    public ProcessedCommand(String name, String usage) {
+    public ProcessedCommand(String name, String usage, CommandValidator validator) {
         setName(name);
         setUsage(usage);
+        setValidator(validator);
+        options = new ArrayList<ProcessedOption>();
+    }
+
+    public ProcessedCommand(String name, String usage,Class<? extends CommandValidator> validator) {
+        setName(name);
+        setUsage(usage);
+        setValidator(initValidator(validator));
         options = new ArrayList<ProcessedOption>();
     }
 
@@ -43,19 +55,11 @@ public final class ProcessedCommand {
         options = new ArrayList<ProcessedOption>();
     }
 
-    public ProcessedCommand(String name, String usage,
-                            ProcessedOption argument, ProcessedOption[] options) throws OptionParserException {
-        setName(name);
-        setUsage(usage);
-        this.argument = argument;
-        this.options = new ArrayList<ProcessedOption>();
-        setOptions(Arrays.asList(options));
-    }
-
-    public ProcessedCommand(String name, String usage,
+    public ProcessedCommand(String name, String usage, CommandValidator validator,
                             ProcessedOption argument, List<ProcessedOption> options) throws OptionParserException {
         setName(name);
         setUsage(usage);
+        setValidator(validator);
         this.argument = argument;
         this.options = new ArrayList<ProcessedOption>();
         setOptions(options);
@@ -114,7 +118,7 @@ public final class ProcessedCommand {
         return name;
     }
 
-    public void setName(String name) {
+    private void setName(String name) {
         this.name = name;
     }
 
@@ -122,8 +126,23 @@ public final class ProcessedCommand {
         return usage;
     }
 
-    public void setUsage(String usage) {
+    private void setUsage(String usage) {
         this.usage = usage;
+    }
+
+    private CommandValidator initValidator(Class<? extends CommandValidator> validator) {
+        if(validator != null && validator != NullCommandValidator.class)
+            return ReflectionUtil.newInstance(validator);
+        else
+            return new NullCommandValidator();
+    }
+
+    public CommandValidator getValidator() {
+        return validator;
+    }
+
+    private void setValidator(CommandValidator validator) {
+        this.validator = validator;
     }
 
     public boolean hasArgument() {

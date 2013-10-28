@@ -15,6 +15,7 @@ import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
+import org.jboss.aesh.cl.validator.NullCommandValidator;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -113,7 +114,7 @@ public class BuilderTest extends TestCase {
     }
 
     public void testParameterInt() throws OptionParserException {
-        ProcessedCommand processedCommand = new ProcessedCommand("foo", "");
+        ProcessedCommand processedCommand = new ProcessedCommand("foo", "", NullCommandValidator.class);
         processedCommand.addOption(new OptionBuilder().name("foo1").shortName('f').type(String.class).create());
         processedCommand.addOption(new OptionBuilder().name("foo2").shortName('o').type(String.class).create());
         processedCommand.addOption(new OptionBuilder().name("foo3").shortName('3').type(String.class).create());
