@@ -931,7 +931,6 @@ public class Console {
     }
 
     private void displayPrompt(Prompt prompt) throws IOException {
-        logger.info("prompt: _"+prompt.getANSI()+"_");
         if(prompt.hasANSI()) {
             out().print(ANSI.getStart() + "0G" + ANSI.getStart() + "2K");
             out().print(prompt.getANSI());
@@ -1118,61 +1117,70 @@ public class Console {
         //need to clear more than one line
         if(line.length() > getInternalShell().getSize().getWidth() ||
                 (line.length()+ Math.abs(buffer.getDelta()) > getInternalShell().getSize().getWidth())) {
-
-            int currentRow = 0;
-            if(buffer.getCursorWithPrompt() > 0)
-                currentRow = buffer.getCursorWithPrompt() / getInternalShell().getSize().getWidth();
-            if(currentRow > 0 && buffer.getCursorWithPrompt() % getInternalShell().getSize().getWidth() == 0)
-                currentRow--;
-
-            if(settings.isLogging()) {
-                logger.info("actual position: "+ getInternalShell().getCursor());
-                logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
-                        +", width:"+ getInternalShell().getSize().getWidth()+", height:"+ getInternalShell().getSize().getHeight()
-                        +", delta:"+buffer.getDelta() +", buffer:"+buffer.getLine());
-            }
-
-            out().print(ANSI.saveCursor()); //save cursor
-
-            if(currentRow > 0)
-                for(int i=0; i<currentRow; i++)
-                    out().print(Buffer.printAnsi("A")); //move to top
-
-            out().print(Buffer.printAnsi("0G")); //clear
-
-            if(!buffer.isPromptDisabled())
-                displayPrompt();
-            out().print(buffer.getLine());
-            //if the current line.length < compared to previous we add spaces to the end
-            // to overwrite the old chars (wtb a better way of doing this)
-            if(buffer.getDelta() < 0) {
-                StringBuilder sb = new StringBuilder();
-                for(int i=0; i > buffer.getDelta(); i--)
-                    sb.append(' ');
-                out().print(sb.toString());
-            }
-
-            // move cursor to saved pos
-            out().print(ANSI.restoreCursor());
+            if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length())
+                redrawMultipleLinesBackspace();
+            else
+                redrawMultipleLines();
         }
         // only clear the current line
         else {
             //most deletions are backspace from the end of the line so we've
             //optimize that like this.
             //NOTE: this doesnt work with history, need to find a better solution
-            /*
             if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length()) {
-                getInternalShell().writeToStdOut(' ' + ANSI.getStart() + "1D"); //move cursor to left
+                out().print(Parser.SPACE_CHAR + ANSI.getStart() + "1D"); //move cursor to left
             }
-            */
-            //save cursor, move the cursor to the beginning, reset line
-            out().print(resetLineAndSetCursorToStart);
-            if(!buffer.isPromptDisabled())
-                displayPrompt();
-            //write line and restore cursor
-            out().print(buffer.getLine()+ANSI.restoreCursor());
+            else {
+                //save cursor, move the cursor to the beginning, reset line
+                out().print(resetLineAndSetCursorToStart);
+                if(!buffer.isPromptDisabled())
+                    displayPrompt();
+                //write line and restore cursor
+                out().print(buffer.getLine()+ANSI.restoreCursor());
+            }
         }
         out().flush();
+    }
+
+    private void redrawMultipleLines() throws IOException {
+        int currentRow = 0;
+        if(buffer.getCursorWithPrompt() > 0)
+            currentRow = buffer.getCursorWithPrompt() / getInternalShell().getSize().getWidth();
+        if(currentRow > 0 && buffer.getCursorWithPrompt() % getInternalShell().getSize().getWidth() == 0)
+            currentRow--;
+
+        if(settings.isLogging()) {
+            logger.info("actual position: "+ getInternalShell().getCursor());
+            logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
+                    +", width:"+ getInternalShell().getSize().getWidth()+", height:"+ getInternalShell().getSize().getHeight()
+                    +", delta:"+buffer.getDelta() +", buffer:"+buffer.getLine());
+        }
+
+        out().print(ANSI.saveCursor()); //save cursor
+
+        if(currentRow > 0)
+            for(int i=0; i<currentRow; i++)
+                out().print(Buffer.printAnsi("A")); //move to top
+
+        out().print(Buffer.printAnsi("0G")); //clear
+
+        if(!buffer.isPromptDisabled())
+            displayPrompt();
+        out().print(buffer.getLine());
+        //if the current line.length < compared to previous we add spaces to the end
+        // to overwrite the old chars (wtb a better way of doing this)
+        if(buffer.getDelta() < 0) {
+            StringBuilder sb = new StringBuilder();
+            for(int i=0; i > buffer.getDelta(); i--)
+                sb.append(' ');
+            out().print(sb.toString());
+        }
+
+        // move cursor to saved pos
+        out().print(ANSI.restoreCursor());
+    }
+    private void redrawMultipleLinesBackspace() {
+        out().print(Parser.SPACE_CHAR + ANSI.getStart() + "1D"); //move cursor to left
     }
 
     private void printSearch(String searchTerm, String result) throws IOException {
