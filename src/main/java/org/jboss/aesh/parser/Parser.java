@@ -140,9 +140,9 @@ public class Parser {
         }
         else {
             for(TerminalString ts : displayList) {
-                String ansi = ts.toString();
-                completionOutput.append(padRight(ansi.length()+2, ansi));
+                completionOutput.append(ts.toString()+"  ");
             }
+            completionOutput.append(Config.getLineSeparator());
         }
 
         return completionOutput.toString();
