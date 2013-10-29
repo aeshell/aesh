@@ -14,6 +14,8 @@ import org.jboss.aesh.terminal.TerminalString;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -23,6 +25,7 @@ import java.util.regex.Pattern;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class FileLister {
+    private static final char DOT = '.';
     private static final Pattern startsWithParent = Pattern.compile("^\\.\\..*");
     private static final Pattern startsWithHomePattern = Pattern.compile("^~/*");
     private static final Pattern containParent = Config.isOSPOSIXCompatible() ?
@@ -38,6 +41,7 @@ public class FileLister {
     private String rest;
     private String lastDir;
     private FileFilter fileFilter;
+    private Comparator fileComparator;
 
     public FileLister(String token, File cwd) {
         if(token == null)
@@ -49,10 +53,19 @@ public class FileLister {
         findRestAndLastDir();
         setFileFilter(Filter.ALL);
     }
+    public FileLister(String token, File cwd, Comparator comparator) {
+        this(token, cwd);
+        this.fileComparator = comparator;
+    }
 
     public FileLister(String token, File cwd, Filter filter) {
         this(token, cwd);
         setFileFilter(filter);
+    }
+
+    public FileLister(String token, File cwd, Filter filter, Comparator fileComparator) {
+        this(token, cwd, filter);
+        this.fileComparator = fileComparator;
     }
 
     public FileLister(String token, File cwd, FileFilter fileFilter) {
@@ -60,13 +73,20 @@ public class FileLister {
         this.fileFilter = fileFilter;
     }
 
+    public FileLister(String token, File cwd, FileFilter fileFilter, Comparator fileComparator) {
+        this(token, cwd, fileFilter);
+        this.fileComparator = fileComparator;
+    }
+
     private void setFileFilter(Filter filter) {
         if(filter == Filter.ALL)
             fileFilter = new FileAndDirectoryFilter();
         else if(filter == Filter.FILE)
             fileFilter = new OnlyFileFilter();
-        else
+        else if(filter == Filter.DIRECTORY)
             fileFilter = new DirectoryFileFilter();
+        else
+            fileFilter = new FileAndDirectoryNoDotNamesFilter();
     }
 
     /**
@@ -317,6 +337,9 @@ public class FileLister {
             }
         }
 
+        if(fileComparator == null)
+            fileComparator = new PosixFileNameComparator();
+        Collections.sort(fileNames, fileComparator);
         return fileNames;
     }
 
@@ -332,26 +355,54 @@ public class FileLister {
 
     class DirectoryFileFilter implements FileFilter {
         @Override
-        public boolean accept(File pathname) {
-            return pathname.isDirectory();
+        public boolean accept(File pathName) {
+            return pathName.isDirectory();
         }
     }
 
     class FileAndDirectoryFilter implements FileFilter {
         @Override
-        public boolean accept(File pathname) {
-            return pathname.isDirectory() || pathname.isFile();
+        public boolean accept(File pathName) {
+            return pathName.isDirectory() || pathName.isFile();
         }
     }
 
     //love this name :)
     class OnlyFileFilter implements FileFilter {
         @Override
-        public boolean accept(File pathname) {
-            return pathname.isFile();
+        public boolean accept(File pathName) {
+            return pathName.isFile();
         }
     }
 
-    public enum Filter { FILE,DIRECTORY,ALL}
+    class FileAndDirectoryNoDotNamesFilter implements FileFilter {
+        @Override
+        public boolean accept(File pathname) {
+            return !pathname.getName().startsWith(".");
+        }
+    }
 
+    public enum Filter { FILE,DIRECTORY,ALL,NO_DOT_NAMES}
+
+    class PosixFileNameComparator implements Comparator<String> {
+        @Override
+        public int compare(String o1, String o2) {
+            if(o1.length() > 1 && o2.length() > 1) {
+                if(o1.indexOf(DOT) == 0) {
+                    if(o2.indexOf(DOT) == 0)
+                        return o1.substring(1).compareToIgnoreCase(o2.substring(1));
+                    else
+                        return o1.substring(1).compareToIgnoreCase(o2);
+                }
+                else {
+                    if(o2.indexOf(DOT) == 0)
+                        return o1.compareToIgnoreCase(o2.substring(1));
+                    else
+                        return o1.compareToIgnoreCase(o2);
+                }
+            }
+            else
+                return 0;
+        }
+    }
 }
