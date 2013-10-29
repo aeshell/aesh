@@ -123,18 +123,26 @@ public class Parser {
         if(numRows * numColumns < displayList.size())
             numRows++;
 
-        // build the completion listing
         StringBuilder completionOutput = new StringBuilder();
-        for(int i=0; i < numRows; i++) {
-            for(int c=0; c < numColumns; c++) {
-                int fetch = i + (c * numRows);
-                if(fetch < displayList.size())
-                    completionOutput.append(padRight(maxLength+displayList.get(i + (c * numRows)).getANSILength(),
-                            displayList.get(i + (c * numRows)).toString())) ;
-                else
-                    break;
+        if(numRows > 1) {
+            // build the completion listing
+            for(int i=0; i < numRows; i++) {
+                for(int c=0; c < numColumns; c++) {
+                    int fetch = i + (c * numRows);
+                    if(fetch < displayList.size())
+                        completionOutput.append(padRight(maxLength+displayList.get(i + (c * numRows)).getANSILength(),
+                                displayList.get(i + (c * numRows)).toString())) ;
+                    else
+                        break;
+                }
+                completionOutput.append(Config.getLineSeparator());
             }
-            completionOutput.append(Config.getLineSeparator());
+        }
+        else {
+            for(TerminalString ts : displayList) {
+                String ansi = ts.toString();
+                completionOutput.append(padRight(ansi.length()+2, ansi));
+            }
         }
 
         return completionOutput.toString();

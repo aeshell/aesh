@@ -22,6 +22,7 @@ public class TerminalString {
     private TerminalTextStyle style;
     private TerminalColor color;
     private boolean ignoreRendering;
+    private int ansiLength = 0;
 
     public TerminalString(String chars, TerminalColor color, TerminalTextStyle style) {
         this.characters = chars;
@@ -69,8 +70,12 @@ public class TerminalString {
     public int getANSILength() {
         if(ignoreRendering)
             return 0;
-        else
-            return ANSI.getStart().length() + color.getLength() + style.getLength() + ANSI.reset().length();
+        else {
+            if (ansiLength == 0)
+                ansiLength = ANSI.getStart().length() + color.getLength() +
+                        style.getLength() + ANSI.reset().length() +2 ; // ; + m
+            return ansiLength;
+        }
     }
 
     public TerminalString cloneRenderingAttributes(String chars) {

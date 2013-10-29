@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Helper class to list possible files during a complete operation.
@@ -26,15 +25,8 @@ import java.util.regex.Pattern;
  */
 public class FileLister {
     private static final char DOT = '.';
-    private static final Pattern startsWithParent = Pattern.compile("^\\.\\..*");
-    private static final Pattern startsWithHomePattern = Pattern.compile("^~/*");
-    private static final Pattern containParent = Config.isOSPOSIXCompatible() ?
-            Pattern.compile("[\\.\\.["+ Config.getPathSeparator()+"]?]+") : Pattern.compile("[\\.\\.[\\\\]?]+");
-    private static final Pattern space = Pattern.compile(".+\\s+.+");
-    private static final Pattern startsWithSlash = Config.isOSPOSIXCompatible() ?
-            Pattern.compile("^\\"+Config.getPathSeparator()+".*") : Pattern.compile("^\\\\.*");
-    private static final Pattern endsWithSlash = Config.isOSPOSIXCompatible() ?
-            Pattern.compile(".*\\"+Config.getPathSeparator()+"$") : Pattern.compile(".*\\\\$");
+    private static final String home = "~/";
+    private static final String parent = "..";
 
     private String token;
     private File cwd;
@@ -129,7 +121,11 @@ public class FileLister {
                                     Config.getPathSeparator()+token), null));
                 }
                 else {
-                   completion.addCompletionCandidates( listDirectory(cwd, token));
+                     List<String> tmpDirs = listDirectory(cwd, token);
+                    if(tmpDirs.size() == 1 || endsWithParent())
+                        completion.addCompletionCandidate( Config.getPathSeparator());
+                    else
+                        completion.addCompletionCandidates( tmpDirs);
                 }
             }
             else if(isCwdAndTokenAFile()) {
@@ -301,20 +297,20 @@ public class FileLister {
                 token.substring(1)).isFile();
     }
 
-    private boolean startWithParent() {
-        return startsWithParent.matcher(token).matches();
+    private boolean endsWithParent() {
+        return token.lastIndexOf(parent) == token.length()-2;
     }
 
     private boolean startWithHome() {
-        return token.startsWith("~/");
+        return token.indexOf(home) == 0;
     }
 
     private boolean startWithSlash() {
-        return startsWithSlash.matcher(token).matches();
+        return token.indexOf(Config.getPathSeparator()) == 0;
     }
 
     private boolean tokenEndsWithSlash() {
-        return endsWithSlash.matcher(token).matches();
+        return token.lastIndexOf(Config.getPathSeparator()) == token.length()-1;
     }
 
     private List<String> listDirectory(File path, String rest) {
@@ -353,14 +349,14 @@ public class FileLister {
                 '}';
     }
 
-    class DirectoryFileFilter implements FileFilter {
+    public static class DirectoryFileFilter implements FileFilter {
         @Override
         public boolean accept(File pathName) {
             return pathName.isDirectory();
         }
     }
 
-    class FileAndDirectoryFilter implements FileFilter {
+    public static class FileAndDirectoryFilter implements FileFilter {
         @Override
         public boolean accept(File pathName) {
             return pathName.isDirectory() || pathName.isFile();
@@ -368,14 +364,14 @@ public class FileLister {
     }
 
     //love this name :)
-    class OnlyFileFilter implements FileFilter {
+    public static class OnlyFileFilter implements FileFilter {
         @Override
         public boolean accept(File pathName) {
             return pathName.isFile();
         }
     }
 
-    class FileAndDirectoryNoDotNamesFilter implements FileFilter {
+    public static class FileAndDirectoryNoDotNamesFilter implements FileFilter {
         @Override
         public boolean accept(File pathname) {
             return !pathname.getName().startsWith(".");
@@ -384,7 +380,7 @@ public class FileLister {
 
     public enum Filter { FILE,DIRECTORY,ALL,NO_DOT_NAMES}
 
-    class PosixFileNameComparator implements Comparator<String> {
+    public static class PosixFileNameComparator implements Comparator<String> {
         @Override
         public int compare(String o1, String o2) {
             if(o1.length() > 1 && o2.length() > 1) {
