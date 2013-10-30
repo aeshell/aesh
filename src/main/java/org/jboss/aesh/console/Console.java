@@ -267,7 +267,7 @@ public class Console {
         startReader();
     }
 
-    public AeshPrintStream out() {
+    private AeshPrintStream out() {
         //if redirection enabled, put it into a buffer
         if(currentOperation != null &&
                 currentOperation.getControlOperator().isRedirectionOut()) {
@@ -277,7 +277,7 @@ public class Console {
         }
     }
 
-    public AeshPrintStream err(){
+    private AeshPrintStream err(){
         //if redirection enabled, put it into a buffer
         if(currentOperation != null &&
                 currentOperation.getControlOperator().isRedirectionErr()) {
@@ -288,7 +288,7 @@ public class Console {
     }
 
     //TODO:
-    public AeshStandardStream in() {
+    private AeshStandardStream in() {
         return standardStream;
     }
 
@@ -1150,10 +1150,10 @@ public class Console {
             currentRow--;
 
         if(settings.isLogging()) {
-            logger.info("actual position: "+ getInternalShell().getCursor());
-            logger.info("currentRow:"+currentRow+", cursorWithPrompt:"+buffer.getCursorWithPrompt()
-                    +", width:"+ getInternalShell().getSize().getWidth()+", height:"+ getInternalShell().getSize().getHeight()
-                    +", delta:"+buffer.getDelta() +", buffer:"+buffer.getLine());
+            logger.info("actual position: " + getInternalShell().getCursor());
+            logger.info("currentRow:" + currentRow + ", cursorWithPrompt:" + buffer.getCursorWithPrompt()
+                    + ", width:" + getInternalShell().getSize().getWidth() + ", height:" + getInternalShell().getSize().getHeight()
+                    + ", delta:" + buffer.getDelta() + ", buffer:" + buffer.getLine());
         }
 
         out().print(ANSI.saveCursor()); //save cursor
@@ -1694,6 +1694,11 @@ public class Console {
         @Override
         public AeshPrintStream err() {
             return console.err();
+        }
+
+        @Override
+        public AeshStandardStream in() {
+            return console.in();
         }
 
         @Override

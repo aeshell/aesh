@@ -74,13 +74,14 @@ public class Example {
         builder.interruptHook(new InterruptHook() {
             @Override
             public void handleInterrupt(Console console) {
-                try {
-                    console.out().println("KILLED!");
-                    console.stop();
-                    System.exit(1);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                //try {
+                    //console.out().println("KILLED!");
+
+                    //console.stop();
+                    //System.exit(1);
+                //} catch (IOException e) {
+                 //   e.printStackTrace();
+                //}
             }
         });
 
@@ -169,9 +170,9 @@ public class Example {
             @Override
             public int readConsoleOutput(ConsoleOperation output) throws IOException{
                 //To change body of implemented methods use File | Settings | File Templates.
-                exampleConsole.out().print("======>\"" + output.getBuffer() + "\"\n");
+                exampleConsole.getShell().out().print("======>\"" + output.getBuffer() + "\"\n");
                 if(masking) {
-                    exampleConsole.out().print("got password: " + output.getBuffer() + ", stopping masking");
+                    exampleConsole.getShell().out().print("got password: " + output.getBuffer() + ", stopping masking");
                     masking = false;
                     exampleConsole.setPrompt(prompt);
                 }
@@ -184,8 +185,8 @@ public class Example {
                     exampleConsole.setPrompt(new Prompt("password: ", (char) 0));
                 }
                 else if(output.getBuffer().startsWith("blah")) {
-                    exampleConsole.err().print("blah. command not found.\n");
-                    exampleConsole.out().print("BAH" + Config.getLineSeparator());
+                    exampleConsole.getShell().err().print("blah. command not found.\n");
+                    exampleConsole.getShell().out().print("BAH" + Config.getLineSeparator());
                 }
                 else if(output.getBuffer().equals("clear"))
                     exampleConsole.clear();
@@ -214,7 +215,7 @@ public class Example {
                 if(hasUsername) {
                     password = output.getBuffer();
                     hasPassword = true;
-                    exampleConsole.out().print("Username: " + username + ", password: " + password + Config.getLineSeparator());
+                    exampleConsole.getShell().out().print("Username: " + username + ", password: " + password + Config.getLineSeparator());
                     exampleConsole.setPrompt(prompt);
                     exampleConsole.setConsoleCallback(consoleCallback);
                 }
@@ -254,20 +255,20 @@ public class Example {
         private void init() {
             try {
                 if(!operation.getControlOperator().isRedirectionOut()) {
-                    console.out().print(ANSI.getAlternateBufferScreen());
-                    console.out().println("print alternate screen...");
-                    console.out().flush();
+                    console.getShell().out().print(ANSI.getAlternateBufferScreen());
+                    console.getShell().out().println("print alternate screen...");
+                    console.getShell().out().flush();
                 }
 
-                if(console.in().getStdIn().available() > 0) {
-                    java.util.Scanner s = new java.util.Scanner(console.in().getStdIn()).useDelimiter("\\A");
+                if(console.getShell().in().getStdIn().available() > 0) {
+                    java.util.Scanner s = new java.util.Scanner(console.getShell().in().getStdIn()).useDelimiter("\\A");
                     String fileContent = s.hasNext() ? s.next() : "";
-                    console.out().println("FILECONTENT: ");
-                    console.out().print(fileContent);
-                    console.out().flush();
+                    console.getShell().out().println("FILECONTENT: ");
+                    console.getShell().out().print(fileContent);
+                    console.getShell().out().flush();
                 }
                 else
-                    console.out().println("console.in() == null");
+                    console.getShell().out().println("console.in() == null");
 
 
                 readFromFile();
@@ -283,17 +284,17 @@ public class Example {
         }
 
         private void readFromFile() throws IOException {
-            if(console.in().getStdIn().available() > 0) {
-                console.out().println("FROM STDOUT: ");
+            if(console.getShell().in().getStdIn().available() > 0) {
+                console.getShell().out().println("FROM STDOUT: ");
             }
             else
-                console.out().println("here should we present some text... press 'q' to quit");
+                console.getShell().out().println("here should we present some text... press 'q' to quit");
         }
 
         @Override
         public void processOperation(CommandOperation operation) throws IOException {
             if(operation.getInput()[0] == 'q') {
-                console.out().print(ANSI.getMainBufferScreen());
+                console.getShell().out().print(ANSI.getMainBufferScreen());
                 attached = false;
             }
             else if(operation.getInput()[0] == 'a') {

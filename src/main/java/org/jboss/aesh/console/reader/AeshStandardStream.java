@@ -13,6 +13,18 @@ public class AeshStandardStream {
     private BufferedInputStream stdIn;
     private BufferedInputStream stdError;
 
+    public AeshStandardStream() {
+    }
+
+    public AeshStandardStream(BufferedInputStream stdIn) {
+        this.stdIn = stdIn;
+    }
+
+    public AeshStandardStream(BufferedInputStream stdIn, BufferedInputStream stdError) {
+        this.stdIn = stdIn;
+        this.stdError = stdError;
+    }
+
     public BufferedInputStream getStdIn() {
         return stdIn;
     }

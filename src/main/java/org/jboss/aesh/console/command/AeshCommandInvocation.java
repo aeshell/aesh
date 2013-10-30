@@ -9,7 +9,6 @@ package org.jboss.aesh.console.command;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.operator.ControlOperator;
-import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.Shell;
 
 /**
@@ -52,11 +51,6 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public Prompt getPrompt() {
         return aeshConsole.getPrompt();
-    }
-
-    @Override
-    public AeshStandardStream in() {
-        return aeshConsole.in();
     }
 
     @Override

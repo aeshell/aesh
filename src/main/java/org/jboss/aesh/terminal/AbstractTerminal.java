@@ -7,6 +7,7 @@
 package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.ANSI;
 
@@ -109,5 +110,10 @@ public abstract class AbstractTerminal implements Terminal, Shell {
     @Override
     public Shell getShell() {
         return this;
+    }
+
+    @Override
+    public AeshStandardStream in() {
+        return null;
     }
 }

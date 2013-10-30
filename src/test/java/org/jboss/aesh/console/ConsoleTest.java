@@ -63,7 +63,7 @@ public class ConsoleTest extends BaseConsoleTest {
         });
         console.start();
 
-        PrintStream out = console.out();
+        PrintStream out = console.getShell().out();
 
         out.print("ls \\");
         out.print("\n");

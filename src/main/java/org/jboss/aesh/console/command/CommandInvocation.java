@@ -8,7 +8,6 @@ package org.jboss.aesh.console.command;
 
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.operator.ControlOperator;
-import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.Shell;
 
 /**
@@ -47,11 +46,6 @@ public interface CommandInvocation {
      * @return Get the current Prompt
      */
     Prompt getPrompt();
-
-    /**
-     * @return the possible input stream
-     */
-    AeshStandardStream in();
 
     /**
      * @return a formatted usage/help info from the specified command

@@ -27,8 +27,6 @@ import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
-import org.jboss.aesh.console.reader.AeshPrintStream;
-import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.terminal.Shell;
@@ -83,16 +81,6 @@ public class AeshConsoleImpl implements AeshConsole {
     }
 
     @Override
-    public AeshPrintStream err() {
-        return console.err();
-    }
-
-    @Override
-    public AeshPrintStream out() {
-        return console.out();
-    }
-
-    @Override
     public void setPrompt(Prompt prompt) {
         try {
             console.setPrompt(prompt);
@@ -109,11 +97,6 @@ public class AeshConsoleImpl implements AeshConsole {
     @Override
     public void attachConsoleCommand(ConsoleCommand consoleCommand) {
         console.attachProcess(consoleCommand);
-    }
-
-    @Override
-    public AeshStandardStream in() {
-        return console.in();
     }
 
     @Override
@@ -232,7 +215,7 @@ public class AeshConsoleImpl implements AeshConsole {
                                     .enhanceCommandInvocation(new AeshCommandInvocation(console, output.getControlOperator())));
                 }
                 catch (CommandLineParserException e) {
-                    console.out().println(e.getMessage());
+                    console.getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
                 }
                 catch (CommandNotFoundException e) {
@@ -240,16 +223,16 @@ public class AeshConsoleImpl implements AeshConsole {
                         commandNotFoundHandler.handleCommandNotFound(output.getBuffer(), getShell());
                     }
                     else {
-                        console.out().print("Command not found: " + Parser.findFirstWord(output.getBuffer()) + Config.getLineSeparator());
+                        console.getShell().out().print("Command not found: " + Parser.findFirstWord(output.getBuffer()) + Config.getLineSeparator());
                     }
                     result = CommandResult.FAILURE;
                 }
                 catch (OptionValidatorException e) {
-                    console.out().println(e.getMessage());
+                    console.getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
                 }
                 catch(CommandValidatorException e) {
-                    console.out().println(e.getMessage());
+                    console.getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
                 }
                 catch (Exception e) {

@@ -6,11 +6,13 @@
  */
 package org.jboss.aesh.terminal;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.jboss.aesh.console.reader.AeshPrintStream;
+import org.jboss.aesh.console.reader.AeshStandardStream;
 
 /**
  * A dummy terminal used for tests
@@ -100,6 +102,11 @@ public class TestTerminal implements Terminal, Shell {
     @Override
     public AeshPrintStream err() {
         return writer;
+    }
+
+    @Override
+    public AeshStandardStream in() {
+        return new AeshStandardStream(new BufferedInputStream(input));
     }
 
     @Override

@@ -7,6 +7,7 @@
 package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.reader.AeshPrintStream;
+import org.jboss.aesh.console.reader.AeshStandardStream;
 
 import java.io.IOException;
 
@@ -32,6 +33,11 @@ public interface Shell {
      * Returns the {@link AeshPrintStream} associated with the std err
      */
     AeshPrintStream err();
+
+    /**
+     * Get the possible input stream
+     */
+    AeshStandardStream in();
 
     /**
      * @return terminal size

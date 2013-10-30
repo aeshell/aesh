@@ -9,8 +9,6 @@ package org.jboss.aesh.console;
 import org.jboss.aesh.console.command.CommandInvocationProvider;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.ConsoleCommand;
-import org.jboss.aesh.console.reader.AeshPrintStream;
-import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.terminal.Shell;
 
@@ -44,16 +42,6 @@ public interface AeshConsole {
     void attachConsoleCommand(ConsoleCommand consoleCommand);
 
     /**
-     * Get the standard out {@link PrintStream}
-     */
-    AeshPrintStream out();
-
-    /**
-     * Get the standard error {@link PrintStream}
-     */
-    AeshPrintStream err();
-
-    /**
      * Specify the prompt
      */
     void setPrompt(Prompt prompt);
@@ -62,11 +50,6 @@ public interface AeshConsole {
      * Get the current Prompt
      */
     Prompt getPrompt();
-
-    /**
-     * Get the possible input stream
-     */
-    AeshStandardStream in();
 
     /**
      *

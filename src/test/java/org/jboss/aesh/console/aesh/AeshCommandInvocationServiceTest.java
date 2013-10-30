@@ -20,7 +20,6 @@ import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.operator.ControlOperator;
-import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.terminal.Shell;
@@ -127,11 +126,6 @@ class FooCommandInvocation implements CommandInvocation {
     @Override
     public Prompt getPrompt() {
         return commandInvocation.getPrompt();
-    }
-
-    @Override
-    public AeshStandardStream in() {
-        return commandInvocation.in();
     }
 
     @Override

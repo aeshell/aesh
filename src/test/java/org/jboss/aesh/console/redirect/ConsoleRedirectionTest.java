@@ -66,10 +66,10 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
             @Override
             public int readConsoleOutput(ConsoleOperation output) throws IOException {
                 assertEquals("ls ", output.getBuffer());
-                assertTrue(console.in().getStdIn().available() > 0);
+                assertTrue(console.getShell().in().getStdIn().available() > 0);
                 //assertTrue(output.getStdOut().contains("CONTENT OF FILE"));
                 assertEquals(ControlOperator.NONE, output.getControlOperator());
-                java.util.Scanner s = new java.util.Scanner(console.in().getStdIn()).useDelimiter("\\A");
+                java.util.Scanner s = new java.util.Scanner(console.getShell().in().getStdIn()).useDelimiter("\\A");
                 String fileContent = s.hasNext() ? s.next() : "";
                 assertEquals("CONTENT OF FILE", fileContent);
                 return 0;
@@ -98,10 +98,10 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
             public int readConsoleOutput(ConsoleOperation output) throws IOException {
                 if(count == 0) {
                     assertEquals("ls ", output.getBuffer());
-                    assertTrue(console.in().getStdIn().available() > 0);
+                    assertTrue(console.getShell().in().getStdIn().available() > 0);
                     //assertTrue(output.getStdOut().contains("CONTENT OF FILE"));
                     assertEquals(ControlOperator.PIPE, output.getControlOperator());
-                    java.util.Scanner s = new java.util.Scanner(console.in().getStdIn()).useDelimiter("\\A");
+                    java.util.Scanner s = new java.util.Scanner(console.getShell().in().getStdIn()).useDelimiter("\\A");
                     String fileContent = s.hasNext() ? s.next() : "";
                     assertEquals("CONTENT OF FILE", fileContent);
                 }
@@ -141,7 +141,7 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
                 assertEquals(" find *. -print", output.getBuffer());
             else if(count == 2) {
                 assertEquals("ls ", output.getBuffer());
-                console.out().print("CONTENT OF FILE");
+                console.getShell().out().print("CONTENT OF FILE");
             }
             else if(count == 3) {
                 assertEquals("", output.getBuffer());
