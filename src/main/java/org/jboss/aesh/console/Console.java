@@ -369,6 +369,16 @@ public class Console {
         command = cc;
     }
 
+    public void clearBufferAndDisplayPrompt() {
+        try {
+            buffer.reset();
+            clearUndoStack();
+            prevAction = Action.NEWLINE;
+            displayPrompt();
+        }
+        catch (IOException ignored) { }
+    }
+
     /**
      * Remove the current running command from Console
      *

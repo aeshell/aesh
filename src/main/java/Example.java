@@ -74,14 +74,8 @@ public class Example {
         builder.interruptHook(new InterruptHook() {
             @Override
             public void handleInterrupt(Console console) {
-                //try {
-                    //console.out().println("KILLED!");
-
-                    //console.stop();
-                    //System.exit(1);
-                //} catch (IOException e) {
-                 //   e.printStackTrace();
-                //}
+                console.getShell().out().println("^C");
+                console.clearBufferAndDisplayPrompt();
             }
         });
 
