@@ -15,7 +15,6 @@ import java.util.logging.Logger;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
-import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
@@ -159,7 +158,7 @@ public class AeshConsoleImpl implements AeshConsole {
                     matchedCommands.add(commandName);
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error retrieving command names from CommandRegistry");
+            logger.log(Level.SEVERE, "Error retrieving command names from CommandRegistry",e);
         }
 
         return matchedCommands;
