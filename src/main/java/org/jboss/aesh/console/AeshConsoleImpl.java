@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
@@ -29,20 +30,20 @@ import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.LoggerUtil;
-import org.jboss.aesh.parser.Parser;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshConsoleImpl implements AeshConsole {
 
-    private Console console;
-    private CommandRegistry registry;
-    private CommandInvocationServices commandInvocationServices;
+    private final Console console;
+    private final CommandRegistry registry;
+    private final CommandInvocationServices commandInvocationServices;
 
-    private Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
+    private final Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
     private String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
     private CommandNotFoundHandler commandNotFoundHandler;
 
@@ -152,9 +153,13 @@ public class AeshConsoleImpl implements AeshConsole {
 
     private List<String> completeCommandName(String input) {
         List<String> matchedCommands = new ArrayList<String>();
-        for(String commandName : registry.getAllCommandNames()) {
-            if(commandName.startsWith(input))
-                matchedCommands.add(commandName);
+        try {
+            for(String commandName : registry.getAllCommandNames()) {
+                if(commandName.startsWith(input))
+                    matchedCommands.add(commandName);
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error retrieving command names from CommandRegistry");
         }
 
         return matchedCommands;
@@ -194,7 +199,7 @@ public class AeshConsoleImpl implements AeshConsole {
 
     class AeshConsoleCallback implements ConsoleCallback {
 
-        private AeshConsole console;
+        private final AeshConsole console;
         AeshConsoleCallback(AeshConsole aeshConsole) {
             this.console = aeshConsole;
         }
