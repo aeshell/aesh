@@ -9,6 +9,7 @@ package org.jboss.aesh.console;
 import org.jboss.aesh.console.command.CommandInvocationProvider;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.ConsoleCommand;
+import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.terminal.Shell;
 
@@ -71,5 +72,5 @@ public interface AeshConsole {
 
     void registerCommandInvocationProvider(String name, CommandInvocationProvider commandInvocationProvider);
 
-    void registerCommandNotFoundHandler(CommandNotFoundHandler handler);
+    ManProvider getManProvider();
 }

@@ -27,6 +27,7 @@ import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
+import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.parser.Parser;
@@ -43,15 +44,18 @@ public class AeshConsoleImpl implements AeshConsole {
     private final CommandInvocationServices commandInvocationServices;
 
     private final Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
+    private final ManProvider manProvider;
+    private final CommandNotFoundHandler commandNotFoundHandler;
     private String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
-    private CommandNotFoundHandler commandNotFoundHandler;
 
     AeshConsoleImpl(Settings settings, CommandRegistry registry,
                     CommandInvocationServices commandInvocationServices,
-                    CommandNotFoundHandler commandNotFoundHandler) {
+                    CommandNotFoundHandler commandNotFoundHandler,
+                    ManProvider manProvider) {
         this.registry = registry;
         this.commandInvocationServices = commandInvocationServices;
         this.commandNotFoundHandler = commandNotFoundHandler;
+        this.manProvider = manProvider;
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallback(this));
         console.addCompletion(new AeshCompletion());
@@ -139,8 +143,8 @@ public class AeshConsoleImpl implements AeshConsole {
     }
 
     @Override
-    public void registerCommandNotFoundHandler(CommandNotFoundHandler handler) {
-        commandNotFoundHandler = handler;
+    public ManProvider getManProvider() {
+        return manProvider;
     }
 
     public String getBuffer() {

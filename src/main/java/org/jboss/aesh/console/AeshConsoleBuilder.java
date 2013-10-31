@@ -9,6 +9,7 @@ package org.jboss.aesh.console;
 import org.jboss.aesh.console.command.CommandInvocationServices;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.command.MutableCommandRegistry;
+import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -23,6 +24,7 @@ public class AeshConsoleBuilder {
     private CommandRegistry registry;
     private CommandInvocationServices commandInvocationServices;
     private CommandNotFoundHandler commandNotFoundHandler;
+    private ManProvider manProvider;
 
     public AeshConsoleBuilder() {
     }
@@ -52,6 +54,11 @@ public class AeshConsoleBuilder {
         return this;
     }
 
+    public AeshConsoleBuilder manProvider(ManProvider manProvider) {
+        this.manProvider = manProvider;
+        return this;
+    }
+
     public AeshConsole create() {
         if(settings == null)
             settings = new SettingsBuilder().create();
@@ -63,7 +70,7 @@ public class AeshConsoleBuilder {
 
         AeshConsole aeshConsole =
                 new AeshConsoleImpl(settings, registry, commandInvocationServices,
-                        commandNotFoundHandler);
+                        commandNotFoundHandler, manProvider);
 
         if(prompt != null)
             aeshConsole.setPrompt(prompt);
