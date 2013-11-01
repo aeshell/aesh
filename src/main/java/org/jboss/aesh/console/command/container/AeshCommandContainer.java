@@ -1,10 +1,11 @@
-package org.jboss.aesh.console.command;
+package org.jboss.aesh.console.command.container;
 
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.util.ReflectionUtil;
 
 /**

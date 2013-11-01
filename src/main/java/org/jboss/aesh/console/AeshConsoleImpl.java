@@ -20,7 +20,7 @@ import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.command.AeshCommandInvocation;
-import org.jboss.aesh.console.command.CommandContainer;
+import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.CommandInvocationProvider;
 import org.jboss.aesh.console.command.CommandInvocationServices;
 import org.jboss.aesh.console.command.CommandNotFoundException;

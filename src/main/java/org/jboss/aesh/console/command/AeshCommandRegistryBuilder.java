@@ -2,6 +2,8 @@ package org.jboss.aesh.console.command;
 
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.console.command.container.AeshCommandContainer;
+import org.jboss.aesh.console.command.container.CommandContainerBuilder;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

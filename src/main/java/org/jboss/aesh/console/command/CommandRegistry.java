@@ -1,5 +1,7 @@
 package org.jboss.aesh.console.command;
 
+import org.jboss.aesh.console.command.container.CommandContainer;
+
 import java.util.Set;
 
 /**

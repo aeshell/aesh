@@ -12,7 +12,7 @@ import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshConsoleImpl;
 import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.command.CommandContainer;
+import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;

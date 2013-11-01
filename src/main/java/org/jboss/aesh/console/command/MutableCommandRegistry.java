@@ -1,5 +1,9 @@
 package org.jboss.aesh.console.command;
 
+import org.jboss.aesh.console.command.container.AeshCommandContainerBuilder;
+import org.jboss.aesh.console.command.container.CommandContainer;
+import org.jboss.aesh.console.command.container.CommandContainerBuilder;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;

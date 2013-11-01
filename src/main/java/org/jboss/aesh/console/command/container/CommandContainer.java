@@ -4,9 +4,10 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.console.command;
+package org.jboss.aesh.console.command.container;
 
 import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.console.command.Command;
 
 /**
  * A CommandContainer hold reference to the Command and
