@@ -4,9 +4,11 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.console.command;
+package org.jboss.aesh.console.command.invocation;
 
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.CommandRegistry;
+import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.terminal.Shell;
 

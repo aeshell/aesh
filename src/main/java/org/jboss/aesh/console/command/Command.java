@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.console.command;
 
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
+
 import java.io.IOException;
 
 /**
