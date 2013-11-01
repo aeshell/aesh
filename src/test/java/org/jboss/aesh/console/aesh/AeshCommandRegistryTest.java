@@ -14,7 +14,7 @@ import org.jboss.aesh.console.AeshConsoleImpl;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.CommandNotFoundException;
-import org.jboss.aesh.console.command.CommandRegistry;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;

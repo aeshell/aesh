@@ -24,7 +24,7 @@ import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.CommandNotFoundException;
-import org.jboss.aesh.console.command.CommandRegistry;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.helper.ManProvider;

@@ -7,8 +7,8 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
-import org.jboss.aesh.console.command.CommandRegistry;
-import org.jboss.aesh.console.command.MutableCommandRegistry;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
+import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;

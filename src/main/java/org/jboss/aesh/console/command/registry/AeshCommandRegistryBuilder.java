@@ -1,7 +1,8 @@
-package org.jboss.aesh.console.command;
+package org.jboss.aesh.console.command.registry;
 
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.container.AeshCommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainerBuilder;
 

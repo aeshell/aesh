@@ -8,7 +8,7 @@ package org.jboss.aesh.console.command.invocation;
 
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.command.CommandRegistry;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.terminal.Shell;
