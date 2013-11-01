@@ -51,6 +51,7 @@ public class SettingsBuilder {
         settings.setQuitHandler(baseSettings.getQuitHandler());
         settings.setInterruptHook(baseSettings.getInterruptHook());
         settings.enableOperatorParser(baseSettings.isOperatorParserEnabled());
+        settings.setManEnabled(baseSettings.isManEnabled());
     }
 
     public SettingsBuilder name(String name) {
@@ -170,6 +171,11 @@ public class SettingsBuilder {
 
     public SettingsBuilder parseOperators(boolean parseOperators) {
         settings.enableOperatorParser(parseOperators);
+        return this;
+    }
+
+    public SettingsBuilder enableMan(boolean enableMan) {
+        settings.setManEnabled(enableMan);
         return this;
     }
 

@@ -1,0 +1,60 @@
+ASCIIDOC(1)
+===========
+:doctype: manpage
+
+
+NAME
+----
+asciidoc - converts an AsciiDoc text file to HTML or DocBook
+
+
+SYNOPSIS
+--------
+*asciidoc* ['OPTIONS'] 'FILE'
+
+
+DESCRIPTION
+-----------
+The asciidoc(1) command translates the AsciiDoc text file 'FILE' to
+DocBook or HTML.  If 'FILE' is '-' then the standard input is used.
+
+
+OPTIONS
+-------
+*-a, --attribute*='ATTRIBUTE'::
+    Define or delete document attribute. 'ATTRIBUTE' is formatted like
+    'NAME=VALUE'. Command-line attributes take precedence over
+    document and configuration file attributes.  Alternate acceptable
+    forms are 'NAME' (the 'VALUE' defaults to an empty string);
+    'NAME!' (delete the 'NAME' attribute); 'NAME=VALUE@' (do not override
+    document or configuration file attributes).  Values containing
+    spaces should be enclosed in double-quote characters. This option
+    may be specified more than once.  A special attribute named
+    'trace' controls the output of diagnostic information.
+
+*-b, --backend*='BACKEND'::
+    Backend output file format: 'docbook45', 'xhtml11', 'html4',
+    'html5', 'slidy', 'wordpress' or 'latex' (the 'latex' backend is
+    experimental).  You can also use the backend alias names 'html'
+    (aliased to 'xhtml11') or 'docbook' (aliased to 'docbook45').
+    Defaults to 'html'.  The *--backend* option is also used to manage
+    backend plugins (see <<X1,*PLUGIN COMMANDS*>>).
+
+
+AUTHOR
+------
+AsciiDoc was originally written by Stuart Rackham. Many people have
+contributed to it.
+
+
+RESOURCES
+---------
+SourceForge: <http://sourceforge.net/projects/asciidoc/>
+
+Main web site: <http://asciidoc.org/>
+
+
+COPYING
+-------
+Copyright \(C) 2002-2011 Stuart Rackham. Free use of this software is
+granted under the terms of the GNU General Public License (GPL).

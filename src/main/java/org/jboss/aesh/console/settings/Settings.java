@@ -171,4 +171,9 @@ public interface Settings {
      * Switch from Emacs to Vi mode (or back)
      */
     void switchMode();
+
+    /**
+     * is the man command enabled (currently only for AeshConsole)
+     */
+    boolean isManEnabled();
 }

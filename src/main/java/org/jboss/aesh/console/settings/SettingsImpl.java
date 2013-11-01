@@ -54,6 +54,7 @@ public class SettingsImpl implements Settings {
     private boolean persistAlias = true;
     private InterruptHook interruptHook = null;
     private boolean enableOperatorParser = true;
+    private boolean manEnabled = true;
 
     protected SettingsImpl() {
     }
@@ -83,6 +84,7 @@ public class SettingsImpl implements Settings {
         setQuitHandler(baseSettings.getQuitHandler());
         setInterruptHook(baseSettings.getInterruptHook());
         enableOperatorParser(baseSettings.isOperatorParserEnabled());
+        setManEnabled(baseSettings.isManEnabled());
     }
 
     public void resetToDefaults() {
@@ -575,6 +577,15 @@ public class SettingsImpl implements Settings {
            editMode = Mode.EMACS;
         else
            editMode = Mode.VI;
+    }
+
+    @Override
+    public boolean isManEnabled() {
+        return manEnabled;
+    }
+
+    public void setManEnabled(boolean enabled) {
+        this.manEnabled = enabled;
     }
 
 }
