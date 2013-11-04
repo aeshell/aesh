@@ -21,6 +21,7 @@ import java.io.PipedOutputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -64,10 +65,14 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
         final Console console = getTestConsole(pipedInputStream);
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) {
                 assertEquals("ls ", output.getBuffer());
-                assertTrue(console.getShell().in().getStdIn().available() > 0);
-                //assertTrue(output.getStdOut().contains("CONTENT OF FILE"));
+                try {
+                    assertTrue(console.getShell().in().getStdIn().available() > 0);
+                }
+                catch (IOException e) {
+                    fail();
+                }
                 assertEquals(ControlOperator.NONE, output.getControlOperator());
                 java.util.Scanner s = new java.util.Scanner(console.getShell().in().getStdIn()).useDelimiter("\\A");
                 String fileContent = s.hasNext() ? s.next() : "";
@@ -95,10 +100,15 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
         console.setConsoleCallback(new ConsoleCallback() {
             private int count = 0;
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) {
                 if(count == 0) {
                     assertEquals("ls ", output.getBuffer());
-                    assertTrue(console.getShell().in().getStdIn().available() > 0);
+                    try {
+                        assertTrue(console.getShell().in().getStdIn().available() > 0);
+                    }
+                    catch (IOException e) {
+                        fail();
+                    }
                     //assertTrue(output.getStdOut().contains("CONTENT OF FILE"));
                     assertEquals(ControlOperator.PIPE, output.getControlOperator());
                     java.util.Scanner s = new java.util.Scanner(console.getShell().in().getStdIn()).useDelimiter("\\A");
@@ -133,7 +143,8 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
             this.console = console;
         }
         @Override
-        public int readConsoleOutput(ConsoleOperation output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) {
+            try {
             if(count == 0) {
                 assertEquals("ls ", output.getBuffer());
             }
@@ -154,6 +165,11 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
             }
             count++;
             return 0;
+            }
+            catch(IOException ioe) {
+                fail();
+                return -1;
+            }
         }
     }
 }

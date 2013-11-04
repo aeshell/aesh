@@ -40,7 +40,7 @@ public class ConsoleMaskingTest extends BaseConsoleTest {
         console.setPrompt(new Prompt("", new Character('\u0000')));
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) {
                 assertEquals("mypasswor", output.getBuffer());
                 return 0;
             }

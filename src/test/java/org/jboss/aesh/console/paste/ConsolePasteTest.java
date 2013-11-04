@@ -41,7 +41,7 @@ public class ConsolePasteTest extends BaseConsoleTest{
         console.setConsoleCallback(new ConsoleCallback() {
             boolean password = false;
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) {
                 if (output.getBuffer().equals("admin")) {
                     console.setPrompt(new Prompt("", new Character('\u0000')));
                     password = true;

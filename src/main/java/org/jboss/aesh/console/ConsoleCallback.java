@@ -6,8 +6,6 @@
  */
 package org.jboss.aesh.console;
 
-import java.io.IOException;
-
 /**
  * Implementation of this interface will be called when a user press the
  * "enter/return" key.
@@ -19,9 +17,9 @@ import java.io.IOException;
 public interface ConsoleCallback {
 
     /**
+     *
      * @param output the consoleOperation
      * @return 0 for success or 1/-1 for failure.
-     * @throws IOException
      */
-    int readConsoleOutput(ConsoleOperation output) throws IOException;
+    int readConsoleOutput(ConsoleOperation output);
 }

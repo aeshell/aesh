@@ -33,7 +33,7 @@ public class EmacsEditingTest extends BaseConsoleTest {
 
             console.setConsoleCallback(new ConsoleCallback() {
                 @Override
-                public int readConsoleOutput(ConsoleOperation output) throws IOException {
+                public int readConsoleOutput(ConsoleOperation output) {
                     assertEquals("1234", output.getBuffer());
                     return 0;
                 }

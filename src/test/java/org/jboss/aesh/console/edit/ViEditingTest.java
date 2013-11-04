@@ -58,9 +58,13 @@ public class ViEditingTest extends BaseConsoleTest {
         }
 
         @Override
-        public int readConsoleOutput(ConsoleOperation output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) {
             assertEquals("1234", output.getBuffer());
-            console.stop();
+            try {
+                console.stop();
+            }
+            catch (IOException ignored) {
+            }
             return 0;
         }
     }

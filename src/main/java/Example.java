@@ -162,7 +162,8 @@ public class Example {
 
         final ConsoleCallback consoleCallback = new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException{
+            public int readConsoleOutput(ConsoleOperation output) {
+                try {
                 //To change body of implemented methods use File | Settings | File Templates.
                 exampleConsole.getShell().out().print("======>\"" + output.getBuffer() + "\"\n");
                 if(masking) {
@@ -195,6 +196,11 @@ public class Example {
                     exampleConsole.setPrompt(new Prompt("Username: "));
                 }
                  return 0;
+                }
+                catch (IOException ioe) {
+                    exampleConsole.getShell().out().println("Exception: "+ioe.getMessage());
+                    return -1;
+                }
             }
         };
         exampleConsole.setConsoleCallback(consoleCallback);
@@ -205,7 +211,7 @@ public class Example {
             private boolean hasUsername = false;
 
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) {
                 if(hasUsername) {
                     password = output.getBuffer();
                     hasPassword = true;

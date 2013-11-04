@@ -20,6 +20,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -57,12 +58,17 @@ public class ConsoleAliasTest extends BaseConsoleTest {
         }
 
         @Override
-        public int readConsoleOutput(ConsoleOperation output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) {
             if(count == 0)
                 assertEquals("ls -alF", output.getBuffer());
             else if(count == 1) {
                 assertEquals("grep --color=auto -l", output.getBuffer());
-                console.stop();
+                try {
+                    console.stop();
+                }
+                catch (IOException e) {
+                    fail();
+                }
             }
             count++;
             return 0;

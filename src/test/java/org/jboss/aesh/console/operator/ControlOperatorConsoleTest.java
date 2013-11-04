@@ -33,7 +33,7 @@ public class ControlOperatorConsoleTest extends BaseConsoleTest {
         console.setConsoleCallback(new ConsoleCallback() {
             int counter = 0;
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) {
                 if(counter == 0) {
                     assertEquals("ls -la *", output.getBuffer());
                     counter++;

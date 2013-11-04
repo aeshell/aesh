@@ -67,11 +67,7 @@ public class AeshConsoleImpl implements AeshConsole {
 
     @Override
     public void start() {
-        try {
-            console.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        console.start();
     }
 
     @Override
@@ -90,11 +86,7 @@ public class AeshConsoleImpl implements AeshConsole {
 
     @Override
     public void setPrompt(Prompt prompt) {
-        try {
-            console.setPrompt(prompt);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        console.setPrompt(prompt);
     }
 
     @Override
@@ -247,7 +239,7 @@ public class AeshConsoleImpl implements AeshConsole {
             this.console = aeshConsole;
         }
         @Override
-        public int readConsoleOutput(ConsoleOperation output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) {
             CommandResult result = CommandResult.SUCCESS;
             if(output != null && output.getBuffer().trim().length() > 0) {
                 try {

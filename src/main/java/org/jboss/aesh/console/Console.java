@@ -231,9 +231,8 @@ public class Console {
      * Set the current prompt.
      *
      * @param prompt prompt
-     * @throws IOException stream
      */
-    public void setPrompt(Prompt prompt) throws IOException {
+    public void setPrompt(Prompt prompt) {
         if(!buffer.getPrompt().equals(prompt)) {
             buffer.updatePrompt(prompt);
             //only update the prompt if Console is running
@@ -257,7 +256,7 @@ public class Console {
         this.consoleCallback = consoleCallback;
     }
 
-    public synchronized void start() throws IOException {
+    public synchronized void start() {
         if(running)
             throw new IllegalStateException("Not allowed to start the Console without stopping it first");
         if(consoleCallback == null)
@@ -370,13 +369,10 @@ public class Console {
     }
 
     public void clearBufferAndDisplayPrompt() {
-        try {
-            buffer.reset();
-            clearUndoStack();
-            prevAction = Action.NEWLINE;
-            displayPrompt();
-        }
-        catch (IOException ignored) { }
+        buffer.reset();
+        clearUndoStack();
+        prevAction = Action.NEWLINE;
+        displayPrompt();
     }
 
     /**
@@ -936,11 +932,11 @@ public class Console {
             history.push(line);
     }
 
-    private void displayPrompt() throws IOException {
+    private void displayPrompt() {
         displayPrompt(buffer.getPrompt());
     }
 
-    private void displayPrompt(Prompt prompt) throws IOException {
+    private void displayPrompt(Prompt prompt) {
         if(prompt.hasANSI()) {
             out().print(ANSI.getStart() + "0G" + ANSI.getStart() + "2K");
             out().print(prompt.getANSI());

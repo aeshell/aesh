@@ -41,7 +41,7 @@ public class TerminalOutputTest extends BaseConsoleTest {
                 new TerminalTextStyle(CharacterType.FAINT))));
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) {
                 assertEquals("FOO", output.getBuffer());
                 return 0;
             }

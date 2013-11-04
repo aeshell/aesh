@@ -224,7 +224,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
             this.console = console;
         }
         @Override
-        public int readConsoleOutput(ConsoleOperation output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) {
             if(count == 0) {
                 assertEquals("foobar ", output.getBuffer());
             }
@@ -232,7 +232,12 @@ public class CompletionConsoleTest extends BaseConsoleTest {
                 assertEquals("barfoo", output.getBuffer());
             else if(count == 2) {
                 assertEquals("less:", output.getBuffer());
-                console.stop();
+                try {
+                    console.stop();
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             count++;
@@ -247,10 +252,15 @@ public class CompletionConsoleTest extends BaseConsoleTest {
             this.console = console;
         }
         @Override
-        public int readConsoleOutput(ConsoleOperation output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) {
             if(count == 0) {
                 assertEquals("less ", output.getBuffer());
-                console.stop();
+                try {
+                    console.stop();
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             count++;
@@ -267,7 +277,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
             this.console = console;
         }
         @Override
-        public int readConsoleOutput(ConsoleOperation output) throws IOException {
+        public int readConsoleOutput(ConsoleOperation output) {
             if(count == 0) {
                 assertEquals("foo", output.getBuffer());
             }
@@ -275,7 +285,12 @@ public class CompletionConsoleTest extends BaseConsoleTest {
                 assertEquals("barfoo", output.getBuffer());
             else if(count == 2) {
                 assertEquals("less:", output.getBuffer());
-                console.stop();
+                try {
+                    console.stop();
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             count++;

@@ -49,7 +49,7 @@ public abstract class AeshTestCase extends TestCase {
         String tmpString = null;
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) {
                 if(lastOnly) {
                     assertEquals(expected, output.getBuffer());
                 }
@@ -80,7 +80,7 @@ public abstract class AeshTestCase extends TestCase {
         Console console = new Console(builder.create());
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) {
                 assertEquals(expected, output.getBuffer());
                 return 0;
             }

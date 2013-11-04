@@ -35,7 +35,7 @@ public class HistoryTest extends BaseConsoleTest {
         console.setConsoleCallback(new ConsoleCallback() {
             private int count = 0;
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int readConsoleOutput(ConsoleOperation output) {
                 if(count == 0)
                     assertEquals("1234", output.getBuffer());
                 else if(count == 1)
