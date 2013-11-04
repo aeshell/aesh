@@ -200,6 +200,10 @@ public class AeshConsoleImpl implements AeshConsole {
         }
     }
 
+    private void detachProcess() {
+        console.detachProcess();
+    }
+
     class AeshCompletion implements Completion {
 
         @Override
@@ -255,7 +259,7 @@ public class AeshConsoleImpl implements AeshConsole {
                                     .enhanceCommandInvocation(new AeshCommandInvocation(console, output.getControlOperator())));
                 }
                 catch (CommandLineParserException e) {
-                    console.getShell().out().println(e.getMessage());
+                    getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
                 }
                 catch (CommandNotFoundException e) {
@@ -263,20 +267,22 @@ public class AeshConsoleImpl implements AeshConsole {
                         commandNotFoundHandler.handleCommandNotFound(output.getBuffer(), getShell());
                     }
                     else {
-                        console.getShell().out().print("Command not found: " + Parser.findFirstWord(output.getBuffer()) + Config.getLineSeparator());
+                        getShell().out().print("Command not found: " + Parser.findFirstWord(output.getBuffer()) + Config.getLineSeparator());
                     }
                     result = CommandResult.FAILURE;
                 }
                 catch (OptionValidatorException e) {
-                    console.getShell().out().println(e.getMessage());
+                    getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
                 }
                 catch(CommandValidatorException e) {
-                    console.getShell().out().println(e.getMessage());
+                    getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
                 }
                 catch (Exception e) {
                     logger.log(Level.SEVERE, "Exception when parsing/running: "+output.getBuffer(), e);
+                    getShell().out().println("Exception when parsing/running: "+output.getBuffer()+", "+e.getMessage());
+                    detachProcess();
                     result = CommandResult.FAILURE;
                 }
             }

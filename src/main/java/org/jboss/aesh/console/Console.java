@@ -377,10 +377,8 @@ public class Console {
 
     /**
      * Remove the current running command from Console
-     *
-     * @throws IOException stream
      */
-    private void detachProcess() throws IOException {
+    void detachProcess() {
         command = null;
         displayPrompt();
     }
