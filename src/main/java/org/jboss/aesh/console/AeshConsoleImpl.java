@@ -24,10 +24,12 @@ import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.CommandNotFoundException;
+import org.jboss.aesh.console.command.registry.AeshInternalCommandRegistry;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.helper.ManProvider;
+import org.jboss.aesh.console.man.Man;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.parser.Parser;
@@ -46,6 +48,7 @@ public class AeshConsoleImpl implements AeshConsole {
     private final Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
     private final ManProvider manProvider;
     private final CommandNotFoundHandler commandNotFoundHandler;
+    private AeshInternalCommandRegistry internalRegistry;
     private String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
 
     AeshConsoleImpl(Settings settings, CommandRegistry registry,
@@ -59,6 +62,7 @@ public class AeshConsoleImpl implements AeshConsole {
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallback(this));
         console.addCompletion(new AeshCompletion());
+        processSettings(settings);
     }
 
     @Override
@@ -154,6 +158,13 @@ public class AeshConsoleImpl implements AeshConsole {
             return "";
     }
 
+    private void processSettings(Settings settings) {
+        if(settings.isManEnabled()) {
+            internalRegistry = new AeshInternalCommandRegistry();
+            internalRegistry.addCommand(new Man(manProvider));
+        }
+    }
+
     private List<String> completeCommandName(String input) {
         List<String> matchedCommands = new ArrayList<String>();
         try {
@@ -161,11 +172,40 @@ public class AeshConsoleImpl implements AeshConsole {
                 if(commandName.startsWith(input))
                     matchedCommands.add(commandName);
             }
-        } catch (Exception e) {
+            if(internalRegistry != null) {
+                for(String commandName : internalRegistry.getAllCommandNames())
+                    if(commandName.startsWith(input))
+                        matchedCommands.add(commandName);
+            }
+        }
+        catch (Exception e) {
             logger.log(Level.SEVERE, "Error retrieving command names from CommandRegistry",e);
         }
 
         return matchedCommands;
+    }
+
+    /**
+     * try to return the command in the given registry
+     * if the given registry do not find the command, check if we have a
+     * internal registry and if its there.
+     * @param name command name
+     * @param line command line
+     * @return command
+     * @throws CommandNotFoundException
+     */
+    private CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
+        try {
+            return registry.getCommand(name, line);
+        }
+        catch (CommandNotFoundException e) {
+            if(internalRegistry != null) {
+                CommandContainer cc = internalRegistry.getCommand(name);
+                if(cc != null)
+                    return cc;
+            }
+            throw e;
+        }
     }
 
     class AeshCompletion implements Completion {
@@ -210,10 +250,10 @@ public class AeshConsoleImpl implements AeshConsole {
         public int readConsoleOutput(ConsoleOperation output) throws IOException {
             CommandResult result = CommandResult.SUCCESS;
             if(output != null && output.getBuffer().trim().length() > 0) {
-                //CommandLineParser calledCommandParser = findCommand(output.getBuffer());
                 try {
-                    CommandContainer commandContainer = registry.getCommand(
-                            Parser.findFirstWord(output.getBuffer()), output.getBuffer());
+                    CommandContainer commandContainer =
+                            getCommand( Parser.findFirstWord(output.getBuffer()), output.getBuffer());
+
                     commandContainer.getParser().getCommandPopulator().populateObject(commandContainer.getCommand(),
                             commandContainer.getParser().parse(output.getBuffer()));
                     //validate the command before execute
