@@ -87,6 +87,11 @@ public class ManPageLoader implements PageLoader {
         }
     }
 
+    public void setFile(InputStream input) throws IOException {
+        if(input != null)
+            reader = new InputStreamReader(input);
+    }
+
     /**
      * Read a file resouce located in a jar
      *

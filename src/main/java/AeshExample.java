@@ -32,6 +32,7 @@ import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.helper.InterruptHook;
+import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.terminal.CharacterType;
@@ -42,7 +43,11 @@ import org.jboss.aesh.terminal.TerminalTextStyle;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,13 +77,14 @@ public class AeshExample {
                 .generateParameter();
 
         SettingsBuilder builder = new SettingsBuilder().logging(true);
-                builder.interruptHook(new InterruptHook() {
-            @Override
-            public void handleInterrupt(Console console) {
-                console.getShell().out().println("^C");
-                console.clearBufferAndDisplayPrompt();
-            }
-        });
+        builder.enableMan(true)
+                .interruptHook(new InterruptHook() {
+                    @Override
+                    public void handleInterrupt(Console console) {
+                        console.getShell().out().println("^C");
+                        console.clearBufferAndDisplayPrompt();
+                    }
+                });
         Settings settings = builder.create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
@@ -88,6 +94,7 @@ public class AeshExample {
                 .create();
         AeshConsole aeshConsole = new AeshConsoleBuilder()
                 .commandRegistry(registry)
+                .manProvider(new ManProviderExample())
                 .settings(settings)
                 .prompt(new Prompt("[aesh@rules]$ "))
                 .create();
@@ -267,6 +274,20 @@ public class AeshExample {
         @Override
         public TerminalTextStyle getTextType() {
             return style;
+        }
+    }
+
+    public static class ManProviderExample implements ManProvider {
+
+        @Override
+        public InputStream getManualDocument(String commandName) {
+            //this is just a stupid example always returning a file located in /tmp
+            try {
+                return new FileInputStream("/tmp/asciitest2.txt");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            return null;
         }
     }
 

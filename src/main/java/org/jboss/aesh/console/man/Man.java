@@ -58,7 +58,7 @@ public class Man extends AeshFileDisplayer {
     }
 
     private void setFile(InputStream input, String fileName) throws IOException {
-        loader.setFile(input, fileName);
+        loader.setFile(input);
     }
 
     @Override

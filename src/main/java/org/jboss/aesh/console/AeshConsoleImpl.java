@@ -218,8 +218,8 @@ public class AeshConsoleImpl implements AeshConsole {
             }
             else {
                 try {
-                    CommandContainer commandContainer = registry.getCommand(
-                            Parser.findFirstWord(completeOperation.getBuffer()), completeOperation.getBuffer());
+                    CommandContainer commandContainer =
+                            getCommand( Parser.findFirstWord(completeOperation.getBuffer()), completeOperation.getBuffer());
                     CommandLineCompletionParser completionParser = commandContainer.getParser().getCompletionParser();
 
                     ParsedCompleteObject completeObject = completionParser.findCompleteObject(completeOperation.getBuffer());
