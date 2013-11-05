@@ -14,6 +14,7 @@ import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.LoggerUtil;
@@ -22,7 +23,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.jboss.aesh.console.man.Page.Search;
+import org.jboss.aesh.console.man.TerminalPage.Search;
 /**
  * An abstract command used to display files
  * Implemented similar to less
@@ -35,9 +36,9 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
     private int columns;
     private int topVisibleRow;
     private int topVisibleRowCache; //only rewrite page if rowCache != row
-    private LessPage page;
+    private TerminalPage page;
     private StringBuilder number;
-    private Page.Search search = Page.Search.NO_SEARCH;
+    private TerminalPage.Search search = TerminalPage.Search.NO_SEARCH;
     private StringBuilder searchBuilder;
     private List<Integer> searchLines;
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
@@ -71,14 +72,12 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
         searchBuilder = new StringBuilder();
         rows = getShell().getSize().getHeight();
         columns = getShell().getSize().getWidth();
-        page = new LessPage(getPageLoader(), columns);
+        page = new TerminalPage(getFileParser(), columns);
         topVisibleRow = 0;
         topVisibleRowCache = -1;
 
         if(operation.isRedirectionOut()) {
             int count=0;
-            //if(Settings.getInstance().isLogging())
-            //    logger.info("REDIRECTION IS OUT");
             for(String line : this.page.getLines()) {
                 getShell().out().print(line);
                 count++;
@@ -91,7 +90,7 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
         }
         else {
             if(!page.hasData()) {
-                getShell().out().print("Missing filename (\"less --help\" for help)\n");
+                getShell().out().println("error: input is null...");
                 afterDetach();
             }
             else {
@@ -122,7 +121,7 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
 
     @Override
     public void processOperation(CommandOperation operation) throws IOException {
-        if(operation.getInput()[0] == 'q') {
+        if(operation.getInputKey() == Key.q) {
             if(search == Search.SEARCHING) {
                 searchBuilder.append((char) operation.getInput()[0]);
                 displayBottom();
@@ -132,10 +131,10 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
                 afterDetach();
             }
         }
-        else if(operation.getInput()[0] == 'j' ||
+        else if(operation.getInputKey() == Key.j ||
                 operation.equals(Operation.HISTORY_NEXT) || operation.equals(Operation.NEW_LINE)) {
             if(search == Search.SEARCHING) {
-                if(operation.getInput()[0] == 'j') {
+                if(operation.getInputKey() == Key.j) {
                     searchBuilder.append((char) operation.getInput()[0]);
                     displayBottom();
                 }
@@ -157,9 +156,11 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
                 clearNumber();
             }
         }
-        else if(operation.getInput()[0] == 'k' || operation.equals(Operation.HISTORY_PREV)) {
+        else if(operation.getInputKey() == Key.k ||
+                operation.getInputKey() == Key.UP ||
+                operation.getInputKey() == Key.UP_2) {
             if(search == Search.SEARCHING) {
-                if(operation.getInput()[0] == 'k')
+                if(operation.getInputKey() == Key.k)
                 searchBuilder.append((char) operation.getInput()[0]);
                 displayBottom();
             }
@@ -171,8 +172,9 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
                 clearNumber();
             }
         }
-        else if(operation.getInput()[0] == 6 || operation.equals(Operation.PGDOWN)
-                || operation.getInput()[0] == 32) { // ctrl-f || pgdown || space
+        else if(operation.getInputKey() == Key.CTRL_F ||
+                operation.getInputKey() == Key.PGDOWN ||
+                operation.getInputKey() == Key.SPACE) { // ctrl-f || pgdown || space
             if(search == Search.SEARCHING) {
 
             }
@@ -189,7 +191,8 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
                 clearNumber();
             }
         }
-        else if(operation.getInput()[0] == 2 || operation.equals(Operation.PGUP)) { // ctrl-b || pgup
+        else if(operation.getInputKey() == Key.CTRL_B ||
+                operation.getInputKey() == Key.PGUP) { // ctrl-b || pgup
             if(search != Search.SEARCHING) {
                 topVisibleRow = topVisibleRow - rows*getNumber()-1;
                 if(topVisibleRow < 0)
@@ -199,7 +202,7 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
             }
         }
         //search
-        else if(operation.getInput()[0] == '/') {
+        else if(operation.getInputKey() == Key.SLASH) {
             if(search == Search.NO_SEARCH || search == Search.RESULT) {
                 search = Search.SEARCHING;
                 searchBuilder = new StringBuilder();
@@ -211,7 +214,7 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
             }
 
         }
-        else if(operation.getInput()[0] == 'n') {
+        else if(operation.getInputKey() == Key.n) {
             if(search == Search.SEARCHING) {
                 searchBuilder.append((char) operation.getInput()[0]);
                 displayBottom();
@@ -233,7 +236,7 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
                 }
             }
         }
-        else if(operation.getInput()[0] == 'N') {
+        else if(operation.getInputKey() == Key.N) {
             if(search == Search.SEARCHING) {
                 searchBuilder.append((char) operation.getInput()[0]);
                 displayBottom();
@@ -254,7 +257,7 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
                 }
             }
         }
-        else if(operation.getInput()[0] == 'G') {
+        else if(operation.getInputKey() == Key.G) {
             if(search == Search.SEARCHING) {
                 searchBuilder.append((char) operation.getInput()[0]);
                 displayBottom();
@@ -277,7 +280,7 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
                 clearNumber();
             }
         }
-        else if(Character.isDigit(operation.getInput()[0])) {
+        else if(operation.getInputKey().isNumber()) {
             if(search == Search.SEARCHING) {
                 searchBuilder.append((char) operation.getInput()[0]);
                 displayBottom();
@@ -339,7 +342,7 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
         getShell().out().flush();
     }
 
-    public abstract PageLoader getPageLoader();
+    public abstract FileParser getFileParser();
 
     public abstract void displayBottom() throws IOException;
 

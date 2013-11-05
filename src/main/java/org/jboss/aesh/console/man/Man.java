@@ -14,12 +14,11 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.helper.ManProvider;
-import org.jboss.aesh.console.man.parser.ManPageLoader;
+import org.jboss.aesh.console.man.parser.ManFileParser;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +33,8 @@ public class Man extends AeshFileDisplayer {
 
     @Arguments(completer = ManCompleter.class)
     private List<String> manPages;
-    private ManPageLoader loader;
+
+    private ManFileParser fileParser;
     private static CommandRegistry registry;
     private final ManProvider manProvider;
 
@@ -42,46 +42,42 @@ public class Man extends AeshFileDisplayer {
         super();
         this.manProvider = manProvider;
         manPages = new ArrayList<String>();
-        loader = new ManPageLoader();
+        fileParser = new ManFileParser();
     }
 
     public void setRegistry(CommandRegistry registry) {
         this.registry = registry;
     }
 
-    private void setFile(String name) throws IOException {
-        loader.setFile(name);
-    }
-
-    private void setFile(URL url) throws IOException {
-        loader.setUrlFile(url);
-    }
-
-    private void setFile(InputStream input, String fileName) throws IOException {
-        loader.setFile(input);
-    }
-
     @Override
-    public PageLoader getPageLoader() {
-       return loader;
+    public FileParser getFileParser() {
+       return fileParser;
     }
 
     @Override
     public void displayBottom() throws IOException {
         writeToConsole(ANSI.getInvertedBackground());
-        writeToConsole("Manual page "+loader.getName()+" line "+getTopVisibleRow()+
+        writeToConsole("Manual page "+ fileParser.getName()+" line "+getTopVisibleRow()+
         " (press h for help or q to quit)"+ ANSI.defaultText());
     }
 
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
-        setCommandInvocation(commandInvocation);
+        if(manPages == null || manPages.size() == 0) {
+            commandInvocation.getShell().out().println("What manual page do you want?");
+            return CommandResult.SUCCESS;
+        }
         if(manPages != null && manPages.size() > 0) {
             InputStream inputStream = manProvider.getManualDocument(manPages.get(0));
             if(inputStream != null) {
-                setFile(inputStream, null);
-                getCommandInvocation().attachConsoleCommand(this);
+                setCommandInvocation(commandInvocation);
+                fileParser.setInput(inputStream);
+                commandInvocation.attachConsoleCommand(this);
                 afterAttach();
+            }
+            else {
+                commandInvocation.getShell().out().println("No manual entry for "+manPages.get(0));
+                return CommandResult.SUCCESS;
             }
         }
 

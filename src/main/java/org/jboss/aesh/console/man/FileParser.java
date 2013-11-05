@@ -6,9 +6,9 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface PageLoader {
+public interface FileParser {
 
     List<String> loadPage(int columns) throws IOException;
 
-    String getResourceName();
+    String getName();
 }

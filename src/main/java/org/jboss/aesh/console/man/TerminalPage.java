@@ -11,24 +11,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Page parse files or input string and prepare it to be displayed in a term
+ * TerminalPage parse files or input string and prepare it to be displayed in a term
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public abstract class Page {
+public class TerminalPage {
 
     private List<String> lines;
-    private PageLoader loader;
+    private FileParser fileParser;
 
-    public Page(PageLoader loader, int columns) {
-       this.loader = loader;
-        try {
-            lines = loader.loadPage(columns);
-        }
-        catch(IOException ioe) {
-            //need to properly log this
-            ioe.printStackTrace();
-        }
+    public TerminalPage(FileParser fileParser, int columns) throws IOException {
+       this.fileParser = fileParser;
+        lines = fileParser.loadPage(columns);
     }
 
     public String getLine(int num) {
@@ -52,7 +46,7 @@ public abstract class Page {
     }
 
     public String getFileName() {
-        return loader.getResourceName();
+        return fileParser.getName();
     }
 
     public List<String> getLines() {
