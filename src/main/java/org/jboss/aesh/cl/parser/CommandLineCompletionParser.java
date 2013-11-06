@@ -15,12 +15,12 @@ import org.jboss.aesh.console.command.Command;
  */
 public interface CommandLineCompletionParser {
     /**
-     * 1. find the last "word"
+     * 1. find the "word" connected with cursor
      *   if it starts with '-', we need to check if its a value or name
      * @param line buffer
      * @return ParsedCompleteObject
      */
-    ParsedCompleteObject findCompleteObject(String line) throws CommandLineParserException;
+    ParsedCompleteObject findCompleteObject(String line, int cursor) throws CommandLineParserException;
 
     void injectValuesAndComplete(ParsedCompleteObject completeObject, Command command,
                                  CompleteOperation completeOperation);

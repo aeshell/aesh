@@ -23,50 +23,50 @@ public class ParseCompleteObjectTest {
         CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class);
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
-        ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1");
+        ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1", 100);
         assertEquals("foo1", pco.getValue());
         assertEquals(String.class, pco.getType());
         assertTrue(pco.isOption());
 
-        pco = completeParser.findCompleteObject("test -f false --equal tru");
+        pco = completeParser.findCompleteObject("test -f false --equal tru", 100);
         assertEquals("tru", pco.getValue());
         assertEquals(String.class, pco.getType());
         assertEquals("equal", pco.getName());
         assertTrue(pco.isOption());
         assertFalse(pco.doDisplayOptions());
 
-        pco = completeParser.findCompleteObject("test -f false --equal file\\ with\\ spaces\\ ");
+        pco = completeParser.findCompleteObject("test -f false --equal file\\ with\\ spaces\\ ", 100);
         assertEquals("file with spaces ", pco.getValue());
         assertEquals(String.class, pco.getType());
         assertEquals("equal", pco.getName());
         assertTrue(pco.isOption());
         assertFalse(pco.doDisplayOptions());
 
-        pco = completeParser.findCompleteObject("test -f=true --equal ");
+        pco = completeParser.findCompleteObject("test -f=true --equal ", 100);
         assertEquals("", pco.getValue());
         assertEquals(String.class, pco.getType());
         assertEquals("equal", pco.getName());
         assertTrue(pco.isOption());
         assertFalse(pco.doDisplayOptions());
 
-        pco = completeParser.findCompleteObject("test -f true --equ ");
+        pco = completeParser.findCompleteObject("test -f true --equ ", 100);
         assertFalse(pco.isArgument());
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());
         assertFalse(pco.isCompleteOptionName());
 
-        pco = completeParser.findCompleteObject("test --equal true foo.txt");
+        pco = completeParser.findCompleteObject("test --equal true foo.txt", 100);
         assertEquals("foo.txt", pco.getValue());
         //assertEquals(String.class, pco.getStyle());
         assertTrue(pco.isArgument());
 
-        pco = completeParser.findCompleteObject("test -e");
+        pco = completeParser.findCompleteObject("test -e", 100);
         assertTrue(pco.doDisplayOptions());
         assertTrue(pco.isCompleteOptionName());
         assertEquals("e", pco.getName());
         assertEquals("--equal", clp.getCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
 
-        pco = completeParser.findCompleteObject("test --eq");
+        pco = completeParser.findCompleteObject("test --eq", 100);
         assertTrue(pco.doDisplayOptions());
         assertFalse(pco.isCompleteOptionName());
         assertEquals("eq", pco.getName());
@@ -74,45 +74,45 @@ public class ParseCompleteObjectTest {
         assertEquals("--equal", clp.getCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
 
         clp.getCommand().clear();
-        pco = completeParser.findCompleteObject("test --");
+        pco = completeParser.findCompleteObject("test --", 100);
         assertTrue(pco.doDisplayOptions());
         assertEquals("", pco.getName());
         assertEquals(2, pco.getOffset());
         assertEquals(4, clp.getCommand().getOptionLongNamesWithDash().size());
 
-        pco = completeParser.findCompleteObject("test --equal true  ");
+        pco = completeParser.findCompleteObject("test --equal true  ", 100);
         assertTrue(pco.isArgument());
 
-        pco = completeParser.findCompleteObject("test -f");
+        pco = completeParser.findCompleteObject("test -f", 100);
         assertTrue(pco.doDisplayOptions());
         assertTrue(pco.isCompleteOptionName());
 
-        pco = completeParser.findCompleteObject("test --equal");
+        pco = completeParser.findCompleteObject("test --equal", 100);
         assertTrue(pco.doDisplayOptions());
         assertTrue(pco.isCompleteOptionName());
 
-        pco = completeParser.findCompleteObject("test --f");
+        pco = completeParser.findCompleteObject("test --f", 100);
         assertTrue(pco.doDisplayOptions());
         assertFalse(pco.isCompleteOptionName());
 
-        pco = completeParser.findCompleteObject("test ");
+        pco = completeParser.findCompleteObject("test ", 100);
         assertTrue(pco.isArgument());
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());
         assertTrue(pco.getValue().length() == 0);
 
-        pco = completeParser.findCompleteObject("test a");
+        pco = completeParser.findCompleteObject("test a", 100);
         assertTrue(pco.isArgument());
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());
 
-        pco = completeParser.findCompleteObject("test a1 b1 ");
+        pco = completeParser.findCompleteObject("test a1 b1 ", 100);
         assertTrue(pco.isArgument());
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());
         assertTrue(pco.getValue() == null || pco.getValue().length() == 0);
 
-        pco = completeParser.findCompleteObject("test a\\ ");
+        pco = completeParser.findCompleteObject("test a\\ ", 100);
         assertTrue(pco.isArgument());
         assertFalse(pco.doDisplayOptions());
         assertFalse(pco.isOption());
@@ -124,11 +124,11 @@ public class ParseCompleteObjectTest {
         CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class);
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
-        ParsedCompleteObject pco = completeParser.findCompleteObject("test -e ");
+        ParsedCompleteObject pco = completeParser.findCompleteObject("test -e ", 100);
         assertEquals(Boolean.class, pco.getType());
         assertTrue(pco.isOption());
 
-        pco = completeParser.findCompleteObject("test ");
+        pco = completeParser.findCompleteObject("test ", 100);
         assertFalse(pco.isOption());
         assertFalse(pco.isCompleteOptionName());
         assertFalse(pco.isArgument());
@@ -140,15 +140,59 @@ public class ParseCompleteObjectTest {
         CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest3.class);
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
-        ParsedCompleteObject pco = completeParser.findCompleteObject("test -v 1 2 3 ");
+        ParsedCompleteObject pco = completeParser.findCompleteObject("test -v 1 2 3 ", 100);
         assertEquals(String.class, pco.getType());
         assertTrue(pco.isOption());
         assertEquals("",pco.getValue());
 
-        pco = completeParser.findCompleteObject("test -v 1 2 3");
+        pco = completeParser.findCompleteObject("test -v 1 2 3", 100);
         assertEquals(String.class, pco.getType());
         assertTrue(pco.isOption());
         assertEquals("3",pco.getValue());
+    }
+
+    @Test
+    public void testCursorInsideBuffer() throws Exception {
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class);
+        CommandLineCompletionParser completeParser = clp.getCompletionParser();
+
+        ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1  asdfjeaasdfae", 12);
+        assertEquals("foo1", pco.getValue());
+        assertEquals(String.class, pco.getType());
+        assertTrue(pco.isOption());
+
+        pco = completeParser.findCompleteObject("test --equal tru  -f false ", 16);
+        assertEquals("tru", pco.getValue());
+        assertEquals(String.class, pco.getType());
+        assertEquals("equal", pco.getName());
+        assertTrue(pco.isOption());
+        assertFalse(pco.doDisplayOptions());
+
+        pco = completeParser.findCompleteObject("test -f false --equal file\\ with\\ spaces\\ ", 100);
+        assertEquals("file with spaces ", pco.getValue());
+        assertEquals(String.class, pco.getType());
+        assertEquals("equal", pco.getName());
+        assertTrue(pco.isOption());
+        assertFalse(pco.doDisplayOptions());
+
+        pco = completeParser.findCompleteObject("test --equal  -f=true ", 13);
+        assertEquals("", pco.getValue());
+        assertEquals(String.class, pco.getType());
+        assertEquals("equal", pco.getName());
+        assertTrue(pco.isOption());
+        assertFalse(pco.doDisplayOptions());
+
+        pco = completeParser.findCompleteObject("test --equ  -f true", 11);
+        assertFalse(pco.isArgument());
+        assertFalse(pco.doDisplayOptions());
+        assertFalse(pco.isOption());
+        assertFalse(pco.isCompleteOptionName());
+
+        pco = completeParser.findCompleteObject("test --equal true foo.txt  bar.txt", 25);
+        assertEquals("foo.txt", pco.getValue());
+        //assertEquals(String.class, pco.getStyle());
+        assertTrue(pco.isArgument());
+
     }
 
 }

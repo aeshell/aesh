@@ -39,7 +39,10 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
      * @return ParsedCompleteObject
      */
     @Override
-    public ParsedCompleteObject findCompleteObject(String line) throws CommandLineParserException {
+    public ParsedCompleteObject findCompleteObject(String line, int cursor) throws CommandLineParserException {
+        if(cursor < line.length()) {
+            line = line.substring(0, cursor);
+        }
         //first we check if it could be a param
         if(Parser.findIfWordEndWithSpace(line)) {
             //check if we try to complete just after the command name
@@ -185,8 +188,15 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                         completeOperation.addCompletionCandidatesTerminalString(optionNamesWithDash);
                     else if(optionNamesWithDash.size() == 1) {
                         int count = 0;
-                        while(completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length()-count).endsWith("-"))
-                            count++;
+                        if(completeOperation.getCursor() < completeOperation.getBuffer().length()) {
+                            String line = completeOperation.getBuffer().substring(0, completeOperation.getCursor());
+                            while(line.substring(0, line.length()-count).endsWith("-"))
+                                count++;
+                        }
+                        else {
+                            while(completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length()-count).endsWith("-"))
+                                count++;
+                        }
                         completeOperation.addCompletionCandidate(optionNamesWithDash.get(0));
                         completeOperation.setOffset( completeOperation.getCursor() - count);
                     }
