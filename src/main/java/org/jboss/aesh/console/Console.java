@@ -1716,12 +1716,12 @@ public class Console {
         }
 
         @Override
-        public void setCursor(CursorPosition position) throws IOException {
+        public void setCursor(CursorPosition position) {
             shell.setCursor(position);
         }
 
         @Override
-        public void moveCursor(int rows, int columns) throws IOException {
+        public void moveCursor(int rows, int columns) {
             shell.moveCursor(rows, columns);
         }
 
@@ -1731,12 +1731,12 @@ public class Console {
         }
 
         @Override
-        public void enableAlternateBuffer() throws IOException {
+        public void enableAlternateBuffer() {
             shell.enableAlternateBuffer();
         }
 
         @Override
-        public void enableMainBuffer() throws IOException {
+        public void enableMainBuffer() {
             shell.enableMainBuffer();
         }
     }

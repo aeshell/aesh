@@ -59,11 +59,11 @@ public class TestTerminal implements Terminal, Shell {
     }
 
     @Override
-    public void setCursor(CursorPosition cp) throws IOException {
+    public void setCursor(CursorPosition cp) {
     }
 
     @Override
-    public void moveCursor(int r, int c) throws IOException {
+    public void moveCursor(int r, int c) {
     }
 
     @Override
@@ -72,12 +72,12 @@ public class TestTerminal implements Terminal, Shell {
     }
 
     @Override
-    public void enableAlternateBuffer() throws IOException {
+    public void enableAlternateBuffer() {
         //do nothing
     }
 
     @Override
-    public void enableMainBuffer() throws IOException {
+    public void enableMainBuffer() {
         //do nothing
     }
 

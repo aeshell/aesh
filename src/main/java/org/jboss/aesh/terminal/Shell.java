@@ -52,13 +52,13 @@ public interface Shell {
     /**
      * Set cursor position
      */
-    void setCursor(CursorPosition position) throws IOException;
+    void setCursor(CursorPosition position);
 
     /**
      * Move the cursor relative to the current position
      * Will not move outside of TerminalSize boundaries
      */
-    void moveCursor(int rows, int columns) throws IOException;
+    void moveCursor(int rows, int columns);
 
     /**
      * @return true if current buffer is main
@@ -70,12 +70,12 @@ public interface Shell {
      *
      * @throws IOException
      */
-    void enableAlternateBuffer() throws IOException;
+    void enableAlternateBuffer();
 
     /**
      * If not main buffer is enabled this will enable it.
      * @throws IOException
      */
-    void enableMainBuffer() throws IOException;
+    void enableMainBuffer();
 
 }

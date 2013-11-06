@@ -11,7 +11,6 @@ import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.ANSI;
 
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,7 +61,7 @@ public abstract class AbstractTerminal implements Terminal, Shell {
     }
 
     @Override
-    public void setCursor(CursorPosition position) throws IOException {
+    public void setCursor(CursorPosition position) {
         if(getSize().isPositionWithinSize(position)) {
             out().print(position.asAnsi());
             out().flush();
@@ -70,7 +69,7 @@ public abstract class AbstractTerminal implements Terminal, Shell {
     }
 
     @Override
-    public void moveCursor(int rows, int columns) throws IOException {
+    public void moveCursor(int rows, int columns) {
         CursorPosition cp = getCursor();
         cp.move(rows, columns);
         if(getSize().isPositionWithinSize(cp)) {
@@ -79,7 +78,7 @@ public abstract class AbstractTerminal implements Terminal, Shell {
     }
 
     @Override
-    public void clear() throws IOException {
+    public void clear() {
         out().print(ANSI.clearScreen());
         out().flush();
     }
@@ -90,7 +89,7 @@ public abstract class AbstractTerminal implements Terminal, Shell {
     }
 
     @Override
-    public void enableAlternateBuffer() throws IOException {
+    public void enableAlternateBuffer() {
         if(isMainBuffer()) {
             out().print(ANSI.getAlternateBufferScreen());
             out().flush();
@@ -99,7 +98,7 @@ public abstract class AbstractTerminal implements Terminal, Shell {
     }
 
     @Override
-    public void enableMainBuffer() throws IOException {
+    public void enableMainBuffer() {
         if(!isMainBuffer()) {
             out().print(ANSI.getMainBufferScreen());
             out().flush();

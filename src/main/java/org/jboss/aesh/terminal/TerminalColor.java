@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.util.ANSI;
+
 import java.io.PrintStream;
 
 /**
@@ -104,6 +106,10 @@ public class TerminalColor {
         result = 31 * result + intBackgroundColor;
         result = 31 * result + intensity.hashCode();
         return result;
+    }
+
+    public String fullString() {
+       return ANSI.getStart()+toString()+"m";
     }
 
     public String toString() {

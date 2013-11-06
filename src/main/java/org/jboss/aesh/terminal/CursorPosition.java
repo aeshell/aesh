@@ -8,8 +8,6 @@ package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.Buffer;
 
-import java.io.IOException;
-
 /**
  * Define the position of the cursor in a terminal
  * 1:1 is upper left corner.
@@ -52,7 +50,7 @@ public class CursorPosition {
         this.column = this.column + column;
     }
 
-    public char[] asAnsi() throws IOException {
+    public char[] asAnsi() {
         return Buffer.printAnsi(row+";"+column+"H");
     }
 

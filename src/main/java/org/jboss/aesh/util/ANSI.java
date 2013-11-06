@@ -53,8 +53,8 @@ public class ANSI {
     private static String UNDERLINE_OFF = Config.isOSPOSIXCompatible() ?
             InfocmpManager.disableUnderline() : "\u001B[0;24m";
     private static String BLINK = Config.isOSPOSIXCompatible() ?
-            InfocmpManager.enableBlink() : "\u001B[0;5m";
-    private static String BLINK_OFF = "\u001B[0;25m";
+            InfocmpManager.enableBlink() : "\u001B[5m";
+    private static String BLINK_OFF = "\u001B[25m";
     private static String CURSOR_START = "\u001B[1G";
     private static String CURSOR_ROW = "\u001B[6n";
     private static String CLEAR_SCREEN = Config.isOSPOSIXCompatible() ?
@@ -63,6 +63,8 @@ public class ANSI {
             InfocmpManager.saveCursor() : "\u001B[s";
     private static String CURSOR_RESTORE = Config.isOSPOSIXCompatible() ?
             InfocmpManager.restoreCursor() : "\u001B[u";
+    private static String CURSOR_HIDE = "\u001B[?25l";
+    private static String CURSOR_SHOW = "\u001B[?25h";
 
     private ANSI() {
     }
@@ -205,5 +207,13 @@ public class ANSI {
 
     public static String restoreCursor() {
         return CURSOR_RESTORE;
+    }
+
+    public static String hideCursor() {
+        return CURSOR_HIDE;
+    }
+
+    public static String showCursor() {
+        return CURSOR_SHOW;
     }
 }
