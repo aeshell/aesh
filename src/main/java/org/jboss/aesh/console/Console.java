@@ -1292,8 +1292,11 @@ public class Console {
         if(settings.isLogging())
             logger.info("Found completions: "+possibleCompletions);
 
+        if(possibleCompletions.size() == 0) {
+            //do nothing
+        }
         // only one hit, do a completion
-        if(possibleCompletions.size() == 1 &&
+        else if(possibleCompletions.size() == 1 &&
                 possibleCompletions.get(0).getCompletionCandidates().size() == 1) {
             //some formatted completions might not be valid and shouldnt be displayed
             displayCompletion(
