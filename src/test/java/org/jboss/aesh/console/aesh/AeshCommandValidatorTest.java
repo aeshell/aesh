@@ -85,11 +85,10 @@ public class AeshCommandValidatorTest {
         }
     }
 
-    public static class FooCommandValidator implements CommandValidator {
+    public static class FooCommandValidator implements CommandValidator<FooCommand> {
         @Override
-        public void validate(Command command) throws CommandValidatorException {
-            FooCommand foo = (FooCommand) command;
-            if(foo.getHigh() + foo.getLow() < 42)
+        public void validate(FooCommand command) throws CommandValidatorException {
+            if(command.getHigh() + command.getLow() < 42)
                 throw new CommandValidatorException("Sum of high and low must be over 42!");
         }
     }
