@@ -73,7 +73,7 @@ public final class ProcessedCommand {
         this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                 opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                 opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(), opt.getConverter(),
-                opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer()));
+                opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer(), opt.doOverrideRequired()));
     }
 
     /**
@@ -105,12 +105,28 @@ public final class ProcessedCommand {
                 type, fieldName, optionType, converter, completer, validator, activator, renderer));
     }
 
+    public void addOption(char name, String longName, String description,
+                     String argument, boolean required, char valueSeparator,
+                     String[] defaultValue, Class<?> type, String fieldName, OptionType optionType,
+                     Class<? extends CLConverter> converter,
+                     Class<? extends OptionCompleter> completer,
+                     Class<? extends OptionValidator> validator,
+                     Class<? extends OptionActivator> activator,
+                     Class<? extends OptionRenderer> renderer, boolean overrideRequired) throws OptionParserException {
+        List<String> defaultValues = new ArrayList<String>();
+        defaultValues.addAll(Arrays.asList(defaultValue));
+        options.add(new ProcessedOption(verifyThatNamesAreUnique(name, longName), longName, description,
+                argument, required, valueSeparator, defaultValues,
+                type, fieldName, optionType, converter, completer, validator, activator, renderer, overrideRequired));
+    }
+
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
         for(ProcessedOption opt : options) {
             this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
                     opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                     opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(),
-                    opt.getConverter(), opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer()));
+                    opt.getConverter(), opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer(),
+                    opt.doOverrideRequired()));
         }
     }
 

@@ -47,6 +47,7 @@ public class OptionBuilder {
     private OptionValidator validator;
     private OptionActivator activator;
     private OptionRenderer renderer;
+    private boolean overrideRequired;
 
     public OptionBuilder() {
         defaultValues = new ArrayList<String>();
@@ -170,6 +171,11 @@ public class OptionBuilder {
         return this;
     }
 
+    public OptionBuilder overrideRequired(boolean overrideRequired) {
+        this.overrideRequired = overrideRequired;
+        return this;
+    }
+
     public ProcessedOption create() throws OptionParserException {
         if(optionType == null) {
             if(!hasValue)
@@ -205,6 +211,6 @@ public class OptionBuilder {
 
         return new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, defaultValues, type, fieldName, optionType, converter,
-                completer, validator, activator, renderer);
+                completer, validator, activator, renderer, overrideRequired);
     }
 }

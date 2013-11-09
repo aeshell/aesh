@@ -125,173 +125,173 @@ public class AeshCommandLineParser implements CommandLineParser {
             commandLine.setArgument(command.getArgument());
         ProcessedOption active = null;
         boolean addedArgument = false;
-            //skip first entry since that's the name of the command
-            for(int i=1; i < lines.size(); i++) {
-                String parseLine = lines.get(i);
-                //name
-                if(parseLine.startsWith("--")) {
-                    //make sure that we dont have any "active" options lying around
-                    if(active != null) {
-                        if(active.getOptionType() == OptionType.LIST ||
-                                active.getOptionType() == OptionType.GROUP) {
+        //skip first entry since that's the name of the command
+        for(int i=1; i < lines.size(); i++) {
+            String parseLine = lines.get(i);
+            //name
+            if(parseLine.startsWith("--")) {
+                //make sure that we dont have any "active" options lying around
+                if(active != null) {
+                    if(active.getOptionType() == OptionType.LIST ||
+                            active.getOptionType() == OptionType.GROUP) {
+                        commandLine.addOption(active);
+                        active = null;
+                    }
+                    else {
+                        commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
+                        break;
+                    }
+                }
+
+                active = findLongOption(command, parseLine.substring(2));
+                if(active != null)
+                    active.setLongNameUsed(true);
+                if(active != null && active.isProperty()) {
+                    if(parseLine.length() <= (2+active.getName().length()) ||
+                            !parseLine.contains(EQUALS))
+                        commandLine.setParserException(new OptionParserException(
+                                "Option "+active.getDisplayName()+", must be part of a property"));
+                    else {
+                        String name =
+                                parseLine.substring(2+active.getName().length(),
+                                        parseLine.indexOf(EQUALS));
+                        String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
+                        if(value.length() < 1)
+                            commandLine.setParserException(new OptionParserException("Option "+active.getDisplayName()+", must have a value"));
+                        else {
+                            active.addProperty(name, value);
                             commandLine.addOption(active);
                             active = null;
-                        }
-                        else {
-                            commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
-                            break;
+                            if(addedArgument)
+                                commandLine.setParserException(new ArgumentParserException("An argument was given to an option that do not support it."));
                         }
                     }
-
-                    active = findLongOption(command, parseLine.substring(2));
+                }
+                else if(active != null && (!active.hasValue() || active.getValue() != null)) {
+                    active.addValue("true");
+                    commandLine.addOption(active);
+                    active = null;
+                    if(addedArgument)
+                        commandLine.setParserException(new ArgumentParserException("An argument was given to an option that do not support it."));
+                }
+                else if(active == null)
+                    commandLine.setParserException(new OptionParserException("Option: "+parseLine+" is not a valid option for this command"));
+            }
+            //name
+            else if(parseLine.startsWith("-")) {
+                //make sure that we dont have any "active" options lying around
+                //except list and group
+                if(active != null) {
+                    if(active.getOptionType() == OptionType.LIST ||
+                            active.getOptionType() == OptionType.GROUP) {
+                        commandLine.addOption(active);
+                        active = null;
+                    }
+                    else {
+                        commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
+                        break;
+                    }
+                }
+                else if(parseLine.length() != 2 && !parseLine.contains("=")) {
+                    //we might have two or more options in a group
+                    //if so, we only allow options (boolean) without value
+                    if(parseLine.length() > 2) {
+                        for(char shortName : parseLine.substring(1).toCharArray()) {
+                            active = findOption(command, String.valueOf(shortName));
+                            if(active != null) {
+                                if(!active.hasValue()) {
+                                    active.setLongNameUsed(false);
+                                    active.addValue("true");
+                                    commandLine.addOption(active);
+                                }
+                                else
+                                    commandLine.setParserException( new OptionParserException("Option: -"+shortName+
+                                            " can not be grouped with other options since it need to be given a value"));
+                            }
+                            else
+                                commandLine.setParserException(new OptionParserException("Option: -"+shortName+" was not found."));
+                        }
+                        //make sure to reset active
+                        active = null;
+                    }
+                    else
+                        commandLine.setParserException(new OptionParserException("Option: - must be followed by a valid operator"));
+                }
+                else {
+                    active = findOption(command, parseLine.substring(1));
                     if(active != null)
-                        active.setLongNameUsed(true);
+                        active.setLongNameUsed(false);
+
                     if(active != null && active.isProperty()) {
-                        if(parseLine.length() <= (2+active.getName().length()) ||
+                        if(parseLine.length() <= 2 ||
                                 !parseLine.contains(EQUALS))
                             commandLine.setParserException(new OptionParserException(
                                     "Option "+active.getDisplayName()+", must be part of a property"));
                         else {
                             String name =
-                                    parseLine.substring(2+active.getName().length(),
+                                    parseLine.substring(2, // 2+char.length
                                             parseLine.indexOf(EQUALS));
                             String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
                             if(value.length() < 1)
-                                commandLine.setParserException(new OptionParserException("Option "+active.getDisplayName()+", must have a value"));
+                                commandLine.setParserException( new OptionParserException("Option "+active.getDisplayName()+", must have a value"));
                             else {
                                 active.addProperty(name, value);
                                 commandLine.addOption(active);
                                 active = null;
                                 if(addedArgument)
-                                    commandLine.setParserException(new ArgumentParserException("An argument was given to an option that do not support it."));
+                                    commandLine.setParserException( new OptionParserException("An argument was given to an option that do not support it."));
                             }
                         }
                     }
+
                     else if(active != null && (!active.hasValue() || active.getValue() != null)) {
                         active.addValue("true");
                         commandLine.addOption(active);
                         active = null;
                         if(addedArgument)
-                            commandLine.setParserException(new ArgumentParserException("An argument was given to an option that do not support it."));
+                            commandLine.setParserException(new OptionParserException("An argument was given to an option that do not support it."));
                     }
                     else if(active == null)
                         commandLine.setParserException(new OptionParserException("Option: "+parseLine+" is not a valid option for this command"));
                 }
-                //name
-                else if(parseLine.startsWith("-")) {
-                    //make sure that we dont have any "active" options lying around
-                    //except list and group
-                    if(active != null) {
-                        if(active.getOptionType() == OptionType.LIST ||
-                                active.getOptionType() == OptionType.GROUP) {
-                            commandLine.addOption(active);
-                            active = null;
+            }
+            else if(active != null) {
+                if(active.hasMultipleValues()) {
+                    if(parseLine.contains(String.valueOf(active.getValueSeparator()))) {
+                        for(String value : parseLine.split(String.valueOf(active.getValueSeparator()))) {
+                            active.addValue(value.trim());
                         }
-                        else {
-                            commandLine.setParserException(new OptionParserException("Option: "+active.getDisplayName()+" must be given a value"));
-                            break;
-                        }
-                    }
-                    else if(parseLine.length() != 2 && !parseLine.contains("=")) {
-                        //we might have two or more options in a group
-                        //if so, we only allow options (boolean) without value
-                        if(parseLine.length() > 2) {
-                            for(char shortName : parseLine.substring(1).toCharArray()) {
-                                active = findOption(command, String.valueOf(shortName));
-                                if(active != null) {
-                                    if(!active.hasValue()) {
-                                        active.setLongNameUsed(false);
-                                        active.addValue("true");
-                                        commandLine.addOption(active);
-                                    }
-                                    else
-                                        commandLine.setParserException( new OptionParserException("Option: -"+shortName+
-                                                        " can not be grouped with other options since it need to be given a value"));
-                                }
-                                else
-                                    commandLine.setParserException(new OptionParserException("Option: -"+shortName+" was not found."));
-                            }
-                            //make sure to reset active
-                            active = null;
-                        }
-                        else
-                            commandLine.setParserException(new OptionParserException("Option: - must be followed by a valid operator"));
-                    }
-                    else {
-                        active = findOption(command, parseLine.substring(1));
-                        if(active != null)
-                            active.setLongNameUsed(false);
-
-                        if(active != null && active.isProperty()) {
-                            if(parseLine.length() <= 2 ||
-                                    !parseLine.contains(EQUALS))
-                                commandLine.setParserException(new OptionParserException(
-                                        "Option "+active.getDisplayName()+", must be part of a property"));
-                            else {
-                                String name =
-                                        parseLine.substring(2, // 2+char.length
-                                                parseLine.indexOf(EQUALS));
-                                String value = parseLine.substring( parseLine.indexOf(EQUALS)+1);
-                                if(value.length() < 1)
-                                    commandLine.setParserException( new OptionParserException("Option "+active.getDisplayName()+", must have a value"));
-                                else {
-                                    active.addProperty(name, value);
-                                    commandLine.addOption(active);
-                                    active = null;
-                                    if(addedArgument)
-                                        commandLine.setParserException( new OptionParserException("An argument was given to an option that do not support it."));
-                                }
-                            }
-                        }
-
-                        else if(active != null && (!active.hasValue() || active.getValue() != null)) {
-                            active.addValue("true");
-                            commandLine.addOption(active);
-                            active = null;
-                            if(addedArgument)
-                                commandLine.setParserException(new OptionParserException("An argument was given to an option that do not support it."));
-                        }
-                        else if(active == null)
-                            commandLine.setParserException(new OptionParserException("Option: "+parseLine+" is not a valid option for this command"));
-                    }
-                }
-                else if(active != null) {
-                    if(active.hasMultipleValues()) {
-                        if(parseLine.contains(String.valueOf(active.getValueSeparator()))) {
-                            for(String value : parseLine.split(String.valueOf(active.getValueSeparator()))) {
-                                active.addValue(value.trim());
-                            }
-                            if(parseLine.endsWith(String.valueOf(active.getValueSeparator())))
-                                active.setEndsWithSeparator(true);
-                            commandLine.addOption(active);
-                            active = null;
-                        }
-                        else
-                            active.addValue(parseLine);
-                    }
-                    else
-                        active.addValue(parseLine);
-
-                    if(active != null &&
-                            (active.getOptionType() == OptionType.NORMAL ||
-                            active.getOptionType() == OptionType.BOOLEAN)) {
+                        if(parseLine.endsWith(String.valueOf(active.getValueSeparator())))
+                            active.setEndsWithSeparator(true);
                         commandLine.addOption(active);
                         active = null;
                     }
-                    if(addedArgument)
-                        commandLine.setParserException(new OptionParserException("An argument was given to an option that do not support it."));
+                    else
+                        active.addValue(parseLine);
                 }
-                //if no command is "active", we add it as an argument
+                else
+                    active.addValue(parseLine);
+
+                if(active != null &&
+                        (active.getOptionType() == OptionType.NORMAL ||
+                                active.getOptionType() == OptionType.BOOLEAN)) {
+                    commandLine.addOption(active);
+                    active = null;
+                }
+                if(addedArgument)
+                    commandLine.setParserException(new OptionParserException("An argument was given to an option that do not support it."));
+            }
+            //if no command is "active", we add it as an argument
+            else {
+                if(command.getArgument() == null) {
+                    commandLine.setParserException(new OptionParserException("An argument was given to a command that do not support it."));
+                }
                 else {
-                    if(command.getArgument() == null) {
-                        commandLine.setParserException(new OptionParserException("An argument was given to a command that do not support it."));
-                    }
-                    else {
-                        commandLine.addArgumentValue(parseLine);
-                        addedArgument = true;
-                    }
+                    commandLine.addArgumentValue(parseLine);
+                    addedArgument = true;
                 }
             }
+        }
 
         if(active != null && (ignoreRequirements ||
                 (active.getOptionType() == OptionType.LIST || active.getOptionType() == OptionType.GROUP))) {
@@ -315,8 +315,14 @@ public class AeshCommandLineParser implements CommandLineParser {
                 for(ProcessedOption po : commandLine.getOptions()) {
                     if(po.getShortName() != null && o.getShortName() != null &&
                             po.getShortName().equals(o.getShortName()) ||
-                            (po.getShortName() != null && po.getShortName().equals(o.getName())))
+                            (po.getShortName() != null && po.getShortName().equals(o.getName()))) {
                         found = true;
+                        break;
+                    }
+                    else if(po.doOverrideRequired()) {
+                        found = true;
+                        break;
+                    }
                 }
                 if(!found)
                     return new RequiredOptionException("Option: "+o.getDisplayName()+" is required for this command.");

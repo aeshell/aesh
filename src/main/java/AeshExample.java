@@ -131,8 +131,11 @@ public class AeshExample {
     @CommandDefinition(name = "test", description = "testing")
     public static class TestConsoleCommand implements Command, ConsoleCommand {
 
-        @Option(hasValue = false)
+        @Option(hasValue = false, required = true)
         private boolean bar;
+
+        @Option(overrideRequired = true, hasValue = false)
+        private boolean help;
 
         private boolean attached = true;
         private Shell shell;
@@ -140,8 +143,13 @@ public class AeshExample {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             this.shell = commandInvocation.getShell();
-            commandInvocation.attachConsoleCommand(this);
-            display();
+            if(help) {
+                shell.out().println(commandInvocation.getHelpInfo("test"));
+            }
+            else {
+                commandInvocation.attachConsoleCommand(this);
+                display();
+            }
 
             return CommandResult.SUCCESS;
         }

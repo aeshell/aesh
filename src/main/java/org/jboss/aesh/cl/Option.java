@@ -81,6 +81,11 @@ public @interface Option {
     boolean hasValue() default true;
 
     /**
+     *
+     */
+    boolean overrideRequired() default false;
+
+    /**
      * Define a converter if the field is a type thats not java.lang and other
      * common types, eg: File,++
      * See ClConverterManager for whats added by default

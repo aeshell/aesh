@@ -56,13 +56,13 @@ public class ParserGenerator {
                     processedCommand.addOption(o.shortName(), field.getName(), o.description(),
                             o.argument(), o.required(), ',', o.defaultValue(),
                             field.getType(), field.getName(), optionType, o.converter(),
-                            o.completer(), o.validator(), o.activator(), o.renderer());
+                            o.completer(), o.validator(), o.activator(), o.renderer(), o.overrideRequired());
                 }
                 else {
                     processedCommand.addOption(o.shortName(), o.name(), o.description(),
                             o.argument(), o.required(), ',', o.defaultValue(),
                             field.getType(), field.getName(), optionType, o.converter(),
-                            o.completer(), o.validator(), o.activator(), o.renderer());
+                            o.completer(), o.validator(), o.activator(), o.renderer(), o.overrideRequired());
                 }
 
             }

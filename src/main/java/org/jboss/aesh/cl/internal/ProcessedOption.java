@@ -62,6 +62,7 @@ public final class ProcessedOption {
     private boolean endsWithSeparator = false;
     private OptionActivator activator;
     private OptionRenderer renderer;
+    private boolean overrideRequired = false;
 
      public ProcessedOption(char shortName, String name, String description,
                             String argument, boolean required, char valueSeparator,
@@ -69,7 +70,7 @@ public final class ProcessedOption {
                             OptionType optionType, CLConverter converter, OptionCompleter completer,
                             OptionValidator optionValidator,
                             OptionActivator activator,
-                            OptionRenderer renderer) throws OptionParserException {
+                            OptionRenderer renderer, boolean overrideRequired) throws OptionParserException {
          this(shortName, name, description, argument, required, valueSeparator, defaultValue,
                  type, fieldName, optionType,
                  (Class<? extends CLConverter>) null,(Class<? extends OptionCompleter>) null,
@@ -88,16 +89,6 @@ public final class ProcessedOption {
              this.renderer = renderer;
      }
 
-
-    public ProcessedOption(char shortName, String name, String description,
-                           String argument, boolean required, char valueSeparator,
-                           List<String> defaultValue, Class<?> type, String fieldName,
-                           OptionType optionType, Class<? extends CLConverter> converter,
-                           OptionCompleter completer) throws OptionParserException {
-        this(shortName, name, description, argument, required, valueSeparator, defaultValue,
-                type, fieldName, optionType, converter, null, null, null, null);
-        this.completer = completer;
-    }
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator,
                            String[] defaultValue, Class<?> type, String fieldName,
@@ -108,6 +99,21 @@ public final class ProcessedOption {
                            Class<? extends OptionRenderer> renderer) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, Arrays.asList(defaultValue),
                 type, fieldName, optionType, converter, completer, optionValidator, activator, renderer);
+    }
+
+    public ProcessedOption(char shortName, String name, String description,
+                           String argument, boolean required, char valueSeparator,
+                           List<String> defaultValue, Class<?> type, String fieldName,
+                           OptionType optionType, Class<? extends CLConverter> converter,
+                           Class<? extends OptionCompleter> completer,
+                           Class<? extends OptionValidator> optionValidator,
+                           Class<? extends OptionActivator> optionActivator,
+                           Class<? extends OptionRenderer> optionRenderer,
+                           boolean overrideRequired) throws OptionParserException {
+        this(shortName, name, description, argument, required, valueSeparator, defaultValue, type, fieldName,
+                optionType, converter, completer, optionValidator, optionActivator, optionRenderer);
+
+        this.overrideRequired = overrideRequired;
     }
 
     public ProcessedOption(char shortName, String name, String description,
@@ -179,6 +185,10 @@ public final class ProcessedOption {
 
     public boolean isRequired() {
         return required;
+    }
+
+    public boolean doOverrideRequired() {
+        return overrideRequired;
     }
 
     public Class<?> getType() {
