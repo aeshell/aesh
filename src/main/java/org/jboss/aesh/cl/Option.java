@@ -81,7 +81,8 @@ public @interface Option {
     boolean hasValue() default true;
 
     /**
-     *
+     * When this is set to true and used it will override missing Options that are
+     * required by the Command.
      */
     boolean overrideRequired() default false;
 

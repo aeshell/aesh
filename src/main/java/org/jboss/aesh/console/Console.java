@@ -475,7 +475,7 @@ public class Console {
                         out().flush();
                         addToHistory(buffer.getLine());
                     }
-                    printNewline();
+                    out().print(Config.getLineSeparator());
                     processOperationResult(buffer.getLineNoMask());
                 }
                 //if we have some chars after the last enter, paste that is as well
@@ -537,7 +537,7 @@ public class Console {
             }
             //normal line
             else {
-                if(result.startsWith(" "))
+                if(result.startsWith(Parser.SPACE))
                     result = Parser.trimInFront(result);
 
                 if(settings.isOperatorParserEnabled())
@@ -709,7 +709,8 @@ public class Console {
             }
             prevAction = Action.NEWLINE;
             //moveToEnd();
-            printNewline(); // output newline
+            out().print(Config.getLineSeparator());
+            //printNewline(); // output newline
             if(buffer.isMultiLine())
                 return buffer.getMultiLineBuffer() + buffer.getLineNoMask();
             else
@@ -1216,7 +1217,7 @@ public class Console {
      * @throws java.io.IOException stream
      */
     private void printNewline() throws IOException {
-        moveCursor(buffer.totalLength());
+        //moveCursor(buffer.totalLength());
         out().println();
     }
 
@@ -1330,8 +1331,7 @@ public class Console {
                     }
                     else {
                         askDisplayCompletion = true;
-                        out().print(Config.getLineSeparator() + "Display all " + completions.size() + " possibilities? (y or n)");
-                        out().flush();
+                        out().println(Config.getLineSeparator() + "Display all " + completions.size() + " possibilities? (y or n)");
                     }
                 }
                 // display all
@@ -1381,13 +1381,12 @@ public class Console {
     private void displayCompletions(List<TerminalString> completions) throws IOException {
         //printNewline reset cursor pos, so we need to store it
         int oldCursorPos = buffer.getCursor();
-        printNewline();
+        out().print(Config.getLineSeparator());
         buffer.setCursor(oldCursorPos);
         out().print(Parser.formatDisplayListTerminalString(completions,
                 getInternalShell().getSize().getHeight(), getInternalShell().getSize().getWidth()));
         displayPrompt();
         out().print(buffer.getLine());
-        out().flush();
         //if we do a complete and the cursor is not at the end of the
         //buffer we need to move it to the correct place
         out().flush();
@@ -1430,7 +1429,7 @@ public class Console {
     public void clear(boolean includeBuffer) throws IOException {
         //(windows fix)
         if(!Config.isOSPOSIXCompatible())
-            printNewline();
+            out().print(Config.getLineSeparator());
         //first clear console
         out().print(ANSI.clearScreen());
         //move cursor to correct position
