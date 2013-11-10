@@ -99,9 +99,9 @@ public class Console {
     private AliasManager aliasManager;
     private Shell shell;
 
-    private Logger logger = LoggerUtil.getLogger(getClass().getName());
+    private final Logger logger = LoggerUtil.getLogger(getClass().getName());
 
-    private Pattern endsWithBackslashPattern = Pattern.compile(".*\\s\\\\$");
+    private static final Pattern endsWithBackslashPattern = Pattern.compile(".*\\s\\\\$");
 
     private ExecutorService executorService;
 
@@ -146,7 +146,6 @@ public class Console {
                 }
             }
         });
-
     }
 
     /**
@@ -602,11 +601,11 @@ public class Console {
             //do not display complete, but make sure that the previous line
             // is restored correctly
             else {
-                out().println();
+                out().print(Config.getLineSeparator());
                 displayPrompt();
                 out().print(buffer.getLine());
-                out().flush();
                 syncCursor();
+                out().flush();
             }
         }
         else if (action == Action.EDIT) {
@@ -829,7 +828,8 @@ public class Console {
         // otherwise, restore the line
         else {
             redrawLine();
-            out().println(Buffer.printAnsi((buffer.getPrompt().getLength() + 1) + "G"));
+            out().print(Buffer.printAnsi((buffer.getPrompt().getLength() + 1) + "G"));
+            out().flush();
         }
     }
 
