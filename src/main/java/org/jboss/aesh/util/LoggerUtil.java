@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
+import java.util.logging.MemoryHandler;
 import java.util.logging.SimpleFormatter;
 
 /**
@@ -24,14 +25,13 @@ import java.util.logging.SimpleFormatter;
 public class LoggerUtil {
 
     private static Handler logHandler;
-
     /**
      *
      * @param name class
      * @return logger
      */
     public static synchronized Logger getLogger(String name) {
-        if(logHandler == null)
+        if(logHandler == null) {
             try {
                 File logFile = new File(Settings.getInstance().getLogFile());
                 if(logFile.getParentFile() != null && !logFile.getParentFile().isDirectory()) {
@@ -47,8 +47,11 @@ public class LoggerUtil {
                 logHandler.setFormatter(new SimpleFormatter());
             }
             catch (IOException e) {
-                e.printStackTrace();
+                //just use a memoryhandler
+                logHandler = new MemoryHandler();
+                logHandler.setFormatter(new SimpleFormatter());
             }
+        }
 
         Logger log =  Logger.getLogger(name);
         log.setUseParentHandlers(false);
