@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.ByteArrayOutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,7 +40,7 @@ public class AeshCommandRegistryTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder().terminal(new TestTerminal()).inputStream(pipedInputStream)
-            .outputStream(byteArrayOutputStream).logging(true).create();
+            .outputStream(new PrintStream(byteArrayOutputStream)).logging(true).create();
 
         CommandRegistry registry = new CommandRegistry() {
 
@@ -80,7 +81,7 @@ public class AeshCommandRegistryTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder().terminal(new TestTerminal()).inputStream(pipedInputStream)
-            .outputStream(byteArrayOutputStream).logging(true).create();
+            .outputStream(new PrintStream(byteArrayOutputStream)).logging(true).create();
 
         CommandRegistry registry = new CommandRegistry() {
 
@@ -121,7 +122,7 @@ public class AeshCommandRegistryTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder().terminal(new TestTerminal()).inputStream(pipedInputStream)
-            .outputStream(byteArrayOutputStream).logging(true).create();
+            .outputStream(new PrintStream(byteArrayOutputStream)).logging(true).create();
 
         CommandRegistry registry = new CommandRegistry() {
 

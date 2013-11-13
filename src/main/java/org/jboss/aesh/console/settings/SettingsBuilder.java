@@ -12,7 +12,7 @@ import org.jboss.aesh.terminal.Terminal;
 
 import java.io.File;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.PrintStream;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -89,12 +89,12 @@ public class SettingsBuilder {
         return this;
     }
 
-    public SettingsBuilder outputStream(OutputStream outputStream) {
+    public SettingsBuilder outputStream(PrintStream outputStream) {
         settings.setStdOut(outputStream);
         return this;
     }
 
-    public SettingsBuilder outputStreamError(OutputStream error) {
+    public SettingsBuilder outputStreamError(PrintStream error) {
         settings.setStdErr(error);
         return this;
     }

@@ -6,10 +6,10 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.jboss.aesh.console.reader.AeshPrintStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 
 import java.io.IOException;
+import java.io.PrintStream;
 
 /**
  * A Shell is an abstraction of the Terminal that provides easy to use methods
@@ -25,14 +25,14 @@ public interface Shell {
     void clear() throws IOException;
 
     /**
-     * Returns the {@link AeshPrintStream} associated with the std out
+     * Returns the {@link PrintStream} associated with the std out
      */
-    AeshPrintStream out();
+    PrintStream out();
 
     /**
-     * Returns the {@link AeshPrintStream} associated with the std err
+     * Returns the {@link PrintStream} associated with the std err
      */
-    AeshPrintStream err();
+    PrintStream err();
 
     /**
      * Get the possible input stream

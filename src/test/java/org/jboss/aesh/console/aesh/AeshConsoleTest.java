@@ -38,6 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.PrintStream;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -57,7 +58,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
         Settings settings = new SettingsBuilder()
                 .terminal(new TestTerminal())
                 .inputStream(pipedInputStream)
-                .outputStream(new ByteArrayOutputStream())
+                .outputStream(new PrintStream(new ByteArrayOutputStream()))
                 .logging(true)
                 .create();
 

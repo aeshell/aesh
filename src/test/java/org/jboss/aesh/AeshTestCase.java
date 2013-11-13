@@ -18,6 +18,7 @@ import org.jboss.aesh.terminal.TestTerminal;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -38,7 +39,7 @@ public abstract class AeshTestCase extends TestCase {
         builder.readInputrc(false);
         builder.terminal(new TestTerminal());
         builder.inputStream(new ByteArrayInputStream(buffer.getBytes()));
-        builder.outputStream(new ByteArrayOutputStream());
+        builder.outputStream(new PrintStream(new ByteArrayOutputStream()));
         builder.readAhead(false);
         builder.mode(Mode.EMACS);
         if(!Config.isOSPOSIXCompatible())
@@ -71,7 +72,7 @@ public abstract class AeshTestCase extends TestCase {
         builder.readInputrc(false);
         builder.terminal(new TestTerminal());
         builder.inputStream(new ByteArrayInputStream(buffer.getBytes()));
-        builder.outputStream(new ByteArrayOutputStream());
+        builder.outputStream(new PrintStream(new ByteArrayOutputStream()));
         builder.readAhead(false);
         builder.mode(Mode.VI);
         if(!Config.isOSPOSIXCompatible())

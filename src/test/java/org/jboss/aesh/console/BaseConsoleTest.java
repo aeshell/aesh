@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -32,7 +33,7 @@ public abstract class BaseConsoleTest {
         builder.readInputrc(false);
         builder.terminal(new TestTerminal());
         builder.inputStream(is);
-        builder.outputStream(new ByteArrayOutputStream());
+        builder.outputStream(new PrintStream(new ByteArrayOutputStream()));
         builder.readAhead(false);
 
         if(!Config.isOSPOSIXCompatible())

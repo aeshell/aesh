@@ -10,10 +10,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jboss.aesh.console.reader.AeshPrintStream;
 import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
@@ -33,8 +33,8 @@ public class POSIXTerminal extends AbstractTerminal {
     private boolean restored = false;
 
     private InputStream input;
-    private AeshPrintStream stdOut;
-    private AeshPrintStream stdErr;
+    private PrintStream stdOut;
+    private PrintStream stdErr;
 
     private static long TIMEOUT_PERIOD = 3000;
 
@@ -45,7 +45,7 @@ public class POSIXTerminal extends AbstractTerminal {
     }
 
     @Override
-    public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
+    public void init(InputStream inputStream, PrintStream stdOut, PrintStream stdErr) {
         // save the initial tty configuration
         try {
             ttyConfig = stty("-g");
@@ -79,8 +79,8 @@ public class POSIXTerminal extends AbstractTerminal {
             e.printStackTrace();
         }
 
-        this.stdOut = new AeshPrintStream( stdOut, true);
-        this.stdErr = new AeshPrintStream( stdErr, true);
+        this.stdOut = stdOut;
+        this.stdErr = stdErr;
         size = new TerminalSize(getHeight(), getWidth());
     }
 
@@ -279,12 +279,12 @@ public class POSIXTerminal extends AbstractTerminal {
     }
 
     @Override
-    public AeshPrintStream err() {
+    public PrintStream err() {
         return stdErr;
     }
 
     @Override
-    public AeshPrintStream out() {
+    public PrintStream out() {
         return stdOut;
     }
 

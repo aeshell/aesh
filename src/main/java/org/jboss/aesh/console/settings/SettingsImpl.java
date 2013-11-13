@@ -20,7 +20,7 @@ import org.jboss.aesh.terminal.WindowsTerminal;
 
 import java.io.File;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.PrintStream;
 
 /**
  * Settings object that is parsed when Console is initialized.
@@ -38,8 +38,8 @@ public class SettingsImpl implements Settings {
     private String bellStyle;
     private boolean ansiConsole = true;
     private InputStream inputStream;
-    private OutputStream stdOut;
-    private OutputStream stdErr;
+    private PrintStream stdOut;
+    private PrintStream stdErr;
     private Terminal terminal;
     private boolean readInputrc = true;
     private File inputrc;
@@ -282,7 +282,7 @@ public class SettingsImpl implements Settings {
      * @return out
      */
     @Override
-    public OutputStream getStdOut() {
+    public PrintStream getStdOut() {
         if(stdOut == null)
             return System.out;
         else
@@ -293,7 +293,7 @@ public class SettingsImpl implements Settings {
      * Set where output should go to
      * @param stdOut output
      */
-    public void setStdOut(OutputStream stdOut) {
+    public void setStdOut(PrintStream stdOut) {
         this.stdOut = stdOut;
     }
 
@@ -302,7 +302,7 @@ public class SettingsImpl implements Settings {
      * @return out
      */
     @Override
-    public OutputStream getStdErr() {
+    public PrintStream getStdErr() {
         if(stdErr == null)
             return System.err;
         else
@@ -313,7 +313,7 @@ public class SettingsImpl implements Settings {
      * Set where output should go to
      * @param stdErr output
      */
-    public void setStdErr(OutputStream stdErr) {
+    public void setStdErr(PrintStream stdErr) {
         this.stdErr = stdErr;
     }
 

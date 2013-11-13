@@ -8,14 +8,13 @@ package org.jboss.aesh.terminal;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.fusesource.jansi.AnsiOutputStream;
 import org.fusesource.jansi.WindowsAnsiOutputStream;
 import org.fusesource.jansi.internal.WindowsSupport;
-import org.jboss.aesh.console.reader.AeshPrintStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -25,8 +24,8 @@ import org.jboss.aesh.util.LoggerUtil;
  */
 public class WindowsTerminal extends AbstractTerminal {
 
-    private AeshPrintStream stdOut;
-    private AeshPrintStream stdErr;
+    private PrintStream stdOut;
+    private PrintStream stdErr;
     private InputStream input;
     private TerminalSize size;
 
@@ -40,16 +39,16 @@ public class WindowsTerminal extends AbstractTerminal {
     }
 
     @Override
-    public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
+    public void init(InputStream inputStream, PrintStream stdOut, PrintStream stdErr) {
         //setting up reader
         try {
             //AnsiConsole.systemInstall();
-            this.stdOut = new AeshPrintStream( new WindowsAnsiOutputStream(stdOut), true);
-            this.stdErr = new AeshPrintStream( new WindowsAnsiOutputStream(stdErr), true);
+            this.stdOut = new PrintStream( new WindowsAnsiOutputStream(stdOut), true);
+            this.stdErr = new PrintStream( new WindowsAnsiOutputStream(stdErr), true);
         }
         catch (Exception ioe) {
-            this.stdOut = new AeshPrintStream( new AnsiOutputStream(stdOut), true);
-            this.stdErr = new AeshPrintStream( new AnsiOutputStream(stdErr), true);
+            this.stdOut = new PrintStream( new AnsiOutputStream(stdOut), true);
+            this.stdErr = new PrintStream( new AnsiOutputStream(stdErr), true);
         }
 
         this.input = inputStream;
@@ -127,12 +126,12 @@ public class WindowsTerminal extends AbstractTerminal {
     }
 
     @Override
-    public AeshPrintStream err() {
+    public PrintStream err() {
         return stdErr;
     }
 
     @Override
-    public AeshPrintStream out() {
+    public PrintStream out() {
         return stdOut;
     }
 }

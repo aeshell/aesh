@@ -8,7 +8,7 @@ package org.jboss.aesh.terminal;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.PrintStream;
 
 /**
  * Generic interface for Terminals
@@ -24,7 +24,7 @@ public interface Terminal {
      * @param stdOut standard output
      * @param stdErr error output
      */
-    void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr);
+    void init(InputStream inputStream, PrintStream stdOut, PrintStream stdErr);
 
     /**
      * Read from the input stream (char by char)

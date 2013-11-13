@@ -14,7 +14,7 @@ import org.jboss.aesh.terminal.Terminal;
 
 import java.io.File;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.PrintStream;
 
 /**
  * Object thats define all tunable settings used by Console
@@ -79,12 +79,12 @@ public interface Settings {
     /**
      * Get standard output stream
      */
-    OutputStream getStdOut();
+    PrintStream getStdOut();
 
     /**
      * Get standard error stream
      */
-    OutputStream getStdErr();
+    PrintStream getStdErr();
 
     /**
      * Get current terminal

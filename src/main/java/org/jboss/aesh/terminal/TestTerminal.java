@@ -9,9 +9,8 @@ package org.jboss.aesh.terminal;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.PrintStream;
 
-import org.jboss.aesh.console.reader.AeshPrintStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 
 /**
@@ -22,13 +21,13 @@ import org.jboss.aesh.console.reader.AeshStandardStream;
 public class TestTerminal implements Terminal, Shell {
 
     private InputStream input;
-    private AeshPrintStream writer;
+    private PrintStream writer;
     private TerminalSize size;
 
     @Override
-    public void init(InputStream inputStream, OutputStream stdOut, OutputStream stdErr) {
+    public void init(InputStream inputStream, PrintStream stdOut, PrintStream stdErr) {
         input = inputStream;
-        writer = new AeshPrintStream(stdOut, true);
+        writer = new PrintStream(stdOut, true);
         size = new TerminalSize(24,80);
     }
 
@@ -100,7 +99,7 @@ public class TestTerminal implements Terminal, Shell {
     }
 
     @Override
-    public AeshPrintStream err() {
+    public PrintStream err() {
         return writer;
     }
 
@@ -110,7 +109,7 @@ public class TestTerminal implements Terminal, Shell {
     }
 
     @Override
-    public AeshPrintStream out() {
+    public PrintStream out() {
         return writer;
     }
 

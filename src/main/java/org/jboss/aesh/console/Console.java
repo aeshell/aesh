@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +36,6 @@ import org.jboss.aesh.console.helper.Search;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
-import org.jboss.aesh.console.reader.AeshPrintStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.EditMode;
@@ -265,21 +265,21 @@ public class Console {
         startReader();
     }
 
-    private AeshPrintStream out() {
+    private PrintStream out() {
         //if redirection enabled, put it into a buffer
         if(currentOperation != null &&
                 currentOperation.getControlOperator().isRedirectionOut()) {
-            return new AeshPrintStream(redirectPipeOutBuffer, true);
+            return new PrintStream(redirectPipeOutBuffer, true);
         } else {
             return getInternalShell().out();
         }
     }
 
-    private AeshPrintStream err(){
+    private PrintStream err(){
         //if redirection enabled, put it into a buffer
         if(currentOperation != null &&
                 currentOperation.getControlOperator().isRedirectionErr()) {
-            return new AeshPrintStream(redirectPipeErrBuffer, true);
+            return new PrintStream(redirectPipeErrBuffer, true);
         } else {
             return getInternalShell().err();
         }
@@ -708,6 +708,7 @@ public class Console {
             }
             prevAction = Action.NEWLINE;
             //moveToEnd();
+            moveCursor(buffer.totalLength());
             out().print(Config.getLineSeparator());
             //printNewline(); // output newline
             if(buffer.isMultiLine())
@@ -1219,6 +1220,7 @@ public class Console {
     private void printNewline() throws IOException {
         //moveCursor(buffer.totalLength());
         out().println();
+        out().flush();
     }
 
     /**
@@ -1585,6 +1587,8 @@ public class Console {
         if(redirectPipeErrBuffer.toString().length() > 0)
             redirectPipeErrBuffer = new ByteArrayOutputStream();
 
+        //todo: check if this flush is needed
+        out().flush();
         if(output != null)
             return findAliases(output);
         else
@@ -1673,6 +1677,7 @@ public class Console {
             if(settings.isLogging())
                 logger.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
             getInternalShell().err().println(e.getMessage());
+            err().flush();
         }
         redirectPipeOutBuffer = new ByteArrayOutputStream();
         redirectPipeErrBuffer = new ByteArrayOutputStream();
@@ -1693,12 +1698,12 @@ public class Console {
         }
 
         @Override
-        public AeshPrintStream out() {
+        public PrintStream out() {
             return console.out();
         }
 
         @Override
-        public AeshPrintStream err() {
+        public PrintStream err() {
             return console.err();
         }
 

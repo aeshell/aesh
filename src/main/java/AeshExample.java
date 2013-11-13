@@ -75,7 +75,7 @@ public class AeshExample {
                         .create())
                 .generateParameter();
 
-        SettingsBuilder builder = new SettingsBuilder().logging(true);
+        SettingsBuilder builder = new SettingsBuilder().logging(false);
         builder.enableMan(true)
                 .interruptHook(new InterruptHook() {
                     @Override
