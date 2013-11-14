@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
+import java.util.logging.MemoryHandler;
 import java.util.logging.SimpleFormatter;
 
 /**
@@ -31,6 +32,8 @@ public class LoggerUtil {
             if(logFile.getParentFile() != null && !logFile.getParentFile().isDirectory()) {
                 if(!logFile.getParentFile().mkdirs()) {
                     //if creating dirs failed, just create a logger without a file handler
+                    logHandler = new MemoryHandler();
+                    logHandler.setFormatter(new SimpleFormatter());
                     return;
                 }
             }
@@ -41,9 +44,10 @@ public class LoggerUtil {
             logHandler.setFormatter(new SimpleFormatter());
         }
         catch (IOException e) {
-            e.printStackTrace();
+            //just use a simple memoryhandler
+            logHandler = new MemoryHandler();
+            logHandler.setFormatter(new SimpleFormatter());
         }
-
     }
 
     /**
