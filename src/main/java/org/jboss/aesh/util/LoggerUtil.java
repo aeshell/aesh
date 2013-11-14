@@ -11,8 +11,10 @@ import org.jboss.aesh.console.settings.Settings;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.MemoryHandler;
 import java.util.logging.SimpleFormatter;
@@ -47,9 +49,10 @@ public class LoggerUtil {
                 logHandler.setFormatter(new SimpleFormatter());
             }
             catch (IOException e) {
-                //just use a memoryhandler
-                logHandler = new MemoryHandler();
+                //just use a consolehandler, set level to severe..
+                logHandler = new ConsoleHandler();
                 logHandler.setFormatter(new SimpleFormatter());
+                logHandler.setLevel(Level.SEVERE);
             }
         }
 
