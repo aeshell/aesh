@@ -42,7 +42,7 @@ public class EmacsEditingTest extends BaseConsoleTest {
             console.start();
             outputStream.write("34".getBytes());
             //home
-            outputStream.write(new byte[]{27,79,72});
+            outputStream.write(new byte[]{1});
             outputStream.write("12\n".getBytes());
 
             Thread.sleep(100);
