@@ -6,13 +6,9 @@
  */
 package org.jboss.aesh.edit;
 
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import org.jboss.aesh.terminal.Key;
 
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
@@ -24,8 +20,6 @@ public class ViEditMode implements EditMode {
 
     private Operation previousAction;
     private KeyOperationManager operationManager;
-    private List<KeyOperation> currentOperations = new ArrayList<KeyOperation>();
-    private int operationLevel = 0;
 
     public ViEditMode(KeyOperationManager operations) {
         mode = Action.EDIT;
@@ -76,183 +70,134 @@ public class ViEditMode implements EditMode {
     }
 
     @Override
-    public Operation parseInput(int[] in, String buffer) {
-        int input = in[0];
+    public Operation parseInput(Key in, String buffer) {
+        KeyOperation currentOperation = operationManager.findOperation(in);
 
-        if(Config.isOSPOSIXCompatible() && in.length > 1) {
-            KeyOperation ko = operationManager.findOperation(in);
-            if(ko != null) {
-                //clear current operations to make sure that everything works as expected
-                currentOperations.clear();
-                currentOperations.add(ko);
-            }
-        }
-        else {
-            //if we're in the middle of parsing a sequence input
-            if(operationLevel > 0) {
-                Iterator<KeyOperation> operationIterator = currentOperations.iterator();
-                while(operationIterator.hasNext())
-                    if(input != operationIterator.next().getKeyValues()[operationLevel])
-                        operationIterator.remove();
+        if(currentOperation != null)
+            return findOperation(currentOperation, buffer);
+        if(isInEditMode())
+            return Operation.EDIT;
+        else
+            return Operation.NO_ACTION;
+    }
 
-            }
-            // parse a first sequence input
-            else {
-                for(KeyOperation ko : operationManager.getOperations())
-                    if(input == ko.getFirstValue() && ko.getKeyValues().length == in.length)
-                        currentOperations.add(ko);
-            }
-        }
+    private Operation findOperation(KeyOperation currentOperation, String buffer) {
 
         //search mode need special handling
         if(mode == Action.SEARCH) {
-            if(currentOperations.size() == 1) {
-                if(currentOperations.get(0).getOperation() == Operation.NEW_LINE) {
-                    mode = Action.EDIT;
-                    currentOperations.clear();
-                    return Operation.SEARCH_END;
-                }
-                else if(currentOperations.get(0).getOperation() == Operation.SEARCH_PREV) {
-                    currentOperations.clear();
-                    return Operation.SEARCH_PREV_WORD;
-                }
-                else if(currentOperations.get(0).getOperation() == Operation.DELETE_PREV_CHAR) {
-                    currentOperations.clear();
-                    return Operation.SEARCH_DELETE;
-                }
-                //if we got more than one we know that it started with esc
-                else if(currentOperations.get(0).getOperation() == Operation.ESCAPE) {
-                    mode = Action.EDIT;
-                    currentOperations.clear();
-                    return Operation.SEARCH_EXIT;
-                }
-                // search input
-                else {
-                    currentOperations.clear();
-                    return Operation.SEARCH_INPUT;
-                }
+            if(currentOperation.getOperation() == Operation.NEW_LINE) {
+                mode = Action.EDIT;
+                return Operation.SEARCH_END;
+            }
+            else if(currentOperation.getOperation() == Operation.SEARCH_PREV) {
+                return Operation.SEARCH_PREV_WORD;
+            }
+            else if(currentOperation.getOperation() == Operation.DELETE_PREV_CHAR) {
+                return Operation.SEARCH_DELETE;
             }
             //if we got more than one we know that it started with esc
-            else if(currentOperations.size() > 1) {
+            else if(currentOperation.getOperation() == Operation.ESCAPE) {
                 mode = Action.EDIT;
-                currentOperations.clear();
+                return Operation.SEARCH_EXIT;
+            }
+            else if(currentOperation.getOperation() == Operation.ESCAPE) {
+                mode = Action.EDIT;
                 return Operation.SEARCH_EXIT;
             }
             // search input
             else {
-                currentOperations.clear();
                 return Operation.SEARCH_INPUT;
             }
         } // end search mode
 
         if(isInReplaceMode()) {
-            if(currentOperations.size() == 1 &&
-                    currentOperations.get(0).getOperation() == Operation.ESCAPE) {
-                operationLevel = 0;
-                currentOperations.clear();
+            if( currentOperation.getOperation() == Operation.ESCAPE) {
                 mode = Action.MOVE;
                 return Operation.NO_ACTION;
             }
             else {
-                operationLevel = 0;
-                currentOperations.clear();
                 mode = Action.MOVE;
                 return saveAction(Operation.REPLACE);
             }
         }
 
 
-        if(currentOperations.isEmpty()) {
-            if(isInEditMode())
-                return Operation.EDIT;
+        Operation operation = currentOperation.getOperation();
+        Action workingMode = currentOperation.getWorkingMode();
+
+        //if ctrl-d is pressed on an empty line we need to return logout
+        //else return new_line
+        if(operation == Operation.EXIT) {
+            if(buffer.isEmpty())
+                return operation;
             else
-                return Operation.NO_ACTION;
-        }
-
-        else if(currentOperations.size() == 1) {
-            Operation operation = currentOperations.get(0).getOperation();
-            Action workingMode = currentOperations.get(0).getWorkingMode();
-            operationLevel = 0;
-            currentOperations.clear();
-
-            //if ctrl-d is pressed on an empty line we need to return logout
-            //else return new_line
-            if(operation == Operation.EXIT) {
-                if(buffer.isEmpty())
-                    return operation;
-                else
-                    return Operation.NEW_LINE;
-            }
-
-            if(operation == Operation.NEW_LINE) {
-                mode = Action.EDIT; //set to edit after a newline
                 return Operation.NEW_LINE;
-            }
-            else if(operation == Operation.REPLACE && !isInEditMode()) {
-                mode = Action.REPLACE;
-                return Operation.NO_ACTION;
-            }
-            else if(operation == Operation.DELETE_PREV_CHAR && workingMode == Action.NO_ACTION) {
-                if(isInEditMode())
-                    return Operation.DELETE_PREV_CHAR;
-                else
-                    return Operation.MOVE_PREV_CHAR;
-            }
-            else if(operation == Operation.DELETE_NEXT_CHAR && workingMode == Action.COMMAND) {
-                if(isInEditMode())
-                    return Operation.NO_ACTION;
-                else
-                    return saveAction(Operation.DELETE_NEXT_CHAR);
-
-            }
-            else if(operation == Operation.COMPLETE) {
-                if(isInEditMode())
-                    return Operation.COMPLETE;
-                else
-                    return Operation.NO_ACTION;
-            }
-            else if(operation == Operation.ESCAPE) {
-                switchEditMode();
-                if(isInEditMode())
-                    return Operation.NO_ACTION;
-                else
-                    return Operation.MOVE_PREV_CHAR;
-            }
-            else if (operation == Operation.SEARCH_PREV) {
-                mode = Action.SEARCH;
-                return Operation.SEARCH_PREV;
-            }
-            else if(operation == Operation.CLEAR)
-                return Operation.CLEAR;
-            //make sure that this only works for working more == Action.EDIT
-            else if(operation == Operation.MOVE_PREV_CHAR && workingMode.equals(Action.EDIT))
-                return Operation.MOVE_PREV_CHAR;
-            else if(operation == Operation.MOVE_NEXT_CHAR && workingMode.equals(Action.EDIT))
-                return Operation.MOVE_NEXT_CHAR;
-            else if(operation == Operation.HISTORY_PREV && workingMode.equals(Action.EDIT))
-                return operation;
-            else if(operation == Operation.HISTORY_NEXT && workingMode.equals(Action.EDIT))
-                return operation;
-            else if(operation == Operation.MOVE_BEGINNING && workingMode.equals(Action.EDIT)) //home
-                return operation;
-            else if(operation == Operation.MOVE_END && workingMode.equals(Action.EDIT)) //end
-                return operation;
-
-            //pgup / pgdown
-            else if(operation == Operation.PGDOWN || operation == Operation.PGUP)
-                return Operation.NO_ACTION;
-            else if(operation == Operation.NO_ACTION)
-                return Operation.NO_ACTION;
-
-            if(!isInEditMode())
-                return inCommandMode(operation, workingMode);
-            else
-                return Operation.EDIT;
         }
-        else {
-            operationLevel++;
+
+        if(operation == Operation.NEW_LINE) {
+            mode = Action.EDIT; //set to edit after a newline
+            return Operation.NEW_LINE;
+        }
+        else if(operation == Operation.REPLACE && !isInEditMode()) {
+            mode = Action.REPLACE;
             return Operation.NO_ACTION;
         }
+        else if(operation == Operation.DELETE_PREV_CHAR && workingMode == Action.NO_ACTION) {
+            if(isInEditMode())
+                return Operation.DELETE_PREV_CHAR;
+            else
+                return Operation.MOVE_PREV_CHAR;
+        }
+        else if(operation == Operation.DELETE_NEXT_CHAR && workingMode == Action.COMMAND) {
+            if(isInEditMode())
+                return Operation.NO_ACTION;
+            else
+                return saveAction(Operation.DELETE_NEXT_CHAR);
+
+        }
+        else if(operation == Operation.COMPLETE) {
+            if(isInEditMode())
+                return Operation.COMPLETE;
+            else
+                return Operation.NO_ACTION;
+        }
+        else if(operation == Operation.ESCAPE) {
+            switchEditMode();
+            if(isInEditMode())
+                return Operation.NO_ACTION;
+            else
+                return Operation.MOVE_PREV_CHAR;
+        }
+        else if (operation == Operation.SEARCH_PREV) {
+            mode = Action.SEARCH;
+            return Operation.SEARCH_PREV;
+        }
+        else if(operation == Operation.CLEAR)
+            return Operation.CLEAR;
+            //make sure that this only works for working more == Action.EDIT
+        else if(operation == Operation.MOVE_PREV_CHAR && workingMode.equals(Action.EDIT))
+            return Operation.MOVE_PREV_CHAR;
+        else if(operation == Operation.MOVE_NEXT_CHAR && workingMode.equals(Action.EDIT))
+            return Operation.MOVE_NEXT_CHAR;
+        else if(operation == Operation.HISTORY_PREV && workingMode.equals(Action.EDIT))
+            return operation;
+        else if(operation == Operation.HISTORY_NEXT && workingMode.equals(Action.EDIT))
+            return operation;
+        else if(operation == Operation.MOVE_BEGINNING && workingMode.equals(Action.EDIT)) //home
+            return operation;
+        else if(operation == Operation.MOVE_END && workingMode.equals(Action.EDIT)) //end
+            return operation;
+
+            //pgup / pgdown
+        else if(operation == Operation.PGDOWN || operation == Operation.PGUP)
+            return Operation.NO_ACTION;
+        else if(operation == Operation.NO_ACTION)
+            return Operation.NO_ACTION;
+
+        if(!isInEditMode())
+            return inCommandMode(operation, workingMode);
+        else
+            return Operation.EDIT;
 
     }
 
@@ -350,13 +295,13 @@ public class ViEditMode implements EditMode {
         }
         else if(operation == Operation.DELETE_PREV_CHAR && workingMode == Action.COMMAND)
             return saveAction(operation);
-        // paste
+            // paste
         else if(operation == Operation.PASTE_AFTER)
-           return saveAction(operation);
+            return saveAction(operation);
 
         else if(operation == Operation.PASTE_BEFORE)
             return saveAction(operation);
-        // replace
+            // replace
         else if(operation == Operation.CHANGE_NEXT_CHAR) {
             switchEditMode();
             return saveAction(operation);

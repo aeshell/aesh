@@ -8,6 +8,7 @@ package org.jboss.aesh.edit;
 
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.terminal.Key;
 
 /**
  *
@@ -15,7 +16,7 @@ import org.jboss.aesh.edit.actions.Operation;
  */
 public interface EditMode {
 
-    Operation parseInput(int[] input, String buffer);
+    Operation parseInput(Key input, String buffer);
 
     Action getCurrentAction();
 

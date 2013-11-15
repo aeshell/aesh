@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.KeyOperationFactory;
 import org.jboss.aesh.edit.KeyOperationManager;
@@ -76,5 +77,53 @@ public class KeyTest {
         ko = manager.findOperation(doubleUpKey);
         assertNull(ko);
 
+    }
+
+    @Test
+    public void testFindStartKey() {
+        int[] input = new int[] {2, 27, 65};
+        Key inc = Key.findStartKey(input);
+        assertEquals(Key.CTRL_B, inc);
+        System.arraycopy(input, inc.getKeyValues().length, input, 0, input.length-inc.getKeyValues().length);
+        inc = Key.findStartKey(input);
+        assertEquals(Key.ESC, inc);
+        System.arraycopy(input, inc.getKeyValues().length, input, 0, input.length - inc.getKeyValues().length);
+        inc = Key.findStartKey(input);
+        assertEquals(Key.A, inc);
+
+        if(Config.isOSPOSIXCompatible()) {
+            input = new int[] {32, 27, 91, 65, 10};
+            inc = Key.findStartKey(input);
+            assertEquals(Key.SPACE, inc);
+            System.arraycopy(input, inc.getKeyValues().length, input, 0, input.length-inc.getKeyValues().length);
+            inc = Key.findStartKey(input);
+            assertEquals(Key.UP, inc);
+            System.arraycopy(input, inc.getKeyValues().length, input, 0, input.length-inc.getKeyValues().length);
+            inc = Key.findStartKey(input);
+            assertEquals(Key.ENTER, inc);
+            System.arraycopy(input, inc.getKeyValues().length, input, 0, input.length-inc.getKeyValues().length);
+        }
+    }
+
+    @Test
+    public void testFindStartKeyPosition() {
+        int[] input = new int[] {2, 27, 65};
+        Key inc = Key.findStartKey(input,0);
+        assertEquals(Key.CTRL_B, inc);
+        inc = Key.findStartKey(input,1);
+        assertEquals(Key.ESC, inc);
+        System.arraycopy(input, inc.getKeyValues().length, input, 0, input.length - inc.getKeyValues().length);
+        inc = Key.findStartKey(input,2);
+        assertEquals(Key.A, inc);
+
+        if(Config.isOSPOSIXCompatible()) {
+            input = new int[] {32, 27, 91, 65, 10};
+            inc = Key.findStartKey(input,0);
+            assertEquals(Key.SPACE, inc);
+            inc = Key.findStartKey(input,1);
+            assertEquals(Key.UP, inc);
+            inc = Key.findStartKey(input,4);
+            assertEquals(Key.ENTER, inc);
+        }
     }
 }

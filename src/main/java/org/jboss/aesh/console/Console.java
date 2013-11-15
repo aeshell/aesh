@@ -434,73 +434,40 @@ public class Console {
                 detachProcess();
             }
 
-            int[] in = getTerminal().read(settings.isReadAhead());
+            int[] input = getTerminal().read(settings.isReadAhead());
             if(settings.isLogging()) {
-                logger.info("GOT: "+ Arrays.toString(in));
+                logger.info("GOT: "+ Arrays.toString(input));
             }
             //close thread, exit
-            if (in[0] == -1) {
+            if (input[0] == -1) {
                 executorService.shutdown();
                 running = false;
                 return;
             }
 
-            //we have a paste that contain enter
-            if(in.length > 1 && Key.ENTER.containKey(in) &&
-                    //dont want ctrl chars in a paste
-                    !Key.ESC.containKey(in)) {
-                //split it up based on enter, atm we assuming its only chars
-                // not special chars like delete, arrow up, etc
-                List<String> lines = new ArrayList<String>();
-                StringBuilder current = new StringBuilder();
-                for(int i : in) {
-                    if(Key.ENTER.getFirstValue() == i) {
-                        lines.add(current.toString());
-                        current = new StringBuilder();
-                    }
-                    else
-                        current.append((char) i);
+            boolean parsing = true;
+            //use a position instead of changing the array
+            int position = 0;
+            //if we get a paste or have input lag this should parse it correctly...
+            while(parsing) {
+                Key inc = Key.findStartKey(input, position);
+                if(input.length > inc.getKeyValues().length+position) {
+                    position += inc.getKeyValues().length;
                 }
-                for(String line : lines) {
-                    //if we're masking the cursor is always at first pos.
-                    if(buffer.isMasking()) {
-                        StringBuilder builder = new StringBuilder(buffer.getLineNoMask());
-                        builder.append(line);
-                        buffer.setLine(builder.toString());
-                    }
-                    else {
-                        buffer.write(line);
-                        out().print(line);
-                        out().flush();
-                        addToHistory(buffer.getLine());
-                    }
-                    out().print(Config.getLineSeparator());
-                    processOperationResult(buffer.getLineNoMask());
+                else {
+                    parsing = false;
                 }
-                //if we have some chars after the last enter, paste that is as well
-                if(current.length() > 0) {
-                    if(buffer.isMasking()) {
-                        StringBuilder builder = new StringBuilder(buffer.getLineNoMask());
-                        builder.append(current);
-                        buffer.setLine(builder.toString());
-                    }
-                    else {
-                        buffer.write(current.toString());
-                        out().print(buffer.getLine());
-                        out().flush();
-                    }
-                }
-            }
-            //a "normal" line, no paste etc...
-            else {
-                Operation operation = editMode.parseInput(in, buffer.getLine());
-                operation.setInput(in);
 
                 //if we have a command hooked in the input goes there
                 if(command != null)
-                    command.processOperation(new CommandOperation(in));
-                    //the input is parsed by æsh
+                    command.processOperation(new CommandOperation(input));
+                //the input is parsed by æsh
                 else {
+                    Operation operation = editMode.parseInput(inc, buffer.getLine());
+                    if(inc != Key.UNKNOWN)
+                        operation.setInput(inc.getKeyValues());
+                    else
+                        operation.setInput(new int[]{input[position]});
                     String result = parseOperation(operation, buffer.getPrompt().getMask());
                     if(result != null)
                         processOperationResult(result);

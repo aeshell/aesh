@@ -260,11 +260,59 @@ public enum Key {
         return Key.UNKNOWN;
     }
 
+    public static Key findStartKey(int[] input) {
+        for(Key key : values()) {
+            if(key != Key.ESC && key != Key.WINDOWS_ESC && key.inputStartsWithKey(input)) {
+                if((Config.isOSPOSIXCompatible() && key == Key.CTRL_J) ||
+                        (!Config.isOSPOSIXCompatible() && key == Key.CTRL_M))
+                    return key.ENTER;
+                else
+                    return key;
+            }
+        }
+        //need to do this in two steps since esc/windows_esc would be returned always
+        if(Key.ESC.inputStartsWithKey(input))
+            return Key.ESC;
+        else if(Key.WINDOWS_ESC.inputStartsWithKey(input))
+            return Key.WINDOWS_ESC;
+
+        return Key.UNKNOWN;
+    }
+
+    public static Key findStartKey(int[] input, int position) {
+        for(Key key : values()) {
+            if(key != Key.ESC && key != Key.WINDOWS_ESC && key.inputStartsWithKey(input, position)) {
+                if((Config.isOSPOSIXCompatible() && key == Key.CTRL_J) ||
+                        (!Config.isOSPOSIXCompatible() && key == Key.CTRL_M))
+                    return key.ENTER;
+                else
+                    return key;
+            }
+        }
+        //need to do this in two steps since esc/windows_esc would be returned always
+        if(Key.ESC.inputStartsWithKey(input, position))
+            return Key.ESC;
+        else if(Key.WINDOWS_ESC.inputStartsWithKey(input, position))
+            return Key.WINDOWS_ESC;
+
+        return Key.UNKNOWN;
+    }
+
     public boolean inputStartsWithKey(int[] input) {
         if(keyValues.length > input.length)
             return false;
         for(int i=0; i < keyValues.length; i++) {
             if(keyValues[i] != input[i])
+                return false;
+        }
+        return true;
+    }
+
+    public boolean inputStartsWithKey(int[] input, int position) {
+        if(keyValues.length+position > input.length)
+            return false;
+        for(int i=0; i < keyValues.length; i++) {
+            if(keyValues[i] != input[i+position])
                 return false;
         }
         return true;

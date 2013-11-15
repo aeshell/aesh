@@ -54,15 +54,35 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.BACKSPACE, Operation.DELETE_PREV_CHAR));
 
         //movement
-        keys.add(new KeyOperation(Key.UP, Operation.HISTORY_PREV));   //arrow up
-        keys.add(new KeyOperation(Key.DOWN, Operation.HISTORY_NEXT));   //arrow down
-        keys.add(new KeyOperation(Key.RIGHT, Operation.MOVE_NEXT_CHAR)); //arrow right
-        keys.add(new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR)); //arrow left
+        if(Key.RIGHT.equalTo(Key.RIGHT_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.RIGHT, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
+        }
+        else {
+            keys.add(new KeyOperation(Key.RIGHT, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
+            keys.add(new KeyOperation(Key.RIGHT_2, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
+        }
+        if(Key.LEFT.equalTo(Key.LEFT_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
 
-        keys.add(new KeyOperation(Key.UP_2, Operation.HISTORY_PREV));   //arrow up
-        keys.add(new KeyOperation(Key.DOWN_2, Operation.HISTORY_NEXT));   //arrow down
-        keys.add(new KeyOperation(Key.RIGHT_2, Operation.MOVE_NEXT_CHAR)); //arrow right
-        keys.add(new KeyOperation(Key.LEFT_2, Operation.MOVE_PREV_CHAR)); //arrow left
+        }
+        else {
+            keys.add(new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+            keys.add(new KeyOperation(Key.LEFT_2, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+        }
+        if(Key.UP.equalTo(Key.UP_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.UP, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
+        }
+        else {
+            keys.add(new KeyOperation(Key.UP, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
+            keys.add(new KeyOperation(Key.UP_2, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
+        }
+        if(Key.DOWN.equalTo(Key.DOWN_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.DOWN, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
+        }
+        else {
+            keys.add(new KeyOperation(Key.DOWN, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
+            keys.add(new KeyOperation(Key.DOWN_2, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
+        }
 
         //meta
         keys.add(new KeyOperation(Key.META_F, Operation.MOVE_NEXT_WORD));   //meta-f
@@ -146,15 +166,35 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.BACKSPACE, Operation.DELETE_PREV_CHAR));
 
         //movement
-        keys.add(new KeyOperation(Key.UP, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
-        keys.add(new KeyOperation(Key.DOWN, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
-        keys.add(new KeyOperation(Key.RIGHT, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
-        keys.add(new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+        if(Key.RIGHT.equalTo(Key.RIGHT_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.RIGHT, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
+        }
+        else {
+            keys.add(new KeyOperation(Key.RIGHT, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
+            keys.add(new KeyOperation(Key.RIGHT_2, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
+        }
+        if(Key.LEFT.equalTo(Key.LEFT_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
 
-        keys.add(new KeyOperation(Key.UP_2, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
-        keys.add(new KeyOperation(Key.DOWN_2, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
-        keys.add(new KeyOperation(Key.RIGHT_2, Operation.MOVE_NEXT_CHAR, Action.EDIT)); //arrow right
-        keys.add(new KeyOperation(Key.LEFT_2, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+        }
+        else {
+            keys.add(new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+            keys.add(new KeyOperation(Key.LEFT_2, Operation.MOVE_PREV_CHAR, Action.EDIT)); //arrow left
+        }
+        if(Key.UP.equalTo(Key.UP_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.UP, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
+        }
+        else {
+            keys.add(new KeyOperation(Key.UP, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
+            keys.add(new KeyOperation(Key.UP_2, Operation.HISTORY_PREV, Action.EDIT));   //arrow up
+        }
+        if(Key.DOWN.equalTo(Key.DOWN_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.DOWN, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
+        }
+        else {
+            keys.add(new KeyOperation(Key.DOWN, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
+            keys.add(new KeyOperation(Key.DOWN_2, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
+        }
 
         keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.EDIT)); //Delete
         keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.COMMAND)); //Delete

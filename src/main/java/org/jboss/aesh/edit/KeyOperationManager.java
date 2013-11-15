@@ -46,6 +46,11 @@ public class KeyOperationManager {
         operations.add(operation);
     }
 
+    public void addOperationIgnoreWorkingMode(KeyOperation operation ) {
+        checkAndRemoveIgnoreWorkingMode(operation);
+        operations.add(operation);
+    }
+
     private boolean exists(KeyOperation operation) {
         for(KeyOperation ko : operations)
             if(Arrays.equals(ko.getKeyValues(), operation.getKeyValues()))
@@ -54,14 +59,30 @@ public class KeyOperationManager {
         return false;
     }
 
+    private void checkAndRemoveIgnoreWorkingMode(KeyOperation ko) {
+        checkAndRemove(ko, true);
+    }
+
     private void checkAndRemove(KeyOperation ko) {
+      checkAndRemove(ko, false);
+    }
+
+    private void checkAndRemove(KeyOperation ko, boolean ignoreWorkingMode) {
         Iterator<KeyOperation> iter = operations.iterator();
         while(iter.hasNext()) {
             KeyOperation operation = iter.next();
-            if(Arrays.equals(operation.getKeyValues(), ko.getKeyValues()) &&
-                    operation.getWorkingMode().equals(ko.getWorkingMode())) {
-                iter.remove();
-                return;
+            if(ignoreWorkingMode) {
+                if(Arrays.equals(operation.getKeyValues(), ko.getKeyValues())) {
+                    iter.remove();
+                    return;
+                }
+            }
+            else {
+                if(Arrays.equals(operation.getKeyValues(), ko.getKeyValues()) &&
+                        operation.getWorkingMode().equals(ko.getWorkingMode())) {
+                    iter.remove();
+                    return;
+                }
             }
         }
     }

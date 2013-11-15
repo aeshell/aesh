@@ -10,10 +10,11 @@ import org.jboss.aesh.console.Config;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.MemoryHandler;
 import java.util.logging.SimpleFormatter;
 
 /**
@@ -26,13 +27,13 @@ public class LoggerUtil {
 
     private static Handler logHandler;
 
-    public static void createLogHandler(String log) {
+    private static void createLogHandler(String log) {
         try {
             File logFile = new File(log);
             if(logFile.getParentFile() != null && !logFile.getParentFile().isDirectory()) {
                 if(!logFile.getParentFile().mkdirs()) {
                     //if creating dirs failed, just create a logger without a file handler
-                    logHandler = new MemoryHandler();
+                    logHandler = new ConsoleHandler();
                     logHandler.setFormatter(new SimpleFormatter());
                     return;
                 }
@@ -44,10 +45,10 @@ public class LoggerUtil {
             logHandler.setFormatter(new SimpleFormatter());
         }
         catch (IOException e) {
-            //just use a simple memoryhandler
-            logHandler = new MemoryHandler();
+            logHandler = new ConsoleHandler();
             logHandler.setFormatter(new SimpleFormatter());
         }
+
     }
 
     /**
@@ -61,8 +62,9 @@ public class LoggerUtil {
             createLogHandler(Config.getTmpDir()+Config.getPathSeparator()+"aesh.log");
         }
 
-        if(logHandler == null)
+        if(logHandler == null) {
             return Logger.getLogger(name);
+        }
 
         Logger log =  Logger.getLogger(name);
         log.setUseParentHandlers(false);
@@ -70,4 +72,5 @@ public class LoggerUtil {
 
         return log;
     }
+
 }

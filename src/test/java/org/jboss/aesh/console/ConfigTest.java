@@ -6,27 +6,25 @@
  */
 package org.jboss.aesh.console;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ConfigTest extends TestCase {
+public class ConfigTest {
 
-    public ConfigTest(String name) {
-        super(name);
-    }
-
-
+    @Test
     public void testParseInputrc() throws IOException {
         SettingsBuilder builder = new SettingsBuilder();
         builder.inputrc( Config.isOSPOSIXCompatible() ?
@@ -44,6 +42,7 @@ public class ConfigTest extends TestCase {
 
     }
 
+    @Test
     public void testParseInputrc2() throws IOException {
         SettingsBuilder builder = new SettingsBuilder();
         builder.inputrc( Config.isOSPOSIXCompatible() ?
@@ -66,6 +65,7 @@ public class ConfigTest extends TestCase {
         }
     }
 
+    @Test
     public void testParseProperties() throws IOException {
         System.setProperty("aesh.terminal", "org.jboss.aesh.terminal.TestTerminal");
         System.setProperty("aesh.editmode", "vi");

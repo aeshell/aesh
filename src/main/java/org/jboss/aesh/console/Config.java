@@ -132,14 +132,14 @@ public class Config {
                 if(Config.isOSPOSIXCompatible()) {
                     Matcher keyQuoteMatcher = keyQuoteNamePattern.matcher(line);
                     if(keyQuoteMatcher.matches()) {
-                        builder.create().getOperationManager().addOperation(
+                        builder.create().getOperationManager().addOperationIgnoreWorkingMode(
                                 KeyMapper.mapQuoteKeys(keyQuoteMatcher.group(1),
                                         keyQuoteMatcher.group(3)));
                     }
                     else {
                         Matcher keyMatcher = keyNamePattern.matcher(line);
                         if(keyMatcher.matches()) {
-                            builder.create().getOperationManager().addOperation(KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
+                            builder.create().getOperationManager().addOperationIgnoreWorkingMode(KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
                         }
                     }
                 }
