@@ -76,20 +76,12 @@ public class AeshCommandValidatorTest {
             commandInvocation.getShell().out().println("you got foooed");
             return CommandResult.SUCCESS;
         }
-
-        public int getLow() {
-            return low;
-        }
-
-        public int getHigh() {
-            return high;
-        }
     }
 
     public static class FooCommandValidator implements CommandValidator<FooCommand> {
         @Override
         public void validate(FooCommand command) throws CommandValidatorException {
-            if(command.getHigh() + command.getLow() < 42)
+            if(command.low + command.high < 42)
                 throw new CommandValidatorException("Sum of high and low must be over 42!");
         }
     }

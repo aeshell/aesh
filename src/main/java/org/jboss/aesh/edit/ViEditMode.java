@@ -75,7 +75,10 @@ public class ViEditMode implements EditMode {
 
         if(currentOperation != null)
             return findOperation(currentOperation, buffer);
-        if(isInEditMode())
+        else if(mode == Action.SEARCH) {
+            return Operation.SEARCH_INPUT;
+        }
+        else if(isInEditMode())
             return Operation.EDIT;
         else
             return Operation.NO_ACTION;
@@ -92,13 +95,11 @@ public class ViEditMode implements EditMode {
             else if(currentOperation.getOperation() == Operation.SEARCH_PREV) {
                 return Operation.SEARCH_PREV_WORD;
             }
+            else if(currentOperation.getOperation() == Operation.SEARCH_NEXT_WORD) {
+                return Operation.SEARCH_NEXT_WORD;
+            }
             else if(currentOperation.getOperation() == Operation.DELETE_PREV_CHAR) {
                 return Operation.SEARCH_DELETE;
-            }
-            //if we got more than one we know that it started with esc
-            else if(currentOperation.getOperation() == Operation.ESCAPE) {
-                mode = Action.EDIT;
-                return Operation.SEARCH_EXIT;
             }
             else if(currentOperation.getOperation() == Operation.ESCAPE) {
                 mode = Action.EDIT;
