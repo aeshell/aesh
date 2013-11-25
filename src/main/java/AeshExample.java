@@ -20,7 +20,6 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
@@ -31,7 +30,6 @@ import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -77,7 +75,8 @@ public class AeshExample {
 
         SettingsBuilder builder = new SettingsBuilder().logging(true);
         builder.enableMan(true)
-                .readInputrc(false)
+                .readInputrc(true);
+                /*
                 .interruptHook(new InterruptHook() {
                     @Override
                     public void handleInterrupt(Console console) {
@@ -85,6 +84,7 @@ public class AeshExample {
                         console.clearBufferAndDisplayPrompt();
                     }
                 });
+                */
         Settings settings = builder.create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)

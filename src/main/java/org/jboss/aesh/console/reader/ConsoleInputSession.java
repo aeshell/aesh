@@ -12,7 +12,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -22,13 +21,14 @@ import java.util.concurrent.TimeUnit;
  */
 public class ConsoleInputSession {
     private InputStream consoleStream;
-    private InputStream externalInputStream;
+    private AeshInputStream aeshInputStream;
     private ExecutorService executorService;
 
     private ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<String>(1000);
 
     public ConsoleInputSession(InputStream consoleStream) {
         this.consoleStream = consoleStream;
+
         executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
@@ -37,46 +37,7 @@ public class ConsoleInputSession {
                 return thread;
             }
         });
-
-        this.externalInputStream = new InputStream() {
-            private String b;
-            private int c;
-
-            @Override
-            public int read() throws IOException {
-                try {
-                    if (b == null || c == b.length()) {
-                        b = blockingQueue.poll(365, TimeUnit.DAYS);
-                        c = 0;
-                    }
-
-                    if (b != null && !b.isEmpty()) {
-                        return b.charAt(c++);
-                    }
-                } catch (InterruptedException e) {
-                    //
-                }
-                return -1;
-            }
-
-            @Override
-            public int available() {
-                if (b != null)
-                    return b.length();
-                else
-                    return 0;
-            }
-
-            @Override
-            public void close() throws IOException {
-                try {
-                    stop();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
+        aeshInputStream = new AeshInputStream(blockingQueue);
         startReader();
     }
 
@@ -114,17 +75,13 @@ public class ConsoleInputSession {
         executorService.execute(reader);
     }
 
-    public void interruptPipe() {
-        blockingQueue.offer("\n");
-    }
 
     public void stop() throws IOException, InterruptedException {
         executorService.shutdown();
-        blockingQueue.offer("");
         consoleStream.close();
     }
 
-    public InputStream getExternalInputStream() {
-        return externalInputStream;
+    public AeshInputStream getExternalInputStream() {
+        return aeshInputStream;
     }
 }
