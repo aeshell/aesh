@@ -8,6 +8,8 @@ package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.cl.validator.CommandValidator;
+import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Prompt;
@@ -28,6 +30,7 @@ import java.io.PipedOutputStream;
 import java.io.PrintStream;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -67,7 +70,7 @@ public class AeshCommandOverrideRequiredTest {
 
     }
 
-    @CommandDefinition(name = "foo", description = "")
+    @CommandDefinition(name = "foo", description = "", validator = FooCommandValidator.class)
     public class FooCommand implements Command {
 
         @Option(required = true)
@@ -81,6 +84,13 @@ public class AeshCommandOverrideRequiredTest {
             if(help)
                 commandInvocation.getShell().out().println("OVERRIDDEN");
             return CommandResult.SUCCESS;
+        }
+    }
+
+    public class FooCommandValidator implements CommandValidator {
+        @Override
+        public void validate(Command command) throws CommandValidatorException {
+            fail("Should never get here!");
         }
     }
 }

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
@@ -251,10 +252,12 @@ public class AeshConsoleImpl implements AeshConsole {
                     CommandContainer commandContainer =
                             getCommand( Parser.findFirstWord(output.getBuffer()), output.getBuffer());
 
-                    commandContainer.getParser().getCommandPopulator().populateObject(commandContainer.getCommand(),
-                            commandContainer.getParser().parse(output.getBuffer()));
-                    //validate the command before execute
-                    if(commandContainer.getParser().getCommand().getValidator() != null)
+                    CommandLine commandLine = commandContainer.getParser().parse(output.getBuffer());
+
+                    commandContainer.getParser().getCommandPopulator().populateObject(commandContainer.getCommand(), commandLine);
+                    //validate the command before execute, only call if no options with overrideRequired is not set
+                    if(commandContainer.getParser().getCommand().getValidator() != null &&
+                            !commandLine.hasOptionWithOverrideRequired())
                         commandContainer.getParser().getCommand().getValidator().validate(commandContainer.getCommand());
                     result = commandContainer.getCommand().execute(
                             commandInvocationServices.getCommandInvocationProvider(commandInvocationProvider)

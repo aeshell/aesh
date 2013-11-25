@@ -124,6 +124,11 @@ public class KeyTest {
             assertEquals(Key.UP, inc);
             inc = Key.findStartKey(input,4);
             assertEquals(Key.ENTER, inc);
+
+            input = new int[] {10};
+            inc = Key.findStartKey(input,0);
+            assertEquals(Key.ENTER, inc);
+
         }
     }
 }

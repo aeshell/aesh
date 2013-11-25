@@ -164,6 +164,14 @@ public class CommandLine {
             this.parserError = true;
     }
 
+    public boolean hasOptionWithOverrideRequired() {
+        for(ProcessedOption option : options) {
+            if(option.doOverrideRequired())
+                return true;
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         return "CommandLine{" +
