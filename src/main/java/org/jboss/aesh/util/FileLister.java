@@ -26,6 +26,7 @@ import java.util.List;
 public class FileLister {
     private static final char DOT = '.';
     private static final String home = "~/";
+    private static final char TILDE = '~';
     private static final String parent = "..";
 
     private String token;

@@ -27,7 +27,7 @@ public class FileListerTest {
 
     @Before
     public void before() throws IOException {
-        workingDir = File.createTempFile("aesh", ".FileListerTest");
+        workingDir = File.createTempFile("temp", ".FileListerTest");
         workingDir.delete();
         workingDir.mkdirs();
     }

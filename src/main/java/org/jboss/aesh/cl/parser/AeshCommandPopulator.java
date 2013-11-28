@@ -67,7 +67,6 @@ public class AeshCommandPopulator implements CommandPopulator {
             resetField(instance, line.getArgument().getFieldName(), true);
     }
 
-    /*
     /**
      * Will parse the input line and populate the fields in the instance object specified by
      * the given annotations.
@@ -77,12 +76,13 @@ public class AeshCommandPopulator implements CommandPopulator {
      * @param instance command
      * @param line command line
      * @throws CommandLineParserException
-
     public static void parseAndPopulate(Object instance, String line)
             throws CommandLineParserException, OptionValidatorException {
-        ParserGenerator.generateCommandLineParser(instance.getClass()).populateObject(instance, line);
+        CommandLineParser parser = ParserGenerator.generateCommandLineParser(instance.getClass());
+        AeshCommandPopulator populator = new AeshCommandPopulator(parser);
+        populator.populateObject(instance, parser.parse(line));
     }
-    */
+     */
 
     private void resetField(Object instance, String fieldName, boolean hasValue) {
         try {
