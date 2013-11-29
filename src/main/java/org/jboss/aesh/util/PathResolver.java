@@ -20,10 +20,11 @@ import java.util.List;
 public class PathResolver {
 
     private static final char TILDE = '~';
+    private static final String TILDE_WITH_SEPARATOR = "~"+Config.getPathSeparator();
     private static final char STAR = '*';
     private static final char QUESTION = '?';
     private static final String PARENT = "..";
-    private static final String PARENT_WITH_SEAPARATOR = ".."+ Config.getPathSeparator();
+    private static final String PARENT_WITH_SEPARATOR = ".."+ Config.getPathSeparator();
     private static final String ROOT = Config.getPathSeparator();
     private static final String CURRENT_WITH_SEPARATOR = "."+Config.getPathSeparator();
     private static final String SEPARATOR_WITH_CURRENT = Config.getPathSeparator()+".";
@@ -43,7 +44,6 @@ public class PathResolver {
         if(cwd == null)
             cwd = new File(Config.getHomeDir());
 
-
         //if incPath start with eg: ./, remove it
         if(incPath.toString().startsWith(CURRENT_WITH_SEPARATOR)) {
             incPath = new File(incPath.toString().substring(CURRENT_WITH_SEPARATOR.length()));
@@ -53,10 +53,18 @@ public class PathResolver {
         if(incPath.toString().equals(CURRENT))
             incPath = new File("");
 
-        if(incPath.toString().length() == 0) {
-            ArrayList<File> fileList = new ArrayList<File>(1);
-            fileList.add(cwd);
-            return fileList;
+        if(incPath.toString().startsWith(TILDE_WITH_SEPARATOR)) {
+            if(Config.getHomeDir().endsWith(Config.getPathSeparator()))
+                incPath = new File(Config.getHomeDir()+incPath.toString().substring(2));
+            else
+                incPath = new File(Config.getHomeDir()+incPath.toString().substring(1));
+        }
+
+        if(incPath.toString().indexOf(TILDE) == 0) {
+            if(incPath.toString().length() > 1)
+                incPath = new File(Config.getPathSeparator() + incPath.toString().substring(1));
+            else
+                incPath = new File(Config.getPathSeparator());
         }
 
         //  foo1/./foo2 is changed to foo1/foo2
@@ -84,13 +92,13 @@ public class PathResolver {
                 incPath = new File(cwd.toString() + Config.getPathSeparator() + incPath.toString());
         }
 
-        if(incPath.toString().indexOf(PARENT_WITH_SEAPARATOR) > -1) {
+        if(incPath.toString().indexOf(PARENT_WITH_SEPARATOR) > -1) {
             String tmp = incPath.toString();
             File tmpFile = new File(incPath.toString());
-            while(tmp.indexOf(PARENT_WITH_SEAPARATOR) > -1) {
-                int index = tmp.indexOf(PARENT_WITH_SEAPARATOR);
+            while(tmp.indexOf(PARENT_WITH_SEPARATOR) > -1) {
+                int index = tmp.indexOf(PARENT_WITH_SEPARATOR);
                 if(index == 0) {
-                    tmp = tmp.substring(PARENT_WITH_SEAPARATOR.length());
+                    tmp = tmp.substring(PARENT_WITH_SEPARATOR.length());
                     tmpFile = new File(Config.getPathSeparator());
                 }
                 else {
@@ -98,8 +106,8 @@ public class PathResolver {
                     tmpFile = tmpFile.getParentFile();
                     if(tmpFile == null)
                         tmpFile = new File(Config.getPathSeparator());
-                    tmpFile = new File(tmpFile.toString() + tmp.substring(index+PARENT_WITH_SEAPARATOR.length()-1));
-                    //tmp = tmp.substring(0, index) + tmp.substring(index+PARENT_WITH_SEAPARATOR.length());
+                    tmpFile = new File(tmpFile.toString() + tmp.substring(index+ PARENT_WITH_SEPARATOR.length()-1));
+                    //tmp = tmp.substring(0, index) + tmp.substring(index+PARENT_WITH_SEPARATOR.length());
                     tmp = tmpFile.toString();
                 }
             }
@@ -113,10 +121,9 @@ public class PathResolver {
                 incPath = new File(Config.getPathSeparator());
         }
 
-        if(incPath.toString().indexOf(TILDE) > -1) {
-            //this should not happen
-        }
-        else if( incPath.toString().indexOf(STAR) > -1) {
+        if( incPath.toString().indexOf(STAR) > -1) {
+            int index = -1;
+
             //we need some wildcard parser
         }
         else {
@@ -128,5 +135,16 @@ public class PathResolver {
 
         return null;
     }
+    /*
+
+    private static List<File> parseWildcard(File incPath) {
+        ArrayList<File> files = new ArrayList<File>();
+        int index = -1;
+        while(incPath.toString().indexOf(STAR) > -1) {
+
+        }
+
+    }
+    */
 
 }
