@@ -834,12 +834,12 @@ public class Console {
         else
             fromHistory = history.getPreviousFetch();
 
+        prevAction = Action.HISTORY;
         if(fromHistory != null) {
             setBufferLine(fromHistory);
             moveCursor(-buffer.getCursor()+buffer.length());
             redrawLine();
         }
-        prevAction = Action.HISTORY;
     }
 
     private void setBufferLine(String newLine) throws IOException {
@@ -1100,7 +1100,8 @@ public class Console {
             //most deletions are backspace from the end of the line so we've
             //optimize that like this.
             //NOTE: this doesnt work with history, need to find a better solution
-            if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length()) {
+            if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length()
+                    && prevAction != Action.HISTORY) {
                 out().print(Parser.SPACE_CHAR + ANSI.getStart() + "1D"); //move cursor to left
             }
             else {
