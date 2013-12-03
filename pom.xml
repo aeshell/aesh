@@ -22,8 +22,8 @@
 
     <properties>
         <!-- jboss-parent override -->
-        <maven.compiler.argument.target>1.6</maven.compiler.argument.target>
-        <maven.compiler.argument.source>1.6</maven.compiler.argument.source>
+        <maven.compiler.argument.target>1.7</maven.compiler.argument.target>
+        <maven.compiler.argument.source>1.7</maven.compiler.argument.source>
     </properties>
 
     <scm>
