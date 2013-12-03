@@ -31,6 +31,7 @@ import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.man.Man;
+import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.parser.Parser;
@@ -142,6 +143,11 @@ public class AeshConsoleImpl implements AeshConsole {
     @Override
     public ManProvider getManProvider() {
         return manProvider;
+    }
+
+    @Override
+    public void executeCommand(String command) {
+        console.getConsoleCallback().readConsoleOutput(new ConsoleOperation(ControlOperator.NONE, command));
     }
 
     public String getBuffer() {

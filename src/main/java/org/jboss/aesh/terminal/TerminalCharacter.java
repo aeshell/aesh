@@ -18,6 +18,7 @@ public class TerminalCharacter {
     private char character;
     private TerminalTextStyle style;
     private TerminalColor color;
+    private String cache;
 
     public TerminalCharacter(char c) {
         this(c, new TerminalTextStyle());
@@ -46,10 +47,15 @@ public class TerminalCharacter {
     public char getCharacter() {
         return character;
     }
+    public void setCharacter(char c) {
+        this.character = c;
+        cache = null;
+    }
 
     public TerminalTextStyle getStyle() {
         return style;
     }
+
 
     /**
      * style, text color, background color
@@ -76,13 +82,16 @@ public class TerminalCharacter {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(ANSI.getStart());
-        builder.append(style.toString()).append(';');
-        builder.append(this.color.toString());
-        builder.append('m');
-        builder.append(getCharacter());
-        return builder.toString();
+        if(cache == null) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(ANSI.getStart());
+            builder.append(style.toString()).append(';');
+            builder.append(this.color.toString());
+            builder.append('m');
+            builder.append(getCharacter());
+            cache = builder.toString();
+        }
+        return cache;
     }
 
     public boolean equalsIgnoreCharacter(TerminalCharacter that) {

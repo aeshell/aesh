@@ -72,4 +72,10 @@ public interface AeshConsole {
     void registerCommandInvocationProvider(String name, CommandInvocationProvider commandInvocationProvider);
 
     ManProvider getManProvider();
+
+    /**
+     * The input wil be executed similar to a command executed from the prompt
+     * @param command command
+     */
+    void executeCommand(String command);
 }

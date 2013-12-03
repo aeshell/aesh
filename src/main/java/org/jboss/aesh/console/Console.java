@@ -255,6 +255,10 @@ public class Console {
         this.consoleCallback = consoleCallback;
     }
 
+    public ConsoleCallback getConsoleCallback() {
+        return consoleCallback;
+    }
+
     public synchronized void start() {
         if(running)
             throw new IllegalStateException("Not allowed to start the Console without stopping it first");

@@ -216,4 +216,8 @@ public class ANSI {
     public static String showCursor() {
         return CURSOR_SHOW;
     }
+
+    public static String moveCursor(int x, int y) {
+       return new StringBuilder().append(START).append(y).append(';').append(x).append('H').toString();
+    }
 }
