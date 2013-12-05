@@ -11,11 +11,11 @@ package org.jboss.aesh.cl.completer;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface OptionCompleter {
+public interface OptionCompleter<T extends CompleterData> {
 
     /**
      * Complete the given input for an option value.
      * The current value to be completed is completerData.getGivenCompleteValue()
      */
-    void complete(CompleterData completerData);
+    void complete(T completerData);
 }
