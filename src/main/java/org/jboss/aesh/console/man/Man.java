@@ -8,8 +8,8 @@ package org.jboss.aesh.console.man;
 
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.OptionCompleter;
+import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
@@ -86,7 +86,7 @@ public class Man extends AeshFileDisplayer {
 
     public static class ManCompleter implements OptionCompleter {
         @Override
-        public void complete(CompleterData completerData) {
+        public void complete(CompleterInvocation completerData) {
             List<String> completeValues = new ArrayList<String>();
             if(registry != null) {
                 for(String command : registry.getAllCommandNames()) {

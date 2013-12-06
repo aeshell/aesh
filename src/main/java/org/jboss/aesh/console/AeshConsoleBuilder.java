@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
+import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
@@ -25,6 +27,7 @@ public class AeshConsoleBuilder {
     private CommandInvocationServices commandInvocationServices;
     private CommandNotFoundHandler commandNotFoundHandler;
     private ManProvider manProvider;
+    private CompleterInvocationProvider completerInvocationProvider;
 
     public AeshConsoleBuilder() {
     }
@@ -54,6 +57,11 @@ public class AeshConsoleBuilder {
         return this;
     }
 
+    public AeshConsoleBuilder completerInvocationProvider(CompleterInvocationProvider completerInvocationProvider) {
+        this.completerInvocationProvider = completerInvocationProvider;
+        return this;
+    }
+
     public AeshConsoleBuilder manProvider(ManProvider manProvider) {
         this.manProvider = manProvider;
         return this;
@@ -68,9 +76,12 @@ public class AeshConsoleBuilder {
         if(commandInvocationServices == null)
             commandInvocationServices = new CommandInvocationServices();
 
+        if(completerInvocationProvider == null)
+            completerInvocationProvider = new AeshCompleterInvocationProvider();
+
         AeshConsole aeshConsole =
                 new AeshConsoleImpl(settings, registry, commandInvocationServices,
-                        commandNotFoundHandler, manProvider);
+                        commandNotFoundHandler, completerInvocationProvider, manProvider);
 
         if(prompt != null)
             aeshConsole.setPrompt(prompt);

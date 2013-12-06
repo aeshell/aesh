@@ -7,6 +7,7 @@
 package org.jboss.aesh.cl.completer;
 
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ import java.util.List;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CompleterData {
+public class CompleterData implements CompleterInvocation {
 
     private List<TerminalString> completerValues;
     private boolean appendSpace = true;

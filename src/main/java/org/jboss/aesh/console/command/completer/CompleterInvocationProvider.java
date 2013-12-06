@@ -4,15 +4,12 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.cl.completer;
-
-import org.jboss.aesh.console.command.completer.CompleterInvocation;
+package org.jboss.aesh.console.command.completer;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class NullOptionCompleter implements OptionCompleter {
-    @Override
-    public void complete(CompleterInvocation completerData) {
-    }
+public interface CompleterInvocationProvider<T extends CompleterInvocation> {
+
+    T enhanceCompleterInvocation(CompleterInvocation completerInvocation);
 }

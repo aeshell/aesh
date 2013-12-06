@@ -15,6 +15,8 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.completer.CompleterInvocation;
+import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.TerminalString;
 
@@ -156,7 +158,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
 
     @Override
     public void injectValuesAndComplete(ParsedCompleteObject completeObject, Command command,
-                                        CompleteOperation completeOperation) {
+                                        CompleteOperation completeOperation,
+                                        CompleterInvocationProvider completerInvocationProvider) {
 
         if(completeObject.doDisplayOptions()) {
             //got the whole name, just add a space
@@ -226,7 +229,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             catch (OptionValidatorException ignored) { }
 
             if(currentOption.getCompleter() != null) {
-                CompleterData completions = new CompleterData(completeObject.getValue(), command);
+                CompleterInvocation completions =
+                        completerInvocationProvider.enhanceCompleterInvocation( new CompleterData(completeObject.getValue(), command));
                 currentOption.getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
@@ -246,7 +250,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             }
             //only try to complete default values if completer is null
             else if(currentOption.getDefaultValues().size() > 0) {
-                CompleterData completions = new CompleterData(completeObject.getValue(), command);
+                CompleterInvocation completions =
+                        completerInvocationProvider.enhanceCompleterInvocation( new CompleterData(completeObject.getValue(), command));
                 new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
@@ -276,7 +281,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
 
             if(parser.getCommand().getArgument() != null &&
                     parser.getCommand().getArgument().getCompleter() != null) {
-                CompleterData completions = new CompleterData(completeObject.getValue(), command);
+                CompleterInvocation completions =
+                        completerInvocationProvider.enhanceCompleterInvocation( new CompleterData(completeObject.getValue(), command));
                 parser.getCommand().getArgument().getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
@@ -295,7 +301,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             }
             else if(parser.getCommand().getArgument() != null &&
                     parser.getCommand().getArgument().getDefaultValues().size() > 0) {
-                CompleterData completions = new CompleterData(completeObject.getValue(), command);
+                CompleterInvocation completions =
+                        completerInvocationProvider.enhanceCompleterInvocation( new CompleterData(completeObject.getValue(), command));
                 new DefaultValueOptionCompleter( parser.getCommand().getArgument().getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());

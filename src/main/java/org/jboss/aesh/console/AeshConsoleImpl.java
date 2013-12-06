@@ -20,6 +20,7 @@ import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
+import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.invocation.AeshCommandInvocation;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
@@ -46,6 +47,7 @@ public class AeshConsoleImpl implements AeshConsole {
     private final Console console;
     private final CommandRegistry registry;
     private final CommandInvocationServices commandInvocationServices;
+    private final CompleterInvocationProvider completerInvocationProvider;
 
     private final Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
     private final ManProvider manProvider;
@@ -56,10 +58,12 @@ public class AeshConsoleImpl implements AeshConsole {
     AeshConsoleImpl(Settings settings, CommandRegistry registry,
                     CommandInvocationServices commandInvocationServices,
                     CommandNotFoundHandler commandNotFoundHandler,
+                    CompleterInvocationProvider completerInvocationProvider,
                     ManProvider manProvider) {
         this.registry = registry;
         this.commandInvocationServices = commandInvocationServices;
         this.commandNotFoundHandler = commandNotFoundHandler;
+        this.completerInvocationProvider = completerInvocationProvider;
         this.manProvider = manProvider;
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallback(this));
@@ -227,7 +231,8 @@ public class AeshConsoleImpl implements AeshConsole {
 
                     ParsedCompleteObject completeObject =
                             completionParser.findCompleteObject( completeOperation.getBuffer(), completeOperation.getCursor());
-                    completionParser.injectValuesAndComplete(completeObject, commandContainer.getCommand(), completeOperation);
+                    completionParser.injectValuesAndComplete(completeObject, commandContainer.getCommand(),
+                            completeOperation, completerInvocationProvider);
                 }
                 catch (CommandLineParserException e) {
                     logger.warning(e.getMessage());

@@ -2,12 +2,12 @@ package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshConsoleImpl;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -108,7 +108,7 @@ public class AeshCommandCompletionTest {
     public static class FooCompletor implements OptionCompleter {
 
         @Override
-        public void complete(CompleterData completerData) {
+        public void complete(CompleterInvocation completerData) {
             if(completerData.getGivenCompleteValue().equals("bar 2")) {
                 completerData.addCompleterValue("bar 2 3 4");
             }

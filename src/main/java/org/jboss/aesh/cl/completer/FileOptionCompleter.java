@@ -9,6 +9,7 @@ package org.jboss.aesh.cl.completer;
 import java.io.File;
 
 import org.jboss.aesh.complete.CompleteOperation;
+import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.util.FileLister;
 import org.jboss.aesh.util.FileLister.Filter;
 
@@ -42,7 +43,7 @@ public class FileOptionCompleter implements OptionCompleter {
     }
 
     @Override
-    public void complete(CompleterData completerData) {
+    public void complete(CompleterInvocation completerData) {
 
         CompleteOperation completeOperation = new CompleteOperation(completerData.getGivenCompleteValue(), 0);
         if (completerData.getGivenCompleteValue() == null)

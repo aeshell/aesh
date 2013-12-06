@@ -12,7 +12,6 @@ import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
-import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
@@ -20,6 +19,7 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
@@ -233,7 +233,7 @@ public class AeshExample {
     public static class LessCompleter implements OptionCompleter {
 
         @Override
-        public void complete(CompleterData completerData) {
+        public void complete(CompleterInvocation completerData) {
             List<String> completeList = new ArrayList<String>();
             if(completerData.getGivenCompleteValue() == null || completerData.getGivenCompleteValue().length() == 0)
                 completeList.add("1");

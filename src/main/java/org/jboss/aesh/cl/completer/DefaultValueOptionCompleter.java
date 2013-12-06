@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.cl.completer;
 
+import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.parser.Parser;
 
 import java.util.List;
@@ -22,7 +23,7 @@ public class DefaultValueOptionCompleter implements OptionCompleter {
     }
 
     @Override
-    public void complete(CompleterData completerData) {
+    public void complete(CompleterInvocation completerData) {
         if(completerData.getGivenCompleteValue() == null ||
                 completerData.getGivenCompleteValue().length() == 0)
             completerData.addAllCompleterValues(defaultValues);
