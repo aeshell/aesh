@@ -139,7 +139,7 @@ public class AeshExample {
         @Option(overrideRequired = true, hasValue = false)
         private boolean help;
 
-        @Option(overrideRequired = true, hasValue = false)
+        @Option(hasValue = false)
         private boolean helpPlease;
 
         private boolean attached = true;
