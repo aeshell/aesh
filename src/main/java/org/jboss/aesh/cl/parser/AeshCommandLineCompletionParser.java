@@ -106,7 +106,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                                 Parser.trimOptionName(lastWord), lastWord.length(), true);
                     else {
                         String optionName = Parser.trimOptionName(lastWord);
-                        if(parser.getCommand().hasLongOption(optionName))
+                        if(parser.getCommand().hasUniqueLongOption(optionName))
                             return new ParsedCompleteObject(true, optionName, lastWord.length(), true);
                         else
                             return new ParsedCompleteObject(true, optionName, lastWord.length(), false);
@@ -180,6 +180,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                         //multiple params
                         else {
                             completeOperation.addCompletionCandidatesTerminalString(optionNamesWithDash);
+                            completeOperation.setOffset( completeOperation.getCursor() - 2 - completeObject.getName().length());
                         }
 
                     }

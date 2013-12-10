@@ -329,4 +329,18 @@ public final class ProcessedCommand {
         }
         return false;
     }
+
+
+    //will only return true if the optionName equals an option and it does
+    //not start with another option name
+    public boolean hasUniqueLongOption(String optionName) {
+        if(hasLongOption(optionName)) {
+            for(ProcessedOption o : getOptions()) {
+                if(o.getName().startsWith(optionName))
+                    return false;
+            }
+            return true;
+        }
+        return false;
+    }
 }
