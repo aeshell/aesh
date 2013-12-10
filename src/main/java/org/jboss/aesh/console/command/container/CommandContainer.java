@@ -18,7 +18,7 @@ import org.jboss.aesh.console.command.Command;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandContainer {
+public interface CommandContainer extends AutoCloseable {
 
     /**
      * @return command
@@ -39,4 +39,9 @@ public interface CommandContainer {
      * @return error message
      */
     String getBuildErrorMessage();
+    
+    /**
+     * Called when this object is no longer used
+     */
+    void close();
 }
