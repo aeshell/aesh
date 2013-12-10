@@ -7,6 +7,7 @@
 package org.jboss.aesh.cl.converter;
 
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.command.converter.ConverterInvocation;
 
 /**
  * A Command line converter
@@ -14,6 +15,6 @@ import org.jboss.aesh.cl.validator.OptionValidatorException;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CLConverter<T> {
-    T convert(String input) throws OptionValidatorException;
+public interface Converter<T,C extends ConverterInvocation> {
+    T convert(C converterInvocation) throws OptionValidatorException;
 }

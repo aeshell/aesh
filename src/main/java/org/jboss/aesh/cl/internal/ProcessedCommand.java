@@ -8,7 +8,7 @@ package org.jboss.aesh.cl.internal;
 
 import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.completer.OptionCompleter;
-import org.jboss.aesh.cl.converter.CLConverter;
+import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.CommandValidator;
@@ -93,7 +93,7 @@ public final class ProcessedCommand {
     public void addOption(char name, String longName, String description,
                      String argument, boolean required, char valueSeparator,
                      String[] defaultValue, Class<?> type, String fieldName, OptionType optionType,
-                     Class<? extends CLConverter> converter,
+                     Class<? extends Converter> converter,
                      Class<? extends OptionCompleter> completer,
                      Class<? extends OptionValidator> validator,
                      Class<? extends OptionActivator> activator,
@@ -108,7 +108,7 @@ public final class ProcessedCommand {
     public void addOption(char name, String longName, String description,
                      String argument, boolean required, char valueSeparator,
                      String[] defaultValue, Class<?> type, String fieldName, OptionType optionType,
-                     Class<? extends CLConverter> converter,
+                     Class<? extends Converter> converter,
                      Class<? extends OptionCompleter> completer,
                      Class<? extends OptionValidator> validator,
                      Class<? extends OptionActivator> activator,

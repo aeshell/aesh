@@ -9,8 +9,13 @@ package org.jboss.aesh.util;
 import org.jboss.aesh.console.Config;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Resolve a file that might contain (~,*,?) to its proper path
@@ -30,6 +35,7 @@ public class PathResolver {
     private static final String SEPARATOR_WITH_CURRENT = Config.getPathSeparator()+".";
     private static final String SEPARATOR_CURRENT_SEPARATOR = Config.getPathSeparator()+"."+Config.getPathSeparator();
     private static final String CURRENT = ".";
+    private static Pattern starPattern = Pattern.compile("[\\*]+");
 
     /**
      * 1. find the absolute root directory
@@ -122,9 +128,8 @@ public class PathResolver {
         }
 
         if( incPath.toString().indexOf(STAR) > -1) {
-            int index = -1;
-
             //we need some wildcard parser
+
         }
         else {
             //no wildcards
@@ -135,7 +140,6 @@ public class PathResolver {
 
         return null;
     }
-    /*
 
     private static List<File> parseWildcard(File incPath) {
         ArrayList<File> files = new ArrayList<File>();
@@ -144,7 +148,47 @@ public class PathResolver {
 
         }
 
+        return files;
     }
-    */
+
+    public static List<File> findFiles(File incPath, String searchArgument, boolean findDirectory) {
+        ArrayList<File> files = new ArrayList<>();
+
+        if(starPattern.matcher(searchArgument).matches()) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(incPath.toPath(), new DirectoryFilter())) {
+                for(Path p : stream)
+                    files.add(p.toFile());
+                return files;
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(incPath.toPath(), searchArgument)) {
+                if(findDirectory) {
+                    for(Path p : stream)
+                        if(Files.isDirectory(p))
+                            files.add(p.toFile());
+                }
+                else {
+                    for(Path p : stream)
+                        files.add(p.toFile());
+                }
+                return files;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return files;
+    }
+
+    private static class DirectoryFilter implements DirectoryStream.Filter<Path> {
+        @Override
+        public boolean accept(Path entry) throws IOException {
+            return Files.isDirectory(entry);
+        }
+    }
 
 }

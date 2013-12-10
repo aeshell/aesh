@@ -6,7 +6,8 @@
  */
 package org.jboss.aesh.util;
 
-import org.jboss.aesh.cl.converter.CLConverter;
+import org.jboss.aesh.cl.converter.Converter;
+import org.jboss.aesh.console.command.converter.ConverterInvocation;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertNotNull;
@@ -32,10 +33,10 @@ public class ReflectionUtilTest {
         Foo3 foo3 = (Foo3) ReflectionUtil.newInstance(Foo3.class);
         assertNotNull(foo3);
 
-        class FooConverter implements CLConverter<FooConverter> {
+        class FooConverter implements Converter<FooConverter, ConverterInvocation> {
 
             @Override
-            public FooConverter convert(String input) {
+            public FooConverter convert(ConverterInvocation input) {
                 return this;
             }
         }

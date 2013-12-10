@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jboss.aesh.cl.CommandLine;
+import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
@@ -48,6 +49,8 @@ public class AeshConsoleImpl implements AeshConsole {
     private final CommandRegistry registry;
     private final CommandInvocationServices commandInvocationServices;
     private final CompleterInvocationProvider completerInvocationProvider;
+    private final ConverterInvocationProvider converterInvocationProvider;
+    private final InvocationProviders invocationProviders;
 
     private final Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
     private final ManProvider manProvider;
@@ -59,12 +62,16 @@ public class AeshConsoleImpl implements AeshConsole {
                     CommandInvocationServices commandInvocationServices,
                     CommandNotFoundHandler commandNotFoundHandler,
                     CompleterInvocationProvider completerInvocationProvider,
+                    ConverterInvocationProvider converterInvocationProvider,
                     ManProvider manProvider) {
         this.registry = registry;
         this.commandInvocationServices = commandInvocationServices;
         this.commandNotFoundHandler = commandNotFoundHandler;
         this.completerInvocationProvider = completerInvocationProvider;
+        this.converterInvocationProvider = converterInvocationProvider;
         this.manProvider = manProvider;
+        this.invocationProviders =
+                new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider);
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallback(this));
         console.addCompletion(new AeshCompletion());
@@ -232,7 +239,7 @@ public class AeshConsoleImpl implements AeshConsole {
                     ParsedCompleteObject completeObject =
                             completionParser.findCompleteObject( completeOperation.getBuffer(), completeOperation.getCursor());
                     completionParser.injectValuesAndComplete(completeObject, commandContainer.getCommand(),
-                            completeOperation, completerInvocationProvider);
+                            completeOperation, invocationProviders);
                 }
                 catch (CommandLineParserException e) {
                     logger.warning(e.getMessage());
@@ -265,7 +272,8 @@ public class AeshConsoleImpl implements AeshConsole {
 
                     CommandLine commandLine = commandContainer.getParser().parse(output.getBuffer());
 
-                    commandContainer.getParser().getCommandPopulator().populateObject(commandContainer.getCommand(), commandLine);
+                    commandContainer.getParser().getCommandPopulator().populateObject(commandContainer.getCommand(), commandLine,
+                            invocationProviders, true);
                     //validate the command before execute, only call if no options with overrideRequired is not set
                     if(commandContainer.getParser().getCommand().getValidator() != null &&
                             !commandLine.hasOptionWithOverrideRequired())

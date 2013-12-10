@@ -12,7 +12,7 @@ import org.jboss.aesh.cl.completer.BooleanOptionCompleter;
 import org.jboss.aesh.cl.completer.FileOptionCompleter;
 import org.jboss.aesh.cl.completer.NullOptionCompleter;
 import org.jboss.aesh.cl.completer.OptionCompleter;
-import org.jboss.aesh.cl.converter.CLConverter;
+import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.converter.CLConverterManager;
 import org.jboss.aesh.cl.converter.NullConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
@@ -21,6 +21,8 @@ import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.NullValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.console.command.converter.AeshConverterInvocation;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ReflectionUtil;
 
@@ -50,7 +52,7 @@ public final class ProcessedOption {
     private String argument;
     private List<String> defaultValues;
     private Class<?> type;
-    private CLConverter converter;
+    private Converter converter;
     private OptionType optionType;
     private boolean required = false;
     private char valueSeparator;
@@ -67,13 +69,13 @@ public final class ProcessedOption {
      public ProcessedOption(char shortName, String name, String description,
                             String argument, boolean required, char valueSeparator,
                             List<String> defaultValue, Class<?> type, String fieldName,
-                            OptionType optionType, CLConverter converter, OptionCompleter completer,
+                            OptionType optionType, Converter converter, OptionCompleter completer,
                             OptionValidator optionValidator,
                             OptionActivator activator,
                             OptionRenderer renderer, boolean overrideRequired) throws OptionParserException {
          this(shortName, name, description, argument, required, valueSeparator, defaultValue,
                  type, fieldName, optionType,
-                 (Class<? extends CLConverter>) null,(Class<? extends OptionCompleter>) null,
+                 (Class<? extends Converter>) null,(Class<? extends OptionCompleter>) null,
                  (Class<? extends OptionValidator>) null,
                  (Class<? extends OptionActivator>) null,
                  (Class<? extends OptionRenderer>) null);
@@ -92,7 +94,7 @@ public final class ProcessedOption {
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator,
                            String[] defaultValue, Class<?> type, String fieldName,
-                           OptionType optionType, Class<? extends CLConverter> converter,
+                           OptionType optionType, Class<? extends Converter> converter,
                            Class<? extends OptionCompleter> completer,
                            Class<? extends OptionValidator> optionValidator,
                            Class<? extends OptionActivator> activator,
@@ -104,7 +106,7 @@ public final class ProcessedOption {
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator,
                            List<String> defaultValue, Class<?> type, String fieldName,
-                           OptionType optionType, Class<? extends CLConverter> converter,
+                           OptionType optionType, Class<? extends Converter> converter,
                            Class<? extends OptionCompleter> completer,
                            Class<? extends OptionValidator> optionValidator,
                            Class<? extends OptionActivator> optionActivator,
@@ -119,7 +121,7 @@ public final class ProcessedOption {
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator,
                            List<String> defaultValue, Class<?> type, String fieldName,
-                           OptionType optionType, Class<? extends CLConverter> converter,
+                           OptionType optionType, Class<? extends Converter> converter,
                            Class<? extends OptionCompleter> completer,
                            Class<? extends OptionValidator> optionValidator,
                            Class<? extends OptionActivator> optionActivator,
@@ -231,7 +233,7 @@ public final class ProcessedOption {
         return fieldName;
     }
 
-    public CLConverter getConverter() {
+    public Converter getConverter() {
         return converter;
     }
 
@@ -341,7 +343,7 @@ public final class ProcessedOption {
         return sb.toString();
     }
 
-    private CLConverter initConverter(Class<? extends CLConverter> converterClass) {
+    private Converter initConverter(Class<? extends Converter> converterClass) {
         if(converterClass != null && converterClass != NullConverter.class) {
             if( CLConverterManager.getInstance().hasConverter(converterClass))
                 return CLConverterManager.getInstance().getConverter(converterClass);
@@ -396,18 +398,24 @@ public final class ProcessedOption {
             return null;
     }
 
-    private Object doConvert(String inputValue,boolean doValidation) throws OptionValidatorException {
-        Object result = converter.convert(inputValue);
+    @SuppressWarnings("unchecked")
+    private Object doConvert(String inputValue, InvocationProviders invocationProviders,
+                             boolean doValidation) throws OptionValidatorException {
+        Object result = converter.convert(
+        invocationProviders.getConverterInvocationProvider().enhanceConverterInvocations(new AeshConverterInvocation(inputValue)));
+        //Object result =   converter.convert(inputValue);
         if(validator != null && doValidation)
             validator.validate(result);
         return result;
     }
 
-    public void injectValueIntoField(Object instance) throws OptionValidatorException {
-        injectValueIntoField(instance, true);
-    }
+    //public void injectValueIntoField(Object instance) throws OptionValidatorException {
+    //    injectValueIntoField(instance, true);
+    //}
 
-    public void injectValueIntoField(Object instance, boolean doValidation) throws OptionValidatorException {
+    @SuppressWarnings("unchecked")
+    public void injectValueIntoField(Object instance, InvocationProviders invocationProviders,
+                                     boolean doValidation) throws OptionValidatorException {
         if(converter == null)
             return;
         try {
@@ -421,9 +429,9 @@ public final class ProcessedOption {
             }
             if(optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN) {
                 if(getValue() != null)
-                    field.set(instance, doConvert(getValue(), doValidation));
+                    field.set(instance, doConvert(getValue(), invocationProviders, doValidation));
                 else if(defaultValues.size() > 0) {
-                    field.set(instance, doConvert(defaultValues.get(0), doValidation));
+                    field.set(instance, doConvert(defaultValues.get(0), invocationProviders, doValidation));
                 }
             }
             else if(optionType == OptionType.LIST || optionType == OptionType.ARGUMENT) {
@@ -432,11 +440,11 @@ public final class ProcessedOption {
                         Set tmpSet = new HashSet<Object>();
                         if(values.size() > 0) {
                             for(String in : values)
-                                tmpSet.add(doConvert(in, doValidation));
+                                tmpSet.add(doConvert(in, invocationProviders, doValidation));
                         }
                         else if(defaultValues.size() > 0) {
                             for(String in : defaultValues)
-                                tmpSet.add(doConvert(in, doValidation));
+                                tmpSet.add(doConvert(in, invocationProviders, doValidation));
                         }
 
                         field.set(instance, tmpSet);
@@ -445,11 +453,11 @@ public final class ProcessedOption {
                         List tmpList = new ArrayList();
                         if(values.size() > 0) {
                             for(String in : values)
-                                tmpList.add(doConvert(in, doValidation));
+                                tmpList.add(doConvert(in, invocationProviders, doValidation));
                         }
                         else if(defaultValues.size() > 0) {
                             for(String in : values)
-                                tmpList.add(doConvert(in, doValidation));
+                                tmpList.add(doConvert(in, invocationProviders, doValidation));
                         }
                         field.set(instance, tmpList);
                     }
@@ -459,11 +467,11 @@ public final class ProcessedOption {
                     Collection tmpInstance = (Collection) field.getType().newInstance();
                     if(values.size() > 0) {
                         for(String in : values)
-                            tmpInstance.add(doConvert(in, doValidation));
+                            tmpInstance.add(doConvert(in, invocationProviders, doValidation));
                     }
                     else if(defaultValues.size() > 0) {
                         for(String in : defaultValues)
-                            tmpInstance.add(doConvert(in, doValidation));
+                            tmpInstance.add(doConvert(in, invocationProviders, doValidation));
                     }
                     field.set(instance, tmpInstance);
                 }
@@ -472,13 +480,13 @@ public final class ProcessedOption {
                 if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
                     Map<String, Object> tmpMap = newHashMap();
                     for(String propertyKey : properties.keySet())
-                        tmpMap.put(propertyKey,doConvert(properties.get(propertyKey), doValidation));
+                        tmpMap.put(propertyKey,doConvert(properties.get(propertyKey), invocationProviders, doValidation));
                     field.set(instance, tmpMap);
                  }
                 else {
                     Map<String,Object> tmpMap = (Map<String,Object>) field.getType().newInstance();
                     for(String propertyKey : properties.keySet())
-                        tmpMap.put(propertyKey,doConvert(properties.get(propertyKey), doValidation));
+                        tmpMap.put(propertyKey,doConvert(properties.get(propertyKey), invocationProviders, doValidation));
                     field.set(instance, tmpMap);
                 }
             }

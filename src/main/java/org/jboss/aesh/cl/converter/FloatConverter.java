@@ -6,16 +6,14 @@
  */
 package org.jboss.aesh.cl.converter;
 
-import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.command.converter.ConverterInvocation;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class NullConverter implements Converter {
-
+public class FloatConverter implements Converter<Float, ConverterInvocation> {
     @Override
-    public Object convert(ConverterInvocation input) throws OptionValidatorException {
-        return null;
+    public Float convert(ConverterInvocation input) {
+        return Float.parseFloat(input.getInput());
     }
 }

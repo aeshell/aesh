@@ -10,6 +10,7 @@ import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.InvocationProviders;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -32,11 +33,13 @@ public class AeshCommandPopulator implements CommandPopulator {
      * @param line command line
      * @throws CommandLineParserException
      */
+    /*
     @Override
     public void populateObject(Object instance, CommandLine line)
             throws CommandLineParserException, OptionValidatorException {
         populateObject(instance, line, true);
     }
+    */
 
     /**
      * Populate a Command instance with the values parsed from a command line
@@ -47,21 +50,22 @@ public class AeshCommandPopulator implements CommandPopulator {
      * @throws CommandLineParserException
      */
     @Override
-    public void populateObject(Object instance, CommandLine line, boolean validate)
+    public void populateObject(Object instance, CommandLine line,
+                               InvocationProviders invocationProviders, boolean validate)
             throws CommandLineParserException, OptionValidatorException {
         if(line.hasParserError())
             throw line.getParserException();
         for(ProcessedOption option: commandLineParser.getCommand().getOptions()) {
             if(line.hasOption(option.getName()))
-                line.getOption(option.getName()).injectValueIntoField(instance, validate);
+                line.getOption(option.getName()).injectValueIntoField(instance, invocationProviders, validate);
             else if(option.getDefaultValues().size() > 0) {
-                option.injectValueIntoField(instance, validate);
+                option.injectValueIntoField(instance, invocationProviders, validate);
             }
             else
                 resetField(instance, option.getFieldName(), option.hasValue());
         }
         if(line.getArgument() != null && line.getArgument().getValues().size() > 0) {
-            line.getArgument().injectValueIntoField(instance, validate);
+            line.getArgument().injectValueIntoField(instance, invocationProviders, validate);
         }
         else if(line.getArgument() != null)
             resetField(instance, line.getArgument().getFieldName(), true);
@@ -74,7 +78,7 @@ public class AeshCommandPopulator implements CommandPopulator {
      * Any parser errors will throw an exception
      *
      * @param instance command
-     * @param line command line
+     * @param fieldName field
      * @throws CommandLineParserException
     public static void parseAndPopulate(Object instance, String line)
             throws CommandLineParserException, OptionValidatorException {

@@ -6,12 +6,14 @@
  */
 package org.jboss.aesh.cl.converter;
 
+import org.jboss.aesh.console.command.converter.ConverterInvocation;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class IntegerCLConverter implements CLConverter<Integer> {
+public class LongConverter implements Converter<Long, ConverterInvocation> {
     @Override
-    public Integer convert(String input) {
-        return Integer.parseInt(input);
+    public Long convert(ConverterInvocation input) {
+        return Long.parseLong(input.getInput());
     }
 }

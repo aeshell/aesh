@@ -9,6 +9,7 @@ package org.jboss.aesh.cl.parser;
 import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.InvocationProviders;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -22,8 +23,8 @@ public interface CommandPopulator {
      * @param line command line
      * @throws CommandLineParserException
      */
-    void populateObject(Object instance, CommandLine line)
-            throws CommandLineParserException, OptionValidatorException;
+//    void populateObject(Object instance, CommandLine line)
+//            throws CommandLineParserException, OptionValidatorException;
 
     /**
      * Populate a Command instance with the values parsed from a command line
@@ -33,7 +34,8 @@ public interface CommandPopulator {
      * @param validate based on rules given to the parser
      * @throws CommandLineParserException
      */
-    void populateObject(Object instance, CommandLine line, boolean validate)
+    void populateObject(Object instance, CommandLine line, InvocationProviders invocationProviders,
+                        boolean validate)
                     throws CommandLineParserException, OptionValidatorException;
 
 }

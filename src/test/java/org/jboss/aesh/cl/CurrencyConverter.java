@@ -6,16 +6,18 @@
  */
 package org.jboss.aesh.cl;
 
-import org.jboss.aesh.cl.converter.CLConverter;
+import org.jboss.aesh.cl.converter.Converter;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.command.converter.ConverterInvocation;
 
 import java.util.Currency;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CurrencyConverter implements CLConverter<Currency> {
+public class CurrencyConverter implements Converter<Currency, ConverterInvocation> {
     @Override
-    public Currency convert(String input) {
-        return Currency.getInstance(input);
+    public Currency convert(ConverterInvocation converterInvocation) throws OptionValidatorException {
+        return Currency.getInstance(converterInvocation.getInput());
     }
 }

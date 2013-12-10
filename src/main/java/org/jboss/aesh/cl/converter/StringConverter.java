@@ -6,15 +6,14 @@
  */
 package org.jboss.aesh.cl.converter;
 
+import org.jboss.aesh.console.command.converter.ConverterInvocation;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CharacterCLConverter implements CLConverter<Character> {
+public class StringConverter implements Converter<String, ConverterInvocation> {
     @Override
-    public Character convert(String input) {
-        if(input != null && input.length() > 0)
-            return input.charAt(0);
-        else
-            return '\u0000';
+    public String convert(ConverterInvocation input) {
+        return input.getInput();
     }
 }

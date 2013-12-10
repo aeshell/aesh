@@ -9,7 +9,7 @@ package org.jboss.aesh.cl.builder;
 import org.jboss.aesh.cl.activation.NullActivator;
 import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.completer.OptionCompleter;
-import org.jboss.aesh.cl.converter.CLConverter;
+import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.converter.CLConverterManager;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
@@ -40,7 +40,7 @@ public class OptionBuilder {
     private boolean hasMultipleValues = false;
     private char valueSeparator = ',';
     private OptionType optionType;
-    private CLConverter converter;
+    private Converter converter;
     private String fieldName;
     private OptionCompleter completer;
     private List<String> defaultValues;
@@ -146,7 +146,7 @@ public class OptionBuilder {
         return this;
     }
 
-    public OptionBuilder converter(CLConverter converter) {
+    public OptionBuilder converter(Converter converter) {
         this.converter = converter;
         return this;
     }

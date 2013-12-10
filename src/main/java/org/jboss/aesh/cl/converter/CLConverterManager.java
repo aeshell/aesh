@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class CLConverterManager {
 
-    private static Map<Class, CLConverter> converters;
+    private static Map<Class, Converter> converters;
 
     private static class CLConvertManagerHolder {
         static final CLConverterManager INSTANCE = new CLConverterManager();
@@ -30,32 +30,32 @@ public class CLConverterManager {
     }
 
     private void initMap() {
-        converters = new HashMap<Class, CLConverter>();
-        converters.put(Integer.class, new IntegerCLConverter());
+        converters = new HashMap<Class, Converter>();
+        converters.put(Integer.class, new IntegerConverter());
         converters.put(int.class, converters.get(Integer.class));
-        converters.put(Boolean.class, new BooleanCLConverter());
+        converters.put(Boolean.class, new BooleanConverter());
         converters.put(boolean.class, converters.get(Boolean.class));
-        converters.put(Character.class, new CharacterCLConverter());
+        converters.put(Character.class, new CharacterConverter());
         converters.put(char.class, converters.get(Character.class));
-        converters.put(Double.class, new DoubleCLConverter());
+        converters.put(Double.class, new DoubleConverter());
         converters.put(double.class, converters.get(Double.class));
-        converters.put(Float.class, new FloatCLConverter());
+        converters.put(Float.class, new FloatConverter());
         converters.put(float.class, converters.get(Float.class));
-        converters.put(Long.class, new LongCLConverter());
+        converters.put(Long.class, new LongConverter());
         converters.put(long.class, converters.get(Long.class));
-        converters.put(Short.class, new ShortCLConverter());
+        converters.put(Short.class, new ShortConverter());
         converters.put(short.class, converters.get(Short.class));
-        converters.put(Byte.class, new ByteCLConverter());
+        converters.put(Byte.class, new ByteConverter());
         converters.put(byte.class, converters.get(Byte.class));
-        converters.put(String.class, new StringCLConverter());
-        converters.put(File.class, new FileCLConverter());
+        converters.put(String.class, new StringConverter());
+        converters.put(File.class, new FileConverter());
     }
 
     public boolean hasConverter(Class clazz) {
         return converters.containsKey(clazz);
     }
 
-    public CLConverter getConverter(Class clazz) {
+    public Converter getConverter(Class clazz) {
         return converters.get(clazz);
     }
 

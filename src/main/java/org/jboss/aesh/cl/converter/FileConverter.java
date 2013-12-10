@@ -6,12 +6,16 @@
  */
 package org.jboss.aesh.cl.converter;
 
+import org.jboss.aesh.console.command.converter.ConverterInvocation;
+
+import java.io.File;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class FloatCLConverter implements CLConverter<Float> {
+public class FileConverter implements Converter<File, ConverterInvocation> {
     @Override
-    public Float convert(String input) {
-        return Float.parseFloat(input);
+    public File convert(ConverterInvocation input) {
+        return new File(input.getInput());
     }
 }

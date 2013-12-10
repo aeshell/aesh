@@ -8,6 +8,8 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
+import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
+import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
@@ -28,6 +30,7 @@ public class AeshConsoleBuilder {
     private CommandNotFoundHandler commandNotFoundHandler;
     private ManProvider manProvider;
     private CompleterInvocationProvider completerInvocationProvider;
+    private ConverterInvocationProvider converterInvocationProvider;
 
     public AeshConsoleBuilder() {
     }
@@ -62,6 +65,12 @@ public class AeshConsoleBuilder {
         return this;
     }
 
+    public AeshConsoleBuilder converterInvocationProvider(ConverterInvocationProvider converterInvocationProvider) {
+        this.converterInvocationProvider = converterInvocationProvider;
+        return this;
+    }
+
+
     public AeshConsoleBuilder manProvider(ManProvider manProvider) {
         this.manProvider = manProvider;
         return this;
@@ -79,9 +88,12 @@ public class AeshConsoleBuilder {
         if(completerInvocationProvider == null)
             completerInvocationProvider = new AeshCompleterInvocationProvider();
 
+        if(converterInvocationProvider == null)
+            converterInvocationProvider = new AeshConverterInvocationProvider();
+
         AeshConsole aeshConsole =
                 new AeshConsoleImpl(settings, registry, commandInvocationServices,
-                        commandNotFoundHandler, completerInvocationProvider, manProvider);
+                        commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider, manProvider);
 
         if(prompt != null)
             aeshConsole.setPrompt(prompt);

@@ -6,12 +6,14 @@
  */
 package org.jboss.aesh.cl.converter;
 
+import org.jboss.aesh.console.command.converter.ConverterInvocation;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class BooleanCLConverter implements CLConverter<Boolean> {
+public class IntegerConverter implements Converter<Integer, ConverterInvocation> {
     @Override
-    public Boolean convert(String input) {
-        return Boolean.parseBoolean(input);
+    public Integer convert(ConverterInvocation input) {
+        return Integer.parseInt(input.getInput());
     }
 }

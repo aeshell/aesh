@@ -8,7 +8,7 @@ package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.completer.NullOptionCompleter;
 import org.jboss.aesh.cl.completer.OptionCompleter;
-import org.jboss.aesh.cl.converter.CLConverter;
+import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.converter.NullConverter;
 import org.jboss.aesh.cl.validator.NullValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
@@ -57,7 +57,7 @@ public @interface Arguments {
      * common types, eg: File,++
      * See ClConverterManager for whats added by default
      */
-    Class<? extends CLConverter> converter() default NullConverter.class;
+    Class<? extends Converter> converter() default NullConverter.class;
 
     /**
      * Define a completer for this option.

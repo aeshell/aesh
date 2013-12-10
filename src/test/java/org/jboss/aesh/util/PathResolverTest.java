@@ -13,6 +13,11 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
 
@@ -20,50 +25,59 @@ import static org.junit.Assert.assertEquals;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class PathResolverTest {
-    private File tempDir;
+    private Path tempDir;
 
+    @Test
+    public void test() {
+
+    }
+
+    /*
     @Before
     public void before() throws IOException {
         tempDir = createTempDirectory();
-        tempDir.delete();
-        tempDir.mkdirs();
     }
 
     @After
     public void after() {
-        FileListerTest.delete(tempDir, true);
+        //FileListerTest.delete(tempDir, true);
     }
 
     @Test
-    public void testPathResolver() {
-        File child1 = new File(tempDir + Config.getPathSeparator()+"child1");
+    public void testListFiles() {
+        File tmp = tempDir.toFile();
+        File child1 = new File(tmp + Config.getPathSeparator()+"child1");
+        File child2 = new File(tmp + Config.getPathSeparator()+"child2");
         File child11 = new File(child1 + Config.getPathSeparator()+"child11");
+        File child12 = new File(child1 + Config.getPathSeparator()+"child12");
+        File child21 = new File(child1 + Config.getPathSeparator()+"child21");
+        File child22 = new File(child1 + Config.getPathSeparator()+"child22");
 
         assertEquals(child1, PathResolver.resolvePath(new File(""), child1).get(0));
 
         assertEquals(child1, PathResolver.resolvePath(new File(".."), child11).get(0));
         assertEquals(child1, PathResolver.resolvePath(new File("../"), child11).get(0));
-        assertEquals(tempDir, PathResolver.resolvePath(new File("../.."), child11).get(0));
-        assertEquals(tempDir, PathResolver.resolvePath(new File("../../"), child11).get(0));
+        assertEquals(tmp, PathResolver.resolvePath(new File("../.."), child11).get(0));
+        assertEquals(tmp, PathResolver.resolvePath(new File("../../"), child11).get(0));
 
         if(Config.isOSPOSIXCompatible()) {
-            assertEquals(tempDir.getParentFile(), PathResolver.resolvePath(new File("../../../"), child11).get(0));
-            assertEquals(tempDir.getParentFile().getParentFile(),
+            assertEquals(tmp.getParentFile(), PathResolver.resolvePath(new File("../../../"), child11).get(0));
+            assertEquals(tmp.getParentFile().getParentFile(),
                     PathResolver.resolvePath(new File("../../../../"), child11).get(0));
-            assertEquals(tempDir.getParentFile().getParentFile(),
+            assertEquals(tmp.getParentFile().getParentFile(),
                     PathResolver.resolvePath(new File("../../../../../"), child11).get(0));
-            assertEquals(tempDir.getParentFile().getParentFile(),
+            assertEquals(tmp.getParentFile().getParentFile(),
                     PathResolver.resolvePath(new File("../../../../../.."), child11).get(0));
         }
 
         assertEquals(child11, PathResolver.resolvePath(new File("../child11"), child11).get(0));
         assertEquals(child1, PathResolver.resolvePath(new File("../../child1"), child11).get(0));
         assertEquals(child11, PathResolver.resolvePath(new File("../../child1/child11"), child11).get(0));
-        assertEquals(tempDir, PathResolver.resolvePath(new File("../../../"+tempDir.getName()), child11).get(0));
+        assertEquals(tmp, PathResolver.resolvePath(new File("../../../"+tmp.getName()), child11).get(0));
 
 
         assertEquals(child11, PathResolver.resolvePath(new File("child11"), child1).get(0));
-        assertEquals(child11, PathResolver.resolvePath(new File("child1/child11"), tempDir).get(0));
+        assertEquals(child11, PathResolver.resolvePath(new File("child1/child11"), tmp).get(0));
 
         assertEquals(child11, PathResolver.resolvePath(new File("./child11"), child1).get(0));
         assertEquals(child1, PathResolver.resolvePath(new File("./"), child1).get(0));
@@ -79,21 +93,62 @@ public class PathResolverTest {
 
         //System.setProperty("user.home", tempDir.toString()+Config.getPathSeparator()+"home");
         //assertEquals(new File(Config.getHomeDir()), PathResolver.resolvePath(new File("~/../home"), child1).get(0));
+    }
+
+    @Test
+    public void testSearchFiles() {
+        File child1 = new File(tempDir + Config.getPathSeparator()+"child1");
+        File child2 = new File(tempDir + Config.getPathSeparator()+"child2");
+        File child11 = new File(child1 + Config.getPathSeparator()+"child11");
+        File child12 = new File(child1 + Config.getPathSeparator()+"child12");
+        File child21 = new File(child1 + Config.getPathSeparator()+"child21");
+        File child22 = new File(child1 + Config.getPathSeparator()+"child22");
+
+        ArrayList<File> files = new ArrayList<>();
+        files.add(child11);
+        files.add(child12);
+
+        assertEquals(files, PathResolver.findFiles(child1, "*", false));
+    }
+
+    @Test
+    public void testNIO() {
+        Path path = new File("/home/stalep/java").toPath();
+
+        DirectoryStream.Filter<Path> filter = new DirectoryStream.Filter<Path>() {
+            @Override
+            public boolean accept(Path entry) throws IOException {
+                return Files.isDirectory(entry);
+            }
+        };
+
+        for(int i=0; i < 3; i++) {
+            long start = System.nanoTime();
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(path, filter)) {
+
+                System.out.println("finding files took: "+(System.nanoTime()-start));
+                ArrayList<Path> list = new ArrayList<>();
+
+                for(Path p : stream) {
+                    list.add(p);
+                }
+                System.out.println("total took: "+(System.nanoTime()-start)+", to find: "+list.size()+" directories");
+
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
-    public static File createTempDirectory() throws IOException {
-        final File temp;
+    public static Path createTempDirectory() throws IOException {
+        final Path tmp;
+        tmp = Files.createTempDirectory(Config.getTmpDir()+Config.getPathSeparator()+"temp"+Long.toString(System.nanoTime()), null);
+        tmp.toFile().deleteOnExit();
 
-        temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
-
-        if(!(temp.delete())) {
-            throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
-        }
-
-        if(!(temp.mkdir())) {
-            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
-        }
-        return (temp);
+        return tmp;
     }
+    */
+
 }
