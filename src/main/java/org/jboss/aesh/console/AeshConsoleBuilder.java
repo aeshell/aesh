@@ -20,6 +20,8 @@ import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 
+import java.io.File;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -34,6 +36,7 @@ public class AeshConsoleBuilder {
     private CompleterInvocationProvider completerInvocationProvider;
     private ConverterInvocationProvider converterInvocationProvider;
     private ValidatorInvocationProvider validatorInvocationProvider;
+    private File cwd;
 
     public AeshConsoleBuilder() {
     }
@@ -83,6 +86,12 @@ public class AeshConsoleBuilder {
         return this;
     }
 
+    public AeshConsoleBuilder currentWorkingDirectory(File cwd) {
+        if(cwd.isDirectory())
+            this.cwd = cwd;
+        return this;
+    }
+
     public AeshConsole create() {
         if(settings == null)
             settings = new SettingsBuilder().create();
@@ -104,7 +113,7 @@ public class AeshConsoleBuilder {
         AeshConsole aeshConsole =
                 new AeshConsoleImpl(settings, registry, commandInvocationServices,
                         commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
-                        validatorInvocationProvider, manProvider);
+                        validatorInvocationProvider, manProvider, cwd);
 
         if(prompt != null)
             aeshConsole.setPrompt(prompt);

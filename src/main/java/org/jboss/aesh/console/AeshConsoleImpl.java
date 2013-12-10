@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.console;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +56,7 @@ public class AeshConsoleImpl implements AeshConsole {
             .getName());
     private final ManProvider manProvider;
     private final CommandNotFoundHandler commandNotFoundHandler;
+    private final AeshContext aeshContext;
     private AeshInternalCommandRegistry internalRegistry;
     private String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
 
@@ -64,14 +66,16 @@ public class AeshConsoleImpl implements AeshConsole {
                     CompleterInvocationProvider completerInvocationProvider,
                     ConverterInvocationProvider converterInvocationProvider,
                     ValidatorInvocationProvider validatorInvocationProvider,
-                    ManProvider manProvider) {
+                    ManProvider manProvider, File cwd) {
         this.registry = registry;
         this.commandInvocationServices = commandInvocationServices;
         this.commandNotFoundHandler = commandNotFoundHandler;
         this.manProvider = manProvider;
-        this.invocationProviders = new AeshInvocationProviders(
-                converterInvocationProvider, completerInvocationProvider,
-                validatorInvocationProvider);
+        this.invocationProviders =
+                new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
+                        validatorInvocationProvider);
+
+        aeshContext = new AeshContextImpl(cwd);
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallback(this));
         console.addCompletion(new AeshCompletion());
@@ -160,11 +164,13 @@ public class AeshConsoleImpl implements AeshConsole {
                 new ConsoleOperation(ControlOperator.NONE, command));
     }
 
+    @Override
+    public AeshContext getContext() {
+        return aeshContext;
+    }
+
     public String getBuffer() {
-        if (console != null)
-            return console.getBuffer();
-        else
-            return "";
+        return console.getBuffer();
     }
 
     private void processSettings(Settings settings) {

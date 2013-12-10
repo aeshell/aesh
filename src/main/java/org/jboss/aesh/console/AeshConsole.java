@@ -78,4 +78,6 @@ public interface AeshConsole {
      * @param command command
      */
     void executeCommand(String command);
+
+    AeshContext getContext();
 }
