@@ -8,28 +8,37 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
+import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshInvocationProviders implements InvocationProviders {
 
-    private ConverterInvocationProvider converterInvocationProvider;
-    private CompleterInvocationProvider completerInvocationProvider;
+    private final ConverterInvocationProvider converterInvocationProvider;
+    private final CompleterInvocationProvider completerInvocationProvider;
+    private final ValidatorInvocationProvider validatorInvocationProvider;
 
     public AeshInvocationProviders(ConverterInvocationProvider converterInvocationProvider,
-                                   CompleterInvocationProvider completerInvocationProvider) {
+                                   CompleterInvocationProvider completerInvocationProvider,
+                                   ValidatorInvocationProvider validatorInvocationProvider) {
         this.converterInvocationProvider = converterInvocationProvider;
         this.completerInvocationProvider = completerInvocationProvider;
+        this.validatorInvocationProvider = validatorInvocationProvider;
     }
 
     @Override
-    public ConverterInvocationProvider getConverterInvocationProvider() {
+    public ConverterInvocationProvider getConverterProvider() {
         return converterInvocationProvider;
     }
 
     @Override
-    public CompleterInvocationProvider getCompleterInvocationProvider() {
+    public CompleterInvocationProvider getCompleterProvider() {
         return completerInvocationProvider;
+    }
+
+    @Override
+    public ValidatorInvocationProvider getValidatorProvider() {
+        return validatorInvocationProvider;
     }
 }

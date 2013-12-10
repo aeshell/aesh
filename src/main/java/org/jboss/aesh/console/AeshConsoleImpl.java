@@ -31,6 +31,7 @@ import org.jboss.aesh.console.command.registry.AeshInternalCommandRegistry;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
+import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.man.Man;
 import org.jboss.aesh.console.operator.ControlOperator;
@@ -48,8 +49,6 @@ public class AeshConsoleImpl implements AeshConsole {
     private final Console console;
     private final CommandRegistry registry;
     private final CommandInvocationServices commandInvocationServices;
-    private final CompleterInvocationProvider completerInvocationProvider;
-    private final ConverterInvocationProvider converterInvocationProvider;
     private final InvocationProviders invocationProviders;
 
     private final Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
@@ -63,15 +62,15 @@ public class AeshConsoleImpl implements AeshConsole {
                     CommandNotFoundHandler commandNotFoundHandler,
                     CompleterInvocationProvider completerInvocationProvider,
                     ConverterInvocationProvider converterInvocationProvider,
+                    ValidatorInvocationProvider validatorInvocationProvider,
                     ManProvider manProvider) {
         this.registry = registry;
         this.commandInvocationServices = commandInvocationServices;
         this.commandNotFoundHandler = commandNotFoundHandler;
-        this.completerInvocationProvider = completerInvocationProvider;
-        this.converterInvocationProvider = converterInvocationProvider;
         this.manProvider = manProvider;
         this.invocationProviders =
-                new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider);
+                new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
+                        validatorInvocationProvider);
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallback(this));
         console.addCompletion(new AeshCompletion());

@@ -11,10 +11,12 @@ import org.jboss.aesh.TestBuffer;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
+import org.junit.Ignore;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
+@Ignore //todo: rewrite to use console
 public class EmacsModeTest extends AeshTestCase {
 
     public EmacsModeTest(String test) {

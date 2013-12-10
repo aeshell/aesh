@@ -122,7 +122,7 @@ public static class FooConverterInvocation implements ConverterInvocation {
 
 public static class FooConverterProvider implements ConverterInvocationProvider<FooConverterInvocation> {
     @Override
-    public FooConverterInvocation enhanceConverterInvocations(ConverterInvocation converterInvocation) {
+    public FooConverterInvocation enhanceConverterInvocation(ConverterInvocation converterInvocation) {
         return new FooConverterInvocation(converterInvocation.getInput());
     }
 }

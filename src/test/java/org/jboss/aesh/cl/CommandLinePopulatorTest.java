@@ -19,6 +19,7 @@ import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
+import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -38,7 +39,10 @@ import static org.junit.Assert.assertTrue;
 public class CommandLinePopulatorTest {
 
     private InvocationProviders invocationProviders =
-            new AeshInvocationProviders(new AeshConverterInvocationProvider(), new AeshCompleterInvocationProvider());
+            new AeshInvocationProviders(
+                    new AeshConverterInvocationProvider(),
+                    new AeshCompleterInvocationProvider(),
+                    new AeshValidatorInvocationProvider());
 
     @Rule
     public ExpectedException exception = ExpectedException.none();

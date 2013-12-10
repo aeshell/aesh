@@ -11,7 +11,7 @@ package org.jboss.aesh.console.command.converter;
  */
 public class AeshConverterInvocationProvider implements ConverterInvocationProvider<ConverterInvocation> {
     @Override
-    public ConverterInvocation enhanceConverterInvocations(ConverterInvocation converterInvocation) {
+    public ConverterInvocation enhanceConverterInvocation(ConverterInvocation converterInvocation) {
         return converterInvocation;
     }
 }

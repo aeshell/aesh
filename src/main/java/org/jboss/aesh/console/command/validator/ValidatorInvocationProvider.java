@@ -4,12 +4,11 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.console.command.converter;
+package org.jboss.aesh.console.command.validator;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface ConverterInvocationProvider<T extends ConverterInvocation> {
-
-    T enhanceConverterInvocation(ConverterInvocation converterInvocation);
+public interface ValidatorInvocationProvider<T extends ValidatorInvocation> {
+    T enhanceValidatorInvocation(ValidatorInvocation validatorInvocation);
 }

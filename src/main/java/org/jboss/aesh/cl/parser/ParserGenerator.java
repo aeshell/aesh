@@ -20,6 +20,7 @@ import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
+import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -129,7 +130,10 @@ public class ParserGenerator {
 
     public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException, OptionValidatorException {
         CommandLineParser cl = generateCommandLineParser(instance.getClass());
-        InvocationProviders invocationProviders = new AeshInvocationProviders(new AeshConverterInvocationProvider(), new AeshCompleterInvocationProvider());
+        InvocationProviders invocationProviders = new AeshInvocationProviders(
+                new AeshConverterInvocationProvider(),
+                new AeshCompleterInvocationProvider(),
+                new AeshValidatorInvocationProvider());
         cl.getCommandPopulator().populateObject(instance,  cl.parse(input), invocationProviders, true);
     }
 

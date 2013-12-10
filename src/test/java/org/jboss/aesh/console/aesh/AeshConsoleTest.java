@@ -25,6 +25,7 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
@@ -136,12 +137,26 @@ public class AeshConsoleTest extends BaseConsoleTest {
         }
     }
 
-    public class DirectoryValidator implements OptionValidator<File> {
+    public class DirectoryValidator implements OptionValidator<DirectoryValidatorInvocation> {
         @Override
-        public void validate(File value) throws OptionValidatorException {
-            if(!value.isDirectory()) {
+        public void validate(DirectoryValidatorInvocation validatorInvocation) throws OptionValidatorException {
+            if(!validatorInvocation.getValue().isDirectory()) {
                 throw new OptionValidatorException("File validation failed, must be a directory.");
             }
+        }
+    }
+
+    public class DirectoryValidatorInvocation implements ValidatorInvocation<File> {
+
+        private final File value;
+
+        public DirectoryValidatorInvocation(File value) {
+            this.value = value;
+        }
+
+        @Override
+        public File getValue() {
+            return value;
         }
     }
 }

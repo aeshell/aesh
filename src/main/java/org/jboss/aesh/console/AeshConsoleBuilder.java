@@ -13,6 +13,8 @@ import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
+import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
+import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
@@ -31,6 +33,7 @@ public class AeshConsoleBuilder {
     private ManProvider manProvider;
     private CompleterInvocationProvider completerInvocationProvider;
     private ConverterInvocationProvider converterInvocationProvider;
+    private ValidatorInvocationProvider validatorInvocationProvider;
 
     public AeshConsoleBuilder() {
     }
@@ -70,6 +73,10 @@ public class AeshConsoleBuilder {
         return this;
     }
 
+    public AeshConsoleBuilder validatorInvocationProvider(ValidatorInvocationProvider validatorInvocationProvider) {
+        this.validatorInvocationProvider = validatorInvocationProvider;
+        return this;
+    }
 
     public AeshConsoleBuilder manProvider(ManProvider manProvider) {
         this.manProvider = manProvider;
@@ -91,9 +98,13 @@ public class AeshConsoleBuilder {
         if(converterInvocationProvider == null)
             converterInvocationProvider = new AeshConverterInvocationProvider();
 
+        if(validatorInvocationProvider == null)
+            validatorInvocationProvider = new AeshValidatorInvocationProvider();
+
         AeshConsole aeshConsole =
                 new AeshConsoleImpl(settings, registry, commandInvocationServices,
-                        commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider, manProvider);
+                        commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
+                        validatorInvocationProvider, manProvider);
 
         if(prompt != null)
             aeshConsole.setPrompt(prompt);

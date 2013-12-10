@@ -30,6 +30,7 @@ import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -248,12 +249,25 @@ public class AeshExample {
         }
     }
 
-    public static class DirectoryValidator implements OptionValidator<File> {
+    public static class DirectoryValidator implements OptionValidator<DirectoryValidatorInvocation> {
         @Override
-        public void validate(File value) throws OptionValidatorException {
-            if(!value.isDirectory()) {
+        public void validate(DirectoryValidatorInvocation validatorInvocation) throws OptionValidatorException {
+            if(!validatorInvocation.getValue().isDirectory())
                 throw new OptionValidatorException("File validation failed, must be a directory.");
-            }
+        }
+    }
+
+    public static class DirectoryValidatorInvocation implements ValidatorInvocation<File> {
+
+        private final File file;
+
+        public DirectoryValidatorInvocation(File file) {
+            this.file = file;
+        }
+
+        @Override
+        public File getValue() {
+            return file;
         }
     }
 

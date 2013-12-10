@@ -8,13 +8,16 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
+import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface InvocationProviders {
 
-    ConverterInvocationProvider getConverterInvocationProvider();
+    ConverterInvocationProvider getConverterProvider();
 
-    CompleterInvocationProvider getCompleterInvocationProvider();
+    CompleterInvocationProvider getCompleterProvider();
+
+    ValidatorInvocationProvider getValidatorProvider();
 }

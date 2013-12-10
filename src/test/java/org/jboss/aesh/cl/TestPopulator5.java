@@ -2,6 +2,7 @@ package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 
 import java.util.Currency;
 import java.util.List;
@@ -71,12 +72,25 @@ public class TestPopulator5 {
         return bar;
     }
 
-    public class LongOptionValidator implements OptionValidator<Long> {
+    public class LongOptionValidator implements OptionValidator<LongValidatorInvocation> {
+        @Override
+        public void validate(LongValidatorInvocation validatorInvocation) throws OptionValidatorException {
+            if(validatorInvocation.getValue() < 0 || validatorInvocation.getValue() > 100)
+                throw new OptionValidatorException("value must be between 0 and 100");
+        }
+    }
+
+    public class LongValidatorInvocation implements ValidatorInvocation<Long> {
+
+        private final Long value;
+
+        public LongValidatorInvocation(Long value) {
+            this.value = value;
+        }
 
         @Override
-        public void validate(Long value) throws OptionValidatorException {
-            if(value < 0 || value > 100)
-                throw new OptionValidatorException("value must be between 0 and 100");
+        public Long getValue() {
+            return value;
         }
     }
 

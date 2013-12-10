@@ -21,21 +21,10 @@ public interface CommandPopulator {
      * If any parser errors are detected it will throw an exception
      * @param instance command
      * @param line command line
-     * @throws CommandLineParserException
-     */
-//    void populateObject(Object instance, CommandLine line)
-//            throws CommandLineParserException, OptionValidatorException;
-
-    /**
-     * Populate a Command instance with the values parsed from a command line
-     * If any parser errors are detected it will throw an exception
-     * @param instance command
-     * @param line command line
      * @param validate based on rules given to the parser
      * @throws CommandLineParserException
      */
     void populateObject(Object instance, CommandLine line, InvocationProviders invocationProviders,
-                        boolean validate)
-                    throws CommandLineParserException, OptionValidatorException;
+                        boolean validate) throws CommandLineParserException, OptionValidatorException;
 
 }

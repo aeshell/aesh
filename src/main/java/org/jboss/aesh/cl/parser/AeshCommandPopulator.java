@@ -31,21 +31,6 @@ public class AeshCommandPopulator implements CommandPopulator {
      * If any parser errors are detected it will throw an exception
      * @param instance command
      * @param line command line
-     * @throws CommandLineParserException
-     */
-    /*
-    @Override
-    public void populateObject(Object instance, CommandLine line)
-            throws CommandLineParserException, OptionValidatorException {
-        populateObject(instance, line, true);
-    }
-    */
-
-    /**
-     * Populate a Command instance with the values parsed from a command line
-     * If any parser errors are detected it will throw an exception
-     * @param instance command
-     * @param line command line
      * @param validate do validation or not
      * @throws CommandLineParserException
      */

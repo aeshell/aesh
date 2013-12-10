@@ -23,6 +23,7 @@ import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocation;
+import org.jboss.aesh.console.command.validator.AeshValidatorInvocation;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ReflectionUtil;
 
@@ -402,16 +403,14 @@ public final class ProcessedOption {
     private Object doConvert(String inputValue, InvocationProviders invocationProviders,
                              boolean doValidation) throws OptionValidatorException {
         Object result = converter.convert(
-        invocationProviders.getConverterInvocationProvider().enhanceConverterInvocations(new AeshConverterInvocation(inputValue)));
+        invocationProviders.getConverterProvider().enhanceConverterInvocation(new AeshConverterInvocation(inputValue)));
         //Object result =   converter.convert(inputValue);
-        if(validator != null && doValidation)
-            validator.validate(result);
+        if(validator != null && doValidation) {
+            validator.validate(
+                    invocationProviders.getValidatorProvider().enhanceValidatorInvocation(new AeshValidatorInvocation(result)));
+        }
         return result;
     }
-
-    //public void injectValueIntoField(Object instance) throws OptionValidatorException {
-    //    injectValueIntoField(instance, true);
-    //}
 
     @SuppressWarnings("unchecked")
     public void injectValueIntoField(Object instance, InvocationProviders invocationProviders,
