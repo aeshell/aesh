@@ -4,7 +4,10 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.console;
+package org.jboss.aesh.console.settings;
+
+import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.Config;
 
 import java.io.File;
 
@@ -19,7 +22,7 @@ public class AeshContextImpl implements AeshContext {
         if(cwd != null && cwd.isDirectory())
             this.cwd = cwd;
         else
-            this.cwd = new File(Config.getUserDir());
+            throw new IllegalArgumentException("Current working directory must be a directory");
     }
 
     AeshContextImpl() {
@@ -35,5 +38,7 @@ public class AeshContextImpl implements AeshContext {
     public void setCurrentWorkingDirectory(File cwd) {
         if(cwd.isDirectory())
             this.cwd = cwd;
+        else
+            throw new IllegalArgumentException("Current working directory must be a directory");
     }
 }

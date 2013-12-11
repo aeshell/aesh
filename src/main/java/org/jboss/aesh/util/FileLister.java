@@ -28,6 +28,9 @@ public class FileLister {
     private static final String home = "~/";
     private static final char TILDE = '~';
     private static final String parent = "..";
+    private static final char STAR = '*';
+    private static final char WILDCARD = '?';
+    private static final char ESCAPE = '\\';
 
     private String token;
     private File cwd;
@@ -95,14 +98,25 @@ public class FileLister {
         if(token.trim().isEmpty()) {
             completion.addCompletionCandidates( listDirectory(cwd, null));
         }
+        else if(containStar()) {
+        }
+        else if(containWildCards()) {
+        }
         else if(startWithHome()) {
             if(isHomeAndTokenADirectory()) {
                 if(tokenEndsWithSlash()) {
                     completion.addCompletionCandidates(
                             listDirectory(new File(Config.getHomeDir()+token.substring(1)), null));
                 }
-                else
-                    completion.addCompletionCandidate(Config.getPathSeparator());
+                else {
+                    //completion.addCompletionCandidate(Config.getPathSeparator());
+                    List<String> tmpDirs = listDirectory(new File(Config.getHomeDir()), token.substring(2));
+                    if(tmpDirs.size() == 1 || endsWithParent()) {
+                        completion.addCompletionCandidate( Config.getPathSeparator());
+                    }
+                    else
+                        completion.addCompletionCandidates( tmpDirs);
+                }
             }
             else if(isHomeAndTokenAFile()) {
                 completion.addCompletionCandidate("");
@@ -304,6 +318,22 @@ public class FileLister {
 
     private boolean startWithHome() {
         return token.indexOf(home) == 0;
+    }
+
+    private boolean containStar() {
+        int index = token.indexOf(STAR);
+        if(index == 0 || (index > 0 && !(token.charAt(index-1) == ESCAPE)))
+            return true;
+        else
+            return false;
+    }
+
+    private boolean containWildCards() {
+        int index = token.indexOf(WILDCARD);
+        if(index == 0 || (index > 0 && !(token.charAt(index-1) == ESCAPE)))
+            return true;
+        else
+            return false;
     }
 
     private boolean startWithSlash() {

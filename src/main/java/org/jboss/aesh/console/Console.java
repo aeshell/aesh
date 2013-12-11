@@ -105,8 +105,10 @@ public class Console {
 
     private ExecutorService executorService;
 
+    private AeshContext context;
+
     //used to optimize text deletion
-    private char[] resetLineAndSetCursorToStart =
+    private static final char[] resetLineAndSetCursorToStart =
             (ANSI.saveCursor()+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
 
     private AeshStandardStream standardStream;
@@ -165,6 +167,8 @@ public class Console {
             logger.info("RESET");
 
         executorService = Executors.newSingleThreadExecutor();
+
+        context = settings.getAeshContext();
 
         if(settings.doReadInputrc())
             settings = Config.parseInputrc(settings);
@@ -292,6 +296,10 @@ public class Console {
     //TODO:
     private AeshStandardStream in() {
         return standardStream;
+    }
+
+    public AeshContext getAeshContext() {
+        return context;
     }
 
     /**
@@ -1305,7 +1313,7 @@ public class Console {
                     }
                     else {
                         askDisplayCompletion = true;
-                        out().println(Config.getLineSeparator() + "Display all " + completions.size() + " possibilities? (y or n)");
+                        out().print(Config.getLineSeparator() + "Display all " + completions.size() + " possibilities? (y or n)");
                     }
                 }
                 // display all
@@ -1611,12 +1619,12 @@ public class Console {
             String command = Parser.findFirstWord(buffer);
             Alias alias = aliasManager.getAlias(command);
             if(alias != null) {
-                return new CompleteOperation( alias.getValue()+buffer.substring(command.length()),
+                return new CompleteOperation(getAeshContext(), alias.getValue()+buffer.substring(command.length()),
                         cursor+(alias.getValue().length()-command.length()));
             }
         }
 
-        return new CompleteOperation(buffer, cursor);
+        return new CompleteOperation(getAeshContext(), buffer, cursor);
     }
 
     private void persistRedirection(String fileName, ControlOperator redirection) throws IOException {

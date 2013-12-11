@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.jboss.aesh.complete.CompleteOperation;
+import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.terminal.TerminalString;
 import org.junit.After;
 import org.junit.Before;
@@ -24,6 +26,15 @@ import static org.junit.Assert.assertTrue;
  */
 public class FileListerTest {
     private File workingDir;
+    private AeshContext aeshContext = new AeshContext() {
+        @Override
+        public File getCurrentWorkingDirectory() {
+            return new File(Config.getUserDir());
+        }
+        @Override
+        public void setCurrentWorkingDirectory(File cwd) {
+        }
+    };
 
     @Before
     public void before() throws IOException {
@@ -40,7 +51,7 @@ public class FileListerTest {
     @Test
     public void testFullCompletionWithSingleSubdirectory() {
         new File(workingDir, "child").mkdir();
-        CompleteOperation completion = new CompleteOperation("cd ", 2);
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd ", 2);
         new FileLister("", workingDir).findMatchingDirectories(completion);
 
         List<TerminalString> candidates = completion.getCompletionCandidates();
@@ -51,7 +62,7 @@ public class FileListerTest {
     @Test
     public void testPartialCompletionWithSingleSubdirectory() {
         new File(workingDir, "child").mkdir();
-        CompleteOperation completion = new CompleteOperation("cd ch", 2);
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd ch", 2);
         new FileLister("ch", workingDir).findMatchingDirectories(completion);
 
         List<TerminalString> candidates = completion.getCompletionCandidates();
@@ -63,7 +74,7 @@ public class FileListerTest {
     public void testFullCompletionWithMultipleSubdirectory() {
         new File(workingDir, "child").mkdir();
         new File(workingDir, "child2").mkdir();
-        CompleteOperation completion = new CompleteOperation("cd ", 2);
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd ", 2);
         new FileLister("", workingDir).findMatchingDirectories(completion);
 
         List<TerminalString> candidates = completion.getCompletionCandidates();
@@ -76,7 +87,7 @@ public class FileListerTest {
     public void testPartialCompletionWithMultipleSubdirectory() {
         new File(workingDir, "child").mkdir();
         new File(workingDir, "child2").mkdir();
-        CompleteOperation completion = new CompleteOperation("cd ch", 4);
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd ch", 4);
         new FileLister("ch", workingDir).findMatchingDirectories(completion);
 
         List<TerminalString> candidates = completion.getCompletionCandidates();

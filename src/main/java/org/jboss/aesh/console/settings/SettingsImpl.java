@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.console.settings;
 
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.edit.EditMode;
@@ -55,6 +56,7 @@ public class SettingsImpl implements Settings {
     private InterruptHook interruptHook = null;
     private boolean enableOperatorParser = true;
     private boolean manEnabled = true;
+    private AeshContext aeshContext;
 
     protected SettingsImpl() {
     }
@@ -85,6 +87,7 @@ public class SettingsImpl implements Settings {
         setInterruptHook(baseSettings.getInterruptHook());
         enableOperatorParser(baseSettings.isOperatorParserEnabled());
         setManEnabled(baseSettings.isManEnabled());
+        setAeshContext(baseSettings.getAeshContext());
     }
 
     public void resetToDefaults() {
@@ -588,4 +591,14 @@ public class SettingsImpl implements Settings {
         this.manEnabled = enabled;
     }
 
+    @Override
+    public AeshContext getAeshContext() {
+        if(aeshContext == null)
+            aeshContext = new AeshContextImpl();
+        return aeshContext;
+    }
+
+    public void setAeshContext(AeshContext aeshContext) {
+        this.aeshContext = aeshContext;
+    }
 }

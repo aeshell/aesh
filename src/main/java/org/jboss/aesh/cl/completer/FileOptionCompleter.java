@@ -20,36 +20,30 @@ import org.jboss.aesh.util.FileLister.Filter;
  */
 public class FileOptionCompleter implements OptionCompleter {
 
-    private final File cwd;
     private final Filter filter;
 
     public FileOptionCompleter() {
-        this(new File(System.getProperty("user.dir")), Filter.ALL);
+        this(Filter.ALL);
     }
 
-    public FileOptionCompleter(File baseDir) {
-        this(baseDir, Filter.ALL);
-    }
-
-    public FileOptionCompleter(File baseDir, Filter filter) {
-        if (!baseDir.isDirectory()) {
-            throw new IllegalArgumentException("Base Dir must be a directory");
-        }
+    public FileOptionCompleter(Filter filter) {
         if (filter == null) {
             throw new IllegalArgumentException("A valid filter must be informed");
         }
-        this.cwd = baseDir;
         this.filter = filter;
     }
 
     @Override
     public void complete(CompleterInvocation completerData) {
 
-        CompleteOperation completeOperation = new CompleteOperation(completerData.getGivenCompleteValue(), 0);
+        CompleteOperation completeOperation =
+                new CompleteOperation(completerData.getAeshContext(), completerData.getGivenCompleteValue(), 0);
         if (completerData.getGivenCompleteValue() == null)
-            new FileLister("", cwd, filter).findMatchingDirectories(completeOperation);
+            new FileLister("", completerData.getAeshContext().getCurrentWorkingDirectory(), filter)
+                    .findMatchingDirectories(completeOperation);
         else
-            new FileLister(completerData.getGivenCompleteValue(), cwd, filter)
+            new FileLister(completerData.getGivenCompleteValue(),
+                    completerData.getAeshContext().getCurrentWorkingDirectory(), filter)
                     .findMatchingDirectories(completeOperation);
 
         if (completeOperation.getCompletionCandidates().size() > 1) {
@@ -60,10 +54,6 @@ public class FileOptionCompleter implements OptionCompleter {
         if (completerData.getGivenCompleteValue() != null && completerData.getCompleterValues().size() == 1) {
             completerData.setAppendSpace(completeOperation.hasAppendSeparator());
         }
-    }
-
-    public File getWorkingDirectory() {
-        return cwd;
     }
 
     public Filter getFilter() {

@@ -30,7 +30,7 @@ public class RedirectionCompletion implements Completion {
             String word = Parser.findWordClosestToCursor(completeOperation.getBuffer().substring(redirectPos, completeOperation.getCursor()), completeOperation.getCursor()-redirectPos);
 
             completeOperation.setOffset(completeOperation.getCursor());
-            FileLister lister = new FileLister(word, new File(System.getProperty("user.dir")));
+            FileLister lister = new FileLister(word, completeOperation.getAeshContext().getCurrentWorkingDirectory());
             lister.findMatchingDirectories(completeOperation);
             //if we only have one complete candidate, leave the escaped space be
             if(completeOperation.getCompletionCandidates().size() > 1)

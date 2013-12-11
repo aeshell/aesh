@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.complete;
 
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.TerminalString;
 
@@ -25,12 +26,14 @@ public class CompleteOperation {
     private boolean trimmed = false;
     private int trimmedSize = 0;
     private String nonTrimmedBuffer;
+    private AeshContext aeshContext;
 
 
     private char separator = ' ';
     private boolean appendSeparator = true;
 
-    public CompleteOperation(String buffer, int cursor) {
+    public CompleteOperation(AeshContext aeshContext, String buffer, int cursor) {
+        this.aeshContext = aeshContext;
         setCursor(cursor);
         setSeparator(' ');
         doAppendSeparator(true);
@@ -82,6 +85,10 @@ public class CompleteOperation {
 
     public void setOffset(int offset) {
         this.offset = offset;
+    }
+
+    public AeshContext getAeshContext() {
+        return aeshContext;
     }
 
     /**

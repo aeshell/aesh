@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.console.settings;
 
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.KeyOperationManager;
@@ -176,4 +177,9 @@ public interface Settings {
      * is the man command enabled (currently only for AeshConsole)
      */
     boolean isManEnabled();
+
+    /**
+     * get aesh context
+     */
+    AeshContext getAeshContext();
 }

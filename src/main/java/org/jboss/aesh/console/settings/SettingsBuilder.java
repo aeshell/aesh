@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.console.settings;
 
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.terminal.Terminal;
@@ -52,6 +53,7 @@ public class SettingsBuilder {
         settings.setInterruptHook(baseSettings.getInterruptHook());
         settings.enableOperatorParser(baseSettings.isOperatorParserEnabled());
         settings.setManEnabled(baseSettings.isManEnabled());
+        settings.setAeshContext(baseSettings.getAeshContext());
     }
 
     public SettingsBuilder name(String name) {
@@ -176,6 +178,11 @@ public class SettingsBuilder {
 
     public SettingsBuilder enableMan(boolean enableMan) {
         settings.setManEnabled(enableMan);
+        return this;
+    }
+
+    public SettingsBuilder aeshContext(AeshContext aeshContext) {
+        settings.setAeshContext(aeshContext);
         return this;
     }
 

@@ -336,7 +336,7 @@ public final class ProcessedCommand {
     public boolean hasUniqueLongOption(String optionName) {
         if(hasLongOption(optionName)) {
             for(ProcessedOption o : getOptions()) {
-                if(o.getName().startsWith(optionName))
+                if(o.getName().startsWith(optionName) && !o.getName().equals(optionName))
                     return false;
             }
             return true;

@@ -79,5 +79,5 @@ public interface AeshConsole {
      */
     void executeCommand(String command);
 
-    AeshContext getContext();
+    AeshContext getAeshContext();
 }

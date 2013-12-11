@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.console.command.completer;
 
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.terminal.TerminalString;
 
@@ -44,4 +45,6 @@ public interface CompleterInvocation {
     boolean isAppendSpace();
 
     void setAppendSpace(boolean appendSpace);
+
+    AeshContext getAeshContext();
 }
