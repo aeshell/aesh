@@ -11,23 +11,26 @@ import org.jboss.aesh.console.Config;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Resolve a file that might contain (~,*,?) to its proper path
+ * Resolve a file that might contain (~,*,?) to its proper parentPath
  * Returns a list of files.
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class PathResolver {
 
+    private static final char SEPARATOR = Config.getPathSeparator().charAt(0);
     private static final char TILDE = '~';
     private static final String TILDE_WITH_SEPARATOR = "~"+Config.getPathSeparator();
     private static final char STAR = '*';
-    private static final char QUESTION = '?';
+    private static final char WILDCARD = '?';
     private static final String PARENT = "..";
     private static final String PARENT_WITH_SEPARATOR = ".."+ Config.getPathSeparator();
     private static final String ROOT = Config.getPathSeparator();
@@ -90,7 +93,7 @@ public class PathResolver {
             incPath = new File(incPath.toString().substring(0, incPath.toString().length()-SEPARATOR_WITH_CURRENT.length()));
         }
 
-        //path do not start with / and cwd is not / either
+        //parentPath do not start with / and cwd is not / either
         if(incPath.toString().indexOf(ROOT) != 0 && !cwd.toString().equals(ROOT)) {
             if(cwd.toString().endsWith(Config.getPathSeparator()))
                 incPath = new File(cwd.toString() + incPath.toString());
@@ -127,9 +130,19 @@ public class PathResolver {
                 incPath = new File(Config.getPathSeparator());
         }
 
-        if( incPath.toString().indexOf(STAR) > -1) {
-            //we need some wildcard parser
+        if( incPath.toString().indexOf(STAR) > -1 || incPath.toString().indexOf(WILDCARD) > -1) {
+            PathCriteria pathCriteria = parsePath(incPath);
+            List<File> foundFiles = findFiles(new File(pathCriteria.parentPath), pathCriteria.getCriteria(), false);
+            if(pathCriteria.childPath.length() == 0)
+                return foundFiles;
+            else {
+                List<File> outFiles = new ArrayList<>();
+                for(File f : foundFiles)
+                    if(new File(f+Config.getPathSeparator()+pathCriteria.childPath).exists())
+                        outFiles.add(new File(f+Config.getPathSeparator()+pathCriteria.childPath));
 
+                return outFiles;
+            }
         }
         else {
             //no wildcards
@@ -137,8 +150,6 @@ public class PathResolver {
             fileList.add(incPath);
             return fileList;
         }
-
-        return null;
     }
 
     private static List<File> parseWildcard(File incPath) {
@@ -151,8 +162,16 @@ public class PathResolver {
         return files;
     }
 
-    public static List<File> findFiles(File incPath, String searchArgument, boolean findDirectory) {
+    private static List<File> findFiles(File incPath, String searchArgument, boolean findDirectory) {
         ArrayList<File> files = new ArrayList<>();
+
+        final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**");
+         DirectoryStream.Filter<Path> filter = new DirectoryStream.Filter<Path>() {
+            @Override
+            public boolean accept(Path entry)  {
+                return matcher.matches(entry.getFileName());
+            }
+        };
 
         if(starPattern.matcher(searchArgument).matches()) {
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(incPath.toPath(), new DirectoryFilter())) {
@@ -191,4 +210,53 @@ public class PathResolver {
         }
     }
 
+    private static PathCriteria parsePath(File path) {
+        int starIndex = path.toString().indexOf(STAR);
+        int wildcardIndex = path.toString().indexOf(WILDCARD);
+
+        int index = (starIndex < wildcardIndex || wildcardIndex < 0) ? starIndex : wildcardIndex;
+
+        if(index == 0 && path.toString().length() == 1)
+            return new PathCriteria(String.valueOf(SEPARATOR), "", path.toString());
+        else {
+            int parentSeparatorIndex = index-1;
+            while(path.toString().charAt(parentSeparatorIndex) != SEPARATOR && parentSeparatorIndex > -1)
+                parentSeparatorIndex--;
+
+            int childSeparatorIndex = index+1;
+            if(childSeparatorIndex < path.toString().length())
+                while(path.toString().charAt(childSeparatorIndex) != SEPARATOR && parentSeparatorIndex < path.toString().length())
+                    childSeparatorIndex++;
+
+            String parentPath = path.toString().substring(0, parentSeparatorIndex);
+            String criteria = path.toString().substring(parentSeparatorIndex+1, childSeparatorIndex);
+            String childPath = path.toString().substring(childSeparatorIndex, path.toString().length());
+
+            return new PathCriteria(parentPath, childPath, criteria);
+        }
+    }
+
+    static class PathCriteria {
+        private String parentPath;
+        private String childPath;
+        private String criteria;
+
+        PathCriteria(String parentPath, String childPath, String criteria) {
+            this.parentPath = parentPath;
+            this.childPath = childPath;
+            this.criteria = criteria;
+        }
+
+        public String getParentPath() {
+            return parentPath;
+        }
+
+        public String getCriteria() {
+            return criteria;
+        }
+
+        public String getChildPath() {
+            return childPath;
+        }
+    }
 }
