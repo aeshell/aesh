@@ -11,8 +11,6 @@ import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.util.FileLister;
 import org.jboss.aesh.parser.Parser;
 
-import java.io.File;
-
 /**
  * ControlOperator completor
  *

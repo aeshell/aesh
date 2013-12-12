@@ -39,5 +39,4 @@ public interface CommandContainer extends AutoCloseable {
      * @return error message
      */
     String getBuildErrorMessage();
-    
 }

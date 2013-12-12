@@ -132,8 +132,7 @@ public class AeshConsoleImpl implements AeshConsole {
             if(commandContainer != null)
                 return commandContainer.getParser().printHelp();
         }
-        catch (CommandNotFoundException e) {
-            e.printStackTrace();
+        catch (Exception e) { //ignored
         }
         return "";
     }
