@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<code_scheme name="aesh">
+  <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="200" />
+  <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="100" />
+  <XML>
+    <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
+  </XML>
+  <codeStyleSettings language="JAVA">
+    <option name="CATCH_ON_NEW_LINE" value="true" />
+    <option name="FINALLY_ON_NEW_LINE" value="true" />
+    <arrangement>
+      <groups>
+        <group>
+          <type>GETTERS_AND_SETTERS</type>
+          <order>KEEP</order>
+        </group>
+      </groups>
+      <rules>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <FINAL />
+              <PUBLIC />
+              <STATIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <FINAL />
+              <PROTECTED />
+              <STATIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <FINAL />
+              <PACKAGE_PRIVATE />
+              <STATIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <FINAL />
+              <PRIVATE />
+              <STATIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <PUBLIC />
+              <STATIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <PROTECTED />
+              <STATIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <PACKAGE_PRIVATE />
+              <STATIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <PRIVATE />
+              <STATIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <FINAL />
+              <PUBLIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <FINAL />
+              <PROTECTED />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <FINAL />
+              <PACKAGE_PRIVATE />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <FINAL />
+              <PRIVATE />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <PUBLIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <PROTECTED />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <PACKAGE_PRIVATE />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <FIELD />
+              <PRIVATE />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <FIELD />
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <CONSTRUCTOR />
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <METHOD />
+              <STATIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <METHOD />
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <ENUM />
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <INTERFACE />
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <AND>
+              <CLASS />
+              <STATIC />
+            </AND>
+          </match>
+        </rule>
+        <rule>
+          <match>
+            <CLASS />
+          </match>
+        </rule>
+      </rules>
+    </arrangement>
+  </codeStyleSettings>
+</code_scheme>
+
