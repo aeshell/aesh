@@ -18,7 +18,7 @@ import org.jboss.aesh.util.FileLister.Filter;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class FileOptionCompleter implements OptionCompleter {
+public class FileOptionCompleter implements OptionCompleter<CompleterInvocation> {
 
     private final Filter filter;
 

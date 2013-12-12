@@ -35,7 +35,7 @@ public class CompleterData implements CompleterInvocation {
         this.aeshContext = aeshContext;
         this.completeValue = completeValue;
         this.command = command;
-        completerValues = new ArrayList<TerminalString>();
+        completerValues = new ArrayList<>();
     }
 
     @Override

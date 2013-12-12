@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class DefaultValueOptionCompleter implements OptionCompleter {
+public class DefaultValueOptionCompleter implements OptionCompleter<CompleterInvocation> {
 
     private final List<String> defaultValues;
 

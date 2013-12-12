@@ -11,7 +11,7 @@ import org.jboss.aesh.console.command.completer.CompleterInvocation;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class NullOptionCompleter implements OptionCompleter {
+public class NullOptionCompleter implements OptionCompleter<CompleterInvocation> {
     @Override
     public void complete(CompleterInvocation completerData) {
     }

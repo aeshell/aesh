@@ -12,7 +12,7 @@ import org.jboss.aesh.console.command.completer.CompleterInvocation;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class BooleanOptionCompleter implements OptionCompleter {
+public class BooleanOptionCompleter implements OptionCompleter<CompleterInvocation> {
     @Override
     public void complete(CompleterInvocation completerData) {
         if(completerData.getGivenCompleteValue().length() == 0) {
