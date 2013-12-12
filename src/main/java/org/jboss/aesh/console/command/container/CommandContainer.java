@@ -40,8 +40,4 @@ public interface CommandContainer extends AutoCloseable {
      */
     String getBuildErrorMessage();
     
-    /**
-     * Called when this object is no longer used
-     */
-    void close();
 }
