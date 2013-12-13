@@ -174,12 +174,23 @@ public interface Settings {
     void switchMode();
 
     /**
-     * is the man command enabled (currently only for AeshConsole)
+     * Is the man command enabled (currently only for AeshConsole)
      */
     boolean isManEnabled();
 
     /**
-     * get aesh context
+     * Get aesh context
      */
     AeshContext getAeshContext();
+
+    /**
+     * Get the export file
+     * Defaults to ~/.aesh_export
+     */
+    File getExportFile();
+
+    /**
+     * Are export enabled?
+     */
+    boolean isExportEnabled();
 }

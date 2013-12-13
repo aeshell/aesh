@@ -14,6 +14,7 @@ package org.jboss.aesh.console.command;
 public enum InternalCommands {
     ALIAS("alias"),
     UNALIAS("unalias"),
+    EXPORT("export"),
     ECHO("echo");
 
     private String command;

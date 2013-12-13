@@ -6,20 +6,20 @@
  */
 package org.jboss.aesh.console.alias;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.console.Config;
+import org.junit.Test;
 
 import java.io.File;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AliasManagerTest extends TestCase {
+public class AliasManagerTest {
 
-    public AliasManagerTest(String name) {
-        super(name);
-    }
-
+    @Test
     public void testParseAlias() throws Exception {
         AliasManager manager = new AliasManager(new File("foo"), false, "aesh");
 
@@ -41,6 +41,7 @@ public class AliasManagerTest extends TestCase {
         assertEquals(sb.toString(), out);
     }
 
+    @Test
     public void testUnalias() throws Exception {
         AliasManager manager = new AliasManager(new File("foo"), false, "aesh");
 

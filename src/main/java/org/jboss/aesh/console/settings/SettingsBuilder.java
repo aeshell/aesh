@@ -54,6 +54,8 @@ public class SettingsBuilder {
         settings.enableOperatorParser(baseSettings.isOperatorParserEnabled());
         settings.setManEnabled(baseSettings.isManEnabled());
         settings.setAeshContext(baseSettings.getAeshContext());
+        settings.setExportEnabled(baseSettings.isExportEnabled());
+        settings.setExportFile(baseSettings.getExportFile());
     }
 
     public SettingsBuilder name(String name) {
@@ -183,6 +185,16 @@ public class SettingsBuilder {
 
     public SettingsBuilder aeshContext(AeshContext aeshContext) {
         settings.setAeshContext(aeshContext);
+        return this;
+    }
+
+    public SettingsBuilder enableExport(boolean enableExport) {
+        settings.setExportEnabled(enableExport);
+        return this;
+    }
+
+    public SettingsBuilder setExportFile(File exportFile) {
+        settings.setExportFile(exportFile);
         return this;
     }
 

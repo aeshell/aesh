@@ -57,6 +57,8 @@ public class SettingsImpl implements Settings {
     private boolean enableOperatorParser = true;
     private boolean manEnabled = true;
     private AeshContext aeshContext;
+    private boolean exportEnabled = true;
+    private File exportFile;
 
     protected SettingsImpl() {
     }
@@ -88,6 +90,8 @@ public class SettingsImpl implements Settings {
         enableOperatorParser(baseSettings.isOperatorParserEnabled());
         setManEnabled(baseSettings.isManEnabled());
         setAeshContext(baseSettings.getAeshContext());
+        setExportEnabled(baseSettings.isExportEnabled());
+        setExportFile(baseSettings.getExportFile());
     }
 
     public void resetToDefaults() {
@@ -519,7 +523,7 @@ public class SettingsImpl implements Settings {
     @Override
     public File getAliasFile() {
         if(aliasFile == null)
-            aliasFile = new File(System.getProperty("user.home")+Config.getPathSeparator()+".aesh_aliases");
+            aliasFile = new File(Config.getHomeDir()+Config.getPathSeparator()+".aesh_aliases");
 
         return aliasFile;
     }
@@ -600,5 +604,26 @@ public class SettingsImpl implements Settings {
 
     public void setAeshContext(AeshContext aeshContext) {
         this.aeshContext = aeshContext;
+    }
+
+    @Override
+    public File getExportFile() {
+        if(exportFile == null)
+            exportFile = new File(Config.getHomeDir()+Config.getPathSeparator()+".aesh_export");
+        return exportFile;
+    }
+
+    public void setExportFile(File exportFile) {
+        if(exportFile != null && exportFile.isFile())
+            this.exportFile = exportFile;
+    }
+
+    @Override
+    public boolean isExportEnabled() {
+        return exportEnabled;
+    }
+
+    public void setExportEnabled(boolean exportEnabled) {
+        this.exportEnabled = exportEnabled;
     }
 }

@@ -398,6 +398,10 @@ public class Parser {
                 else
                     haveDoubleQuote = true;
             }
+            else if(haveEscape) {
+                builder.append(SLASH);
+                builder.append(c);
+            }
             else
                 builder.append(c);
         }
