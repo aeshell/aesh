@@ -8,6 +8,7 @@ package org.jboss.aesh.console.export;
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
+import org.jboss.aesh.parser.Parser;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -32,6 +33,18 @@ public class ExportCompletion implements Completion {
             completeOperation.addCompletionCandidate(EXPORT);
         else if(EXPORT_SPACE.equals(completeOperation.getBuffer())) {
             completeOperation.addCompletionCandidates(exportManager.getAllNames());
+        }
+        else if(completeOperation.getBuffer().startsWith(EXPORT_SPACE)) {
+            String word = Parser.findWordClosestToCursor( completeOperation.getBuffer(), completeOperation.getCursor());
+            completeOperation.addCompletionCandidates( exportManager.findAllMatchingKeys(word));
+            completeOperation.setOffset(completeOperation.getCursor() - word.length());
+        }
+        else if(Parser.containsNonEscapedDollar( completeOperation.getBuffer())) {
+            String word = Parser.findWordClosestToCursor( completeOperation.getBuffer(), completeOperation.getCursor());
+            if(Parser.containsNonEscapedDollar(word)) {
+                completeOperation.addCompletionCandidates(exportManager.findAllMatchingKeys(word));
+                completeOperation.setOffset(completeOperation.getCursor()-word.length());
+            }
         }
     }
 }

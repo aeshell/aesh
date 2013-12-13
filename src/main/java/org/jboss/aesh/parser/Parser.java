@@ -28,6 +28,7 @@ public class Parser {
     public static final char SLASH = '\\';
     public static final char SINGLE_QUOTE = '\'';
     public static final char DOUBLE_QUOTE = '\"';
+    public static final char DOLLAR = '$';
     private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
     private static final Pattern spacePattern = Pattern.compile("(?<!\\\\)\\s");
 
@@ -548,4 +549,16 @@ public class Parser {
         }
     }
 
+    public static boolean containsNonEscapedDollar(String buffer) {
+        int startIndex = 0;
+        while((startIndex = buffer.indexOf(DOLLAR, startIndex)) > -1) {
+            if(startIndex == 0)
+                return true;
+            else if(buffer.charAt(startIndex-1) != SLASH)
+                return true;
+            else
+                startIndex++;
+        }
+        return false;
+    }
 }

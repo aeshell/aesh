@@ -31,6 +31,8 @@ import org.jboss.aesh.console.alias.AliasManager;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.command.InternalCommands;
+import org.jboss.aesh.console.export.ExportCompletion;
+import org.jboss.aesh.console.export.ExportManager;
 import org.jboss.aesh.console.helper.InterruptHandler;
 import org.jboss.aesh.console.helper.Search;
 import org.jboss.aesh.console.operator.ControlOperator;
@@ -97,6 +99,7 @@ public class Console {
     private List<ConsoleOperation> operations;
     private ConsoleOperation currentOperation;
     private AliasManager aliasManager;
+    private ExportManager exportManager;
     private Shell shell;
 
     private final Logger logger = LoggerUtil.getLogger(getClass().getName());
@@ -196,9 +199,18 @@ public class Console {
 
         //enable aliasing
         if(settings.isAliasEnabled()) {
-            logger.info("enable aliasmanager with file: "+settings.getAliasFile());
+            if(settings.isLogging())
+                logger.info("enable aliasmanager with file: "+settings.getAliasFile());
             aliasManager = new AliasManager(settings.getAliasFile(), settings.doPersistAlias(), settings.getName());
             completionList.add(new AliasCompletion(aliasManager));
+        }
+
+        //enable export
+        if(settings.isExportEnabled()) {
+            if(settings.isLogging())
+                logger.info("enabling exportManager with file: "+settings.getExportFile());
+            exportManager = new ExportManager(settings.getExportFile());
+            completionList.add(new ExportCompletion(exportManager));
         }
 
         operations = new ArrayList<ConsoleOperation>();
@@ -349,6 +361,8 @@ public class Console {
             history.stop();
             if(aliasManager != null)
                 aliasManager.persist();
+            if(exportManager != null)
+                exportManager.persistVariables();
             if(settings.isLogging())
                 logger.info("Done stopping reading thread. Terminal is reset");
         }
@@ -1597,11 +1611,28 @@ public class Console {
 
                 return new ConsoleOperation(ControlOperator.NONE, null);
             }
+            else if(settings.isExportEnabled() &&
+                    output.getBuffer().startsWith(InternalCommands.EXPORT.getCommand())) {
+                String out = exportManager.addVariable(output.getBuffer());
+                if(out != null) {
+                    out().println(out);
+                    out().flush();
+                }
+                return new ConsoleOperation(ControlOperator.NONE, null);
+            }
         }
         return output;
     }
 
     private ConsoleOperation findAliases(ConsoleOperation operation) {
+
+        if(settings.isExportEnabled()) {
+            if(Parser.containsNonEscapedDollar(operation.getBuffer())) {
+                operation = new ConsoleOperation(operation.getControlOperator(),
+                        exportManager.getValue(operation.getBuffer()));
+            }
+        }
+
         if(settings.isAliasEnabled()) {
             String command = Parser.findFirstWord(operation.getBuffer());
             Alias alias = aliasManager.getAlias(command);
@@ -1615,6 +1646,15 @@ public class Console {
     }
 
     private CompleteOperation findAliases(String buffer, int cursor) {
+
+        /*
+        if(settings.isExportEnabled()) {
+            if(Parser.containsNonEscapedDollar(buffer)) {
+                buffer = exportManager.getValue(buffer);
+            }
+        }
+        */
+
         if(settings.isAliasEnabled()) {
             String command = Parser.findFirstWord(buffer);
             Alias alias = aliasManager.getAlias(command);

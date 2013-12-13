@@ -7,6 +7,7 @@
 package org.jboss.aesh.console.export;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +32,8 @@ public class ExportManager {
     private Pattern exportPattern = Pattern.compile("^(export)\\s+(\\w+)\\s*=\\s*(\\S+).*$");
     private Pattern variableDollarFirstPattern = Pattern.compile("\\$(\\w+|\\{(\\w+)\\})(.*)");
     private Pattern variablePattern = Pattern.compile("(.*)\\$(\\w+|\\{(\\w+)\\})(.*)");
+
+    private static final Logger logger = LoggerUtil.getLogger("ExportManager.class");
 
     private static final String EXPORT = "export";
 
@@ -51,7 +55,7 @@ public class ExportManager {
         }
     }
 
-    public void addVariable(String line) {
+    public String addVariable(String line) {
         Matcher variableMatcher = exportPattern.matcher(line);
         if(variableMatcher.matches()) {
             String name = variableMatcher.group(2);
@@ -62,6 +66,10 @@ public class ExportManager {
             }
             variables.put(name, value);
         }
+        else
+            return "export: usage: export [name[=value] ...]";
+
+        return null;
     }
 
     /**
@@ -173,4 +181,17 @@ public class ExportManager {
             names.add(key+"=");
         return names;
     }
+
+    public List<String> findAllMatchingKeys(String word) {
+        int index = word.lastIndexOf(DOLLAR);
+        word = word.substring(index+1, word.length());
+        List<String> keys = new ArrayList<>();
+        for(String key : variables.keySet())
+            if(key.startsWith(word))
+                keys.add("$"+key);
+
+        return keys;
+    }
+
+
 }

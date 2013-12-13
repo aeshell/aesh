@@ -219,4 +219,15 @@ public class ParserTest {
         assertEquals(4, Parser.findNumberOfSpacesInWord(" this is a\\ word !"));
     }
 
+    @Test
+    public void testContainsDollar() {
+        assertTrue(Parser.containsNonEscapedDollar("foo $bar"));
+        assertFalse(Parser.containsNonEscapedDollar("foo bar"));
+        assertFalse(Parser.containsNonEscapedDollar("foo \\$bar"));
+        assertFalse(Parser.containsNonEscapedDollar("foo \\$bar\\$"));
+        assertFalse(Parser.containsNonEscapedDollar("\\$foo \\$bar\\$"));
+        assertTrue(Parser.containsNonEscapedDollar("$foo \\$bar\\$"));
+        assertTrue(Parser.containsNonEscapedDollar("\\$foo \\$bar$"));
+    }
+
 }

@@ -48,5 +48,7 @@ public class ExportManagerTest {
         exportManager.addVariable("export TEST=/bla /ha");
         assertEquals("/bla", exportManager.getValue("TEST"));
 
+        assertEquals("ls -la /bla", exportManager.getValue("ls -la $TEST"));
+        assertEquals("/bla ls -la /bla", exportManager.getValue("$TEST ls -la $TEST"));
     }
 }
