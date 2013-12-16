@@ -179,7 +179,7 @@ public class Console {
         settings = Config.readRuntimeProperties(settings);
 
         //init terminal
-        settings.getTerminal().init(settings.getInputStream(), settings.getStdOut(), settings.getStdErr());
+        settings.getTerminal().init(settings);
 
         editMode = settings.getEditMode();
 

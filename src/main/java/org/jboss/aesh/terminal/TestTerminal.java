@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.jboss.aesh.console.reader.AeshStandardStream;
+import org.jboss.aesh.console.settings.Settings;
 
 /**
  * A dummy terminal used for tests
@@ -25,9 +26,9 @@ public class TestTerminal implements Terminal, Shell {
     private TerminalSize size;
 
     @Override
-    public void init(InputStream inputStream, PrintStream stdOut, PrintStream stdErr) {
-        input = inputStream;
-        writer = new PrintStream(stdOut, true);
+    public void init(Settings settings) {
+        input = settings.getInputStream();
+        writer = new PrintStream(settings.getStdOut(), true);
         size = new TerminalSize(24,80);
     }
 

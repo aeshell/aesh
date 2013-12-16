@@ -34,24 +34,25 @@ public class WindowsTerminal extends AbstractTerminal {
 
     private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 
-    public WindowsTerminal(Settings settings) {
-        super(settings, logger);
+    public WindowsTerminal() {
+        super(logger);
     }
 
     @Override
-    public void init(InputStream inputStream, PrintStream stdOut, PrintStream stdErr) {
+    public void init(Settings settings) {
+        this.settings = settings;
         //setting up reader
         try {
             //AnsiConsole.systemInstall();
-            this.stdOut = new PrintStream( new WindowsAnsiOutputStream(stdOut), true);
-            this.stdErr = new PrintStream( new WindowsAnsiOutputStream(stdErr), true);
+            this.stdOut = new PrintStream( new WindowsAnsiOutputStream(settings.getStdOut()), true);
+            this.stdErr = new PrintStream( new WindowsAnsiOutputStream(settings.getStdErr()), true);
         }
         catch (Exception ioe) {
-            this.stdOut = new PrintStream( new AnsiOutputStream(stdOut), true);
-            this.stdErr = new PrintStream( new AnsiOutputStream(stdErr), true);
+            this.stdOut = new PrintStream( new AnsiOutputStream(settings.getStdOut()), true);
+            this.stdErr = new PrintStream( new AnsiOutputStream(settings.getStdErr()), true);
         }
 
-        this.input = inputStream;
+        this.input = settings.getInputStream();
     }
 
     @Override

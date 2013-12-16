@@ -20,11 +20,10 @@ import java.util.logging.Logger;
 public abstract class AbstractTerminal implements Terminal, Shell {
 
     private Logger logger;
-    protected final Settings settings;
+    protected Settings settings;
     private boolean mainBuffer = true;
 
-    AbstractTerminal(Settings settings, Logger logger) {
-        this.settings = settings;
+    AbstractTerminal(Logger logger) {
         this.logger = logger;
     }
 

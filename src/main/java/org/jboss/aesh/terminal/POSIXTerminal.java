@@ -41,12 +41,13 @@ public class POSIXTerminal extends AbstractTerminal {
 
     private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 
-    public POSIXTerminal(final Settings settings) {
-        super(settings, logger);
+    public POSIXTerminal() {
+        super(logger);
     }
 
     @Override
-    public void init(InputStream inputStream, PrintStream stdOut, PrintStream stdErr) {
+    public void init(Settings settings) {
+        this.settings = settings;
         // save the initial tty configuration
         try {
             ttyConfig = stty("-g");
@@ -68,7 +69,7 @@ public class POSIXTerminal extends AbstractTerminal {
             echoEnabled = false;
 
             //setting up input
-            input =  new ConsoleInputSession(inputStream).getExternalInputStream();
+            input =  new ConsoleInputSession(settings.getInputStream()).getExternalInputStream();
         }
         catch (IOException ioe) {
             if(settings.isLogging())
@@ -80,8 +81,8 @@ public class POSIXTerminal extends AbstractTerminal {
             e.printStackTrace();
         }
 
-        this.stdOut = stdOut;
-        this.stdErr = stdErr;
+        this.stdOut = settings.getStdOut();
+        this.stdErr = settings.getStdErr();
         size = new TerminalSize(getHeight(), getWidth());
     }
 
@@ -95,7 +96,7 @@ public class POSIXTerminal extends AbstractTerminal {
         }
         int input = this.input.read();
         int available = this.input.available();
-        if(available > 1 && readAhead) {
+        if(available > 1) {
             int[] in = new int[available];
             in[0] = input;
             for(int c=1; c < available; c++ )

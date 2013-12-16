@@ -334,9 +334,9 @@ public class SettingsImpl implements Settings {
     public Terminal getTerminal() {
         if(terminal == null) {
             if(Config.isOSPOSIXCompatible())
-                terminal = new POSIXTerminal(this);
+                terminal = new POSIXTerminal();
             else
-                terminal = new WindowsTerminal(this);
+                terminal = new WindowsTerminal();
         }
 
         return terminal;
