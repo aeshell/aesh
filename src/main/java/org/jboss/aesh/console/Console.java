@@ -1613,10 +1613,14 @@ public class Console {
             }
             else if(settings.isExportEnabled() &&
                     output.getBuffer().startsWith(InternalCommands.EXPORT.getCommand())) {
-                String out = exportManager.addVariable(output.getBuffer());
-                if(out != null) {
-                    out().println(out);
-                    out().flush();
+                if(output.getBuffer().trim().equals(InternalCommands.EXPORT.getCommand()))
+                    out().print(exportManager.listAllVariables());
+                else {
+                    String out = exportManager.addVariable(output.getBuffer());
+                    if(out != null) {
+                        out().println(out);
+                        out().flush();
+                    }
                 }
                 return new ConsoleOperation(ControlOperator.NONE, null);
             }

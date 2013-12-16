@@ -39,19 +39,25 @@ public class ExportManager {
 
     private File exportFile;
 
-    public ExportManager(File exportFile) throws IOException {
+    public ExportManager(File exportFile) {
         this.exportFile = exportFile;
         variables = new HashMap<>();
         if(exportFile.isFile())
             readVariablesFromFile();
     }
 
-    private void readVariablesFromFile() throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(exportFile));
-        String line;
-        while((line = br.readLine()) != null) {
-            if(line.startsWith(EXPORT))
-                addVariable(line);
+    private void readVariablesFromFile() {
+        try (BufferedReader br = new BufferedReader(new FileReader(exportFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.startsWith(EXPORT))
+                    addVariable(line);
+            }
+
+            br.close();
+        }
+        catch (IOException e) {
+            logger.warning("Failed to read variables from file "+exportFile+", error: "+e);
         }
     }
 
@@ -163,16 +169,20 @@ public class ExportManager {
         return builder.toString();
     }
 
-    public void persistVariables() throws IOException {
+    public void persistVariables() {
         if(exportFile.isFile())
             exportFile.delete();
 
-        FileWriter fw = new FileWriter(exportFile);
-        for(String key : variables.keySet())
-            fw.write(EXPORT+" "+key+"="+variables.get(key)+Config.getLineSeparator());
+        try(FileWriter fw = new FileWriter(exportFile)) {
+            for(String key : variables.keySet())
+                fw.write(EXPORT+" "+key+"="+variables.get(key)+Config.getLineSeparator());
 
-        fw.flush();
-        fw.close();
+            fw.flush();
+            fw.close();
+        }
+        catch (IOException e) {
+            logger.warning("Failed to persist variables to file "+exportFile+", error: "+e);
+        }
     }
 
     public List<String> getAllNames() {
@@ -184,11 +194,16 @@ public class ExportManager {
 
     public List<String> findAllMatchingKeys(String word) {
         int index = word.lastIndexOf(DOLLAR);
-        word = word.substring(index+1, word.length());
+        if(index > -1)
+            word = word.substring(index+1, word.length());
         List<String> keys = new ArrayList<>();
         for(String key : variables.keySet())
-            if(key.startsWith(word))
-                keys.add("$"+key);
+            if(key.startsWith(word)) {
+                if(index > -1)
+                    keys.add("$"+key);
+                else
+                    keys.add(key);
+            }
 
         return keys;
     }
