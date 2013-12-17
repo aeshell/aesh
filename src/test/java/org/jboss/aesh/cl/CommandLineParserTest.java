@@ -34,6 +34,11 @@ public class CommandLineParserTest {
         assertEquals("e", cl.getOptions().get(1).getShortName());
         assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
 
+        cl = parser.parse("test -f -e=bar -Df=g /tmp/file.txt");
+        assertEquals("f", cl.getOptions().get(0).getShortName());
+        assertEquals("e", cl.getOptions().get(1).getShortName());
+        assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
+
         cl = parser.parse("test -e bar -DXms=128m -DXmx=512m --X /tmp/file.txt");
         assertEquals("e", cl.getOptions().get(0).getShortName());
         assertEquals("bar", cl.getOptions().get(0).getValue());
@@ -142,6 +147,7 @@ public class CommandLineParserTest {
         */
     }
 
+    @Test
     public void testParseCommandLine4() throws CommandLineParserException {
         CommandLineParser clp = ParserGenerator.generateCommandLineParser(Parser4Test.class);
 
@@ -149,6 +155,19 @@ public class CommandLineParserTest {
         assertTrue(cl.hasOption('o'));
         assertEquals("bar1", cl.getOptionValues("o").get(0));
         assertEquals("bar3", cl.getOptionValues("o").get(2));
+        assertEquals(3, cl.getOptionValues("o").size());
+
+        cl = clp.parse("test -o=bar1,bar2,bar3 foo");
+        assertTrue(cl.hasOption('o'));
+        assertEquals("bar1", cl.getOptionValues("o").get(0));
+        assertEquals("bar3", cl.getOptionValues("o").get(2));
+        assertEquals(3, cl.getOptionValues("o").size());
+
+        cl = clp.parse("test --option=bar1,bar2,bar3 foo");
+        assertTrue(cl.hasOption('o'));
+        assertEquals("bar1", cl.getOptionValues("o").get(0));
+        assertEquals("bar3", cl.getOptionValues("o").get(2));
+        assertEquals(3, cl.getOptionValues("o").size());
 
         cl = clp.parse("test --help bar4:bar5:bar6 foo");
         assertTrue(cl.hasOption("help"));

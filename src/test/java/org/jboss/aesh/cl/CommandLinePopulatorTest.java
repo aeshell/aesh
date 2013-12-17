@@ -105,7 +105,17 @@ public class CommandLinePopulatorTest {
             assertEquals(4, test2.getBasicSet().size());
             assertTrue(test2.getBasicSet().contains("s3"));
 
-            parser.getCommandPopulator().populateObject(test2, parser.parse("test -b s1 s2 s3,s4"), invocationProviders, true);
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test -b=s1,s2,s3,s4"), invocationProviders, true);
+            assertNotNull(test2.getBasicSet());
+            assertEquals(4, test2.getBasicSet().size());
+            assertTrue(test2.getBasicSet().contains("s3"));
+
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test -b s1,s2,s3,s4"), invocationProviders, true);
+            assertNotNull(test2.getBasicSet());
+            assertEquals(4, test2.getBasicSet().size());
+            assertTrue(test2.getBasicSet().contains("s3"));
+
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test -b=s1 s2 s3,s4"), invocationProviders, true);
             assertNotNull(test2.getBasicSet());
             assertEquals(4, test2.getBasicSet().size());
             assertTrue(test2.getBasicSet().contains("s3"));
@@ -116,8 +126,22 @@ public class CommandLinePopulatorTest {
             assertEquals(4, test2.getBasicList().size());
             assertEquals((Object) 1, test2.getBasicList().get(0));
 
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test -a=1,2,3,4"), invocationProviders, true);
+            assertNull(test2.getBasicSet());
+            assertNotNull(test2.getBasicList());
+            assertEquals(4, test2.getBasicList().size());
+            assertEquals((Object) 1, test2.getBasicList().get(0));
+
 
             parser.getCommandPopulator().populateObject(test2, parser.parse("test -a 3,4 --basicSet foo,bar"), invocationProviders, true);
+
+            assertNotNull(test2.getBasicList());
+            assertNotNull(test2.getBasicSet());
+            assertEquals(2, test2.getBasicList().size());
+            assertEquals(2, test2.getBasicSet().size());
+            assertTrue(test2.getBasicSet().contains("foo"));
+
+            parser.getCommandPopulator().populateObject(test2, parser.parse("test -a 3,4 --basicSet=foo,bar"), invocationProviders, true);
 
             assertNotNull(test2.getBasicList());
             assertNotNull(test2.getBasicSet());

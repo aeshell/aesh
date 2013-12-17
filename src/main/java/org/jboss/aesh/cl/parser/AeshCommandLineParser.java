@@ -167,7 +167,14 @@ public class AeshCommandLineParser implements CommandLineParser {
                         }
                     }
                 }
-                else if(active != null && (!active.hasValue() || active.getValue() != null)) {
+                else if(active != null && active.getValue() != null) {
+                    if(!active.getEndsWithSeparator()) {
+                        commandLine.addOption(active);
+                        active = null;
+                    }
+                }
+                else if(active != null && active.getOptionType().equals(OptionType.BOOLEAN) &&
+                        (!active.hasValue() || active.getValue() != null)) {
                     active.addValue("true");
                     commandLine.addOption(active);
                     active = null;
@@ -243,8 +250,14 @@ public class AeshCommandLineParser implements CommandLineParser {
                             }
                         }
                     }
-
-                    else if(active != null && (!active.hasValue() || active.getValue() != null)) {
+                    else if(active != null && active.getValue() != null) {
+                        if(!active.getEndsWithSeparator()) {
+                            commandLine.addOption(active);
+                            active = null;
+                        }
+                    }
+                    else if(active != null && active.getOptionType().equals(OptionType.BOOLEAN) &&
+                            (!active.hasValue() || active.getValue() != null)) {
                         active.addValue("true");
                         commandLine.addOption(active);
                         active = null;
@@ -342,8 +355,17 @@ public class AeshCommandLineParser implements CommandLineParser {
             return option;
         if(option != null) {
            String rest = line.substring(option.getShortName().length());
-            if(rest != null && rest.length() > 1 && rest.startsWith("=")) {
-                option.addValue(rest.substring(1));
+            if(rest.length() > 1 && rest.startsWith("=")) {
+                if(option.getOptionType().equals(OptionType.LIST) &&
+                        rest.indexOf(option.getValueSeparator()) > -1) {
+                    for(String value : rest.substring(1).split(String.valueOf(option.getValueSeparator()))) {
+                        option.addValue(value.trim());
+                    }
+                    if(rest.endsWith(String.valueOf(option.getValueSeparator())))
+                        option.setEndsWithSeparator(true);
+                }
+                else
+                    option.addValue(rest.substring(1));
                 return option;
             }
         }
@@ -363,8 +385,17 @@ public class AeshCommandLineParser implements CommandLineParser {
             return option;
         if(option != null) {
             String rest = line.substring(option.getName().length());
-            if(rest != null && rest.length() > 1 && rest.startsWith("=")) {
-                option.addValue(rest.substring(1));
+            if(rest.length() > 1 && rest.startsWith("=")) {
+                 if(option.getOptionType().equals(OptionType.LIST) &&
+                        rest.indexOf(option.getValueSeparator()) > -1) {
+                    for(String value : rest.substring(1).split(String.valueOf(option.getValueSeparator()))) {
+                        option.addValue(value.trim());
+                    }
+                    if(rest.endsWith(String.valueOf(option.getValueSeparator())))
+                        option.setEndsWithSeparator(true);
+                }
+                else
+                     option.addValue(rest.substring(1));
                 return option;
             }
         }
