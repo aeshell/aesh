@@ -1,5 +1,6 @@
 package org.jboss.aesh.console.aesh;
 
+import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.completer.OptionCompleter;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -89,6 +91,15 @@ public class AeshCommandCompletionTest {
         Thread.sleep(100);
         assertEquals("foo --bar bar\\ 2 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
+        outputStream.write("\n".getBytes());
+        outputStream.flush();
+
+         outputStream.write(("foo --bar foo ").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(100);
+        assertEquals("foo --bar foo ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         aeshConsole.stop();
     }
@@ -98,6 +109,9 @@ public class AeshCommandCompletionTest {
 
         @Option(completer = FooCompletor.class)
         private String bar;
+
+        @Arguments
+        private List<String> arguments;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {

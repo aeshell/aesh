@@ -8,7 +8,7 @@ package org.jboss.aesh.cl.parser;
 public class ParsedCompleteObject {
 
     private String name;
-    private String value;
+    private String value = "";
     private Class<?> type;
     private boolean option; //if its not option, its an argument
     private boolean displayOptions = false;
