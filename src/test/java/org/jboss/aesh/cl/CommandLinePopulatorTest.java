@@ -6,7 +6,6 @@
  */
 package org.jboss.aesh.cl;
 
-import junit.framework.Assert;
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
@@ -84,13 +83,11 @@ public class CommandLinePopulatorTest {
             assertTrue(test1.getEnableX());
 
             parser.getCommandPopulator().populateObject(test1, parser.parse("test -e enable2\\ "), invocationProviders, true);
-            Assert.assertEquals("enable2 ", test1.getEqual());
+            assertEquals("enable2 ", test1.getEqual());
             assertFalse(test1.getEnableX());
 
         }
-        catch (CommandLineParserException e) {
-            e.printStackTrace();
-        } catch (OptionValidatorException e) {
+        catch (CommandLineParserException | OptionValidatorException e) {
             e.printStackTrace();
         }
     }
@@ -172,7 +169,7 @@ public class CommandLinePopulatorTest {
 
     @Test
     public void testListObjects2() {
-        CommandLineParser parser = null;
+        CommandLineParser parser;
         try {
             parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class);
             TestPopulator5 test5 = new TestPopulator5();
@@ -180,9 +177,7 @@ public class CommandLinePopulatorTest {
 
             assertEquals("foo1", test5.getStrings().get(0));
 
-        } catch (CommandLineParserException e) {
-            e.printStackTrace();
-        } catch (OptionValidatorException e) {
+        } catch (CommandLineParserException | OptionValidatorException e) {
             e.printStackTrace();
         }
     }
@@ -228,9 +223,7 @@ public class CommandLinePopulatorTest {
             assertEquals(2, test4.getArguments().size());
             assertTrue(test4.getArguments().contains(new File("test2.txt")));
         }
-        catch (CommandLineParserException e) {
-        }
-        catch (OptionValidatorException e) {
+        catch (CommandLineParserException | OptionValidatorException e) {
         }
     }
 
@@ -257,9 +250,7 @@ public class CommandLinePopulatorTest {
             ParserGenerator.parseAndPopulate(test3, "test --integerMapI12=");
             exception.expect(OptionParserException.class);
         }
-        catch (CommandLineParserException e) {
-        }
-        catch (OptionValidatorException e) {
+        catch (CommandLineParserException | OptionValidatorException e) {
         }
     }
 
@@ -294,12 +285,10 @@ public class CommandLinePopulatorTest {
             assertFalse(test1.foo);
 
             parser.getCommandPopulator().populateObject(test1, parser.parse("test"), invocationProviders, true);
-            Assert.assertEquals("en", test1.equal);
-            Assert.assertEquals(12345, test1.int2);
+            assertEquals("en", test1.equal);
+            assertEquals(12345, test1.int2);
         }
-        catch (CommandLineParserException e) {
-            e.printStackTrace();
-        } catch (OptionValidatorException e) {
+        catch (CommandLineParserException | OptionValidatorException e) {
             e.printStackTrace();
         }
     }
@@ -338,9 +327,7 @@ public class CommandLinePopulatorTest {
             parser.getCommandPopulator().populateObject(test5, parser.parse("test --veryLong 101"), invocationProviders, true);
             exception.expect(OptionValidatorException.class);
         }
-        catch (CommandLineParserException e) {
-        }
-        catch (OptionValidatorException e) {
+        catch (CommandLineParserException | OptionValidatorException e) {
         }
     }
 
@@ -366,9 +353,7 @@ public class CommandLinePopulatorTest {
             exception.expect(OptionValidatorException.class);
 
         }
-        catch (CommandLineParserException e) {
-        }
-        catch (OptionValidatorException e) {
+        catch (CommandLineParserException | OptionValidatorException e) {
         }
     }
 }

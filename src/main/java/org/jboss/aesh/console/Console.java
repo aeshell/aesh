@@ -193,7 +193,7 @@ public class Console {
             history = new InMemoryHistory(settings.getHistorySize());
 
 
-        completionList = new ArrayList<Completion>();
+        completionList = new ArrayList<>();
         //enable completion for redirection
         completionList.add(new RedirectionCompletion());
 
@@ -213,7 +213,7 @@ public class Console {
             completionList.add(new ExportCompletion(exportManager));
         }
 
-        operations = new ArrayList<ConsoleOperation>();
+        operations = new ArrayList<>();
         currentOperation = null;
 
         standardStream = new AeshStandardStream();
@@ -387,7 +387,6 @@ public class Console {
      * Used by ConsoleCommand to attach itself to the Console
      *
      * @param cc command
-     * @throws IOException stream
      */
     public void attachProcess(ConsoleCommand cc) {
         command = cc;
@@ -536,7 +535,7 @@ public class Console {
                     operations = ControlOperatorParser.findAllControlOperators(result);
                 else {
                     //if we do not parse operators just add ControlOperator.NONE
-                    operations = new ArrayList<ConsoleOperation>(1);
+                    operations = new ArrayList<>(1);
                     operations.add(new ConsoleOperation(ControlOperator.NONE, result));
                 }
 
@@ -1256,7 +1255,7 @@ public class Console {
         if(completionList.size() < 1)
             return;
 
-        List<CompleteOperation> possibleCompletions = new ArrayList<CompleteOperation>();
+        List<CompleteOperation> possibleCompletions = new ArrayList<>();
         int pipeLinePos = 0;
         boolean redirect = false;
         if(ControlOperatorParser.doStringContainPipelineOrEnd(buffer.getLine())) {
@@ -1316,7 +1315,7 @@ public class Console {
                 // display all
                 // check size
             else {
-                List<TerminalString> completions = new ArrayList<TerminalString>();
+                List<TerminalString> completions = new ArrayList<>();
                 for(int i=0; i < possibleCompletions.size(); i++)
                     completions.addAll(possibleCompletions.get(i).getCompletionCandidates());
 

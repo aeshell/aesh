@@ -20,8 +20,8 @@ import java.util.Map;
 public class InfocmpHandler {
 
     private Map<String, String> values;
-    private final String escape = "\\E";
-    private final String escAsString = "\u001B";
+    private static final String escape = "\\E";
+    private static final String escAsString = "\u001B";
 
     private static class InfocmpHolder {
         static final InfocmpHandler INSTANCE = new InfocmpHandler();
@@ -38,7 +38,7 @@ public class InfocmpHandler {
 
 
     private void parseInfocmp() {
-        values = new HashMap<String, String>();
+        values = new HashMap<>();
         fetchInfocmp();
     }
 
@@ -64,9 +64,7 @@ public class InfocmpHandler {
 
             process.waitFor();
         }
-        catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
         finally {

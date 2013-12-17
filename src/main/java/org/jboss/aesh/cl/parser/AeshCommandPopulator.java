@@ -66,7 +66,6 @@ public class AeshCommandPopulator implements CommandPopulator {
      *
      * @param instance command
      * @param fieldName field
-     * @throws CommandLineParserException
     public static void parseAndPopulate(Object instance, String line)
             throws CommandLineParserException, OptionValidatorException {
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(instance.getClass());
@@ -104,10 +103,7 @@ public class AeshCommandPopulator implements CommandPopulator {
             else
                 field.set(instance, null);
         }
-        catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        catch (IllegalAccessException e) {
+        catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
     }

@@ -75,11 +75,7 @@ public final class ProcessedOption {
                             OptionActivator activator,
                             OptionRenderer renderer, boolean overrideRequired) throws OptionParserException {
          this(shortName, name, description, argument, required, valueSeparator, defaultValue,
-                 type, fieldName, optionType,
-                 (Class<? extends Converter>) null,(Class<? extends OptionCompleter>) null,
-                 (Class<? extends OptionValidator>) null,
-                 (Class<? extends OptionActivator>) null,
-                 (Class<? extends OptionRenderer>) null);
+                 type, fieldName, optionType, null, null, null, null, null);
          this.converter = converter;
          this.completer = completer;
          this.validator = optionValidator;
@@ -143,12 +139,12 @@ public final class ProcessedOption {
         this.activator = initActivator(optionActivator);
         this.renderer = initRenderer(optionRenderer);
 
-        this.defaultValues = new ArrayList<String>();
+        this.defaultValues = new ArrayList<>();
         if(defaultValue != null)
             defaultValues.addAll(defaultValue);
 
-        properties = new HashMap<String, String>();
-        values = new ArrayList<String>();
+        properties = new HashMap<>();
+        values = new ArrayList<>();
 
         if((shortName == Character.MIN_VALUE) && name.equals("") && optionType != OptionType.ARGUMENT) {
             throw new OptionParserException("Either shortName or name must be set.");
@@ -369,9 +365,7 @@ public final class ProcessedOption {
                 else
                     return null;
 
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
+            } catch (InstantiationException | IllegalAccessException e) {
                 e.printStackTrace();
             }
             return null;
@@ -490,19 +484,13 @@ public final class ProcessedOption {
                 }
             }
         }
-        catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
+        catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InstantiationException e) {
             e.printStackTrace();
         }
     }
 
     private <String, T> Map<String, T> newHashMap() {
-        return new HashMap<String, T>();
+        return new HashMap<>();
     }
 
     @Override

@@ -93,24 +93,23 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             }
             //the last word is an option (most likely)
             else {
-                if(lastWord.equals("-")) {
-                    return new ParsedCompleteObject(true, "", 1);
-                }
-                else if(lastWord.equals("--")) {
-                    return new ParsedCompleteObject(true, "", 2);
-                }
-                else {
-                    //we have a complete shortName
-                    if(!lastWord.startsWith("--") && lastWord.length() == 2)
-                        return new ParsedCompleteObject(true,
-                                Parser.trimOptionName(lastWord), lastWord.length(), true);
-                    else {
-                        String optionName = Parser.trimOptionName(lastWord);
-                        if(parser.getCommand().hasUniqueLongOption(optionName))
-                            return new ParsedCompleteObject(true, optionName, lastWord.length(), true);
-                        else
-                            return new ParsedCompleteObject(true, optionName, lastWord.length(), false);
-                    }
+                switch (lastWord) {
+                    case "-":
+                        return new ParsedCompleteObject(true, "", 1);
+                    case "--":
+                        return new ParsedCompleteObject(true, "", 2);
+                    default:
+                        //we have a complete shortName
+                        if (!lastWord.startsWith("--") && lastWord.length() == 2)
+                            return new ParsedCompleteObject(true,
+                                    Parser.trimOptionName(lastWord), lastWord.length(), true);
+                        else {
+                            String optionName = Parser.trimOptionName(lastWord);
+                            if (parser.getCommand().hasUniqueLongOption(optionName))
+                                return new ParsedCompleteObject(true, optionName, lastWord.length(), true);
+                            else
+                                return new ParsedCompleteObject(true, optionName, lastWord.length(), false);
+                        }
                 }
             }
         }
@@ -157,6 +156,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void injectValuesAndComplete(ParsedCompleteObject completeObject, Command command,
                                         CompleteOperation completeOperation,
                                         InvocationProviders invocationProviders) {
@@ -226,8 +226,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 parser.getCommandPopulator().populateObject(command, parser.parse(rest), invocationProviders, false);
             }
             //this should be ignored at some point
-            catch (CommandLineParserException ignored) { }
-            catch (OptionValidatorException ignored) { }
+            catch (CommandLineParserException | OptionValidatorException ignored) { }
 
             if(currentOption.getCompleter() != null) {
                 CompleterInvocation completions =
@@ -280,8 +279,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             try {
                 parser.getCommandPopulator().populateObject(command, parser.parse(rest), invocationProviders, false);
             }
-            catch (CommandLineParserException ignored) { }
-            catch (OptionValidatorException ignored) { }
+            catch (CommandLineParserException | OptionValidatorException ignored) { }
 
             if(parser.getCommand().getArgument() != null &&
                     parser.getCommand().getArgument().getCompleter() != null) {

@@ -38,21 +38,21 @@ public final class ProcessedCommand {
         setName(name);
         setUsage(usage);
         setValidator(validator);
-        options = new ArrayList<ProcessedOption>();
+        options = new ArrayList<>();
     }
 
     public ProcessedCommand(String name, String usage,Class<? extends CommandValidator> validator) {
         setName(name);
         setUsage(usage);
         setValidator(initValidator(validator));
-        options = new ArrayList<ProcessedOption>();
+        options = new ArrayList<>();
     }
 
     public ProcessedCommand(String name, String usage, ProcessedOption argument) {
         setName(name);
         setUsage(usage);
         this.argument = argument;
-        options = new ArrayList<ProcessedOption>();
+        options = new ArrayList<>();
     }
 
     public ProcessedCommand(String name, String usage, CommandValidator validator,
@@ -61,7 +61,7 @@ public final class ProcessedCommand {
         setUsage(usage);
         setValidator(validator);
         this.argument = argument;
-        this.options = new ArrayList<ProcessedOption>();
+        this.options = new ArrayList<>();
         setOptions(options);
     }
 
@@ -98,7 +98,7 @@ public final class ProcessedCommand {
                      Class<? extends OptionValidator> validator,
                      Class<? extends OptionActivator> activator,
                      Class<? extends OptionRenderer> renderer) throws OptionParserException {
-        List<String> defaultValues = new ArrayList<String>();
+        List<String> defaultValues = new ArrayList<>();
         defaultValues.addAll(Arrays.asList(defaultValue));
         options.add(new ProcessedOption(verifyThatNamesAreUnique(name, longName), longName, description,
                 argument, required, valueSeparator, defaultValues,
@@ -113,7 +113,7 @@ public final class ProcessedCommand {
                      Class<? extends OptionValidator> validator,
                      Class<? extends OptionActivator> activator,
                      Class<? extends OptionRenderer> renderer, boolean overrideRequired) throws OptionParserException {
-        List<String> defaultValues = new ArrayList<String>();
+        List<String> defaultValues = new ArrayList<>();
         defaultValues.addAll(Arrays.asList(defaultValue));
         options.add(new ProcessedOption(verifyThatNamesAreUnique(name, longName), longName, description,
                 argument, required, valueSeparator, defaultValues,
@@ -254,7 +254,7 @@ public final class ProcessedCommand {
      * and is enabled
      */
     public List<TerminalString> getOptionLongNamesWithDash() {
-        List<TerminalString> names = new ArrayList<TerminalString>(options.size());
+        List<TerminalString> names = new ArrayList<>(options.size());
         for(ProcessedOption o : options) {
             if(o.getValues().size() == 0 &&
                     o.getActivator().isActivated(this))
@@ -265,7 +265,7 @@ public final class ProcessedCommand {
     }
 
     public List<TerminalString> findPossibleLongNamesWitdDash(String name) {
-        List<TerminalString> names = new ArrayList<TerminalString>(options.size());
+        List<TerminalString> names = new ArrayList<>(options.size());
         for(ProcessedOption o : options) {
            if(((o.getShortName() != null && o.getShortName().equals(name) &&
                    !o.isLongNameUsed()) || o.getName().startsWith(name)) &&

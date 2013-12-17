@@ -177,7 +177,7 @@ public class AeshConsoleImpl implements AeshConsole {
     }
 
     private List<String> completeCommandName(String input) {
-        List<String> matchedCommands = new ArrayList<String>();
+        List<String> matchedCommands = new ArrayList<>();
         try {
             for (String commandName : registry.getAllCommandNames()) {
                 if (commandName.startsWith(input))
@@ -269,8 +269,9 @@ public class AeshConsoleImpl implements AeshConsole {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public int readConsoleOutput(ConsoleOperation output) {
-            CommandResult result = CommandResult.SUCCESS;
+            CommandResult result;
             if (output != null && output.getBuffer().trim().length() > 0) {
                 try (CommandContainer commandContainer = getCommand(
                         Parser.findFirstWord(output.getBuffer()),

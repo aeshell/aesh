@@ -20,9 +20,9 @@ public class AeshLine {
 
     public AeshLine(List<String> words, ParserStatus status, String errorMessage) {
         if(words == null)
-            this.words = new ArrayList<String>(0);
+            this.words = new ArrayList<>(0);
         else {
-            this.words = new ArrayList<String>(words.size());
+            this.words = new ArrayList<>(words.size());
             this.words.addAll(words);
         }
 
