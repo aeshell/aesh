@@ -250,9 +250,6 @@ public class AeshConsoleImpl implements AeshConsole {
                 } catch (CommandLineParserException e) {
                     logger.warning(e.getMessage());
                 } catch (CommandNotFoundException ignored) {
-                    if (commandNotFoundHandler != null)
-                        commandNotFoundHandler.handleCommandNotFound(
-                                completeOperation.getBuffer(), getShell());
                 } catch (Exception ex) {
                     logger.log(Level.SEVERE,
                             "Runtime exception when completing: "
