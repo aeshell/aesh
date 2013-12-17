@@ -135,7 +135,7 @@ public class InfocmpManager {
         String cursor = InfocmpHandler.getInstance().get("sc");
         if(cursor.length() == 0) {
             logger.warning("Failed to get save_cursor from infocmp, using default");
-            return "\u001B[7";
+            return "\u001B[s";
         }
         else
             return cursor;
@@ -145,7 +145,7 @@ public class InfocmpManager {
         String cursor = InfocmpHandler.getInstance().get("rc");
         if(cursor.length() == 0) {
             logger.warning("Failed to get restore_cursor from infocmp, using default");
-            return "\u001B[8";
+            return "\u001B[u";
         }
         else
             return cursor;
