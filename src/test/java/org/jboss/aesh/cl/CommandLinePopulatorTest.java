@@ -62,6 +62,7 @@ public class CommandLinePopulatorTest {
             assertTrue(test1.foo);
             assertEquals(2, test1.getInt1().intValue());
             assertEquals(3, test1.int2);
+            assertEquals("foo", test1.arguments.get(0));
 
             parser.getCommandPopulator().populateObject(test1, parser.parse("test -e enable2 --X"), invocationProviders, true);
             assertTrue(test1.getEnableX());

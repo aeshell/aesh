@@ -455,7 +455,7 @@ public final class ProcessedOption {
                                 tmpList.add(doConvert(in, invocationProviders, doValidation));
                         }
                         else if(defaultValues.size() > 0) {
-                            for(String in : values)
+                            for(String in : defaultValues)
                                 tmpList.add(doConvert(in, invocationProviders, doValidation));
                         }
                         field.set(instance, tmpList);

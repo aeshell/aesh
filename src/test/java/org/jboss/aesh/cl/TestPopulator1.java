@@ -1,5 +1,7 @@
 package org.jboss.aesh.cl;
 
+import java.util.List;
+
 @CommandDefinition(name = "test", description = "a simple test")
 public class TestPopulator1 {
 
@@ -20,6 +22,9 @@ public class TestPopulator1 {
 
     @Option(shortName = 'n')
     public int int2;
+
+    @Arguments(defaultValue = {"foo"})
+    public List<String> arguments;
 
     /*
     @OptionGroup(shortName = 'D', description = "define properties")

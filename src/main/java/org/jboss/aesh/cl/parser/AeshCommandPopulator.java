@@ -49,7 +49,9 @@ public class AeshCommandPopulator implements CommandPopulator {
             else
                 resetField(instance, option.getFieldName(), option.hasValue());
         }
-        if(line.getArgument() != null && line.getArgument().getValues().size() > 0) {
+        if((line.getArgument() != null && line.getArgument().getValues().size() > 0) ||
+                (commandLineParser.getCommand().getArgument() != null &&
+                        commandLineParser.getCommand().getArgument().getDefaultValues().size() > 0)) {
             line.getArgument().injectValueIntoField(instance, invocationProviders, validate);
         }
         else if(line.getArgument() != null)
