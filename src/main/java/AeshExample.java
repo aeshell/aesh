@@ -19,6 +19,7 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.AeshConsole;
@@ -36,6 +37,7 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
+import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalTextStyle;
@@ -92,6 +94,7 @@ public class AeshExample {
                 .command(fooCommand, FooCommand.class)
                 .command(LsCommand.class)
                 .command(TestConsoleCommand.class)
+                .command(PromptCommand.class)
                 .create();
         AeshConsole aeshConsole = new AeshConsoleBuilder()
                 .commandRegistry(registry)
@@ -231,6 +234,44 @@ public class AeshExample {
                 }
             }
             return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "prompt", description = "")
+    public static class PromptCommand implements Command, ConsoleCommand {
+
+        @Option(hasValue = false)
+        private boolean bar;
+
+        private boolean attached = false;
+        private Shell shell;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+            this.shell = commandInvocation.getShell();
+            if(bar) {
+                attached = true;
+                commandInvocation.attachConsoleCommand(this);
+                shell.out().print("are you sure you want bar? (y/n) ");
+            }
+            return CommandResult.SUCCESS;
+        }
+
+        @Override
+        public void processOperation(CommandOperation operation) throws IOException {
+            if(operation.getInputKey() == Key.y) {
+                shell.out().println(Config.getLineSeparator()+"you wanted bar!");
+            }
+            else
+                shell.out().println(Config.getLineSeparator()+"you chickened out!!");
+
+            //detach from the console
+            attached = false;
+        }
+
+        @Override
+        public boolean isAttached() {
+            return attached;
         }
     }
 
