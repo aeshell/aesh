@@ -95,6 +95,21 @@ public class FileListerTest {
         assertEquals("child", candidates.get(0).getCharacters());
     }
 
+    @Test
+    public void testCompletionWithSubdirectory() {
+        File test = new File(workingDir, "test");
+        test.mkdir();
+        new File(test, "main2").mkdir();
+        new File(test, "test2").mkdir();
+
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd test/", 2);
+        new FileLister("test/", workingDir).findMatchingDirectories(completion);
+        List<TerminalString> candidates = completion.getCompletionCandidates();
+        assertEquals(2, candidates.size());
+        assertEquals("main2/", candidates.get(0).getCharacters());
+
+    }
+
     public static boolean delete(File file, final boolean recursive) {
         boolean result = false;
         if (recursive) {

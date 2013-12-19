@@ -1305,6 +1305,8 @@ public class Console {
 
             String startsWith = Parser.findStartsWithOperation(possibleCompletions);
 
+            logger.info("Starts with: "+startsWith);
+
             if(startsWith.length() > 0) {
                 if(startsWith.contains(" "))
                     displayCompletion(new TerminalString(Parser.switchSpacesToEscapedSpacesInWord(startsWith), true),

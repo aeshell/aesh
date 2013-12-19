@@ -141,7 +141,7 @@ public class Parser {
         }
         else {
             for(TerminalString ts : displayList) {
-                completionOutput.append(ts.toString()+"  ");
+                completionOutput.append(ts.toString()).append("  ");
             }
             completionOutput.append(Config.getLineSeparator());
         }
@@ -158,7 +158,7 @@ public class Parser {
     }
 
     public static List<String> splitBySizeKeepWords(String words, int size) {
-        List<String> out = new ArrayList<String>();
+        List<String> out = new ArrayList<>();
         if(words.length() <= size) {
             out.add(words);
             return out;
@@ -204,7 +204,7 @@ public class Parser {
      * @return common start string
      */
     public static String findStartsWithOperation(List<CompleteOperation> coList) {
-        List<String> tmpList = new ArrayList<String>();
+        List<String> tmpList = new ArrayList<>();
         for(CompleteOperation co : coList) {
             String s = findStartsWith(co.getFormattedCompletionCandidates());
             if(s.length() > 0)
@@ -341,7 +341,7 @@ public class Parser {
     }
 
     public static AeshLine findAllWords(String text) {
-        List<String> textList = new ArrayList<String>();
+        List<String> textList = new ArrayList<>();
         boolean haveEscape = false;
         boolean haveSingleQuote = false;
         boolean haveDoubleQuote = false;
@@ -419,9 +419,7 @@ public class Parser {
         else  if(haveSingleQuote || haveDoubleQuote)
             status = ParserStatus.UNCLOSED_QUOTE;
 
-        AeshLine aeshLine = new AeshLine(textList, status, "");
-
-        return aeshLine;
+        return new AeshLine(textList, status, "");
     }
 
     public static boolean doWordContainOnlyEscapedSpace(String word) {
@@ -435,8 +433,8 @@ public class Parser {
     /**
      * find number of spaces in the given word.
      * escaped spaces are not counted
-     * @param word
-     * @return
+     * @param word to check
+     * @return number of spaces
      */
     public static int findNumberOfSpacesInWord(String word) {
         int count = 0;

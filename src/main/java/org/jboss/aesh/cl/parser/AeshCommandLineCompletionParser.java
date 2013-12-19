@@ -236,6 +236,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 currentOption.getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
+                completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
                     //if the contain spaces we need to add the number of spaces to the size
@@ -258,6 +259,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
+                completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
                     //if the contain spaces we need to add the number of spaces to the size
@@ -289,6 +291,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 parser.getCommand().getArgument().getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
+                completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
                     if(completeObject.getValue().indexOf(Parser.SPACE_CHAR) > 0) {
@@ -310,6 +313,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 new DefaultValueOptionCompleter( parser.getCommand().getArgument().getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
+                completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
 
                 if(completions.getCompleterValues().size() == 1) {
                     if(completeObject.getValue().indexOf(Parser.SPACE_CHAR) > 0) {

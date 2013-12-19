@@ -24,20 +24,20 @@ public class CompleteOperation {
     private int offset;
     private List<TerminalString> completionCandidates;
     private boolean trimmed = false;
-    private int trimmedSize = 0;
     private String nonTrimmedBuffer;
     private AeshContext aeshContext;
 
 
     private char separator = ' ';
     private boolean appendSeparator = true;
+    private boolean ignoreOffset = false;
 
     public CompleteOperation(AeshContext aeshContext, String buffer, int cursor) {
         this.aeshContext = aeshContext;
         setCursor(cursor);
         setSeparator(' ');
         doAppendSeparator(true);
-        completionCandidates = new ArrayList<TerminalString>();
+        completionCandidates = new ArrayList<>();
         setBuffer(buffer);
     }
 
@@ -85,6 +85,14 @@ public class CompleteOperation {
 
     public void setOffset(int offset) {
         this.offset = offset;
+    }
+
+    public void setIgnoreOffset(boolean ignoreOffset) {
+        this.ignoreOffset = ignoreOffset;
+    }
+
+    public boolean doIgnoreOffset() {
+        return ignoreOffset;
     }
 
     public AeshContext getAeshContext() {
@@ -174,7 +182,7 @@ public class CompleteOperation {
     public List<String> getFormattedCompletionCandidates() {
         List<String> fixedCandidates = new ArrayList<String>(completionCandidates.size());
         for(TerminalString c : completionCandidates) {
-            if(offset < cursor) {
+            if(!ignoreOffset && offset < cursor) {
                 int pos = cursor - offset;
                 if(c.getCharacters().length() >= pos)
                     fixedCandidates.add(c.getCharacters().substring(pos));
@@ -191,7 +199,7 @@ public class CompleteOperation {
     public List<TerminalString> getFormattedCompletionCandidatesTerminalString() {
         List<TerminalString> fixedCandidates = new ArrayList<TerminalString>(completionCandidates.size());
         for(TerminalString c : completionCandidates) {
-            if(offset < cursor) {
+            if(!ignoreOffset && offset < cursor) {
                 int pos = cursor - offset;
                 if(c.getCharacters().length() >= pos) {
                     TerminalString ts = c;
@@ -226,6 +234,7 @@ public class CompleteOperation {
         sb.append("Buffer: ").append(buffer)
                 .append(", Cursor:").append(cursor)
                 .append(", Offset:").append(offset)
+                .append(", IgnoreOffset:").append(ignoreOffset)
                 .append(", Append separator: ").append(appendSeparator)
                 .append(", Candidates:").append(completionCandidates);
 

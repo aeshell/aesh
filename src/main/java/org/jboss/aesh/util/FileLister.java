@@ -92,7 +92,7 @@ public class FileLister {
      * @param completion
      */
     public void findMatchingDirectories(CompleteOperation completion) {
-       completion.doAppendSeparator(false);
+        completion.doAppendSeparator(false);
 
         //if token is empty, just list cwd
         if(token.trim().isEmpty()) {
@@ -238,6 +238,7 @@ public class FileLister {
             }
         }
         else if(completion.getCompletionCandidates().size() > 1) {
+            completion.setIgnoreOffset(true);
             if(rest != null && rest.length() > 0)
                 completion.setOffset(completion.getCursor() - rest.length());
         }

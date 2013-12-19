@@ -30,6 +30,8 @@ public class CompleterData implements CompleterInvocation {
     private String completeValue;
     private Command command;
     private AeshContext aeshContext;
+    private int offset;
+    private boolean ignoreOffset = false;
 
     public CompleterData(AeshContext aeshContext, String completeValue, Command command) {
         this.aeshContext = aeshContext;
@@ -93,6 +95,26 @@ public class CompleterData implements CompleterInvocation {
     @Override
     public void setAppendSpace(boolean appendSpace) {
         this.appendSpace = appendSpace;
+    }
+
+    @Override
+    public boolean doIgnoreOffset() {
+        return ignoreOffset;
+    }
+
+    @Override
+    public void setIgnoreOffset(boolean ignoreOffset) {
+        this.ignoreOffset = ignoreOffset;
+    }
+
+    @Override
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    @Override
+    public int getOffset() {
+        return offset;
     }
 
     @Override

@@ -52,6 +52,9 @@ public class FileOptionCompleter implements OptionCompleter<CompleterInvocation>
         if (completerData.getGivenCompleteValue() != null && completerData.getCompleterValues().size() == 1) {
             completerData.setAppendSpace(completeOperation.hasAppendSeparator());
         }
+
+        if(completeOperation.doIgnoreOffset())
+            completerData.setIgnoreOffset(completeOperation.doIgnoreOffset());
     }
 
     public Filter getFilter() {

@@ -46,5 +46,13 @@ public interface CompleterInvocation {
 
     void setAppendSpace(boolean appendSpace);
 
+    void setIgnoreOffset(boolean ignoreOffset);
+
+    boolean doIgnoreOffset();
+
+    void setOffset(int offset);
+
+    int getOffset();
+
     AeshContext getAeshContext();
 }
