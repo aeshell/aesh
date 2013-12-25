@@ -13,7 +13,7 @@ Features:
 * Paste buffer
 * Emacs and Vi editing mode
 * Supports POSIX OS's and Windows
-* Easy to configure (history file & buffer size, edit mode, streams, possible to override terminal impls, etc)
+* Easy to configure (history file & buffer size, edit mode, streams, possible to override terminal implementations, etc)
 * Support standard out and standard error
 * Redirect
 * Alias
@@ -27,29 +27,36 @@ To get going:
 -------------
 <pre>
 import java.io.IOException;
+
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.ConsoleOutput;
+import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 
-public class Example2 {
+public class Example {
 
-  public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
 
-    final Console console = new Console(new SettingsBuilder().create());
-    console.setPrompt(new Prompt("[aesh]$ "));
+        final Console console = new Console(new SettingsBuilder().create());
+        console.setPrompt(new Prompt("[aesh]$ "));
 
-    console.setConsoleCallback( new ConsoleCallback() {
-      @Override
-      public int readConsoleOutput(ConsoleOutput output) throws IOException{
-        console.pushToStdOut("======>\"" + output.getBuffer() + "\"\n");
-        if(output.getBuffer().equals("quit"))
-          console.stop();
-        return 0;
-      }  
-    });   console.start();
-  }   
+        console.setConsoleCallback(new ConsoleCallback() {
+            @Override
+            public int readConsoleOutput(ConsoleOperation output) {
+                console.getShell().out().println("======>\"" + output.getBuffer() + "\"\n");
+                if (output.getBuffer().equals("quit")) {
+                    try {
+                        console.stop();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return 0;
+            }
+        });
+        console.start();
+    }
 }
 </pre>
 
@@ -118,12 +125,12 @@ Supported runtime properties:
 -------------
 * aesh.terminal : specify Terminal object
 * aesh.editmode : specify either VI or EMACS edit mode
-* aesh.readinputrc : specify if æsh should read settings from inputrc
+* aesh.readinputrc : specify if Æsh should read settings from inputrc
 * aesh.inputrc : specify the inputrc file (must exist)
 * aesh.historyfile : specify the history file (must exist)
-* aesh.historypersistent : specify if jreadlin should persist history file on exit
+* aesh.historypersistent : specify if Æsh should persist history file on exit
 * aesh.historydisabled : specify if history should be disabled
-* aesh.historysize : speficy the maximum size of the history file
+* aesh.historysize : specify the maximum size of the history file
 * aesh.logging : specify if logging should be enabled
 * aesh.logfile : specify the log file
 * aesh.disablecompletion : specify if completion should be disabled
