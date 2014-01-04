@@ -33,8 +33,11 @@ public class ManFileParser implements FileParser {
     }
 
     public void setInput(InputStream input) throws IOException {
-        if(input != null)
+        if(input != null) {
             reader = new InputStreamReader(input);
+            this.name = null;
+            sections.clear();
+        }
     }
 
     public String getName() {
