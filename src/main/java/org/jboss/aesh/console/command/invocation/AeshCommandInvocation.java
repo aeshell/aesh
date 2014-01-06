@@ -7,6 +7,7 @@
 package org.jboss.aesh.console.command.invocation;
 
 import org.jboss.aesh.console.AeshConsole;
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.ConsoleCommand;
@@ -63,5 +64,10 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public void stop() {
         aeshConsole.stop();
+    }
+
+    @Override
+    public AeshContext getAeshContext() {
+        return aeshConsole.getAeshContext();
     }
 }

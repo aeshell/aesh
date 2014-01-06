@@ -9,6 +9,7 @@ package org.jboss.aesh.console.aesh;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
@@ -137,6 +138,11 @@ class FooCommandInvocation implements CommandInvocation {
     @Override
     public void stop() {
         commandInvocation.stop();
+    }
+
+    @Override
+    public AeshContext getAeshContext() {
+        return commandInvocation.getAeshContext();
     }
 
     public String getFoo() {

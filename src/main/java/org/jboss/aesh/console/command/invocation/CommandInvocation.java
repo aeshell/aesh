@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.console.command.invocation;
 
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.ConsoleCommand;
@@ -58,4 +59,9 @@ public interface CommandInvocation {
      * Stop the console and end the session
      */
     void stop();
+
+    /**
+     * Get AeshContext
+     */
+    AeshContext getAeshContext();
 }
