@@ -29,7 +29,6 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 import org.jboss.aesh.console.helper.ManProvider;
@@ -134,7 +133,7 @@ public class AeshExample {
     }
 
     @CommandDefinition(name = "test", description = "testing")
-    public static class TestConsoleCommand implements Command, ConsoleCommand {
+    public static class TestConsoleCommand implements Command {
 
         @Option(hasValue = false, required = true)
         private boolean bar;
@@ -155,8 +154,8 @@ public class AeshExample {
                 shell.out().println(commandInvocation.getHelpInfo("test"));
             }
             else {
-                commandInvocation.attachConsoleCommand(this);
                 display();
+                processOperation(commandInvocation);
             }
 
             return CommandResult.SUCCESS;
@@ -173,21 +172,20 @@ public class AeshExample {
             attached = false;
         }
 
-        @Override
-        public void processOperation(CommandOperation operation) throws IOException {
+        public void processOperation(CommandInvocation invocation) throws IOException {
+
+            CommandOperation operation;
+            operation = invocation.getInput().get(0);
+            while(!operation.getInputKey().equals(Key.q)) {
+                shell.out().print((char) operation.getInput()[0]);
+                shell.out().flush();
+                operation = invocation.getInput().get(0);
+            }
             if(operation.getInput()[0] == 'q') {
                 stop();
             }
-            else {
-                shell.out().print((char) operation.getInput()[0]);
-                shell.out().flush();
-            }
         }
 
-        @Override
-        public boolean isAttached() {
-            return attached;
-        }
     }
 
     @CommandDefinition(name="ls", description = "[OPTION]... [FILE]...")
@@ -238,20 +236,17 @@ public class AeshExample {
     }
 
     @CommandDefinition(name = "prompt", description = "")
-    public static class PromptCommand implements Command, ConsoleCommand {
+    public static class PromptCommand implements Command {
 
         @Option(hasValue = false)
         private boolean bar;
 
-        private boolean attached = false;
         private Shell shell;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             this.shell = commandInvocation.getShell();
             if(bar) {
-                attached = true;
-                commandInvocation.attachConsoleCommand(this);
                 shell.out().print("are you sure you want bar? (y/n) ");
                 List<CommandOperation> operation = commandInvocation.getInput();
                 processOperation(operation.get(0));
@@ -259,22 +254,14 @@ public class AeshExample {
             return CommandResult.SUCCESS;
         }
 
-        @Override
         public void processOperation(CommandOperation operation) throws IOException {
             if(operation.getInputKey() == Key.y) {
                 shell.out().println(Config.getLineSeparator()+"you wanted bar!");
             }
             else
                 shell.out().println(Config.getLineSeparator()+"you chickened out!!");
-
-            //detach from the console
-            attached = false;
         }
 
-        @Override
-        public boolean isAttached() {
-            return attached;
-        }
     }
 
     public static class LessCompleter implements OptionCompleter {

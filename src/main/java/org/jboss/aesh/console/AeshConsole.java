@@ -8,7 +8,6 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.terminal.Shell;
 
@@ -33,13 +32,6 @@ public interface AeshConsole {
      * Get the CommandRegistry
      */
     CommandRegistry getCommandRegistry();
-
-    /**
-     * Attach a ConsoleCommand to the console. All input received
-     * to the console will be sent directly to the
-     * ConsoleCommand.start(..)
-     */
-    void attachConsoleCommand(ConsoleCommand consoleCommand);
 
     /**
      * Specify the prompt

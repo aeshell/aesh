@@ -29,7 +29,6 @@ import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasCompletion;
 import org.jboss.aesh.console.alias.AliasManager;
 import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.command.InternalCommands;
 import org.jboss.aesh.console.export.ExportCompletion;
 import org.jboss.aesh.console.export.ExportManager;
@@ -88,7 +87,6 @@ public class Console {
 
     private Action prevAction = Action.EDIT;
 
-    private ConsoleCommand command;
     private ConsoleCallback consoleCallback;
 
     private boolean displayCompletion = false;
@@ -393,27 +391,10 @@ public class Console {
         return running;
     }
 
-    /**
-     * Used by ConsoleCommand to attach itself to the Console
-     *
-     * @param cc command
-     */
-    public void attachProcess(ConsoleCommand cc) {
-        //command = cc;
-    }
-
     public void clearBufferAndDisplayPrompt() {
         buffer.reset();
         clearUndoStack();
         prevAction = Action.NEWLINE;
-        displayPrompt();
-    }
-
-    /**
-     * Remove the current running command from Console
-     */
-    void detachProcess() {
-        command = null;
         displayPrompt();
     }
 
@@ -492,9 +473,6 @@ public class Console {
 
     private void read() {
         try {
-            if(command != null && !command.isAttached()) {
-                detachProcess();
-            }
 
             int[] input = getTerminal().read(settings.isReadAhead());
             if(settings.isLogging()) {
@@ -523,10 +501,6 @@ public class Console {
                 if(processManager.hasRunningProcess()) {
                     processManager.operation(new CommandOperation(input));
                 }
-
-                //if we have a command hooked in the input goes there
-                else if(command != null)
-                    command.processOperation(new CommandOperation(input));
                 //the input is parsed by æsh
                 else {
                     Operation operation = editMode.parseInput(inc, buffer.getLine());

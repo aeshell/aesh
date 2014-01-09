@@ -12,7 +12,6 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.helper.InterruptHook;
@@ -162,7 +161,6 @@ public class Example {
         exampleConsole.addCompletion(completer);
 
         final ConsoleCallback consoleCallback = new AeshConsoleCallback() {
-            ConsoleCommand man;
             @Override
             public int execute(ConsoleOperation output) {
                 try {
@@ -244,11 +242,10 @@ public class Example {
 
     }
 
-    public static class ExampleConsoleCommand implements ConsoleCommand {
+    public static class ExampleConsoleCommand {
 
         private Console console;
         private ConsoleOperation operation;
-        private boolean attached = true;
 
         public ExampleConsoleCommand(Console console, ConsoleOperation operation) {
             this.console = console;
@@ -280,7 +277,6 @@ public class Example {
 
                 //detach after init if hasRedirectOut()
                 if(operation.getControlOperator().isRedirectionOut()) {
-                    attached = false;
                 }
 
                 console.getShell().out().println("trying to wait on input");
@@ -300,11 +296,9 @@ public class Example {
                 console.getShell().out().println("here should we present some text... press 'q' to quit");
         }
 
-        @Override
         public void processOperation(CommandOperation operation) throws IOException {
             if(operation.getInput()[0] == 'q') {
                 console.getShell().out().print(ANSI.getMainBufferScreen());
-                attached = false;
             }
             else if(operation.getInput()[0] == 'a') {
                 readFromFile();
@@ -312,11 +306,6 @@ public class Example {
             else {
 
             }
-        }
-
-        @Override
-        public boolean isAttached() {
-            return attached;
         }
 
     }

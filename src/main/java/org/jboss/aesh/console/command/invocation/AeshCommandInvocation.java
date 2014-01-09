@@ -12,7 +12,6 @@ import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.terminal.Shell;
 
@@ -41,11 +40,6 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public CommandRegistry getCommandRegistry() {
         return aeshConsole.getCommandRegistry();
-    }
-
-    @Override
-    public void attachConsoleCommand(ConsoleCommand consoleCommand) {
-        aeshConsole.attachConsoleCommand(consoleCommand);
     }
 
     @Override

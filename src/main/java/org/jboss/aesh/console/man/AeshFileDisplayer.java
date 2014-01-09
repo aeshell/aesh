@@ -11,7 +11,6 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
@@ -30,7 +29,7 @@ import org.jboss.aesh.console.man.TerminalPage.Search;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
+public abstract class AeshFileDisplayer implements Command {
 
     private int rows;
     private int columns;
@@ -44,9 +43,10 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
     private Logger logger = LoggerUtil.getLogger(getClass().getName());
     private CommandInvocation commandInvocation;
     private ControlOperator operation;
-    private boolean attached = true;
+    private boolean stop;
 
     public AeshFileDisplayer() {
+        stop = false;
     }
 
     protected void setCommandInvocation(CommandInvocation commandInvocation) {
@@ -67,7 +67,6 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
     }
 
     protected void afterAttach() throws IOException {
-        attached = true;
         number = new StringBuilder();
         searchBuilder = new StringBuilder();
         rows = getShell().getSize().getHeight();
@@ -87,6 +86,7 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
             getShell().out().flush();
 
             afterDetach();
+            getShell().out().flush();
         }
         else {
             if(!page.hasData()) {
@@ -100,9 +100,10 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
                     display();
                 else
                     display();
+
+                processInput();
             }
         }
-        getShell().out().flush();
     }
 
     protected void afterDetach() throws IOException {
@@ -111,15 +112,13 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
 
         page.clear();
         topVisibleRow = 0;
-        attached = false;
     }
 
-    @Override
-    public boolean isAttached() {
-        return attached;
+    public void processInput() throws IOException {
+        while(!stop)
+            processOperation(getCommandInvocation().getInput().get(0));
     }
 
-    @Override
     public void processOperation(CommandOperation operation) throws IOException {
         if(operation.getInputKey() == Key.q) {
             if(search == Search.SEARCHING) {
@@ -129,6 +128,7 @@ public abstract class AeshFileDisplayer implements ConsoleCommand, Command {
             else {
                 clearNumber();
                 afterDetach();
+                stop = true;
             }
         }
         else if(operation.getInputKey() == Key.j ||

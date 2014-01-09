@@ -10,9 +10,7 @@ import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
@@ -23,7 +21,6 @@ import org.jboss.aesh.graphics.Graphics;
 import org.jboss.aesh.graphics.GraphicsConfiguration;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalColor;
 
 import java.io.IOException;
@@ -62,41 +59,34 @@ public class AeshGraphicsExample {
     }
 
     @CommandDefinition(name = "gfx", description = "")
-    public static class GraphicsCommand implements Command, ConsoleCommand {
+    public static class GraphicsCommand implements Command {
 
         private boolean attached = false;
-        private Shell shell;
+        private CommandInvocation invocation;
         private Graphics g;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
-            attached = true;
-            shell = commandInvocation.getShell();
-            commandInvocation.attachConsoleCommand(this);
-            shell.enableAlternateBuffer();
+            invocation = commandInvocation;
+            invocation.getShell().enableAlternateBuffer();
             doGfx();
 
             return CommandResult.SUCCESS;
         }
 
-        @Override
-        public void processOperation(CommandOperation operation) throws IOException {
-            if(operation.getInputKey() == Key.q) {
-                if(g != null)
-                    g.cleanup();
-                shell.enableMainBuffer();
-                attached = false;
-            }
-        }
+        public void waitForInput() {
+            while(!invocation.getInput().get(0).getInputKey().equals(Key.q)) {
 
-        @Override
-        public boolean isAttached() {
-            return attached;
+            }
+            if(g != null)
+                g.cleanup();
+            invocation.getShell().enableMainBuffer();
+            attached = false;
         }
 
         private void doGfx() {
             try {
-                GraphicsConfiguration gc = new AeshGraphicsConfiguration(shell);
+                GraphicsConfiguration gc = new AeshGraphicsConfiguration(invocation.getShell());
                 g = gc.getGraphics();
 
                 g.setColor(new TerminalColor(Color.BLUE, Color.DEFAULT));
@@ -149,6 +139,7 @@ public class AeshGraphicsExample {
                         j--;
                 }
 
+                waitForInput();
             }
             catch (InterruptedException ignored) { }
         }

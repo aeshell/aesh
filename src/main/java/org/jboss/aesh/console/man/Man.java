@@ -72,7 +72,6 @@ public class Man extends AeshFileDisplayer {
             if(inputStream != null) {
                 setCommandInvocation(commandInvocation);
                 fileParser.setInput(inputStream);
-                commandInvocation.attachConsoleCommand(this);
                 afterAttach();
             }
             else {

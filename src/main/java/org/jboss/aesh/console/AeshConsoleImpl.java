@@ -22,7 +22,6 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
@@ -102,11 +101,6 @@ public class AeshConsoleImpl implements AeshConsole {
     @Override
     public Prompt getPrompt() {
         return console.getPrompt();
-    }
-
-    @Override
-    public void attachConsoleCommand(ConsoleCommand consoleCommand) {
-        console.attachProcess(consoleCommand);
     }
 
     @Override
@@ -218,10 +212,6 @@ public class AeshConsoleImpl implements AeshConsole {
         }
     }
 
-    private void detachProcess() {
-        console.detachProcess();
-    }
-
     class AeshCompletion implements Completion {
 
         @Override
@@ -326,7 +316,6 @@ public class AeshConsoleImpl implements AeshConsole {
                             "Exception when parsing/running: "
                                     + output.getBuffer() + ", "
                                     + e.getMessage());
-                    detachProcess();
                     result = CommandResult.FAILURE;
                 }
             }
