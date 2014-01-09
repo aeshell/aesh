@@ -7,6 +7,7 @@
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
+import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
@@ -160,9 +161,10 @@ public class Example {
 
         exampleConsole.addCompletion(completer);
 
-        final ConsoleCallback consoleCallback = new ConsoleCallback() {
+        final ConsoleCallback consoleCallback = new AeshConsoleCallback() {
+            ConsoleCommand man;
             @Override
-            public int readConsoleOutput(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) {
                 try {
                 //To change body of implemented methods use File | Settings | File Templates.
                 exampleConsole.getShell().out().print("======>\"" + output.getBuffer() + "\"\n");
@@ -187,9 +189,11 @@ public class Example {
                     exampleConsole.clear();
                 else if(output.getBuffer().startsWith("man")) {
                     //exampleConsole.attachProcess(test);
-                    ConsoleCommand test =
-                            new ExampleConsoleCommand(exampleConsole, output);
-                    exampleConsole.attachProcess(test);
+                    //man = new ExampleConsoleCommand(exampleConsole, output);
+                    exampleConsole.getShell().out().println("trying to wait for input");
+                    List<CommandOperation> co = getInput();
+                    exampleConsole.getShell().out().println("got: " + co.get(0).toString());
+                    //exampleConsole.attachProcess(test);
                 }
                 else if(output.getBuffer().startsWith("login")) {
                     exampleConsole.setConsoleCallback(passwordCallback);
@@ -203,15 +207,16 @@ public class Example {
                 }
             }
         };
+
         exampleConsole.setConsoleCallback(consoleCallback);
         exampleConsole.start();
         exampleConsole.setPrompt(prompt);
 
-        passwordCallback = new ConsoleCallback() {
+        passwordCallback = new AeshConsoleCallback() {
             private boolean hasUsername = false;
 
             @Override
-            public int readConsoleOutput(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) {
                 if(hasUsername) {
                     password = output.getBuffer();
                     hasPassword = true;
@@ -277,6 +282,10 @@ public class Example {
                 if(operation.getControlOperator().isRedirectionOut()) {
                     attached = false;
                 }
+
+                console.getShell().out().println("trying to wait on input");
+                int input = console.getShell().in().getStdIn().read();
+                console.getShell().out().println("we got: "+input);
             }
             catch(IOException ioe) {
 

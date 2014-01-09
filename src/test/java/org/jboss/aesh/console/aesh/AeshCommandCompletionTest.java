@@ -73,6 +73,7 @@ public class AeshCommandCompletionTest {
 
         outputStream.write("\n".getBytes());
         outputStream.flush();
+        Thread.sleep(20);
 
         outputStream.write(("foo --bar bar\\ 2\\ ").getBytes());
         outputStream.write(completeChar.getFirstValue());
@@ -83,6 +84,7 @@ public class AeshCommandCompletionTest {
 
         outputStream.write("\n".getBytes());
         outputStream.flush();
+        Thread.sleep(20);
 
          outputStream.write(("foo --bar bar").getBytes());
         outputStream.write(completeChar.getFirstValue());
@@ -93,6 +95,7 @@ public class AeshCommandCompletionTest {
 
         outputStream.write("\n".getBytes());
         outputStream.flush();
+        Thread.sleep(20);
 
          outputStream.write(("foo --bar foo ").getBytes());
         outputStream.write(completeChar.getFirstValue());

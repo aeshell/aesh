@@ -6,9 +6,9 @@
  */
 package org.jboss.aesh.console.operator;
 
+import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.junit.Test;
 
@@ -30,10 +30,10 @@ public class ControlOperatorConsoleTest extends BaseConsoleTest {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
         Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new ConsoleCallback() {
+        console.setConsoleCallback(new AeshConsoleCallback() {
             int counter = 0;
             @Override
-            public int readConsoleOutput(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) {
                 if(counter == 0) {
                     assertEquals("ls -la *", output.getBuffer());
                     counter++;

@@ -6,9 +6,9 @@
  */
 package org.jboss.aesh.console.edit;
 
+import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
@@ -49,7 +49,7 @@ public class ViEditingTest extends BaseConsoleTest {
         Thread.sleep(100);
     }
 
-    class ViConsoleCallback implements ConsoleCallback {
+    class ViConsoleCallback extends AeshConsoleCallback {
 
         Console console;
 
@@ -58,13 +58,9 @@ public class ViEditingTest extends BaseConsoleTest {
         }
 
         @Override
-        public int readConsoleOutput(ConsoleOperation output) {
+        public int execute(ConsoleOperation output) {
             assertEquals("1234", output.getBuffer());
-            try {
-                console.stop();
-            }
-            catch (IOException ignored) {
-            }
+            console.stop();
             return 0;
         }
     }

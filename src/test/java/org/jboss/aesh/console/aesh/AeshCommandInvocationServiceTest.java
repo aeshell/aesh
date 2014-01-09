@@ -12,6 +12,7 @@ import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
@@ -143,6 +145,11 @@ class FooCommandInvocation implements CommandInvocation {
     @Override
     public AeshContext getAeshContext() {
         return commandInvocation.getAeshContext();
+    }
+
+    @Override
+    public List<CommandOperation> getInput() {
+        return commandInvocation.getInput();
     }
 
     public String getFoo() {

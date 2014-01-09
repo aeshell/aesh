@@ -7,10 +7,10 @@
 package org.jboss.aesh.console.redirect;
 
 import org.jboss.aesh.TestBuffer;
+import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.junit.Test;
@@ -63,9 +63,9 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
         final Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new ConsoleCallback() {
+        console.setConsoleCallback(new AeshConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) {
                 assertEquals("ls ", output.getBuffer());
                 try {
                     assertTrue(console.getShell().in().getStdIn().available() > 0);
@@ -97,10 +97,10 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
         final Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new ConsoleCallback() {
+        console.setConsoleCallback(new AeshConsoleCallback() {
             private int count = 0;
             @Override
-            public int readConsoleOutput(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) {
                 if(count == 0) {
                     assertEquals("ls ", output.getBuffer());
                     try {
@@ -135,7 +135,7 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
         console.stop();
     }
 
-    class RedirectionConsoleCallback implements ConsoleCallback {
+    class RedirectionConsoleCallback extends AeshConsoleCallback {
         private int count = 0;
         Console console;
 
@@ -143,33 +143,16 @@ public class ConsoleRedirectionTest extends BaseConsoleTest {
             this.console = console;
         }
         @Override
-        public int readConsoleOutput(ConsoleOperation output) {
-            try {
+        public int execute(ConsoleOperation output) {
             if(count == 0) {
                 assertEquals("ls ", output.getBuffer());
             }
-            else if(count == 1)
+            else if(count == 1) {
                 assertEquals(" find *. -print", output.getBuffer());
-            else if(count == 2) {
-                assertEquals("ls ", output.getBuffer());
-                console.getShell().out().print("CONTENT OF FILE");
-            }
-            else if(count == 3) {
-                assertEquals("", output.getBuffer());
-                if(Config.isOSPOSIXCompatible())
-                    assertEquals("CONTENT OF FILE\n", getContentOfFile(Config.getTmpDir()+"/foo bar.txt"));
-                else
-                    assertEquals("CONTENT OF FILE\n", getContentOfFile(Config.getTmpDir()+"\\foo bar.txt"));
-
                 console.stop();
             }
             count++;
             return 0;
-            }
-            catch(IOException ioe) {
-                fail();
-                return -1;
-            }
         }
     }
 }

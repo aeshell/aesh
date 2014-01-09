@@ -27,9 +27,9 @@ public class ConsoleTest extends BaseConsoleTest {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
         Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new ConsoleCallback() {
+        console.setConsoleCallback(new AeshConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) {
                 assertEquals("ls foo bar", output.getBuffer());
                 return 0;
             }
@@ -54,9 +54,9 @@ public class ConsoleTest extends BaseConsoleTest {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
         Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new ConsoleCallback() {
+        console.setConsoleCallback(new AeshConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) {
                 assertEquals("ls foo bar", output.getBuffer());
                 return 0;
             }

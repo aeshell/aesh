@@ -43,7 +43,7 @@ public class Example {
 
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) {
                 console.getShell().out().println("======>\"" + output.getBuffer() + "\"\n");
                 if (output.getBuffer().equals("quit")) {
                     try {

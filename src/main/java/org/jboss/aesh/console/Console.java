@@ -110,11 +110,14 @@ public class Console {
 
     private AeshContext context;
 
+    private ProcessManager processManager;
+
     //used to optimize text deletion
     private static final char[] resetLineAndSetCursorToStart =
             (ANSI.saveCursor()+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
 
     private AeshStandardStream standardStream;
+    private transient boolean initiateStop = false;
 
     public Console(final Settings settings) {
         this.settings = settings;
@@ -212,6 +215,8 @@ public class Console {
             exportManager = new ExportManager(settings.getExportFile());
             completionList.add(new ExportCompletion(exportManager));
         }
+
+        processManager = new ProcessManager(this);
 
         operations = new ArrayList<>();
         currentOperation = null;
@@ -344,16 +349,19 @@ public class Console {
         };
     }
 
+    public void stop() {
+        initiateStop = true;
+    }
+
     /**
      * Stop the Console, close streams, and reset terminals.
      * WARNING: After this is called the Console object must be reset
      * before its used.
      * @throws IOException stream
      */
-    public synchronized void stop() throws IOException {
+    private void doStop() throws IOException {
         try {
             running = false;
-            executorService.shutdown();
             //setting it to null to prevent uncertain state
             //settings.setInputStream(null);
             getTerminal().reset();
@@ -365,6 +373,8 @@ public class Console {
                 exportManager.persistVariables();
             if(settings.isLogging())
                 logger.info("Done stopping reading thread. Terminal is reset");
+            processManager.stop();
+            executorService.shutdown();
         }
         finally {
             settings.getInputStream().close();
@@ -389,7 +399,7 @@ public class Console {
      * @param cc command
      */
     public void attachProcess(ConsoleCommand cc) {
-        command = cc;
+        //command = cc;
     }
 
     public void clearBufferAndDisplayPrompt() {
@@ -419,6 +429,33 @@ public class Console {
      */
     public Shell getShell() {
         return shell;
+    }
+
+    public void currentProcessFinished(Process process) {
+        if(currentOperation != null) {
+            ConsoleOperation tmpOutput = null;
+            try {
+                tmpOutput = parseCurrentOperation();
+            }
+            catch (IOException e) { e.printStackTrace(); }
+
+            if(tmpOutput != null && !executorService.isShutdown())
+                processManager.startNewProcess(consoleCallback, tmpOutput);
+        }
+        else {
+            buffer.reset();
+            displayPrompt();
+            search = null;
+            if(initiateStop) {
+                try {
+                    doStop();
+                    initiateStop = false;
+                }
+                catch (IOException e) {
+                    logger.warning("Stop failed: "+e.getCause());
+                }
+            }
+        }
     }
 
     private Terminal getTerminal() {
@@ -483,8 +520,12 @@ public class Console {
                     parsing = false;
                 }
 
+                if(processManager.hasRunningProcess()) {
+                    processManager.operation(new CommandOperation(input));
+                }
+
                 //if we have a command hooked in the input goes there
-                if(command != null)
+                else if(command != null)
                     command.processOperation(new CommandOperation(input));
                 //the input is parsed by æsh
                 else {
@@ -505,7 +546,7 @@ public class Console {
             try {
                 //if we get an ioexception its either input or output failure
                 //lets just stop while we can...
-                stop();
+                doStop();
             }
             catch (IOException ignored) { }
         }
@@ -543,21 +584,24 @@ public class Console {
                 output = processInternalCommands(output);
                 if(output.getBuffer() != null) {
                     //return output;
-                    consoleCallback.readConsoleOutput(output);
+                    //consoleCallback.execute(output);
+                    processManager.startNewProcess(consoleCallback, output);
                     //abort if the user have initiated stop
                     if(executorService.isShutdown())
                         return;
 
+                    /*
                     while(currentOperation != null) {
                         ConsoleOperation tmpOutput = parseCurrentOperation();
                         if(tmpOutput != null && !executorService.isShutdown())
-                            consoleCallback.readConsoleOutput(tmpOutput);
+                            consoleCallback.execute(tmpOutput);
                     }
                     search = null;
                     buffer.reset();
                     if(command == null) {
                         displayPrompt();
                     }
+                    */
                 }
                 else {
                     buffer.reset();
@@ -645,8 +689,12 @@ public class Console {
                 if(settings.hasInterruptHook())
                     settings.getInterruptHook().handleInterrupt(this);
             }
-            stop();
-            System.exit(0);
+            if(processManager.hasRunningProcess())
+                stop();
+            else {
+                doStop();
+                System.exit(0);
+            }
         }
         else if(action == Action.HISTORY) {
             if(operation.getMovement() == Movement.NEXT)

@@ -74,7 +74,7 @@ public class AeshConsoleImpl implements AeshConsole {
                         validatorInvocationProvider);
 
         console = new Console(settings);
-        console.setConsoleCallback(new AeshConsoleCallback(this));
+        console.setConsoleCallback(new AeshConsoleCallbackImpl(this));
         console.addCompletion(new AeshCompletion());
         processSettings(settings);
     }
@@ -86,11 +86,7 @@ public class AeshConsoleImpl implements AeshConsole {
 
     @Override
     public void stop() {
-        try {
-            console.stop();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        console.stop();
     }
 
     @Override
@@ -156,7 +152,7 @@ public class AeshConsoleImpl implements AeshConsole {
 
     @Override
     public void executeCommand(String command) {
-        console.getConsoleCallback().readConsoleOutput(
+        console.getConsoleCallback().execute(
                 new ConsoleOperation(ControlOperator.NONE, command));
     }
 
@@ -260,18 +256,18 @@ public class AeshConsoleImpl implements AeshConsole {
 
     }
 
-    class AeshConsoleCallback implements ConsoleCallback {
+    class AeshConsoleCallbackImpl extends AeshConsoleCallback {
 
         private final AeshConsole console;
+        private CommandResult result;
 
-        AeshConsoleCallback(AeshConsole aeshConsole) {
+        AeshConsoleCallbackImpl(AeshConsole aeshConsole) {
             this.console = aeshConsole;
         }
 
         @Override
         @SuppressWarnings("unchecked")
-        public int readConsoleOutput(ConsoleOperation output) {
-            CommandResult result;
+        public int execute(ConsoleOperation output) {
             if (output != null && output.getBuffer().trim().length() > 0) {
                 try (CommandContainer commandContainer = getCommand(
                         Parser.findFirstWord(output.getBuffer()),
@@ -300,9 +296,8 @@ public class AeshConsoleImpl implements AeshConsole {
                                             .getCommandInvocationProvider(
                                                     commandInvocationProvider)
                                             .enhanceCommandInvocation(
-                                                    new AeshCommandInvocation(
-                                                            console,
-                                                            output.getControlOperator())));
+                                                    new AeshCommandInvocation( console,
+                                                            output.getControlOperator(), this)));
                 } catch (CommandLineParserException e) {
                     getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;

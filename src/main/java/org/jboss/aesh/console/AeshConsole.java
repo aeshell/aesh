@@ -37,7 +37,7 @@ public interface AeshConsole {
     /**
      * Attach a ConsoleCommand to the console. All input received
      * to the console will be sent directly to the
-     * ConsoleCommand.processOperation(..)
+     * ConsoleCommand.start(..)
      */
     void attachConsoleCommand(ConsoleCommand consoleCommand);
 

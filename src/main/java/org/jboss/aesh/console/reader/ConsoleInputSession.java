@@ -6,12 +6,16 @@
  */
 package org.jboss.aesh.console.reader;
 
+import org.jboss.aesh.util.LoggerUtil;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 /**
  *
@@ -25,6 +29,8 @@ public class ConsoleInputSession {
     private ExecutorService executorService;
 
     private ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<String>(1000);
+
+    private static final Logger logger = LoggerUtil.getLogger(ConsoleInputSession.class.getName());
 
     public ConsoleInputSession(InputStream consoleStream) {
         this.consoleStream = consoleStream;
@@ -77,8 +83,9 @@ public class ConsoleInputSession {
 
 
     public void stop() throws IOException, InterruptedException {
-        executorService.shutdown();
         consoleStream.close();
+        executorService.awaitTermination(5, TimeUnit.MILLISECONDS);
+        logger.info("input stream is closed, readers finished...");
     }
 
     public AeshInputStream getExternalInputStream() {

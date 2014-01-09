@@ -8,10 +8,13 @@ package org.jboss.aesh.console.command.invocation;
 
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.ConsoleCommand;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.terminal.Shell;
+
+import java.util.List;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -31,7 +34,7 @@ public interface CommandInvocation {
     /**
      * Attach a ConsoleCommand to the console. All input received
      * to the console will be sent directly to the
-     * ConsoleCommand.processOperation(..)
+     * ConsoleCommand.start(..)
      */
     void attachConsoleCommand(ConsoleCommand consoleCommand);
 
@@ -64,4 +67,9 @@ public interface CommandInvocation {
      * Get AeshContext
      */
     AeshContext getAeshContext();
+
+    /**
+     * Get user input. This method will block until input is given.
+     */
+    List<CommandOperation> getInput();
 }

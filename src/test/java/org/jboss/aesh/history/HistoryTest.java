@@ -7,10 +7,10 @@
 package org.jboss.aesh.history;
 
 import org.jboss.aesh.TestBuffer;
+import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.junit.Test;
 
@@ -32,10 +32,10 @@ public class HistoryTest extends BaseConsoleTest {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
         Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new ConsoleCallback() {
+        console.setConsoleCallback(new AeshConsoleCallback() {
             private int count = 0;
             @Override
-            public int readConsoleOutput(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) {
                 if(count == 0)
                     assertEquals("1234", output.getBuffer());
                 else if(count == 1)
@@ -51,17 +51,23 @@ public class HistoryTest extends BaseConsoleTest {
         });
         console.start();
 
-        outputStream.write(("1234"+ Config.getLineSeparator()+"567").getBytes());
-        outputStream.write("\n".getBytes());
+        outputStream.write(("1234"+ Config.getLineSeparator()).getBytes());
+        outputStream.flush();
+        Thread.sleep(20);
+        outputStream.write(("567"+Config.getLineSeparator()).getBytes());
+        outputStream.flush();
+        Thread.sleep(20);
         outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
         outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
         outputStream.write("\n".getBytes());
+        outputStream.flush();
+        Thread.sleep(20);
         outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
         outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
         outputStream.write("\n".getBytes());
 
 
-        Thread.sleep(200);
+        Thread.sleep(100);
         console.stop();
     }
 

@@ -203,7 +203,7 @@ public class AeshExample {
         private String less;
 
         @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':',
-                validator = DirectoryValidator.class,
+                //validator = DirectoryValidator.class,
                 activator = BarActivator.class)
         List<File> files;
 
@@ -253,6 +253,8 @@ public class AeshExample {
                 attached = true;
                 commandInvocation.attachConsoleCommand(this);
                 shell.out().print("are you sure you want bar? (y/n) ");
+                List<CommandOperation> operation = commandInvocation.getInput();
+                processOperation(operation.get(0));
             }
             return CommandResult.SUCCESS;
         }

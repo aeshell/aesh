@@ -6,10 +6,10 @@
  */
 package org.jboss.aesh.console.edit;
 
+import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.junit.Test;
 
@@ -31,9 +31,9 @@ public class EmacsEditingTest extends BaseConsoleTest {
             PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
             Console console = getTestConsole(pipedInputStream);
 
-            console.setConsoleCallback(new ConsoleCallback() {
+            console.setConsoleCallback(new AeshConsoleCallback() {
                 @Override
-                public int readConsoleOutput(ConsoleOperation output) {
+                public int execute(ConsoleOperation output) {
                     assertEquals("1234", output.getBuffer());
                     return 0;
                 }
