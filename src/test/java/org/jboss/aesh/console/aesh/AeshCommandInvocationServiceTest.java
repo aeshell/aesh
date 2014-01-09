@@ -112,11 +112,6 @@ class FooCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public void attachConsoleCommand(ConsoleCommand consoleCommand) {
-        commandInvocation.attachConsoleCommand(consoleCommand);
-    }
-
-    @Override
     public Shell getShell() {
         return commandInvocation.getShell();
     }
