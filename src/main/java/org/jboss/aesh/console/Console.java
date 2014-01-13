@@ -16,8 +16,10 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -99,6 +101,8 @@ public class Console {
     private AliasManager aliasManager;
     private ExportManager exportManager;
     private Shell shell;
+
+    private ArrayBlockingQueue<CommandOperation> inputQueue;
 
     private final Logger logger = LoggerUtil.getLogger(getClass().getName());
 
@@ -183,6 +187,8 @@ public class Console {
         settings.getTerminal().init(settings);
 
         editMode = settings.getEditMode();
+
+        inputQueue = new ArrayBlockingQueue<>(50);
 
         undoManager = new UndoManager();
         pasteManager = new PasteManager();
@@ -398,6 +404,16 @@ public class Console {
         displayPrompt();
     }
 
+    protected CommandOperation getInput() {
+        try {
+            return inputQueue.poll(365, TimeUnit.DAYS);
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     /**
      * @return get the current shell
      */
@@ -498,19 +514,19 @@ public class Console {
                     parsing = false;
                 }
 
+                try {
+                    inputQueue.put(new CommandOperation(inc, input, position));
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
                 if(processManager.hasRunningProcess()) {
-                    processManager.operation(new CommandOperation(input));
+                    //processManager.operation(new CommandOperation(input));
                 }
                 //the input is parsed by æsh
                 else {
-                    Operation operation = editMode.parseInput(inc, buffer.getLine());
-                    if(inc != Key.UNKNOWN)
-                        operation.setInput(inc.getKeyValues());
-                    else
-                        operation.setInput(new int[]{input[position]});
-                    String result = parseOperation(operation, buffer.getPrompt().getMask());
-                    if(result != null)
-                        processOperationResult(result);
+                    processInternalOperation(getInput());
                 }
             }
         }
@@ -524,6 +540,17 @@ public class Console {
             }
             catch (IOException ignored) { }
         }
+    }
+
+    private void processInternalOperation(CommandOperation commandOperation) throws IOException {
+        Operation operation = editMode.parseInput(commandOperation.getInputKey(), buffer.getLine());
+        if(commandOperation.getInputKey() != Key.UNKNOWN)
+            operation.setInput(commandOperation.getInputKey().getKeyValues());
+        else
+            operation.setInput(new int[]{ commandOperation.getInput()[commandOperation.getPosition()]});
+        String result = parseOperation(operation, buffer.getPrompt().getMask());
+        if(result != null)
+            processOperationResult(result);
     }
 
     private void processOperationResult(String result) {

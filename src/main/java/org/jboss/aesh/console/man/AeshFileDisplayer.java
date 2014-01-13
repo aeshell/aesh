@@ -116,7 +116,7 @@ public abstract class AeshFileDisplayer implements Command {
 
     public void processInput() throws IOException {
         while(!stop)
-            processOperation(getCommandInvocation().getInput().get(0));
+            processOperation(getCommandInvocation().getInput());
     }
 
     public void processOperation(CommandOperation operation) throws IOException {

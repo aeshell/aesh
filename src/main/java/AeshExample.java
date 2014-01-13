@@ -175,11 +175,11 @@ public class AeshExample {
         public void processOperation(CommandInvocation invocation) throws IOException {
 
             CommandOperation operation;
-            operation = invocation.getInput().get(0);
+            operation = invocation.getInput();
             while(!operation.getInputKey().equals(Key.q)) {
                 shell.out().print((char) operation.getInput()[0]);
                 shell.out().flush();
-                operation = invocation.getInput().get(0);
+                operation = invocation.getInput();
             }
             if(operation.getInput()[0] == 'q') {
                 stop();
@@ -248,8 +248,8 @@ public class AeshExample {
             this.shell = commandInvocation.getShell();
             if(bar) {
                 shell.out().print("are you sure you want bar? (y/n) ");
-                List<CommandOperation> operation = commandInvocation.getInput();
-                processOperation(operation.get(0));
+                CommandOperation operation = commandInvocation.getInput();
+                processOperation(operation);
             }
             return CommandResult.SUCCESS;
         }

@@ -30,6 +30,7 @@ public class AeshProcess implements Runnable, Process {
         this.consoleCallback = consoleCallback;
         this.operation = consoleOperation;
         this.commandOperations = new ArrayList<>(1);
+        this.consoleCallback.setProcess(this);
     }
 
     @Override
@@ -54,10 +55,8 @@ public class AeshProcess implements Runnable, Process {
     }
 
     @Override
-    public void operation(CommandOperation operation) {
-        consoleCallback.addCommandOperation(operation);
-        if(consoleCallback.isSleeping())
-            consoleCallback.release();
+    public CommandOperation getInput() {
+        return manager.getInput();
     }
 
     @Override

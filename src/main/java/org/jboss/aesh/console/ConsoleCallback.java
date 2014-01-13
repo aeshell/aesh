@@ -8,8 +8,6 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
 
-import java.util.List;
-
 /**
  * Implementation of this interface will be called when a user press the
  * "enter/return" key.
@@ -27,11 +25,10 @@ public interface ConsoleCallback {
      */
     int execute(ConsoleOperation output);
 
-    List<CommandOperation> getInput();
+    CommandOperation getInput();
 
     void release();
 
-    void addCommandOperation(CommandOperation commandOperation);
+    void setProcess(Process process);
 
-    boolean isSleeping();
 }

@@ -8,68 +8,29 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public abstract class AeshConsoleCallback implements ConsoleCallback {
 
-    private CountDownLatch latch;
-    private List<CommandOperation> operations;
     private boolean resetOperations = false;
+    private Process process;
 
     public AeshConsoleCallback() {
     }
 
     @Override
-    public List<CommandOperation> getInput() {
-        reset();
-        if(operations != null && operations.size() > 0) {
-            resetOperations = true;
-            return operations;
-        }
-        else {
-            latch = new CountDownLatch(1);
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            resetOperations = true;
-
-            return operations;
-        }
+    public CommandOperation getInput() {
+        return process.getInput();
     }
 
     @Override
     public void release() {
-       if(latch != null && latch.getCount() > 0)
-           latch.countDown();
     }
 
     @Override
-    public void addCommandOperation(CommandOperation commandOperation) {
-        if(operations == null)
-            operations = new ArrayList<>(1);
-        else {
-            reset();
-        }
-        operations.add(commandOperation);
-    }
-
-    @Override
-    public boolean isSleeping() {
-        return (latch != null && latch.getCount() > 0);
-    }
-
-    private void reset() {
-        if(resetOperations) {
-            operations.clear();
-            resetOperations = false;
-        }
+    public void setProcess(Process process) {
+        this.process = process;
     }
 
 }

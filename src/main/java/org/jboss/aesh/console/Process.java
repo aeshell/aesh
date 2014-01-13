@@ -17,7 +17,7 @@ public interface Process {
 
     void notifyManager();
 
-    void operation(CommandOperation operation);
+    CommandOperation getInput();
 
     int getPID();
 }

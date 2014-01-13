@@ -142,7 +142,7 @@ class FooCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public List<CommandOperation> getInput() {
+    public CommandOperation getInput() {
         return commandInvocation.getInput();
     }
 

@@ -60,9 +60,9 @@ public class ProcessManager {
         processes.add(process);
     }
 
-    public void operation(CommandOperation operation) {
-        if(hasRunningProcess())
-            getCurrentProcess().operation(operation);
+    //TODO: need to check if the process fetching has "focus"
+    public CommandOperation getInput() {
+        return console.getInput();
     }
 
     /**

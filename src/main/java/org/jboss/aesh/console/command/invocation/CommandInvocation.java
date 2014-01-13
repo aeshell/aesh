@@ -63,5 +63,5 @@ public interface CommandInvocation {
     /**
      * Get user input. This method will block until input is given.
      */
-    List<CommandOperation> getInput();
+    CommandOperation getInput();
 }

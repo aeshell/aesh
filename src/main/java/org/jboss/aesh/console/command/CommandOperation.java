@@ -13,12 +13,32 @@ import org.jboss.aesh.terminal.Key;
  */
 public class CommandOperation {
 
-    private Key inputKey;
-    private int[] input;
+    private final Key inputKey;
+    private final int[] input;
+    private final int position;
 
     public CommandOperation(int[] input) {
         inputKey = Key.getKey(input);
         this.input = input;
+        position = inputKey.getKeyValues().length;
+    }
+
+    public CommandOperation(Key key, int[] input) {
+        inputKey = key;
+        this.input = input;
+        position = inputKey.getKeyValues().length;
+    }
+
+    public CommandOperation(Key key) {
+        inputKey = key;
+        this.input = key.getKeyValues();
+        position = inputKey.getKeyValues().length;
+    }
+
+    public CommandOperation(Key key, int[] input, int position) {
+        inputKey = key;
+        this.input = input;
+        this.position = position;
     }
 
     public Key getInputKey() {
@@ -27,5 +47,9 @@ public class CommandOperation {
 
     public int[] getInput() {
         return input;
+    }
+
+    public int getPosition() {
+        return position;
     }
 }

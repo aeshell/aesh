@@ -73,7 +73,7 @@ public final class AeshCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public List<CommandOperation> getInput() {
+    public CommandOperation getInput() {
         return callback.getInput();
     }
 }
