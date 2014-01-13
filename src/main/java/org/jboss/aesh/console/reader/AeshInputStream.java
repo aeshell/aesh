@@ -6,6 +6,9 @@
  */
 package org.jboss.aesh.console.reader;
 
+import org.jboss.aesh.console.Config;
+import org.jboss.aesh.terminal.Key;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -43,11 +46,32 @@ public class AeshInputStream extends InputStream {
 
     public int[] readAll() {
         try {
-            String out = blockingQueue.poll(356, TimeUnit.DAYS);
-            int[] input = new int[out.length()];
-            for(int i=0; i < out.length(); i++)
-                input[i] = out.charAt(i);
-            return input;
+            if(Config.isOSPOSIXCompatible()) {
+                String out = blockingQueue.poll(356, TimeUnit.DAYS);
+                int[] input = new int[out.length()];
+                for(int i=0; i < out.length(); i++)
+                    input[i] = out.charAt(i);
+                return input;
+            }
+            else {
+                String out = blockingQueue.poll(356, TimeUnit.DAYS);
+                //hack to make multi-value input work (arrows ++)
+                if(out.charAt(0) == Key.WINDOWS_ESC.getAsChar()) {
+                    int[] input = new int[2];
+                    input[0] = out.charAt(0);
+                    String out2 = blockingQueue.poll(356, TimeUnit.DAYS);
+                    input[1] = out2.charAt(0);
+
+                    return input;
+                }
+                else {
+                    int[] input = new int[out.length()];
+                    for(int i=0; i < out.length(); i++)
+                        input[i] = out.charAt(i);
+                    return input;
+                }
+            }
+
         }
         catch (InterruptedException e) {
             return new int[] {-1};
