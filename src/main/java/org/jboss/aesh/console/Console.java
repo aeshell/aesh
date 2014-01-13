@@ -1137,7 +1137,7 @@ public class Console {
         //need to clear more than one line
         if(line.length() > getInternalShell().getSize().getWidth() ||
                 (line.length()+ Math.abs(buffer.getDelta()) > getInternalShell().getSize().getWidth())) {
-            if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length())
+            if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length() && Config.isOSPOSIXCompatible())
                 redrawMultipleLinesBackspace();
             else
                 redrawMultipleLines();

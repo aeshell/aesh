@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.edit;
 
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
@@ -51,7 +52,8 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.CTRL_X_CTRL_U, Operation.UNDO)); //ctrl-x ctrl-u
 
         keys.add(new KeyOperation(Key.UNIT_SEPARATOR, Operation.UNDO));
-        keys.add(new KeyOperation(Key.BACKSPACE, Operation.DELETE_PREV_CHAR));
+        if(Config.isOSPOSIXCompatible())
+            keys.add(new KeyOperation(Key.BACKSPACE, Operation.DELETE_PREV_CHAR));
 
         //movement
         if(Key.RIGHT.equalTo(Key.RIGHT_2.getKeyValues())) {
