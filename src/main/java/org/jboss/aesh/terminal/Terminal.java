@@ -39,6 +39,8 @@ public interface Terminal extends AutoCloseable {
      */
     void reset() throws IOException;
 
+    void close() throws IOException;
+
     Shell getShell();
 
 }
