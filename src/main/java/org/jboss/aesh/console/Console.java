@@ -364,29 +364,28 @@ public class Console {
      * @throws IOException stream
      */
     private void doStop() throws IOException {
-        try {
-            running = false;
-            getTerminal().close();
-            //setting it to null to prevent uncertain state
-            //settings.setInputStream(null);
-            getTerminal().reset();
-            //terminal = null;
-            history.stop();
-            if(aliasManager != null)
-                aliasManager.persist();
-            if(exportManager != null)
-                exportManager.persistVariables();
-            if(settings.isLogging())
-                logger.info("Done stopping reading thread. Terminal is reset");
-            processManager.stop();
-            executorService.shutdown();
-        }
-        finally {
-            settings.getInputStream().close();
-            settings.getStdErr().close();
-            settings.getStdOut().close();
-            if(settings.isLogging())
-                logger.info("Streams are closed");
+        if(running) {
+            try {
+                running = false;
+                getTerminal().close();
+                getTerminal().reset();
+                history.stop();
+                if(aliasManager != null)
+                    aliasManager.persist();
+                if(exportManager != null)
+                    exportManager.persistVariables();
+                if(settings.isLogging())
+                    logger.info("Done stopping reading thread. Terminal is reset");
+                processManager.stop();
+                executorService.shutdown();
+            }
+            finally {
+                settings.getInputStream().close();
+                settings.getStdErr().close();
+                settings.getStdOut().close();
+                if(settings.isLogging())
+                    logger.info("Streams are closed");
+            }
         }
     }
 
@@ -436,7 +435,6 @@ public class Console {
         }
         else {
             buffer.reset();
-            displayPrompt();
             search = null;
             if(initiateStop) {
                 try {
@@ -447,6 +445,8 @@ public class Console {
                     logger.warning("Stop failed: "+e.getCause());
                 }
             }
+            else
+                displayPrompt();
         }
     }
 
@@ -474,7 +474,7 @@ public class Console {
         Runnable reader = new Runnable() {
             @Override
             public void run() {
-                while(!executorService.isShutdown()) {
+                while(running) {
                     read();
                 }
             }
@@ -490,9 +490,10 @@ public class Console {
                 logger.info("GOT: "+ Arrays.toString(input));
             }
             //close thread, exit
-            if (input[0] == -1) {
-                //executorService.shutdown();
-                doStop();
+            if(input.length == 0 || input[0] == -1) {
+                //dont have to initiate it twice
+                if(!initiateStop)
+                    doStop();
                 running = false;
                 return;
             }

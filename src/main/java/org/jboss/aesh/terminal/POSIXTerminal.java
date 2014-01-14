@@ -34,6 +34,7 @@ public class POSIXTerminal extends AbstractTerminal {
     private boolean restored = false;
 
     private AeshInputStream input;
+    private ConsoleInputSession inputSession;
     private PrintStream stdOut;
     private PrintStream stdErr;
 
@@ -69,7 +70,9 @@ public class POSIXTerminal extends AbstractTerminal {
             echoEnabled = false;
 
             //setting up input
-            input =  new ConsoleInputSession(settings.getInputStream()).getExternalInputStream();
+            //input =  new ConsoleInputSession(settings.getInputStream()).getExternalInputStream();
+            inputSession =  new ConsoleInputSession(settings.getInputStream());
+            input = inputSession.getExternalInputStream();
         }
         catch (IOException ioe) {
             if(settings.isLogging())
@@ -179,7 +182,12 @@ public class POSIXTerminal extends AbstractTerminal {
 
     @Override
     public void close() throws IOException {
-        input.close();
+        try {
+            inputSession.stop();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        //input.close();
     }
 
     private boolean propertiesTimedOut() {

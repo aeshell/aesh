@@ -94,6 +94,7 @@ public class AeshInputStream extends InputStream {
     @Override
     public void close() throws IOException {
         stopped = true;
+        blockingQueue.add("");
     }
 
 }

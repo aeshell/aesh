@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -35,16 +34,6 @@ public class ProcessManager {
         processes = new ArrayList<>(1);
 
         executorService = Executors.newFixedThreadPool(50);
-        /*
-        executorService = Executors.newFixedThreadPool(10, new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable runnable) {
-                Thread thread = Executors.defaultThreadFactory().newThread(runnable);
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
-        */
     }
 
     public void startNewProcess(ConsoleCallback callback, ConsoleOperation consoleOperation) {
@@ -52,8 +41,6 @@ public class ProcessManager {
         AeshProcess process = new AeshProcess(1, this, callback, consoleOperation);
 
         logger.info("starting a new process...");
-
-        //process.run();
 
         executorService.execute(process);
 
