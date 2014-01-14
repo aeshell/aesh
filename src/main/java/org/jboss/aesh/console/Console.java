@@ -121,6 +121,8 @@ public class Console {
     private AeshStandardStream standardStream;
     private transient boolean initiateStop = false;
 
+    private InterruptHandler interruptHandler;
+
     public Console(final Settings settings) {
         this.settings = settings;
         try {
@@ -133,7 +135,8 @@ public class Console {
         if(settings.hasInterruptHook()) {
             try {
                 if(Class.forName("sun.misc.Signal") != null)
-                    new InterruptHandler(this, settings.getInterruptHook()).initInterrupt();
+                    interruptHandler = new InterruptHandler(this, settings.getInterruptHook());
+                    interruptHandler.initInterrupt();
             }
             catch(ClassNotFoundException e) {
                 if(settings.isLogging())
@@ -145,6 +148,7 @@ public class Console {
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
             public void start() {
                 try {
                     settings.getTerminal().reset();
@@ -374,6 +378,8 @@ public class Console {
                     aliasManager.persist();
                 if(exportManager != null)
                     exportManager.persistVariables();
+                if(interruptHandler != null)
+                    interruptHandler.removeInterrupt();
                 if(settings.isLogging())
                     logger.info("Done stopping reading thread. Terminal is reset");
                 processManager.stop();
@@ -844,6 +850,8 @@ public class Console {
                     setBufferLine("");
                 }
                 //redrawLine();
+                break;
+            default:
                 break;
         }
         // if we're still in doSearch mode, print the doSearch status
@@ -1755,8 +1763,8 @@ public class Console {
     }
 
     private class ConsoleShell implements Shell {
-        private Console console;
-        private Shell shell;
+        private final Console console;
+        private final Shell shell;
 
         ConsoleShell(Shell shell, Console console) {
             this.shell = shell;
