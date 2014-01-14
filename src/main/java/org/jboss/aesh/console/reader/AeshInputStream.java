@@ -61,7 +61,7 @@ public class AeshInputStream extends InputStream {
             else {
                 String out = blockingQueue.poll(356, TimeUnit.DAYS);
                 //hack to make multi-value input work (arrows ++)
-                if(out.charAt(0) == Key.WINDOWS_ESC.getAsChar()) {
+                if (!out.isEmpty() && out.charAt(0) == Key.WINDOWS_ESC.getAsChar()) {
                     int[] input = new int[2];
                     input[0] = out.charAt(0);
                     String out2 = blockingQueue.poll(356, TimeUnit.DAYS);
