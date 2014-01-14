@@ -8,6 +8,7 @@ package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.settings.Settings;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
@@ -15,7 +16,7 @@ import java.io.IOException;
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
-public interface Terminal extends AutoCloseable {
+public interface Terminal extends Closeable {
 
     /**
      * Initialize the Terminal with which input/output stream it should use
@@ -38,8 +39,6 @@ public interface Terminal extends AutoCloseable {
      * @throws java.io.IOException stream
      */
     void reset() throws IOException;
-
-    void close() throws IOException;
 
     Shell getShell();
 
