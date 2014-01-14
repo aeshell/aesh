@@ -41,6 +41,8 @@ public class EmacsEditMode implements EditMode {
             else
                 return Operation.SEARCH_INPUT;
         }
+        else if(in == Key.ESC)
+            return Operation.NO_ACTION;
         else
             return Operation.EDIT;
     }
