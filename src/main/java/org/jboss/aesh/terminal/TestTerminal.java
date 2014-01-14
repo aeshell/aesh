@@ -91,6 +91,11 @@ public class TestTerminal implements Terminal, Shell {
     }
 
     @Override
+    public void close() throws IOException {
+
+    }
+
+    @Override
     public Shell getShell() {
         return this;
     }

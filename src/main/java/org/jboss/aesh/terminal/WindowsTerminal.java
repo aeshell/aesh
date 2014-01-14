@@ -145,6 +145,11 @@ public class WindowsTerminal extends AbstractTerminal {
     public void reset() throws IOException {
     }
 
+    @Override
+    public void close() throws IOException {
+        input.close();
+    }
+
     private boolean propertiesTimedOut() {
         return (System.currentTimeMillis() -ttyPropsLastFetched) > TIMEOUT_PERIOD;
     }

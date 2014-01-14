@@ -22,6 +22,7 @@ public class AeshInputStream extends InputStream {
     private final ArrayBlockingQueue<String> blockingQueue;
     private String b;
     private int c;
+    private transient boolean stopped = false;
 
     public AeshInputStream(ArrayBlockingQueue<String> blockingQueue) {
         this.blockingQueue = blockingQueue;
@@ -29,6 +30,8 @@ public class AeshInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
+        if(stopped && blockingQueue.size() == 0)
+            return -1;
         try {
             if (b == null || c == b.length()) {
                 b = blockingQueue.poll(365, TimeUnit.DAYS);
@@ -45,6 +48,8 @@ public class AeshInputStream extends InputStream {
     }
 
     public int[] readAll() {
+        if(stopped && blockingQueue.size() == 0)
+            return new int[] {-1};
         try {
             if(Config.isOSPOSIXCompatible()) {
                 String out = blockingQueue.poll(356, TimeUnit.DAYS);
@@ -88,6 +93,7 @@ public class AeshInputStream extends InputStream {
 
     @Override
     public void close() throws IOException {
+        stopped = true;
     }
 
 }

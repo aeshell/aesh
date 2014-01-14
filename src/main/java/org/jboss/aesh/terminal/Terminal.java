@@ -39,6 +39,8 @@ public interface Terminal {
      */
     void reset() throws IOException;
 
+    void close() throws IOException;
+
     Shell getShell();
 
 }

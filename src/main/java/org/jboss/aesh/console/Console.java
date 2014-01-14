@@ -366,6 +366,7 @@ public class Console {
     private void doStop() throws IOException {
         try {
             running = false;
+            getTerminal().close();
             //setting it to null to prevent uncertain state
             //settings.setInputStream(null);
             getTerminal().reset();
@@ -496,7 +497,8 @@ public class Console {
             }
             //close thread, exit
             if (input[0] == -1) {
-                executorService.shutdown();
+                //executorService.shutdown();
+                doStop();
                 running = false;
                 return;
             }

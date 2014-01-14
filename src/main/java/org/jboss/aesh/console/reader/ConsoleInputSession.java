@@ -72,7 +72,12 @@ public class ConsoleInputSession {
                 catch (Exception e) {
                     if (!executorService.isShutdown()) {
                         executorService.shutdown();
-                        throw new RuntimeException(e);
+                    }
+                    try {
+                        stop();
+                    }
+                    catch (InterruptedException | IOException e1) {
+                        e1.printStackTrace();
                     }
                 }
             }
@@ -84,7 +89,8 @@ public class ConsoleInputSession {
 
     public void stop() throws IOException, InterruptedException {
         consoleStream.close();
-        executorService.awaitTermination(5, TimeUnit.MILLISECONDS);
+        executorService.shutdown();
+        aeshInputStream.close();
         logger.info("input stream is closed, readers finished...");
     }
 

@@ -177,6 +177,11 @@ public class POSIXTerminal extends AbstractTerminal {
         }
     }
 
+    @Override
+    public void close() throws IOException {
+        input.close();
+    }
+
     private boolean propertiesTimedOut() {
         return (System.currentTimeMillis() -ttyPropsLastFetched) > TIMEOUT_PERIOD;
     }
