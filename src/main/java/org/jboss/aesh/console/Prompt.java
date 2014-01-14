@@ -32,6 +32,14 @@ public class Prompt {
             this.prompt = "";
     }
 
+    public Prompt(String prompt, String ansiString) {
+        if(prompt != null)
+            this.prompt = prompt;
+        else
+            this.prompt = "";
+        this.ansiString = ansiString;
+    }
+
     public Prompt(String prompt, Character mask) {
         if(prompt != null)
             this.prompt = prompt;
