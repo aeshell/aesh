@@ -144,7 +144,6 @@ public class AeshExample {
         @Option(hasValue = false)
         private boolean helpPlease;
 
-        private boolean attached = true;
         private Shell shell;
 
         @Override
@@ -169,19 +168,23 @@ public class AeshExample {
 
         private void stop() {
             shell.out().print(ANSI.getMainBufferScreen());
-            attached = false;
         }
 
         public void processOperation(CommandInvocation invocation) throws IOException {
 
             CommandOperation operation;
-            operation = invocation.getInput();
-            while(!operation.getInputKey().equals(Key.q)) {
-                shell.out().print((char) operation.getInput()[0]);
-                shell.out().flush();
+            try {
                 operation = invocation.getInput();
+                while(!operation.getInputKey().equals(Key.q)) {
+                    shell.out().print((char) operation.getInput()[0]);
+                    shell.out().flush();
+                    operation = invocation.getInput();
+                }
+                if(operation.getInput()[0] == 'q') {
+                    stop();
+                }
             }
-            if(operation.getInput()[0] == 'q') {
+            catch (InterruptedException e) {
                 stop();
             }
         }
@@ -248,7 +251,13 @@ public class AeshExample {
             this.shell = commandInvocation.getShell();
             if(bar) {
                 shell.out().print("are you sure you want bar? (y/n) ");
-                CommandOperation operation = commandInvocation.getInput();
+                CommandOperation operation = null;
+                try {
+                    operation = commandInvocation.getInput();
+                }
+                catch (InterruptedException e) {
+                    return CommandResult.FAILURE;
+                }
                 processOperation(operation);
             }
             return CommandResult.SUCCESS;

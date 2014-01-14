@@ -142,7 +142,7 @@ class FooCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public CommandOperation getInput() {
+    public CommandOperation getInput() throws InterruptedException {
         return commandInvocation.getInput();
     }
 

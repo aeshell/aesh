@@ -61,7 +61,7 @@ public class ProcessManager {
     }
 
     //TODO: need to check if the process fetching has "focus"
-    public CommandOperation getInput() {
+    public CommandOperation getInput() throws InterruptedException {
         return console.getInput();
     }
 

@@ -17,7 +17,7 @@ public interface Process {
 
     void notifyManager();
 
-    CommandOperation getInput();
+    CommandOperation getInput() throws InterruptedException;
 
     int getPID();
 }

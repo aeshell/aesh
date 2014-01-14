@@ -20,7 +20,7 @@ public abstract class AeshConsoleCallback implements ConsoleCallback {
     }
 
     @Override
-    public CommandOperation getInput() {
+    public CommandOperation getInput() throws InterruptedException {
         return process.getInput();
     }
 

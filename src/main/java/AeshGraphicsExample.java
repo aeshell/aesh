@@ -61,7 +61,6 @@ public class AeshGraphicsExample {
     @CommandDefinition(name = "gfx", description = "")
     public static class GraphicsCommand implements Command {
 
-        private boolean attached = false;
         private CommandInvocation invocation;
         private Graphics g;
 
@@ -75,13 +74,15 @@ public class AeshGraphicsExample {
         }
 
         public void waitForInput() {
-            while(!invocation.getInput().getInputKey().equals(Key.q)) {
+            try {
+                while(!invocation.getInput().getInputKey().equals(Key.q)) {
 
+                }
             }
+            catch (InterruptedException ignored) { }
             if(g != null)
                 g.cleanup();
             invocation.getShell().enableMainBuffer();
-            attached = false;
         }
 
         private void doGfx() {

@@ -55,7 +55,7 @@ public class AeshProcess implements Runnable, Process {
     }
 
     @Override
-    public CommandOperation getInput() {
+    public CommandOperation getInput() throws InterruptedException {
         return manager.getInput();
     }
 

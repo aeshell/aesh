@@ -73,7 +73,7 @@ public final class AeshCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public CommandOperation getInput() {
+    public CommandOperation getInput() throws InterruptedException {
         return callback.getInput();
     }
 }

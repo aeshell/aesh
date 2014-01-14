@@ -405,14 +405,8 @@ public class Console {
         displayPrompt();
     }
 
-    protected CommandOperation getInput() {
-        try {
-            return inputQueue.poll(365, TimeUnit.DAYS);
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-            return null;
-        }
+    protected CommandOperation getInput() throws InterruptedException {
+        return inputQueue.poll(365, TimeUnit.DAYS);
     }
 
     /**
@@ -532,11 +526,11 @@ public class Console {
                 }
             }
         }
-        catch (IOException ioe) {
+        catch (IOException | InterruptedException ioe) {
             if(settings.isLogging())
                 logger.severe("Stream failure, stopping Aesh: "+ioe);
             try {
-                //if we get an ioexception its either input or output failure
+                //if we get an ioexception/interrupted exp its either input or output failure
                 //lets just stop while we can...
                 doStop();
             }

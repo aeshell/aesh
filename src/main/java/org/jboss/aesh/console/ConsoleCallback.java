@@ -25,7 +25,7 @@ public interface ConsoleCallback {
      */
     int execute(ConsoleOperation output);
 
-    CommandOperation getInput();
+    CommandOperation getInput() throws InterruptedException;
 
     void release();
 
