@@ -296,7 +296,7 @@ public class AeshConsoleImpl implements AeshConsole {
                         commandNotFoundHandler.handleCommandNotFound(
                                 output.getBuffer(), getShell());
                     } else {
-                        getShell().out().print(
+                        getShell().err().print(
                                 "Command not found: "
                                         + Parser.findFirstWord(output
                                         .getBuffer())

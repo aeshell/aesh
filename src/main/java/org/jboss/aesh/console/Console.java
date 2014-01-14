@@ -438,6 +438,10 @@ public class Console {
 
             if(tmpOutput != null && !executorService.isShutdown())
                 processManager.startNewProcess(consoleCallback, tmpOutput);
+
+            buffer.reset();
+            search = null;
+            displayPrompt();
         }
         else {
             buffer.reset();
@@ -1359,9 +1363,8 @@ public class Console {
 
             String startsWith = Parser.findStartsWithOperation(possibleCompletions);
 
-            logger.info("Starts with: "+startsWith);
-
-            if(startsWith.length() > 0) {
+            if(startsWith.length() > 0 && startsWith.startsWith(
+                    buffer.getLine().substring( possibleCompletions.get(0).getOffset()))) {
                 if(startsWith.contains(" "))
                     displayCompletion(new TerminalString(Parser.switchSpacesToEscapedSpacesInWord(startsWith), true),
                             false, possibleCompletions.get(0).getSeparator());
