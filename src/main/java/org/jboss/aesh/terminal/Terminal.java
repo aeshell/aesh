@@ -15,7 +15,7 @@ import java.io.IOException;
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
-public interface Terminal {
+public interface Terminal extends AutoCloseable {
 
     /**
      * Initialize the Terminal with which input/output stream it should use
@@ -38,8 +38,6 @@ public interface Terminal {
      * @throws java.io.IOException stream
      */
     void reset() throws IOException;
-
-    void close() throws IOException;
 
     Shell getShell();
 
