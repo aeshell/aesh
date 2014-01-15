@@ -32,6 +32,8 @@ public class FileLister {
     private static final char WILDCARD = '?';
     private static final char ESCAPE = '\\';
 
+    private static final File[] windowsRoots = File.listRoots();
+
     private String token;
     private File cwd;
     private String rest;
@@ -128,7 +130,7 @@ public class FileLister {
                listPossibleDirectories(completion);
             }
         }
-        else if(!startWithSlash()) {
+        else if(!startWithSlash() && !startWithWindowsDrive()) {
             if(isCwdAndTokenADirectory()) {
                 if(tokenEndsWithSlash()) {
                     completion.addCompletionCandidates(
@@ -161,7 +163,7 @@ public class FileLister {
                listPossibleDirectories(completion);
             }
         }
-        else if(startWithSlash()) {
+        else if(startWithSlash() || startWithWindowsDrive()) {
             if(isTokenADirectory()) {
                 if(tokenEndsWithSlash()) {
                     completion.addCompletionCandidates(
@@ -253,6 +255,12 @@ public class FileLister {
             else
                 returnFiles =  listDirectory(new File(Config.getPathSeparator()+lastDir), rest);
         }
+        else if(startWithWindowsDrive()) {
+            if(lastDir != null && lastDir.length() == 2)
+                returnFiles = listDirectory(new File(lastDir+Config.getPathSeparator()), rest);
+            else
+                returnFiles = listDirectory(new File(lastDir), rest);
+        }
         else if(startWithHome()) {
             if(lastDir != null) {
                 returnFiles =  listDirectory(new File(Config.getHomeDir()+lastDir.substring(1)), rest);
@@ -339,6 +347,19 @@ public class FileLister {
 
     private boolean startWithSlash() {
         return token.indexOf(Config.getPathSeparator()) == 0;
+    }
+
+    private boolean startWithWindowsDrive() {
+        if(!Config.isOSPOSIXCompatible()) {
+            for(File f : windowsRoots) {
+                if(token.startsWith(f.toString())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        else
+            return false;
     }
 
     private boolean tokenEndsWithSlash() {
