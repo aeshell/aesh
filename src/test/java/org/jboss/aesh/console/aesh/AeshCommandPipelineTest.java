@@ -9,6 +9,7 @@ package org.jboss.aesh.console.aesh;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
@@ -62,7 +63,7 @@ public class AeshCommandPipelineTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
-        outputStream.write(("pipe | bar\n").getBytes());
+        outputStream.write(("pipe | bar"+ Config.getLineSeparator()).getBytes());
 
 
         Thread.sleep(100);

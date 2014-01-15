@@ -2,6 +2,7 @@ package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
@@ -50,7 +51,7 @@ public class AeshCommandNotFoundHandlerTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
-        outputStream.write(("foo -l 12 -h 20\n").getBytes());
+        outputStream.write(("foo -l 12 -h 20"+ Config.getLineSeparator()).getBytes());
         Thread.sleep(100);
         assertTrue(byteArrayOutputStream.toString().contains("DUUUUDE"));
 

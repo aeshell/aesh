@@ -12,6 +12,7 @@ import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
@@ -65,11 +66,11 @@ public class AeshConverterInvocationProviderTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
-        outputStream.write(("convert --foo bar\n").getBytes());
+        outputStream.write(("convert --foo bar"+ Config.getLineSeparator()).getBytes());
         outputStream.flush();
 
         Thread.sleep(100);
-        assertTrue( byteArrayOutputStream.toString().contains("FOOO") );
+        assertTrue(byteArrayOutputStream.toString().contains("FOOO"));
         aeshConsole.stop();
     }
 

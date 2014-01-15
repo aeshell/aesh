@@ -115,8 +115,8 @@ public class FileOptionCompleterTest {
         completer.complete(data);
         assertNotNull(data.getCompleterValues());
         assertEquals(2, data.getCompleterValues().size());
-        assertTrue(data.getCompleterValues().contains(new TerminalString(child.getName() + "/", true)));
-        assertTrue(data.getCompleterValues().contains(new TerminalString(child2.getName() + "/", true)));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child.getName() + Config.getPathSeparator(), true)));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child2.getName() + Config.getPathSeparator(), true)));
 
         data = new CompleterData(aeshContext, "ch", null);
         completer.complete(data);
@@ -128,8 +128,8 @@ public class FileOptionCompleterTest {
         completer.complete(data);
         assertNotNull(data.getCompleterValues());
         assertEquals(2, data.getCompleterValues().size());
-        assertTrue(data.getCompleterValues().contains(new TerminalString(child.getName() + "/", true)));
-        assertTrue(data.getCompleterValues().contains(new TerminalString(child2.getName() + "/", true)));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child.getName() + Config.getPathSeparator(), true)));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child2.getName() + Config.getPathSeparator(), true)));
     }
 
 }

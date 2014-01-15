@@ -7,11 +7,7 @@
 package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.*;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
@@ -72,7 +68,7 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
         aeshConsole.setCurrentCommandInvocationProvider("FOO");
         aeshConsole.start();
 
-        outputStream.write(("bar\n").getBytes());
+        outputStream.write(("bar"+ Config.getLineSeparator()).getBytes());
 
         Thread.sleep(100);
         assertTrue( byteArrayOutputStream.toString().contains("FOO") );

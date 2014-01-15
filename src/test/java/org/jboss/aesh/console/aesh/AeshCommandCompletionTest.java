@@ -4,10 +4,7 @@ import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.completer.OptionCompleter;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.AeshConsoleImpl;
-import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.*;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
@@ -71,9 +68,9 @@ public class AeshCommandCompletionTest {
         Thread.sleep(100);
         assertEquals("foo --bar bar\\ 2\\ 3\\ 4 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
-        outputStream.write("\n".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
-        Thread.sleep(20);
+        Thread.sleep(50);
 
         outputStream.write(("foo --bar bar\\ 2\\ ").getBytes());
         outputStream.write(completeChar.getFirstValue());
@@ -82,9 +79,9 @@ public class AeshCommandCompletionTest {
         Thread.sleep(100);
         assertEquals("foo --bar bar\\ 2\\ 3\\ 4 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
-        outputStream.write("\n".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
-        Thread.sleep(20);
+        Thread.sleep(50);
 
          outputStream.write(("foo --bar bar").getBytes());
         outputStream.write(completeChar.getFirstValue());
@@ -93,9 +90,9 @@ public class AeshCommandCompletionTest {
         Thread.sleep(100);
         assertEquals("foo --bar bar\\ 2 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
-        outputStream.write("\n".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
-        Thread.sleep(20);
+        Thread.sleep(50);
 
          outputStream.write(("foo --bar foo ").getBytes());
         outputStream.write(completeChar.getFirstValue());

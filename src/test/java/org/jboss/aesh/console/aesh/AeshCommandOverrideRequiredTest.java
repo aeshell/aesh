@@ -12,6 +12,7 @@ import org.jboss.aesh.cl.validator.CommandValidator;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
@@ -62,7 +63,7 @@ public class AeshCommandOverrideRequiredTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
-        outputStream.write(("foo -h\n").getBytes());
+        outputStream.write(("foo -h"+ Config.getLineSeparator()).getBytes());
         Thread.sleep(100);
         assertTrue(byteArrayOutputStream.toString().contains("OVERRIDDEN"));
 
