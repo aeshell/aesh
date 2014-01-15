@@ -40,7 +40,7 @@ public class ProcessManager {
 
         AeshProcess process = new AeshProcess(1, this, callback, consoleOperation);
 
-        logger.info("starting a new process...");
+        logger.info("starting a new process: "+process+", consoleOperation: "+consoleOperation);
 
         executorService.execute(process);
 

@@ -124,6 +124,9 @@ public class ParserTest {
         assertEquals("ls", line.getWords().get(0));
         assertEquals("--files", line.getWords().get(1));
         assertEquals("/tmp/A ", line.getWords().get(2));
+
+        line = Parser.findAllWords("..\\..\\..\\..\\..\\..\\..\\temp\\foo.txt");
+        assertEquals("..\\..\\..\\..\\..\\..\\..\\temp\\foo.txt", line.getWords().get(0));
     }
 
     @Test

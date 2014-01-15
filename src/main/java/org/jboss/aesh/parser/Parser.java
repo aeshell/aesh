@@ -402,6 +402,7 @@ public class Parser {
             else if(haveEscape) {
                 builder.append(SLASH);
                 builder.append(c);
+                haveEscape = false;
             }
             else
                 builder.append(c);

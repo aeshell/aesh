@@ -58,9 +58,10 @@ public class PathResolverTest {
         assertEquals(child1, PathResolver.resolvePath(new File(""), child1).get(0));
 
         assertEquals(child1, PathResolver.resolvePath(new File(".."), child11).get(0));
-        assertEquals(child1, PathResolver.resolvePath(new File("../"), child11).get(0));
-        assertEquals(tmp, PathResolver.resolvePath(new File("../.."), child11).get(0));
-        assertEquals(tmp, PathResolver.resolvePath(new File("../../"), child11).get(0));
+        assertEquals(child1, PathResolver.resolvePath(new File(".."+Config.getPathSeparator()), child11).get(0));
+        assertEquals(tmp, PathResolver.resolvePath(new File(".."+Config.getPathSeparator()+".."), child11).get(0));
+        assertEquals(tmp, PathResolver.resolvePath(new File(".."+Config.getPathSeparator()+
+                ".."+Config.getPathSeparator()), child11).get(0));
 
         if(Config.isOSPOSIXCompatible()) {
             assertEquals(tmp.getParentFile(), PathResolver.resolvePath(new File("../../../"), child11).get(0));
@@ -72,26 +73,36 @@ public class PathResolverTest {
 //                    PathResolver.resolvePath(new File("../../../../../.."), child11).get(0));
         }
 
-        assertEquals(child11, PathResolver.resolvePath(new File("../child11"), child11).get(0));
-        assertEquals(child1, PathResolver.resolvePath(new File("../../child1"), child11).get(0));
-        assertEquals(child11, PathResolver.resolvePath(new File("../../child1/child11"), child11).get(0));
-        assertEquals(tmp, PathResolver.resolvePath(new File("../../../"+tmp.getName()), child11).get(0));
+        assertEquals(child11, PathResolver.resolvePath(new File(".."+Config.getPathSeparator()+"child11"), child11).get(0));
+        assertEquals(child1, PathResolver.resolvePath(new File(".."+Config.getPathSeparator()+".."+Config.getPathSeparator()+"child1"),
+                child11).get(0));
+        assertEquals(child11, PathResolver.resolvePath(new File(".."+Config.getPathSeparator()+".."+
+                Config.getPathSeparator()+"child1"+Config.getPathSeparator()+"child11"), child11).get(0));
+        assertEquals(tmp, PathResolver.resolvePath(new File(".."+Config.getPathSeparator()+".."+
+                Config.getPathSeparator()+".."+Config.getPathSeparator()+tmp.getName()), child11).get(0));
 
 
         assertEquals(child11, PathResolver.resolvePath(new File("child11"), child1).get(0));
-        assertEquals(child11, PathResolver.resolvePath(new File("child1/child11"), tmp).get(0));
+        assertEquals(child11, PathResolver.resolvePath(new File("child1"+Config.getPathSeparator()+"child11"), tmp).get(0));
 
-        assertEquals(child11, PathResolver.resolvePath(new File("./child11"), child1).get(0));
-        assertEquals(child1, PathResolver.resolvePath(new File("./"), child1).get(0));
+        assertEquals(child11, PathResolver.resolvePath(new File("."+Config.getPathSeparator()+"child11"), child1).get(0));
+        assertEquals(child1, PathResolver.resolvePath(new File("."+Config.getPathSeparator()), child1).get(0));
 
-        assertEquals(child1, PathResolver.resolvePath(new File("../child1/"), child1).get(0));
-        assertEquals(child1, PathResolver.resolvePath(new File("../child1/../child1"), child1).get(0));
-        assertEquals(child11, PathResolver.resolvePath(new File("../child1/../child1/child11"), child1).get(0));
+        assertEquals(child1, PathResolver.resolvePath(
+                new File(".."+Config.getPathSeparator()+"child1"+Config.getPathSeparator()), child1).get(0));
+        assertEquals(child1, PathResolver.resolvePath(new File(".."+Config.getPathSeparator()+"child1"+
+                Config.getPathSeparator()+".."+Config.getPathSeparator()+"child1"), child1).get(0));
+        assertEquals(child11, PathResolver.resolvePath(new File(".."+Config.getPathSeparator()+"child1"+
+                Config.getPathSeparator()+".."+Config.getPathSeparator()+"child1"+Config.getPathSeparator()+"child11"), child1).get(0));
 
-        assertEquals(child11, PathResolver.resolvePath(new File("../child1/./child11"), child1).get(0));
+        assertEquals(child11, PathResolver.resolvePath(new File(".."+Config.getPathSeparator()+
+                "child1"+Config.getPathSeparator()+"."+Config.getPathSeparator()+"child11"), child1).get(0));
 
-        assertEquals(child11, PathResolver.resolvePath(new File("./../child1/./child11"), child1).get(0));
-        assertEquals(child11, PathResolver.resolvePath(new File("./../child1/./child11/."), child1).get(0));
+        assertEquals(child11, PathResolver.resolvePath(new File("."+Config.getPathSeparator()+".."+
+                Config.getPathSeparator()+"child1"+Config.getPathSeparator()+"."+Config.getPathSeparator()+"child11"), child1).get(0));
+        assertEquals(child11, PathResolver.resolvePath(new File("."+Config.getPathSeparator()+".."+
+                Config.getPathSeparator()+"child1"+Config.getPathSeparator()+"."+
+                Config.getPathSeparator()+"child11"+Config.getPathSeparator()+"."), child1).get(0));
 
         //System.setProperty("user.home", tempDir.toString()+Config.getPathSeparator()+"home");
         //assertEquals(new File(Config.getHomeDir()), PathResolver.resolvePath(new File("~/../home"), child1).get(0));
@@ -107,6 +118,7 @@ public class PathResolverTest {
         File child21 = new File(child2 + Config.getPathSeparator()+"child21");
         File child22 = new File(child2 + Config.getPathSeparator()+"child22");
 
+        if(Config.isOSPOSIXCompatible()) {
         Files.createDirectory(child1.toPath(), fileAttribute).toFile().deleteOnExit();
         Files.createDirectory(child2.toPath(), fileAttribute).toFile().deleteOnExit();
         Files.createDirectory(child11.toPath(), fileAttribute).toFile().deleteOnExit();
@@ -114,6 +126,16 @@ public class PathResolverTest {
         Files.createDirectory(child21.toPath(), fileAttribute).toFile().deleteOnExit();
         Files.createDirectory(child22.toPath(), fileAttribute).toFile().deleteOnExit();
         Files.createDirectory(child111.toPath(), fileAttribute).toFile().deleteOnExit();
+        }
+        else {
+            Files.createDirectory(child1.toPath()).toFile().deleteOnExit();
+            Files.createDirectory(child2.toPath()).toFile().deleteOnExit();
+            Files.createDirectory(child11.toPath()).toFile().deleteOnExit();
+            Files.createDirectory(child12.toPath()).toFile().deleteOnExit();
+            Files.createDirectory(child21.toPath()).toFile().deleteOnExit();
+            Files.createDirectory(child22.toPath()).toFile().deleteOnExit();
+            Files.createDirectory(child111.toPath()).toFile().deleteOnExit();
+        }
 
         ArrayList<File> expected = new ArrayList<>();
         expected.add(child11);
@@ -148,7 +170,7 @@ public class PathResolverTest {
 
         //test4
         actual = PathResolver.resolvePath(
-                new File(child1.getAbsolutePath()+Config.getPathSeparator()+"child*/child111"),
+                new File(child1.getAbsolutePath()+Config.getPathSeparator()+"child*"+Config.getPathSeparator()+"child111"),
                 new File(Config.getPathSeparator()));
 
         assertEquals(1, actual.size());
@@ -189,7 +211,11 @@ public class PathResolverTest {
 
     public static Path createTempDirectory() throws IOException {
         final Path tmp;
-        tmp = Files.createTempDirectory("temp"+Long.toString(System.nanoTime()), fileAttribute);
+        if(Config.isOSPOSIXCompatible())
+            tmp = Files.createTempDirectory("temp"+Long.toString(System.nanoTime()), fileAttribute);
+        else {
+            tmp = Files.createTempDirectory("temp"+Long.toString(System.nanoTime()));
+        }
 
         tmp.toFile().deleteOnExit();
 

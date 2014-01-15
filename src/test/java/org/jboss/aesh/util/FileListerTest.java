@@ -56,7 +56,7 @@ public class FileListerTest {
 
         List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(1, candidates.size());
-        assertEquals("child/", candidates.get(0).getCharacters());
+        assertEquals("child"+Config.getPathSeparator(), candidates.get(0).getCharacters());
     }
 
     @Test
@@ -67,7 +67,7 @@ public class FileListerTest {
 
         List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(1, candidates.size());
-        assertEquals("child/", candidates.get(0).getCharacters());
+        assertEquals("child"+Config.getPathSeparator(), candidates.get(0).getCharacters());
     }
 
     @Test
@@ -79,8 +79,10 @@ public class FileListerTest {
 
         List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(2, candidates.size());
-        assertTrue("child/", candidates.contains(new TerminalString("child/", true)));
-        assertTrue("child2/", candidates.contains(new TerminalString("child2/", true)));
+        assertTrue("child"+Config.getPathSeparator(),
+                candidates.contains(new TerminalString("child"+Config.getPathSeparator(), true)));
+        assertTrue("child2"+Config.getPathSeparator(),
+                candidates.contains(new TerminalString("child2"+Config.getPathSeparator(), true)));
     }
 
     @Test
@@ -102,11 +104,11 @@ public class FileListerTest {
         new File(test, "main2").mkdir();
         new File(test, "test2").mkdir();
 
-        CompleteOperation completion = new CompleteOperation(aeshContext, "cd test/", 2);
-        new FileLister("test/", workingDir).findMatchingDirectories(completion);
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd test"+Config.getPathSeparator(), 2);
+        new FileLister("test"+Config.getPathSeparator(), workingDir).findMatchingDirectories(completion);
         List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(2, candidates.size());
-        assertEquals("main2/", candidates.get(0).getCharacters());
+        assertEquals("main2"+Config.getPathSeparator(), candidates.get(0).getCharacters());
 
     }
 
