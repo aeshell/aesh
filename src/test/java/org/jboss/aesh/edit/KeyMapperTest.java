@@ -6,7 +6,6 @@
  */
 package org.jboss.aesh.edit;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.edit.mapper.KeyMapper;
