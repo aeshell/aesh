@@ -33,6 +33,7 @@ public class RedirectionCompletion implements Completion {
             //if we only have one complete candidate, leave the escaped space be
             if(completeOperation.getCompletionCandidates().size() > 1)
                 completeOperation.removeEscapedSpacesFromCompletionCandidates();
+            completeOperation.setIgnoreStartsWith(true);
         }
     }
 }

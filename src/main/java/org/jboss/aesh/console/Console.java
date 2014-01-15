@@ -1361,7 +1361,10 @@ public class Console {
         // more than one hit...
         else {
 
-            String startsWith = Parser.findStartsWithOperation(possibleCompletions);
+            String startsWith = "";
+
+            if(!possibleCompletions.get(0).isIgnoreStartsWith())
+                startsWith = Parser.findStartsWithOperation(possibleCompletions);
 
             if(startsWith.length() > 0 ) {
                 if(startsWith.contains(" "))

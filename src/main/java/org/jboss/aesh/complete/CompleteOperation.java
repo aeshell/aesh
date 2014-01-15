@@ -24,6 +24,7 @@ public class CompleteOperation {
     private int offset;
     private List<TerminalString> completionCandidates;
     private boolean trimmed = false;
+    private boolean ignoreStartsWith = false;
     private String nonTrimmedBuffer;
     private AeshContext aeshContext;
 
@@ -226,6 +227,14 @@ public class CompleteOperation {
         }
         else
             return completion;
+    }
+
+    public boolean isIgnoreStartsWith() {
+        return ignoreStartsWith;
+    }
+
+    public void setIgnoreStartsWith(boolean ignoreStartsWith) {
+        this.ignoreStartsWith = ignoreStartsWith;
     }
 
     @Override

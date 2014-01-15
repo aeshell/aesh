@@ -138,6 +138,9 @@ public class AeshExample {
         @Option(hasValue = false, required = true)
         private boolean bar;
 
+        @Option(hasValue = false)
+        private boolean barbar;
+
         @Option(overrideRequired = true, hasValue = false)
         private boolean help;
 
