@@ -8,44 +8,46 @@ package org.jboss.aesh.terminal;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 
+import org.jboss.aesh.console.reader.AeshInputStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
+import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
 
 /**
  * A dummy terminal used for tests
- *
+ * 
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class TestTerminal implements Terminal, Shell {
 
-    private InputStream input;
+    private ConsoleInputSession inputSession;
+    private AeshInputStream input;
     private PrintStream writer;
     private TerminalSize size;
 
     @Override
     public void init(Settings settings) {
-        input = settings.getInputStream();
+        inputSession = new ConsoleInputSession(settings.getInputStream());
+        input = inputSession.getExternalInputStream();
         writer = new PrintStream(settings.getStdOut(), true);
-        size = new TerminalSize(24,80);
+        size = new TerminalSize(24, 80);
     }
 
     @Override
     public int[] read(boolean readAhead) throws IOException {
         int input = this.input.read();
         int available = this.input.available();
-        if(available > 1 && readAhead) {
+        if (available > 1 && readAhead) {
             int[] in = new int[available];
             in[0] = input;
-            for(int c=1; c < available; c++ )
+            for (int c = 1; c < available; c++)
                 in[c] = this.input.read();
 
             return in;
-        }
-        else
-            return new int[] {input};
+        } else
+            return new int[] { input };
     }
 
     @Override
@@ -55,7 +57,7 @@ public class TestTerminal implements Terminal, Shell {
 
     @Override
     public CursorPosition getCursor() {
-        return new CursorPosition(0,0);
+        return new CursorPosition(0, 0);
     }
 
     @Override
@@ -73,12 +75,12 @@ public class TestTerminal implements Terminal, Shell {
 
     @Override
     public void enableAlternateBuffer() {
-        //do nothing
+        // do nothing
     }
 
     @Override
     public void enableMainBuffer() {
-        //do nothing
+        // do nothing
     }
 
     @Override
@@ -92,7 +94,11 @@ public class TestTerminal implements Terminal, Shell {
 
     @Override
     public void close() throws IOException {
-
+        try {
+            inputSession.stop();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

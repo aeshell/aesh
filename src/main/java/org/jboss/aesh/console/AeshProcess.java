@@ -8,50 +8,36 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshProcess implements Runnable, Process {
 
-    private int pid;
-    private ProcessManager manager;
-    private ConsoleCallback consoleCallback;
-    private ConsoleOperation operation;
-    private List<CommandOperation> commandOperations;
+    private final int pid;
+    private final ProcessManager manager;
+    private final ConsoleCallback consoleCallback;
+    private final ConsoleOperation operation;
 
-    public AeshProcess(int pid, ProcessManager manager,
-                       ConsoleCallback consoleCallback,
-                       ConsoleOperation consoleOperation) {
+    public AeshProcess(int pid, ProcessManager manager, ConsoleCallback consoleCallback,
+        ConsoleOperation consoleOperation) {
         this.pid = pid;
         this.manager = manager;
         this.consoleCallback = consoleCallback;
         this.operation = consoleOperation;
-        this.commandOperations = new ArrayList<>(1);
         this.consoleCallback.setProcess(this);
     }
 
     @Override
     public void run() {
+        String originalName = Thread.currentThread().getName();
         try {
-            //todo: we need to make sure exit status is used properly later
+            Thread.currentThread().setName("AeshProcess: " + pid);
+            // todo: we need to make sure exit status is used properly later
             int exitStatus = consoleCallback.execute(operation);
+        } finally {
+            Thread.currentThread().setName(originalName);
+            manager.processFinished(this);
         }
-        finally {
-            notifyManager();
-        }
-    }
-
-    @Override
-    public void setManager(ProcessManager manager) {
-        this.manager = manager;
-    }
-
-    @Override
-    public void notifyManager() {
-        manager.processHaveFinished(this);
     }
 
     @Override
@@ -66,11 +52,12 @@ public class AeshProcess implements Runnable, Process {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof AeshProcess)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof AeshProcess))
+            return false;
 
         AeshProcess that = (AeshProcess) o;
-
         return pid == that.pid;
     }
 
@@ -81,11 +68,7 @@ public class AeshProcess implements Runnable, Process {
 
     @Override
     public String toString() {
-        return "AeshProcess{" +
-                "pid=" + pid +
-                ", manager=" + manager +
-                ", consoleCallback=" + consoleCallback +
-                ", operation=" + operation +
-                '}';
+        return "AeshProcess{" + "pid=" + pid + ", manager=" + manager + ", consoleCallback=" + consoleCallback
+            + ", operation=" + operation + '}';
     }
 }

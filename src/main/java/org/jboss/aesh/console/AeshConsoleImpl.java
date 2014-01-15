@@ -134,7 +134,7 @@ public class AeshConsoleImpl implements AeshConsole {
 
     @Override
     public void registerCommandInvocationProvider(String name,
-                                                  CommandInvocationProvider commandInvocationProvider) {
+                                                  CommandInvocationProvider<?> commandInvocationProvider) {
         commandInvocationServices.registerProvider(name,
                 commandInvocationProvider);
     }
@@ -333,4 +333,10 @@ public class AeshConsoleImpl implements AeshConsole {
                 return 1;
         }
     }
+
+    @Override
+    public boolean isRunning() {
+        return console.isRunning();
+    }
+
 }

@@ -13,10 +13,6 @@ import org.jboss.aesh.console.command.CommandOperation;
  */
 public interface Process {
 
-    void setManager(ProcessManager manager);
-
-    void notifyManager();
-
     CommandOperation getInput() throws InterruptedException;
 
     int getPID();

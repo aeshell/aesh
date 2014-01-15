@@ -6,9 +6,6 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.util.LoggerUtil;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -16,38 +13,35 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import org.jboss.aesh.console.command.CommandOperation;
+import org.jboss.aesh.util.LoggerUtil;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ProcessManager {
 
-    private Console console;
-    private List<Process> processes;
+    private final Console console;
+    private final List<Process> processes;
     private Process current;
-    private ExecutorService executorService;
+    private final ExecutorService executorService;
 
     private static final Logger logger = LoggerUtil.getLogger(ProcessManager.class.getName());
-
 
     public ProcessManager(Console console) {
         this.console = console;
         processes = new ArrayList<>(1);
-
         executorService = Executors.newFixedThreadPool(50);
     }
 
     public void startNewProcess(ConsoleCallback callback, ConsoleOperation consoleOperation) {
-
         AeshProcess process = new AeshProcess(1, this, callback, consoleOperation);
-
-        logger.info("starting a new process: "+process+", consoleOperation: "+consoleOperation);
-
+        logger.info("starting a new process: " + process + ", consoleOperation: " + consoleOperation);
         executorService.execute(process);
-
         processes.add(process);
     }
 
-    //TODO: need to check if the process fetching has "focus"
+    // TODO: need to check if the process fetching has "focus"
     public CommandOperation getInput() throws InterruptedException {
         return console.getInput();
     }
@@ -60,12 +54,12 @@ public class ProcessManager {
     }
 
     public boolean hasRunningProcess() {
-        logger.info("do we have a running process: "+(processes.size() > 0));
+        logger.info("do we have a running process: " + (processes.size() > 0));
         return processes.size() > 0;
     }
 
-    public void processHaveFinished(Process process) {
-        logger.info("process has finished: "+process);
+    public void processFinished(Process process) {
+        logger.info("process has finished: " + process);
         console.currentProcessFinished(process);
         processes.remove(process);
 
@@ -73,16 +67,15 @@ public class ProcessManager {
 
     public void stop() {
         try {
-            logger.info("number of processes in list: "+processes.size());
+            logger.info("number of processes in list: " + processes.size());
             processes.clear();
             executorService.shutdown();
             executorService.awaitTermination(5, TimeUnit.MILLISECONDS);
-            if(executorService.isTerminated())
+            if (executorService.isTerminated())
                 logger.info("Processes are cleaned up and finished...");
-            if(executorService.isShutdown())
+            if (executorService.isShutdown())
                 logger.info("Executor isShutdown..");
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }

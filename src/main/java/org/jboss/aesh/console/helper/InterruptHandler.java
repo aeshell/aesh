@@ -15,7 +15,7 @@ import sun.misc.SignalHandler;
 
 /**
  * A simple InterruptHandler, for now it only handles INT.
- *
+ * 
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 @SuppressWarnings("restriction")
@@ -23,6 +23,7 @@ public class InterruptHandler {
 
     private final Console console;
     private final InterruptHook interruptHook;
+    private final Signal signal = new Signal("INT");
     private SignalHandler original;
 
     public InterruptHandler(Console console, InterruptHook interruptHook) {
@@ -37,10 +38,10 @@ public class InterruptHandler {
                 interruptHook.handleInterrupt(console);
             }
         };
-        original = Signal.handle(new Signal("INT"), handler);
+        original = Signal.handle(signal, handler);
     }
 
     public void removeInterrupt() {
-        Signal.handle(new Signal("INT"), original);
+        Signal.handle(signal, original);
     }
 }

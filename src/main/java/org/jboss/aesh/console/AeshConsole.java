@@ -13,10 +13,15 @@ import org.jboss.aesh.terminal.Shell;
 
 /**
  * A Console that manages Commands and properly execute them.
- *
+ * 
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface AeshConsole {
+
+    /**
+     * Return <code>true</code> or <code>false</code> if the console is started or stopped.
+     */
+    boolean isRunning();
 
     /**
      * Start the Console. Open stream and set the proper terminal settings.
@@ -44,7 +49,7 @@ public interface AeshConsole {
     Prompt getPrompt();
 
     /**
-     *
+     * 
      * @return get shell
      */
     Shell getShell();
@@ -61,13 +66,15 @@ public interface AeshConsole {
 
     void setCurrentCommandInvocationProvider(String name);
 
-    void registerCommandInvocationProvider(String name, CommandInvocationProvider commandInvocationProvider);
+    void registerCommandInvocationProvider(String name, CommandInvocationProvider<?> commandInvocationProvider);
 
     ManProvider getManProvider();
 
     /**
      * The input wil be executed similar to a command executed from the prompt
-     * @param command command
+     * 
+     * @param command
+     *            command
      */
     void executeCommand(String command);
 
