@@ -12,7 +12,6 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.operator.ControlOperator;
-import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.ANSI;
