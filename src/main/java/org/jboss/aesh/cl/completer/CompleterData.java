@@ -32,6 +32,7 @@ public class CompleterData implements CompleterInvocation {
     private AeshContext aeshContext;
     private int offset;
     private boolean ignoreOffset = false;
+    private boolean ignoreStartsWith = false;
 
     public CompleterData(AeshContext aeshContext, String completeValue, Command command) {
         this.aeshContext = aeshContext;
@@ -115,6 +116,16 @@ public class CompleterData implements CompleterInvocation {
     @Override
     public int getOffset() {
         return offset;
+    }
+
+    @Override
+    public void setIgnoreStartsWith(boolean ignoreStartsWith) {
+        this.ignoreStartsWith = ignoreStartsWith;
+    }
+
+    @Override
+    public boolean isIgnoreStartsWith() {
+        return ignoreStartsWith;
     }
 
     @Override

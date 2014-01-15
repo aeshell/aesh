@@ -55,6 +55,8 @@ public class FileOptionCompleter implements OptionCompleter<CompleterInvocation>
 
         if(completeOperation.doIgnoreOffset())
             completerData.setIgnoreOffset(completeOperation.doIgnoreOffset());
+
+        completerData.setIgnoreStartsWith(true);
     }
 
     public Filter getFilter() {

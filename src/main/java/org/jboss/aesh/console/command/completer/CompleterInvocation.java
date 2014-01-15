@@ -54,5 +54,9 @@ public interface CompleterInvocation {
 
     int getOffset();
 
+    void setIgnoreStartsWith(boolean ignoreStartsWith);
+
+    boolean isIgnoreStartsWith();
+
     AeshContext getAeshContext();
 }
