@@ -8,6 +8,8 @@ package org.jboss.aesh.console.command;
 
 import org.jboss.aesh.terminal.Key;
 
+import java.util.Arrays;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -51,5 +53,14 @@ public class CommandOperation {
 
     public int getPosition() {
         return position;
+    }
+
+    @Override
+    public String toString() {
+        return "CommandOperation{" +
+                "inputKey=" + inputKey +
+                ", input=" + Arrays.toString(input) +
+                ", position=" + position +
+                '}';
     }
 }

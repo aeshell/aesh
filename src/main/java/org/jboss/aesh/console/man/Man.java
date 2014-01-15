@@ -56,9 +56,22 @@ public class Man extends AeshFileDisplayer {
 
     @Override
     public void displayBottom() throws IOException {
-        writeToConsole(ANSI.getInvertedBackground());
-        writeToConsole("Manual page "+ fileParser.getName()+" line "+getTopVisibleRow()+
-        " (press h for help or q to quit)"+ ANSI.defaultText());
+        if(getSearchStatus() == TerminalPage.Search.SEARCHING) {
+            clearBottomLine();
+           writeToConsole("/"+getSearchWord());
+        }
+        else if(getSearchStatus() == TerminalPage.Search.NOT_FOUND) {
+            clearBottomLine();
+            writeToConsole(ANSI.getInvertedBackground()+
+                    "Pattern not found (press RETURN)"+
+                    ANSI.defaultText());
+        }
+        else if(getSearchStatus() == TerminalPage.Search.NO_SEARCH ||
+                getSearchStatus() == TerminalPage.Search.RESULT) {
+            writeToConsole(ANSI.getInvertedBackground());
+            writeToConsole("Manual page "+ fileParser.getName()+" line "+getTopVisibleRow()+
+                    " (press h for help or q to quit)"+ ANSI.defaultText());
+        }
     }
 
     @Override

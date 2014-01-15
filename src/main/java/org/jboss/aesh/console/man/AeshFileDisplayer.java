@@ -140,16 +140,25 @@ public abstract class AeshFileDisplayer implements Command {
             }
         }
         else if(operation.getInputKey() == Key.j ||
-                operation.equals(Operation.HISTORY_NEXT) || operation.equals(Operation.NEW_LINE)) {
+                operation.getInputKey() == Key.DOWN ||
+                operation.getInputKey() == Key.DOWN_2 ||
+                operation.getInputKey() == Key.ENTER ) {
             if(search == Search.SEARCHING) {
                 if(operation.getInputKey() == Key.j) {
                     searchBuilder.append((char) operation.getInput()[0]);
                     displayBottom();
                 }
-                else if(operation.equals(Operation.NEW_LINE)) {
+                else if(operation.getInputKey() == Key.ENTER) {
                     search = Search.RESULT;
                     findSearchWord(true);
                 }
+            }
+            else if(search == Search.NOT_FOUND) {
+               if(operation.getInputKey() == Key.ENTER) {
+                   search = Search.NO_SEARCH;
+                   clearBottomLine();
+                   displayBottom();
+               }
             }
             else {
                 topVisibleRow = topVisibleRow + getNumber();
