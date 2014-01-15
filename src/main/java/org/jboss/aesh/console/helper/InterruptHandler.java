@@ -15,7 +15,7 @@ import sun.misc.SignalHandler;
 
 /**
  * A simple InterruptHandler, for now it only handles INT.
- * 
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 @SuppressWarnings("restriction")

@@ -74,6 +74,7 @@ public abstract class AeshFileDisplayer implements Command {
         page = new TerminalPage(getFileParser(), columns);
         topVisibleRow = 0;
         topVisibleRowCache = -1;
+        stop = false;
 
         if(operation.isRedirectionOut()) {
             int count=0;

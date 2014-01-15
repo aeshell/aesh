@@ -77,7 +77,7 @@ public class AeshExample {
 
         SettingsBuilder builder = new SettingsBuilder().logging(true);
         builder.enableMan(true)
-                .readInputrc(true);
+                .readInputrc(false);
                 /*
                 .interruptHook(new InterruptHook() {
                     @Override
