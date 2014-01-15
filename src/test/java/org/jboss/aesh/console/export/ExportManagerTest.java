@@ -51,4 +51,17 @@ public class ExportManagerTest {
         assertEquals("ls -la /bla", exportManager.getValue("ls -la $TEST"));
         assertEquals("/bla ls -la /bla", exportManager.getValue("$TEST ls -la $TEST"));
     }
+
+    @Test
+    public void testMultipleVariable() throws IOException {
+
+        ExportManager exportManager =
+                new ExportManager(new File(Config.getTmpDir()+Config.getPathSeparator()+"aesh_variable_test"));
+
+        exportManager.addVariable("export FOO=/opt");
+
+        assertEquals("/opt /opt", exportManager.getValue("$FOO $FOO"));
+
+        assertEquals("ls /opt /opt", exportManager.getValue("ls $FOO $FOO"));
+    }
 }

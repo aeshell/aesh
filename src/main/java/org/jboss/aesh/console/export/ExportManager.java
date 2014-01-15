@@ -142,15 +142,15 @@ public class ExportManager {
                     if(group2 != null && variables.containsKey(group2)) {
                         if(group3 != null && group3.indexOf(DOLLAR) > -1) {
                             if(variables.get(group2).indexOf(DOLLAR) == -1)
-                                return group1 + variables.get(group2) + parseValue(group3);
+                                return parseValue(group1) + variables.get(group2) + parseValue(group3);
                             else
-                                return group1 + parseValue(variables.get(group2)) + parseValue(group3);
+                                return parseValue(group1) + parseValue(variables.get(group2)) + parseValue(group3);
                         }
                         else {
                             if(variables.get(group2).indexOf(DOLLAR) == -1)
-                                return group1 + variables.get(group2) + group3;
+                                return parseValue(group1) + variables.get(group2) + group3;
                             else
-                                return group1 + parseValue(variables.get(group2)) + group3;
+                                return parseValue(group1) + parseValue(variables.get(group2)) + group3;
                         }
                     }
                     else
