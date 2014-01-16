@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -178,8 +179,14 @@ public class Console {
         if(settings.isLogging())
             logger.info("RESET");
 
-        executorService = Executors.newSingleThreadExecutor();
-
+        executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable runnable) {
+                Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+                thread.setName("Aesh Read Loop " + runnable.hashCode());
+                return thread;
+            }
+        });
         context = settings.getAeshContext();
 
         if(settings.doReadInputrc())
@@ -484,15 +491,24 @@ public class Console {
         Runnable reader = new Runnable() {
             @Override
             public void run() {
-                while(running) {
-                    read();
+                try {
+                    while(read()) { }
+                }
+                finally {
+                    try {
+                        doStop();
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                 }
             }
         };
         executorService.execute(reader);
     }
 
-    private void read() {
+    private boolean read() {
         try {
 
             int[] input = getTerminal().read(settings.isReadAhead());
@@ -503,9 +519,8 @@ public class Console {
             if(input.length == 0 || input[0] == -1) {
                 //dont have to initiate it twice
                 if(!initiateStop)
-                    doStop();
-                running = false;
-                return;
+                    stop();
+                return false;
             }
 
             boolean parsing = true;
@@ -521,23 +536,20 @@ public class Console {
                     parsing = false;
                 }
 
-
                 if(processManager.hasRunningProcess()) {
-
-                try {
-                    inputQueue.put(new CommandOperation(inc, input, position));
+                    try {
+                        inputQueue.put(new CommandOperation(inc, input, position));
+                    }
+                    catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-                catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                    //processManager.operation(new CommandOperation(input));
-                }
-                //the input is parsed by æsh
+                //the input is parsed by æsh, no need to send it to the queue
                 else {
                     processInternalOperation(new CommandOperation(inc, input, position));
                 }
             }
+            return true;
         }
         catch (IOException ioe) {
             if(settings.isLogging())
@@ -546,8 +558,11 @@ public class Console {
                 //if we get an ioexception/interrupted exp its either input or output failure
                 //lets just stop while we can...
                 doStop();
+                return false;
             }
-            catch (IOException ignored) { }
+            catch (IOException ignored) {
+                return false;
+            }
         }
     }
 

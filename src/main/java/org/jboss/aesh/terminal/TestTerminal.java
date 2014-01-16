@@ -8,7 +8,6 @@ package org.jboss.aesh.terminal;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.jboss.aesh.console.reader.AeshInputStream;

@@ -36,22 +36,18 @@ public class AeshProcess implements Runnable, Process {
     @Override
     public void run() {
         try {
+            Thread.currentThread().setName("AeshProcess: " + pid);
             //todo: we need to make sure exit status is used properly later
             int exitStatus = consoleCallback.execute(operation);
         }
         finally {
-            notifyManager();
+            manager.processHaveFinished(this);
         }
     }
 
     @Override
     public void setManager(ProcessManager manager) {
         this.manager = manager;
-    }
-
-    @Override
-    public void notifyManager() {
-        manager.processHaveFinished(this);
     }
 
     @Override
