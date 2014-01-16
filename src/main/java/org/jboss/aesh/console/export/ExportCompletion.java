@@ -31,13 +31,17 @@ public class ExportCompletion implements Completion {
         }
         else if(EXPORT.startsWith(completeOperation.getBuffer()))
             completeOperation.addCompletionCandidate(EXPORT);
-        else if(EXPORT_SPACE.equals(completeOperation.getBuffer())) {
+        else if(EXPORT_SPACE.equals(completeOperation.getBuffer()) ||
+                EXPORT.equals(completeOperation.getBuffer().trim())) {
             completeOperation.addCompletionCandidates(exportManager.getAllNames());
+            completeOperation.setOffset(completeOperation.getCursor());
         }
         else if(completeOperation.getBuffer().startsWith(EXPORT_SPACE)) {
             String word = Parser.findWordClosestToCursor( completeOperation.getBuffer(), completeOperation.getCursor());
-            completeOperation.addCompletionCandidates( exportManager.findAllMatchingKeys(word));
-            completeOperation.setOffset(completeOperation.getCursor() - word.length());
+            if(word.length() > 0) {
+                completeOperation.addCompletionCandidates( exportManager.findAllMatchingKeys(word));
+                completeOperation.setOffset(completeOperation.getCursor() - word.length());
+            }
         }
         else if(Parser.containsNonEscapedDollar( completeOperation.getBuffer())) {
             String word = Parser.findWordClosestToCursor( completeOperation.getBuffer(), completeOperation.getCursor());
