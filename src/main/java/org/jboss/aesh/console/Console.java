@@ -366,6 +366,12 @@ public class Console {
 
     public void stop() {
         initiateStop = true;
+        try {
+            getTerminal().close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

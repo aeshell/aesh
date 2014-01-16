@@ -87,10 +87,12 @@ public class ConsoleInputSession {
 
 
     public void stop() throws IOException, InterruptedException {
-        consoleStream.close();
-        executorService.shutdown();
-        aeshInputStream.close();
-        logger.info("input stream is closed, readers finished...");
+        if(!executorService.isShutdown()) {
+            consoleStream.close();
+            executorService.shutdown();
+            aeshInputStream.close();
+            logger.info("input stream is closed, readers finished...");
+        }
     }
 
     public AeshInputStream getExternalInputStream() {

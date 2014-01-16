@@ -32,18 +32,14 @@ public class ProcessManager {
     public ProcessManager(Console console) {
         this.console = console;
         processes = new ArrayList<>(1);
-
         executorService = Executors.newFixedThreadPool(50);
     }
 
     public void startNewProcess(ConsoleCallback callback, ConsoleOperation consoleOperation) {
-
         AeshProcess process = new AeshProcess(1, this, callback, consoleOperation);
-
         logger.info("starting a new process: "+process+", consoleOperation: "+consoleOperation);
 
         executorService.execute(process);
-
         processes.add(process);
     }
 
@@ -68,7 +64,6 @@ public class ProcessManager {
         logger.info("process has finished: "+process);
         console.currentProcessFinished(process);
         processes.remove(process);
-
     }
 
     public void stop() {

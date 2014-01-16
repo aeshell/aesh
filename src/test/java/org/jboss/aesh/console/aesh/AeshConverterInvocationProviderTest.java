@@ -72,6 +72,9 @@ public class AeshConverterInvocationProviderTest {
         Thread.sleep(100);
         assertTrue(byteArrayOutputStream.toString().contains("FOOO"));
         aeshConsole.stop();
+        outputStream.close();
+        pipedInputStream.close();
+        byteArrayOutputStream.close();
     }
 
 @CommandDefinition(name = "convert", description = "")
