@@ -155,6 +155,11 @@ public class AeshConsoleImpl implements AeshConsole {
         return console.getAeshContext();
     }
 
+    @Override
+    public boolean isRunning() {
+        return console.isRunning();
+    }
+
     public String getBuffer() {
         return console.getBuffer();
     }

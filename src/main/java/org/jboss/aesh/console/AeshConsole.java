@@ -59,8 +59,16 @@ public interface AeshConsole {
      */
     String getHelpInfo(String commandName);
 
+    /**
+     * Specify the current CommandInvocationProvider
+     */
     void setCurrentCommandInvocationProvider(String name);
 
+    /**
+     * Register a new CommandInvocationProvider
+     * @param name the name
+     * @param commandInvocationProvider the provider
+     */
     void registerCommandInvocationProvider(String name, CommandInvocationProvider commandInvocationProvider);
 
     ManProvider getManProvider();
@@ -71,5 +79,13 @@ public interface AeshConsole {
      */
     void executeCommand(String command);
 
+    /**
+     * Get the AeshContext
+     */
     AeshContext getAeshContext();
+
+    /**
+     * Is the console currently running?
+     */
+    boolean isRunning();
 }
