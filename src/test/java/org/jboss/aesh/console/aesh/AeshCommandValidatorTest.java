@@ -54,14 +54,15 @@ public class AeshCommandValidatorTest {
                 .prompt(new Prompt(""));
 
         AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
 
+        aeshConsole.start();
         outputStream.write(("foo -l 12 -h 20"+ Config.getLineSeparator()).getBytes());
+        outputStream.flush();
+
         Thread.sleep(100);
         assertTrue(byteArrayOutputStream.toString().contains("Sum of high and"));
 
         aeshConsole.stop();
-
     }
 
     @CommandDefinition(name = "foo", description = "blah", validator = FooCommandValidator.class)

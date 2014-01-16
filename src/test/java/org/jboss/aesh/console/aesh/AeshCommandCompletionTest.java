@@ -69,7 +69,7 @@ public class AeshCommandCompletionTest {
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
-        Thread.sleep(100);
+        Thread.sleep(50);
         assertEquals("foo --bar bar\\ 2\\ 3\\ 4 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         outputStream.write(Config.getLineSeparator().getBytes());
@@ -80,7 +80,7 @@ public class AeshCommandCompletionTest {
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
-        Thread.sleep(100);
+        Thread.sleep(50);
         assertEquals("foo --bar bar\\ 2\\ 3\\ 4 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         outputStream.write(Config.getLineSeparator().getBytes());
@@ -91,7 +91,7 @@ public class AeshCommandCompletionTest {
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
-        Thread.sleep(100);
+        Thread.sleep(50);
         assertEquals("foo --bar bar\\ 2 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         outputStream.write(Config.getLineSeparator().getBytes());
@@ -102,7 +102,7 @@ public class AeshCommandCompletionTest {
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
-        Thread.sleep(100);
+        Thread.sleep(50);
         assertEquals("foo --bar foo ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         aeshConsole.stop();

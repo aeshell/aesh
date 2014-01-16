@@ -64,8 +64,7 @@ public class AeshCommandPipelineTest {
         aeshConsole.start();
 
         outputStream.write(("pipe | bar"+ Config.getLineSeparator()).getBytes());
-
-
+        outputStream.flush();
         Thread.sleep(100);
         assertEquals(1, pipe.getCounter());
         aeshConsole.stop();

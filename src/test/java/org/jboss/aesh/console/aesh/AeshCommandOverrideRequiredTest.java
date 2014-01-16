@@ -64,7 +64,8 @@ public class AeshCommandOverrideRequiredTest {
         aeshConsole.start();
 
         outputStream.write(("foo -h"+ Config.getLineSeparator()).getBytes());
-        Thread.sleep(100);
+        outputStream.flush();
+        Thread.sleep(50);
         assertTrue(byteArrayOutputStream.toString().contains("OVERRIDDEN"));
 
         aeshConsole.stop();

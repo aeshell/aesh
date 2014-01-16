@@ -52,11 +52,11 @@ public class AeshCommandNotFoundHandlerTest {
         aeshConsole.start();
 
         outputStream.write(("foo -l 12 -h 20"+ Config.getLineSeparator()).getBytes());
-        Thread.sleep(100);
+        outputStream.flush();
+        Thread.sleep(50);
         assertTrue(byteArrayOutputStream.toString().contains("DUUUUDE"));
 
         aeshConsole.stop();
-
     }
 
     public static class HandlerCommandNotFound implements CommandNotFoundHandler {

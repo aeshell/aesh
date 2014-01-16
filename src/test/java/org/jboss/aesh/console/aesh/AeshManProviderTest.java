@@ -27,7 +27,7 @@ public class AeshManProviderTest {
 
     @Test
     public void testManProvider() throws IOException, InterruptedException {
-               PipedOutputStream outputStream = new PipedOutputStream();
+        PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 

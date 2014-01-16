@@ -20,6 +20,7 @@ import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.BaseConsoleTest;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -89,10 +90,12 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
         outputStream.write(("foo").getBytes());
         //outputStream.write(completeChar.getFirstValue());
-        outputStream.write("\n".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
+        outputStream.flush();
 
         outputStream.write("ls --files /home:/tmp".getBytes());
-        outputStream.write("\n".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
+        outputStream.flush();
 
         Thread.sleep(100);
         aeshConsole.stop();

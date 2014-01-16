@@ -74,6 +74,7 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
         aeshConsole.start();
 
         outputStream.write(("bar"+ Config.getLineSeparator()).getBytes());
+        outputStream.flush();
 
         Thread.sleep(100);
         assertTrue( byteArrayOutputStream.toString().contains("FOO") );
