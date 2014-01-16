@@ -521,6 +521,9 @@ public class Console {
                     parsing = false;
                 }
 
+
+                if(processManager.hasRunningProcess()) {
+
                 try {
                     inputQueue.put(new CommandOperation(inc, input, position));
                 }
@@ -528,16 +531,15 @@ public class Console {
                     e.printStackTrace();
                 }
 
-                if(processManager.hasRunningProcess()) {
                     //processManager.operation(new CommandOperation(input));
                 }
                 //the input is parsed by æsh
                 else {
-                    processInternalOperation(getInput());
+                    processInternalOperation(new CommandOperation(inc, input, position));
                 }
             }
         }
-        catch (IOException | InterruptedException ioe) {
+        catch (IOException ioe) {
             if(settings.isLogging())
                 logger.severe("Stream failure, stopping Aesh: "+ioe);
             try {

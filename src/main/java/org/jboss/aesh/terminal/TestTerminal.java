@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
+import org.jboss.aesh.console.reader.AeshInputStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
+import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
 
 /**
@@ -21,22 +23,31 @@ import org.jboss.aesh.console.settings.Settings;
  */
 public class TestTerminal implements Terminal, Shell {
 
-    private InputStream input;
     private PrintStream writer;
     private TerminalSize size;
+    private AeshInputStream input;
+    private ConsoleInputSession inputSession;
+    private PrintStream stdOut;
+    private PrintStream stdErr;
 
     @Override
     public void init(Settings settings) {
-        input = settings.getInputStream();
+        inputSession =  new ConsoleInputSession(settings.getInputStream());
+        input = inputSession.getExternalInputStream();
         writer = new PrintStream(settings.getStdOut(), true);
+        this.stdOut = settings.getStdOut();
+        this.stdErr = settings.getStdErr();
+
         size = new TerminalSize(24,80);
     }
 
     @Override
     public int[] read(boolean readAhead) throws IOException {
+        if(readAhead)
+            return input.readAll();
         int input = this.input.read();
         int available = this.input.available();
-        if(available > 1 && readAhead) {
+        if(available > 1) {
             int[] in = new int[available];
             in[0] = input;
             for(int c=1; c < available; c++ )
@@ -92,6 +103,12 @@ public class TestTerminal implements Terminal, Shell {
 
     @Override
     public void close() throws IOException {
+        try {
+            inputSession.stop();
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 
