@@ -192,7 +192,7 @@ public class Console {
 
         editMode = settings.getEditMode();
 
-        inputQueue = new ArrayBlockingQueue<>(50);
+        inputQueue = new ArrayBlockingQueue<>(50000);
 
         undoManager = new UndoManager();
         pasteManager = new PasteManager();
@@ -1172,7 +1172,7 @@ public class Console {
     private void drawLine(String line) throws IOException {
         //need to clear more than one line
         if(line.length() > getInternalShell().getSize().getWidth() ||
-                (line.length()+ Math.abs(buffer.getDelta()) > getInternalShell().getSize().getWidth())) {
+                (buffer.getDelta() < 0 && line.length()+ Math.abs(buffer.getDelta()) > getInternalShell().getSize().getWidth())) {
             if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length() && Config.isOSPOSIXCompatible())
                 redrawMultipleLinesBackspace();
             else

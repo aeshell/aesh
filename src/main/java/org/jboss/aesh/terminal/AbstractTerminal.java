@@ -11,6 +11,7 @@ import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.ANSI;
 
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,17 +39,25 @@ public abstract class AbstractTerminal implements Terminal, Shell {
     public CursorPosition getCursor() {
         if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
             try {
+                StringBuilder col = new StringBuilder(4);
+                StringBuilder row = new StringBuilder(4);
                 out().print(ANSI.getCurrentCursorPos());
                 out().flush();
-                StringBuilder builder = new StringBuilder(8);
-                int row;
-                while((row = read(false)[0]) > -1 && row != 'R') {
-                    if (row != 27 && row != '[') {
-                        builder.append((char) row);
+                boolean gotSep = false;
+                //read the position
+                int[] input = read(true);
+
+                for(int i=2; i < input.length-1; i++) {
+                    if(input[i] == 59) // we got a ';' which is the separator
+                       gotSep = true;
+                    else {
+                        if(gotSep)
+                            col.append((char) input[i]);
+                        else
+                            row.append((char) input[i]);
                     }
                 }
-                return new CursorPosition(Integer.parseInt(builder.substring(0, builder.indexOf(";"))),
-                        Integer.parseInt(builder.substring(builder.lastIndexOf(";") + 1, builder.length())));
+                return new CursorPosition(Integer.parseInt(row.toString()), Integer.parseInt(col.toString()));
             }
             catch (Exception e) {
                 if(settings.isLogging())
