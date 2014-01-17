@@ -4,6 +4,7 @@ import org.jboss.aesh.util.ANSI;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -44,6 +45,23 @@ public class TerminalCharacterTest {
                 4+Color.BLUE.getValue() +
                 "mf",
                 c2.toString(c1));
+
+        TerminalCharacter c3 = new TerminalCharacter('f', new TerminalColor(Color.RED, Color.BLUE));
+        TerminalCharacter c4 = new TerminalCharacter('f', new TerminalColor(Color.RED, Color.BLUE));
+
+         assertEquals("f", c4.toString(c3));
+
+        c4 = new TerminalCharacter('g', new TerminalColor(Color.RED, Color.BLUE), new TerminalTextStyle(CharacterType.BOLD));
+
+         assertEquals(ANSI.getStart() + CharacterType.BOLD.getValue() + "mg", c4.toString(c3));
+    }
+
+    @Test
+    public void testEqualsIgnoreCharacter() {
+        TerminalCharacter c1 = new TerminalCharacter('a', new TerminalColor(Color.RED, Color.BLUE));
+        TerminalCharacter c2 = new TerminalCharacter('b', new TerminalColor(Color.RED, Color.BLUE));
+
+        assertTrue(c1.equalsIgnoreCharacter(c2));
 
     }
 

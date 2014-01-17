@@ -66,7 +66,9 @@ public class TerminalCharacter {
         else {
             StringBuilder builder = new StringBuilder();
             builder.append(ANSI.getStart());
-            builder.append(style.getValueComparedToPrev(prev.getStyle()));
+            if(!style.equals(prev.getStyle())) {
+                builder.append(style.getValueComparedToPrev(prev.getStyle()));
+            }
             if(!this.color.equals(prev.color)) {
                 if(prev.getStyle().isInvert())
                     builder.append(';').append(this.color.toString());
@@ -95,7 +97,7 @@ public class TerminalCharacter {
     }
 
     public boolean equalsIgnoreCharacter(TerminalCharacter that) {
-        if (style != that.style) return false;
+        if (!style.equals(that.style)) return false;
         if (!color.equals(that.color)) return false;
 
         return true;
@@ -108,7 +110,7 @@ public class TerminalCharacter {
 
         TerminalCharacter that = (TerminalCharacter) o;
 
-        if (style != that.style) return false;
+        if (!style.equals(that.style)) return false;
         if (character != that.character) return false;
         if (!color.equals(that.color)) return false;
 

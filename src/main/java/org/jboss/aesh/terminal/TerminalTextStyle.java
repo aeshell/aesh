@@ -219,22 +219,47 @@ public class TerminalTextStyle {
     public String getValueComparedToPrev(TerminalTextStyle prev) {
         StringBuilder builder = new StringBuilder();
         if(!this.equals(prev)) {
-            if(prev.isBold() || prev.isFaint())
-                builder.append(BOLD_OFF).append(SEPARATOR);
-            if(prev.isUnderline())
-                builder.append(UNDERLINE_OFF).append(SEPARATOR);
-            if(prev.isItalic())
-                builder.append(ITALIC_OFF).append(SEPARATOR);
-            if(prev.isBlink())
-                builder.append(BLINK_OFF).append(SEPARATOR);
-            if(prev.isInvert())
-                builder.append(INVERT_OFF).append(SEPARATOR);
-            if(prev.isCrossedOut())
-                builder.append(CROSSED_OUT_OFF).append(SEPARATOR);
-            if(prev.isConceal())
-                builder.append(REVEAL).append(SEPARATOR);
+            if(prev.isBold() || prev.isFaint()) {
+                if(builder.length() > 0)
+                    builder.append(SEPARATOR);
+                builder.append(BOLD_OFF);
+            }
+            if(prev.isUnderline()) {
+                if(builder.length() > 0)
+                    builder.append(SEPARATOR);
+                builder.append(UNDERLINE_OFF);
+            }
+            if(prev.isItalic()) {
+                if(builder.length() > 0)
+                    builder.append(SEPARATOR);
+                builder.append(ITALIC_OFF);
+            }
+            if(prev.isBlink()) {
+                if(builder.length() > 0)
+                    builder.append(SEPARATOR);
+                builder.append(BLINK_OFF);
+            }
+            if(prev.isInvert()) {
+                if(builder.length() > 0)
+                    builder.append(SEPARATOR);
+                builder.append(INVERT_OFF);
+            }
+            if(prev.isCrossedOut()) {
+                if(builder.length() > 0)
+                    builder.append(SEPARATOR);
+                builder.append(CROSSED_OUT_OFF);
+            }
+            if(prev.isConceal()) {
+                if(builder.length() > 0)
+                    builder.append(SEPARATOR);
+                builder.append(REVEAL);
+            }
         }
 
-        return builder.append(toString()).toString();
+        String str = toString();
+        if(str.length() > 0 && builder.length() > 0)
+            return builder.append(SEPARATOR).append(str).toString();
+        else
+            return builder.append(str).toString();
     }
 }

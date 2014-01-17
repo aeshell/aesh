@@ -39,6 +39,7 @@ import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalColor;
+import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.terminal.TerminalTextStyle;
 import org.jboss.aesh.util.ANSI;
 
@@ -95,11 +96,13 @@ public class AeshExample {
                 .command(TestConsoleCommand.class)
                 .command(PromptCommand.class)
                 .create();
+
         AeshConsole aeshConsole = new AeshConsoleBuilder()
                 .commandRegistry(registry)
                 .manProvider(new ManProviderExample())
                 .settings(settings)
-                .prompt(new Prompt("[aesh@rules]$ "))
+                .prompt(new Prompt(new TerminalString("[aesh@rules]$ ",
+                        new TerminalColor(Color.GREEN, Color.DEFAULT, Color.Intensity.BRIGHT))))
                 .create();
 
         aeshConsole.start();
