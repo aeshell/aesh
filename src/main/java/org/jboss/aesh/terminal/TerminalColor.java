@@ -150,7 +150,13 @@ public class TerminalColor {
         if(this.equals(prev))
             return "";
         else {
-            return textString(prev) + backgroundString(prev);
+
+            String txt = textString(prev);
+            String bg = backgroundString(prev);
+            if(txt.length() > 0 && bg.length() > 0)
+                return textString(prev) +';'+ backgroundString(prev);
+            else
+                return textString(prev) + backgroundString(prev);
         }
     }
 

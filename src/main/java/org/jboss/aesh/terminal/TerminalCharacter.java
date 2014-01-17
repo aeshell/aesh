@@ -70,10 +70,18 @@ public class TerminalCharacter {
                 builder.append(style.getValueComparedToPrev(prev.getStyle()));
             }
             if(!this.color.equals(prev.color)) {
-                if(prev.getStyle().isInvert())
-                    builder.append(';').append(this.color.toString());
-                else
-                    builder.append(';').append(this.color.toString(prev.color));
+                if(prev.getStyle().isInvert()) {
+                    if(builder.charAt(builder.length()-1) == '[')
+                        builder.append(this.color.toString());
+                    else
+                        builder.append(';').append(this.color.toString());
+                }
+                else {
+                    if(builder.charAt(builder.length()-1) == '[')
+                        builder.append(this.color.toString(prev.color));
+                    else
+                        builder.append(';').append(this.color.toString(prev.color));
+                }
             }
 
             builder.append('m');
