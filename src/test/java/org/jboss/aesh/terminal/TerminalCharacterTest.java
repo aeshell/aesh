@@ -55,10 +55,14 @@ public class TerminalCharacterTest {
 
          assertEquals(ANSI.getStart() + CharacterType.BOLD.getValue() + "mg", c4.toString(c3));
 
+        c3 = new TerminalCharacter('f', new TerminalColor(Color.RED, Color.BLUE), new TerminalTextStyle(CharacterType.BOLD));
         c4 = new TerminalCharacter('g');
 
-        assertEquals(ANSI.getStart() + CharacterType.BOLD.getValue() + "39;49mg", c4.toString(c3));
+        assertEquals(ANSI.getStart() + "22;39;49mg", c4.toString(c3));
 
+        c4 = new TerminalCharacter('g', new TerminalTextStyle(CharacterType.INVERT));
+
+        assertEquals(ANSI.getStart() + "22;7;39;49mg", c4.toString(c3));
     }
 
     @Test

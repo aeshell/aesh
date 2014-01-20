@@ -16,14 +16,14 @@ package org.jboss.aesh.terminal;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class TerminalTextStyle {
-    private boolean bold;
-    private boolean faint;
-    private boolean italic;
-    private boolean underline;
-    private boolean blink;
-    private boolean invert;
-    private boolean crossedOut;
-    private boolean conceal;
+    private boolean bold = false;
+    private boolean faint = false;
+    private boolean italic = false;
+    private boolean underline = false;
+    private boolean blink = false;
+    private boolean invert = false;
+    private boolean crossedOut = false;
+    private boolean conceal = false;
 
     private int length = -1;
 
