@@ -40,7 +40,12 @@ public class ExportCompletion implements Completion {
             String word = Parser.findWordClosestToCursor( completeOperation.getBuffer(), completeOperation.getCursor());
             if(word.length() > 0) {
                 completeOperation.addCompletionCandidates( exportManager.findAllMatchingKeys(word));
-                completeOperation.setOffset(completeOperation.getCursor() - word.length());
+                if(Parser.containsNonEscapedDollar(word)) {
+                    int index = word.lastIndexOf('$');
+                    completeOperation.setOffset(completeOperation.getCursor()-(word.length()-index));
+                }
+                else
+                    completeOperation.setOffset(completeOperation.getCursor()-word.length());
             }
         }
         else if(Parser.containsNonEscapedDollar( completeOperation.getBuffer())) {
