@@ -56,6 +56,7 @@ public class SettingsBuilder {
         settings.setAeshContext(baseSettings.getAeshContext());
         settings.setExportEnabled(baseSettings.isExportEnabled());
         settings.setExportFile(baseSettings.getExportFile());
+        settings.setPersistExport(baseSettings.doPersistExport());
     }
 
     public SettingsBuilder name(String name) {
@@ -195,6 +196,11 @@ public class SettingsBuilder {
 
     public SettingsBuilder setExportFile(File exportFile) {
         settings.setExportFile(exportFile);
+        return this;
+    }
+
+    public SettingsBuilder setPersistExport(boolean persistExport) {
+        settings.setPersistExport(persistExport);
         return this;
     }
 

@@ -59,6 +59,7 @@ public class SettingsImpl implements Settings {
     private AeshContext aeshContext;
     private boolean exportEnabled = true;
     private File exportFile;
+    private boolean persistExport = true;
 
     protected SettingsImpl() {
     }
@@ -92,6 +93,7 @@ public class SettingsImpl implements Settings {
         setAeshContext(baseSettings.getAeshContext());
         setExportEnabled(baseSettings.isExportEnabled());
         setExportFile(baseSettings.getExportFile());
+        setPersistExport(baseSettings.doPersistExport());
     }
 
     public void resetToDefaults() {
@@ -625,5 +627,15 @@ public class SettingsImpl implements Settings {
 
     public void setExportEnabled(boolean exportEnabled) {
         this.exportEnabled = exportEnabled;
+    }
+
+    @Override
+    public void setPersistExport(boolean persistExport) {
+        this.persistExport = persistExport;
+    }
+
+    @Override
+    public boolean doPersistExport() {
+        return persistExport;
     }
 }

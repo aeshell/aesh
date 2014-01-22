@@ -193,4 +193,14 @@ public interface Settings {
      * Are export enabled?
      */
     boolean isExportEnabled();
+
+    /**
+     * Should aesh persist export variables at shutdown
+     */
+    void setPersistExport(boolean persist);
+
+    /**
+     * Is aesh persisting variables at shutdown
+     */
+    boolean doPersistExport();
 }
