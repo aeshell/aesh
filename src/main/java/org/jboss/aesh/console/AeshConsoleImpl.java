@@ -31,6 +31,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.AeshInternalCommandRegistry;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
+import org.jboss.aesh.console.export.ExportManager;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.man.Man;
 import org.jboss.aesh.console.operator.ControlOperator;
@@ -158,6 +159,11 @@ public class AeshConsoleImpl implements AeshConsole {
     @Override
     public boolean isRunning() {
         return console.isRunning();
+    }
+    
+    @Override
+    public ExportManager getExportManager() {
+    	return console.getExportManager();
     }
 
     public String getBuffer() {
