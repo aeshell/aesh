@@ -79,14 +79,6 @@ public interface AeshConsole {
 	ManProvider getManProvider();
 
 	/**
-	 * The input wil be executed similar to a command executed from the prompt
-	 * 
-	 * @param command
-	 *            command
-	 */
-	void executeCommand(String command);
-
-	/**
 	 * Get the AeshContext
 	 */
 	AeshContext getAeshContext();

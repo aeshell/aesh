@@ -146,12 +146,6 @@ public class AeshConsoleImpl implements AeshConsole {
     }
 
     @Override
-    public void executeCommand(String command) {
-        console.getConsoleCallback().execute(
-                new ConsoleOperation(ControlOperator.NONE, command));
-    }
-
-    @Override
     public AeshContext getAeshContext() {
         return console.getAeshContext();
     }
