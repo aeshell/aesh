@@ -286,6 +286,10 @@ public class Console {
         return buffer.getPrompt();
     }
 
+    public ExportManager getExportManager() {
+        return exportManager;
+    }
+
     public void setConsoleCallback(ConsoleCallback consoleCallback) {
         this.consoleCallback = consoleCallback;
     }
@@ -1853,5 +1857,4 @@ public class Console {
             shell.enableMainBuffer();
         }
     }
->>>>>>> [AESH-196]
 }
