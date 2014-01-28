@@ -168,7 +168,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
 
         final ProcessedCommand param = new CommandBuilder().name("less")
                 .description("less -options <files>")
-                .generateParameter();
+                .generateCommand();
 
         param.addOption(new OptionBuilder().shortName('f').name("foo").hasValue(true).type(String.class).create());
         param.addOption(new OptionBuilder().shortName('b').name("bar").hasValue(true).type(String.class).create());

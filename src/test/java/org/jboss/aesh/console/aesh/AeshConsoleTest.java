@@ -74,7 +74,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
                         .type(String.class)
                         .fieldName("bar")
                         .create())
-                .generateParameter();
+                .generateCommand();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(new AeshCommandLineParser(fooCommand), FooTestCommand.class)

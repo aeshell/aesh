@@ -42,7 +42,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .type(String.class)
                         .create());
 
-        CommandLineParser clp = new CommandLineParserBuilder(pb.generateParameter()).generateParser();
+        CommandLineParser clp = new CommandLineParserBuilder(pb.generateCommand()).generateParser();
 
         assertEquals("Usage: man [OPTION...]"+ Config.getLineSeparator()+
                 "  -d, --debug    emit debugging messages"+Config.getLineSeparator()+
@@ -80,7 +80,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .create());
 
 
-        CommandLineParser clp = new CommandLineParserBuilder(pb.generateParameter()).generateParser();
+        CommandLineParser clp = new CommandLineParserBuilder(pb.generateCommand()).generateParser();
 
         assertEquals("Usage: man [OPTION...]"+Config.getLineSeparator()+
                 "  -d, --debug            emit debugging messages"+Config.getLineSeparator()+

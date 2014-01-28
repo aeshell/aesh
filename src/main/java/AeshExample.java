@@ -74,7 +74,7 @@ public class AeshExample {
                         .fieldName("foo")
                         .type(String.class)
                         .create())
-                .generateParameter();
+                .generateCommand();
 
         SettingsBuilder builder = new SettingsBuilder().logging(true);
         builder.enableMan(true)
