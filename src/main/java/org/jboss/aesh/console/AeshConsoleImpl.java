@@ -9,6 +9,8 @@ package org.jboss.aesh.console;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +36,6 @@ import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.export.ExportManager;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.man.Man;
-import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.parser.Parser;
@@ -52,26 +53,26 @@ public class AeshConsoleImpl implements AeshConsole {
     private final InvocationProviders invocationProviders;
 
     private final Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class
-            .getName());
+        .getName());
     private final ManProvider manProvider;
     private final CommandNotFoundHandler commandNotFoundHandler;
     private AeshInternalCommandRegistry internalRegistry;
     private String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
 
     AeshConsoleImpl(Settings settings, CommandRegistry registry,
-                    CommandInvocationServices commandInvocationServices,
-                    CommandNotFoundHandler commandNotFoundHandler,
-                    CompleterInvocationProvider completerInvocationProvider,
-                    ConverterInvocationProvider converterInvocationProvider,
-                    ValidatorInvocationProvider validatorInvocationProvider,
-                    ManProvider manProvider) {
+        CommandInvocationServices commandInvocationServices,
+        CommandNotFoundHandler commandNotFoundHandler,
+        CompleterInvocationProvider completerInvocationProvider,
+        ConverterInvocationProvider converterInvocationProvider,
+        ValidatorInvocationProvider validatorInvocationProvider,
+        ManProvider manProvider) {
         this.registry = registry;
         this.commandInvocationServices = commandInvocationServices;
         this.commandNotFoundHandler = commandNotFoundHandler;
         this.manProvider = manProvider;
         this.invocationProviders =
-                new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
-                        validatorInvocationProvider);
+            new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
+                validatorInvocationProvider);
 
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallbackImpl(this));
@@ -113,17 +114,18 @@ public class AeshConsoleImpl implements AeshConsole {
     public void clear() {
         try {
             console.clear();
-        } catch (IOException ignored) {
+        }
+        catch (IOException ignored) {
         }
     }
 
     @Override
     public String getHelpInfo(String commandName) {
-        try (CommandContainer commandContainer = registry.getCommand(commandName, "")){
-            if(commandContainer != null)
+        try (CommandContainer commandContainer = registry.getCommand(commandName, "")) {
+            if (commandContainer != null)
                 return commandContainer.getParser().printHelp();
         }
-        catch (Exception e) { //ignored
+        catch (Exception e) { // ignored
         }
         return "";
     }
@@ -135,9 +137,9 @@ public class AeshConsoleImpl implements AeshConsole {
 
     @Override
     public void registerCommandInvocationProvider(String name,
-                                                  CommandInvocationProvider commandInvocationProvider) {
+        CommandInvocationProvider commandInvocationProvider) {
         commandInvocationServices.registerProvider(name,
-                commandInvocationProvider);
+            commandInvocationProvider);
     }
 
     @Override
@@ -154,10 +156,10 @@ public class AeshConsoleImpl implements AeshConsole {
     public boolean isRunning() {
         return console.isRunning();
     }
-    
+
     @Override
     public ExportManager getExportManager() {
-    	return console.getExportManager();
+        return console.getExportManager();
     }
 
     public String getBuffer() {
@@ -173,41 +175,40 @@ public class AeshConsoleImpl implements AeshConsole {
 
     private List<String> completeCommandName(String input) {
         List<String> matchedCommands = new ArrayList<>();
+        Set<String> allCommandNames = new TreeSet<>();
+        allCommandNames.addAll(registry.getAllCommandNames());
+        if (internalRegistry != null) {
+            allCommandNames.addAll(internalRegistry.getAllCommandNames());
+        }
         try {
-            for (String commandName : registry.getAllCommandNames()) {
+            for (String commandName : allCommandNames) {
                 if (commandName.startsWith(input))
                     matchedCommands.add(commandName);
             }
-            if (internalRegistry != null) {
-                for (String commandName : internalRegistry.getAllCommandNames())
-                    if (commandName.startsWith(input))
-                        matchedCommands.add(commandName);
-            }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             logger.log(Level.SEVERE,
-                    "Error retrieving command names from CommandRegistry", e);
+                "Error retrieving command names from CommandRegistry", e);
         }
 
         return matchedCommands;
     }
 
     /**
-     * try to return the command in the given registry if the given registry do
-     * not find the command, check if we have a internal registry and if its
-     * there.
-     *
-     * @param name
-     *            command name
-     * @param line
-     *            command line
+     * try to return the command in the given registry if the given registry do not find the command, check if we have a
+     * internal registry and if its there.
+     * 
+     * @param name command name
+     * @param line command line
      * @return command
      * @throws CommandNotFoundException
      */
     private CommandContainer getCommand(String name, String line)
-            throws CommandNotFoundException {
+        throws CommandNotFoundException {
         try {
             return registry.getCommand(name, line);
-        } catch (CommandNotFoundException e) {
+        }
+        catch (CommandNotFoundException e) {
             if (internalRegistry != null) {
                 CommandContainer cc = internalRegistry.getCommand(name);
                 if (cc != null)
@@ -222,29 +223,33 @@ public class AeshConsoleImpl implements AeshConsole {
         @Override
         public void complete(CompleteOperation completeOperation) {
             List<String> completedCommands = completeCommandName(completeOperation
-                    .getBuffer());
+                .getBuffer());
             if (completedCommands.size() > 0) {
                 completeOperation.addCompletionCandidates(completedCommands);
-            } else {
+            }
+            else {
                 try (CommandContainer commandContainer = getCommand(
-                        Parser.findFirstWord(completeOperation.getBuffer()),
-                        completeOperation.getBuffer())) {
+                    Parser.findFirstWord(completeOperation.getBuffer()),
+                    completeOperation.getBuffer())) {
                     CommandLineCompletionParser completionParser = commandContainer
-                            .getParser().getCompletionParser();
+                        .getParser().getCompletionParser();
 
                     ParsedCompleteObject completeObject = completionParser
-                            .findCompleteObject(completeOperation.getBuffer(),
-                                    completeOperation.getCursor());
+                        .findCompleteObject(completeOperation.getBuffer(),
+                            completeOperation.getCursor());
                     completionParser.injectValuesAndComplete(completeObject,
-                            commandContainer.getCommand(), completeOperation,
-                            invocationProviders);
-                } catch (CommandLineParserException e) {
+                        commandContainer.getCommand(), completeOperation,
+                        invocationProviders);
+                }
+                catch (CommandLineParserException e) {
                     logger.warning(e.getMessage());
-                } catch (CommandNotFoundException ignored) {
-                } catch (Exception ex) {
+                }
+                catch (CommandNotFoundException ignored) {
+                }
+                catch (Exception ex) {
                     logger.log(Level.SEVERE,
-                            "Runtime exception when completing: "
-                                    + completeOperation, ex);
+                        "Runtime exception when completing: "
+                            + completeOperation, ex);
                 }
             }
         }
@@ -265,69 +270,76 @@ public class AeshConsoleImpl implements AeshConsole {
         public int execute(ConsoleOperation output) {
             if (output != null && output.getBuffer().trim().length() > 0) {
                 try (CommandContainer commandContainer = getCommand(
-                        Parser.findFirstWord(output.getBuffer()),
-                        output.getBuffer())) {
+                    Parser.findFirstWord(output.getBuffer()),
+                    output.getBuffer())) {
 
                     CommandLine commandLine = commandContainer.getParser()
-                            .parse(output.getBuffer());
+                        .parse(output.getBuffer());
 
                     commandContainer
-                            .getParser()
-                            .getCommandPopulator()
-                            .populateObject(commandContainer.getCommand(),
-                                    commandLine, invocationProviders, true);
+                        .getParser()
+                        .getCommandPopulator()
+                        .populateObject(commandContainer.getCommand(),
+                            commandLine, invocationProviders, true);
                     // validate the command before execute, only call if no
                     // options with overrideRequired is not set
                     if (commandContainer.getParser().getCommand()
-                            .getValidator() != null
-                            && !commandLine.hasOptionWithOverrideRequired())
+                        .getValidator() != null
+                        && !commandLine.hasOptionWithOverrideRequired())
                         commandContainer.getParser().getCommand()
-                                .getValidator()
-                                .validate(commandContainer.getCommand());
+                            .getValidator()
+                            .validate(commandContainer.getCommand());
                     result = commandContainer
-                            .getCommand()
-                            .execute(
-                                    commandInvocationServices
-                                            .getCommandInvocationProvider(
-                                                    commandInvocationProvider)
-                                            .enhanceCommandInvocation(
-                                                    new AeshCommandInvocation( console,
-                                                            output.getControlOperator(), this)));
-                } catch (CommandLineParserException e) {
+                        .getCommand()
+                        .execute(
+                            commandInvocationServices
+                                .getCommandInvocationProvider(
+                                    commandInvocationProvider)
+                                .enhanceCommandInvocation(
+                                    new AeshCommandInvocation(console,
+                                        output.getControlOperator(), this)));
+                }
+                catch (CommandLineParserException e) {
                     getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
-                } catch (CommandNotFoundException e) {
+                }
+                catch (CommandNotFoundException e) {
                     if (commandNotFoundHandler != null) {
                         commandNotFoundHandler.handleCommandNotFound(
-                                output.getBuffer(), getShell());
-                    } else {
+                            output.getBuffer(), getShell());
+                    }
+                    else {
                         getShell().err().print(
-                                "Command not found: "
-                                        + Parser.findFirstWord(output
-                                        .getBuffer())
-                                        + Config.getLineSeparator());
+                            "Command not found: "
+                                + Parser.findFirstWord(output
+                                    .getBuffer())
+                                + Config.getLineSeparator());
                     }
                     result = CommandResult.FAILURE;
-                } catch (OptionValidatorException e) {
+                }
+                catch (OptionValidatorException e) {
                     getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
-                } catch (CommandValidatorException e) {
+                }
+                catch (CommandValidatorException e) {
                     getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     logger.log(Level.SEVERE, "Exception when parsing/running: "
-                            + output.getBuffer(), e);
+                        + output.getBuffer(), e);
                     getShell().out().println(
-                            "Exception when parsing/running: "
-                                    + output.getBuffer() + ", "
-                                    + e.getMessage());
+                        "Exception when parsing/running: "
+                            + output.getBuffer() + ", "
+                            + e.getMessage());
                     result = CommandResult.FAILURE;
                 }
             }
             // empty line
             else if (output != null) {
                 result = CommandResult.FAILURE;
-            } else {
+            }
+            else {
                 stop();
                 result = CommandResult.FAILURE;
             }
