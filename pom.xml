@@ -14,7 +14,7 @@
     <groupId>org.jboss.aesh</groupId>
     <artifactId>aesh</artifactId>
     <packaging>jar</packaging>
-    <version>0.47</version>
+    <version>0.48-SNAPSHOT</version>
     <name>Æsh</name>
     <description>Æsh (Another Extendable SHell)</description>
 
@@ -28,7 +28,7 @@
         <connection>scm:git:git://github.com/aeshell/aesh.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/aeshell/aesh.git</developerConnection>
         <url>http://aeshell.github.com/</url>
-      <tag>0.47</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <!-- Licenses -->
