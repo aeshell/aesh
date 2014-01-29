@@ -206,7 +206,7 @@ public class AeshExample {
         @Option(hasValue = false, description = "set the bar", renderer = BlueBoldRenderer.class)
         private boolean bar;
 
-        @Option(completer = LessCompleter.class, defaultValue = {"MORE"}, argument = "SIZE")
+        @Option(shortName = 'l', completer = LessCompleter.class, defaultValue = {"MORE"}, argument = "SIZE")
         private String less;
 
         @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':',

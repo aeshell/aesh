@@ -268,7 +268,8 @@ public final class ProcessedCommand {
         List<TerminalString> names = new ArrayList<>(options.size());
         for(ProcessedOption o : options) {
            if(((o.getShortName() != null && o.getShortName().equals(name) &&
-                   !o.isLongNameUsed()) || o.getName().startsWith(name)) &&
+                   !o.isLongNameUsed() && o.getValues().size() == 0) ||
+                   (o.getName().startsWith(name) && o.getValues().size() == 0)) &&
                    o.getActivator().isActivated(this))
                names.add(o.getRenderedNameWithDashes());
         }

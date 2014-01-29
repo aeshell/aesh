@@ -65,45 +65,53 @@ public class AeshCommandCompletionTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
+        /*
         outputStream.write(("foo --bar bar\\ 2").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
-        Thread.sleep(50);
+        Thread.sleep(80);
         assertEquals("foo --bar bar\\ 2\\ 3\\ 4 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
-        Thread.sleep(50);
+        Thread.sleep(80);
 
         outputStream.write(("foo --bar bar\\ 2\\ ").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
-        Thread.sleep(50);
+        Thread.sleep(80);
         assertEquals("foo --bar bar\\ 2\\ 3\\ 4 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
-        Thread.sleep(50);
+        Thread.sleep(80);
 
-         outputStream.write(("foo --bar bar").getBytes());
+        outputStream.write(("foo --bar bar").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
-        Thread.sleep(50);
+        Thread.sleep(80);
         assertEquals("foo --bar bar\\ 2 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
-        Thread.sleep(50);
+        Thread.sleep(80);
 
-         outputStream.write(("foo --bar foo ").getBytes());
+        outputStream.write(("foo --bar foo ").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
-        Thread.sleep(50);
+        Thread.sleep(80);
         assertEquals("foo --bar foo ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        */
+        outputStream.write(("foo --bar foo --b").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        assertEquals("foo --bar foo --b", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         aeshConsole.stop();
     }

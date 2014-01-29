@@ -64,6 +64,7 @@ public class ParseCompleteObjectTest {
         assertTrue(pco.doDisplayOptions());
         assertTrue(pco.isCompleteOptionName());
         assertEquals("e", pco.getName());
+        clp.getCommand().clear();
         assertEquals("--equal", clp.getCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
 
         pco = completeParser.findCompleteObject("test --eq", 100);
@@ -71,6 +72,7 @@ public class ParseCompleteObjectTest {
         assertFalse(pco.isCompleteOptionName());
         assertEquals("eq", pco.getName());
         assertEquals(4, pco.getOffset());
+        clp.getCommand().clear();
         assertEquals("--equal", clp.getCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
 
         clp.getCommand().clear();
