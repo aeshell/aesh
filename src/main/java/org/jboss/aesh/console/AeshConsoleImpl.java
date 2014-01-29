@@ -175,12 +175,13 @@ public class AeshConsoleImpl implements AeshConsole {
 
     private List<String> completeCommandName(String input) {
         List<String> matchedCommands = new ArrayList<>();
-        Set<String> allCommandNames = new TreeSet<>();
-        allCommandNames.addAll(registry.getAllCommandNames());
-        if (internalRegistry != null) {
-            allCommandNames.addAll(internalRegistry.getAllCommandNames());
-        }
         try {
+            Set<String> allCommandNames = new TreeSet<>();
+            if(registry.getAllCommandNames() != null)
+                allCommandNames.addAll(registry.getAllCommandNames());
+            if (internalRegistry != null) {
+                allCommandNames.addAll(internalRegistry.getAllCommandNames());
+            }
             for (String commandName : allCommandNames) {
                 if (commandName.startsWith(input))
                     matchedCommands.add(commandName);
@@ -188,7 +189,7 @@ public class AeshConsoleImpl implements AeshConsole {
         }
         catch (Exception e) {
             logger.log(Level.SEVERE,
-                "Error retrieving command names from CommandRegistry", e);
+                    "Error retrieving command names from CommandRegistry", e);
         }
 
         return matchedCommands;
@@ -197,7 +198,7 @@ public class AeshConsoleImpl implements AeshConsole {
     /**
      * try to return the command in the given registry if the given registry do not find the command, check if we have a
      * internal registry and if its there.
-     * 
+     *
      * @param name command name
      * @param line command line
      * @return command
@@ -222,9 +223,8 @@ public class AeshConsoleImpl implements AeshConsole {
 
         @Override
         public void complete(CompleteOperation completeOperation) {
-            List<String> completedCommands = completeCommandName(completeOperation
-                .getBuffer());
-            if (completedCommands.size() > 0) {
+            List<String> completedCommands = completeCommandName(completeOperation.getBuffer());
+            if (completedCommands != null && completedCommands.size() > 0) {
                 completeOperation.addCompletionCandidates(completedCommands);
             }
             else {
@@ -234,12 +234,14 @@ public class AeshConsoleImpl implements AeshConsole {
                     CommandLineCompletionParser completionParser = commandContainer
                         .getParser().getCompletionParser();
 
-                    ParsedCompleteObject completeObject = completionParser
-                        .findCompleteObject(completeOperation.getBuffer(),
-                            completeOperation.getCursor());
-                    completionParser.injectValuesAndComplete(completeObject,
-                        commandContainer.getCommand(), completeOperation,
-                        invocationProviders);
+                    if(commandContainer != null) {
+                        ParsedCompleteObject completeObject = completionParser
+                                .findCompleteObject(completeOperation.getBuffer(),
+                                        completeOperation.getCursor());
+                        completionParser.injectValuesAndComplete(completeObject,
+                                commandContainer.getCommand(), completeOperation,
+                                invocationProviders);
+                    }
                 }
                 catch (CommandLineParserException e) {
                     logger.warning(e.getMessage());

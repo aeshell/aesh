@@ -86,7 +86,7 @@ public class ExportCommandTest {
         outputStream.write((":/opt"+Config.getLineSeparator()).getBytes());
         outputStream.write(("export"+Config.getLineSeparator()).getBytes());
         outputStream.flush();
-        Thread.sleep(50);
+        Thread.sleep(80);
         assertTrue(byteArrayOutputStream.toString().contains("BAR=/tmp:/opt"));
 
         outputStream.write(("$").getBytes());

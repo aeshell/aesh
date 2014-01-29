@@ -18,17 +18,23 @@ import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.complete.CompletionRegistration;
 import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
+import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.PrintStream;
 
 import static org.junit.Assert.assertEquals;
 
@@ -163,7 +169,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         console.stop();
     }
 
-    //@Test TODO: need to figure out why this fails!
+    @Test
     public void completionWithOptions() throws IOException, InterruptedException, CommandLineParserException {
 
         final ProcessedCommand param = new CommandBuilder().name("less")
@@ -203,8 +209,17 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         };
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        Console console = getTestConsole(pipedInputStream);
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .inputStream(pipedInputStream)
+                .outputStream(new PrintStream(byteArrayOutputStream))
+                .logging(true)
+                .create();
+
+        Console console = new Console(settings);
+
         console.addCompletion(completion);
 
         console.setConsoleCallback(new CompletionConsoleCallback2(console));
@@ -212,13 +227,12 @@ public class CompletionConsoleTest extends BaseConsoleTest {
 
         outputStream.write("le".getBytes());
         outputStream.write(completeChar.getFirstValue());
-        outputStream.write("\n".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
-        Thread.sleep(20);
 
         outputStream.write("less -".getBytes());
         outputStream.write(completeChar.getFirstValue());
-        outputStream.write("\n".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
 
         Thread.sleep(200);
@@ -261,7 +275,6 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         public int execute(ConsoleOperation output) {
             if(count == 0) {
                 assertEquals("less ", output.getBuffer());
-                console.stop();
             }
 
             count++;

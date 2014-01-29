@@ -61,14 +61,13 @@ public class AeshCommandPasteTest {
 
         outputStream.write(("FOO"+Config.getLineSeparator()+"FUU"+ Config.getLineSeparator()+"bar").getBytes());
         outputStream.flush();
-        Thread.sleep(50);
+        Thread.sleep(100);
         assertEquals("bar", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         aeshConsole.stop();
     }
 
-    //TODO: the reader thread is blocking for input, but it has data in the queue
-    @Test(expected = AssertionError.class)
+    @Test
     public void testPasteWhileACommandIsRunning() throws IOException, InterruptedException {
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);

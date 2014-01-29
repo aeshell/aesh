@@ -63,10 +63,10 @@ public class AeshCommandRegistryTest {
 
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
-        Thread.sleep(100);
+        Thread.sleep(80);
         outputStream.write(WRITTEN.getBytes());
         outputStream.flush();
-        Thread.sleep(100);
+        Thread.sleep(80);
 
         assertEquals(WRITTEN, ((AeshConsoleImpl) aeshConsole).getBuffer().trim());
 
@@ -80,8 +80,13 @@ public class AeshCommandRegistryTest {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        Settings settings = new SettingsBuilder().terminal(new TestTerminal()).inputStream(pipedInputStream)
-            .outputStream(new PrintStream(byteArrayOutputStream)).logging(true).create();
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .inputStream(pipedInputStream)
+                .outputStream(new PrintStream(byteArrayOutputStream))
+                .setPersistExport(false)
+                .logging(true)
+                .create();
 
         CommandRegistry registry = new CommandRegistry() {
 
@@ -96,18 +101,20 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder().settings(settings).commandRegistry(registry)
-            .prompt(new Prompt(""));
+        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
+                .settings(settings)
+                .commandRegistry(registry)
+                .prompt(new Prompt(""));
 
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
-        Thread.sleep(100);
+        Thread.sleep(80);
         outputStream.write(WRITTEN.getBytes());
         outputStream.flush();
-        Thread.sleep(100);
+        Thread.sleep(80);
 
         assertEquals(WRITTEN, ((AeshConsoleImpl) aeshConsole).getBuffer().trim());
 
@@ -133,7 +140,7 @@ public class AeshCommandRegistryTest {
 
             @Override
             public Set<String> getAllCommandNames() {
-                return new HashSet<String>();
+                return new HashSet<>();
             }
         };
 
@@ -145,7 +152,6 @@ public class AeshCommandRegistryTest {
 
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
-        Thread.sleep(100);
         outputStream.write(WRITTEN.getBytes());
         outputStream.flush();
         Thread.sleep(100);
