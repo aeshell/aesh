@@ -604,7 +604,7 @@ public class Console {
     }
 
     private void execute() {
-        if(!processManager.hasRunningProcess() && hasInput()) {
+        while(!processManager.hasRunningProcess() && hasInput()) {
             try {
                 processInternalOperation(getInput());
             }
