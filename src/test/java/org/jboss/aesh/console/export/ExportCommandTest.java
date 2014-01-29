@@ -79,11 +79,13 @@ public class ExportCommandTest {
         outputStream.write(("export BAR=$F").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
-        Thread.sleep(80);
+        Thread.sleep(150);
         assertEquals("export BAR=$FOO ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         outputStream.write(backSpace.getFirstValue());
         outputStream.write((":/opt"+Config.getLineSeparator()).getBytes());
+        outputStream.flush();
+        Thread.sleep(80);
         outputStream.write(("export"+Config.getLineSeparator()).getBytes());
         outputStream.flush();
         Thread.sleep(80);

@@ -65,7 +65,6 @@ public class AeshCommandCompletionTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
-        /*
         outputStream.write(("foo --bar bar\\ 2").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
@@ -105,8 +104,7 @@ public class AeshCommandCompletionTest {
 
         Thread.sleep(80);
         assertEquals("foo --bar foo ", ((AeshConsoleImpl) aeshConsole).getBuffer());
-        */
-        outputStream.write(("foo --bar foo --b").getBytes());
+        outputStream.write(("--b").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
