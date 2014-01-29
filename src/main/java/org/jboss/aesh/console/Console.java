@@ -72,7 +72,7 @@ import org.jboss.aesh.util.LoggerUtil;
 
 /**
  * A console reader. Supports ansi terminals
- * 
+ *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class Console {
@@ -178,7 +178,7 @@ public class Console {
         if(settings.isLogging())
             logger.info("RESET");
 
-        executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+        executorService = Executors.newFixedThreadPool(2, new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
                 Thread thread = Executors.defaultThreadFactory().newThread(runnable);
@@ -306,6 +306,7 @@ public class Console {
         running = true;
         displayPrompt();
         startReader();
+        startExecutor();
     }
 
     private PrintStream out() {
@@ -430,6 +431,10 @@ public class Console {
         return inputQueue.poll(365, TimeUnit.DAYS);
     }
 
+    private boolean hasInput() {
+        return inputQueue.size() > 0;
+    }
+
     /**
      * @return get the current shell
      */
@@ -517,6 +522,33 @@ public class Console {
         executorService.execute(reader);
     }
 
+    private void startExecutor() {
+        Runnable reader = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while(!executorService.isShutdown()) {
+                        execute();
+                        Thread.sleep(10);
+                    }
+                }
+                catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                }
+                finally {
+                    try {
+                        doStop();
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        };
+        executorService.execute(reader);
+    }
+
     private boolean read() {
         try {
 
@@ -549,10 +581,6 @@ public class Console {
                 }
 
                 inputQueue.put(new CommandOperation(inc, input, position));
-
-                if(!processManager.hasRunningProcess())
-                    processInternalOperation(getInput());
-
             }
             return true;
         }
@@ -572,6 +600,18 @@ public class Console {
         catch (InterruptedException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    private void execute() {
+        if(!processManager.hasRunningProcess() && hasInput()) {
+            try {
+                processInternalOperation(getInput());
+            }
+            catch (IOException | InterruptedException e) {
+                if(settings.isLogging())
+                    logger.warning("Execution exception: "+e.getMessage());
+            }
         }
     }
 
