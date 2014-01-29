@@ -177,8 +177,9 @@ public class AeshConsoleImpl implements AeshConsole {
         List<String> matchedCommands = new ArrayList<>();
         try {
             Set<String> allCommandNames = new TreeSet<>();
-            if(registry.getAllCommandNames() != null)
-                allCommandNames.addAll(registry.getAllCommandNames());
+            Set<String> registryCommandNames = registry.getAllCommandNames();
+            if(registryCommandNames != null)
+                allCommandNames.addAll(registryCommandNames);
             if (internalRegistry != null) {
                 allCommandNames.addAll(internalRegistry.getAllCommandNames());
             }
