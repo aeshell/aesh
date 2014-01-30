@@ -230,7 +230,7 @@ public class Console {
             completionList.add(new ExportCompletion(exportManager));
         }
 
-        processManager = new ProcessManager(this);
+        processManager = new ProcessManager(this, settings.isLogging());
 
         operations = new ArrayList<>();
         currentOperation = null;

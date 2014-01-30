@@ -25,19 +25,23 @@ public class ProcessManager {
     private List<Process> processes;
     private Process current;
     private ExecutorService executorService;
+    private boolean doLogging;
+
 
     private static final Logger logger = LoggerUtil.getLogger(ProcessManager.class.getName());
 
 
-    public ProcessManager(Console console) {
+    public ProcessManager(Console console, boolean log) {
         this.console = console;
+        this.doLogging = log;
         processes = new ArrayList<>(1);
         executorService = Executors.newFixedThreadPool(50);
     }
 
     public void startNewProcess(ConsoleCallback callback, ConsoleOperation consoleOperation) {
         AeshProcess process = new AeshProcess(1, this, callback, consoleOperation);
-        logger.info("starting a new process: "+process+", consoleOperation: "+consoleOperation);
+        if(doLogging)
+            logger.info("starting a new process: "+process+", consoleOperation: "+consoleOperation);
 
         executorService.execute(process);
         processes.add(process);
@@ -56,25 +60,26 @@ public class ProcessManager {
     }
 
     public boolean hasRunningProcess() {
-        logger.info("do we have a running process: "+(processes.size() > 0));
         return processes.size() > 0;
     }
 
     public void processHaveFinished(Process process) {
-        logger.info("process has finished: "+process);
+        if(doLogging)
+            logger.info("process has finished: "+process);
         console.currentProcessFinished(process);
         processes.remove(process);
     }
 
     public void stop() {
         try {
-            logger.info("number of processes in list: "+processes.size());
+            if(doLogging)
+                logger.info("number of processes in list: "+processes.size());
             processes.clear();
             executorService.shutdown();
             executorService.awaitTermination(5, TimeUnit.MILLISECONDS);
-            if(executorService.isTerminated())
+            if(executorService.isTerminated() && doLogging)
                 logger.info("Processes are cleaned up and finished...");
-            if(executorService.isShutdown())
+            if(executorService.isShutdown() && doLogging)
                 logger.info("Executor isShutdown..");
         }
         catch (InterruptedException e) {
