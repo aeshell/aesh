@@ -235,14 +235,11 @@ public class AeshConsoleImpl implements AeshConsole {
                     CommandLineCompletionParser completionParser = commandContainer
                         .getParser().getCompletionParser();
 
-                    if(commandContainer != null) {
-                        ParsedCompleteObject completeObject = completionParser
-                                .findCompleteObject(completeOperation.getBuffer(),
-                                        completeOperation.getCursor());
-                        completionParser.injectValuesAndComplete(completeObject,
-                                commandContainer.getCommand(), completeOperation,
-                                invocationProviders);
-                    }
+                    ParsedCompleteObject completeObject = completionParser
+                            .findCompleteObject(completeOperation.getBuffer(),
+                                    completeOperation.getCursor());
+                    completionParser.injectValuesAndComplete(completeObject,
+                            commandContainer.getCommand(), completeOperation, invocationProviders);
                 }
                 catch (CommandLineParserException e) {
                     logger.warning(e.getMessage());

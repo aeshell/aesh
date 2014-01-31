@@ -147,6 +147,9 @@ public class Config {
 
         }
 
+        //finally close
+        reader.close();
+
         return builder.create();
     }
 

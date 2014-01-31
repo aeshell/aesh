@@ -13,7 +13,6 @@ import org.jboss.aesh.console.command.CommandOperation;
  */
 public abstract class AeshConsoleCallback implements ConsoleCallback {
 
-    private boolean resetOperations = false;
     private Process process;
 
     public AeshConsoleCallback() {
