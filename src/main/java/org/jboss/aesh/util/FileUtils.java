@@ -26,25 +26,29 @@ public class FileUtils {
         if(file.isDirectory()) {
             throw new IOException(file+": Is a directory");
         }
-        else if(file.isFile()) {
-            FileWriter fileWriter;
-            // append text at the end of the file
-            if(append)
-                fileWriter = new FileWriter(file, true);
-             //overwrite the file
-            else
-                fileWriter = new FileWriter(file, false);
+        FileWriter fileWriter = null;
+        try {
+            if(file.isFile()) {
+                // append text at the end of the file
+                if(append)
+                    fileWriter = new FileWriter(file, true);
+                    //overwrite the file
+                else
+                    fileWriter = new FileWriter(file, false);
 
-            fileWriter.write(text);
-            fileWriter.flush();
-            fileWriter.close();
+                fileWriter.write(text);
+                fileWriter.flush();
+            }
+            else {
+                //create a new file and write to it
+                fileWriter = new FileWriter(file, false);
+                fileWriter.write(text);
+                fileWriter.flush();
+            }
         }
-        else {
-            //create a new file and write to it
-            FileWriter fileWriter = new FileWriter(file, false);
-            fileWriter.write(text);
-            fileWriter.flush();
-            fileWriter.close();
+        finally {
+            if(fileWriter != null)
+                fileWriter.close();
         }
     }
 

@@ -363,7 +363,7 @@ public class Console {
         return new CompletionRegistration() {
             @Override
             public void removeCompletion() {
-                completionList.removeAll(completionList);
+                completionList.clear();
             }
         };
     }
@@ -767,7 +767,6 @@ public class Console {
                 stop();
             else {
                 doStop();
-                System.exit(0);
             }
         }
         else if(action == Action.HISTORY) {
@@ -1833,7 +1832,7 @@ public class Console {
         redirectPipeErrBuffer = new ByteArrayOutputStream();
     }
 
-    private class ConsoleShell implements Shell {
+    private static class ConsoleShell implements Shell {
         private final Console console;
         private final Shell shell;
 

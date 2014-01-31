@@ -36,17 +36,18 @@ public class FileHistory extends InMemoryHistory {
      * @throws IOException io
      */
     private void readFile() throws IOException {
-
-        if(new File(historyFile).exists()) {
-
-            BufferedReader reader =
-                    new BufferedReader(new FileReader(historyFile));
-
-            String line;
-            while((line = reader.readLine()) != null)
-                push(line);
-
-            reader.close();
+        BufferedReader reader = null;
+        try {
+            if(new File(historyFile).exists()) {
+                reader = new BufferedReader(new FileReader(historyFile));
+                String line;
+                while((line = reader.readLine()) != null)
+                    push(line);
+            }
+        }
+        finally {
+            if(reader != null)
+                reader.close();
         }
     }
 

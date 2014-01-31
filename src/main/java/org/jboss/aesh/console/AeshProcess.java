@@ -20,7 +20,6 @@ public class AeshProcess implements Runnable, Process {
     private ProcessManager manager;
     private ConsoleCallback consoleCallback;
     private ConsoleOperation operation;
-    private List<CommandOperation> commandOperations;
 
     public AeshProcess(int pid, ProcessManager manager,
                        ConsoleCallback consoleCallback,
@@ -29,7 +28,6 @@ public class AeshProcess implements Runnable, Process {
         this.manager = manager;
         this.consoleCallback = consoleCallback;
         this.operation = consoleOperation;
-        this.commandOperations = new ArrayList<>(1);
         this.consoleCallback.setProcess(this);
     }
 

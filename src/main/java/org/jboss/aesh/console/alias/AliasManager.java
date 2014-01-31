@@ -75,17 +75,22 @@ public class AliasManager {
             if(aliasFile.isFile())
                 aliasFile.delete();
 
-            FileWriter fw = new FileWriter(aliasFile);
-            logger.info("created fileWriter");
+            FileWriter fw = null;
+            try {
+                fw = new FileWriter(aliasFile);
+                logger.info("created fileWriter");
 
-            Collections.sort(aliases); // not very efficient, but it'll do for now...
-            for(Alias a : aliases) {
-                logger.info("writing to file: "+ALIAS_SPACE+a.toString());
-                fw.write(ALIAS_SPACE+a.toString()+Config.getLineSeparator());
+                Collections.sort(aliases); // not very efficient, but it'll do for now...
+                for(Alias a : aliases) {
+                    logger.info("writing to file: "+ALIAS_SPACE+a.toString());
+                    fw.write(ALIAS_SPACE+a.toString()+Config.getLineSeparator());
+                }
+            }
+            finally {
+                fw.flush();
+                fw.close();
             }
 
-            fw.flush();
-            fw.close();
         }
     }
 
