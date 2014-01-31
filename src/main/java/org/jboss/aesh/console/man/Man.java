@@ -80,7 +80,7 @@ public class Man extends AeshFileDisplayer {
             commandInvocation.getShell().out().println("What manual page do you want?");
             return CommandResult.SUCCESS;
         }
-        if(manPages != null && manPages.size() > 0) {
+        if(manPages.size() > 0) {
             InputStream inputStream = manProvider.getManualDocument(manPages.get(0));
             if(inputStream != null) {
                 setCommandInvocation(commandInvocation);

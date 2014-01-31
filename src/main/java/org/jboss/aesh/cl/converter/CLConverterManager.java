@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class CLConverterManager {
 
-    private static Map<Class, Converter> converters;
+    private Map<Class, Converter> converters;
 
     private static class CLConvertManagerHolder {
         static final CLConverterManager INSTANCE = new CLConverterManager();

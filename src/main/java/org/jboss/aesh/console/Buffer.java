@@ -66,7 +66,7 @@ public class Buffer {
         cursor = 0;
         line = new StringBuilder();
         delta = 0;
-        this.mask = prompt.getMask();
+        this.mask = this.prompt.getMask();
         multiLine = false;
         multiLineBuffer = null;
     }
@@ -210,8 +210,6 @@ public class Buffer {
         //going up
         else if (row < 0) {
             //check if we are on the "first" row:
-            if(getCursor() <= termWidth) {
-            }
             StringBuilder sb = new StringBuilder();
             sb.append(printAnsi(Math.abs(row)+"A")).append(printAnsi(cursor+"G"));
             return sb.toString().toCharArray();

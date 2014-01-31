@@ -121,8 +121,7 @@ public class KeyMapper {
      */
     private static int[] mapRandomKeys(String randomKeys, boolean control, boolean meta) {
         if(randomKeys == null)
-            throw new RuntimeException("ERROR Aesh didnt find any keys after meta/control: "
-                    +randomKeys+" Check your inputrc.");
+            throw new RuntimeException("ERROR Aesh didn't find any keys after meta/control.Check your inputrc.");
 
         //parse the rest after control/meta
         int[] out;
