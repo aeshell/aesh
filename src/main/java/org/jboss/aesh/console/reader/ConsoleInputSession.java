@@ -33,15 +33,7 @@ public class ConsoleInputSession {
 
     public ConsoleInputSession(InputStream consoleStream) {
         this.consoleStream = consoleStream;
-
-        executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable runnable) {
-                Thread thread = Executors.defaultThreadFactory().newThread(runnable);
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
+        executorService = Executors.newSingleThreadExecutor();
         aeshInputStream = new AeshInputStream(blockingQueue);
         startReader();
     }
@@ -53,13 +45,15 @@ public class ConsoleInputSession {
                 try {
                     byte[] bBuf = new byte[1024];
                     while (!executorService.isShutdown()) {
-                        int read = consoleStream.read(bBuf);
+                        int read = consoleStream.available();
                         if (read > 0) {
+                            consoleStream.read(bBuf, 0, read);
                             blockingQueue.put(new String(bBuf, 0, read));
                         }
                         else if (read < 0) {
                             stop();
                         }
+                        Thread.sleep(10);
                     }
                 }
                 catch (RuntimeException e) {
