@@ -146,21 +146,23 @@ public class Console {
                 e.printStackTrace();
             }
         }
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void start() {
-                try {
-                    settings.getTerminal().reset();
-                    if(settings.getQuitHandler() != null)
-                        settings.getQuitHandler().quit();
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
     }
+    
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            if(settings != null)
+            {
+                if(settings.getTerminal() != null)
+                    settings.getTerminal().reset();
+                if(settings.getQuitHandler() != null)
+                    settings.getQuitHandler().quit();
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    };
 
     /**
      * Reset the Console with Settings
