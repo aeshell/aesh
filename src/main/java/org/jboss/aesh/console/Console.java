@@ -147,12 +147,11 @@ public class Console {
             }
         }
     }
-    
+
     @Override
     protected void finalize() throws Throwable {
         try {
-            if(settings != null)
-            {
+            if(settings != null) {
                 if(settings.getTerminal() != null)
                     settings.getTerminal().reset();
                 if(settings.getQuitHandler() != null)
@@ -162,7 +161,7 @@ public class Console {
         catch (Exception e) {
             e.printStackTrace();
         }
-    };
+    }
 
     /**
      * Reset the Console with Settings
@@ -759,16 +758,15 @@ public class Console {
             complete();
         }
         else if(action == Action.EXIT) {
-            //atm Action.EXIT will only be called on windows
-            //so make sure we call interruptHook first
-            if(!Config.isOSPOSIXCompatible()) {
-                if(settings.hasInterruptHook())
-                    settings.getInterruptHook().handleInterrupt(this);
+            if(settings.hasInterruptHook()) {
+                settings.getInterruptHook().handleInterrupt(this);
             }
-            if(processManager.hasRunningProcess())
-                stop();
             else {
-                doStop();
+                if(processManager.hasRunningProcess())
+                    stop();
+                else {
+                    doStop();
+                }
             }
         }
         else if(action == Action.HISTORY) {

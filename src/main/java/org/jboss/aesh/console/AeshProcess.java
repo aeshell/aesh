@@ -8,9 +8,6 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
