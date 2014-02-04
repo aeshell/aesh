@@ -63,7 +63,8 @@ public class POSIXTerminal extends AbstractTerminal {
 
             // set the console to be character-buffered instead of line-buffered
             // -ixon will give access to ctrl-s/ctrl-q
-            stty("-ixon -icanon min 1");
+            //intr undef set ctrl-c not to interrupt
+            stty("-ixon -icanon min 1 intr undef");
 
             // disable character echoing
             stty("-echo");
