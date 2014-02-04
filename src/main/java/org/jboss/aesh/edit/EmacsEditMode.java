@@ -78,7 +78,7 @@ public class EmacsEditMode implements EditMode {
 
             //if ctrl-d is pressed on an empty line we need to return logout
             //else return delete next char
-            if(currentOperation.getOperation().equals(Operation.EXIT)) {
+            if(currentOperation.getKey().equals(Key.CTRL_D)) {
                 if(buffer.isEmpty())
                     return operation;
                 else
