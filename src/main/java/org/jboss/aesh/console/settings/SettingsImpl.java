@@ -616,7 +616,7 @@ public class SettingsImpl implements Settings {
     }
 
     public void setExportFile(File exportFile) {
-        if(exportFile != null && exportFile.isFile())
+        if(exportFile != null)
             this.exportFile = exportFile;
     }
 
