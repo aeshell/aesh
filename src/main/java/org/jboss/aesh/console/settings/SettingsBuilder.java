@@ -194,7 +194,7 @@ public class SettingsBuilder {
         return this;
     }
 
-    public SettingsBuilder setExportFile(File exportFile) {
+    public SettingsBuilder exportFile(File exportFile) {
         settings.setExportFile(exportFile);
         return this;
     }
