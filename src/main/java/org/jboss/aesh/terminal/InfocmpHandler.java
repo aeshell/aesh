@@ -6,11 +6,14 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.util.LoggerUtil;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Run infocmp and parse the output. Only usable on POSIX systems.
@@ -20,8 +23,10 @@ import java.util.Map;
 public class InfocmpHandler {
 
     private Map<String, String> values;
-    private static final String escape = "\\E";
-    private static final String escAsString = "\u001B";
+    private static final String ESCAPE = "\\E";
+    private static final String ESC_AS_STRING = "\u001B";
+
+    private static final Logger LOGGER = LoggerUtil.getLogger(InfocmpHandler.class.getName());
 
     private static class InfocmpHolder {
         static final InfocmpHandler INSTANCE = new InfocmpHandler();
@@ -65,7 +70,7 @@ public class InfocmpHandler {
             process.waitFor();
         }
         catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            LOGGER.warning("Failed to execute infocmp, using default values: "+e.getMessage());
         }
         finally {
             try {
@@ -75,7 +80,7 @@ public class InfocmpHandler {
                     out.close();
             }
             catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.warning("Failed to close streams: "+e.getMessage());
             }
         }
     }
@@ -88,7 +93,7 @@ public class InfocmpHandler {
     }
 
     private int[] convertStringToInts(String input) {
-        if(input.startsWith(escape)) {
+        if(input.startsWith(ESCAPE)) {
             int[] out = new int[input.length()-1];
             out[0] = 27;
             int counter = 1;
@@ -112,7 +117,7 @@ public class InfocmpHandler {
 
     public String get(String key) {
        if(values.containsKey(key)) {
-           return values.get(key).replaceAll("\\\\E", escAsString);
+           return values.get(key).replaceAll("\\\\E", ESC_AS_STRING);
        }
         else
            return "";
