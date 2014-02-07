@@ -8,6 +8,7 @@ package org.jboss.aesh.console.edit;
 
 import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -44,9 +45,11 @@ public class ViEditingTest extends BaseConsoleTest {
         outputStream.write(new byte[]{5});
         //ctrl-a
         outputStream.write(new byte[]{1});
-        outputStream.write("12\n".getBytes());
+        outputStream.write(("12"+Config.getLineSeparator()).getBytes());
+        outputStream.flush();
 
         Thread.sleep(100);
+        console.stop();
     }
 
     class ViConsoleCallback extends AeshConsoleCallback {
@@ -60,7 +63,6 @@ public class ViEditingTest extends BaseConsoleTest {
         @Override
         public int execute(ConsoleOperation output) {
             assertEquals("1234", output.getBuffer());
-            console.stop();
             return 0;
         }
     }
