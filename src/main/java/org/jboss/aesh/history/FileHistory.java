@@ -7,12 +7,15 @@
 package org.jboss.aesh.history;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 
 /**
@@ -23,6 +26,7 @@ import java.io.IOException;
 public class FileHistory extends InMemoryHistory {
 
     private String historyFile;
+    private static final Logger LOGGER = LoggerUtil.getLogger(FileHistory.class.getName());
 
     public FileHistory(String fileName, int maxSize) throws IOException {
         super(maxSize);
@@ -47,18 +51,20 @@ public class FileHistory extends InMemoryHistory {
      *
      * @throws IOException io
      */
-    private void readFile() throws IOException {
-
+    private void readFile() {
         if(new File(historyFile).exists()) {
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(historyFile));
 
-            BufferedReader reader =
-                    new BufferedReader(new FileReader(historyFile));
+                String line;
+                while((line = reader.readLine()) != null)
+                    push(line);
 
-            String line;
-            while((line = reader.readLine()) != null)
-                push(line);
-
-            reader.close();
+                reader.close();
+            }
+            catch (IOException e) {
+                LOGGER.warning("Failed to write to history file; "+e.getMessage());
+            }
         }
     }
 
