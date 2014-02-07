@@ -1387,7 +1387,6 @@ public class Console {
         if(ControlOperatorParser.findLastRedirectionPositionBeforeCursor(buffer.getLine(), buffer.getCursor()) > pipeLinePos) {
             pipeLinePos = 0;
             redirect = true;
-
         }
 
         for(int i=0; i < completionList.size(); i++) {
