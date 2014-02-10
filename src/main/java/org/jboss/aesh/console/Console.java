@@ -35,7 +35,6 @@ import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.InternalCommands;
 import org.jboss.aesh.console.export.ExportCompletion;
 import org.jboss.aesh.console.export.ExportManager;
-import org.jboss.aesh.console.helper.InterruptHandler;
 import org.jboss.aesh.console.helper.Search;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
@@ -121,31 +120,15 @@ public class Console {
     private AeshStandardStream standardStream;
     private transient boolean initiateStop = false;
 
-    private InterruptHandler interruptHandler;
-
     public Console(final Settings settings) {
         this.settings = settings;
         try {
             init();
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+        catch (IOException e) {
+            logger.severe("Æsh failed during setup: "+e.getMessage());
         }
 
-        //init a interrupt hook if its defined (by default its null)
-        if(settings.hasInterruptHook()) {
-            try {
-                if(Class.forName("sun.misc.Signal") != null)
-                    interruptHandler = new InterruptHandler(this, settings.getInterruptHook());
-                    interruptHandler.initInterrupt();
-            }
-            catch(ClassNotFoundException e) {
-                if(settings.isLogging())
-                    logger.log(Level.WARNING,
-                            "Class sun.misc.Signal was not found. No interrupt handling enabled.");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override
@@ -396,8 +379,6 @@ public class Console {
                     aliasManager.persist();
                 if(exportManager != null)
                     exportManager.persistVariables();
-                if(interruptHandler != null)
-                    interruptHandler.removeInterrupt();
                 if(settings.isLogging())
                     logger.info("Done stopping reading thread. Terminal is reset");
                 processManager.stop();

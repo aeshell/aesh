@@ -19,6 +19,8 @@ jar {
 
 test {
     testLogging.showStandardStreams = true
+    //maxParallelForks = 1
+    forkEvery = 1
     onOutput { descriptor, event ->
     logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
   }
