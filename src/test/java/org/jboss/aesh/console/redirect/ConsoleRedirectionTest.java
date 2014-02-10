@@ -90,9 +90,10 @@ import org.jboss.aesh.console.AeshConsoleCallback;
          console.start();
 
          if(Config.isOSPOSIXCompatible())
-             outputStream.write(("ls < "+Config.getTmpDir()+"/foo\\ bar.txt \n").getBytes());
+             outputStream.write(("ls < "+Config.getTmpDir()+"/foo\\ bar.txt"+Config.getLineSeparator()).getBytes());
          else
-             outputStream.write(("ls < "+Config.getTmpDir()+"\\foo\\ bar.txt \n").getBytes());
+             outputStream.write(("ls < "+Config.getTmpDir()+"\\foo\\ bar.txt"+Config.getLineSeparator()).getBytes());
+         outputStream.flush();
 
          Thread.sleep(200);
          console.stop();
@@ -134,9 +135,10 @@ import org.jboss.aesh.console.AeshConsoleCallback;
          console.start();
 
          if(Config.isOSPOSIXCompatible())
-             outputStream.write(("ls < "+Config.getTmpDir()+"/foo\\ bar.txt | man\n").getBytes());
+             outputStream.write(("ls < "+Config.getTmpDir()+"/foo\\ bar.txt | man"+Config.getLineSeparator()).getBytes());
          else
-             outputStream.write(("ls < "+Config.getTmpDir()+"\\foo\\ bar.txt | man\n").getBytes());
+             outputStream.write(("ls < "+Config.getTmpDir()+"\\foo\\ bar.txt | man"+Config.getLineSeparator()).getBytes());
+         outputStream.flush();
 
          Thread.sleep(200);
          console.stop();

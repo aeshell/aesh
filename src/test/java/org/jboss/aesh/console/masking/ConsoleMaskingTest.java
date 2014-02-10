@@ -8,6 +8,7 @@ package org.jboss.aesh.console.masking;
 
 import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
@@ -27,8 +28,6 @@ import static org.junit.Assert.*;
  */
 public class ConsoleMaskingTest extends BaseConsoleTest {
 
-    private boolean didFail = false;
-
     @Test
     public void masking() throws IOException, InterruptedException {
         PipedOutputStream outputStream = new PipedOutputStream();
@@ -37,7 +36,7 @@ public class ConsoleMaskingTest extends BaseConsoleTest {
         KeyOperation deletePrevChar =  new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR);
 
         Console console = getTestConsole(pipedInputStream);
-        console.setPrompt(new Prompt("", new Character('\u0000')));
+        console.setPrompt(new Prompt("", '\u0000'));
         console.setConsoleCallback(new AeshConsoleCallback() {
             @Override
             public int execute(ConsoleOperation output) {
@@ -48,7 +47,8 @@ public class ConsoleMaskingTest extends BaseConsoleTest {
         console.start();
         outputStream.write(("mypassword").getBytes());
         outputStream.write(deletePrevChar.getFirstValue());
-        outputStream.write(("\n").getBytes());
+        outputStream.write((Config.getLineSeparator()).getBytes());
+        outputStream.flush();
 
         Thread.sleep(100);
 

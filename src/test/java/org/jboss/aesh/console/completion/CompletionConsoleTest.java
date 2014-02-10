@@ -45,6 +45,8 @@ public class CompletionConsoleTest extends BaseConsoleTest {
 
     private KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
 
+    private static final byte[] LINE_SEPARATOR = Config.getLineSeparator().getBytes();
+
     @Test
     public void completion() throws IOException, InterruptedException {
         PipedOutputStream outputStream = new PipedOutputStream();
@@ -89,17 +91,21 @@ public class CompletionConsoleTest extends BaseConsoleTest {
 
         outputStream.write("foo".getBytes());
         outputStream.write(completeChar.getFirstValue());
-        outputStream.write("\n".getBytes());
+        outputStream.write(LINE_SEPARATOR);
+        outputStream.flush();
         Thread.sleep(20);
 
         outputStream.write("bar".getBytes());
         outputStream.write(completeChar.getFirstValue());
-        outputStream.write("\n".getBytes());
+        outputStream.write(LINE_SEPARATOR);
+        outputStream.flush();
         Thread.sleep(20);
 
         outputStream.write("le".getBytes());
         outputStream.write(completeChar.getFirstValue());
-        outputStream.write("\n".getBytes());
+        outputStream.write(LINE_SEPARATOR);
+        outputStream.flush();
+        Thread.sleep(20);
 
         Thread.sleep(100);
         console.stop();
@@ -149,19 +155,19 @@ public class CompletionConsoleTest extends BaseConsoleTest {
 
         outputStream.write("foo".getBytes());
         outputStream.write(completeChar.getFirstValue());
-        outputStream.write("\n".getBytes());
+        outputStream.write(LINE_SEPARATOR);
         outputStream.flush();
         Thread.sleep(20);
 
         outputStream.write("bar".getBytes());
         outputStream.write(completeChar.getFirstValue());
-        outputStream.write("\n".getBytes());
+        outputStream.write(LINE_SEPARATOR);
         outputStream.flush();
         Thread.sleep(20);
 
         outputStream.write("le".getBytes());
         outputStream.write(completeChar.getFirstValue());
-        outputStream.write("\n".getBytes());
+        outputStream.write(LINE_SEPARATOR);
         outputStream.flush();
         Thread.sleep(20);
 
@@ -177,7 +183,6 @@ public class CompletionConsoleTest extends BaseConsoleTest {
                 .generateCommand();
 
         param.addOption(new OptionBuilder().shortName('f').name("foo").hasValue(true).type(String.class).create());
-        param.addOption(new OptionBuilder().shortName('b').name("bar").hasValue(true).type(String.class).create());
 
         final CommandLineParser parser = new AeshCommandLineParser(param);
         final StringBuilder builder = new StringBuilder();
@@ -194,8 +199,9 @@ public class CompletionConsoleTest extends BaseConsoleTest {
                       if(co.getBuffer().endsWith(" --")) {
                          for(ProcessedOption o : parser.getCommand().getOptions()) {
                              co.addCompletionCandidate("--"+o.getName());
-                             builder.append("--"+o.getName()+" ");
+                             builder.append(o.getName()+" ");
                          }
+                          co.setOffset(co.getOffset());
                       }
                       else if(co.getBuffer().endsWith(" -")) {
                           for(ProcessedOption o : parser.getCommand().getOptions()) {
@@ -227,12 +233,14 @@ public class CompletionConsoleTest extends BaseConsoleTest {
 
         outputStream.write("le".getBytes());
         outputStream.write(completeChar.getFirstValue());
-        outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
+        Thread.sleep(150);
 
-        outputStream.write("less -".getBytes());
+        assertEquals("less ", console.getBuffer());
+
+        outputStream.write(LINE_SEPARATOR);
+        outputStream.write("less --".getBytes());
         outputStream.write(completeChar.getFirstValue());
-        outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
 
         Thread.sleep(200);
@@ -241,7 +249,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
     }
 
     class CompletionConsoleCallback extends AeshConsoleCallback {
-        private int count = 0;
+        private transient int count = 0;
         Console console;
         OutputStream outputStream;
         CompletionConsoleCallback(Console console, OutputStream outputStream) {
