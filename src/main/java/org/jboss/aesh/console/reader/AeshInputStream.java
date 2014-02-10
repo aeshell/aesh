@@ -6,13 +6,12 @@
  */
 package org.jboss.aesh.console.reader;
 
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.terminal.Key;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
+
+import org.jboss.aesh.console.Config;
+import org.jboss.aesh.terminal.Key;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -34,7 +33,7 @@ public class AeshInputStream extends InputStream {
             return -1;
         try {
             if (b == null || c == b.length()) {
-                b = blockingQueue.poll(365, TimeUnit.DAYS);
+                b = blockingQueue.take();
                 c = 0;
             }
 
@@ -52,19 +51,19 @@ public class AeshInputStream extends InputStream {
             return new int[] {-1};
         try {
             if(Config.isOSPOSIXCompatible()) {
-                String out = blockingQueue.poll(356, TimeUnit.DAYS);
+                String out = blockingQueue.take();
                 int[] input = new int[out.length()];
                 for(int i=0; i < out.length(); i++)
                     input[i] = out.charAt(i);
                 return input;
             }
             else {
-                String out = blockingQueue.poll(356, TimeUnit.DAYS);
+                String out = blockingQueue.take();
                 //hack to make multi-value input work (arrows ++)
                 if (!out.isEmpty() && out.charAt(0) == Key.WINDOWS_ESC.getAsChar()) {
                     int[] input = new int[2];
                     input[0] = out.charAt(0);
-                    String out2 = blockingQueue.poll(356, TimeUnit.DAYS);
+                    String out2 = blockingQueue.take();
                     input[1] = out2.charAt(0);
 
                     return input;
