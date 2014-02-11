@@ -114,6 +114,11 @@ public class AeshCommandCompletionTest {
         aeshConsole.stop();
     }
 
+    @Test
+    public void testCompletionNoArguments() {
+
+    }
+
     @CommandDefinition(name = "foo", description = "")
     public static class FooCommand implements Command {
 
@@ -122,6 +127,18 @@ public class AeshCommandCompletionTest {
 
         @Arguments
         private List<String> arguments;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "bar", description = "")
+    public static class BarCommand implements Command {
+
+        @Option(completer = FooCompletor.class)
+        private String bar;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {

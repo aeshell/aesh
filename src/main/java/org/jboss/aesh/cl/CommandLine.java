@@ -31,18 +31,13 @@ public class CommandLine {
     private CommandLineParserException parserException;
 
     public CommandLine() {
-        options = new ArrayList<ProcessedOption>();
+        options = new ArrayList<>();
     }
 
     public CommandLine(CommandLineParserException parserException) {
         this();
         if(parserException != null)
             setParserException(parserException);
-    }
-
-    public CommandLine(ProcessedOption argument) {
-        options = new ArrayList<ProcessedOption>();
-        this.argument = argument;
     }
 
     public void addOption(ProcessedOption option) {
@@ -143,7 +138,7 @@ public class CommandLine {
                 return po.getProperties();
         }
 
-        return new HashMap<String, String>();
+        return new HashMap<>();
     }
 
     public boolean hasParserError() {

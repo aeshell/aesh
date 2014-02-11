@@ -194,7 +194,20 @@ public class ParseCompleteObjectTest {
         assertEquals("foo.txt", pco.getValue());
         //assertEquals(String.class, pco.getStyle());
         assertTrue(pco.isArgument());
+    }
 
+    @Test
+    public void testCompletionWithNoArguments() throws Exception {
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class);
+        CommandLineCompletionParser completeParser = clp.getCompletionParser();
+
+        ParsedCompleteObject pco = completeParser.findCompleteObject("test ", 4);
+        assertFalse(pco.isArgument());
+        assertTrue(pco.doDisplayOptions());
+
+        pco = completeParser.findCompleteObject("test -X foo1 ", 13);
+        assertFalse(pco.isArgument());
+        assertTrue(pco.doDisplayOptions());
     }
 
 }

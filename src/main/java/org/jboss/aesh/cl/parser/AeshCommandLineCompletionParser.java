@@ -139,7 +139,10 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
 
             if(endsWithSpace && po.getValue() != null &&  po.getValue().length() > 0 &&
                     (po.getOptionType() == OptionType.NORMAL || po.getOptionType() == OptionType.BOOLEAN)) {
-                return new ParsedCompleteObject(true);
+                if(cl.getArgument() == null)
+                    return new ParsedCompleteObject(true, "", 0);
+                else
+                    return new ParsedCompleteObject(true);
             }
             else if(po.isLongNameUsed() || (po.getShortName() == null || po.getShortName().length() < 1))
                 return new ParsedCompleteObject(po.getName(),
