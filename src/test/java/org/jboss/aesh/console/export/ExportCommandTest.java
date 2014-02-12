@@ -66,47 +66,47 @@ public class ExportCommandTest {
         outputStream.write(("exp").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
-        Thread.sleep(50);
+        Thread.sleep(100);
         assertEquals("export ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
 
         outputStream.write(("FOO=/tmp"+Config.getLineSeparator()).getBytes());
         outputStream.write(("export"+Config.getLineSeparator()).getBytes());
         outputStream.flush();
-        Thread.sleep(80);
+        Thread.sleep(100);
         assertTrue(byteArrayOutputStream.toString().contains("FOO=/tmp"));
 
         outputStream.write(("export BAR=$F").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
-        Thread.sleep(150);
+        Thread.sleep(100);
         assertEquals("export BAR=$FOO ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         outputStream.write(backSpace.getFirstValue());
         outputStream.write((":/opt"+Config.getLineSeparator()).getBytes());
         outputStream.flush();
-        Thread.sleep(80);
+        Thread.sleep(100);
         outputStream.write(("export"+Config.getLineSeparator()).getBytes());
         outputStream.flush();
-        Thread.sleep(80);
+        Thread.sleep(400);
         assertTrue(byteArrayOutputStream.toString().contains("BAR=/tmp:/opt"));
 
         outputStream.write(("$").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
-        Thread.sleep(80);
+        Thread.sleep(400);
         assertTrue(byteArrayOutputStream.toString().contains("$FOO"));
         assertTrue(byteArrayOutputStream.toString().contains("$BAR"));
 
         outputStream.write(("B").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
-        Thread.sleep(80);
+        Thread.sleep(400);
         assertEquals("$BAR ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
-        Thread.sleep(80);
+        Thread.sleep(400);
 
         assertTrue(byteArrayOutputStream.toString().contains("/tmp:/opt"));
 
