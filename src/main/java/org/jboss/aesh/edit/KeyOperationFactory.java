@@ -171,6 +171,12 @@ public class KeyOperationFactory {
 
         keys.add(new KeyOperation(Key.META_CTRL_J, Operation.VI_EDIT_MODE)); //meta-ctrl-j
 
+        //keys that we ignore
+        keys.add(new KeyOperation(Key.FILE_SEPARATOR, Operation.NO_ACTION));
+        keys.add(new KeyOperation(Key.GROUP_SEPARATOR, Operation.NO_ACTION));
+        keys.add(new KeyOperation(Key.RECORD_SEPARATOR, Operation.NO_ACTION));
+        keys.add(new KeyOperation(Key.UNIT_SEPARATOR, Operation.NO_ACTION));
+
         return keys;
     }
 
@@ -345,6 +351,11 @@ public class KeyOperationFactory {
             keys.add(new KeyOperation(Key.CTRL_RIGHT_2, Operation.MOVE_NEXT_BIG_WORD, Action.EDIT));
         }
 
+        //keys that we ignore
+        keys.add(new KeyOperation(Key.FILE_SEPARATOR, Operation.NO_ACTION));
+        keys.add(new KeyOperation(Key.GROUP_SEPARATOR, Operation.NO_ACTION));
+        keys.add(new KeyOperation(Key.RECORD_SEPARATOR, Operation.NO_ACTION));
+        keys.add(new KeyOperation(Key.UNIT_SEPARATOR, Operation.NO_ACTION));
 
         return keys;
     }

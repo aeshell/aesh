@@ -230,7 +230,7 @@ public enum Key {
 
     Key(int[] keyValues) {
         this.keyValues = keyValues;
-        }
+    }
 
     /**
      * is of type a-z or A-Z
