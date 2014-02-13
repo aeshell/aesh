@@ -24,9 +24,13 @@ public class KeyOperationFactory {
     public static List<KeyOperation> generateEmacsMode() {
         List<KeyOperation> keys = new ArrayList<KeyOperation>();
 
-        keys.add(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
-        if(!Config.isOSPOSIXCompatible())
+        if(Key.ENTER.equalTo(Key.ENTER_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
+        }
+        else {
+            keys.add(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
             keys.add(new KeyOperation(Key.ENTER_2, Operation.NEW_LINE));
+        }
 
         keys.add(new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING));
         keys.add(new KeyOperation(Key.CTRL_B, Operation.MOVE_PREV_CHAR));
@@ -94,20 +98,78 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.META_D, Operation.DELETE_NEXT_WORD)); //meta-d
 
         //pgup, pgdown, end, home, delete
-        keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR)); //Delete
-        keys.add(new KeyOperation(Key.PGUP, Operation.PGUP));   //pgup
-        keys.add(new KeyOperation(Key.PGDOWN, Operation.PGDOWN));   //pgdown
-        keys.add(new KeyOperation(Key.HOME, Operation.MOVE_BEGINNING));  //home
-        keys.add(new KeyOperation(Key.HOME_2, Operation.MOVE_BEGINNING));  //home
-        keys.add(new KeyOperation(Key.END, Operation.MOVE_END));        //end
-        keys.add(new KeyOperation(Key.END_2, Operation.MOVE_END));        //end
-        keys.add(new KeyOperation(Key.INSERT, Operation.NO_ACTION));        //insert
+        if(Key.DELETE.equalTo(Key.DELETE_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.EDIT)); //Delete
+        }
+        else {
+            keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.EDIT)); //Delete
+            keys.add(new KeyOperation(Key.DELETE_2, Operation.DELETE_NEXT_CHAR, Action.EDIT)); //Delete
+        }
+        if(Key.PGUP.equalTo(Key.PGUP_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.PGUP, Operation.PGUP));   //pgup
+        }
+        else {
+            keys.add(new KeyOperation(Key.PGUP, Operation.PGUP));   //pgup
+            keys.add(new KeyOperation(Key.PGUP_2, Operation.PGUP));   //pgup
+        }
+        if(Key.PGDOWN.equalTo(Key.PGDOWN_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.PGDOWN, Operation.PGDOWN));   //pgdown
+        }
+        else {
+            keys.add(new KeyOperation(Key.PGDOWN, Operation.PGDOWN));   //pgdown
+            keys.add(new KeyOperation(Key.PGDOWN_2, Operation.PGDOWN));   //pgdown
+        }
+        if(Key.INSERT.equalTo(Key.INSERT_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.INSERT, Operation.NO_ACTION));        //insert
+        }
+        else {
+            keys.add(new KeyOperation(Key.INSERT, Operation.NO_ACTION));        //insert
+            keys.add(new KeyOperation(Key.INSERT_2, Operation.NO_ACTION));        //insert
+        }
+        if(Key.END.equalTo(Key.END_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.END, Operation.MOVE_END));        //end
+        }
+        else {
+            keys.add(new KeyOperation(Key.END, Operation.MOVE_END));        //end
+            keys.add(new KeyOperation(Key.END_2, Operation.MOVE_END));        //end
+        }
+        if(Key.HOME.equalTo(Key.HOME_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.HOME, Operation.MOVE_BEGINNING));  //home
+        }
+        else {
+            keys.add(new KeyOperation(Key.HOME, Operation.MOVE_BEGINNING));  //home
+            keys.add(new KeyOperation(Key.HOME_2, Operation.MOVE_BEGINNING));  //home
+        }
+        if(Key.CTRL_DOWN.equalTo(Key.CTRL_DOWN_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.CTRL_DOWN, Operation.MOVE_BEGINNING, Action.EDIT));
+        }
+        else {
+            keys.add(new KeyOperation(Key.CTRL_DOWN, Operation.MOVE_BEGINNING, Action.EDIT));
+            keys.add(new KeyOperation(Key.CTRL_DOWN_2, Operation.MOVE_BEGINNING, Action.EDIT));
+        }
+        if(Key.CTRL_UP.equalTo(Key.CTRL_UP_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.CTRL_UP, Operation.MOVE_END, Action.EDIT));
+        }
+        else {
+            keys.add(new KeyOperation(Key.CTRL_UP, Operation.MOVE_END, Action.EDIT));
+            keys.add(new KeyOperation(Key.CTRL_UP_2, Operation.MOVE_END, Action.EDIT));
+        }
+        if(Key.CTRL_LEFT.equalTo(Key.CTRL_LEFT_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.CTRL_LEFT, Operation.MOVE_PREV_BIG_WORD, Action.EDIT));
+        }
+        else {
+            keys.add(new KeyOperation(Key.CTRL_LEFT, Operation.MOVE_PREV_BIG_WORD, Action.EDIT));
+            keys.add(new KeyOperation(Key.CTRL_LEFT_2, Operation.MOVE_PREV_BIG_WORD, Action.EDIT));
+        }
+        if(Key.CTRL_RIGHT.equalTo(Key.CTRL_RIGHT_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.CTRL_RIGHT, Operation.MOVE_NEXT_BIG_WORD, Action.EDIT));
+        }
+        else {
+            keys.add(new KeyOperation(Key.CTRL_RIGHT, Operation.MOVE_NEXT_BIG_WORD, Action.EDIT));
+            keys.add(new KeyOperation(Key.CTRL_RIGHT_2, Operation.MOVE_NEXT_BIG_WORD, Action.EDIT));
+        }
 
         keys.add(new KeyOperation(Key.META_CTRL_J, Operation.VI_EDIT_MODE)); //meta-ctrl-j
-        keys.add(new KeyOperation(Key.CTRL_DOWN, Operation.MOVE_BEGINNING));
-        keys.add(new KeyOperation(Key.CTRL_UP, Operation.MOVE_END));
-        keys.add(new KeyOperation(Key.CTRL_LEFT, Operation.MOVE_PREV_BIG_WORD));
-        keys.add(new KeyOperation(Key.CTRL_RIGHT, Operation.MOVE_NEXT_BIG_WORD));
 
         return keys;
     }
@@ -116,9 +178,13 @@ public class KeyOperationFactory {
         List<KeyOperation> keys = new ArrayList<KeyOperation>();
 
         keys.add(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
-        //only add this on windows
-        if(!Config.isOSPOSIXCompatible())
+        if(Key.ENTER.equalTo(Key.ENTER_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
+        }
+        else {
+            keys.add(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
             keys.add(new KeyOperation(Key.ENTER_2, Operation.NEW_LINE));
+        }
 
         keys.add(new KeyOperation(Key.CTRL_C, Operation.EXIT));
         //ctrl-d, if pressed on a line with chars it will cause the
@@ -204,22 +270,81 @@ public class KeyOperationFactory {
             keys.add(new KeyOperation(Key.DOWN_2, Operation.HISTORY_NEXT, Action.EDIT));   //arrow down
         }
 
-        keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.EDIT)); //Delete
-        keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.COMMAND)); //Delete
+        if(Key.DELETE.equalTo(Key.DELETE_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.EDIT)); //Delete
+        }
+        else {
+            keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.EDIT)); //Delete
+            keys.add(new KeyOperation(Key.DELETE_2, Operation.DELETE_NEXT_CHAR, Action.EDIT)); //Delete
+        }
 
-        keys.add(new KeyOperation(Key.PGUP, Operation.PGUP));   //pgup
-        keys.add(new KeyOperation(Key.PGDOWN, Operation.PGDOWN));   //pgdown
+        if(Key.PGUP.equalTo(Key.PGUP_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.PGUP, Operation.PGUP));   //pgup
+        }
+        else {
+            keys.add(new KeyOperation(Key.PGUP, Operation.PGUP));   //pgup
+            keys.add(new KeyOperation(Key.PGUP_2, Operation.PGUP));   //pgup
+        }
+        if(Key.PGDOWN.equalTo(Key.PGDOWN_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.PGDOWN, Operation.PGDOWN));   //pgdown
+        }
+        else {
+            keys.add(new KeyOperation(Key.PGDOWN, Operation.PGDOWN));   //pgdown
+            keys.add(new KeyOperation(Key.PGDOWN_2, Operation.PGDOWN));   //pgdown
+        }
 
-        keys.add(new KeyOperation(Key.HOME, Operation.MOVE_BEGINNING, Action.EDIT));  //home
-        keys.add(new KeyOperation(Key.HOME_2, Operation.MOVE_BEGINNING));  //home
-        keys.add(new KeyOperation(Key.END, Operation.MOVE_END, Action.EDIT));        //end
-        keys.add(new KeyOperation(Key.END_2, Operation.MOVE_END, Action.EDIT));        //end
-        keys.add(new KeyOperation(Key.INSERT, Operation.NO_ACTION));        //insert
+        if(Key.INSERT.equalTo(Key.INSERT_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.INSERT, Operation.NO_ACTION));        //insert
+        }
+        else {
+            keys.add(new KeyOperation(Key.INSERT, Operation.NO_ACTION));        //insert
+            keys.add(new KeyOperation(Key.INSERT_2, Operation.NO_ACTION));        //insert
+        }
 
-        keys.add(new KeyOperation(Key.CTRL_DOWN, Operation.MOVE_BEGINNING, Action.EDIT));
-        keys.add(new KeyOperation(Key.CTRL_UP, Operation.MOVE_END, Action.EDIT));
-        keys.add(new KeyOperation(Key.CTRL_LEFT, Operation.MOVE_PREV_BIG_WORD, Action.EDIT));
-        keys.add(new KeyOperation(Key.CTRL_RIGHT, Operation.MOVE_NEXT_BIG_WORD, Action.EDIT));
+        if(Key.HOME.equalTo(Key.HOME_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.HOME, Operation.MOVE_BEGINNING, Action.EDIT));  //home
+        }
+        else {
+            keys.add(new KeyOperation(Key.HOME, Operation.MOVE_BEGINNING, Action.EDIT));  //home
+            keys.add(new KeyOperation(Key.HOME_2, Operation.MOVE_BEGINNING));  //home
+        }
+
+        if(Key.END.equalTo(Key.END_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.END, Operation.MOVE_END, Action.EDIT));        //end
+        }
+        else {
+            keys.add(new KeyOperation(Key.END, Operation.MOVE_END, Action.EDIT));        //end
+            keys.add(new KeyOperation(Key.END_2, Operation.MOVE_END, Action.EDIT));        //end
+        }
+        if(Key.CTRL_DOWN.equalTo(Key.CTRL_DOWN_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.CTRL_DOWN, Operation.MOVE_BEGINNING, Action.EDIT));
+        }
+        else {
+            keys.add(new KeyOperation(Key.CTRL_DOWN, Operation.MOVE_BEGINNING, Action.EDIT));
+            keys.add(new KeyOperation(Key.CTRL_DOWN_2, Operation.MOVE_BEGINNING, Action.EDIT));
+        }
+        if(Key.CTRL_UP.equalTo(Key.CTRL_UP_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.CTRL_UP, Operation.MOVE_END, Action.EDIT));
+        }
+        else {
+            keys.add(new KeyOperation(Key.CTRL_UP, Operation.MOVE_END, Action.EDIT));
+            keys.add(new KeyOperation(Key.CTRL_UP_2, Operation.MOVE_END, Action.EDIT));
+        }
+        if(Key.CTRL_LEFT.equalTo(Key.CTRL_LEFT_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.CTRL_LEFT, Operation.MOVE_PREV_BIG_WORD, Action.EDIT));
+        }
+        else {
+            keys.add(new KeyOperation(Key.CTRL_LEFT, Operation.MOVE_PREV_BIG_WORD, Action.EDIT));
+            keys.add(new KeyOperation(Key.CTRL_LEFT_2, Operation.MOVE_PREV_BIG_WORD, Action.EDIT));
+        }
+        if(Key.CTRL_RIGHT.equalTo(Key.CTRL_RIGHT_2.getKeyValues())) {
+            keys.add(new KeyOperation(Key.CTRL_RIGHT, Operation.MOVE_NEXT_BIG_WORD, Action.EDIT));
+        }
+        else {
+            keys.add(new KeyOperation(Key.CTRL_RIGHT, Operation.MOVE_NEXT_BIG_WORD, Action.EDIT));
+            keys.add(new KeyOperation(Key.CTRL_RIGHT_2, Operation.MOVE_NEXT_BIG_WORD, Action.EDIT));
+        }
+
 
         return keys;
     }
