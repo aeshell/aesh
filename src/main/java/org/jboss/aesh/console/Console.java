@@ -20,7 +20,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -410,7 +409,7 @@ public class Console {
     }
 
     protected CommandOperation getInput() throws InterruptedException {
-        return inputQueue.poll(365, TimeUnit.DAYS);
+        return inputQueue.take();
     }
 
     private boolean hasInput() {
