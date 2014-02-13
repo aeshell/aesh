@@ -532,10 +532,6 @@ public class Console {
 
     private boolean read() {
         try {
-
-            while(!processManager.hasRunningProcess() && inputQueue.size() > 0)
-                processInternalOperation(getInput());
-
             int[] input = getTerminal().read(settings.isReadAhead());
             if(settings.isLogging()) {
                 logger.info("GOT: "+ Arrays.toString(input));
