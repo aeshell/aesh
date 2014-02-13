@@ -295,7 +295,7 @@ public enum Key {
                    return key.ENTER;
                 }
                 else if(!Config.isOSPOSIXCompatible() && key == Key.CTRL_M) {
-                    if(input.length > position && input[position+1] == Key.CTRL_J.getFirstValue())
+                    if(input.length > position + 1 && input[position+1] == Key.CTRL_J.getFirstValue())
                         return key.ENTER_2;
                     else
                         return key.ENTER;
