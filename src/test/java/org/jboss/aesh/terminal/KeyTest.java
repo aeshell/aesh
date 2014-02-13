@@ -41,42 +41,42 @@ public class KeyTest {
         assertEquals(ko.getOperation(), Operation.HISTORY_PREV);
 
         if(Config.isOSPOSIXCompatible()) {
-        int[] doubleUpKey = new int[6];
-        for(int i=0; i < 6; i++) {
-            if(i > 2)
-                doubleUpKey[i] = up.getKeyValues()[i-3];
-            else
-                doubleUpKey[i] = up.getKeyValues()[i];
-        }
+            int[] doubleUpKey = new int[6];
+            for(int i=0; i < 6; i++) {
+                if(i > 2)
+                    doubleUpKey[i] = up.getKeyValues()[i-3];
+                else
+                    doubleUpKey[i] = up.getKeyValues()[i];
+            }
 
-        ko = manager.findOperation(doubleUpKey);
-        assertEquals(up, ko.getKey());
-        assertEquals(ko.getOperation(), Operation.HISTORY_PREV);
+            ko = manager.findOperation(doubleUpKey);
+            assertEquals(up, ko.getKey());
+            assertEquals(ko.getOperation(), Operation.HISTORY_PREV);
 
-        doubleUpKey[2] = 3212;
-        ko = manager.findOperation(doubleUpKey);
-        assertEquals(Key.ESC, ko.getKey());
-        assertEquals(ko.getOperation(), Operation.NO_ACTION);
+            doubleUpKey[2] = 3212;
+            ko = manager.findOperation(doubleUpKey);
+            assertEquals(Key.ESC, ko.getKey());
+            assertEquals(ko.getOperation(), Operation.NO_ACTION);
 
-        doubleUpKey = new int[7];
-        for(int i=0; i < 6; i++) {
-            if(i > 2)
-                doubleUpKey[i] = up.getKeyValues()[i-3];
-            else
-                doubleUpKey[i] = up.getKeyValues()[i];
-        }
-        doubleUpKey[6] = 42;
+            doubleUpKey = new int[7];
+            for(int i=0; i < 6; i++) {
+                if(i > 2)
+                    doubleUpKey[i] = up.getKeyValues()[i-3];
+                else
+                    doubleUpKey[i] = up.getKeyValues()[i];
+            }
+            doubleUpKey[6] = 42;
 
-        ko = manager.findOperation(doubleUpKey);
-        assertEquals(Key.ESC, ko.getKey());
-        assertEquals(ko.getOperation(), Operation.NO_ACTION);
+            ko = manager.findOperation(doubleUpKey);
+            assertEquals(Key.ESC, ko.getKey());
+            assertEquals(ko.getOperation(), Operation.NO_ACTION);
 
-        doubleUpKey = new int[4];
-        for(int i=0; i < 4;i++)
-            doubleUpKey[i] = 1000+i;
+            doubleUpKey = new int[4];
+            for(int i=0; i < 4;i++)
+                doubleUpKey[i] = 1000+i;
 
-        ko = manager.findOperation(doubleUpKey);
-        assertNull(ko);
+            ko = manager.findOperation(doubleUpKey);
+            assertNull(ko);
         }
 
     }
