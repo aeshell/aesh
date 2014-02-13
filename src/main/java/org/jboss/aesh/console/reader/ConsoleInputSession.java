@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.console.reader;
 
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.logging.Logger;
 
 /**
@@ -32,7 +34,17 @@ public class ConsoleInputSession {
 
     public ConsoleInputSession(InputStream consoleStream) {
         this.consoleStream = consoleStream;
-        executorService = Executors.newSingleThreadExecutor();
+        if(Config.isOSPOSIXCompatible())
+            executorService = Executors.newSingleThreadExecutor();
+        else
+            executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+                @Override
+                public Thread newThread(Runnable runnable) {
+                    Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+                    thread.setDaemon(true);
+                    return thread;
+                }
+            });
         aeshInputStream = new AeshInputStream(blockingQueue);
         startReader();
     }
@@ -43,16 +55,30 @@ public class ConsoleInputSession {
             public void run() {
                 try {
                     byte[] bBuf = new byte[1024];
-                    while (!executorService.isShutdown()) {
-                        int read = consoleStream.available();
-                        if (read > 0) {
-                            consoleStream.read(bBuf, 0, read);
-                            blockingQueue.put(new String(bBuf, 0, read));
+                    if(Config.isOSPOSIXCompatible()) {
+                        while (!executorService.isShutdown()) {
+                            int read = consoleStream.available();
+                            if (read > 0) {
+                                consoleStream.read(bBuf, 0, read);
+                                blockingQueue.put(new String(bBuf, 0, read));
+                            }
+                            else if (read < 0) {
+                                stop();
+                            }
+                            Thread.sleep(10);
                         }
-                        else if (read < 0) {
-                            stop();
+                    }
+                    else {
+                        while (!executorService.isShutdown()) {
+                            int read = consoleStream.read(bBuf);
+                            if (read > 0) {
+                                blockingQueue.put(new String(bBuf, 0, read));
+                            }
+                            else if (read < 0) {
+                                stop();
+                            }
+                            Thread.sleep(10);
                         }
-                        Thread.sleep(10);
                     }
                 }
                 catch (RuntimeException e) {

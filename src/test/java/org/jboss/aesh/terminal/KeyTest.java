@@ -40,6 +40,7 @@ public class KeyTest {
         assertEquals(up, ko.getKey());
         assertEquals(ko.getOperation(), Operation.HISTORY_PREV);
 
+        if(Config.isOSPOSIXCompatible()) {
         int[] doubleUpKey = new int[6];
         for(int i=0; i < 6; i++) {
             if(i > 2)
@@ -76,6 +77,7 @@ public class KeyTest {
 
         ko = manager.findOperation(doubleUpKey);
         assertNull(ko);
+        }
 
     }
 
