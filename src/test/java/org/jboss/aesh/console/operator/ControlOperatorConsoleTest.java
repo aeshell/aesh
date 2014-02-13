@@ -8,6 +8,7 @@ package org.jboss.aesh.console.operator;
 
 import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.junit.Test;
@@ -47,7 +48,7 @@ public class ControlOperatorConsoleTest extends BaseConsoleTest {
 
         console.start();
 
-        outputStream.write("ls -la *; foo\n".getBytes());
+        outputStream.write(("ls -la *; foo" + Config.getLineSeparator()).getBytes());
 
         Thread.sleep(200);
     }

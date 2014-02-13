@@ -44,7 +44,7 @@ public class Example {
         console.setConsoleCallback(new ConsoleCallback() {
             @Override
             public int execute(ConsoleOperation output) {
-                console.getShell().out().println("======>\"" + output.getBuffer() + "\"\n");
+                console.getShell().out().println("======>\"" + output.getBuffer());
                 if (output.getBuffer().equals("quit")) {
                     try {
                         console.stop();

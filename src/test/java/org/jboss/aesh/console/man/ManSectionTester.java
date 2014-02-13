@@ -28,7 +28,7 @@ public class ManSectionTester {
         input.add("-------");
         input.add("*-a, --attribute*='ATTRIBUTE'::");
         input.add("  Define or delete document attribute. ");
-        input.add("\n");
+        input.add(Config.getLineSeparator());
         input.add("*-b, --backend*='BACKEND'::");
         input.add("  Define or delete document attribute.");
 

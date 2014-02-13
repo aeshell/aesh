@@ -41,10 +41,10 @@ public class ConsoleAliasTest extends BaseConsoleTest {
         console.setConsoleCallback(new AliasConsoleCallback(console));
         console.start();
 
-        outputStream.write("ll\n".getBytes());
+        outputStream.write(("ll"+Config.getLineSeparator()).getBytes());
         outputStream.flush();
         Thread.sleep(10);
-        outputStream.write("grep -l\n".getBytes());
+        outputStream.write(("grep -l"+Config.getLineSeparator()).getBytes());
 
         Thread.sleep(100);
     }

@@ -165,7 +165,7 @@ public class Example {
             public int execute(ConsoleOperation output) {
                 try {
                 //To change body of implemented methods use File | Settings | File Templates.
-                exampleConsole.getShell().out().print("======>\"" + output.getBuffer() + "\"\n");
+                exampleConsole.getShell().out().println("======>\"" + output.getBuffer());
                 if(masking) {
                     exampleConsole.getShell().out().print("got password: " + output.getBuffer() + ", stopping masking");
                     masking = false;
@@ -180,7 +180,7 @@ public class Example {
                     exampleConsole.setPrompt(new Prompt("password: ", (char) 0));
                 }
                 else if(output.getBuffer().startsWith("blah")) {
-                    exampleConsole.getShell().err().print("blah. command not found.\n");
+                    exampleConsole.getShell().err().println("blah. command not found.");
                     exampleConsole.getShell().out().print("BAH" + Config.getLineSeparator());
                 }
                 else if(output.getBuffer().equals("clear"))

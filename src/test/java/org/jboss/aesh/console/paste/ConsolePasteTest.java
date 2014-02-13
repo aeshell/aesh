@@ -8,6 +8,7 @@ package org.jboss.aesh.console.paste;
 
 import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
@@ -31,10 +32,10 @@ public class ConsolePasteTest extends BaseConsoleTest{
 
 
         String pasteLine1 =
-                "connect\n" +
-                "admin\n" +
+                "connect" + Config.getLineSeparator() +
+                "admin" + Config.getLineSeparator() +
                 "admin!";
-        String pasteLine2 = "234\n" + "exit\n";
+        String pasteLine2 = "234"+ Config.getLineSeparator() + "exit"+ Config.getLineSeparator();
 
 
         final Console console = getTestConsole(pipedInputStream);

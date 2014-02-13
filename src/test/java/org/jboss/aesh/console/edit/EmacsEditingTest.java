@@ -48,7 +48,7 @@ public class EmacsEditingTest extends BaseConsoleTest {
             outputStream.write("34".getBytes());
             //home
             outputStream.write(new byte[]{1});
-            outputStream.write("12\n".getBytes());
+            outputStream.write(("12"+Config.getLineSeparator()).getBytes());
 
             Thread.sleep(100);
             console.stop();

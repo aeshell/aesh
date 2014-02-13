@@ -59,12 +59,12 @@ public class HistoryTest extends BaseConsoleTest {
         Thread.sleep(20);
         outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
         outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
-        outputStream.write("\n".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
         Thread.sleep(20);
         outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
         outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
-        outputStream.write("\n".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
 
 
         Thread.sleep(100);

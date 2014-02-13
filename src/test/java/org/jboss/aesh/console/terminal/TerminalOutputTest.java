@@ -8,6 +8,7 @@ package org.jboss.aesh.console.terminal;
 
 import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
@@ -49,7 +50,7 @@ public class TerminalOutputTest extends BaseConsoleTest {
 
         console.start();
         outputStream.write(new TerminalString("FOO", new TerminalTextStyle( CharacterType.BOLD)).getCharacters().getBytes());
-        outputStream.write("\n".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
         Thread.sleep(100);
 
         console.stop();

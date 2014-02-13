@@ -37,10 +37,10 @@ public class ConsoleTest extends BaseConsoleTest {
         console.start();
 
         outputStream.write(("ls \\").getBytes());
-        outputStream.write(("\n").getBytes());
+        outputStream.write((Config.getLineSeparator()).getBytes());
         outputStream.write(("foo \\").getBytes());
-        outputStream.write(("\n").getBytes());
-        outputStream.write(("bar\n").getBytes());
+        outputStream.write((Config.getLineSeparator()).getBytes());
+        outputStream.write(("bar"+Config.getLineSeparator()).getBytes());
         outputStream.flush();
 
         Thread.sleep(100);
@@ -66,9 +66,9 @@ public class ConsoleTest extends BaseConsoleTest {
         PrintStream out = console.getShell().out();
 
         out.print("ls \\");
-        out.print("\n");
+        out.print(Config.getLineSeparator());
         out.print("foo \\");
-        out.print("\n");
+        out.print(Config.getLineSeparator());
         out.println("bar");
         outputStream.flush();
 

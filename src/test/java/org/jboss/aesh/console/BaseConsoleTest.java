@@ -60,7 +60,7 @@ public abstract class BaseConsoleTest {
 
             while (line != null) {
                 sb.append(line);
-                sb.append("\n");
+                sb.append(Config.getLineSeparator());
                 line = br.readLine();
             }
             return sb.toString();
