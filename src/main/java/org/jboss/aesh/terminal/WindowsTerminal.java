@@ -71,6 +71,10 @@ public class WindowsTerminal extends AbstractTerminal {
                 in[0] = tmp[0];
                 return 1;
             }
+
+            public void close() {
+                WindowsSupport.flushConsoleInputBuffer();
+            }
         };
             this.input = new ConsoleInputSession(inStream).getExternalInputStream();
         }

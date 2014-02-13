@@ -205,7 +205,10 @@ public enum Key {
             new int[] {27,91,49,59,53,66} : new int[]{224, 145}),
 
     ENTER(Config.isOSPOSIXCompatible() ?
-            new int[]{10} : new int[]{13});
+            new int[]{10} : new int[]{13}),
+    //needed to support stupid \r\n on windows...
+    ENTER_2(Config.isOSPOSIXCompatible() ?
+            new int[]{10} : new int[]{13,10});
 
     private int[] keyValues;
 
@@ -263,9 +266,15 @@ public enum Key {
     public static Key findStartKey(int[] input) {
         for(Key key : values()) {
             if(key != Key.ESC && key != Key.WINDOWS_ESC && key.inputStartsWithKey(input)) {
-                if((Config.isOSPOSIXCompatible() && key == Key.CTRL_J) ||
-                        (!Config.isOSPOSIXCompatible() && key == Key.CTRL_M))
-                    return key.ENTER;
+                if(Config.isOSPOSIXCompatible() && key == Key.CTRL_J) {
+                   return key.ENTER;
+                }
+                else if(!Config.isOSPOSIXCompatible() && key == Key.CTRL_M) {
+                    if(input.length > 1 && input[1] == Key.CTRL_J.getFirstValue())
+                        return key.ENTER_2;
+                    else
+                        return key.ENTER;
+                }
                 else
                     return key;
             }
@@ -282,9 +291,15 @@ public enum Key {
     public static Key findStartKey(int[] input, int position) {
         for(Key key : values()) {
             if(key != Key.ESC && key != Key.WINDOWS_ESC && key.inputStartsWithKey(input, position)) {
-                if((Config.isOSPOSIXCompatible() && key == Key.CTRL_J) ||
-                        (!Config.isOSPOSIXCompatible() && key == Key.CTRL_M))
-                    return key.ENTER;
+                if(Config.isOSPOSIXCompatible() && key == Key.CTRL_J) {
+                   return key.ENTER;
+                }
+                else if(!Config.isOSPOSIXCompatible() && key == Key.CTRL_M) {
+                    if(input.length > position && input[position+1] == Key.CTRL_J.getFirstValue())
+                        return key.ENTER_2;
+                    else
+                        return key.ENTER;
+                }
                 else
                     return key;
             }
