@@ -145,6 +145,7 @@ public enum Key {
     TILDE(new int[]{126}), // ~
 
     WINDOWS_ESC(new int[]{224}), // just used to identify win special chars
+    WINDOWS_ESC_2(new int[]{341}), // just used to identify win special chars
     //movement
     UP(Config.isOSPOSIXCompatible() ?
             new int[]{27,91,65} : new int[]{224,72}),

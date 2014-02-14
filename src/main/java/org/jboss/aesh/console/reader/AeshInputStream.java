@@ -60,7 +60,9 @@ public class AeshInputStream extends InputStream {
             else {
                 String out = blockingQueue.take();
                 //hack to make multi-value input work (arrows ++)
-                if (!out.isEmpty() && out.charAt(0) == Key.WINDOWS_ESC.getAsChar()) {
+                if (!out.isEmpty() &&
+                        (out.charAt(0) == Key.WINDOWS_ESC.getAsChar() ||
+                                out.charAt(0) == Key.WINDOWS_ESC_2.getAsChar())) {
                     int[] input = new int[2];
                     input[0] = out.charAt(0);
                     String out2 = blockingQueue.take();
