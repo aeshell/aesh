@@ -282,7 +282,8 @@ public enum Key {
 
     public static Key findStartKey(int[] input) {
         for(Key key : values()) {
-            if(key != Key.ESC && key != Key.WINDOWS_ESC && key.inputStartsWithKey(input)) {
+            if(key != Key.ESC && key != Key.WINDOWS_ESC && key != Key.WINDOWS_ESC_2 &&
+                    key.inputStartsWithKey(input)) {
                 if(Config.isOSPOSIXCompatible() && key == Key.CTRL_J) {
                    return key.ENTER;
                 }
@@ -307,7 +308,8 @@ public enum Key {
 
     public static Key findStartKey(int[] input, int position) {
         for(Key key : values()) {
-            if(key != Key.ESC && key != Key.WINDOWS_ESC && key.inputStartsWithKey(input, position)) {
+            if(key != Key.ESC && key != Key.WINDOWS_ESC && key != Key.WINDOWS_ESC_2 &&
+                    key.inputStartsWithKey(input, position)) {
                 if(Config.isOSPOSIXCompatible() && key == Key.CTRL_J) {
                    return key.ENTER;
                 }
