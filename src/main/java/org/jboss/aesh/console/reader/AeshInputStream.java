@@ -64,7 +64,8 @@ public class AeshInputStream extends InputStream {
                         (out.charAt(0) == Key.WINDOWS_ESC.getAsChar() ||
                                 out.charAt(0) == Key.WINDOWS_ESC_2.getAsChar())) {
                     int[] input = new int[2];
-                    input[0] = out.charAt(0);
+                    //set the first char to WINDOWS_ESC, then we can reduce the number of different key's in the future
+                    input[0] = Key.WINDOWS_ESC.getAsChar();
                     String out2 = blockingQueue.take();
                     input[1] = out2.charAt(0);
 
