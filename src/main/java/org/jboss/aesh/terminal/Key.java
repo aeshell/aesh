@@ -175,27 +175,16 @@ public enum Key {
     //div
     DELETE(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getDelete() : new int[]{224,83}),
-    DELETE_2(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getDelete() : new int[]{341,83}),
     INSERT(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getIns() : new int[]{224,82}),
-    INSERT_2(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getIns() : new int[]{341,82}),
     PGUP(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getPgUp() : new int[]{224,73}),
-    PGUP_2(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getPgUp() : new int[]{341,73}),
     PGDOWN(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getPgDown() : new int[]{224,81}),
-    PGDOWN_2(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getPgDown() : new int[]{341,81}),
     HOME(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getKeyHome() : new int[]{224,71}),
-    HOME_2(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getCursorHome() : new int[]{341,71}),
     END(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getEnd() : new int[]{224,79}),
-    END_2(Config.isOSPOSIXCompatible() ? new int[]{27,91,70} : new int[]{341,79}),
     META_CTRL_J(Config.isOSPOSIXCompatible() ?
             new int[]{27,10} : new int[]{0,36}),
     META_CTRL_D(new int[]{27,4}),
@@ -206,20 +195,12 @@ public enum Key {
 
     CTRL_LEFT(Config.isOSPOSIXCompatible() ?
             new int[] {27,91,49,59,53,68} : new int[]{224, 115}),
-    CTRL_LEFT_2(Config.isOSPOSIXCompatible() ?
-            new int[] {27,91,49,59,53,68} : new int[]{341, 115}),
-    CTRL_RIGHT_2(Config.isOSPOSIXCompatible() ?
-            new int[] {27,91,49,59,53,67} : new int[]{341, 116}),
     CTRL_RIGHT(Config.isOSPOSIXCompatible() ?
             new int[] {27,91,49,59,53,67} : new int[]{224, 116}),
     CTRL_UP(Config.isOSPOSIXCompatible() ?
             new int[] {27,91,49,59,53,65} : new int[]{224, 141}),
-    CTRL_UP_2(Config.isOSPOSIXCompatible() ?
-            new int[] {27,91,49,59,53,65} : new int[]{341, 141}),
     CTRL_DOWN(Config.isOSPOSIXCompatible() ?
             new int[] {27,91,49,59,53,66} : new int[]{224, 145}),
-    CTRL_DOWN_2(Config.isOSPOSIXCompatible() ?
-            new int[] {27,91,49,59,53,66} : new int[]{341, 145}),
 
     ENTER(Config.isOSPOSIXCompatible() ?
             new int[]{10} : new int[]{13}),
@@ -282,7 +263,7 @@ public enum Key {
 
     public static Key findStartKey(int[] input) {
         for(Key key : values()) {
-            if(key != Key.ESC && key != Key.WINDOWS_ESC && key != Key.WINDOWS_ESC_2 &&
+            if(key != Key.ESC && key != Key.WINDOWS_ESC &&
                     key.inputStartsWithKey(input)) {
                 if(Config.isOSPOSIXCompatible() && key == Key.CTRL_J) {
                    return key.ENTER;
@@ -308,7 +289,7 @@ public enum Key {
 
     public static Key findStartKey(int[] input, int position) {
         for(Key key : values()) {
-            if(key != Key.ESC && key != Key.WINDOWS_ESC && key != Key.WINDOWS_ESC_2 &&
+            if(key != Key.ESC && key != Key.WINDOWS_ESC &&
                     key.inputStartsWithKey(input, position)) {
                 if(Config.isOSPOSIXCompatible() && key == Key.CTRL_J) {
                    return key.ENTER;
