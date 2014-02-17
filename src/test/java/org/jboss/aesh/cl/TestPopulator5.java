@@ -13,7 +13,7 @@ import java.util.TreeMap;
 @CommandDefinition(name = "test", description = "a simple test")
 public class TestPopulator5 {
 
-    @Option(validator = LongOptionValidator.class)
+    @Option(shortName = 'v', validator = LongOptionValidator.class)
     private Long veryLong;
 
     @OptionList
@@ -72,10 +72,11 @@ public class TestPopulator5 {
         return bar;
     }
 
-    public class LongOptionValidator implements OptionValidator<LongValidatorInvocation> {
+    public class LongOptionValidator implements OptionValidator {
         @Override
-        public void validate(LongValidatorInvocation validatorInvocation) throws OptionValidatorException {
-            if(validatorInvocation.getValue() < 0 || validatorInvocation.getValue() > 100)
+        public void validate(ValidatorInvocation validatorInvocation) throws OptionValidatorException {
+            Long value = (Long) validatorInvocation.getValue();
+            if(value < 0 || value > 100)
                 throw new OptionValidatorException("value must be between 0 and 100");
         }
     }

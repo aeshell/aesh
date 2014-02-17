@@ -30,7 +30,9 @@ import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.validator.AeshValidatorInvocation;
 import org.jboss.aesh.console.command.validator.ValidatorInvocation;
+import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -101,6 +103,7 @@ public class AeshExample {
                 .commandRegistry(registry)
                 .manProvider(new ManProviderExample())
                 .settings(settings)
+                .validatorInvocationProvider(new ExampleValidatorInvocationProvider())
                 .prompt(new Prompt(new TerminalString("[aesh@rules]$ ",
                         new TerminalColor(Color.GREEN, Color.DEFAULT, Color.Intensity.BRIGHT))))
                 .create();
@@ -210,7 +213,7 @@ public class AeshExample {
         private String less;
 
         @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':',
-                //validator = DirectoryValidator.class,
+                validator = DirectoryValidator.class,
                 activator = BarActivator.class)
         List<File> files;
 
@@ -316,6 +319,17 @@ public class AeshExample {
         @Override
         public File getValue() {
             return file;
+        }
+    }
+
+    public static class ExampleValidatorInvocationProvider implements ValidatorInvocationProvider {
+
+        @Override
+        public ValidatorInvocation enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
+            if(validatorInvocation.getValue() instanceof File)
+                return new DirectoryValidatorInvocation((File) validatorInvocation.getValue());
+            else
+                return validatorInvocation;
         }
     }
 
