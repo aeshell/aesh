@@ -148,59 +148,59 @@ public enum Key {
     WINDOWS_ESC_2(new int[]{341}), // just used to identify win special chars
     //movement
     UP(Config.isOSPOSIXCompatible() ?
-            new int[]{27,91,65} : new int[]{224,72}),
+            new int[]{ESC.getFirstValue(),91,65} : new int[]{WINDOWS_ESC.getFirstValue(),72}),
     DOWN(Config.isOSPOSIXCompatible() ?
-            new int[]{27,91,66} : new int[]{224,80}),
+            new int[]{ESC.getFirstValue(),91,66} : new int[]{WINDOWS_ESC.getFirstValue(),80}),
     RIGHT(Config.isOSPOSIXCompatible() ?
-            new int[]{27,91,67} : new int[]{224,77}),
+            new int[]{ESC.getFirstValue(),91,67} : new int[]{WINDOWS_ESC.getFirstValue(),77}),
     LEFT(Config.isOSPOSIXCompatible() ?
-            new int[]{27,91,68} : new int[]{224,75}),
+            new int[]{ESC.getFirstValue(),91,68} : new int[]{WINDOWS_ESC.getFirstValue(),75}),
 
     UP_2(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getUp() : new int[]{341,72}),
+            InfocmpManager.getUp() : new int[]{WINDOWS_ESC.getFirstValue(),72}),
     DOWN_2(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getDown() : new int[]{341,80}),
+            InfocmpManager.getDown() : new int[]{WINDOWS_ESC.getFirstValue(),80}),
     RIGHT_2(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getRight() : new int[]{341,77}),
+            InfocmpManager.getRight() : new int[]{WINDOWS_ESC.getFirstValue(),77}),
     LEFT_2(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getLeft() : new int[]{341,75}),
+            InfocmpManager.getLeft() : new int[]{WINDOWS_ESC.getFirstValue(),75}),
     //meta
     META_F(Config.isOSPOSIXCompatible() ?
-            new int[]{27,102} : new int[]{0,33}),
+            new int[]{ESC.getFirstValue(),102} : new int[]{0,33}),
     META_B(Config.isOSPOSIXCompatible() ?
-            new int[]{27,98} : new int[]{0,48}),
+            new int[]{ESC.getFirstValue(),98} : new int[]{0,48}),
     META_D(Config.isOSPOSIXCompatible() ?
-            new int[]{27,100} : new int[]{0,32}),
-    META_A(new int[]{27,97}),
+            new int[]{ESC.getFirstValue(),100} : new int[]{0,32}),
+    META_A(new int[]{ESC.getFirstValue(),97}),
     //div
     DELETE(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getDelete() : new int[]{224,83}),
+            InfocmpManager.getDelete() : new int[]{WINDOWS_ESC.getFirstValue(),83}),
     INSERT(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getIns() : new int[]{224,82}),
+            InfocmpManager.getIns() : new int[]{WINDOWS_ESC.getFirstValue(),82}),
     PGUP(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getPgUp() : new int[]{224,73}),
+            InfocmpManager.getPgUp() : new int[]{WINDOWS_ESC.getFirstValue(),73}),
     PGDOWN(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getPgDown() : new int[]{224,81}),
+            InfocmpManager.getPgDown() : new int[]{WINDOWS_ESC.getFirstValue(),81}),
     HOME(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getKeyHome() : new int[]{224,71}),
+            InfocmpManager.getKeyHome() : new int[]{WINDOWS_ESC.getFirstValue(),71}),
     END(Config.isOSPOSIXCompatible() ?
-            InfocmpManager.getEnd() : new int[]{224,79}),
+            InfocmpManager.getEnd() : new int[]{WINDOWS_ESC.getFirstValue(),79}),
     META_CTRL_J(Config.isOSPOSIXCompatible() ?
-            new int[]{27,10} : new int[]{0,36}),
-    META_CTRL_D(new int[]{27,4}),
+            new int[]{ESC.getFirstValue(),10} : new int[]{0,36}),
+    META_CTRL_D(new int[]{ESC.getFirstValue(),4}),
     CTRL_X_CTRL_U(Config.isOSPOSIXCompatible() ?
-            new int[]{24,21} : new int[]{0,36}),
+            new int[]{ESC.getFirstValue(),21} : new int[]{0,36}),
     BACKSPACE(Config.isOSPOSIXCompatible() ?
             new int[]{127} : new int[]{8}),
 
     CTRL_LEFT(Config.isOSPOSIXCompatible() ?
-            new int[] {27,91,49,59,53,68} : new int[]{224, 115}),
+            new int[] {ESC.getFirstValue(),91,49,59,53,68} : new int[]{WINDOWS_ESC.getFirstValue(), 115}),
     CTRL_RIGHT(Config.isOSPOSIXCompatible() ?
-            new int[] {27,91,49,59,53,67} : new int[]{224, 116}),
+            new int[] {ESC.getFirstValue(),91,49,59,53,67} : new int[]{WINDOWS_ESC.getFirstValue(), 116}),
     CTRL_UP(Config.isOSPOSIXCompatible() ?
-            new int[] {27,91,49,59,53,65} : new int[]{224, 141}),
+            new int[] {ESC.getFirstValue(),91,49,59,53,65} : new int[]{WINDOWS_ESC.getFirstValue(), 141}),
     CTRL_DOWN(Config.isOSPOSIXCompatible() ?
-            new int[] {27,91,49,59,53,66} : new int[]{224, 145}),
+            new int[] {ESC.getFirstValue(),91,49,59,53,66} : new int[]{WINDOWS_ESC.getFirstValue(), 145}),
 
     ENTER(Config.isOSPOSIXCompatible() ?
             new int[]{10} : new int[]{13}),
