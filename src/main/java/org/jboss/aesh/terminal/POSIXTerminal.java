@@ -64,7 +64,8 @@ public class POSIXTerminal extends AbstractTerminal {
             // set the console to be character-buffered instead of line-buffered
             // -ixon will give access to ctrl-s/ctrl-q
             //intr undef set ctrl-c not to interrupt
-            stty("-ixon -icanon min 1 intr undef");
+            //icrnl, translate carriage return to newline (needed when aesh is started in the background)
+            stty("-ixon -icanon min 1 intr undef icrnl");
 
             // disable character echoing
             stty("-echo");
