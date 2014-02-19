@@ -10,9 +10,9 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
+import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
@@ -34,13 +34,13 @@ public class IgnoreEofTest extends BaseConsoleTest {
 
         PipedOutputStream stdin = new PipedOutputStream();
         Console console = getTestConsole(builder, new PipedInputStream(stdin));
-        console.setConsoleCallback(new ConsoleCallback() {
+        console.setConsoleCallback(new AeshConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int execute(ConsoleOperation output) {
                 return 0;
             }
         });
-        console.setIgnoreEof(1);
+        //console.setIgnoreEof(1);
         console.start();
 
         String BUF = "asdfasdf";
@@ -71,14 +71,14 @@ public class IgnoreEofTest extends BaseConsoleTest {
 
         PipedOutputStream stdin = new PipedOutputStream();
         Console console = getTestConsole(builder, new PipedInputStream(stdin));
-        console.setConsoleCallback(new ConsoleCallback() {
+        console.setConsoleCallback(new AeshConsoleCallback() {
             @Override
-            public int readConsoleOutput(ConsoleOperation output) throws IOException {
+            public int execute(ConsoleOperation output) {
                 return 0;
             }
         });
         console.start();
-        console.setIgnoreEof(1);
+        //console.setIgnoreEof(1);
 
         String BUF = "a";
 
