@@ -54,6 +54,7 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.CTRL_W, Operation.DELETE_PREV_BIG_WORD));
         //keys.add(new KeyOperation(24, Operation.NO_ACTION)); ctrl-x
         keys.add(new KeyOperation(Key.CTRL_Y, Operation.PASTE_BEFORE));
+        keys.add(new KeyOperation(Key.CTRL_Z, Operation.NO_ACTION));
 
         keys.add(new KeyOperation(Key.CTRL_X_CTRL_U, Operation.UNDO)); //ctrl-x ctrl-u
 
@@ -140,6 +141,7 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.CTRL_E, Operation.EMACS_EDIT_MODE)); //ctrl-e
         keys.add(new KeyOperation(Key.CTRL_I, Operation.COMPLETE)); //tab
         keys.add(new KeyOperation(Key.CTRL_L, Operation.CLEAR)); //ctrl-l
+        keys.add(new KeyOperation(Key.CTRL_Z, Operation.NO_ACTION));
 
         //search
         keys.add(new KeyOperation(Key.CTRL_R, Operation.SEARCH_PREV));
