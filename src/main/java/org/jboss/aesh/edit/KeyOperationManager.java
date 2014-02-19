@@ -23,7 +23,7 @@ public class KeyOperationManager {
     private List<KeyOperation> operations;
 
     public KeyOperationManager() {
-       operations = new ArrayList<KeyOperation>();
+       operations = new ArrayList<>();
     }
 
     public List<KeyOperation> getOperations() {
@@ -105,10 +105,10 @@ public class KeyOperationManager {
     }
 
     /**
-     * If we cant find an operation in Key we its either a char we havent mapped
+     * If we cant find an operation in Key we its either a char we haven't mapped
      * or possibly a block that contains several identical chars.
-     * @param input
-     * @return
+     * @param input input
+     * @return found operation
      */
     private KeyOperation findOtherOperations(int[] input) {
         if(Key.startsWithEscape(input)) {

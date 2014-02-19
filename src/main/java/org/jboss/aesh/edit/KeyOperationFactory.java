@@ -22,7 +22,7 @@ import java.util.List;
 public class KeyOperationFactory {
 
     public static List<KeyOperation> generateEmacsMode() {
-        List<KeyOperation> keys = new ArrayList<KeyOperation>();
+        List<KeyOperation> keys = new ArrayList<>();
 
         if(Key.ENTER.equalTo(Key.ENTER_2.getKeyValues())) {
             keys.add(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
@@ -123,7 +123,7 @@ public class KeyOperationFactory {
     }
 
     public static List<KeyOperation> generateViMode() {
-        List<KeyOperation> keys = new ArrayList<KeyOperation>();
+        List<KeyOperation> keys = new ArrayList<>();
 
         keys.add(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
         if(Key.ENTER.equalTo(Key.ENTER_2.getKeyValues())) {
