@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.edit;
 
+import org.jboss.aesh.console.Console;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
@@ -23,8 +24,34 @@ public class EmacsEditMode implements EditMode {
 
     private KeyOperationManager operationManager;
 
+    private Console console;
+
+    private static final String IGNOREEOF = "IGNOREEOF";
+    private int eofCounter;
+    //default value
+    private int ignoreEof = 0;
+
     public EmacsEditMode(KeyOperationManager operations) {
         this.operationManager = operations;
+    }
+
+    @Override
+    public void init(Console console) {
+       this.console = console;
+        eofCounter = 0;
+    }
+
+    private void checkEof() {
+        String strValue = console.getExportManager().getValueIgnoreCase(IGNOREEOF);
+        try {
+            int eofValue = Integer.parseInt(strValue);
+            if(eofValue > -1)
+                ignoreEof = eofValue;
+            else
+                ignoreEof = 0; // standard value
+        }
+        catch (NumberFormatException ignored) {
+        }
     }
 
     @Override
@@ -76,13 +103,20 @@ public class EmacsEditMode implements EditMode {
                     operation == Operation.SEARCH_NEXT_WORD)
                 mode = Action.SEARCH;
 
-            //if ctrl-d is pressed on an empty line we need to return logout
-            //else return delete next char
+            //if ctrl-d is pressed on an empty line we update the eofCounter
+            // if eofCounter > ignoreEof we send EXIT operation, else NO_ACTION
+            //if buffer is not empty, we send a NEW_LINE
             if(currentOperation.getKey().equals(Key.CTRL_D)) {
-                if(buffer.isEmpty())
-                    return operation;
+                if(buffer.isEmpty()) {
+                    checkEof();
+                    eofCounter++;
+                    if(eofCounter > ignoreEof)
+                        return operation;
+                    else
+                        return Operation.NO_ACTION;
+                }
                 else
-                    return Operation.DELETE_NEXT_CHAR;
+                    return Operation.NEW_LINE;
             }
 
             return operation;

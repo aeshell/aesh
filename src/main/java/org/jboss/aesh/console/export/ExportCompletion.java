@@ -33,7 +33,7 @@ public class ExportCompletion implements Completion {
             completeOperation.addCompletionCandidate(EXPORT);
         else if(EXPORT_SPACE.equals(completeOperation.getBuffer()) ||
                 EXPORT.equals(completeOperation.getBuffer().trim())) {
-            completeOperation.addCompletionCandidates(exportManager.getAllNames());
+            completeOperation.addCompletionCandidates(exportManager.getAllNamesWithEquals());
             completeOperation.setOffset(completeOperation.getCursor());
         }
         else if(completeOperation.getBuffer().startsWith(EXPORT_SPACE)) {

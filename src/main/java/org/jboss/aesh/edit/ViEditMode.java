@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.edit;
 
+import org.jboss.aesh.console.Console;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
@@ -67,6 +68,11 @@ public class ViEditMode implements EditMode {
             mode = Action.EDIT;
 
         return action;
+    }
+
+    @Override
+    public void init(Console console) {
+
     }
 
     @Override

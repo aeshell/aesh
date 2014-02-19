@@ -28,7 +28,7 @@ public class ConsoleInputSession {
     private AeshInputStream aeshInputStream;
     private ExecutorService executorService;
 
-    private ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<String>(1000);
+    private ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<>(1000);
 
     private static final Logger logger = LoggerUtil.getLogger(ConsoleInputSession.class.getName());
 

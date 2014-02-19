@@ -180,6 +180,7 @@ public class Console {
         settings.getTerminal().init(settings);
 
         editMode = settings.getEditMode();
+        editMode.init(this);
 
         inputQueue = new ArrayBlockingQueue<>(50000);
 
@@ -738,6 +739,7 @@ public class Console {
                 settings.getInterruptHook().handleInterrupt(this);
             }
             else {
+                out().println();
                 if(processManager.hasRunningProcess())
                     stop();
                 else {

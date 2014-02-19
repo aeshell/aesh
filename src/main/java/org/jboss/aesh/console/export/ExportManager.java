@@ -96,6 +96,15 @@ public class ExportManager {
         }
     }
 
+    public String getValueIgnoreCase(String name) {
+        for(String key : variables.keySet()) {
+            if(key.equalsIgnoreCase(name))
+                return variables.get(key);
+        }
+
+        return "";
+    }
+
     private String parseValue(String value) {
         if(value.indexOf(DOLLAR) == -1) {
             return value;
@@ -185,10 +194,17 @@ public class ExportManager {
         }
     }
 
-    public List<String> getAllNames() {
+    public List<String> getAllNamesWithEquals() {
         List<String> names = new ArrayList<>(variables.size());
         for(String key : variables.keySet())
             names.add(key+"=");
+        return names;
+    }
+
+    public List<String> getAllNames() {
+        List<String> names = new ArrayList<>(variables.size());
+        for(String key : variables.keySet())
+            names.add(key);
         return names;
     }
 

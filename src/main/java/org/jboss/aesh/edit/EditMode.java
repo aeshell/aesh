@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.edit;
 
+import org.jboss.aesh.console.Console;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
@@ -21,4 +22,6 @@ public interface EditMode {
     Action getCurrentAction();
 
     Mode getMode();
+
+    void init(Console console);
 }
