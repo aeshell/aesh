@@ -17,8 +17,11 @@ import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.terminal.Key;
-import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
@@ -40,26 +43,40 @@ public class IgnoreEofTest extends BaseConsoleTest {
                 return 0;
             }
         });
-        //console.setIgnoreEof(1);
         console.start();
+        console.getExportManager().addVariable("export ignoreeof = 2");
 
         String BUF = "asdfasdf";
 
         stdin.write(BUF.getBytes());
+        stdin.flush();
         Thread.sleep(100);
 
-        Assert.assertEquals(BUF, console.getBuffer());
+        assertEquals(BUF, console.getBuffer());
 
         stdin.write(Key.CTRL_D.getFirstValue());
         stdin.flush();
         Thread.sleep(100);
 
-        Assert.assertEquals("", console.getBuffer());
+        assertEquals("", console.getBuffer());
 
         stdin.write(Key.CTRL_D.getFirstValue());
+        stdin.flush();
         Thread.sleep(100);
 
-        Assert.assertFalse(console.isRunning());
+        assertTrue(console.isRunning());
+
+        stdin.write(Key.CTRL_D.getFirstValue());
+        stdin.flush();
+        Thread.sleep(100);
+
+        assertTrue(console.isRunning());
+
+        stdin.write(Key.CTRL_D.getFirstValue());
+        stdin.flush();
+        Thread.sleep(100);
+
+        assertFalse(console.isRunning());
     }
 
     @Test
@@ -78,27 +95,33 @@ public class IgnoreEofTest extends BaseConsoleTest {
             }
         });
         console.start();
-        //console.setIgnoreEof(1);
+        console.getExportManager().addVariable("export ignoreeof = 1");
 
         String BUF = "a";
 
         stdin.write(BUF.getBytes());
         Thread.sleep(100);
 
-        Assert.assertEquals(BUF, console.getBuffer());
+        assertEquals(BUF, console.getBuffer());
 
-        for (int val : Key.LEFT.getKeyValues()) {
-            stdin.write(val);
-        }
+        stdin.write(Key.CTRL_D.getFirstValue());
         stdin.flush();
-        stdin.write(Key.CTRL_D.getFirstValue());
-        Thread.sleep(100);
-        Assert.assertEquals("", console.getBuffer());
-
-        stdin.write(Key.CTRL_D.getFirstValue());
         Thread.sleep(100);
 
-        Assert.assertFalse(console.isRunning());
+        assertTrue(console.isRunning());
+
+        stdin.write(Key.CTRL_D.getFirstValue());
+        stdin.flush();
+        Thread.sleep(100);
+
+        assertTrue(console.isRunning());
+
+        stdin.write(Key.CTRL_D.getFirstValue());
+        stdin.flush();
+        Thread.sleep(100);
+
+        assertFalse(console.isRunning());
+
     }
 
 }
