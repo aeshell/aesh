@@ -79,12 +79,12 @@ public class EmacsEditMode extends AbstractEditMode {
             //if ctrl-d is pressed on an empty line we update the eofCounter
             // if eofCounter > ignoreEof we send EXIT operation, else NO_ACTION
             //if buffer is not empty, we send a NEW_LINE
-            if(currentOperation.getKey().equals(Key.CTRL_D)) {
+            if(currentOperation.getOperation() == Operation.EOF) {
                 if(buffer.isEmpty()) {
                     checkEof();
                     eofCounter++;
                     if(eofCounter > ignoreEof)
-                        return operation;
+                        return Operation.EXIT;
                     else
                         return Operation.NO_ACTION;
                 }

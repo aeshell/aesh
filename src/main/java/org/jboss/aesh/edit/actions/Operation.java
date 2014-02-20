@@ -92,7 +92,8 @@ public enum Operation {
     EXIT(Action.EXIT),
     VI_EDIT_MODE(Movement.PREV, Action.CHANGE_EDITMODE),
     EMACS_EDIT_MODE(Movement.NEXT, Action.CHANGE_EDITMODE),
-    REPLACE(Movement.NEXT, Action.REPLACE);
+    REPLACE(Movement.NEXT, Action.REPLACE),
+    EOF(Action.EOF);
 
     private Movement movement;
     private Action action;

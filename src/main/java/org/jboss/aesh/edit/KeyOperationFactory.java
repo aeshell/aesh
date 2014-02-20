@@ -37,7 +37,7 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.CTRL_C, Operation.EXIT));
         //ctrl-d, if pressed on a line with chars it will cause the
         //action delete_next_char else exit
-        keys.add(new KeyOperation(Key.CTRL_D, Operation.EXIT));
+        keys.add(new KeyOperation(Key.CTRL_D, Operation.EOF));
         keys.add(new KeyOperation(Key.CTRL_E, Operation.MOVE_END));
         keys.add(new KeyOperation(Key.CTRL_F, Operation.MOVE_NEXT_CHAR));
         keys.add(new KeyOperation(Key.CTRL_G, Operation.ABORT));
@@ -137,7 +137,7 @@ public class KeyOperationFactory {
         keys.add(new KeyOperation(Key.CTRL_C, Operation.EXIT));
         //ctrl-d, if pressed on a line with chars it will cause the
         //action delete_next_char else exit
-        keys.add(new KeyOperation(Key.CTRL_D, Operation.EXIT));
+        keys.add(new KeyOperation(Key.CTRL_D, Operation.EOF));
         keys.add(new KeyOperation(Key.CTRL_E, Operation.EMACS_EDIT_MODE)); //ctrl-e
         keys.add(new KeyOperation(Key.CTRL_I, Operation.COMPLETE)); //tab
         keys.add(new KeyOperation(Key.CTRL_L, Operation.CLEAR)); //ctrl-l

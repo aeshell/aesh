@@ -32,5 +32,6 @@ public enum Action {
     ABORT,
     CHANGE_EDITMODE,
     NO_ACTION,
-    REPLACE
+    REPLACE,
+    EOF
 }
