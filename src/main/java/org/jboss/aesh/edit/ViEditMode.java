@@ -6,7 +6,6 @@
  */
 package org.jboss.aesh.edit;
 
-import org.jboss.aesh.console.Console;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
@@ -14,7 +13,7 @@ import org.jboss.aesh.terminal.Key;
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
-public class ViEditMode implements EditMode {
+public class ViEditMode extends AbstractEditMode {
 
     private Action mode;
     private Action previousMode;
@@ -68,11 +67,6 @@ public class ViEditMode implements EditMode {
             mode = Action.EDIT;
 
         return action;
-    }
-
-    @Override
-    public void init(Console console) {
-
     }
 
     @Override
@@ -132,11 +126,18 @@ public class ViEditMode implements EditMode {
         Operation operation = currentOperation.getOperation();
         Action workingMode = currentOperation.getWorkingMode();
 
-        //if ctrl-d is pressed on an empty line we need to return logout
-        //else return new_line
-        if(operation == Operation.EXIT) {
-            if(buffer.isEmpty())
-                return operation;
+        //if ctrl-d is pressed on an empty line we update the eofCounter
+        // if eofCounter > ignoreEof we send EXIT operation, else NO_ACTION
+        //if buffer is not empty, we send a NEW_LINE
+        if(operation == Operation.EOF) {
+            if(buffer.isEmpty()) {
+                checkEof();
+                eofCounter++;
+                if(eofCounter > ignoreEof)
+                    return Operation.EXIT;
+                else
+                    return Operation.NO_ACTION;
+            }
             else
                 return Operation.NEW_LINE;
         }
