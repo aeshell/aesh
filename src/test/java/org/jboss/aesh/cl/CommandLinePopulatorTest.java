@@ -47,7 +47,7 @@ public class CommandLinePopulatorTest {
     public ExpectedException exception = ExpectedException.none();
 
     @Test
-    public void testSimpleObjects() throws CommandLineParserException, OptionValidatorException {
+    public void testSimpleObjects() throws Exception {
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(TestPopulator1.class);
 
         TestPopulator1 test1 = new TestPopulator1();
@@ -87,7 +87,7 @@ public class CommandLinePopulatorTest {
     }
 
     @Test(expected = OptionParserException.class)
-    public void testListObjects() throws CommandLineParserException, OptionValidatorException {
+    public void testListObjects() throws Exception {
             CommandLineParser parser = ParserGenerator.generateCommandLineParser(TestPopulator2.class);
             TestPopulator2 test2 = new TestPopulator2();
 
@@ -171,7 +171,7 @@ public class CommandLinePopulatorTest {
     }
 
     @Test(expected = OptionParserException.class)
-    public void testGroupObjects() throws CommandLineParserException, OptionValidatorException {
+    public void testGroupObjects() throws Exception {
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(TestPopulator3.class);
         TestPopulator3 test3 = new TestPopulator3();
         parser.getCommandPopulator().populateObject(test3, parser.parse("test -bX1=foo -bX2=bar"), invocationProviders, true);
@@ -196,7 +196,7 @@ public class CommandLinePopulatorTest {
     }
 
     @Test
-    public void testArguments() throws CommandLineParserException, OptionValidatorException {
+    public void testArguments() throws Exception {
         CommandLineParser  parser = ParserGenerator.generateCommandLineParser(TestPopulator4.class);
         TestPopulator4 test4 = new TestPopulator4();
         parser.getCommandPopulator().populateObject(test4, parser.parse("test test2.txt test4.txt"), invocationProviders, true);
@@ -207,7 +207,7 @@ public class CommandLinePopulatorTest {
     }
 
     @Test(expected = OptionParserException.class)
-    public void testStaticPopulator() throws CommandLineParserException, OptionValidatorException {
+    public void testStaticPopulator() throws Exception {
         TestPopulator3 test3 = new TestPopulator3();
         ParserGenerator.parseAndPopulate(test3, "test -bX1=foo -bX2=bar");
 
@@ -230,7 +230,7 @@ public class CommandLinePopulatorTest {
     }
 
     @Test
-    public void testSimpleObjectsBuilder() throws CommandLineParserException, OptionValidatorException {
+    public void testSimpleObjectsBuilder() throws Exception {
         CommandBuilder commandBuilder = new CommandBuilder().name("test").description("a simple test");
         commandBuilder
                 .addOption(new OptionBuilder().name("XX").description("enable X").fieldName("enableX")
@@ -264,7 +264,7 @@ public class CommandLinePopulatorTest {
     }
 
     @Test
-    public void testCustomConverter() throws CommandLineParserException, OptionValidatorException {
+    public void testCustomConverter() throws Exception {
         CommandLineParser  parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class);
         TestPopulator5 test5 = new TestPopulator5();
         parser.getCommandPopulator().populateObject(test5, parser.parse("test test2.txt test4.txt"), invocationProviders, true);

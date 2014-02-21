@@ -30,7 +30,6 @@ import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.command.validator.AeshValidatorInvocation;
 import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.ManProvider;

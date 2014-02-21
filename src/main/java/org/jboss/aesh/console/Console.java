@@ -734,16 +734,20 @@ public class Console {
         else if(action == Action.COMPLETE) {
             complete();
         }
-        else if(action == Action.EXIT) {
+        else if(action == Action.EXIT || action == Action.EOF ||
+                action == Action.INTERRUPT || action == Action.IGNOREEOF) {
             if(settings.hasInterruptHook()) {
-                settings.getInterruptHook().handleInterrupt(this);
+                settings.getInterruptHook().handleInterrupt(this, action);
             }
             else {
-                out().println();
-                if(processManager.hasRunningProcess())
-                    stop();
-                else {
-                    doStop();
+                //all action other than IGNOREEOF will stop aesh
+                if(action != Action.IGNOREEOF) {
+                    out().println();
+                    if(processManager.hasRunningProcess())
+                        stop();
+                    else {
+                        doStop();
+                    }
                 }
             }
         }
@@ -753,7 +757,6 @@ public class Console {
             else if(operation.getMovement() == Movement.PREV)
                 getHistoryElement(false);
         }
-
         else if(action == Action.UNDO) {
             undo();
         }

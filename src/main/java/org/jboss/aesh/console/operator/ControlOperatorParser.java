@@ -20,12 +20,11 @@ import java.util.regex.Pattern;
  */
 public class ControlOperatorParser {
 
-    private static Pattern controlOperatorPattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)|(\\|&)|(\\|)|(;)|(&&)|(&)");
-    private static Pattern redirectionNoPipelinePattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)");
-    private static Pattern pipelinePattern = Pattern.compile("(\\|&)|(\\|)");
-    private static Pattern pipelineAndEndPattern = Pattern.compile("(\\|&)|(\\|)|(;)");
-    private static char escape = '\\';
-    private static char equals = '=';
+    private static final Pattern controlOperatorPattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)|(\\|&)|(\\|)|(;)|(&&)|(&)");
+    private static final Pattern redirectionNoPipelinePattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)");
+    private static final Pattern pipelineAndEndPattern = Pattern.compile("(\\|&)|(\\|)|(;)");
+    private static final char ESCAPE = '\\';
+    private static final char EQUALS = '=';
 
     public static boolean doStringContainRedirectionNoPipeline(String buffer) {
         return redirectionNoPipelinePattern.matcher(buffer).find();
@@ -93,7 +92,7 @@ public class ControlOperatorParser {
      */
     public static List<ConsoleOperation> findAllControlOperators(String buffer) {
         Matcher matcher = controlOperatorPattern.matcher(buffer);
-        List<ConsoleOperation> reOpList = new ArrayList<ConsoleOperation>();
+        List<ConsoleOperation> reOpList = new ArrayList<>();
 
         while(matcher.find()) {
             if(matcher.group(1) != null) {
@@ -122,10 +121,10 @@ public class ControlOperatorParser {
             }
             else if(matcher.group(5) != null) {
                 if(matcher.start(5) > 0 &&
-                        buffer.charAt(matcher.start(5)-1) != escape &&
-                        buffer.charAt(matcher.start(5)-1) != equals &&
+                        buffer.charAt(matcher.start(5)-1) != ESCAPE &&
+                        buffer.charAt(matcher.start(5)-1) != EQUALS &&
                         ((matcher.start(5)+1 < buffer.length() &&
-                                buffer.charAt(matcher.start(5)+1) != equals)
+                                buffer.charAt(matcher.start(5)+1) != EQUALS)
                                 || matcher.start(5)+1 == buffer.length())) {
                     reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_OUT,
                             buffer.substring(0, matcher.start(5))));
@@ -135,10 +134,10 @@ public class ControlOperatorParser {
             }
             else if(matcher.group(6) != null) {
                 if(matcher.start(6) > 0 &&
-                        buffer.charAt(matcher.start(6)-1) != escape &&
-                        buffer.charAt(matcher.start(6)-1) != equals &&
+                        buffer.charAt(matcher.start(6)-1) != ESCAPE &&
+                        buffer.charAt(matcher.start(6)-1) != EQUALS &&
                         (( matcher.start(6)+1 < buffer.length() &&
-                                buffer.charAt(matcher.start(6)+1) != equals) ||
+                                buffer.charAt(matcher.start(6)+1) != EQUALS) ||
                                 matcher.start(6)+1 == buffer.length())) {
 
                     reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_IN,
@@ -155,7 +154,7 @@ public class ControlOperatorParser {
             }
             else if(matcher.group(8) != null) {
                 if(matcher.start(8) > 0 &&
-                        buffer.charAt(matcher.start(8)-1) != escape) {
+                        buffer.charAt(matcher.start(8)-1) != ESCAPE) {
                     reOpList.add( new ConsoleOperation(ControlOperator.PIPE,
                             buffer.substring(0, matcher.start(8))));
                     buffer = buffer.substring(matcher.end(8));
@@ -176,7 +175,7 @@ public class ControlOperatorParser {
             }
             else if(matcher.group(11) != null) {
                 if(matcher.start(11) > 0 &&
-                        buffer.charAt(matcher.start(11)-1) != escape) {
+                        buffer.charAt(matcher.start(11)-1) != ESCAPE) {
                     reOpList.add( new ConsoleOperation(ControlOperator.AMP,
                             buffer.substring(0, matcher.start(11))));
                     buffer = buffer.substring(matcher.end(11));

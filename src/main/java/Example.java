@@ -16,6 +16,7 @@ import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalCharacter;
@@ -73,9 +74,19 @@ public class Example {
         //a simple interruptHook
         builder.interruptHook(new InterruptHook() {
             @Override
-            public void handleInterrupt(Console console) {
-                console.getShell().out().println("^C");
-                console.clearBufferAndDisplayPrompt();
+            public void handleInterrupt(Console console, Action action) {
+                if(action == Action.INTERRUPT) {
+                    console.getShell().out().println("^C");
+                    console.clearBufferAndDisplayPrompt();
+                }
+                else if(action == Action.IGNOREEOF) {
+                    console.getShell().out().println("Use \"exit\" to leave the shell.");
+                    console.clearBufferAndDisplayPrompt();
+                }
+                else {
+                    console.getShell().out().println();
+                    console.stop();
+                }
             }
         });
 
