@@ -33,5 +33,7 @@ public enum Action {
     CHANGE_EDITMODE,
     NO_ACTION,
     REPLACE,
+    INTERRUPT,
+    IGNOREEOF,
     EOF
 }

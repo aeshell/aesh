@@ -84,9 +84,9 @@ public class EmacsEditMode extends AbstractEditMode {
                     checkEof();
                     eofCounter++;
                     if(eofCounter > ignoreEof)
-                        return Operation.EXIT;
+                        return currentOperation.getOperation();
                     else
-                        return Operation.NO_ACTION;
+                        return Operation.IGNOREEOF;
                 }
                 else
                     return Operation.NEW_LINE;

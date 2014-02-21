@@ -34,7 +34,7 @@ public class KeyOperationFactory {
 
         keys.add(new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING));
         keys.add(new KeyOperation(Key.CTRL_B, Operation.MOVE_PREV_CHAR));
-        keys.add(new KeyOperation(Key.CTRL_C, Operation.EXIT));
+        keys.add(new KeyOperation(Key.CTRL_C, Operation.INTERRUPT));
         //ctrl-d, if pressed on a line with chars it will cause the
         //action delete_next_char else exit
         keys.add(new KeyOperation(Key.CTRL_D, Operation.EOF));
@@ -134,7 +134,7 @@ public class KeyOperationFactory {
             keys.add(new KeyOperation(Key.ENTER_2, Operation.NEW_LINE));
         }
 
-        keys.add(new KeyOperation(Key.CTRL_C, Operation.EXIT));
+        keys.add(new KeyOperation(Key.CTRL_C, Operation.INTERRUPT));
         //ctrl-d, if pressed on a line with chars it will cause the
         //action delete_next_char else exit
         keys.add(new KeyOperation(Key.CTRL_D, Operation.EOF));
