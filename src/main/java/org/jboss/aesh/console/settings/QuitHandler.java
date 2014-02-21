@@ -11,6 +11,6 @@ package org.jboss.aesh.console.settings;
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
-public abstract class QuitHandler {
-    public abstract void quit();
+public interface QuitHandler {
+    void quit();
 }
