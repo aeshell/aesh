@@ -804,7 +804,6 @@ public class Console {
             //moveToEnd();
             moveCursor(buffer.totalLength());
             out().print(Config.getLineSeparator());
-            //printNewline(); // output newline
             if(buffer.isMultiLine())
                 return buffer.getMultiLineBuffer() + buffer.getLineNoMask();
             else

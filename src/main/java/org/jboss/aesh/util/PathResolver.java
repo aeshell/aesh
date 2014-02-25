@@ -103,15 +103,13 @@ public class PathResolver {
 
         if(incPath.toString().indexOf(PARENT_WITH_SEPARATOR) > -1) {
             String tmp = incPath.toString();
-            File tmpFile = new File(incPath.toString());
             while(tmp.indexOf(PARENT_WITH_SEPARATOR) > -1) {
                 int index = tmp.indexOf(PARENT_WITH_SEPARATOR);
                 if(index == 0) {
                     tmp = tmp.substring(PARENT_WITH_SEPARATOR.length());
-                    tmpFile = new File(Config.getPathSeparator());
                 }
                 else {
-                    tmpFile = new File(tmp.substring(0, index));
+                    File tmpFile = new File(tmp.substring(0, index));
                     tmpFile = tmpFile.getParentFile();
                     if(tmpFile == null)
                         tmpFile = new File(Config.getPathSeparator());
@@ -132,28 +130,46 @@ public class PathResolver {
 
         if( incPath.toString().indexOf(STAR) > -1 || incPath.toString().indexOf(WILDCARD) > -1) {
             PathCriteria pathCriteria = parsePath(incPath);
-            List<File> foundFiles = findFiles(new File(pathCriteria.parentPath), pathCriteria.getCriteria(), false);
-            if(pathCriteria.childPath.length() == 0)
-                return foundFiles;
-            else {
-                List<File> outFiles = new ArrayList<>();
-                for(File f : foundFiles)
-                    if(new File(f+Config.getPathSeparator()+pathCriteria.childPath).exists())
-                        outFiles.add(new File(f+Config.getPathSeparator()+pathCriteria.childPath));
+            if(incPath.toString().indexOf(SEPARATOR) > -1) {
+                List<File> foundFiles  = null;
+                if(pathCriteria.getCriteria().equals(String.valueOf(STAR))) {
+                    foundFiles = new ArrayList<>();
+                    foundFiles.add(new File(pathCriteria.getParentPath()));
+                }
+                else
+                    foundFiles = findFiles(new File(pathCriteria.parentPath), pathCriteria.getCriteria(), false);
+                if(pathCriteria.childPath.length() == 0)
+                    return foundFiles;
+                else {
+                    List<File> outFiles = new ArrayList<>();
+                    for(File f : foundFiles)
+                        if(new File(f+Config.getPathSeparator()+pathCriteria.childPath).exists())
+                            outFiles.add(new File(f+Config.getPathSeparator()+pathCriteria.childPath));
 
-                return outFiles;
+                    return outFiles;
+                }
+            }
+            //just wildcard without separators
+            else {
+                if(incPath.toString().length() == 1) {
+                    List<File> foundFiles = findFiles(new File(pathCriteria.parentPath), pathCriteria.getCriteria(), false);
+                    if(pathCriteria.childPath.length() == 0)
+                        return foundFiles;
+                }
+
+                return new ArrayList<File>();
             }
         }
         else {
             //no wildcards
-            ArrayList<File> fileList = new ArrayList<File>(1);
+            ArrayList<File> fileList = new ArrayList<>(1);
             fileList.add(incPath);
             return fileList;
         }
     }
 
     private static List<File> parseWildcard(File incPath) {
-        ArrayList<File> files = new ArrayList<File>();
+        ArrayList<File> files = new ArrayList<>();
         int index = -1;
         while(incPath.toString().indexOf(STAR) > -1) {
 
@@ -174,7 +190,9 @@ public class PathResolver {
         };
 
         if(starPattern.matcher(searchArgument).matches()) {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(incPath.toPath(), new DirectoryFilter())) {
+            try (DirectoryStream<Path> stream = findDirectory ?
+                         Files.newDirectoryStream(incPath.toPath(), new DirectoryFilter()) :
+                    Files.newDirectoryStream(incPath.toPath(), new FileFilter())) {
                 for(Path p : stream)
                     files.add(p.toFile());
                 return files;
@@ -210,6 +228,14 @@ public class PathResolver {
         }
     }
 
+    private static class FileFilter implements DirectoryStream.Filter<Path> {
+        @Override
+        public boolean accept(Path entry) throws IOException {
+            return Files.exists(entry);
+        }
+    }
+
+    //todo: path criteria need to check if separator is in the path
     private static PathCriteria parsePath(File path) {
         int starIndex = path.toString().indexOf(STAR);
         int wildcardIndex = path.toString().indexOf(WILDCARD);
