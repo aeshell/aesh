@@ -23,6 +23,7 @@ public enum ControlOperator {
     END, // ;
     AMP, // &
     AND, // &&
+    OR, // ||
     NONE;
 
     public boolean isRedirectionOut() {

@@ -63,12 +63,13 @@ public class ControlOperatorParserTest extends TestCase {
         assertEquals(new ConsoleOperation(ControlOperator.END, " foo"), ops.get(1));
         assertEquals(new ConsoleOperation(ControlOperator.NONE, " foo2"), ops.get(2));
 
-         ops = ControlOperatorParser.findAllControlOperators("bas & foo; foo2 && foo3; bar");
+         ops = ControlOperatorParser.findAllControlOperators("bas & foo; foo2 && foo3; bar || foo4");
         assertEquals(new ConsoleOperation(ControlOperator.AMP, "bas "), ops.get(0));
         assertEquals(new ConsoleOperation(ControlOperator.END, " foo"), ops.get(1));
         assertEquals(new ConsoleOperation(ControlOperator.AND, " foo2 "), ops.get(2));
         assertEquals(new ConsoleOperation(ControlOperator.END, " foo3"), ops.get(3));
-        assertEquals(new ConsoleOperation(ControlOperator.NONE, " bar"), ops.get(4));
+        assertEquals(new ConsoleOperation(ControlOperator.OR, " bar "), ops.get(4));
+        assertEquals(new ConsoleOperation(ControlOperator.NONE, " foo4"), ops.get(5));
 
         //escaped pipes
         assertEquals(new ConsoleOperation(ControlOperator.NONE, "ls \\>foo.txt"),
