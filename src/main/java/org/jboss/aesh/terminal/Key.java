@@ -232,8 +232,18 @@ public enum Key {
     /**
      * @return true if input is a valid char
      */
-    public boolean isValidInput() {
-        return (keyValues.length == 1 && (keyValues[0] > 31 && keyValues[0] < 127));
+    public boolean isPrintable() {
+        return isPrintable(getKeyValues());
+    }
+
+    public static boolean isPrintable(int[] keyValues) {
+        if(Config.isOSPOSIXCompatible())
+            return (keyValues.length == 1 && ((keyValues[0] > 31 && keyValues[0] < 127) || keyValues[0] > 127));
+        else
+            return (keyValues.length == 1 && ((keyValues[0] > 31 && keyValues[0] < 127) ||
+                    (keyValues[0] > 127 &&
+                            keyValues[0] != WINDOWS_ESC.getFirstValue() &&
+                            keyValues[0] != WINDOWS_ESC_2.getFirstValue())));
     }
 
     public char getAsChar() {

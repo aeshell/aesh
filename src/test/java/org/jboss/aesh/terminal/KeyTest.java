@@ -14,6 +14,7 @@ import org.jboss.aesh.edit.actions.Operation;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -132,5 +133,19 @@ public class KeyTest {
             assertEquals(Key.ENTER, inc);
 
         }
+    }
+
+    @Test
+    public void testIsPrintable() {
+        assertTrue(Key.a.isPrintable());
+        assertTrue(Key.P.isPrintable());
+        assertTrue(Key.RIGHT_CURLY_BRACKET.isPrintable());
+
+        assertFalse(Key.BACKSPACE.isPrintable());
+
+        assertTrue(Key.isPrintable(new int[] {197}));
+        assertTrue(Key.isPrintable(new int[] {229}));
+        if(!Config.isOSPOSIXCompatible())
+            assertFalse(Key.isPrintable(new int[] {Key.WINDOWS_ESC.getFirstValue()}));
     }
 }
