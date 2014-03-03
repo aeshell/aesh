@@ -26,6 +26,11 @@ public class KeyOperationManager {
        operations = new ArrayList<>();
     }
 
+    public KeyOperationManager(List<KeyOperation> operations) {
+        this.operations = new ArrayList<>();
+        this.operations.addAll(operations);
+    }
+
     public List<KeyOperation> getOperations() {
         return operations;
     }

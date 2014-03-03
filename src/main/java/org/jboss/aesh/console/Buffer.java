@@ -20,7 +20,6 @@ public class Buffer {
     private StringBuilder line;
     private Prompt prompt;
     private int delta; //need to keep track of a delta for ansi terminal
-    private Character mask;
     private boolean disablePrompt = false;
     private boolean multiLine = false;
     private StringBuilder multiLineBuffer;
@@ -29,7 +28,7 @@ public class Buffer {
     private static final int TAB = 4;
 
     protected Buffer(boolean ansi) {
-        this(ansi, null, null);
+        this(ansi, null);
     }
 
     /**
@@ -37,11 +36,7 @@ public class Buffer {
      *
      * @param prompt set prompt
      */
-    protected Buffer(boolean ansi, Prompt prompt) {
-        this(ansi, prompt, null);
-    }
-
-    protected Buffer(boolean ansi, Prompt prompt, Character mask) {
+    protected Buffer(boolean ansi, Prompt prompt ) {
         this.ansi = ansi;
         if(prompt != null)
             this.prompt = prompt;
@@ -50,7 +45,10 @@ public class Buffer {
 
         line = new StringBuilder();
         delta = 0;
-        this.mask = mask;
+    }
+
+    protected Buffer(Prompt prompt) {
+        this(true, prompt);
     }
 
     /**
@@ -66,7 +64,6 @@ public class Buffer {
         cursor = 0;
         line = new StringBuilder();
         delta = 0;
-        this.mask = this.prompt.getMask();
         multiLine = false;
         multiLineBuffer = null;
     }
@@ -80,7 +77,6 @@ public class Buffer {
         cursor = 0;
         line = new StringBuilder();
         delta = 0;
-        this.mask = prompt.getMask();
         multiLine = false;
         multiLineBuffer = null;
     }
@@ -98,22 +94,22 @@ public class Buffer {
      * @return length of the line without prompt
      */
     protected int length() {
-        if(mask != null && mask == 0)
+        if(prompt.isMasking() && prompt.getMask() == 0)
             return 1;
         else
             return line.length();
     }
 
     protected int totalLength() {
-        if(mask != null) {
-            if(mask == 0)
+        if(prompt.isMasking()) {
+            if(prompt.getMask() == 0)
                 return disablePrompt ? 1 : getPrompt().getLength()+1;
         }
         return disablePrompt ? line.length()+1 : line.length() + getPrompt().getLength()+1;
     }
 
     protected int getCursor() {
-        return (mask != null && mask == 0) ? 0 : cursor;
+        return (prompt.isMasking() && prompt.getMask() == 0) ? 0 : cursor;
     }
 
     protected int getCursorWithPrompt() {
@@ -156,7 +152,7 @@ public class Buffer {
     }
 
     public boolean isMasking() {
-        return mask != null;
+        return prompt.isMasking();
     }
 
     /**
@@ -321,11 +317,11 @@ public class Buffer {
     }
 
     public String getLine() {
-        if(mask == null)
+        if(!prompt.isMasking())
             return line.toString();
         else {
             if(line.length() > 0)
-                return String.format("%"+line.length()+"s", "").replace(' ', mask);
+                return String.format("%"+line.length()+"s", "").replace(' ', prompt.getMask());
             else
                 return "";
         }
