@@ -23,11 +23,11 @@ import java.io.IOException;
  */
 public class FileHistory extends InMemoryHistory {
 
-    private String historyFile;
+    private File historyFile;
 
-    public FileHistory(String fileName, int maxSize) throws IOException {
+    public FileHistory(File file, int maxSize) throws IOException {
         super(maxSize);
-        historyFile = fileName;
+        historyFile = file;
         readFile();
     }
 
@@ -39,7 +39,7 @@ public class FileHistory extends InMemoryHistory {
     private void readFile() throws IOException {
         BufferedReader reader = null;
         try {
-            if(new File(historyFile).exists()) {
+            if(historyFile.exists()) {
                 reader = new BufferedReader(new FileReader(historyFile));
                 String line;
                 while((line = reader.readLine()) != null)
@@ -61,7 +61,7 @@ public class FileHistory extends InMemoryHistory {
      * @throws IOException io
      */
     private void writeFile() throws IOException {
-        new File(historyFile).delete();
+        historyFile.delete();
 
         FileWriter fw = new FileWriter(historyFile);
 

@@ -188,8 +188,7 @@ public class Console {
         pasteManager = new PasteManager();
         buffer = new Buffer(settings.isAnsiConsole(), null);
         if(settings.isHistoryPersistent())
-            history = new FileHistory(settings.getHistoryFile().getAbsolutePath(),
-                    settings.getHistorySize());
+            history = new FileHistory(settings.getHistoryFile(), settings.getHistorySize());
         else
             history = new InMemoryHistory(settings.getHistorySize());
 
