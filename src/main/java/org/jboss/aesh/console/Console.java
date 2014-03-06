@@ -31,6 +31,7 @@ import org.jboss.aesh.console.alias.AliasCompletion;
 import org.jboss.aesh.console.alias.AliasManager;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.InternalCommands;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.export.ExportCompletion;
 import org.jboss.aesh.console.export.ExportManager;
 import org.jboss.aesh.console.operator.ControlOperator;
@@ -74,6 +75,9 @@ public class Console {
     private Shell shell;
 
     private ArrayBlockingQueue<CommandOperation> inputQueue;
+
+    private ArrayBlockingQueue<int[]> cursorQueue;
+    private transient boolean readingCursor = false;
 
     private final Logger logger = LoggerUtil.getLogger(getClass().getName());
 
@@ -160,6 +164,7 @@ public class Console {
         editMode.init(this);
 
         inputQueue = new ArrayBlockingQueue<>(50000);
+        cursorQueue = new ArrayBlockingQueue<>(1);
 
         processManager = new ProcessManager(this, settings.isLogging());
 
@@ -484,6 +489,13 @@ public class Console {
             int[] input = getTerminal().read(settings.isReadAhead());
             if(settings.isLogging()) {
                 logger.info("GOT: "+ Arrays.toString(input));
+            }
+            if(readingCursor) {
+                if(input.length > 4) {
+                    cursorQueue.add(input);
+                    readingCursor = false;
+                    return true;
+                }
             }
             //close thread, exit
             if(input.length == 0 || input[0] == -1) {
@@ -908,7 +920,62 @@ public class Console {
 
         @Override
         public CursorPosition getCursor() {
-            return shell.getCursor();
+            if(console.settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
+                try {
+                    out().print(ANSI.getCurrentCursorPos());
+                    out().flush();
+                    console.readingCursor = true;
+
+                    return getActualCursor(console.cursorQueue.take());
+                }
+                catch (Exception e) {
+                    if(console.settings.isLogging())
+                        console.logger.log(Level.SEVERE, "Failed to find current row with ansi code: ",e);
+                    return new CursorPosition(-1,-1);
+                }
+            }
+            return new CursorPosition(-1,-1);
+        }
+
+        private CursorPosition getActualCursor(int[] input) {
+            boolean started = false;
+            boolean gotSep = false;
+            int col = 0;
+            int row = 0;
+
+            //read until we get a 'R'
+            for(int i=0; i < input.length-1; i++) {
+                if(started) {
+                    if(input[i] == 82)
+                        break;
+                    else if(input[i] == 59) // we got a ';' which is the separator
+                        gotSep = true;
+                    else {
+                        if(gotSep) {
+                            //col.append((char) input[i]);
+                            char c = (char) input[i];
+                            int digit = ((int)c & 0xF);
+                            col *= 10;
+                            col += digit;
+                        }
+                        else {
+                            char c = (char) input[i];
+                            int digit = ((int)c & 0xF);
+                            row *= 10;
+                            row += digit;
+                        }
+                            //row.append((char) input[i]);
+                    }
+                }
+                //search for the beginning which starts with esc,[
+                else if(input[i] == Key.ESC.getFirstValue() && i < input.length-1 &&
+                        input[i+1] == Key.LEFT_SQUARE_BRACKET.getFirstValue()) {
+                    started = true;
+                    i++;
+                }
+            }
+
+            return new CursorPosition(row, col);
         }
 
         @Override
