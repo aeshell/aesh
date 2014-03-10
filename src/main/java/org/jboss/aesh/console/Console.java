@@ -40,6 +40,7 @@ import org.jboss.aesh.console.operator.RedirectionCompletion;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.EditMode;
+import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
@@ -206,10 +207,35 @@ public class Console {
             completionHandler.addCompletion(new ExportCompletion(exportManager));
         }
 
+        //InterruptHandler for InputProcessor
+        InputProcessorInterruptHook interruptHook = new InputProcessorInterruptHook() {
+            @Override
+            public void handleInterrupt(Action action) {
+                if(settings.hasInterruptHook()) {
+                    settings.getInterruptHook().handleInterrupt(Console.this, action);
+                }
+                else {
+                    if(action != Action.IGNOREEOF) {
+                        if(processManager.hasRunningProcess())
+                            stop();
+                        else {
+                            try {
+                                doStop();
+                            }
+                            catch (IOException e) {
+                                logger.warning("Failed to stop aesh! "+e.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
         inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .completion(completionHandler)
                 .settings(settings)
+                .interruptHook(interruptHook)
                 .create();
     }
 
@@ -954,15 +980,13 @@ public class Console {
                         if(gotSep) {
                             //col.append((char) input[i]);
                             char c = (char) input[i];
-                            int digit = ((int)c & 0xF);
                             col *= 10;
-                            col += digit;
+                            col += ((int)c & 0xF);
                         }
                         else {
                             char c = (char) input[i];
-                            int digit = ((int)c & 0xF);
                             row *= 10;
-                            row += digit;
+                            row += ((int)c & 0xF);
                         }
                             //row.append((char) input[i]);
                     }

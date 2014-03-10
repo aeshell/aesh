@@ -22,6 +22,7 @@ public class AeshInputProcessorBuilder {
     private Settings settings;
     private History history;
     private CompletionHandler completion;
+    private InputProcessorInterruptHook interruptHook;
 
     public AeshInputProcessorBuilder() {
     }
@@ -42,6 +43,11 @@ public class AeshInputProcessorBuilder {
         return this;
     }
 
+    public AeshInputProcessorBuilder interruptHook(InputProcessorInterruptHook interruptHook) {
+        this.interruptHook = interruptHook;
+        return this;
+    }
+
     public InputProcessor create() {
         try {
             if(settings == null)
@@ -56,7 +62,7 @@ public class AeshInputProcessorBuilder {
                     history = new InMemoryHistory(settings.getHistorySize());
             }
 
-            return new AeshInputProcessor(consoleBuffer, history, settings, completion);
+            return new AeshInputProcessor(consoleBuffer, history, settings, completion, interruptHook);
         }
         catch (IOException e) {
             throw new IllegalArgumentException("Failed to create InputProcessor: "+e.getMessage());

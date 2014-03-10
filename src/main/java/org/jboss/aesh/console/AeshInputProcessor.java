@@ -30,15 +30,16 @@ import java.util.regex.Pattern;
  */
 public class AeshInputProcessor implements InputProcessor {
 
+    private final InputProcessorInterruptHook interruptHook;
     private Buffer buffer;
 
     private Search search;
-    private History history;
-    private Settings settings;
+    private final History history;
+    private final Settings settings;
 
-    private ConsoleBuffer consoleBuffer;
+    private final ConsoleBuffer consoleBuffer;
 
-    private CompletionHandler completionHandler;
+    private final CompletionHandler completionHandler;
 
     private Action prevAction = Action.EDIT;
 
@@ -52,13 +53,15 @@ public class AeshInputProcessor implements InputProcessor {
 
     AeshInputProcessor(ConsoleBuffer consoleBuffer,
                        History history, Settings settings,
-                       CompletionHandler completionHandler ) {
+                       CompletionHandler completionHandler,
+                       InputProcessorInterruptHook interruptHook ) {
 
         this.consoleBuffer = consoleBuffer;
         this.buffer = consoleBuffer.getBuffer();
         this.history = history;
         this.settings = settings;
         this.completionHandler = completionHandler;
+        this.interruptHook = interruptHook;
     }
 
     @Override
@@ -114,22 +117,8 @@ public class AeshInputProcessor implements InputProcessor {
         }
         else if(action == Action.EXIT || action == Action.EOF ||
                 action == Action.INTERRUPT || action == Action.IGNOREEOF) {
-            if(settings.hasInterruptHook()) {
-                //settings.getInterruptHook().handleInterrupt(this, action);
-            }
-            else {
-                //all action other than IGNOREEOF will stop aesh
-                if(action != Action.IGNOREEOF) {
-                    consoleBuffer.out().println();
-                    consoleBuffer.out().println("we should stop aesh here...");
-                    /*
-                    if(processManager.hasRunningProcess())
-                        stop();
-                    else {
-                        doStop();
-                    }
-                    */
-                }
+            if(interruptHook != null) {
+                interruptHook.handleInterrupt(action);
             }
         }
         else if(action == Action.HISTORY) {
