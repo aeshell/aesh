@@ -94,9 +94,13 @@ public class KeyOperationFactory {
         }
 
         //meta
-        keys.add(new KeyOperation(Key.META_F, Operation.MOVE_NEXT_WORD));   //meta-f
-        keys.add(new KeyOperation(Key.META_B, Operation.MOVE_PREV_WORD));    //meta-b
-        keys.add(new KeyOperation(Key.META_D, Operation.DELETE_NEXT_WORD)); //meta-d
+        keys.add(new KeyOperation(Key.META_f, Operation.MOVE_NEXT_WORD));   //meta-f
+        keys.add(new KeyOperation(Key.META_b, Operation.MOVE_PREV_WORD));    //meta-b
+        keys.add(new KeyOperation(Key.META_c, Operation.CAPITALISE_WORD));    //meta-b
+        keys.add(new KeyOperation(Key.META_d, Operation.DELETE_NEXT_WORD)); //meta-d
+        keys.add(new KeyOperation(Key.META_u, Operation.UPPERCASE_WORD)); //meta-u
+        keys.add(new KeyOperation(Key.META_l, Operation.LOWERCASE_WORD)); //meta-l
+        keys.add(new KeyOperation(Key.META_BACKSPACE, Operation.DELETE_PREV_WORD)); //meta-backspace
 
         //pgup, pgdown, end, home, delete
         keys.add(new KeyOperation(Key.DELETE, Operation.DELETE_NEXT_CHAR, Action.EDIT)); //Delete

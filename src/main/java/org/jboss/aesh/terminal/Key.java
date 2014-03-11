@@ -144,6 +144,9 @@ public enum Key {
     RIGHT_CURLY_BRACKET(new int[]{125}), // {
     TILDE(new int[]{126}), // ~
 
+    BACKSPACE(Config.isOSPOSIXCompatible() ?
+            new int[]{127} : new int[]{8}),
+
     WINDOWS_ESC(new int[]{224}), // just used to identify win special chars
     WINDOWS_ESC_2(new int[]{341}), // just used to identify win special chars
     //movement
@@ -165,13 +168,20 @@ public enum Key {
     LEFT_2(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getLeft() : new int[]{WINDOWS_ESC.getFirstValue(),75}),
     //meta
-    META_F(Config.isOSPOSIXCompatible() ?
-            new int[]{ESC.getFirstValue(),102} : new int[]{0,33}),
-    META_B(Config.isOSPOSIXCompatible() ?
+    META_a(new int[]{ESC.getFirstValue(),a.getFirstValue()}),
+    META_b(Config.isOSPOSIXCompatible() ?
             new int[]{ESC.getFirstValue(),98} : new int[]{0,48}),
-    META_D(Config.isOSPOSIXCompatible() ?
-            new int[]{ESC.getFirstValue(),100} : new int[]{0,32}),
-    META_A(new int[]{ESC.getFirstValue(),97}),
+    META_c(new int[]{ESC.getFirstValue(),c.getFirstValue()}),
+    META_d(Config.isOSPOSIXCompatible() ?
+            new int[]{ESC.getFirstValue(),d.getFirstValue()} : new int[]{0,32}),
+    META_e(new int[]{ESC.getFirstValue(),e.getFirstValue()}),
+    META_f(Config.isOSPOSIXCompatible() ?
+            new int[]{ESC.getFirstValue(),102} : new int[]{0,33}),
+    META_l(new int[]{ESC.getFirstValue(),l.getFirstValue()}),
+    META_u(new int[]{ESC.getFirstValue(),u.getFirstValue()}),
+
+    META_BACKSPACE(new int[]{ESC.getFirstValue(),BACKSPACE.getFirstValue()}),
+
     //div
     DELETE(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getDelete() : new int[]{WINDOWS_ESC.getFirstValue(),83}),
@@ -190,8 +200,6 @@ public enum Key {
     META_CTRL_D(new int[]{ESC.getFirstValue(),4}),
     CTRL_X_CTRL_U(Config.isOSPOSIXCompatible() ?
             new int[]{ESC.getFirstValue(),21} : new int[]{0,36}),
-    BACKSPACE(Config.isOSPOSIXCompatible() ?
-            new int[]{127} : new int[]{8}),
 
     CTRL_LEFT(Config.isOSPOSIXCompatible() ?
             new int[] {ESC.getFirstValue(),91,49,59,53,68} : new int[]{WINDOWS_ESC.getFirstValue(), 115}),

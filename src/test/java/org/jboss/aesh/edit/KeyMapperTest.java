@@ -24,7 +24,7 @@ public class KeyMapperTest {
     public void testQuoteMapKeys() {
         if(Config.isOSPOSIXCompatible()) {
             KeyOperation o1 = KeyMapper.mapQuoteKeys("\"\\M-a","meta");
-            assertEquals(new KeyOperation(Key.META_A, Operation.NO_ACTION), o1);
+            assertEquals(new KeyOperation(Key.META_a, Operation.NO_ACTION), o1);
             o1 = KeyMapper.mapQuoteKeys("\"\\M-[D","backward-char");
             assertEquals(new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR), o1);
             o1 = KeyMapper.mapQuoteKeys("\"\\M-[C","forward-char");
@@ -47,7 +47,7 @@ public class KeyMapperTest {
     public void testMapKeys() {
         if(Config.isOSPOSIXCompatible()) {
             KeyOperation o1 = KeyMapper.mapKeys("M-a","meta");
-            assertEquals(new KeyOperation(Key.META_A, Operation.NO_ACTION), o1);
+            assertEquals(new KeyOperation(Key.META_a, Operation.NO_ACTION), o1);
             o1 = KeyMapper.mapKeys("M-[D","backward-char");
             assertEquals(new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR), o1);
             o1 = KeyMapper.mapKeys("M-[C","forward-char");

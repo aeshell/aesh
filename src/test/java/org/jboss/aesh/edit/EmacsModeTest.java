@@ -69,9 +69,9 @@ public class EmacsModeTest extends AeshTestCase {
     public void testWordMovementAndEdit() throws Exception {
 
         if(Config.isOSPOSIXCompatible()) {
-            KeyOperation moveNextWord = new KeyOperation(Key.META_F, Operation.MOVE_NEXT_WORD);
-            KeyOperation movePrevWord = new KeyOperation(Key.META_B, Operation.MOVE_PREV_WORD);
-            KeyOperation deleteNextWord = new KeyOperation(Key.META_D, Operation.DELETE_NEXT_WORD);
+            KeyOperation moveNextWord = new KeyOperation(Key.META_f, Operation.MOVE_NEXT_WORD);
+            KeyOperation movePrevWord = new KeyOperation(Key.META_b, Operation.MOVE_PREV_WORD);
+            KeyOperation deleteNextWord = new KeyOperation(Key.META_d, Operation.DELETE_NEXT_WORD);
             KeyOperation moveBeginning = new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING);
             KeyOperation deleteBeginning = new KeyOperation(Key.CTRL_U, Operation.DELETE_BEGINNING);
 
