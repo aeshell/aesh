@@ -109,8 +109,22 @@ public class AeshInputProcessor implements InputProcessor {
         else if(action == Action.ABORT) {
         }
         else if(action == Action.CASE) {
-            consoleBuffer.addActionToUndoStack();
-            consoleBuffer.changeCase();
+            //capitalize word
+            if(operation.getMovement() == Movement.BEGINNING) {
+                consoleBuffer.capitalizeWord();
+            }
+            //upper case word
+            else if(operation.getMovement() == Movement.NEXT) {
+
+            }
+            //lower case word
+            else if(operation.getMovement() == Movement.PREV) {
+
+            }
+            else {
+                consoleBuffer.addActionToUndoStack();
+                consoleBuffer.changeCase();
+            }
         }
         else if(action == Action.COMPLETE) {
             complete();

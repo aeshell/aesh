@@ -35,6 +35,7 @@ public class AeshInputProcessorTest {
 
         Settings settings = new SettingsBuilder()
                 .terminal(new TestTerminal())
+                .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
                 .create();
@@ -78,6 +79,7 @@ public class AeshInputProcessorTest {
 
         Settings settings = new SettingsBuilder()
                 .terminal(new TestTerminal())
+                .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
                 .create();
@@ -134,6 +136,7 @@ public class AeshInputProcessorTest {
 
         Settings settings = new SettingsBuilder()
                 .terminal(new TestTerminal())
+                .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
                 .create();
@@ -191,6 +194,7 @@ public class AeshInputProcessorTest {
 
         Settings settings = new SettingsBuilder()
                 .terminal(new TestTerminal())
+                .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
                 .create();
@@ -237,6 +241,7 @@ public class AeshInputProcessorTest {
 
         Settings settings = new SettingsBuilder()
                 .terminal(new TestTerminal())
+                .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
                 .persistHistory(false)
@@ -285,6 +290,7 @@ public class AeshInputProcessorTest {
 
         Settings settings = new SettingsBuilder()
                 .terminal(new TestTerminal())
+                .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
                 .persistHistory(false)
@@ -300,6 +306,62 @@ public class AeshInputProcessorTest {
 
         CommandOperation edit = new CommandOperation(Key.f);
 
+    }
+
+    @Test
+    public void testCapitalizeWord() throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder().shell(shell).prompt(new Prompt("aesh")).create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .create();
+
+        CommandOperation edit = new CommandOperation(Key.f);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.o);
+        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.SPACE);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.b);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.a);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.r);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.SPACE);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.META_c);
+        inputProcessor.parseOperation(edit);
+        //line should be the same
+        assertEquals("foo bar ", consoleBuffer.getBuffer().getLineNoMask());
+
+        edit = new CommandOperation(Key.LEFT);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.META_c);
+        inputProcessor.parseOperation(edit);
+        assertEquals("foo Bar ", consoleBuffer.getBuffer().getLineNoMask());
+        edit = new CommandOperation(Key.LEFT);
+        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(edit);
+
+        edit = new CommandOperation(Key.META_c);
+        inputProcessor.parseOperation(edit);
+        assertEquals("Foo Bar ", consoleBuffer.getBuffer().getLineNoMask());
     }
 
     private static class TestShell implements Shell {

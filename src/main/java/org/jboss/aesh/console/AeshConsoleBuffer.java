@@ -213,6 +213,16 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     }
 
     @Override
+    public void capitalizeWord() {
+        String word = Parser.findWordClosestToCursor(buffer.getLineNoMask(), buffer.getCursor());
+        if(word.length() > 0) {
+            int pos = buffer.getLineNoMask().indexOf(word, buffer.getCursor()-word.length());
+            buffer.replaceChar(Character.toUpperCase(buffer.getLineNoMask().charAt(pos)), pos);
+            drawLine();
+        }
+    }
+
+    @Override
     public void writeChars(int[] chars) {
         for(int c : chars)
             writeChar((char) c);
