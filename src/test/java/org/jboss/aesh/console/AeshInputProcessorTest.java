@@ -364,6 +364,62 @@ public class AeshInputProcessorTest {
         assertEquals("Foo Bar ", consoleBuffer.getBuffer().getLineNoMask());
     }
 
+    @Test
+    public void testLowerCaseWord() throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder().shell(shell).prompt(new Prompt("aesh")).create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .create();
+
+        CommandOperation edit = new CommandOperation(Key.F);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.o);
+        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.SPACE);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.B);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.A);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.r);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.SPACE);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.META_l);
+        inputProcessor.parseOperation(edit);
+        //line should be the same
+        assertEquals("Foo BAr ", consoleBuffer.getBuffer().getLineNoMask());
+
+        edit = new CommandOperation(Key.LEFT);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.META_l);
+        inputProcessor.parseOperation(edit);
+        assertEquals("Foo bar ", consoleBuffer.getBuffer().getLineNoMask());
+        edit = new CommandOperation(Key.LEFT);
+        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(edit);
+
+        edit = new CommandOperation(Key.META_l);
+        inputProcessor.parseOperation(edit);
+        assertEquals("foo bar ", consoleBuffer.getBuffer().getLineNoMask());
+    }
+
     private static class TestShell implements Shell {
 
         private final PrintStream out;

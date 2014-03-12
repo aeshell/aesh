@@ -119,7 +119,7 @@ public class AeshInputProcessor implements InputProcessor {
             }
             //lower case word
             else if(operation.getMovement() == Movement.PREV) {
-
+                consoleBuffer.lowerCaseWord();
             }
             else {
                 consoleBuffer.addActionToUndoStack();

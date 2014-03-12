@@ -56,6 +56,8 @@ public interface ConsoleBuffer {
 
     void writeChar(char input);
 
+    void lowerCaseWord();
+
     void writeChars(int[] input);
 
     void writeString(String input);
