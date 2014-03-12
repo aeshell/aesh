@@ -115,12 +115,13 @@ public class AeshInputProcessor implements InputProcessor {
             }
             //upper case word
             else if(operation.getMovement() == Movement.NEXT) {
-
+                consoleBuffer.upperCaseWord();
             }
             //lower case word
             else if(operation.getMovement() == Movement.PREV) {
                 consoleBuffer.lowerCaseWord();
             }
+            //change case of the current char
             else {
                 consoleBuffer.addActionToUndoStack();
                 consoleBuffer.changeCase();
