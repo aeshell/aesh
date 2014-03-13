@@ -136,6 +136,8 @@ public class AeshInputProcessorTest {
 
         Settings settings = new SettingsBuilder()
                 .terminal(new TestTerminal())
+                .disableHistory(false)
+                .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -239,20 +241,15 @@ public class AeshInputProcessorTest {
     public void testSearch() throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
-                .readInputrc(false)
-                .ansi(true)
-                .enableAlias(false)
-                .persistHistory(false)
-                .create();
-
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder().shell(shell).prompt(new Prompt("aesh")).create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
-                .settings(settings)
+                .enableHistory(true)
+                .persistHistory(false)
+                .historySize(10)
+                .enableSearch(true)
                 .create();
 
         CommandOperation edit = new CommandOperation(Key.f);

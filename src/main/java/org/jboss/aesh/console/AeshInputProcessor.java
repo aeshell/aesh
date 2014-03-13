@@ -8,8 +8,11 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.helper.Search;
-import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.edit.EmacsEditMode;
+import org.jboss.aesh.edit.KeyOperationFactory;
+import org.jboss.aesh.edit.KeyOperationManager;
 import org.jboss.aesh.edit.Mode;
+import org.jboss.aesh.edit.ViEditMode;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.EditActionManager;
 import org.jboss.aesh.edit.actions.Movement;
@@ -35,13 +38,15 @@ public class AeshInputProcessor implements InputProcessor {
 
     private Search search;
     private final History history;
-    private final Settings settings;
 
     private final ConsoleBuffer consoleBuffer;
 
     private final CompletionHandler completionHandler;
 
     private Action prevAction = Action.EDIT;
+
+    private boolean historyDisabled = false;
+    private boolean searchDisabled = false;
 
     private static final Pattern endsWithBackslashPattern = Pattern.compile(".*\\s\\\\$");
 
@@ -52,16 +57,21 @@ public class AeshInputProcessor implements InputProcessor {
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputProcessor.class.getName());
 
     AeshInputProcessor(ConsoleBuffer consoleBuffer,
-                       History history, Settings settings,
+                       History history,
                        CompletionHandler completionHandler,
-                       InputProcessorInterruptHook interruptHook ) {
+                       InputProcessorInterruptHook interruptHook,
+                       boolean historyDisabled, boolean searchDisabled) {
 
         this.consoleBuffer = consoleBuffer;
         this.buffer = consoleBuffer.getBuffer();
         this.history = history;
-        this.settings = settings;
         this.completionHandler = completionHandler;
         this.interruptHook = interruptHook;
+        this.historyDisabled = !historyDisabled;
+        this.searchDisabled = !searchDisabled;
+        //make sure that search is disabled if history is
+        if(this.historyDisabled)
+            this.searchDisabled = true;
     }
 
     @Override
@@ -90,7 +100,7 @@ public class AeshInputProcessor implements InputProcessor {
         }
         // For search movement is used a bit differently.
         // It only triggers what kind of search action thats performed
-        else if(action == Action.SEARCH && !settings.isHistoryDisabled()) {
+        else if(action == Action.SEARCH && !searchDisabled) {
 
             if(search == null)
                 search = new Search(operation, operation.getInput()[0]);
@@ -136,7 +146,7 @@ public class AeshInputProcessor implements InputProcessor {
                 interruptHook.handleInterrupt(action);
             }
         }
-        else if(action == Action.HISTORY) {
+        else if(action == Action.HISTORY && !historyDisabled) {
             if(operation.getMovement() == Movement.NEXT)
                 getHistoryElement(true);
             else if(operation.getMovement() == Movement.PREV)
@@ -169,7 +179,7 @@ public class AeshInputProcessor implements InputProcessor {
         }
 
         //a hack to get history working
-        if(action == Action.HISTORY && !settings.isHistoryDisabled())
+        if(action == Action.HISTORY && !historyDisabled)
             prevAction = action;
 
         //in the end we check for a newline
@@ -178,7 +188,7 @@ public class AeshInputProcessor implements InputProcessor {
             consoleBuffer.getUndoManager().clear();
             if(!buffer.isMasking()) {// dont push to history if masking
                 //dont push lines that end with \ to history
-                if(!endsWithBackslashPattern.matcher(buffer.getLine()).find()) {
+                if(!historyDisabled && !endsWithBackslashPattern.matcher(buffer.getLine()).find()) {
                     if(buffer.isMultiLine())
                         addToHistory(buffer.getMultiLineBuffer()+buffer.getLine());
                     else
@@ -351,19 +361,14 @@ public class AeshInputProcessor implements InputProcessor {
      */
     private void changeEditMode(Movement movement) {
         if(consoleBuffer.getEditMode().getMode() == Mode.EMACS && movement == Movement.PREV) {
-            settings.switchMode();
-            settings.resetEditMode();
+            consoleBuffer.setEditMode(new ViEditMode(new KeyOperationManager(KeyOperationFactory.generateViMode())));
         }
         else if(consoleBuffer.getEditMode().getMode() == Mode.VI && movement == Movement.NEXT) {
-            settings.switchMode();
-            settings.resetEditMode();
+            consoleBuffer.setEditMode(new EmacsEditMode(new KeyOperationManager(KeyOperationFactory.generateEmacsMode())));
         }
-        consoleBuffer.setEditMode(settings.getEditMode());
     }
 
     private void getHistoryElement(boolean first) throws IOException {
-        if(settings.isHistoryDisabled())
-            return;
         // first add current line to history
         if(prevAction == Action.NEWLINE) {
             history.setCurrent(buffer.getLine());
@@ -385,8 +390,7 @@ public class AeshInputProcessor implements InputProcessor {
     }
 
     private void addToHistory(String line) {
-        if(!settings.isHistoryDisabled())
-            history.push(line);
+        history.push(line);
     }
 
     /**

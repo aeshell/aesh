@@ -5,6 +5,7 @@
  * http://www.eclipse.org/legal/epl-v10.html
  */
 
+import org.fusesource.jansi.internal.Kernel32;
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
@@ -19,7 +20,12 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.AeshConsoleBuffer;
+import org.jboss.aesh.console.AeshConsoleBufferBuilder;
+import org.jboss.aesh.console.AeshInputProcessorBuilder;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.ConsoleBuffer;
+import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.AeshConsole;
@@ -170,7 +176,6 @@ public class AeshExample {
 
         private void display() {
             shell.out().print(ANSI.getAlternateBufferScreen());
-            shell.out().print("press q to stop.....");
             shell.out().flush();
         }
 
@@ -180,19 +185,26 @@ public class AeshExample {
 
         public void processOperation(CommandInvocation invocation) throws IOException {
 
-            CommandOperation operation;
+            ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                    .shell(invocation.getShell())
+                    .prompt(new Prompt("type: "))
+                    .create();
+            InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                    .consoleBuffer(consoleBuffer)
+                    .create();
+
+            consoleBuffer.displayPrompt();
             try {
-                operation = invocation.getInput();
-                while(!operation.getInputKey().equals(Key.q)) {
-                    shell.out().print((char) operation.getInput()[0]);
-                    shell.out().flush();
-                    operation = invocation.getInput();
+                String result;
+                do {
+                    result = inputProcessor.parseOperation(invocation.getInput());
                 }
-                if(operation.getInput()[0] == 'q') {
-                    stop();
-                }
+                while(result == null );
+                invocation.getShell().out().println("RESULT: "+result);
+
             }
             catch (InterruptedException e) {
+                e.printStackTrace();
                 stop();
             }
         }
