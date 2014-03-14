@@ -461,11 +461,7 @@ public class AeshInputProcessorTest {
         edit = new CommandOperation(Key.META_u);
         inputProcessor.parseOperation(edit);
         assertEquals("foo BAR ", consoleBuffer.getBuffer().getLineNoMask());
-        edit = new CommandOperation(Key.LEFT);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.CTRL_A);
         inputProcessor.parseOperation(edit);
 
         edit = new CommandOperation(Key.META_u);

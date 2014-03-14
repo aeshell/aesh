@@ -25,7 +25,7 @@ public class Parser {
     private static final String spaceEscapedMatcher = "\\ ";
     public static final String SPACE = " ";
     public static final char SPACE_CHAR = ' ';
-    public static final char SLASH = '\\';
+    public static final char BACK_SLASH = '\\';
     public static final char SINGLE_QUOTE = '\'';
     public static final char DOUBLE_QUOTE = '\"';
     public static final char DOLLAR = '$';
@@ -265,15 +265,80 @@ public class Parser {
 
 
 
+    public static String findWordClosestToCursor(String text, int cursor) {
+        boolean startOutsideText = false;
+        if(cursor >= text.length()) {
+            cursor = text.length()-1;
+            startOutsideText = true;
+        }
+        if(cursor < 0 || text.trim().length() == 0)
+            return "";
+
+        boolean foundBackslash = false;
+
+        if(text.contains(SPACE)) {
+            int start, end;
+            if(text.charAt(cursor) == SPACE_CHAR) {
+                if(startOutsideText)
+                    return "";
+                if(cursor > 0) {
+                    if(text.charAt(cursor-1) == SPACE_CHAR)
+                        return "";
+                    else
+                        cursor--;
+                }
+            }
+
+            boolean space = false;
+            for(start = cursor; start > 0; start--) {
+                if(space) {
+                   if(text.charAt(start) == BACK_SLASH) {
+                       space = false;
+                       foundBackslash = true;
+                   }
+                    else {
+                       start+=2;
+                       break;
+                   }
+                }
+                if(Character.isSpaceChar(text.charAt(start)))
+                    space = true;
+            }
+
+            boolean back = false;
+            for(end = cursor; end < text.length(); end++) {
+                if(text.charAt(end) == BACK_SLASH) {
+                    back = true;
+                    foundBackslash = true;
+                }
+                else if(back) {
+                    if(Character.isSpaceChar(text.charAt(end))) {
+                        back = false;
+                    }
+                }
+                else if(Character.isSpaceChar(text.charAt(end))) {
+                    break;
+                }
+            }
+            if(foundBackslash)
+                return switchEscapedSpacesToSpacesInWord(text.substring(start,end));
+            else
+                return text.substring(start,end);
+        }
+        else {
+            return text.trim();
+        }
+    }
+
     /**
-     * Return the word "connected" to cursor
+     * Return the word "connected" to cursor, the word ends at cursor position.
      * Note that cursor position starts at 0
      *
      * @param text to parse
      * @param cursor position
      * @return word connected to cursor
      */
-    public static String findWordClosestToCursor(String text, int cursor) {
+    public static String findCurrentWordFromCursor(String text, int cursor) {
         if(text.length() <= cursor+1) {
             // return last word
             if(text.contains(SPACE)) {
@@ -331,7 +396,7 @@ public class Parser {
         int index;
         String originalText = text;
         while((index = text.lastIndexOf(SPACE)) > -1) {
-           if(index > 0 && text.charAt(index-1) == SLASH) {
+           if(index > 0 && text.charAt(index-1) == BACK_SLASH) {
                text = text.substring(0,index-1);
            }
             else
@@ -361,7 +426,7 @@ public class Parser {
                     builder = new StringBuilder();
                 }
             }
-            else if(c == SLASH) {
+            else if(c == BACK_SLASH) {
                 if(haveEscape) {
                     builder.append(c);
                     haveEscape = false;
@@ -400,7 +465,7 @@ public class Parser {
                     haveDoubleQuote = true;
             }
             else if(haveEscape) {
-                builder.append(SLASH);
+                builder.append(BACK_SLASH);
                 builder.append(c);
                 haveEscape = false;
             }
@@ -409,7 +474,7 @@ public class Parser {
         }
         //if the escape was the last char, add it to the builder
         if(haveEscape)
-            builder.append(SLASH);
+            builder.append(BACK_SLASH);
 
         if(builder.length() > 0)
             textList.add(builder.toString());
@@ -440,7 +505,7 @@ public class Parser {
     public static int findNumberOfSpacesInWord(String word) {
         int count = 0;
         for(int i=0; i < word.length();i++)
-            if(word.charAt(i) == SPACE_CHAR && (i == 0 || word.charAt(i-1) != SLASH))
+            if(word.charAt(i) == SPACE_CHAR && (i == 0 || word.charAt(i-1) != BACK_SLASH))
                 count++;
 
         return count;
@@ -496,7 +561,7 @@ public class Parser {
         //remove spaces in the end
         count = buffer.length();
         for(int i=buffer.length()-1; i > 0; i--) {
-            if(buffer.charAt(i) == SPACE_CHAR && buffer.charAt(i-1) != SLASH)
+            if(buffer.charAt(i) == SPACE_CHAR && buffer.charAt(i-1) != BACK_SLASH)
                 count--;
             else
                 break;
@@ -553,7 +618,7 @@ public class Parser {
         while((startIndex = buffer.indexOf(DOLLAR, startIndex)) > -1) {
             if(startIndex == 0)
                 return true;
-            else if(buffer.charAt(startIndex-1) != SLASH)
+            else if(buffer.charAt(startIndex-1) != BACK_SLASH)
                 return true;
             else
                 startIndex++;

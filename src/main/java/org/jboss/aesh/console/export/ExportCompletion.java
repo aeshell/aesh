@@ -37,7 +37,7 @@ public class ExportCompletion implements Completion {
             completeOperation.setOffset(completeOperation.getCursor());
         }
         else if(completeOperation.getBuffer().startsWith(EXPORT_SPACE)) {
-            String word = Parser.findWordClosestToCursor( completeOperation.getBuffer(), completeOperation.getCursor());
+            String word = Parser.findCurrentWordFromCursor(completeOperation.getBuffer(), completeOperation.getCursor());
             if(word.length() > 0) {
                 completeOperation.addCompletionCandidates( exportManager.findAllMatchingKeys(word));
                 if(Parser.containsNonEscapedDollar(word)) {
@@ -49,7 +49,7 @@ public class ExportCompletion implements Completion {
             }
         }
         else if(Parser.containsNonEscapedDollar( completeOperation.getBuffer())) {
-            String word = Parser.findWordClosestToCursor( completeOperation.getBuffer(), completeOperation.getCursor());
+            String word = Parser.findCurrentWordFromCursor(completeOperation.getBuffer(), completeOperation.getCursor());
             if(Parser.containsNonEscapedDollar(word)) {
                 completeOperation.addCompletionCandidates(exportManager.findAllMatchingKeys(word));
                 completeOperation.setOffset(completeOperation.getCursor()-word.length());

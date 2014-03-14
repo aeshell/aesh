@@ -217,6 +217,8 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         String word = Parser.findWordClosestToCursor(buffer.getLineNoMask(), buffer.getCursor());
         if(word.length() > 0) {
             int pos = buffer.getLineNoMask().indexOf(word, buffer.getCursor()-word.length());
+            if(pos < 0)
+                pos = 0;
             buffer.replaceChar(Character.toUpperCase(buffer.getLineNoMask().charAt(pos)), pos);
             drawLine();
         }
@@ -227,6 +229,8 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         String word = Parser.findWordClosestToCursor(buffer.getLineNoMask(), buffer.getCursor());
         if(word.length() > 0) {
             int pos = buffer.getLineNoMask().indexOf(word, buffer.getCursor()-word.length());
+            if(pos < 0)
+                pos = 0;
             for(int i = 0; i < word.length(); i++) {
                 buffer.replaceChar(Character.toLowerCase(buffer.getLineNoMask().charAt(pos+i)), pos+i);
             }
@@ -239,6 +243,8 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         String word = Parser.findWordClosestToCursor(buffer.getLineNoMask(), buffer.getCursor());
         if(word.length() > 0) {
             int pos = buffer.getLineNoMask().indexOf(word, buffer.getCursor()-word.length());
+            if(pos < 0)
+                pos = 0;
             for(int i = 0; i < word.length(); i++) {
                 buffer.replaceChar(Character.toUpperCase(buffer.getLineNoMask().charAt(pos+i)), pos+i);
             }

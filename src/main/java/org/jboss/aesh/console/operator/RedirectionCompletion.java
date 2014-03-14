@@ -25,7 +25,7 @@ public class RedirectionCompletion implements Completion {
             int redirectPos =  ControlOperatorParser.findLastRedirectionPositionBeforeCursor(
                     completeOperation.getBuffer(), completeOperation.getCursor());
 
-            String word = Parser.findWordClosestToCursor(completeOperation.getBuffer().substring(redirectPos, completeOperation.getCursor()), completeOperation.getCursor()-redirectPos);
+            String word = Parser.findCurrentWordFromCursor(completeOperation.getBuffer().substring(redirectPos, completeOperation.getCursor()), completeOperation.getCursor() - redirectPos);
 
             completeOperation.setOffset(completeOperation.getCursor());
             FileLister lister = new FileLister(word, completeOperation.getAeshContext().getCurrentWorkingDirectory());
