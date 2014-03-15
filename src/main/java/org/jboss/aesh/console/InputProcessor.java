@@ -21,4 +21,6 @@ public interface InputProcessor {
     History getHistory();
 
     void clearBufferAndDisplayPrompt();
+
+    void resetBuffer();
 }

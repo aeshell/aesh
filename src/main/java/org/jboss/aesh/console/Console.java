@@ -426,8 +426,7 @@ public class Console {
             inputProcessor.clearBufferAndDisplayPrompt();
         }
         else {
-            consoleBuffer.getBuffer().reset();
-            //search = null;
+            inputProcessor.resetBuffer();
             if(initiateStop) {
                 try {
                     doStop();

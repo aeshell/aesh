@@ -75,6 +75,12 @@ public class AeshInputProcessor implements InputProcessor {
     }
 
     @Override
+    public void resetBuffer() {
+        buffer.reset();
+        search = null;
+    }
+
+    @Override
     public String parseOperation(CommandOperation commandOperation) throws IOException {
 
         Operation operation = consoleBuffer.getEditMode().parseInput(commandOperation.getInputKey(),
@@ -206,6 +212,7 @@ public class AeshInputProcessor implements InputProcessor {
             else
                 result = buffer.getLineNoMask();
             buffer.reset();
+            search = null;
             return result;
         }
 
