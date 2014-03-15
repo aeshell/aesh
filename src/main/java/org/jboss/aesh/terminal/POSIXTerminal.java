@@ -72,10 +72,6 @@ public class POSIXTerminal extends AbstractTerminal {
             stty("-echo");
             echoEnabled = false;
 
-            //setting up input
-            //input =  new ConsoleInputSession(settings.getInputStream()).getExternalInputStream();
-            inputSession =  new ConsoleInputSession(settings.getInputStream());
-            input = inputSession.getExternalInputStream();
         }
         catch (IOException ioe) {
             if(settings.isLogging())
@@ -86,6 +82,11 @@ public class POSIXTerminal extends AbstractTerminal {
                 logger.log(Level.SEVERE, "failed while waiting for process to end: ",e);
             e.printStackTrace();
         }
+
+        //setting up input
+        //input =  new ConsoleInputSession(settings.getInputStream()).getExternalInputStream();
+        inputSession =  new ConsoleInputSession(settings.getInputStream());
+        input = inputSession.getExternalInputStream();
 
         this.stdOut = settings.getStdOut();
         this.stdErr = settings.getStdErr();
