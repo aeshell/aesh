@@ -11,5 +11,15 @@ package org.jboss.aesh.console.command;
  */
 public enum CommandResult {
     SUCCESS,
-    FAILURE
+    FAILURE;
+
+    private int result = 0;
+
+    public void setResultValue(int result) {
+        this.result = result;
+    }
+
+    public int getResultValue() {
+        return result;
+    }
 }

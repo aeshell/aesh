@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.result.NullResultHandler;
+import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidator;
 import org.jboss.aesh.cl.validator.NullCommandValidator;
 
@@ -27,4 +29,6 @@ public @interface CommandDefinition {
     String description();
 
     Class<? extends CommandValidator> validator() default NullCommandValidator.class;
+
+    Class<? extends ResultHandler> resultHandler() default NullResultHandler.class;
 }
