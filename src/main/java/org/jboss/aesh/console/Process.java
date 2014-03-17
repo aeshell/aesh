@@ -7,6 +7,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
+import org.jboss.aesh.console.command.CommandResult;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -18,4 +19,7 @@ public interface Process {
     CommandOperation getInput() throws InterruptedException;
 
     int getPID();
+
+    CommandResult getExitResult();
+
 }

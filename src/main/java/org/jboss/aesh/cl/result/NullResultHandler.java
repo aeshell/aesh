@@ -17,7 +17,7 @@ public class NullResultHandler implements ResultHandler {
     }
 
     @Override
-    public void onValidation(CommandResult result) {
+    public void onValidationFailure(CommandResult result) {
 
     }
 }

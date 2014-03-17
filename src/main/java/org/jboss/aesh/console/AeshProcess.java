@@ -7,6 +7,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
+import org.jboss.aesh.console.command.CommandResult;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -17,6 +18,7 @@ public class AeshProcess implements Runnable, Process {
     private ProcessManager manager;
     private ConsoleCallback consoleCallback;
     private ConsoleOperation operation;
+    private CommandResult exitResult;
 
     public AeshProcess(int pid, ProcessManager manager,
                        ConsoleCallback consoleCallback,
@@ -32,8 +34,7 @@ public class AeshProcess implements Runnable, Process {
     public void run() {
         try {
             Thread.currentThread().setName("AeshProcess: " + pid);
-            //todo: we need to make sure exit status is used properly later
-            int exitStatus = consoleCallback.execute(operation);
+            setExitResult( consoleCallback.execute(operation));
         }
         finally {
             manager.processHaveFinished(this);
@@ -53,6 +54,22 @@ public class AeshProcess implements Runnable, Process {
     @Override
     public int getPID() {
         return pid;
+    }
+
+    private void setExitResult(int exitStatus) {
+        if(exitStatus == 0) {
+            exitResult = CommandResult.SUCCESS;
+            exitResult.setResultValue(0);
+        }
+        else {
+            exitResult = CommandResult.FAILURE;
+            exitResult.setResultValue(exitStatus);
+        }
+    }
+
+    @Override
+    public CommandResult getExitResult() {
+        return exitResult;
     }
 
     @Override

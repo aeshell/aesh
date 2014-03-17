@@ -44,7 +44,8 @@ public class ParserGenerator {
         if(command == null)
             throw new CommandLineParserException("Commands must be annotated with @CommandDefinition");
 
-        ProcessedCommand processedCommand = new ProcessedCommand(command.name(), command.description(), command.validator());
+        ProcessedCommand processedCommand = new ProcessedCommand(command.name(), command.description(),
+                command.validator(), command.resultHandler());
 
         for(Field field : clazz.getDeclaredFields()) {
             Option o;

@@ -9,6 +9,7 @@ package org.jboss.aesh.cl.builder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidator;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class CommandBuilder {
     private String name;
     private String description;
     private CommandValidator validator;
+    private ResultHandler resultHandler;
     private ProcessedOption argument;
     private List<ProcessedOption> options;
 
@@ -52,6 +54,11 @@ public class CommandBuilder {
         return this;
     }
 
+    public CommandBuilder resultHandler(ResultHandler resultHandler) {
+        this.resultHandler = resultHandler;
+        return this;
+    }
+
     public CommandBuilder addOption(ProcessedOption option) {
         this.options.add(option);
         return this;
@@ -65,6 +72,6 @@ public class CommandBuilder {
     public ProcessedCommand generateCommand() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
-        return  new ProcessedCommand(name, description, validator, argument, options);
+        return  new ProcessedCommand(name, description, validator, resultHandler, argument, options);
     }
 }

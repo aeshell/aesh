@@ -11,6 +11,8 @@ import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
+import org.jboss.aesh.cl.result.NullResultHandler;
+import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidator;
 import org.jboss.aesh.cl.validator.NullCommandValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
@@ -30,6 +32,7 @@ public final class ProcessedCommand {
     private String name;
     private String usage;
     private CommandValidator validator;
+    private ResultHandler resultHandler;
 
     private List<ProcessedOption> options;
     private ProcessedOption argument;
@@ -41,10 +44,12 @@ public final class ProcessedCommand {
         options = new ArrayList<>();
     }
 
-    public ProcessedCommand(String name, String usage,Class<? extends CommandValidator> validator) {
+    public ProcessedCommand(String name, String usage,Class<? extends CommandValidator> validator,
+                            Class<? extends ResultHandler> resultHandler) {
         setName(name);
         setUsage(usage);
         setValidator(initValidator(validator));
+        setResultHandler(initResultHandler(resultHandler));
         options = new ArrayList<>();
     }
 
@@ -55,11 +60,12 @@ public final class ProcessedCommand {
         options = new ArrayList<>();
     }
 
-    public ProcessedCommand(String name, String usage, CommandValidator validator,
+    public ProcessedCommand(String name, String usage, CommandValidator validator, ResultHandler resultHandler,
                             ProcessedOption argument, List<ProcessedOption> options) throws OptionParserException {
         setName(name);
         setUsage(usage);
         setValidator(validator);
+        setResultHandler(resultHandler);
         this.argument = argument;
         this.options = new ArrayList<>();
         setOptions(options);
@@ -153,12 +159,25 @@ public final class ProcessedCommand {
             return new NullCommandValidator();
     }
 
+    private ResultHandler initResultHandler(Class<? extends ResultHandler> resultHandler) {
+        if(resultHandler != null && resultHandler != NullResultHandler.class)
+            return ReflectionUtil.newInstance(resultHandler);
+        else
+            return new NullResultHandler();
+    }
+
     public CommandValidator getValidator() {
         return validator;
     }
 
     private void setValidator(CommandValidator validator) {
         this.validator = validator;
+    }
+
+    public ResultHandler getResultHandler() { return resultHandler; }
+
+    private void setResultHandler(ResultHandler resultHandler) {
+        this.resultHandler = resultHandler;
     }
 
     public boolean hasArgument() {

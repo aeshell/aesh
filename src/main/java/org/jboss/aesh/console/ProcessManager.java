@@ -63,8 +63,8 @@ public class ProcessManager {
     public void processHaveFinished(Process process) {
         if (doLogging)
             logger.info("process has finished: " + process);
-        console.currentProcessFinished(process);
         processes.remove(process);
+        console.currentProcessFinished(process);
     }
 
     public void stop() {
