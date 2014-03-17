@@ -25,6 +25,7 @@ public class ProcessManager {
     private List<Process> processes;
     private ExecutorService executorService;
     private boolean doLogging;
+    private int pidCounter;
 
     private static final Logger logger = LoggerUtil.getLogger(ProcessManager.class.getName());
 
@@ -36,7 +37,7 @@ public class ProcessManager {
     }
 
     public void startNewProcess(ConsoleCallback callback, ConsoleOperation consoleOperation) {
-        AeshProcess process = new AeshProcess(1, this, callback, consoleOperation);
+        AeshProcess process = new AeshProcess(pidCounter++, this, callback, consoleOperation);
         if (doLogging)
             logger.info("starting a new process: " + process + ", consoleOperation: " + consoleOperation);
 
