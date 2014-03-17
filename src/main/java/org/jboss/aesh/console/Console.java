@@ -31,7 +31,6 @@ import org.jboss.aesh.console.alias.AliasCompletion;
 import org.jboss.aesh.console.alias.AliasManager;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.InternalCommands;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.export.ExportCompletion;
 import org.jboss.aesh.console.export.ExportManager;
 import org.jboss.aesh.console.operator.ControlOperator;
@@ -64,8 +63,6 @@ public class Console {
 
     private ConsoleCallback consoleCallback;
 
-    private boolean displayCompletion = false;
-    private boolean askDisplayCompletion = false;
     private volatile boolean running = false;
     private ByteArrayOutputStream redirectPipeOutBuffer;
     private ByteArrayOutputStream redirectPipeErrBuffer;
@@ -84,6 +81,7 @@ public class Console {
 
     private static final Pattern endsWithBackslashPattern = Pattern.compile(".*\\s\\\\$");
 
+    private ExecutorService readerService;
     private ExecutorService executorService;
 
     private AeshContext context;
@@ -137,17 +135,26 @@ public class Console {
         if(running)
             throw new RuntimeException("Cant reset an already running Console, must stop if first!");
         //if we already have reset, just return
-        if(executorService != null && !executorService.isShutdown()) {
+        if(readerService != null && !readerService.isShutdown()) {
             return;
         }
         if(settings.isLogging())
             logger.info("RESET");
 
-        executorService = Executors.newFixedThreadPool(2, new ThreadFactory() {
+        readerService = Executors.newFixedThreadPool(1, new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
                 Thread thread = Executors.defaultThreadFactory().newThread(runnable);
                 thread.setName("Aesh Read Loop " + runnable.hashCode());
+                return thread;
+            }
+        });
+
+        executorService = Executors.newFixedThreadPool(1, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable runnable) {
+                Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+                thread.setName("Aesh Process Loop " + runnable.hashCode());
                 return thread;
             }
         });
@@ -366,6 +373,7 @@ public class Console {
                 if(settings.isLogging())
                     logger.info("Done stopping reading thread. Terminal is reset");
                 processManager.stop();
+                readerService.shutdown();
                 executorService.shutdown();
             }
             finally {
@@ -420,7 +428,7 @@ public class Console {
             }
             catch (IOException e) { e.printStackTrace(); }
 
-            if(tmpOutput != null && !executorService.isShutdown())
+            if(tmpOutput != null && !readerService.isShutdown())
                 processManager.startNewProcess(consoleCallback, tmpOutput);
 
             inputProcessor.clearBufferAndDisplayPrompt();
@@ -479,7 +487,7 @@ public class Console {
                 }
             }
         };
-        executorService.execute(reader);
+        readerService.execute(reader);
     }
 
     private void startExecutor() {
@@ -617,29 +625,11 @@ public class Console {
                     //consoleCallback.execute(output);
                     processManager.startNewProcess(consoleCallback, output);
                     //abort if the user have initiated stop
-                    if(executorService.isShutdown())
-                        return;
-
-                    /*
-                    while(currentOperation != null) {
-                        ConsoleOperation tmpOutput = parseCurrentOperation();
-                        if(tmpOutput != null && !executorService.isShutdown())
-                            consoleCallback.execute(tmpOutput);
-                    }
-                    search = null;
-                    buffer.reset();
-                    if(command == null) {
-                        displayPrompt();
-                    }
-                    */
+                    //if(readerService.isShutdown())
+                    //    return;
                 }
                 else {
                     inputProcessor.clearBufferAndDisplayPrompt();
-                    /*
-                    buffer.reset();
-                    displayPrompt();
-                    search = null;
-                    */
                 }
             }
         }
