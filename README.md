@@ -1,6 +1,8 @@
 Æsh (Another Extendable SHell)
 =========
 
+[![Build Status](https://travis-ci.org/aeshell/aesh.png?branch=master)](https://travis-ci.org/aeshell/aesh)
+
 Æsh is a Java library for handling console input with the goal to support most GNU Readline features.
 
 Features:
