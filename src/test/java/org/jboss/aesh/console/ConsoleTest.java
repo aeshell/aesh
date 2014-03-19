@@ -9,8 +9,7 @@ package org.jboss.aesh.console;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 
 import org.junit.Test;
@@ -22,58 +21,45 @@ public class ConsoleTest extends BaseConsoleTest {
 
 
     @Test
-    public void multiLine() throws IOException, InterruptedException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-
-        Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new AeshConsoleCallback() {
+    public void multiLine() throws Throwable {
+        invokeTestConsole(new Setup() {
             @Override
-            public int execute(ConsoleOperation output) {
-                assertEquals("ls foo bar", output.getBuffer());
+            public void call(Console console, OutputStream out) throws IOException {
+                out.write(("ls \\").getBytes());
+                out.write((Config.getLineSeparator()).getBytes());
+                out.write(("foo \\").getBytes());
+                out.write((Config.getLineSeparator()).getBytes());
+                out.write(("bar"+Config.getLineSeparator()).getBytes());
+                out.flush();
+            }
+        }, new Verify() {
+            @Override
+            public int call(Console console, ConsoleOperation op) {
+                assertEquals("ls foo bar", op.getBuffer());
                 return 0;
             }
         });
-        console.start();
-
-        outputStream.write(("ls \\").getBytes());
-        outputStream.write((Config.getLineSeparator()).getBytes());
-        outputStream.write(("foo \\").getBytes());
-        outputStream.write((Config.getLineSeparator()).getBytes());
-        outputStream.write(("bar"+Config.getLineSeparator()).getBytes());
-        outputStream.flush();
-
-        Thread.sleep(100);
-        console.stop();
     }
-
 
     @Test
-    public void testPrintWriter() throws IOException, InterruptedException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-
-        Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new AeshConsoleCallback() {
+    public void testPrintWriter() throws Throwable {
+        invokeTestConsole(new Setup() {
             @Override
-            public int execute(ConsoleOperation output) {
-                assertEquals("ls foo bar", output.getBuffer());
+            public void call(Console console, OutputStream out) throws IOException {
+                PrintStream pout = console.getShell().out();
+                pout.write(("ls \\").getBytes());
+                pout.write((Config.getLineSeparator()).getBytes());
+                pout.write(("foo \\").getBytes());
+                pout.write((Config.getLineSeparator()).getBytes());
+                pout.write(("bar"+Config.getLineSeparator()).getBytes());
+                out.flush();
+            }
+        }, new Verify() {
+            @Override
+            public int call(Console console, ConsoleOperation op) {
+                assertEquals("ls foo bar", op.getBuffer());
                 return 0;
             }
         });
-        console.start();
-
-        PrintStream out = console.getShell().out();
-
-        out.print("ls \\");
-        out.print(Config.getLineSeparator());
-        out.print("foo \\");
-        out.print(Config.getLineSeparator());
-        out.println("bar");
-        outputStream.flush();
-
-        Thread.sleep(100);
-        console.stop();
     }
-
 }

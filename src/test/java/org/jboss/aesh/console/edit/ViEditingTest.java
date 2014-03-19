@@ -6,7 +6,10 @@
  */
 package org.jboss.aesh.console.edit;
 
-import org.jboss.aesh.console.AeshConsoleCallback;
+import static org.junit.Assert.assertEquals;
+
+import java.io.OutputStream;
+
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
@@ -15,55 +18,35 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-
-import static org.junit.Assert.assertEquals;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ViEditingTest extends BaseConsoleTest {
 
     @Test
-    public void testVi() throws IOException, InterruptedException {
+    public void testVi() throws Exception {
         SettingsBuilder builder = new SettingsBuilder();
         builder.mode(Mode.VI);
 
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        Console console = getTestConsole(builder, pipedInputStream);
-
-        console.setConsoleCallback(new ViConsoleCallback(console));
-
-        console.start();
-        outputStream.write("34".getBytes());
-        //esc
-        outputStream.write(new byte[]{27});
-        //ctrl-e (should switch to emacs mode)
-        outputStream.write(new byte[]{5});
-        //ctrl-a
-        outputStream.write(new byte[]{1});
-        outputStream.write(("12"+Config.getLineSeparator()).getBytes());
-        outputStream.flush();
-
-        Thread.sleep(100);
-        console.stop();
-    }
-
-    class ViConsoleCallback extends AeshConsoleCallback {
-
-        Console console;
-
-        ViConsoleCallback(Console console) {
-            this.console = console;
-        }
-
-        @Override
-        public int execute(ConsoleOperation output) {
-            assertEquals("1234", output.getBuffer());
-            return 0;
-        }
+        invokeTestConsole(1, new Setup() {
+            @Override
+            public void call(Console console, OutputStream out) throws Exception {
+                out.write("34".getBytes());
+                //esc
+                out.write(new byte[]{27});
+                //ctrl-e (should switch to emacs mode)
+                out.write(new byte[]{5});
+                //ctrl-a
+                out.write(new byte[]{1});
+                out.write(("12"+Config.getLineSeparator()).getBytes());
+                out.flush();
+            }
+        }, new Verify() {
+           @Override
+           public int call(Console console, ConsoleOperation op) {
+               assertEquals("1234", op.getBuffer());
+               return 0;
+           }
+        }, builder);
     }
 }

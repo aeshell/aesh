@@ -119,7 +119,7 @@ public class ViModeTest extends AeshTestCase {
         assertEqualsViMode("bar...   Foo-Bar.", b);
     }
 
-    public void testRepeatAndEdit() throws IOException {
+    public void testRepeatAndEdit() throws Exception {
         TestBuffer b = new TestBuffer("/cd /home/foo/ ls/ cd Desktop/ ls ../");
         b.append(TestBuffer.ESCAPE)
                 .append("0")
@@ -145,7 +145,7 @@ public class ViModeTest extends AeshTestCase {
         assertEqualsViMode("/cd /home/foo/ ls/ cd ", b);
     }
 
-    public void testTildeAndEdit() throws IOException {
+    public void testTildeAndEdit() throws Exception {
         TestBuffer b = new TestBuffer("apt-get install vIM");
         b.append(TestBuffer.ESCAPE)
                 .append("b")
@@ -162,7 +162,7 @@ public class ViModeTest extends AeshTestCase {
         assertEqualsViMode("apt-cache search Vim", b);
     }
 
-    public void testPasteAndEdit() throws IOException {
+    public void testPasteAndEdit() throws Exception {
         TestBuffer b = new TestBuffer("apt-get install vIM");
         b.append(TestBuffer.ESCAPE)
                 .append("0")

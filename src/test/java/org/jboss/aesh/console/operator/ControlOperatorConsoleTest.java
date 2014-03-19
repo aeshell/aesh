@@ -6,18 +6,16 @@
  */
 package org.jboss.aesh.console.operator;
 
-import org.jboss.aesh.console.AeshConsoleCallback;
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -25,31 +23,25 @@ import static org.junit.Assert.assertEquals;
 public class ControlOperatorConsoleTest extends BaseConsoleTest {
 
     @Test
-    public void controlOperatorTest() throws IOException, InterruptedException {
-
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-
-        Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new AeshConsoleCallback() {
+    public void controlOperatorTest() throws Throwable {
+        invokeTestConsole(2, new Setup() {
+            @Override
+            public void call(Console console, OutputStream out) throws IOException {
+                out.write(("ls -la *; foo" + Config.getLineSeparator()).getBytes());
+            }
+        }, new Verify() {
             int counter = 0;
             @Override
-            public int execute(ConsoleOperation output) {
+            public int call(Console console, ConsoleOperation op) {
                 if(counter == 0) {
-                    assertEquals("ls -la *", output.getBuffer());
+                    assertEquals("ls -la *", op.getBuffer());
                     counter++;
                 }
                 else if(counter == 1)
-                    assertEquals(" foo", output.getBuffer());
+                    assertEquals(" foo", op.getBuffer());
 
                 return 0;
             }
         });
-
-        console.start();
-
-        outputStream.write(("ls -la *; foo" + Config.getLineSeparator()).getBytes());
-
-        Thread.sleep(200);
     }
 }

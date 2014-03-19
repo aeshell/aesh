@@ -6,19 +6,17 @@
  */
 package org.jboss.aesh.history;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
 import org.jboss.aesh.TestBuffer;
-import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-
-import static org.junit.Assert.*;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -26,49 +24,43 @@ import static org.junit.Assert.*;
 public class HistoryTest extends BaseConsoleTest {
 
     @Test
-    public void testHistory() throws IOException, InterruptedException {
+    public void testHistory() throws Exception {
 
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-
-        Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new AeshConsoleCallback() {
-            private int count = 0;
+        invokeTestConsole(4, new Setup() {
             @Override
-            public int execute(ConsoleOperation output) {
-                if(count == 0)
-                    assertEquals("1234", output.getBuffer());
-                else if(count == 1)
-                    assertEquals("567", output.getBuffer());
-                else if(count == 2)
-                    assertEquals("1234", output.getBuffer());
-                else if(count == 3)
-                    assertEquals("567", output.getBuffer());
+            public void call(Console console, OutputStream out) throws IOException {
+                out.write(("1234"+ Config.getLineSeparator()).getBytes());
+                out.flush();
 
-                count++;
-                return 0;
+                out.write(("567"+Config.getLineSeparator()).getBytes());
+                out.flush();
+
+                out.write(TestBuffer.EMACS_HISTORY_PREV);
+                out.write(TestBuffer.EMACS_HISTORY_PREV);
+                out.write(Config.getLineSeparator().getBytes());
+                out.flush();
+
+                out.write(TestBuffer.EMACS_HISTORY_PREV);
+                out.write(TestBuffer.EMACS_HISTORY_PREV);
+                out.write(Config.getLineSeparator().getBytes());
             }
+        }, new Verify() {
+           private int count = 0;
+           @Override
+           public int call(Console console, ConsoleOperation op) {
+               if(count == 0)
+                   assertEquals("1234", op.getBuffer());
+               else if(count == 1)
+                   assertEquals("567", op.getBuffer());
+               else if(count == 2)
+                   assertEquals("1234", op.getBuffer());
+               else if(count == 3)
+                   assertEquals("567", op.getBuffer());
+
+               count++;
+               return 0;
+           }
         });
-        console.start();
-
-        outputStream.write(("1234"+ Config.getLineSeparator()).getBytes());
-        outputStream.flush();
-        Thread.sleep(20);
-        outputStream.write(("567"+Config.getLineSeparator()).getBytes());
-        outputStream.flush();
-        Thread.sleep(20);
-        outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
-        outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
-        outputStream.write(Config.getLineSeparator().getBytes());
-        outputStream.flush();
-        Thread.sleep(20);
-        outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
-        outputStream.write(TestBuffer.EMACS_HISTORY_PREV);
-        outputStream.write(Config.getLineSeparator().getBytes());
-
-
-        Thread.sleep(100);
-        console.stop();
     }
 
     @Test

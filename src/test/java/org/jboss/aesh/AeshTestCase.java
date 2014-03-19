@@ -6,19 +6,25 @@
  */
 package org.jboss.aesh;
 
-import junit.framework.TestCase;
-import org.jboss.aesh.console.AeshConsoleCallback;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleOperation;
-import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.Mode;
-import org.jboss.aesh.terminal.TestTerminal;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import junit.framework.TestCase;
+
+import org.jboss.aesh.console.AeshConsoleCallback;
+import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.Console;
+import org.jboss.aesh.console.ConsoleOperation;
+import org.jboss.aesh.console.TestConsoleCallback;
+import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.edit.Mode;
+import org.jboss.aesh.terminal.TestTerminal;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -66,7 +72,7 @@ public abstract class AeshTestCase extends TestCase {
 
     }
 
-    public void assertEqualsViMode(final String expected, TestBuffer buffer) throws IOException {
+    public void assertEqualsViMode(final String expected, TestBuffer buffer) throws Exception {
 
         SettingsBuilder builder = new SettingsBuilder();
         builder.readInputrc(false);
@@ -78,19 +84,26 @@ public abstract class AeshTestCase extends TestCase {
         if(!Config.isOSPOSIXCompatible())
             builder.ansi(false);
 
+        CountDownLatch latch = new CountDownLatch(1);
+        List<Throwable> exceptions = new ArrayList<Throwable>();
+
         Console console = new Console(builder.create());
-        console.setConsoleCallback(new AeshConsoleCallback() {
+        console.setConsoleCallback(new TestConsoleCallback(latch, exceptions) {
             @Override
-            public int execute(ConsoleOperation output) {
+            public int verify(ConsoleOperation output) {
                 assertEquals(expected, output.getBuffer());
                 return 0;
             }
         });
 
-        console.start();
-        try { Thread.sleep(100); }
-        catch (InterruptedException e) { }
+
+        if(!latch.await(200, TimeUnit.MILLISECONDS)) {
+           fail("Failed waiting for Console to finish");
+        }
         console.stop();
+        if(exceptions.size() > 0) {
+           throw new RuntimeException(exceptions.get(0));
+        }
     }
 
 }
