@@ -28,7 +28,9 @@ public abstract class AbstractEditMode implements EditMode {
     }
 
     protected void checkEof() {
-        String strValue = console.getExportManager().getValueIgnoreCase(IGNOREEOF);
+        String strValue = "1";
+        if(console != null && console.getExportManager() != null)
+            strValue = console.getExportManager().getValueIgnoreCase(IGNOREEOF);
         try {
             int eofValue = Integer.parseInt(strValue);
             if(eofValue > -1)
