@@ -5,7 +5,6 @@
  * http://www.eclipse.org/legal/epl-v10.html
  */
 
-import org.fusesource.jansi.internal.Kernel32;
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
@@ -20,7 +19,6 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.console.AeshConsoleBuffer;
 import org.jboss.aesh.console.AeshConsoleBufferBuilder;
 import org.jboss.aesh.console.AeshInputProcessorBuilder;
 import org.jboss.aesh.console.Config;

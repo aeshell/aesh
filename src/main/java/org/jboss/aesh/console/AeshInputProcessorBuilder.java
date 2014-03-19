@@ -7,7 +7,6 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.history.FileHistory;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.InMemoryHistory;
