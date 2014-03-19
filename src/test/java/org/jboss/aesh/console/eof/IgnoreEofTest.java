@@ -6,11 +6,12 @@
  */
 package org.jboss.aesh.console.eof;
 
-import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import org.jboss.aesh.console.AeshConsoleCallback;
+import java.io.OutputStream;
+
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
@@ -19,109 +20,104 @@ import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 /**
  * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
  */
 public class IgnoreEofTest extends BaseConsoleTest {
 
     @Test
-    public void ignoreeofDefaultVi() throws IOException, InterruptedException {
+    public void ignoreeofDefaultVi() throws Exception {
         SettingsBuilder builder = new SettingsBuilder();
         builder.enableAlias(true);
         builder.persistAlias(false);
         builder.mode(Mode.VI);
 
-        PipedOutputStream stdin = new PipedOutputStream();
-        Console console = getTestConsole(builder, new PipedInputStream(stdin));
-        console.setConsoleCallback(new AeshConsoleCallback() {
+        invokeTestConsole(1, new Setup() {
             @Override
-            public int execute(ConsoleOperation output) {
-                return 0;
+            public void call(Console console, OutputStream out) throws Exception {
+                console.getExportManager().addVariable("export ignoreeof = 2");
+
+                String BUF = "asdfasdf";
+
+                out.write(BUF.getBytes());
+                out.flush();
+                Thread.sleep(100);
+
+                assertEquals(BUF, console.getBuffer());
+
+                out.write(Key.CTRL_D.getFirstValue());
+                out.flush();
+                Thread.sleep(100);
+
+                assertEquals("", console.getBuffer());
+
+                out.write(Key.CTRL_D.getFirstValue());
+                out.flush();
+                Thread.sleep(100);
+
+                assertTrue(console.isRunning());
+
+                out.write(Key.CTRL_D.getFirstValue());
+                out.flush();
+                Thread.sleep(100);
+
+                assertTrue(console.isRunning());
+
+                out.write(Key.CTRL_D.getFirstValue());
+                out.flush();
+                Thread.sleep(100);
+
+                assertFalse(console.isRunning());
             }
-        });
-        console.start();
-        console.getExportManager().addVariable("export ignoreeof = 2");
-
-        String BUF = "asdfasdf";
-
-        stdin.write(BUF.getBytes());
-        stdin.flush();
-        Thread.sleep(100);
-
-        assertEquals(BUF, console.getBuffer());
-
-        stdin.write(Key.CTRL_D.getFirstValue());
-        stdin.flush();
-        Thread.sleep(100);
-
-        assertEquals("", console.getBuffer());
-
-        stdin.write(Key.CTRL_D.getFirstValue());
-        stdin.flush();
-        Thread.sleep(100);
-
-        assertTrue(console.isRunning());
-
-        stdin.write(Key.CTRL_D.getFirstValue());
-        stdin.flush();
-        Thread.sleep(100);
-
-        assertTrue(console.isRunning());
-
-        stdin.write(Key.CTRL_D.getFirstValue());
-        stdin.flush();
-        Thread.sleep(100);
-
-        assertFalse(console.isRunning());
+        }, new Verify() {
+           @Override
+           public int call(Console console, ConsoleOperation op) {
+               return 0;
+           }
+        }, builder);
     }
 
     @Test
-    public void ignoreeofDefaultEmacs() throws IOException, InterruptedException {
+    public void ignoreeofDefaultEmacs() throws Exception {
         SettingsBuilder builder = new SettingsBuilder();
         builder.enableAlias(true);
         builder.persistAlias(false);
         builder.mode(Mode.EMACS);
 
-        PipedOutputStream stdin = new PipedOutputStream();
-        Console console = getTestConsole(builder, new PipedInputStream(stdin));
-        console.setConsoleCallback(new AeshConsoleCallback() {
+        invokeTestConsole(1, new Setup() {
             @Override
-            public int execute(ConsoleOperation output) {
-                return 0;
-            }
-        });
-        console.start();
-        console.getExportManager().addVariable("export ignoreeof = 1");
+            public void call(Console console, OutputStream out) throws Exception {
+                console.getExportManager().addVariable("export ignoreeof = 1");
 
-        String BUF = "a";
+                String BUF = "a";
 
-        stdin.write(BUF.getBytes());
-        Thread.sleep(100);
+                out.write(BUF.getBytes());
+                Thread.sleep(100);
 
-        assertEquals(BUF, console.getBuffer());
+                assertEquals(BUF, console.getBuffer());
 
-        stdin.write(Key.CTRL_D.getFirstValue());
-        stdin.flush();
-        Thread.sleep(100);
+                out.write(Key.CTRL_D.getFirstValue());
+                out.flush();
+                Thread.sleep(100);
 
-        assertTrue(console.isRunning());
+                assertTrue(console.isRunning());
 
-        stdin.write(Key.CTRL_D.getFirstValue());
-        stdin.flush();
-        Thread.sleep(100);
+                out.write(Key.CTRL_D.getFirstValue());
+                out.flush();
+                Thread.sleep(100);
 
-        assertTrue(console.isRunning());
+                assertTrue(console.isRunning());
 
-        stdin.write(Key.CTRL_D.getFirstValue());
-        stdin.flush();
-        Thread.sleep(100);
+                out.write(Key.CTRL_D.getFirstValue());
+                out.flush();
+                Thread.sleep(100);
 
-        assertFalse(console.isRunning());
-
+                assertFalse(console.isRunning());            }
+        }, new Verify() {
+           @Override
+           public int call(Console console, ConsoleOperation op) {
+               return 0;
+           }
+        }, builder);
     }
-
 }

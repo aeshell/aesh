@@ -6,7 +6,11 @@
  */
 package org.jboss.aesh.console.masking;
 
-import org.jboss.aesh.console.AeshConsoleCallback;
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
@@ -17,42 +21,30 @@ import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-
-import static org.junit.Assert.*;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ConsoleMaskingTest extends BaseConsoleTest {
 
     @Test
-    public void masking() throws IOException, InterruptedException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-
-        KeyOperation deletePrevChar =  new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR);
-
-        Console console = getTestConsole(pipedInputStream);
-        console.setPrompt(new Prompt("", '\u0000'));
-        console.setConsoleCallback(new AeshConsoleCallback() {
+    public void masking() throws Exception {
+        invokeTestConsole(new Setup() {
             @Override
-            public int execute(ConsoleOperation output) {
-                assertEquals("mypasswor", output.getBuffer());
-                return 0;
+            public void call(Console console, OutputStream out) throws IOException {
+                KeyOperation deletePrevChar =  new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR);
+                console.setPrompt(new Prompt("", '\u0000'));
+
+                out.write(("mypassword").getBytes());
+                out.write(deletePrevChar.getFirstValue());
+                out.write((Config.getLineSeparator()).getBytes());
+                out.flush();
             }
+        }, new Verify() {
+           @Override
+           public int call(Console console, ConsoleOperation op) {
+               assertEquals("mypasswor", op.getBuffer());
+               return 0;
+           }
         });
-        console.start();
-        outputStream.write(("mypassword").getBytes());
-        outputStream.write(deletePrevChar.getFirstValue());
-        outputStream.write((Config.getLineSeparator()).getBytes());
-        outputStream.flush();
-
-        Thread.sleep(100);
-
-        console.stop();
     }
-
 }

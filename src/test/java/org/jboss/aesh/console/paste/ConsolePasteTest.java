@@ -6,7 +6,11 @@
  */
 package org.jboss.aesh.console.paste;
 
-import org.jboss.aesh.console.AeshConsoleCallback;
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
@@ -14,55 +18,39 @@ import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-
-import static org.junit.Assert.assertEquals;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ConsolePasteTest extends BaseConsoleTest{
+public class ConsolePasteTest extends BaseConsoleTest {
 
     @Test
-    public void paste() throws IOException, InterruptedException {
-        final PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-
-
-        String pasteLine1 =
-                "connect" + Config.getLineSeparator() +
-                "admin" + Config.getLineSeparator() +
-                "admin!";
-        String pasteLine2 = "234"+ Config.getLineSeparator() + "exit"+ Config.getLineSeparator();
-
-
-        final Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new AeshConsoleCallback() {
-            boolean password = false;
+    public void paste() throws Exception {
+        invokeTestConsole(4, new Setup() {
             @Override
-            public int execute(ConsoleOperation output) {
-                if (output.getBuffer().equals("admin")) {
-                    console.setPrompt(new Prompt("", new Character('\u0000')));
-                    password = true;
-                    return 0;
-                }
-                if(password) {
-                    assertEquals("admin!234", output.getBuffer());
-                    password = false;
-                }
-                return 0;
+            public void call(Console console, OutputStream out) throws IOException {
+                String pasteLine1 =
+                        "connect" + Config.getLineSeparator() +
+                        "admin" + Config.getLineSeparator() +
+                        "admin!";
+                String pasteLine2 = "234"+ Config.getLineSeparator() + "exit"+ Config.getLineSeparator();
+                out.write(pasteLine1.getBytes());
+                out.write(pasteLine2.getBytes());
             }
+        }, new Verify() {
+           boolean password = false;
+           @Override
+           public int call(Console console, ConsoleOperation op) {
+               if (op.getBuffer().equals("admin")) {
+                   console.setPrompt(new Prompt("", new Character('\u0000')));
+                   password = true;
+                   return 0;
+               }
+               if(password) {
+                   assertEquals("admin!234", op.getBuffer());
+                   password = false;
+               }
+               return 0;
+           }
         });
-        console.start();
-        outputStream.write(pasteLine1.getBytes());
-        outputStream.write(pasteLine2.getBytes());
-
-        Thread.sleep(500);
-
-        console.stop();
-
-
     }
 }

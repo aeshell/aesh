@@ -7,20 +7,14 @@
 package org.jboss.aesh.console.operator;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
-import org.jboss.aesh.console.TestConsoleCallback;
 import org.junit.Test;
 
 /**
@@ -30,40 +24,24 @@ public class ControlOperatorConsoleTest extends BaseConsoleTest {
 
     @Test
     public void controlOperatorTest() throws Throwable {
-
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-
-        CountDownLatch latch = new CountDownLatch(1);
-        List<Throwable> exceptions = new ArrayList<Throwable>();
-
-        Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new TestConsoleCallback(latch, exceptions) {
+        invokeTestConsole(2, new Setup() {
+            @Override
+            public void call(Console console, OutputStream out) throws IOException {
+                out.write(("ls -la *; foo" + Config.getLineSeparator()).getBytes());
+            }
+        }, new Verify() {
             int counter = 0;
             @Override
-            public int verify(ConsoleOperation output) {
+            public int call(Console console, ConsoleOperation op) {
                 if(counter == 0) {
-                    assertEquals("ls -la *", output.getBuffer());
+                    assertEquals("ls -la *", op.getBuffer());
                     counter++;
                 }
                 else if(counter == 1)
-                    assertEquals(" foo", output.getBuffer());
+                    assertEquals(" foo", op.getBuffer());
 
                 return 0;
             }
         });
-
-        console.start();
-
-        outputStream.write(("ls -la *; foo" + Config.getLineSeparator()).getBytes());
-
-
-        if(!latch.await(200, TimeUnit.MILLISECONDS)) {
-           fail("Failed waiting for Console to finish");
-        }
-        console.stop();
-        if(exceptions.size() > 0) {
-           throw exceptions.get(0);
-        }
     }
 }

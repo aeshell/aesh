@@ -6,13 +6,22 @@
  */
 package org.jboss.aesh.console.completion;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.io.PrintStream;
+
 import org.jboss.aesh.cl.builder.CommandBuilder;
-import org.jboss.aesh.cl.parser.AeshCommandLineParser;
-import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.builder.OptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.cl.parser.AeshCommandLineParser;
+import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.complete.CompletionRegistration;
@@ -29,15 +38,6 @@ import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
-
-import static org.junit.Assert.assertEquals;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -48,131 +48,143 @@ public class CompletionConsoleTest extends BaseConsoleTest {
     private static final byte[] LINE_SEPARATOR = Config.getLineSeparator().getBytes();
 
     @Test
-    public void completion() throws IOException, InterruptedException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-
-        Console console = getTestConsole(pipedInputStream);
-
-        Completion completion = new Completion() {
+    public void completion() throws Exception {
+        invokeTestConsole(3, new Setup() {
             @Override
-            public void complete(CompleteOperation co) {
-                if(co.getBuffer().equals("foo"))
-                    co.addCompletionCandidate("foobar");
+            public void call(Console console, OutputStream out) throws IOException {
+                Completion completion = new Completion() {
+                    @Override
+                    public void complete(CompleteOperation co) {
+                        if(co.getBuffer().equals("foo"))
+                            co.addCompletionCandidate("foobar");
+                    }
+                };
+                console.addCompletion(completion);
+
+
+                Completion completion2 = new Completion() {
+                    @Override
+                    public void complete(CompleteOperation co) {
+                        if(co.getBuffer().equals("bar")) {
+                            co.addCompletionCandidate("barfoo");
+                            co.doAppendSeparator(false);
+                        }
+                    }
+                };
+                console.addCompletion(completion2);
+
+                Completion completion3 = new Completion() {
+                    @Override
+                    public void complete(CompleteOperation co) {
+                        if(co.getBuffer().equals("le")) {
+                            co.addCompletionCandidate("less");
+                            co.setSeparator(':');
+                        }
+                    }
+                };
+                console.addCompletion(completion3);
+
+                out.write("foo".getBytes());
+                out.write(completeChar.getFirstValue());
+                out.write(LINE_SEPARATOR);
+                out.flush();
+
+                out.write("bar".getBytes());
+                out.write(completeChar.getFirstValue());
+                out.write(LINE_SEPARATOR);
+                out.flush();
+
+                out.write("le".getBytes());
+                out.write(completeChar.getFirstValue());
+                out.write(LINE_SEPARATOR);
+                out.flush();
             }
-        };
-        console.addCompletion(completion);
-
-
-        Completion completion2 = new Completion() {
-            @Override
-            public void complete(CompleteOperation co) {
-                if(co.getBuffer().equals("bar")) {
-                    co.addCompletionCandidate("barfoo");
-                    co.doAppendSeparator(false);
-                }
-            }
-        };
-        console.addCompletion(completion2);
-
-        Completion completion3 = new Completion() {
-            @Override
-            public void complete(CompleteOperation co) {
-                if(co.getBuffer().equals("le")) {
-                    co.addCompletionCandidate("less");
-                    co.setSeparator(':');
-                }
-            }
-        };
-        console.addCompletion(completion3);
-
-        console.setConsoleCallback(new CompletionConsoleCallback(console, outputStream));
-        console.start();
-
-        outputStream.write("foo".getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.write(LINE_SEPARATOR);
-        outputStream.flush();
-        Thread.sleep(20);
-
-        outputStream.write("bar".getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.write(LINE_SEPARATOR);
-        outputStream.flush();
-        Thread.sleep(20);
-
-        outputStream.write("le".getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.write(LINE_SEPARATOR);
-        outputStream.flush();
-        Thread.sleep(20);
-
-        Thread.sleep(100);
-        console.stop();
+        }, new Verify() {
+           private int count = 0;
+           @Override
+           public int call(Console console, ConsoleOperation op) {
+               if(count == 0) {
+                   assertEquals("foobar ", op.getBuffer());
+               }
+               else if(count == 1)
+                   assertEquals("barfoo", op.getBuffer());
+               else if(count == 2) {
+                   assertEquals("less:", op.getBuffer());
+               }
+               count++;
+               return 0;
+           }
+        });
     }
 
     @Test
-    public void removeCompletion() throws IOException, InterruptedException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-
-        Console console = getTestConsole(pipedInputStream);
-
-        Completion completion = new Completion() {
+    public void removeCompletion() throws Exception {
+        invokeTestConsole(3, new Setup() {
             @Override
-            public void complete(CompleteOperation co) {
-                if(co.getBuffer().equals("foo"))
-                    co.addCompletionCandidate("foobar");
+            public void call(Console console, OutputStream out) throws IOException {
+                Completion completion = new Completion() {
+                    @Override
+                    public void complete(CompleteOperation co) {
+                        if(co.getBuffer().equals("foo"))
+                            co.addCompletionCandidate("foobar");
+                    }
+                };
+                CompletionRegistration completionRegistration = console.addCompletion(completion);
+
+                Completion completion2 = new Completion() {
+                    @Override
+                    public void complete(CompleteOperation co) {
+                        if(co.getBuffer().equals("bar")) {
+                            co.addCompletionCandidate("barfoo");
+                            co.doAppendSeparator(false);
+                        }
+                    }
+                };
+                console.addCompletion(completion2);
+
+                Completion completion3 = new Completion() {
+                    @Override
+                    public void complete(CompleteOperation co) {
+                        if(co.getBuffer().equals("le")) {
+                            co.addCompletionCandidate("less");
+                            co.setSeparator(':');
+                        }
+                    }
+                };
+                console.addCompletion(completion3);
+                completionRegistration.removeCompletion();
+
+                out.write("foo".getBytes());
+                out.write(completeChar.getFirstValue());
+                out.write(LINE_SEPARATOR);
+                out.flush();
+
+                out.write("bar".getBytes());
+                out.write(completeChar.getFirstValue());
+                out.write(LINE_SEPARATOR);
+                out.flush();
+
+                out.write("le".getBytes());
+                out.write(completeChar.getFirstValue());
+                out.write(LINE_SEPARATOR);
+                out.flush();
             }
-        };
-        CompletionRegistration completionRegistration = console.addCompletion(completion);
-
-        Completion completion2 = new Completion() {
-            @Override
-            public void complete(CompleteOperation co) {
-                if(co.getBuffer().equals("bar")) {
-                    co.addCompletionCandidate("barfoo");
-                    co.doAppendSeparator(false);
-                }
-            }
-        };
-        console.addCompletion(completion2);
-
-        Completion completion3 = new Completion() {
-            @Override
-            public void complete(CompleteOperation co) {
-                if(co.getBuffer().equals("le")) {
-                    co.addCompletionCandidate("less");
-                    co.setSeparator(':');
-                }
-            }
-        };
-        console.addCompletion(completion3);
-        completionRegistration.removeCompletion();
-
-        console.setConsoleCallback(new CompletionConsoleCallback3(console, outputStream));
-        console.start();
-
-        outputStream.write("foo".getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.write(LINE_SEPARATOR);
-        outputStream.flush();
-        Thread.sleep(20);
-
-        outputStream.write("bar".getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.write(LINE_SEPARATOR);
-        outputStream.flush();
-        Thread.sleep(20);
-
-        outputStream.write("le".getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.write(LINE_SEPARATOR);
-        outputStream.flush();
-        Thread.sleep(20);
-
-        Thread.sleep(100);
-        console.stop();
+        }, new Verify() {
+           private int count = 0;
+           @Override
+           public int call(Console console, ConsoleOperation op) {
+               if(count == 0) {
+                   assertEquals("foo", op.getBuffer());
+               }
+               else if(count == 1)
+                   assertEquals("barfoo", op.getBuffer());
+               else if(count == 2) {
+                   assertEquals("less:", op.getBuffer());
+               }
+               count++;
+               return 0;
+           }
+        });
     }
 
     @Test

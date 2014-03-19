@@ -6,7 +6,10 @@
  */
 package org.jboss.aesh.console.terminal;
 
-import org.jboss.aesh.console.AeshConsoleCallback;
+import static org.junit.Assert.assertEquals;
+
+import java.io.OutputStream;
+
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
@@ -19,12 +22,6 @@ import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.terminal.TerminalTextStyle;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-
-import static org.junit.Assert.assertEquals;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -32,27 +29,21 @@ public class TerminalOutputTest extends BaseConsoleTest {
 
 
     @Test
-    public void terminalString() throws IOException, InterruptedException {
-
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-
-        Console console = getTestConsole(pipedInputStream);
-        console.setPrompt(new Prompt(new TerminalString("[test]", new TerminalColor(Color.WHITE, Color.BLACK),
-                new TerminalTextStyle(CharacterType.FAINT))));
-        console.setConsoleCallback(new AeshConsoleCallback() {
+    public void terminalString() throws Exception {
+        invokeTestConsole(new Setup() {
             @Override
-            public int execute(ConsoleOperation output) {
-                assertEquals("FOO", output.getBuffer());
-                return 0;
+            public void call(Console console, OutputStream out) throws Exception {
+                console.setPrompt(new Prompt(new TerminalString("[test]", new TerminalColor(Color.WHITE, Color.BLACK),
+                        new TerminalTextStyle(CharacterType.FAINT))));
+                out.write(new TerminalString("FOO", new TerminalTextStyle( CharacterType.BOLD)).getCharacters().getBytes());
+                out.write(Config.getLineSeparator().getBytes());
             }
+        }, new Verify() {
+           @Override
+           public int call(Console console, ConsoleOperation op) {
+               assertEquals("FOO", op.getBuffer());
+               return 0;
+           }
         });
-
-        console.start();
-        outputStream.write(new TerminalString("FOO", new TerminalTextStyle( CharacterType.BOLD)).getCharacters().getBytes());
-        outputStream.write(Config.getLineSeparator().getBytes());
-        Thread.sleep(100);
-
-        console.stop();
     }
 }
