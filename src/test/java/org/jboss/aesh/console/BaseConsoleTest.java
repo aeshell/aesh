@@ -127,10 +127,10 @@ public abstract class BaseConsoleTest {
     }
 
     public interface Setup {
-        public void call(Console console, OutputStream out) throws Exception;
+        void call(Console console, OutputStream out) throws Exception;
     }
 
     public interface Verify {
-        public int call(Console console, ConsoleOperation op) throws Exception;
+        int call(Console console, ConsoleOperation op) throws Exception;
     }
 }

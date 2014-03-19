@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -21,6 +22,7 @@ public class ConsoleTest extends BaseConsoleTest {
 
 
     @Test
+    @Ignore
     public void multiLine() throws Throwable {
         invokeTestConsole(new Setup() {
             @Override
@@ -42,6 +44,7 @@ public class ConsoleTest extends BaseConsoleTest {
     }
 
     @Test
+    @Ignore
     public void testPrintWriter() throws Throwable {
         invokeTestConsole(new Setup() {
             @Override

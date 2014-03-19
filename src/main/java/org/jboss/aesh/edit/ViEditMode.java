@@ -170,11 +170,14 @@ public class ViEditMode extends AbstractEditMode {
                 return Operation.NO_ACTION;
         }
         else if(operation == Operation.ESCAPE) {
-            switchEditMode();
-            if(isInEditMode())
-                return Operation.NO_ACTION;
-            else
+            if(isInEditMode()) {
+                mode = Action.MOVE;
                 return Operation.MOVE_PREV_CHAR;
+            }
+            else {
+                mode = Action.MOVE;
+                return Operation.NO_ACTION;
+            }
         }
         else if (operation == Operation.SEARCH_PREV) {
             mode = Action.SEARCH;

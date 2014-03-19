@@ -6,188 +6,414 @@
  */
 package org.jboss.aesh.edit;
 
-import org.jboss.aesh.AeshTestCase;
-import org.jboss.aesh.TestBuffer;
+import org.jboss.aesh.console.AeshConsoleBufferBuilder;
+import org.jboss.aesh.console.AeshInputProcessorBuilder;
+import org.jboss.aesh.console.ConsoleBuffer;
+import org.jboss.aesh.console.InputProcessor;
+import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.CommandOperation;
+import org.jboss.aesh.console.reader.AeshStandardStream;
+import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.terminal.CursorPosition;
+import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.terminal.Shell;
+import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.TestTerminal;
+import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * Test ViEditMode
- * TODO: should be changed to use BaseConsoleTest
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ViModeTest extends AeshTestCase {
+public class ViModeTest {
 
-    public ViModeTest(String test) {
-        super(test);
-    }
-
+    @Test
     public void testSimpleMovementAndEdit() throws Exception {
-        TestBuffer b = new TestBuffer("1234");
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        b.append(TestBuffer.ESCAPE) // esc
-                .append("x") // x
-                .append(TestBuffer.getNewLine()); // enter
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .mode(Mode.VI)
+                .create();
 
-        assertEqualsViMode("123", b);
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .shell(shell)
+                .prompt(new Prompt("aesh"))
+                .editMode(settings.getEditMode())
+                .create();
 
-        b = new TestBuffer("1234");
-        b.append(TestBuffer.ESCAPE) // esc
-                .append("h") // h
-                .append("s") // s
-                .append("5")
-                .append(TestBuffer.getNewLine()); // enter
-        assertEqualsViMode("1254", b);
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .create();
 
+        consoleBuffer.writeString("abcd");
 
-        b = new TestBuffer("1234");
-        b.append(TestBuffer.ESCAPE) // esc
-                .append("0") // 0
-                .append("x") // x
-                .append(TestBuffer.getNewLine()); // enter
+        CommandOperation co = new CommandOperation(Key.ESC);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.x);
+        inputProcessor.parseOperation(co);
 
-        assertEqualsViMode("234", b);
+        assertEquals("abc", consoleBuffer.getBuffer().getLineNoMask());
 
-        b = new TestBuffer("1234");
-        b.append(TestBuffer.ESCAPE) // esc
-                .append("0")
-                .append("x")
-                .append("l")
-                .append("a")
-                .append("5")
-                .append(TestBuffer.getNewLine());
+        co = new CommandOperation(Key.h);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.s);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.T);
+        inputProcessor.parseOperation(co);
 
-        assertEqualsViMode("2354", b);
+        assertEquals("aTc", consoleBuffer.getBuffer().getLineNoMask());
 
+        co = new CommandOperation(Key.ESC);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.ZERO);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.x);
+        inputProcessor.parseOperation(co);
 
-        b = new TestBuffer("1234");
-        b.append(TestBuffer.ESCAPE) // esc
-                .append("0")
-                .append("$")
-                .append("x")
-                .append(TestBuffer.getNewLine());
+        assertEquals("Tc", consoleBuffer.getBuffer().getLineNoMask());
 
-        assertEqualsViMode("123", b);
+        co = new CommandOperation(Key.l);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.a);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.o);
+        inputProcessor.parseOperation(co);
+
+        assertEquals("Tco", consoleBuffer.getBuffer().getLineNoMask());
+
     }
 
+    @Test
     public void testWordMovementAndEdit() throws Exception {
-        TestBuffer b = new TestBuffer("foo   bar...  Foo-Bar.");
-        b.append(TestBuffer.ESCAPE)
-                .append("B")
-                .append("d").append("b") // db
-                .append(TestBuffer.getNewLine());
-        assertEqualsViMode("foo   barFoo-Bar.", b);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        b = new TestBuffer("foo   bar...  Foo-Bar.");
-        b.append(TestBuffer.ESCAPE)
-                .append("0")
-                .append("W")
-                .append("W")
-                .append("d").append("W")
-                .append(TestBuffer.getNewLine());
-        assertEqualsViMode("foo   bar...  ", b);
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .mode(Mode.VI)
+                .create();
 
-        b = new TestBuffer("foo   bar...   Foo-Bar.");
-        b.append(TestBuffer.ESCAPE)
-                .append("0")
-                .append("w")
-                .append("w")
-                .append("d").append("W")
-                .append(TestBuffer.getNewLine());
-        assertEqualsViMode("foo   barFoo-Bar.", b);
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .shell(shell)
+                .prompt(new Prompt("aesh"))
+                .editMode(settings.getEditMode())
+                .create();
 
-        b = new TestBuffer("foo   bar...   Foo-Bar.");
-        b.append(TestBuffer.ESCAPE)
-                .append("B")
-                .append("d").append("B")
-                .append(TestBuffer.getNewLine());
-        assertEqualsViMode("foo   Foo-Bar.", b);
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .create();
 
-        b = new TestBuffer("foo   bar...   Foo-Bar.");
-        b.append(TestBuffer.ESCAPE)
-                .append("0")
-                .append("w").append("w")
-                .append("i")
-                .append("-bar")
-                .append(TestBuffer.ESCAPE)
-                .append("B")
-                .append("d").append("w") //dw
-                .append("x") // x
-                .append("d").append("B") //dB
-                .append(TestBuffer.getNewLine());
-        assertEqualsViMode("bar...   Foo-Bar.", b);
+        consoleBuffer.writeString("foo  bar...  Foo-Bar.");
+
+        CommandOperation co = new CommandOperation(Key.ESC);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.B);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.d);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.b);
+        inputProcessor.parseOperation(co);
+
+        assertEquals("foo  barFoo-Bar.", consoleBuffer.getBuffer().getLineNoMask());
+
+        co = new CommandOperation(Key.ESC);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.ZERO);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.W);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.d);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.w);
+        inputProcessor.parseOperation(co);
+
+        assertEquals("foo  -Bar.", consoleBuffer.getBuffer().getLineNoMask());
+
     }
 
+    @Test
     public void testRepeatAndEdit() throws Exception {
-        TestBuffer b = new TestBuffer("/cd /home/foo/ ls/ cd Desktop/ ls ../");
-        b.append(TestBuffer.ESCAPE)
-                .append("0")
-                .append("w").append("w").append("w").append("w").append("w")
-                .append("c").append("w")
-                .append("bar")
-                .append(TestBuffer.ESCAPE)
-                .append("W")
-                .append("d").append("w")
-                .append(".")
-                .append(TestBuffer.getNewLine());
-        assertEqualsViMode("/cd /home/bar/ cd Desktop/ ls ../", b);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        b = new TestBuffer("/cd /home/foo/ ls/ cd Desktop/ ls ../");
-        b.append(TestBuffer.ESCAPE)
-                .append("B")
-                .append("D")
-                .append("B")
-                .append(".")
-                .append("B")
-                .append(".")
-                .append(TestBuffer.getNewLine());
-        assertEqualsViMode("/cd /home/foo/ ls/ cd ", b);
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .mode(Mode.VI)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .shell(shell)
+                .prompt(new Prompt("aesh"))
+                .editMode(settings.getEditMode())
+                .create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .create();
+
+        consoleBuffer.writeString("/cd /home/foo/ ls/ cd Desktop/ ls ../");
+
+        CommandOperation co = new CommandOperation(Key.ESC);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.ZERO);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.w);
+        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.c);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.w);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.b);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.a);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.r);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.ESC);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.W);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.d);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.w);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.PERIOD);
+        inputProcessor.parseOperation(co);
+        co = new CommandOperation(Key.ENTER);
+
+        assertEquals("/cd /home/bar/ cd Desktop/ ls ../", inputProcessor.parseOperation(co));
+
+        consoleBuffer.writeString("/cd /home/foo/ ls/ cd Desktop/ ls ../");
+        inputProcessor.parseOperation(new CommandOperation(Key.ESC));
+        inputProcessor.parseOperation(new CommandOperation(Key.B));
+        inputProcessor.parseOperation(new CommandOperation(Key.D));
+        inputProcessor.parseOperation(new CommandOperation(Key.B));
+        inputProcessor.parseOperation(new CommandOperation(Key.PERIOD));
+        inputProcessor.parseOperation(new CommandOperation(Key.B));
+        inputProcessor.parseOperation(new CommandOperation(Key.PERIOD));
+
+        assertEquals("/cd /home/foo/ ls/ cd ",
+                inputProcessor.parseOperation(new CommandOperation(Key.ENTER)));
     }
 
+    @Test
     public void testTildeAndEdit() throws Exception {
-        TestBuffer b = new TestBuffer("apt-get install vIM");
-        b.append(TestBuffer.ESCAPE)
-                .append("b")
-                .append("~").append("~").append("~")
-                .append("0")
-                .append("w").append("w")
-                .append("c").append("w")
-                .append("cache")
-                .append(TestBuffer.ESCAPE)
-                .append("w")
-                .append("c").append("w")
-                .append("search")
-                .append(TestBuffer.getNewLine());
-        assertEqualsViMode("apt-cache search Vim", b);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .mode(Mode.VI)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .shell(shell)
+                .prompt(new Prompt("aesh"))
+                .editMode(settings.getEditMode())
+                .create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .create();
+
+        consoleBuffer.writeString("apt-get install vIM");
+        inputProcessor.parseOperation(new CommandOperation(Key.ESC));
+        inputProcessor.parseOperation(new CommandOperation(Key.b));
+        inputProcessor.parseOperation(new CommandOperation(Key.TILDE));
+        inputProcessor.parseOperation(new CommandOperation(Key.TILDE));
+        inputProcessor.parseOperation(new CommandOperation(Key.TILDE));
+        inputProcessor.parseOperation(new CommandOperation(Key.ZERO));
+        inputProcessor.parseOperation(new CommandOperation(Key.w));
+        inputProcessor.parseOperation(new CommandOperation(Key.w));
+        inputProcessor.parseOperation(new CommandOperation(Key.c));
+        inputProcessor.parseOperation(new CommandOperation(Key.w));
+
+        consoleBuffer.writeString("cache");
+
+        inputProcessor.parseOperation(new CommandOperation(Key.ESC));
+        inputProcessor.parseOperation(new CommandOperation(Key.w));
+        inputProcessor.parseOperation(new CommandOperation(Key.c));
+        inputProcessor.parseOperation(new CommandOperation(Key.w));
+
+        consoleBuffer.writeString("search");
+
+        assertEquals("apt-cache search Vim",
+                inputProcessor.parseOperation(new CommandOperation(Key.ENTER)));
+
     }
 
+    @Test
     public void testPasteAndEdit() throws Exception {
-        TestBuffer b = new TestBuffer("apt-get install vIM");
-        b.append(TestBuffer.ESCAPE)
-                .append("0")
-                .append("dW")
-                .append("w")
-                .append("P") //yank before
-                .append("W")
-                .append("yw") // add word to buffer
-                .append("$")
-                .append("p")
-                .append(TestBuffer.getNewLine());
-        assertEqualsViMode("install apt-get vIMvIM", b);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .mode(Mode.VI)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .shell(shell)
+                .prompt(new Prompt("aesh"))
+                .editMode(settings.getEditMode())
+                .create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .create();
+
+        consoleBuffer.writeString("apt-get install vIM");
+
+        inputProcessor.parseOperation(new CommandOperation(Key.ESC));
+        inputProcessor.parseOperation(new CommandOperation(Key.ZERO));
+        inputProcessor.parseOperation(new CommandOperation(Key.d));
+        inputProcessor.parseOperation(new CommandOperation(Key.W));
+        inputProcessor.parseOperation(new CommandOperation(Key.w));
+        inputProcessor.parseOperation(new CommandOperation(Key.P));
+        inputProcessor.parseOperation(new CommandOperation(Key.W));
+        inputProcessor.parseOperation(new CommandOperation(Key.y));
+        inputProcessor.parseOperation(new CommandOperation(Key.w));
+        inputProcessor.parseOperation(new CommandOperation(Key.DOLLAR));
+        inputProcessor.parseOperation(new CommandOperation(Key.p));
+
+        assertEquals("install apt-get vIMvIM",
+                inputProcessor.parseOperation(new CommandOperation(Key.ENTER)));
     }
 
+    @Test
     public void testSearch() throws IOException {
-        TestBuffer b = new TestBuffer();
-        b.append("asdf jkl").append(TestBuffer.getNewLine());
-        b.append("footing").append(TestBuffer.getNewLine());
-        int PREV_SEARCH = 18;
-        b.append(PREV_SEARCH).append("a").append(TestBuffer.getNewLine());
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        //assertEqualsViMode("asdf jkl", b);
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .persistHistory(false)
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .mode(Mode.VI)
+                .create();
 
-        b.append(PREV_SEARCH).append("ewsa").append(TestBuffer.getNewLine());
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .shell(shell)
+                .prompt(new Prompt("aesh"))
+                .editMode(settings.getEditMode())
+                .create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .create();
+
+        consoleBuffer.writeString("asdf jkl");
+        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        consoleBuffer.writeString("footing");
+        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+
+        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
+        inputProcessor.parseOperation(new CommandOperation(Key.a));
+
+        assertEquals("asdf jkl",
+        inputProcessor.parseOperation(new CommandOperation(Key.ENTER)));
+
     }
 
+    private static class TestShell implements Shell {
+
+        private final PrintStream out;
+        private final PrintStream err;
+
+        TestShell(PrintStream out, PrintStream err) {
+            this.out = out;
+            this.err = err;
+        }
+
+        @Override
+        public void clear() throws IOException {
+
+        }
+
+        @Override
+        public PrintStream out() {
+            return out;
+        }
+
+        @Override
+        public PrintStream err() {
+            return err;
+        }
+
+        @Override
+        public AeshStandardStream in() {
+            return null;
+        }
+
+        @Override
+        public TerminalSize getSize() {
+            return new TerminalSize(80,20);
+        }
+
+        @Override
+        public CursorPosition getCursor() {
+            return new CursorPosition(1,1);
+        }
+
+        @Override
+        public void setCursor(CursorPosition position) {
+
+        }
+
+        @Override
+        public void moveCursor(int rows, int columns) {
+
+        }
+
+        @Override
+        public boolean isMainBuffer() {
+            return false;
+        }
+
+        @Override
+        public void enableAlternateBuffer() {
+
+        }
+
+        @Override
+        public void enableMainBuffer() {
+
+        }
+    }
 }
