@@ -7,11 +7,16 @@
 package org.jboss.aesh.console;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
@@ -22,14 +27,17 @@ public class ConsoleTest extends BaseConsoleTest {
 
 
     @Test
-    public void multiLine() throws IOException, InterruptedException {
+    public void multiLine() throws Throwable {
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
+        CountDownLatch latch = new CountDownLatch(1);
+        List<Throwable> exceptions = new ArrayList<Throwable>();
+
         Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new AeshConsoleCallback() {
+        console.setConsoleCallback(new TestConsoleCallback(latch, exceptions) {
             @Override
-            public int execute(ConsoleOperation output) {
+            public int verify(ConsoleOperation output) {
                 assertEquals("ls foo bar", output.getBuffer());
                 return 0;
             }
@@ -43,20 +51,28 @@ public class ConsoleTest extends BaseConsoleTest {
         outputStream.write(("bar"+Config.getLineSeparator()).getBytes());
         outputStream.flush();
 
-        Thread.sleep(100);
+        if(!latch.await(200, TimeUnit.MILLISECONDS)) {
+           fail("Failed waiting for Console to finish");
+        }
         console.stop();
+        if(exceptions.size() > 0) {
+           throw exceptions.get(0);
+        }
     }
 
 
     @Test
-    public void testPrintWriter() throws IOException, InterruptedException {
+    public void testPrintWriter() throws Throwable {
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 
+        CountDownLatch latch = new CountDownLatch(1);
+        List<Throwable> exceptions = new ArrayList<Throwable>();
+
         Console console = getTestConsole(pipedInputStream);
-        console.setConsoleCallback(new AeshConsoleCallback() {
+        console.setConsoleCallback(new TestConsoleCallback(latch, exceptions) {
             @Override
-            public int execute(ConsoleOperation output) {
+            public int verify(ConsoleOperation output) {
                 assertEquals("ls foo bar", output.getBuffer());
                 return 0;
             }
@@ -72,8 +88,13 @@ public class ConsoleTest extends BaseConsoleTest {
         out.println("bar");
         outputStream.flush();
 
-        Thread.sleep(100);
+        if(!latch.await(200, TimeUnit.MILLISECONDS)) {
+           fail("Failed waiting for Console to finish");
+        }
         console.stop();
+        if(exceptions.size() > 0) {
+           throw exceptions.get(0);
+        }
     }
 
 }
