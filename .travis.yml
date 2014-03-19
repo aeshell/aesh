@@ -7,3 +7,5 @@ jdk:
 
 env:
    - TERM=dumb
+
+script: gradle check -Dorg.gradle.parallel=false
