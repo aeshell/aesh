@@ -65,12 +65,12 @@ public class AeshCommandCompletionTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
-        outputStream.write(("foo --bar bar\\ 2").getBytes());
+        outputStream.write(("foo --name aslak --bar bar\\ 2").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
         Thread.sleep(80);
-        assertEquals("foo --bar bar\\ 2\\ 3\\ 4 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        assertEquals("foo --name aslak --bar bar\\ 2\\ 3\\ 4 ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
@@ -125,12 +125,19 @@ public class AeshCommandCompletionTest {
         @Option(completer = FooCompletor.class)
         private String bar;
 
+        @Option
+        private String name;
+
         @Arguments
         private List<String> arguments;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             return CommandResult.SUCCESS;
+        }
+
+        public String getName() {
+            return name;
         }
     }
 
@@ -151,7 +158,8 @@ public class AeshCommandCompletionTest {
         @Override
         public void complete(CompleterInvocation completerData) {
             if(completerData.getGivenCompleteValue().equals("bar 2")) {
-                completerData.addCompleterValue("bar 2 3 4");
+                if(((FooCommand) completerData.getCommand()).getName().equals("aslak"))
+                    completerData.addCompleterValue("bar 2 3 4");
             }
             else if(completerData.getGivenCompleteValue().equals("bar 2 ")) {
                 completerData.addCompleterValue("bar 2 3 4");
