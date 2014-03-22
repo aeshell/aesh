@@ -173,6 +173,12 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 parser.parse(completeOperation.getBuffer(), true);
                 //we have partial/full name
                 if(completeObject.getName() != null && completeObject.getName().length() > 0) {
+                    String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( completeObject.getName()));
+                    try {
+                        parser.getCommandPopulator().populateObject(command, parser.parse(rest), invocationProviders, false);
+                    }
+                    //this should be ignored at some point
+                    catch (CommandLineParserException | OptionValidatorException ignored) { }
                     List<TerminalString> optionNamesWithDash = parser.getCommand().findPossibleLongNamesWitdDash(completeObject.getName());
                     if(optionNamesWithDash.size() > 0) {
                         //only one param
