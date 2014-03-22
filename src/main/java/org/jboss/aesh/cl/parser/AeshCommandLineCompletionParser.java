@@ -195,6 +195,17 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     }
                 }
                 else {
+                    String rest = completeOperation.getBuffer();
+                    while(rest.endsWith("-")) {
+                        rest = rest.substring(0, rest.length() -1);
+                    }
+
+                    try {
+                        parser.getCommandPopulator().populateObject(command, parser.parse(rest), invocationProviders, false);
+                    }
+                    //this should be ignored at some point
+                    catch (CommandLineParserException | OptionValidatorException ignored) { }
+
                     List<TerminalString> optionNamesWithDash = parser.getCommand().getOptionLongNamesWithDash();
 
                     if(optionNamesWithDash.size() > 1)
