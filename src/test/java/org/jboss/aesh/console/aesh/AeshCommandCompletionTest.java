@@ -65,7 +65,13 @@ public class AeshCommandCompletionTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
-        outputStream.write(("foo --name aslak --bar bar\\ 2").getBytes());
+        outputStream.write(("foo --name aslak --bar ").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        assertEquals("foo --name aslak --bar bar\\ 2", ((AeshConsoleImpl) aeshConsole).getBuffer());
+
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
@@ -157,7 +163,13 @@ public class AeshCommandCompletionTest {
 
         @Override
         public void complete(CompleterInvocation completerData) {
-            if(completerData.getGivenCompleteValue().equals("bar 2")) {
+            if(completerData.getGivenCompleteValue() == null || completerData.getGivenCompleteValue().length() == 0) {
+                if(((FooCommand) completerData.getCommand()).getName().equals("aslak")) {
+                    completerData.addCompleterValue("bar 2");
+                    completerData.setAppendSpace(false);
+                }
+            }
+            else if(completerData.getGivenCompleteValue().equals("bar 2")) {
                 if(((FooCommand) completerData.getCommand()).getName().equals("aslak"))
                     completerData.addCompleterValue("bar 2 3 4");
             }
