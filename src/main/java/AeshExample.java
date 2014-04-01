@@ -20,6 +20,7 @@ import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsoleBufferBuilder;
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.AeshInputProcessorBuilder;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.ConsoleBuffer;
@@ -317,26 +318,41 @@ public class AeshExample {
         }
     }
 
-    public static class DirectoryValidatorInvocation implements ValidatorInvocation<File> {
+    public static class DirectoryValidatorInvocation implements ValidatorInvocation<File, Command> {
 
         private final File file;
+        private final Command command;
+        private final AeshContext aeshContext;
 
-        public DirectoryValidatorInvocation(File file) {
+        public DirectoryValidatorInvocation(File file, Command command, AeshContext aeshContext) {
             this.file = file;
+            this.command = command;
+            this.aeshContext = aeshContext;
         }
 
         @Override
         public File getValue() {
             return file;
         }
-    }
-
-    public static class ExampleValidatorInvocationProvider implements ValidatorInvocationProvider {
 
         @Override
-        public ValidatorInvocation enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
+        public Command getCommand() {
+            return command;
+        }
+
+        @Override
+        public AeshContext getAeshContext() {
+            return aeshContext;
+        }
+    }
+
+    public static class ExampleValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>> {
+
+        @Override
+        public ValidatorInvocation<File, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
             if(validatorInvocation.getValue() instanceof File)
-                return new DirectoryValidatorInvocation((File) validatorInvocation.getValue());
+                return new DirectoryValidatorInvocation((File) validatorInvocation.getValue(),
+                        (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
             else
                 return validatorInvocation;
         }

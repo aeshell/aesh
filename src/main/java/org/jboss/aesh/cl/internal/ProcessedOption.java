@@ -21,6 +21,7 @@ import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.NullValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocation;
 import org.jboss.aesh.console.command.validator.AeshValidatorInvocation;
@@ -394,20 +395,21 @@ public final class ProcessedOption {
     }
 
     @SuppressWarnings("unchecked")
-    private Object doConvert(String inputValue, InvocationProviders invocationProviders,
+    private Object doConvert(String inputValue, InvocationProviders invocationProviders, Object command,
+                             AeshContext aeshContext,
                              boolean doValidation) throws OptionValidatorException {
         Object result = converter.convert(
         invocationProviders.getConverterProvider().enhanceConverterInvocation(new AeshConverterInvocation(inputValue)));
         //Object result =   converter.convert(inputValue);
         if(validator != null && doValidation) {
             validator.validate(
-                    invocationProviders.getValidatorProvider().enhanceValidatorInvocation(new AeshValidatorInvocation(result)));
+                    invocationProviders.getValidatorProvider().enhanceValidatorInvocation(new AeshValidatorInvocation(result, command, aeshContext )));
         }
         return result;
     }
 
     @SuppressWarnings("unchecked")
-    public void injectValueIntoField(Object instance, InvocationProviders invocationProviders,
+    public void injectValueIntoField(Object instance, InvocationProviders invocationProviders, AeshContext aeshContext,
                                      boolean doValidation) throws OptionValidatorException {
         if(converter == null)
             return;
@@ -422,9 +424,9 @@ public final class ProcessedOption {
             }
             if(optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN) {
                 if(getValue() != null)
-                    field.set(instance, doConvert(getValue(), invocationProviders, doValidation));
+                    field.set(instance, doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation));
                 else if(defaultValues.size() > 0) {
-                    field.set(instance, doConvert(defaultValues.get(0), invocationProviders, doValidation));
+                    field.set(instance, doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation));
                 }
             }
             else if(optionType == OptionType.LIST || optionType == OptionType.ARGUMENT) {
@@ -433,11 +435,11 @@ public final class ProcessedOption {
                         Set tmpSet = new HashSet<Object>();
                         if(values.size() > 0) {
                             for(String in : values)
-                                tmpSet.add(doConvert(in, invocationProviders, doValidation));
+                                tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
                         }
                         else if(defaultValues.size() > 0) {
                             for(String in : defaultValues)
-                                tmpSet.add(doConvert(in, invocationProviders, doValidation));
+                                tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
                         }
 
                         field.set(instance, tmpSet);
@@ -446,11 +448,11 @@ public final class ProcessedOption {
                         List tmpList = new ArrayList();
                         if(values.size() > 0) {
                             for(String in : values)
-                                tmpList.add(doConvert(in, invocationProviders, doValidation));
+                                tmpList.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
                         }
                         else if(defaultValues.size() > 0) {
                             for(String in : defaultValues)
-                                tmpList.add(doConvert(in, invocationProviders, doValidation));
+                                tmpList.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
                         }
                         field.set(instance, tmpList);
                     }
@@ -460,11 +462,11 @@ public final class ProcessedOption {
                     Collection tmpInstance = (Collection) field.getType().newInstance();
                     if(values.size() > 0) {
                         for(String in : values)
-                            tmpInstance.add(doConvert(in, invocationProviders, doValidation));
+                            tmpInstance.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
                     }
                     else if(defaultValues.size() > 0) {
                         for(String in : defaultValues)
-                            tmpInstance.add(doConvert(in, invocationProviders, doValidation));
+                            tmpInstance.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
                     }
                     field.set(instance, tmpInstance);
                 }
@@ -473,13 +475,13 @@ public final class ProcessedOption {
                 if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
                     Map<String, Object> tmpMap = newHashMap();
                     for(String propertyKey : properties.keySet())
-                        tmpMap.put(propertyKey,doConvert(properties.get(propertyKey), invocationProviders, doValidation));
+                        tmpMap.put(propertyKey,doConvert(properties.get(propertyKey), invocationProviders, instance, aeshContext, doValidation));
                     field.set(instance, tmpMap);
                  }
                 else {
                     Map<String,Object> tmpMap = (Map<String,Object>) field.getType().newInstance();
                     for(String propertyKey : properties.keySet())
-                        tmpMap.put(propertyKey,doConvert(properties.get(propertyKey), invocationProviders, doValidation));
+                        tmpMap.put(propertyKey,doConvert(properties.get(propertyKey), invocationProviders, instance, aeshContext, doValidation));
                     field.set(instance, tmpMap);
                 }
             }

@@ -280,7 +280,7 @@ public class AeshConsoleImpl implements AeshConsole {
                         .getParser()
                         .getCommandPopulator()
                         .populateObject(commandContainer.getCommand(),
-                            commandLine, invocationProviders, true);
+                            commandLine, invocationProviders, getAeshContext(), true);
                     // validate the command before execute, only call if no
                     // options with overrideRequired is not set
                     if (commandContainer.getParser().getCommand()

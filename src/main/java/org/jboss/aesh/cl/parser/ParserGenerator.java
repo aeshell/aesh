@@ -135,7 +135,7 @@ public class ParserGenerator {
                 new AeshConverterInvocationProvider(),
                 new AeshCompleterInvocationProvider(),
                 new AeshValidatorInvocationProvider());
-        cl.getCommandPopulator().populateObject(instance,  cl.parse(input), invocationProviders, true);
+        cl.getCommandPopulator().populateObject(instance,  cl.parse(input), invocationProviders, null, true);
     }
 
 }

@@ -2,6 +2,7 @@ package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 
 import java.util.Currency;
@@ -81,7 +82,7 @@ public class TestPopulator5 {
         }
     }
 
-    public class LongValidatorInvocation implements ValidatorInvocation<Long> {
+    public class LongValidatorInvocation implements ValidatorInvocation<Long, Object> {
 
         private final Long value;
 
@@ -92,6 +93,16 @@ public class TestPopulator5 {
         @Override
         public Long getValue() {
             return value;
+        }
+
+        @Override
+        public Object getCommand() {
+            return null;
+        }
+
+        @Override
+        public AeshContext getAeshContext() {
+            return null;
         }
     }
 

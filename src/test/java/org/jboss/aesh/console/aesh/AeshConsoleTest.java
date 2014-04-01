@@ -19,6 +19,7 @@ import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
@@ -149,7 +150,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
         }
     }
 
-    public class DirectoryValidatorInvocation implements ValidatorInvocation<File> {
+    public class DirectoryValidatorInvocation implements ValidatorInvocation<File, Command> {
 
         private final File value;
 
@@ -160,6 +161,16 @@ public class AeshConsoleTest extends BaseConsoleTest {
         @Override
         public File getValue() {
             return value;
+        }
+
+        @Override
+        public Command getCommand() {
+            return null;
+        }
+
+        @Override
+        public AeshContext getAeshContext() {
+            return null;
         }
     }
 }

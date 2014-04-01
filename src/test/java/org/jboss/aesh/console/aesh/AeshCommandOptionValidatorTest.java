@@ -12,6 +12,7 @@ import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
@@ -239,26 +240,42 @@ public class AeshCommandOptionValidatorTest {
         }
     }
 
-    public static class TestValidatorInvocation implements ValidatorInvocation<String> {
+    public static class TestValidatorInvocation implements ValidatorInvocation<String,Command> {
         private String value;
+        private Command command;
+        private AeshContext aeshContext;
 
-        public TestValidatorInvocation(String value) {
+        public TestValidatorInvocation(String value, Command command, AeshContext aeshContext) {
             this.value = value;
+            this.command = command;
+            this.aeshContext = aeshContext;
         }
 
         @Override
         public String getValue() {
             return value;
         }
+
+        @Override
+        public Command getCommand() {
+            return command;
+        }
+
+        @Override
+        public AeshContext getAeshContext() {
+            return aeshContext;
+        }
     }
 
-    public static class TestValidatorInvocationProvider implements ValidatorInvocationProvider {
+    public static class TestValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<String, Command>> {
         @Override
-        public ValidatorInvocation enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
+        public ValidatorInvocation<String, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
             if(validatorInvocation.getValue() instanceof String )
-                return new TestValidatorInvocation((String) validatorInvocation.getValue());
+                return new TestValidatorInvocation((String) validatorInvocation.getValue(),
+                        (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
             else
-                return new AeshValidatorInvocation(validatorInvocation.getValue());
+                return new AeshValidatorInvocation(validatorInvocation.getValue(),
+                        validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
         }
     }
 }
