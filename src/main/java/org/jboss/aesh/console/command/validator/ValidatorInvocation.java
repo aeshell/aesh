@@ -12,6 +12,7 @@ import org.jboss.aesh.console.AeshContext;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface ValidatorInvocation<V,C> {
+
     V getValue();
 
     C getCommand();

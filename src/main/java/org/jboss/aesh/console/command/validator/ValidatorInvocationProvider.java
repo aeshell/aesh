@@ -9,6 +9,6 @@ package org.jboss.aesh.console.command.validator;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface ValidatorInvocationProvider<T extends ValidatorInvocation> {
-    T enhanceValidatorInvocation(ValidatorInvocation validatorInvocation);
+public interface ValidatorInvocationProvider<T extends ValidatorInvocation, V, C> {
+    T enhanceValidatorInvocation(ValidatorInvocation<V,C> validatorInvocation);
 }

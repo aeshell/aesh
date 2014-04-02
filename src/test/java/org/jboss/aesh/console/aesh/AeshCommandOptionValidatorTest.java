@@ -267,9 +267,9 @@ public class AeshCommandOptionValidatorTest {
         }
     }
 
-    public static class TestValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<String, Command>> {
+    public static class TestValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<String, Command>, String, Command> {
         @Override
-        public ValidatorInvocation<String, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
+        public ValidatorInvocation<String, Command> enhanceValidatorInvocation(ValidatorInvocation<String, Command> validatorInvocation) {
             if(validatorInvocation.getValue() instanceof String )
                 return new TestValidatorInvocation((String) validatorInvocation.getValue(),
                         (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
