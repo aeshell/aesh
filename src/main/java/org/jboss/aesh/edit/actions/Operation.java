@@ -28,6 +28,7 @@ public enum Operation {
     NEW_LINE(Action.NEWLINE),
     NO_ACTION(Movement.PREV, Action.NO_ACTION),
     COMPLETE(Movement.NEXT, Action.COMPLETE),
+    COMPLETE_ABORT(Movement.PREV, Action.COMPLETE),
     EDIT(Action.EDIT),
     CLEAR(Action.CLEAR),
     HISTORY_NEXT(Movement.NEXT, Action.HISTORY),

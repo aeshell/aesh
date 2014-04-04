@@ -65,7 +65,8 @@ public class AeshCompletionHandler implements CompletionHandler {
         return askDisplayCompletion;
     }
 
-    private void setAskDisplayCompletion(boolean askDisplayCompletion) {
+    @Override
+    public void setAskDisplayCompletion(boolean askDisplayCompletion) {
         this.askDisplayCompletion = askDisplayCompletion;
     }
 

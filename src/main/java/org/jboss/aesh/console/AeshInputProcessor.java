@@ -144,7 +144,16 @@ public class AeshInputProcessor implements InputProcessor {
             }
         }
         else if(action == Action.COMPLETE) {
-            complete();
+            if(operation.getMovement() == Movement.NEXT)
+                complete();
+            else {
+                if(completionHandler != null) {
+                    completionHandler.setAskDisplayCompletion(false);
+                    consoleBuffer.getUndoManager().clear();
+                    consoleBuffer.out().print(Config.getLineSeparator());
+                    clearBufferAndDisplayPrompt();
+                }
+            }
         }
         else if(action == Action.EXIT || action == Action.EOF ||
                 action == Action.INTERRUPT || action == Action.IGNOREEOF) {
@@ -352,6 +361,9 @@ public class AeshInputProcessor implements InputProcessor {
         if(completionHandler != null) {
             try {
                 completionHandler.complete(consoleBuffer.out(), consoleBuffer.getBuffer());
+                if(completionHandler.doAskDisplayCompletion()) {
+                   consoleBuffer.getEditMode().setAskForCompletions(true);
+                }
             }
             catch (IOException e) {
                 e.printStackTrace();

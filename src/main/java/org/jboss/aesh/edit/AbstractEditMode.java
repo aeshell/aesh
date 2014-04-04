@@ -21,10 +21,21 @@ public abstract class AbstractEditMode implements EditMode {
     //default value
     protected int ignoreEof = 0;
 
+    private boolean askForCompletions = false;
+
     @Override
     public void init(final Console console) {
         this.console = console;
         eofCounter = 0;
+    }
+
+    @Override
+    public void setAskForCompletions(boolean askForCompletions) {
+        this.askForCompletions = askForCompletions;
+    }
+
+    protected boolean isAskingForCompletions() {
+        return askForCompletions;
     }
 
     protected void checkEof() {

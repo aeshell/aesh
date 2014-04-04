@@ -556,6 +556,7 @@ public class Console {
             return true;
         }
         catch (IOException ioe) {
+            ioe.printStackTrace();
             if(settings.isLogging())
                 logger.severe("Stream failure, stopping Aesh: "+ioe);
             try {
@@ -565,6 +566,7 @@ public class Console {
                 return false;
             }
             catch (IOException ignored) {
+                ignored.printStackTrace();
                 return false;
             }
         }

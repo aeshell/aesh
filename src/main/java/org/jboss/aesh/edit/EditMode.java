@@ -24,4 +24,6 @@ public interface EditMode {
     Mode getMode();
 
     void init(Console console);
+
+    void setAskForCompletions(boolean askForCompletions);
 }

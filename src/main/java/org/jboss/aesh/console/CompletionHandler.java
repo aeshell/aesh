@@ -21,6 +21,8 @@ public interface CompletionHandler {
 
     void removeCompletion(Completion completion);
 
+    void setAskDisplayCompletion(boolean askDisplayCompletion);
+
     boolean doAskDisplayCompletion();
 
     void setAskCompletionSize(int size);

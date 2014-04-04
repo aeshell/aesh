@@ -71,8 +71,22 @@ public class ViEditMode extends AbstractEditMode {
 
     @Override
     public Operation parseInput(Key in, String buffer) {
-        KeyOperation currentOperation = operationManager.findOperation(in);
 
+        if(isAskingForCompletions()) {
+            if(in == Key.y) {
+                setAskForCompletions(false);
+                return Operation.COMPLETE;
+            }
+            else if(in == Key.n) {
+                setAskForCompletions(false);
+                return Operation.COMPLETE_ABORT;
+            }
+            else {
+                return Operation.NO_ACTION;
+            }
+        }
+
+        KeyOperation currentOperation = operationManager.findOperation(in);
         if(currentOperation != null)
             return findOperation(currentOperation, buffer);
         else if(mode == Action.SEARCH) {
