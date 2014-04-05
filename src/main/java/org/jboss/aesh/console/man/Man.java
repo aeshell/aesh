@@ -9,10 +9,12 @@ package org.jboss.aesh.console.man;
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.completer.OptionCompleter;
+import org.jboss.aesh.console.DefaultCommandResult;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Result;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.man.parser.ManFileParser;
 import org.jboss.aesh.util.ANSI;
@@ -78,7 +80,7 @@ public class Man extends AeshFileDisplayer {
     public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
         if(manPages == null || manPages.size() == 0) {
             commandInvocation.getShell().out().println("What manual page do you want?");
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
         if(manPages.size() > 0) {
             InputStream inputStream = manProvider.getManualDocument(manPages.get(0));
@@ -89,11 +91,11 @@ public class Man extends AeshFileDisplayer {
             }
             else {
                 commandInvocation.getShell().out().println("No manual entry for "+manPages.get(0));
-                return CommandResult.SUCCESS;
+                return new DefaultCommandResult(Result.SUCCESS);
             }
         }
 
-        return CommandResult.SUCCESS;
+        return new DefaultCommandResult(Result.SUCCESS);
     }
 
     public static class ManCompleter implements OptionCompleter {

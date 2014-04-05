@@ -8,13 +8,15 @@ import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshConsoleImpl;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.DefaultCommandResult;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Result;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
@@ -139,7 +141,7 @@ public class AeshCommandCompletionTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
 
         public String getName() {
@@ -155,7 +157,7 @@ public class AeshCommandCompletionTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
     }
 

@@ -8,9 +8,11 @@
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
+import org.jboss.aesh.console.DefaultCommandResult;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Result;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
@@ -54,7 +56,7 @@ public class AeshGraphicsExample {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             commandInvocation.stop();
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
     }
 
@@ -70,7 +72,7 @@ public class AeshGraphicsExample {
             invocation.getShell().enableAlternateBuffer();
             doGfx();
 
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
 
         public void waitForInput() {

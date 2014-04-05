@@ -24,7 +24,10 @@ import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.AeshInputProcessorBuilder;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.ConsoleBuffer;
+import org.jboss.aesh.console.DefaultCommandResult;
 import org.jboss.aesh.console.InputProcessor;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Result;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.AeshConsole;
@@ -33,7 +36,6 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
@@ -121,7 +123,7 @@ public class AeshExample {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             commandInvocation.stop();
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
     }
 
@@ -138,7 +140,7 @@ public class AeshExample {
                commandInvocation.getShell().out().println("NO BAR!");
             else
                commandInvocation.getShell().out().println("you set bar to: " + bar);
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
     }
 
@@ -170,7 +172,7 @@ public class AeshExample {
                 processOperation(commandInvocation);
             }
 
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
 
         private void display() {
@@ -253,7 +255,7 @@ public class AeshExample {
                         commandInvocation.getShell().out().println(f.toString());
                 }
             }
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
     }
 
@@ -275,11 +277,11 @@ public class AeshExample {
                     operation = commandInvocation.getInput();
                 }
                 catch (InterruptedException e) {
-                    return CommandResult.FAILURE;
+                    return new DefaultCommandResult(Result.FAILURE);
                 }
                 processOperation(operation);
             }
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
 
         public void processOperation(CommandOperation operation) throws IOException {

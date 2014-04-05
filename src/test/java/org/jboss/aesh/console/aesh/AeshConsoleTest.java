@@ -22,11 +22,13 @@ import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.DefaultCommandResult;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Result;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -108,7 +110,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             assertEquals("en", bar);
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
     }
 
@@ -137,7 +139,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             assertEquals(2, files.size());
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
     }
 

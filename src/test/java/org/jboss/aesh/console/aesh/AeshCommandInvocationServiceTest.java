@@ -12,15 +12,18 @@ import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.DefaultCommandResult;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.CommandOperation;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Formatter;
+import org.jboss.aesh.console.command.Result;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -84,12 +87,12 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
 }
 
 @CommandDefinition(name = "bar", description = "a bar...")
-class BarCommand implements Command<FooCommandInvocation> {
+class BarCommand implements Command<FooCommandInvocation, Object, Formatter<Object>> {
 
     @Override
     public CommandResult execute(FooCommandInvocation commandInvocation) throws IOException {
         commandInvocation.getShell().out().println(commandInvocation.getFoo());
-        return CommandResult.SUCCESS;
+        return new DefaultCommandResult(Result.SUCCESS);
     }
 }
 

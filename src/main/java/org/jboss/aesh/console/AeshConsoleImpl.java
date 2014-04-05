@@ -24,6 +24,7 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Result;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
@@ -301,7 +302,7 @@ public class AeshConsoleImpl implements AeshConsole {
                 }
                 catch (CommandLineParserException e) {
                     getShell().out().println(e.getMessage());
-                    result = CommandResult.FAILURE;
+                    result = new DefaultCommandResult(Result.FAILURE);
                 }
                 catch (CommandNotFoundException e) {
                     if (commandNotFoundHandler != null) {
@@ -315,15 +316,15 @@ public class AeshConsoleImpl implements AeshConsole {
                                     .getBuffer())
                                 + Config.getLineSeparator());
                     }
-                    result = CommandResult.FAILURE;
+                    result = new DefaultCommandResult(Result.FAILURE);
                 }
                 catch (OptionValidatorException e) {
                     getShell().out().println(e.getMessage());
-                    result = CommandResult.FAILURE;
+                    result = new DefaultCommandResult(Result.FAILURE);
                 }
                 catch (CommandValidatorException e) {
                     getShell().out().println(e.getMessage());
-                    result = CommandResult.FAILURE;
+                    result = new DefaultCommandResult(Result.FAILURE);
                 }
                 catch (Exception e) {
                     logger.log(Level.SEVERE, "Exception when parsing/running: "
@@ -332,19 +333,19 @@ public class AeshConsoleImpl implements AeshConsole {
                         "Exception when parsing/running: "
                             + output.getBuffer() + ", "
                             + e.getMessage());
-                    result = CommandResult.FAILURE;
+                    result = new DefaultCommandResult(Result.FAILURE);
                 }
             }
             // empty line
             else if (output != null) {
-                result = CommandResult.FAILURE;
+                result = new DefaultCommandResult(Result.FAILURE);
             }
             else {
                 stop();
-                result = CommandResult.FAILURE;
+                result = new DefaultCommandResult(Result.FAILURE);
             }
 
-            if (result == CommandResult.SUCCESS)
+            if (result.getResult() == Result.SUCCESS)
                 return 0;
             else
                 return 1;

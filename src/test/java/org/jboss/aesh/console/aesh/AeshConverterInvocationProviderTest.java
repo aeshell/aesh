@@ -13,9 +13,11 @@ import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.DefaultCommandResult;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Result;
 import org.jboss.aesh.console.command.converter.ConverterInvocation;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -90,7 +92,7 @@ public static class ConCommand implements Command {
     public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
         commandInvocation.getShell().out().println(foo);
         commandInvocation.getShell().out().flush();
-        return CommandResult.SUCCESS;
+        return new DefaultCommandResult(Result.SUCCESS);
     }
 }
 

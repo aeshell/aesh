@@ -11,9 +11,11 @@ import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.DefaultCommandResult;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Result;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
@@ -78,7 +80,7 @@ public class AeshCommandEndOperator {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             counter++;
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
     }
 
@@ -92,7 +94,7 @@ public class AeshCommandEndOperator {
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
             assertEquals("yup", info);
             counter++;
-            return CommandResult.SUCCESS;
+            return new DefaultCommandResult(Result.SUCCESS);
         }
     }
 

@@ -13,12 +13,12 @@ import java.io.IOException;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface Command<T extends CommandInvocation> {
+public interface Command<C extends CommandInvocation, T, F extends Formatter<T>> {
     /**
      * Will be called when this command is triggered by the command line.
      *
      * @return success or failure depending on how the execution went.
      * @throws IOException
      */
-    CommandResult execute(T commandInvocation) throws IOException;
+    CommandResult<T, F> execute(C commandInvocation) throws IOException;
 }

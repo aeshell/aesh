@@ -7,7 +7,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Result;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -18,7 +18,7 @@ public class AeshProcess implements Runnable, Process {
     private ProcessManager manager;
     private ConsoleCallback consoleCallback;
     private ConsoleOperation operation;
-    private CommandResult exitResult;
+    private Result exitResult;
 
     public AeshProcess(int pid, ProcessManager manager,
                        ConsoleCallback consoleCallback,
@@ -58,17 +58,17 @@ public class AeshProcess implements Runnable, Process {
 
     private void setExitResult(int exitStatus) {
         if(exitStatus == 0) {
-            exitResult = CommandResult.SUCCESS;
+            exitResult = Result.SUCCESS;
             exitResult.setResultValue(0);
         }
         else {
-            exitResult = CommandResult.FAILURE;
+            exitResult = Result.FAILURE;
             exitResult.setResultValue(exitStatus);
         }
     }
 
     @Override
-    public CommandResult getExitResult() {
+    public Result getExitResult() {
         return exitResult;
     }
 

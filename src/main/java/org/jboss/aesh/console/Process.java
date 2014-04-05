@@ -7,7 +7,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Result;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -20,6 +20,6 @@ public interface Process {
 
     int getPID();
 
-    CommandResult getExitResult();
+    Result getExitResult();
 
 }
