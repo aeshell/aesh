@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class DefaultCommandResult implements CommandResult<Set<Object>, Formatter<Set<Object>>> {
+public class DefaultCommandResult implements CommandResult<Set<Object>, Formatter<Set<Object>, CommandInvocation>> {
 
     private Result result;
 
