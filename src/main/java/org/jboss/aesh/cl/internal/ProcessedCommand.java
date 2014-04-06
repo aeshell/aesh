@@ -34,6 +34,7 @@ public final class ProcessedCommand {
     private CommandValidator validator;
     private ResultHandler resultHandler;
 
+    private ProcessedPipeline pipeline;
     private List<ProcessedOption> options;
     private ProcessedOption argument;
 
@@ -134,6 +135,14 @@ public final class ProcessedCommand {
                     opt.getConverter(), opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer(),
                     opt.doOverrideRequired()));
         }
+    }
+
+    public void setPipeline(ProcessedPipeline pipeline) {
+        this.pipeline = pipeline;
+    }
+
+    public ProcessedPipeline getPipeline() {
+        return pipeline;
     }
 
     public String getName() {

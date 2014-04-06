@@ -43,12 +43,12 @@ public class Man extends AeshFileDisplayer {
     public Man(ManProvider manProvider) {
         super();
         this.manProvider = manProvider;
-        manPages = new ArrayList<String>();
+        manPages = new ArrayList<>();
         fileParser = new ManFileParser();
     }
 
     public void setRegistry(CommandRegistry registry) {
-        this.registry = registry;
+        Man.registry = registry;
     }
 
     @Override
@@ -101,7 +101,7 @@ public class Man extends AeshFileDisplayer {
     public static class ManCompleter implements OptionCompleter {
         @Override
         public void complete(CompleterInvocation completerData) {
-            List<String> completeValues = new ArrayList<String>();
+            List<String> completeValues = new ArrayList<>();
             if(registry != null) {
                 for(String command : registry.getAllCommandNames()) {
                     if(command.startsWith(completerData.getGivenCompleteValue()))

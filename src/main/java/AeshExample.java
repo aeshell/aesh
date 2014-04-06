@@ -272,7 +272,7 @@ public class AeshExample {
             this.shell = commandInvocation.getShell();
             if(bar) {
                 shell.out().print("are you sure you want bar? (y/n) ");
-                CommandOperation operation = null;
+                CommandOperation operation;
                 try {
                     operation = commandInvocation.getInput();
                 }
@@ -298,7 +298,7 @@ public class AeshExample {
 
         @Override
         public void complete(CompleterInvocation completerData) {
-            List<String> completeList = new ArrayList<String>();
+            List<String> completeList = new ArrayList<>();
             if(completerData.getGivenCompleteValue() == null || completerData.getGivenCompleteValue().length() == 0)
                 completeList.add("1");
             else {
@@ -365,10 +365,7 @@ public class AeshExample {
         @Override
         public boolean isActivated(ProcessedCommand processedCommand) {
             ProcessedOption bar = processedCommand.findLongOption("bar");
-            if(bar != null && bar.getValue() != null)
-                return true;
-            else
-                return false;
+            return bar != null && bar.getValue() != null;
         }
     }
 

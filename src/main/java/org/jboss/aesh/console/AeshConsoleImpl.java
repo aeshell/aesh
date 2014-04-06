@@ -300,7 +300,7 @@ public class AeshConsoleImpl implements AeshConsole {
                                     new AeshCommandInvocation(console,
                                         output.getControlOperator(), this)));
                 }
-                catch (CommandLineParserException e) {
+                catch (CommandLineParserException | CommandValidatorException | OptionValidatorException e) {
                     getShell().out().println(e.getMessage());
                     result = new DefaultCommandResult(Result.FAILURE);
                 }
@@ -316,14 +316,6 @@ public class AeshConsoleImpl implements AeshConsole {
                                     .getBuffer())
                                 + Config.getLineSeparator());
                     }
-                    result = new DefaultCommandResult(Result.FAILURE);
-                }
-                catch (OptionValidatorException e) {
-                    getShell().out().println(e.getMessage());
-                    result = new DefaultCommandResult(Result.FAILURE);
-                }
-                catch (CommandValidatorException e) {
-                    getShell().out().println(e.getMessage());
                     result = new DefaultCommandResult(Result.FAILURE);
                 }
                 catch (Exception e) {

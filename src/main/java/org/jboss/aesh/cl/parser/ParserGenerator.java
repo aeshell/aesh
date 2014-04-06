@@ -11,10 +11,12 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionGroup;
 import org.jboss.aesh.cl.OptionList;
+import org.jboss.aesh.cl.PipeInput;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.internal.ProcessedPipeline;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.InvocationProviders;
@@ -52,6 +54,7 @@ public class ParserGenerator {
             OptionGroup og;
             OptionList ol;
             Arguments a;
+            PipeInput pipe;
             if((o = field.getAnnotation(Option.class)) != null) {
                 OptionType optionType;
                 if(o.hasValue())
@@ -123,6 +126,17 @@ public class ParserGenerator {
                         new ProcessedOption('\u0000',"", a.description(), "", false, a.valueSeparator(),
                                 a.defaultValue(), type, field.getName(), OptionType.ARGUMENT, a.converter(),
                                 a.completer(), a.validator(), null, null));
+            }
+            else if((pipe = field.getAnnotation(PipeInput.class)) != null) {
+                if(!Collection.class.isAssignableFrom(field.getType()))
+                    throw new CommandLineParserException("PipeInput fields must be instance of Collection");
+                Class type = Object.class;
+                if(field.getGenericType() != null) {
+                    ParameterizedType listType = (ParameterizedType) field.getGenericType();
+                    type = (Class) listType.getActualTypeArguments()[0];
+                    processedCommand.setPipeline(
+                            new ProcessedPipeline(field.getName(), type, pipe.type()));
+                }
             }
         }
 
