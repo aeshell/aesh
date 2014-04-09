@@ -166,7 +166,7 @@ public class AeshExample {
                 shell.out().println(commandInvocation.getHelpInfo("test"));
             }
             else {
-                display();
+                //display();
                 processOperation(commandInvocation);
             }
 
@@ -183,10 +183,19 @@ public class AeshExample {
         }
 
         public void processOperation(CommandInvocation invocation) throws IOException {
+            //first ask for username, then password
+            String username = promptForInput("username: ", null, invocation);
+            String password = promptForInput("password: ", '*', invocation);
+
+            shell.out().println("we got username: "+username+", password: "+password);
+        }
+
+        private String promptForInput(String prompt, Character mask,
+                                      CommandInvocation invocation) throws IOException {
 
             ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                     .shell(invocation.getShell())
-                    .prompt(new Prompt("type: ", '*'))
+                    .prompt(new Prompt(prompt, mask))
                     .create();
             InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                     .consoleBuffer(consoleBuffer)
@@ -199,12 +208,12 @@ public class AeshExample {
                     result = inputProcessor.parseOperation(invocation.getInput());
                 }
                 while(result == null );
-                invocation.getShell().out().println("RESULT: "+result);
-
+                return result;
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
                 stop();
+                return null;
             }
         }
 
