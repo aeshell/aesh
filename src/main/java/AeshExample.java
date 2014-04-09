@@ -186,7 +186,7 @@ public class AeshExample {
 
             ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                     .shell(invocation.getShell())
-                    .prompt(new Prompt("type: "))
+                    .prompt(new Prompt("type: ", '*'))
                     .create();
             InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                     .consoleBuffer(consoleBuffer)
