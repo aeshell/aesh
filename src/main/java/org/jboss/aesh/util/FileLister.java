@@ -138,9 +138,15 @@ public class FileLister {
                                     Config.getPathSeparator()+token), null));
                 }
                 else {
-                     List<String> tmpDirs = listDirectory(cwd, token);
+                    List<String> tmpDirs;
+                    if (lastDir != null) {
+                        tmpDirs = listDirectory(
+                                new File(cwd.getAbsolutePath() + Config.getPathSeparator() + lastDir), rest);
+                    } else {
+                        tmpDirs = listDirectory(cwd, rest);
+                    }
                     if(tmpDirs.size() == 1 || endsWithParent())
-                        completion.addCompletionCandidate( Config.getPathSeparator());
+                        completion.addCompletionCandidate(rest + Config.getPathSeparator());
                     else
                         completion.addCompletionCandidates( tmpDirs);
                 }
@@ -201,7 +207,7 @@ public class FileLister {
 
         //new offset tweaking to match the "common" way of returning completions
         if(completion.getCompletionCandidates().size() == 1) {
-            if(isTokenADirectory() && !tokenEndsWithSlash()) {
+            if(isTokenADirectory() && !tokenEndsWithSlash() && (startWithSlash() || startWithWindowsDrive())) {
                 completion.getCompletionCandidates().get(0).setCharacters( token +
                         completion.getCompletionCandidates().get(0).getCharacters());
 
@@ -284,12 +290,10 @@ public class FileLister {
             lastDir = token.substring(0, token.lastIndexOf(Config.getPathSeparator()));
             rest = token.substring(token.lastIndexOf(Config.getPathSeparator())+1);
         }
-        else {
-            if(new File(cwd+Config.getPathSeparator()+token).exists())
-                lastDir = token;
-            else {
-                rest = token;
-            }
+        else if (token.trim().isEmpty()) {
+            lastDir = token;
+        } else {
+            rest = token;
         }
     }
 
