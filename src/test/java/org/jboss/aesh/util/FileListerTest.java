@@ -112,6 +112,46 @@ public class FileListerTest {
 
     }
 
+    @Test
+    public void testDirectoryWithoutSlashCompletion() {
+        File test = new File(workingDir, "test");
+        test.mkdir();
+
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd test", 2);
+        new FileLister("test", workingDir).findMatchingDirectories(completion);
+        List<TerminalString> candidates = completion.getCompletionCandidates();
+        assertEquals(1, candidates.size());
+        assertEquals("test" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+    }
+
+    @Test
+    public void testSubDirectoryWithoutSlashCompletion() {
+        File test = new File(workingDir, "test");
+        test.mkdir();
+        new File(test, "child").mkdir();
+
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd test/child", 2);
+        new FileLister("test/child", workingDir).findMatchingDirectories(completion);
+        List<TerminalString> candidates = completion.getCompletionCandidates();
+        assertEquals(1, candidates.size());
+        assertEquals("test/child" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+    }
+
+    @Test
+    public void testInWorkingDirectoryWithoutSlashCompletion() {
+        File workingDir = new File(".");
+        File test = new File(workingDir, "test");
+        test.mkdir();
+
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd test", 2);
+        new FileLister("test", workingDir).findMatchingDirectories(completion);
+        List<TerminalString> candidates = completion.getCompletionCandidates();
+        assertEquals(1, candidates.size());
+        assertEquals("test" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+
+        delete(test, true);
+    }
+
     public static boolean delete(File file, final boolean recursive) {
         boolean result = false;
         if (recursive) {
