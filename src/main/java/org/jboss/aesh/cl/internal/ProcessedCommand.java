@@ -30,40 +30,40 @@ import java.util.List;
 public final class ProcessedCommand {
 
     private String name;
-    private String usage;
+    private String description;
     private CommandValidator validator;
     private ResultHandler resultHandler;
 
     private List<ProcessedOption> options;
     private ProcessedOption argument;
 
-    public ProcessedCommand(String name, String usage, CommandValidator validator) {
+    public ProcessedCommand(String name, String description, CommandValidator validator) {
         setName(name);
-        setUsage(usage);
+        setDescription(description);
         setValidator(validator);
         options = new ArrayList<>();
     }
 
-    public ProcessedCommand(String name, String usage,Class<? extends CommandValidator> validator,
+    public ProcessedCommand(String name, String description,Class<? extends CommandValidator> validator,
                             Class<? extends ResultHandler> resultHandler) {
         setName(name);
-        setUsage(usage);
+        setDescription(description);
         setValidator(initValidator(validator));
         setResultHandler(initResultHandler(resultHandler));
         options = new ArrayList<>();
     }
 
-    public ProcessedCommand(String name, String usage, ProcessedOption argument) {
+    public ProcessedCommand(String name, String description, ProcessedOption argument) {
         setName(name);
-        setUsage(usage);
+        setDescription(description);
         this.argument = argument;
         options = new ArrayList<>();
     }
 
-    public ProcessedCommand(String name, String usage, CommandValidator validator, ResultHandler resultHandler,
+    public ProcessedCommand(String name, String description, CommandValidator validator, ResultHandler resultHandler,
                             ProcessedOption argument, List<ProcessedOption> options) throws OptionParserException {
         setName(name);
-        setUsage(usage);
+        setDescription(description);
         setValidator(validator);
         setResultHandler(resultHandler);
         this.argument = argument;
@@ -144,12 +144,12 @@ public final class ProcessedCommand {
         this.name = name;
     }
 
-    public String getUsage() {
-        return usage;
+    public String getDescription() {
+        return description;
     }
 
-    private void setUsage(String usage) {
-        this.usage = usage;
+    private void setDescription(String description) {
+        this.description = description;
     }
 
     private CommandValidator initValidator(Class<? extends CommandValidator> validator) {
@@ -296,7 +296,7 @@ public final class ProcessedCommand {
     }
 
     /**
-     * Returns a usage String based on the defined command and options.
+     * Returns a description String based on the defined command and options.
      * Useful when printing "help" info etc.
      *
      */
@@ -310,14 +310,14 @@ public final class ProcessedCommand {
         StringBuilder sb = new StringBuilder();
         for(ProcessedOption o : getOptions())
             sb.append(o.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
-        return "Usage: "+getName()+" "+getUsage()+ Config.getLineSeparator()+sb.toString();
+        return "Usage: "+getName()+" "+ getDescription()+ Config.getLineSeparator()+sb.toString();
     }
 
     @Override
     public String toString() {
         return "ProcessedCommand{" +
                 "name='" + name + '\'' +
-                ", description='" + usage + '\'' +
+                ", description='" + description + '\'' +
                 ", options=" + options +
                 '}';
     }
@@ -330,7 +330,7 @@ public final class ProcessedCommand {
         ProcessedCommand that = (ProcessedCommand) o;
 
         if (!name.equals(that.name)) return false;
-        if (usage != null ? !usage.equals(that.usage) : that.usage != null) return false;
+        if (description != null ? !description.equals(that.description) : that.description != null) return false;
 
         return true;
     }
@@ -338,7 +338,7 @@ public final class ProcessedCommand {
     @Override
     public int hashCode() {
         int result = name.hashCode();
-        result = 31 * result + (usage != null ? usage.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
         return result;
     }
 
