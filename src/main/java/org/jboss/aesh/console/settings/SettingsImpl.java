@@ -60,6 +60,7 @@ public class SettingsImpl implements Settings {
     private boolean exportEnabled = true;
     private File exportFile;
     private boolean persistExport = true;
+    private File commandLocaleFile;
 
     protected SettingsImpl() {
     }
@@ -637,5 +638,15 @@ public class SettingsImpl implements Settings {
     @Override
     public boolean doPersistExport() {
         return persistExport;
+    }
+
+    public void setCommandLocaleFile(File commandLocaleFile) {
+        if(commandLocaleFile != null)
+            this.commandLocaleFile = commandLocaleFile;
+    }
+
+    @Override
+    public File getCommandLocaleFile() {
+        return commandLocaleFile;
     }
 }

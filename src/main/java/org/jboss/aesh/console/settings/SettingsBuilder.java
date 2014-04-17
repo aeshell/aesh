@@ -57,6 +57,7 @@ public class SettingsBuilder {
         settings.setExportEnabled(baseSettings.isExportEnabled());
         settings.setExportFile(baseSettings.getExportFile());
         settings.setPersistExport(baseSettings.doPersistExport());
+        settings.setCommandLocaleFile(baseSettings.getCommandLocaleFile());
     }
 
     public SettingsBuilder name(String name) {
@@ -201,6 +202,11 @@ public class SettingsBuilder {
 
     public SettingsBuilder setPersistExport(boolean persistExport) {
         settings.setPersistExport(persistExport);
+        return this;
+    }
+
+    public SettingsBuilder setCommandLocaleFile(File commandLocaleFile) {
+        settings.setCommandLocaleFile(commandLocaleFile);
         return this;
     }
 

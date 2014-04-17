@@ -171,6 +171,10 @@ public class AeshConsoleImpl implements AeshConsole {
             internalRegistry = new AeshInternalCommandRegistry();
             internalRegistry.addCommand(new Man(manProvider));
         }
+        if(settings.getCommandLocaleFile() != null &&
+                settings.getCommandLocaleFile().isFile()) {
+
+        }
     }
 
     private List<String> completeCommandName(String input) {
@@ -299,10 +303,6 @@ public class AeshConsoleImpl implements AeshConsole {
                                     new AeshCommandInvocation(console,
                                         output.getControlOperator(), this)));
                 }
-                catch (CommandLineParserException e) {
-                    getShell().out().println(e.getMessage());
-                    result = CommandResult.FAILURE;
-                }
                 catch (CommandNotFoundException e) {
                     if (commandNotFoundHandler != null) {
                         commandNotFoundHandler.handleCommandNotFound(
@@ -317,11 +317,9 @@ public class AeshConsoleImpl implements AeshConsole {
                     }
                     result = CommandResult.FAILURE;
                 }
-                catch (OptionValidatorException e) {
-                    getShell().out().println(e.getMessage());
-                    result = CommandResult.FAILURE;
-                }
-                catch (CommandValidatorException e) {
+                catch (CommandLineParserException |
+                        OptionValidatorException  |
+                        CommandValidatorException e) {
                     getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
                 }

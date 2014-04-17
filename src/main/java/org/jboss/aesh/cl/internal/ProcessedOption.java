@@ -199,6 +199,10 @@ public final class ProcessedOption {
         return description;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public char getValueSeparator() {
        return valueSeparator;
     }

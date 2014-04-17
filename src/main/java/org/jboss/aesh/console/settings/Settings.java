@@ -203,4 +203,12 @@ public interface Settings {
      * Is aesh persisting variables at shutdown
      */
     boolean doPersistExport();
+
+    /**
+     * The Command locale file will override command and option descriptions
+     * for that particular locale.
+     *
+     * @return command locale file
+     */
+    File getCommandLocaleFile();
 }

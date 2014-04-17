@@ -20,6 +20,11 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ReflectionUtil;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -363,4 +368,25 @@ public final class ProcessedCommand {
         }
         return false;
     }
+
+    public void updateDescriptionBasedOnLocale(File locale) {
+        if(locale != null && locale.isFile()) {
+            try {
+                FileReader reader = new FileReader(locale);
+                BufferedReader br = new BufferedReader(reader);
+                String line;
+                while((line = br.readLine()) != null) {
+
+                }
+            }
+            catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
 }
