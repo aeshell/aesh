@@ -24,11 +24,13 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.Formatter;
 import org.jboss.aesh.console.command.Result;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.console.command.invocation.AeshCommandInvocation;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.AeshInternalCommandRegistry;
@@ -257,7 +259,7 @@ public class AeshConsoleImpl implements AeshConsole {
 
     }
 
-    class AeshConsoleCallbackImpl extends AeshConsoleCallback {
+    class AeshConsoleCallbackImpl extends AeshConsoleCallback<Set<Object>, AeshFormatter> {
 
         private final AeshConsole console;
         private CommandResult result;
@@ -268,7 +270,7 @@ public class AeshConsoleImpl implements AeshConsole {
 
         @Override
         @SuppressWarnings("unchecked")
-        public int execute(ConsoleOperation output) {
+        public CallbackResult execute(ConsoleOperation output) {
             if (output != null && output.getBuffer().trim().length() > 0) {
                 try (CommandContainer commandContainer = getCommand(
                     Parser.findFirstWord(output.getBuffer()),
@@ -294,11 +296,10 @@ public class AeshConsoleImpl implements AeshConsole {
                         .getCommand()
                         .execute(
                             commandInvocationServices
-                                .getCommandInvocationProvider(
-                                    commandInvocationProvider)
+                                .getCommandInvocationProvider( commandInvocationProvider)
                                 .enhanceCommandInvocation(
-                                    new AeshCommandInvocation(console,
-                                        output.getControlOperator(), this)));
+                                        new AeshCommandInvocation(console,
+                                                output.getControlOperator(), this)));
                 }
                 catch (CommandLineParserException | CommandValidatorException | OptionValidatorException e) {
                     getShell().out().println(e.getMessage());
@@ -337,10 +338,22 @@ public class AeshConsoleImpl implements AeshConsole {
                 result = new DefaultCommandResult(Result.FAILURE);
             }
 
+            return new DefaultCallbackResult(result.getResult());
+            /*
             if (result.getResult() == Result.SUCCESS)
                 return 0;
             else
                 return 1;
+                */
         }
+
     }
+        class AeshFormatter implements Formatter<Set            
+            
+
+            @Override
+            public void format(Set<Object> output, CommandInvocation commandInvocation) {
+
+            }
+        }
 }

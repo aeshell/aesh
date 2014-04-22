@@ -16,14 +16,14 @@ import org.jboss.aesh.console.command.CommandOperation;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface ConsoleCallback {
+public interface ConsoleCallback<T, F extends ConsoleFormatter<T>> {
 
     /**
      *
      * @param output the consoleOperation
      * @return 0 for success or 1/-1 for failure.
      */
-    int execute(ConsoleOperation output);
+    CallbackResult<T, F> execute(ConsoleOperation output);
 
     CommandOperation getInput() throws InterruptedException;
 

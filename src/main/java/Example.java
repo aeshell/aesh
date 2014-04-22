@@ -8,12 +8,15 @@
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.AeshConsoleCallback;
+import org.jboss.aesh.console.CallbackResult;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleCallback;
+import org.jboss.aesh.console.DefaultCallbackResult;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.Result;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.actions.Action;
@@ -173,53 +176,53 @@ public class Example {
 
         final ConsoleCallback consoleCallback = new AeshConsoleCallback() {
             @Override
-            public int execute(ConsoleOperation output) {
+            public CallbackResult execute(ConsoleOperation output) {
                 try {
-                //To change body of implemented methods use File | Settings | File Templates.
-                exampleConsole.getShell().out().println("======>\"" + output.getBuffer());
-                if(masking) {
-                    exampleConsole.getShell().out().print("got password: " + output.getBuffer() + ", stopping masking");
-                    masking = false;
-                    exampleConsole.setPrompt(prompt);
-                }
-                else if (output.getBuffer().equalsIgnoreCase("quit") || output.getBuffer().equalsIgnoreCase("exit") ||
-                        output.getBuffer().equalsIgnoreCase("reset")) {
-                    exampleConsole.stop();
-                }
-                else if(output.getBuffer().equalsIgnoreCase("password")) {
-                    masking = true;
-                    exampleConsole.setPrompt(new Prompt("password: ", (char) 0));
-                }
-                else if(output.getBuffer().startsWith("blah")) {
-                    exampleConsole.getShell().err().println("blah. command not found.");
-                    exampleConsole.getShell().out().print("BAH" + Config.getLineSeparator());
-                }
-                else if(output.getBuffer().equals("clear"))
-                    exampleConsole.clear();
-                else if(output.getBuffer().startsWith("man")) {
-                    //exampleConsole.attachProcess(test);
-                    //man = new ExampleConsoleCommand(exampleConsole, output);
-                    exampleConsole.getShell().out().println("trying to wait for input");
-                    CommandOperation co = null;
-                    try {
-                        co = getInput();
+                    //To change body of implemented methods use File | Settings | File Templates.
+                    exampleConsole.getShell().out().println("======>\"" + output.getBuffer());
+                    if(masking) {
+                        exampleConsole.getShell().out().print("got password: " + output.getBuffer() + ", stopping masking");
+                        masking = false;
+                        exampleConsole.setPrompt(prompt);
                     }
-                    catch (InterruptedException e) {
-                        e.printStackTrace();
-                        return -1;
+                    else if (output.getBuffer().equalsIgnoreCase("quit") || output.getBuffer().equalsIgnoreCase("exit") ||
+                            output.getBuffer().equalsIgnoreCase("reset")) {
+                        exampleConsole.stop();
                     }
-                    exampleConsole.getShell().out().println("got: " + co.toString());
-                    //exampleConsole.attachProcess(test);
-                }
-                else if(output.getBuffer().startsWith("login")) {
-                    exampleConsole.setConsoleCallback(passwordCallback);
-                    exampleConsole.setPrompt(new Prompt("Username: "));
-                }
-                 return 0;
+                    else if(output.getBuffer().equalsIgnoreCase("password")) {
+                        masking = true;
+                        exampleConsole.setPrompt(new Prompt("password: ", (char) 0));
+                    }
+                    else if(output.getBuffer().startsWith("blah")) {
+                        exampleConsole.getShell().err().println("blah. command not found.");
+                        exampleConsole.getShell().out().print("BAH" + Config.getLineSeparator());
+                    }
+                    else if(output.getBuffer().equals("clear"))
+                        exampleConsole.clear();
+                    else if(output.getBuffer().startsWith("man")) {
+                        //exampleConsole.attachProcess(test);
+                        //man = new ExampleConsoleCommand(exampleConsole, output);
+                        exampleConsole.getShell().out().println("trying to wait for input");
+                        CommandOperation co = null;
+                        try {
+                            co = getInput();
+                        }
+                        catch (InterruptedException e) {
+                            e.printStackTrace();
+                            return new DefaultCallbackResult(Result.FAILURE);
+                        }
+                        exampleConsole.getShell().out().println("got: " + co.toString());
+                        //exampleConsole.attachProcess(test);
+                    }
+                    else if(output.getBuffer().startsWith("login")) {
+                        exampleConsole.setConsoleCallback(passwordCallback);
+                        exampleConsole.setPrompt(new Prompt("Username: "));
+                    }
+                    return new DefaultCallbackResult(Result.SUCCESS);
                 }
                 catch (IOException ioe) {
                     exampleConsole.getShell().out().println("Exception: "+ioe.getMessage());
-                    return -1;
+                    return new DefaultCallbackResult(Result.FAILURE);
                 }
             }
         };
@@ -232,7 +235,7 @@ public class Example {
             private boolean hasUsername = false;
 
             @Override
-            public int execute(ConsoleOperation output) {
+            public CallbackResult execute(ConsoleOperation output) {
                 if(hasUsername) {
                     password = output.getBuffer();
                     hasPassword = true;
@@ -245,7 +248,7 @@ public class Example {
                     exampleConsole.setPrompt( new Prompt("Password: ", (char) 0));
                     hasUsername = true;
                 }
-                return 0;
+                return new DefaultCallbackResult(Result.SUCCESS);
             }
         };
 

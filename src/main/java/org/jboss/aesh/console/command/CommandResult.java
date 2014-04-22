@@ -5,6 +5,10 @@ package org.jboss.aesh.console.command;
  */
 public interface CommandResult<T, F extends Formatter> {
 
+    T getValue();
+
+    F getFormatter();
+
     Result getResult();
 
 }

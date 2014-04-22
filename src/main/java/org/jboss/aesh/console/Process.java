@@ -7,12 +7,11 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.console.command.Result;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface Process {
+public interface Process<T, F extends ConsoleFormatter> {
 
     void setManager(ProcessManager manager);
 
@@ -20,6 +19,6 @@ public interface Process {
 
     int getPID();
 
-    Result getExitResult();
+    CallbackResult<T,F> getCallbackResult();
 
 }

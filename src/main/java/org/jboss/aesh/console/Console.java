@@ -420,8 +420,17 @@ public class Console {
         return shell;
     }
 
+    /**
+     * 1. if currentOperation == |, &&, ||, do not call format
+     * @param process
+     */
     public void currentProcessFinished(Process process) {
         if(currentOperation != null) {
+
+            if(process.getCallbackResult().getConsoleFormatter() != null)
+                process.getCallbackResult().getConsoleFormatter().format(
+                        process.getCallbackResult().getResult(), currentOperation);
+
             ConsoleOperation tmpOutput = null;
             try {
                 tmpOutput = parseCurrentOperation();
@@ -434,6 +443,7 @@ public class Console {
             inputProcessor.clearBufferAndDisplayPrompt();
         }
         else {
+
             inputProcessor.resetBuffer();
             if(initiateStop) {
                 try {

@@ -5,6 +5,6 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface Formatter<T,C extends CommandInvocation> {
-    void format(T output,C Command);
+public interface Formatter<T> {
+    void format(T output, CommandInvocation commandInvocation);
 }

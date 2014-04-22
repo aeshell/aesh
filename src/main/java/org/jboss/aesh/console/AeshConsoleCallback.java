@@ -7,11 +7,12 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
+import org.jboss.aesh.console.command.Formatter;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public abstract class AeshConsoleCallback implements ConsoleCallback {
+public abstract class AeshConsoleCallback<T, F extends Formatter<T>> implements ConsoleCallback {
 
     private Process process;
 

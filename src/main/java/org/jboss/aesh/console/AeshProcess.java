@@ -7,7 +7,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.console.command.Result;
+import org.jboss.aesh.console.command.CommandResult;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -18,7 +18,7 @@ public class AeshProcess implements Runnable, Process {
     private ProcessManager manager;
     private ConsoleCallback consoleCallback;
     private ConsoleOperation operation;
-    private Result exitResult;
+    private CallbackResult callbackResult;
 
     public AeshProcess(int pid, ProcessManager manager,
                        ConsoleCallback consoleCallback,
@@ -34,7 +34,7 @@ public class AeshProcess implements Runnable, Process {
     public void run() {
         try {
             Thread.currentThread().setName("AeshProcess: " + pid);
-            setExitResult( consoleCallback.execute(operation));
+            setCallbackResult(consoleCallback.execute(operation));
         }
         finally {
             manager.processHaveFinished(this);
@@ -56,20 +56,13 @@ public class AeshProcess implements Runnable, Process {
         return pid;
     }
 
-    private void setExitResult(int exitStatus) {
-        if(exitStatus == 0) {
-            exitResult = Result.SUCCESS;
-            exitResult.setResultValue(0);
-        }
-        else {
-            exitResult = Result.FAILURE;
-            exitResult.setResultValue(exitStatus);
-        }
+    @Override
+    public CallbackResult getCallbackResult() {
+        return callbackResult;
     }
 
-    @Override
-    public Result getExitResult() {
-        return exitResult;
+    private void setCallbackResult(CallbackResult result) {
+        callbackResult = result;
     }
 
     @Override
