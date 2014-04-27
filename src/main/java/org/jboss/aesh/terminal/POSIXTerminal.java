@@ -14,6 +14,7 @@ import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.reader.AeshInputStream;
 import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
@@ -49,7 +50,7 @@ public class POSIXTerminal extends AbstractTerminal {
     @Override
     public void init(Settings settings) {
         this.settings = settings;
-        // save the initial tty configuration
+        // save the initial tty configuration, this should work on posix and cygwin
         try {
             ttyConfig = stty("-g");
 
@@ -61,15 +62,20 @@ public class POSIXTerminal extends AbstractTerminal {
                 throw new RuntimeException("Unrecognized stty code: " + ttyConfig);
             }
 
-            // set the console to be character-buffered instead of line-buffered
-            // -ixon will give access to ctrl-s/ctrl-q
-            //intr undef ctrl-c will no longer send the interrupt signal
-            //icrnl, translate carriage return to newline (needed when aesh is started in the background)
-            //susb undef, ctrl-z will no longer send the stop signal
-            stty("-ixon -icanon min 1 intr undef icrnl susp undef");
+            if(Config.isCygwin()) {
+                stty("icanon echo");
+            }
+            else {
+                // set the console to be character-buffered instead of line-buffered
+                // -ixon will give access to ctrl-s/ctrl-q
+                //intr undef ctrl-c will no longer send the interrupt signal
+                //icrnl, translate carriage return to newline (needed when aesh is started in the background)
+                //susb undef, ctrl-z will no longer send the stop signal
+                stty("-ixon -icanon min 1 intr undef icrnl susp undef");
 
-            // disable character echoing
-            stty("-echo");
+                // disable character echoing
+                stty("-echo");
+            }
             echoEnabled = false;
 
         }

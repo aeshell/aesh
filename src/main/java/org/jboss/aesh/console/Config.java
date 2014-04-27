@@ -14,9 +14,12 @@ import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -36,14 +39,17 @@ public class Config {
     private static String lineSeparator = System.getProperty("line.separator");
     private static String pathSeparator = System.getProperty("file.separator");
     private static String tmpDir = System.getProperty("java.io.tmpdir");
-    private static boolean posixCompatible =
-            !(System.getProperty("os.name").startsWith("Windows") ||
-                    System.getProperty("os.name").startsWith("OS/2"));
+    private static boolean posixCompatible = checkPosixCompability();
+    private static boolean cygwin = false;
 
     private static Logger logger = LoggerUtil.getLogger("Config");
 
     public static boolean isOSPOSIXCompatible() {
         return posixCompatible;
+    }
+
+    public static boolean isCygwin() {
+        return cygwin;
     }
 
     public static String getLineSeparator() {
@@ -64,6 +70,37 @@ public class Config {
 
     public static String getUserDir() {
         return System.getProperty("user.dir");
+    }
+
+    private static boolean checkPosixCompability() {
+        if(System.getProperty("os.name").startsWith("Windows")) {
+            //need to check if we're running under cygwin
+            try {
+                java.lang.Process process = Runtime.getRuntime().exec(new String[]{"uname"});
+                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                int c;
+                InputStream in = process.getInputStream();
+                while ((c = in.read()) != -1) {
+                    bout.write(c);
+                }
+                process.waitFor();
+
+                String output = new String(bout.toByteArray());
+                if(output.toLowerCase().contains("cygwin")) {
+                    cygwin = true;
+                    return true;
+                }
+            }
+            catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            return false;
+        }
+        else if( System.getProperty("os.name").startsWith("OS/2"))
+            return false;
+        else
+            return true;
     }
 
     /**
