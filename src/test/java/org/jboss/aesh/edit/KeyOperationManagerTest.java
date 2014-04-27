@@ -55,8 +55,8 @@ public class KeyOperationManagerTest extends TestCase {
         kom.addOperations(KeyOperationFactory.generateEmacsMode());
 
         if(Config.isOSPOSIXCompatible()) {
-            assertEquals(new KeyOperation(Key.HOME, Operation.MOVE_BEGINNING),
-                    kom.findOperation(new int[]{27,79,72}));
+            assertEquals(new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING),
+                    kom.findOperation(new int[]{1}));
 
         }
     }
