@@ -170,8 +170,6 @@ public class AeshInputProcessorTest {
 
         assertEquals("foo bar", result);
 
-        inputProcessor.resetBuffer();
-
         assertEquals("", consoleBuffer.getBuffer().getLine());
 
         edit = new CommandOperation(Key.UP);
@@ -181,8 +179,6 @@ public class AeshInputProcessorTest {
         edit = new CommandOperation(Key.ENTER);
         result = inputProcessor.parseOperation(edit);
         assertEquals("foo ba", result);
-
-        inputProcessor.resetBuffer();
 
         edit = new CommandOperation(Key.UP);
         inputProcessor.parseOperation(edit);
@@ -273,8 +269,6 @@ public class AeshInputProcessorTest {
         edit = new CommandOperation(Key.ENTER);
         String result = inputProcessor.parseOperation(edit);
         assertEquals("foo bar", result);
-
-        inputProcessor.resetBuffer();
 
         result = inputProcessor.parseOperation(edit);
         assertEquals("", result);
