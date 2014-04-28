@@ -208,8 +208,6 @@ public class ViModeTest {
 
         assertEquals("/cd /home/bar/ cd Desktop/ ls ../", inputProcessor.parseOperation(co));
 
-        inputProcessor.resetBuffer();
-
         consoleBuffer.writeString("/cd /home/foo/ ls/ cd Desktop/ ls ../");
         inputProcessor.parseOperation(new CommandOperation(Key.ESC));
         inputProcessor.parseOperation(new CommandOperation(Key.B));
@@ -343,12 +341,8 @@ public class ViModeTest {
         consoleBuffer.writeString("asdf jkl");
         inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
 
-        inputProcessor.resetBuffer();
-
         consoleBuffer.writeString("footing");
         inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
-
-        inputProcessor.resetBuffer();
 
         inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
         inputProcessor.parseOperation(new CommandOperation(Key.a));
