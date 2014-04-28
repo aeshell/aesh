@@ -336,6 +336,22 @@ public class Buffer {
         this.line = new StringBuilder(line);
     }
 
+    public String getMultiLine() {
+        if (multiLine) {
+            return getMultiLineBuffer() + getLine();
+        } else {
+            return getLine();
+        }
+    }
+
+    public int getMultiCursor() {
+        if (multiLine) {
+            return multiLineBuffer.length() + getCursor();
+        } else {
+            return getCursor();
+        }
+    }
+
     protected void delete(int start, int end) {
         delta = start - end;
         line.delete(start, end);

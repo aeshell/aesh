@@ -102,10 +102,10 @@ public class AeshCompletionHandler implements CompletionHandler {
         List<CompleteOperation> possibleCompletions = new ArrayList<>();
         int pipeLinePos = 0;
         boolean redirect = false;
-        if(ControlOperatorParser.doStringContainPipelineOrEnd(buffer.getLine())) {
-            pipeLinePos =  ControlOperatorParser.findLastPipelineAndEndPositionBeforeCursor(buffer.getLine(), buffer.getCursor());
+        if(ControlOperatorParser.doStringContainPipelineOrEnd(buffer.getMultiLine())) {
+            pipeLinePos =  ControlOperatorParser.findLastPipelineAndEndPositionBeforeCursor(buffer.getMultiLine(), buffer.getMultiCursor());
         }
-        if(ControlOperatorParser.findLastRedirectionPositionBeforeCursor(buffer.getLine(), buffer.getCursor()) > pipeLinePos) {
+        if(ControlOperatorParser.findLastRedirectionPositionBeforeCursor(buffer.getMultiLine(), buffer.getMultiCursor()) > pipeLinePos) {
             pipeLinePos = 0;
             redirect = true;
         }
@@ -116,10 +116,10 @@ public class AeshCompletionHandler implements CompletionHandler {
             }
             CompleteOperation co;
             if(pipeLinePos > 0) {
-                co = findAliases(buffer.getLine().substring(pipeLinePos, buffer.getCursor()), buffer.getCursor() - pipeLinePos);
+                co = findAliases(buffer.getMultiLine().substring(pipeLinePos, buffer.getMultiCursor()), buffer.getMultiCursor() - pipeLinePos);
             }
             else {
-                co = findAliases(buffer.getLine(), buffer.getCursor());
+                co = findAliases(buffer.getMultiLine(), buffer.getMultiCursor());
             }
 
             completionList.get(i).complete(co);
@@ -198,8 +198,8 @@ public class AeshCompletionHandler implements CompletionHandler {
      */
     private void displayCompletion(TerminalString completion, Buffer buffer, PrintStream out,
                                    boolean appendSpace, char separator) throws IOException {
-        if(completion.getCharacters().startsWith(buffer.getLine())) {
-            consoleBuffer.performAction(new PrevWordAction(buffer.getCursor(), Action.DELETE));
+        if(completion.getCharacters().startsWith(buffer.getMultiLine())) {
+            consoleBuffer.performAction(new PrevWordAction(buffer.getMultiCursor(), Action.DELETE));
             buffer.write(completion.getCharacters());
             out.print(completion);
 
