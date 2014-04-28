@@ -220,7 +220,6 @@ public class AeshInputProcessor implements InputProcessor {
             }
             else
                 result = buffer.getLineNoMask();
-            buffer.reset();
             search = null;
             return result;
         }
