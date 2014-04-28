@@ -34,7 +34,6 @@ import java.util.regex.Pattern;
 public class AeshInputProcessor implements InputProcessor {
 
     private final InputProcessorInterruptHook interruptHook;
-    private Buffer buffer;
 
     private Search search;
     private final History history;
@@ -63,7 +62,6 @@ public class AeshInputProcessor implements InputProcessor {
                        boolean historyDisabled, boolean searchDisabled) {
 
         this.consoleBuffer = consoleBuffer;
-        this.buffer = consoleBuffer.getBuffer();
         this.history = history;
         this.completionHandler = completionHandler;
         this.interruptHook = interruptHook;
@@ -76,7 +74,7 @@ public class AeshInputProcessor implements InputProcessor {
 
     @Override
     public void resetBuffer() {
-        buffer.reset();
+        consoleBuffer.getBuffer().reset();
         search = null;
     }
 
@@ -101,7 +99,7 @@ public class AeshInputProcessor implements InputProcessor {
                 if(consoleBuffer.getBuffer().getPrompt().getMask() == 0)
                     deleteWithMaskEnabled();
                 else
-                    consoleBuffer.performAction(EditActionManager.parseAction(operation, buffer.getCursor(), buffer.length()));
+                    consoleBuffer.performAction(EditActionManager.parseAction(operation, consoleBuffer.getBuffer().getCursor(), consoleBuffer.getBuffer().length()));
             }
         }
         // For search movement is used a bit differently.
@@ -120,7 +118,7 @@ public class AeshInputProcessor implements InputProcessor {
         }
         else if(action == Action.MOVE || action == Action.DELETE ||
                 action == Action.CHANGE || action == Action.YANK) {
-            consoleBuffer.performAction(EditActionManager.parseAction(operation, buffer.getCursor(), buffer.length()));
+            consoleBuffer.performAction(EditActionManager.parseAction(operation, consoleBuffer.getBuffer().getCursor(), consoleBuffer.getBuffer().length()));
         }
         else if(action == Action.ABORT) {
         }
@@ -201,27 +199,40 @@ public class AeshInputProcessor implements InputProcessor {
         if(action == Action.NEWLINE) {
             // clear the undo stack for each new line
             consoleBuffer.getUndoManager().clear();
-            if(!buffer.isMasking()) {// dont push to history if masking
+            boolean isCurrentLineEnding = true;
+            if(!consoleBuffer.getBuffer().isMasking()) {// dont push to history if masking
+
                 //dont push lines that end with \ to history
-                if(!historyDisabled && !endsWithBackslashPattern.matcher(buffer.getLine()).find()) {
-                    if(buffer.isMultiLine())
-                        addToHistory(buffer.getMultiLineBuffer()+buffer.getLine());
+                if(endsWithBackslashPattern.matcher(consoleBuffer.getBuffer().getLine()).find()) {
+                    consoleBuffer.getBuffer().setMultiLine(true);
+                    consoleBuffer.getBuffer().updateMultiLineBuffer();
+                    isCurrentLineEnding = false;
+                }
+                else  if(!historyDisabled) {
+                    if(consoleBuffer.getBuffer().isMultiLine())
+                        addToHistory(consoleBuffer.getBuffer().getMultiLineBuffer()+consoleBuffer.getBuffer().getLine());
                     else
-                        addToHistory(buffer.getLine());
+                        addToHistory(consoleBuffer.getBuffer().getLine());
                 }
             }
             prevAction = Action.NEWLINE;
             //moveToEnd();
-            consoleBuffer.moveCursor(buffer.totalLength());
+            consoleBuffer.moveCursor(consoleBuffer.getBuffer().totalLength());
             consoleBuffer.out().print(Config.getLineSeparator());
             String result;
-            if(buffer.isMultiLine()) {
-                result = buffer.getMultiLineBuffer() + buffer.getLineNoMask();
+            if(consoleBuffer.getBuffer().isMultiLine()) {
+                result = consoleBuffer.getBuffer().getMultiLineBuffer() + consoleBuffer.getBuffer().getLineNoMask();
             }
             else
-                result = buffer.getLineNoMask();
+                result = consoleBuffer.getBuffer().getLineNoMask();
             search = null;
-            return result;
+            if(isCurrentLineEnding) {
+                consoleBuffer.getBuffer().setMultiLine(false);
+                consoleBuffer.getBuffer().reset();
+                return result;
+            }
+            else
+                consoleBuffer.displayPrompt();
         }
 
         return null;
@@ -253,7 +264,7 @@ public class AeshInputProcessor implements InputProcessor {
             //init a previous doSearch
             case PREV:
                 history.setSearchDirection(SearchDirection.REVERSE);
-                search.setSearchTerm( new StringBuilder(buffer.getLine()));
+                search.setSearchTerm( new StringBuilder(consoleBuffer.getBuffer().getLine()));
                 if (search.getSearchTerm().length() > 0) {
                     search.setResult( history.search(search.getSearchTerm().toString()));
                 }
@@ -261,7 +272,7 @@ public class AeshInputProcessor implements InputProcessor {
 
             case NEXT:
                 history.setSearchDirection(SearchDirection.FORWARD);
-                search.setSearchTerm(new StringBuilder(buffer.getLine()));
+                search.setSearchTerm(new StringBuilder(consoleBuffer.getBuffer().getLine()));
                 if (search.getSearchTerm().length() > 0) {
                     search.setResult( history.search(search.getSearchTerm().toString()));
                 }
@@ -299,16 +310,16 @@ public class AeshInputProcessor implements InputProcessor {
             case END:
                 // Set buffer to the found string.
                 if (search.getResult() != null) {
-                    consoleBuffer.moveCursor(-buffer.getCursor());
+                    consoleBuffer.moveCursor(-consoleBuffer.getBuffer().getCursor());
                     consoleBuffer.setBufferLine(search.getResult());
                     consoleBuffer.drawLine();
                     consoleBuffer.out().println();
-                    search.setResult( buffer.getLineNoMask());
+                    search.setResult( consoleBuffer.getBuffer().getLineNoMask());
                     search.setFinished(true);
                     return;
                 }
                 else {
-                    consoleBuffer.moveCursor(-buffer.getCursor());
+                    consoleBuffer.moveCursor(-consoleBuffer.getBuffer().getCursor());
                     consoleBuffer.setBufferLine("");
                     consoleBuffer.drawLine();
                 }
@@ -317,12 +328,12 @@ public class AeshInputProcessor implements InputProcessor {
             //exiting doSearch (with esc)
             case NEXT_BIG_WORD:
                 if(search.getResult() != null) {
-                    consoleBuffer.moveCursor(-buffer.getCursor());
+                    consoleBuffer.moveCursor(-consoleBuffer.getBuffer().getCursor());
                     consoleBuffer.setBufferLine(search.getResult());
                     search.setResult(null);
                 }
                 else {
-                    consoleBuffer.moveCursor(-buffer.getCursor());
+                    consoleBuffer.moveCursor(-consoleBuffer.getBuffer().getCursor());
                     consoleBuffer.setBufferLine("");
                 }
                 //drawLine();
@@ -351,7 +362,7 @@ public class AeshInputProcessor implements InputProcessor {
         // otherwise, restore the line
         else {
             consoleBuffer.drawLine();
-            consoleBuffer.out().print(Buffer.printAnsi((buffer.getPrompt().getLength() + 1) + "G"));
+            consoleBuffer.out().print(Buffer.printAnsi((consoleBuffer.getBuffer().getPrompt().getLength() + 1) + "G"));
             consoleBuffer.out().flush();
         }
     }
@@ -389,7 +400,7 @@ public class AeshInputProcessor implements InputProcessor {
     private void getHistoryElement(boolean first) throws IOException {
         // first add current line to history
         if(prevAction == Action.NEWLINE) {
-            history.setCurrent(buffer.getLine());
+            history.setCurrent(consoleBuffer.getBuffer().getLine());
         }
         //get next
         String fromHistory;
@@ -403,7 +414,7 @@ public class AeshInputProcessor implements InputProcessor {
         if(fromHistory != null) {
             consoleBuffer.setBufferLine(fromHistory);
             consoleBuffer.drawLine();
-            consoleBuffer.moveCursor(-buffer.getCursor() + buffer.length());
+            consoleBuffer.moveCursor(-consoleBuffer.getBuffer().getCursor() + consoleBuffer.getBuffer().length());
         }
     }
 
@@ -420,8 +431,8 @@ public class AeshInputProcessor implements InputProcessor {
      * @throws IOException
      */
     private void deleteWithMaskEnabled() throws IOException {
-        if(buffer.getLineNoMask().length() > 0)
-            buffer.delete(buffer.getLineNoMask().length()-1, buffer.getLineNoMask().length());
+        if(consoleBuffer.getBuffer().getLineNoMask().length() > 0)
+            consoleBuffer.getBuffer().delete(consoleBuffer.getBuffer().getLineNoMask().length() - 1, consoleBuffer.getBuffer().getLineNoMask().length());
     }
 
 
@@ -437,14 +448,14 @@ public class AeshInputProcessor implements InputProcessor {
         builder.append(searchTerm).append("': ");
         cursor += builder.length();
         builder.append(result);
-        buffer.disablePrompt(true);
-        consoleBuffer.moveCursor(-buffer.getCursor());
+        consoleBuffer.getBuffer().disablePrompt(true);
+        consoleBuffer.moveCursor(-consoleBuffer.getBuffer().getCursor());
         consoleBuffer.out().print(ANSI.moveCursorToBeginningOfLine());
         consoleBuffer.out().print(ANSI.getStart() + "2K");
         consoleBuffer.setBufferLine(builder.toString());
         consoleBuffer.moveCursor(cursor);
-        consoleBuffer.drawLine(buffer.getLine());
-        buffer.disablePrompt(false);
+        consoleBuffer.drawLine(consoleBuffer.getBuffer().getLine());
+        consoleBuffer.getBuffer().disablePrompt(false);
         consoleBuffer.out().flush();
     }
 
@@ -458,7 +469,7 @@ public class AeshInputProcessor implements InputProcessor {
         if(ua != null) {
             consoleBuffer.setBufferLine(ua.getBuffer());
             consoleBuffer.drawLine();
-            consoleBuffer.moveCursor(ua.getCursorPosition() - buffer.getCursor());
+            consoleBuffer.moveCursor(ua.getCursorPosition() - consoleBuffer.getBuffer().getCursor());
         }
     }
 
