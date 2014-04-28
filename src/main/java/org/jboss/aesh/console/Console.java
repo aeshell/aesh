@@ -601,38 +601,27 @@ public class Console {
                 inputProcessor.clearBufferAndDisplayPrompt();
                 return;
             }
-            // if the line ends with: \ we create a new line
-            if(!consoleBuffer.getBuffer().getPrompt().isMasking() && endsWithBackslashPattern.matcher(result).find()) {
-                consoleBuffer.getBuffer().setMultiLine(true);
-                consoleBuffer.getBuffer().updateMultiLineBuffer();
-                displayPrompt();
-            }
-            //normal line
+            if(result.startsWith(Parser.SPACE))
+                result = Parser.trimInFront(result);
+
+            if(settings.isOperatorParserEnabled())
+                operations = ControlOperatorParser.findAllControlOperators(result);
             else {
-                if(result.startsWith(Parser.SPACE))
-                    result = Parser.trimInFront(result);
+                //if we do not parse operators just add ControlOperator.NONE
+                operations = new ArrayList<>(1);
+                operations.add(new ConsoleOperation(ControlOperator.NONE, result));
+            }
 
-                if(settings.isOperatorParserEnabled())
-                    operations = ControlOperatorParser.findAllControlOperators(result);
-                else {
-                    //if we do not parse operators just add ControlOperator.NONE
-                    operations = new ArrayList<>(1);
-                    operations.add(new ConsoleOperation(ControlOperator.NONE, result));
-                }
-
-                ConsoleOperation output = parseOperations();
-                output = processInternalCommands(output);
-                if(output.getBuffer() != null) {
-                    //return output;
-                    //consoleCallback.execute(output);
-                    processManager.startNewProcess(consoleCallback, output);
-                    //abort if the user have initiated stop
-                    //if(readerService.isShutdown())
-                    //    return;
-                }
-                else {
-                    inputProcessor.clearBufferAndDisplayPrompt();
-                }
+            ConsoleOperation output = parseOperations();
+            output = processInternalCommands(output);
+            if(output.getBuffer() != null) {
+                processManager.startNewProcess(consoleCallback, output);
+                //abort if the user have initiated stop
+                //if(readerService.isShutdown())
+                //    return;
+            }
+            else {
+                inputProcessor.clearBufferAndDisplayPrompt();
             }
         }
         catch (IOException ioe) {

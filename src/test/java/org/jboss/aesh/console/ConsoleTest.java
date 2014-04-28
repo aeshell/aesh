@@ -10,9 +10,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintStream;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -22,7 +20,6 @@ public class ConsoleTest extends BaseConsoleTest {
 
 
     @Test
-    @Ignore
     public void multiLine() throws Throwable {
         invokeTestConsole(new Setup() {
             @Override
@@ -43,26 +40,4 @@ public class ConsoleTest extends BaseConsoleTest {
         });
     }
 
-    @Test
-    @Ignore
-    public void testPrintWriter() throws Throwable {
-        invokeTestConsole(new Setup() {
-            @Override
-            public void call(Console console, OutputStream out) throws IOException {
-                PrintStream pout = console.getShell().out();
-                pout.write(("ls \\").getBytes());
-                pout.write((Config.getLineSeparator()).getBytes());
-                pout.write(("foo \\").getBytes());
-                pout.write((Config.getLineSeparator()).getBytes());
-                pout.write(("bar"+Config.getLineSeparator()).getBytes());
-                out.flush();
-            }
-        }, new Verify() {
-            @Override
-            public int call(Console console, ConsoleOperation op) {
-                assertEquals("ls foo bar", op.getBuffer());
-                return 0;
-            }
-        });
-    }
 }
