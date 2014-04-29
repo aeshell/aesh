@@ -91,7 +91,7 @@ public class Config {
                 }
             }
             catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+                //silently ignore that we're not running cygwin
             }
 
             return false;

@@ -63,7 +63,7 @@ public class POSIXTerminal extends AbstractTerminal {
             }
 
             if(Config.isCygwin()) {
-                stty("icanon echo");
+                stty("-ixon -icanon min 1 intr undef -echo");
             }
             else {
                 // set the console to be character-buffered instead of line-buffered
