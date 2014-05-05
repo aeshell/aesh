@@ -26,6 +26,7 @@ import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocation;
 import org.jboss.aesh.console.command.validator.AeshValidatorInvocation;
 import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.ReflectionUtil;
 
 import java.io.File;
@@ -315,18 +316,22 @@ public final class ProcessedOption {
     //TODO: add offset, offset for descriptionstart and break on width
     public String getFormattedOption(int offset, int descriptionStart, int width) {
         StringBuilder sb = new StringBuilder();
+        if(required)
+            sb.append(ANSI.getBold());
         if(offset > 0)
             sb.append(String.format("%" + offset+ "s", ""));
         if(shortName != null)
             sb.append("-").append(shortName);
         if(name != null) {
-            if(sb.toString().trim().length() > 0)
+            if(shortName != null)
                 sb.append(", ");
             sb.append("--").append(name);
         }
         if(argument != null && argument.length() > 0) {
             sb.append("=<").append(argument).append(">");
         }
+        if(required)
+            sb.append(ANSI.getBoldOff());
         if(description != null && description.length() > 0) {
             //int descOffset = descriptionStart - sb.length();
             int descOffset = descriptionStart - getFormattedLength() - offset;

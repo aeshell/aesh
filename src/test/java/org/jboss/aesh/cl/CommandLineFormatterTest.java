@@ -13,6 +13,7 @@ import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.util.ANSI;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -65,9 +66,11 @@ public class CommandLineFormatterTest extends TestCase {
                 new OptionBuilder()
                         .shortName('D')
                         .name("default")
+                        .required(true)
                         .description("reset all options to their default values")
                         .type(String.class)
-                        .create());
+                        .create()
+        );
 
         pb.addOption(
                 new OptionBuilder()
@@ -82,10 +85,14 @@ public class CommandLineFormatterTest extends TestCase {
 
         CommandLineParser clp = new CommandLineParserBuilder(pb.generateCommand()).generateParser();
 
-        assertEquals("Usage: man [OPTION...]"+Config.getLineSeparator()+
-                "  -d, --debug            emit debugging messages"+Config.getLineSeparator()+
-                "  -D, --default          reset all options to their default values"+Config.getLineSeparator()+
-                "  -f, --file=<filename>  set the filename"+Config.getLineSeparator(),
+        assertEquals("Usage: man [OPTION...]"+
+                        Config.getLineSeparator()+
+                        "  -d, --debug            emit debugging messages"+Config.getLineSeparator()+
+                        ANSI.getBold()+
+                        "  -D, --default"+
+                        ANSI.getBoldOff()+
+                        "          reset all options to their default values"+Config.getLineSeparator()+
+                        "  -f, --file=<filename>  set the filename"+Config.getLineSeparator(),
                 clp.printHelp());
     }
 
