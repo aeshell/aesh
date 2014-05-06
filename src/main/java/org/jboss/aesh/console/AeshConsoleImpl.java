@@ -166,6 +166,10 @@ public class AeshConsoleImpl implements AeshConsole {
         return console.getBuffer();
     }
 
+    public InputProcessor getInputProcessor() {
+        return console.getInputProcessor();
+    }
+
     private void processSettings(Settings settings) {
         if (settings.isManEnabled()) {
             internalRegistry = new AeshInternalCommandRegistry();

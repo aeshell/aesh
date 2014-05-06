@@ -402,6 +402,10 @@ public class Console {
         return inputQueue.take();
     }
 
+    protected InputProcessor getInputProcessor() {
+        return inputProcessor;
+    }
+
     private boolean hasInput() {
         return inputQueue.size() > 0;
     }
