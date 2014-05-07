@@ -99,7 +99,8 @@ public class AeshInputProcessor implements InputProcessor {
                 if(consoleBuffer.getBuffer().getPrompt().getMask() == 0)
                     deleteWithMaskEnabled();
                 else
-                    consoleBuffer.performAction(EditActionManager.parseAction(operation, consoleBuffer.getBuffer().getCursor(), consoleBuffer.getBuffer().length()));
+                    consoleBuffer.performAction(EditActionManager.parseAction(operation, consoleBuffer.getBuffer().getCursor(),
+                            consoleBuffer.getBuffer().length(), consoleBuffer.getEditMode().getMode()));
             }
         }
         // For search movement is used a bit differently.
@@ -118,7 +119,8 @@ public class AeshInputProcessor implements InputProcessor {
         }
         else if(action == Action.MOVE || action == Action.DELETE ||
                 action == Action.CHANGE || action == Action.YANK) {
-            consoleBuffer.performAction(EditActionManager.parseAction(operation, consoleBuffer.getBuffer().getCursor(), consoleBuffer.getBuffer().length()));
+            consoleBuffer.performAction(EditActionManager.parseAction(operation, consoleBuffer.getBuffer().getCursor(),
+                    consoleBuffer.getBuffer().length(), consoleBuffer.getEditMode().getMode()));
         }
         else if(action == Action.ABORT) {
         }

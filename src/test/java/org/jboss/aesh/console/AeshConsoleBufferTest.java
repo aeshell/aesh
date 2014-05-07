@@ -7,6 +7,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.reader.AeshStandardStream;
+import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.DeleteAction;
 import org.jboss.aesh.edit.actions.NextWordAction;
@@ -85,7 +86,7 @@ public class AeshConsoleBufferTest {
         assertEquals("foo0", consoleBuffer.getBuffer().getLine());
         consoleBuffer.performAction(new DeleteAction(consoleBuffer.getBuffer().getCursor() - 1, Action.DELETE));
         assertEquals("foo", consoleBuffer.getBuffer().getLine());
-        consoleBuffer.performAction(new PrevWordAction(consoleBuffer.getBuffer().getCursor(), Action.DELETE));
+        consoleBuffer.performAction(new PrevWordAction(consoleBuffer.getBuffer().getCursor(), Action.DELETE, Mode.EMACS));
         assertEquals("", consoleBuffer.getBuffer().getLine());
 
         consoleBuffer.writeString("foo bar");
@@ -96,7 +97,7 @@ public class AeshConsoleBufferTest {
         //move to the beginning
         consoleBuffer.performAction(new SimpleAction(consoleBuffer.getBuffer().getCursor(), Action.MOVE, 0));
 
-        consoleBuffer.performAction(new NextWordAction(consoleBuffer.getBuffer().getCursor(), Action.DELETE));
+        consoleBuffer.performAction(new NextWordAction(consoleBuffer.getBuffer().getCursor(), Action.DELETE, Mode.EMACS));
         assertEquals("foo0 bah", consoleBuffer.getBuffer().getLine());
 
         consoleBuffer.performAction(new DeleteAction(consoleBuffer.getBuffer().getCursor(), Action.DELETE));

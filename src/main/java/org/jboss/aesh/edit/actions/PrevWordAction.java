@@ -6,34 +6,45 @@
  */
 package org.jboss.aesh.edit.actions;
 
+import org.jboss.aesh.edit.Mode;
+
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class PrevWordAction extends EditAction {
 
-    public PrevWordAction(int start, Action action) {
+    private final Mode mode;
+
+    public PrevWordAction(int start, Action action, Mode mode) {
         super(start, action);
+        this.mode = mode;
     }
 
     @Override
     public void doAction(String buffer) {
         int cursor = getStart();
-        //the cursor position in jline might be > the buffer
+        //the cursor position might be > the buffer
         if(cursor > buffer.length())
             cursor = buffer.length()-1;
 
         //move back every space
-        while(cursor > 0 && isSpace(buffer.charAt(cursor-1)))
-            cursor--;
-
-        if(cursor > 0 && isDelimiter(buffer.charAt(cursor-1))) {
-            while(cursor > 0 && isDelimiter(buffer.charAt(cursor-1)))
+        if(mode == Mode.EMACS) {
+            while (cursor > 0 && isDelimiter(buffer.charAt(cursor - 1)))
+                cursor--;
+            while (cursor > 0 && !isDelimiter(buffer.charAt(cursor - 1)))
                 cursor--;
         }
         else {
-
-            while(cursor > 0 && !isDelimiter(buffer.charAt(cursor-1))) {
+            while(cursor > 0 && isSpace(buffer.charAt(cursor-1)))
                 cursor--;
+            if(cursor > 0 && isDelimiter(buffer.charAt(cursor-1))) {
+                while(cursor > 0 && isDelimiter(buffer.charAt(cursor-1)))
+                    cursor--;
+            }
+            else {
+                while(cursor > 0 && !isDelimiter(buffer.charAt(cursor-1))) {
+                    cursor--;
+                }
             }
         }
 

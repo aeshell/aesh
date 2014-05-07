@@ -6,12 +6,14 @@
  */
 package org.jboss.aesh.edit.actions;
 
+import org.jboss.aesh.edit.Mode;
+
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class EditActionManager {
 
-    public static EditAction parseAction(Operation operation, int cursor, int length) {
+    public static EditAction parseAction(Operation operation, int cursor, int length, Mode mode) {
 
         if (operation.getAction() == Action.MOVE || operation.getAction() == Action.YANK) {
                 switch (operation.getMovement()) {
@@ -20,11 +22,11 @@ public class EditActionManager {
                     case PREV:
                         return new SimpleAction(cursor, operation.getAction(), cursor-1);
                     case NEXT_WORD:
-                        return new NextWordAction(cursor, operation.getAction());
+                        return new NextWordAction(cursor, operation.getAction(), mode);
                     case NEXT_BIG_WORD:
                         return new NextSpaceWordAction(cursor, operation.getAction());
                     case PREV_WORD:
-                        return new PrevWordAction(cursor, operation.getAction());
+                        return new PrevWordAction(cursor, operation.getAction(), mode);
                     case PREV_BIG_WORD:
                         return new PrevSpaceWordAction(cursor, operation.getAction());
                     case BEGINNING:
@@ -43,11 +45,11 @@ public class EditActionManager {
                 case PREV:
                     return new DeleteAction(cursor, operation.getAction(), true);
                 case NEXT_WORD:
-                    return new NextWordAction(cursor, operation.getAction());
+                    return new NextWordAction(cursor, operation.getAction(), mode);
                 case NEXT_BIG_WORD:
                     return new NextSpaceWordAction(cursor, operation.getAction());
                 case PREV_WORD:
-                    return new PrevWordAction(cursor, operation.getAction());
+                    return new PrevWordAction(cursor, operation.getAction(), mode);
                 case PREV_BIG_WORD:
                     return new PrevSpaceWordAction(cursor, operation.getAction());
                 case BEGINNING:

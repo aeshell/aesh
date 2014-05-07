@@ -6,15 +6,19 @@
  */
 package org.jboss.aesh.edit.actions;
 
+import org.jboss.aesh.edit.Mode;
+
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public class NextWordAction extends EditAction {
 
+    private final Mode mode;
     private boolean removeTrailingSpaces = true;
 
-    public NextWordAction(int start, Action action) {
+    public NextWordAction(int start, Action action, Mode mode) {
         super(start, action);
+        this.mode = mode;
         if(getAction() == Action.CHANGE)
             removeTrailingSpaces = false;
     }
@@ -24,20 +28,35 @@ public class NextWordAction extends EditAction {
         int cursor = getStart();
 
         //if cursor stand on a delimiter, move till its no more delimiters
-        if(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
-            while(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
+        if(mode == Mode.EMACS) {
+            while (cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
                 cursor++;
-            //if we stand on a non-delimiter
-        else {
-            while(cursor < buffer.length() && !isDelimiter(buffer.charAt(cursor)))
+            while (cursor < buffer.length() && !isDelimiter(buffer.charAt(cursor)))
                 cursor++;
-
-            //if we end up on a space we move past that too
-            if(removeTrailingSpaces)
-                if(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
-                    while(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
-                        cursor++;
         }
+        //vi mode
+        else {
+            if(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
+                while(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
+                    cursor++;
+                //if we stand on a non-delimiter
+            else {
+                while(cursor < buffer.length() && !isDelimiter(buffer.charAt(cursor)))
+                    cursor++;
+                //if we end up on a space we move past that too
+                if(removeTrailingSpaces)
+                    if(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
+                        while(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
+                            cursor++;
+            }
+
+        }
+
+        //if we end up on a space we move past that too
+        if(removeTrailingSpaces)
+            if(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
+                while(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
+                    cursor++;
 
         setEnd(cursor);
     }
