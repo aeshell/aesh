@@ -12,6 +12,7 @@ import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasManager;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
+import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.PrevWordAction;
 import org.jboss.aesh.parser.Parser;
@@ -199,7 +200,7 @@ public class AeshCompletionHandler implements CompletionHandler {
     private void displayCompletion(TerminalString completion, Buffer buffer, PrintStream out,
                                    boolean appendSpace, char separator) throws IOException {
         if(completion.getCharacters().startsWith(buffer.getMultiLine())) {
-            consoleBuffer.performAction(new PrevWordAction(buffer.getMultiCursor(), Action.DELETE));
+            consoleBuffer.performAction(new PrevWordAction(buffer.getMultiCursor(), Action.DELETE, Mode.EMACS));
             buffer.write(completion.getCharacters());
             out.print(completion);
 

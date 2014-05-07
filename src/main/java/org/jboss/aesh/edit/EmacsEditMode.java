@@ -103,7 +103,7 @@ public class EmacsEditMode extends AbstractEditMode {
                         return Operation.IGNOREEOF;
                 }
                 else
-                    return Operation.NEW_LINE;
+                    return Operation.DELETE_NEXT_CHAR;
             }
 
             return operation;

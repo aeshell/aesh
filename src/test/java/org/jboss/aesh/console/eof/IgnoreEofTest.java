@@ -102,6 +102,10 @@ public class IgnoreEofTest extends BaseConsoleTest {
 
                 assertTrue(console.isRunning());
 
+                out.write(Key.ENTER.getFirstValue());
+                out.flush();
+                Thread.sleep(100);
+
                 out.write(Key.CTRL_D.getFirstValue());
                 out.flush();
                 Thread.sleep(100);
