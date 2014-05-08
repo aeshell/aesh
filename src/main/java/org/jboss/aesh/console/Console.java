@@ -752,7 +752,7 @@ public class Console {
                     else {
                         err().println(settings.getName() + ": " + readFile.toString()+ " no such file.");
                         currentOperation = null;
-                        output = new ConsoleOperation(ControlOperator.NONE, "");
+                        output = new ConsoleOperation(ControlOperator.NONE, op.getBuffer());
                     }
                 }
                 else {
