@@ -10,21 +10,35 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermissions;
 
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.operator.ControlOperator;
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
   * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
   */
  public class ConsoleRedirectionTest extends BaseConsoleTest {
+
+    private Path tempDir;
+    private static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
+
+    @Before
+    public void before() throws IOException {
+        tempDir = createTempDirectory();
+    }
 
      @Test
      public void pipeCommands() throws Throwable {
@@ -38,59 +52,60 @@ import org.junit.Test;
 
      @Test
      public void redirectionCommands() throws Throwable {
+         final File tmp = tempDir.toFile();
          invokeTestConsole(new Setup() {
              @Override
              public void call(Console console, OutputStream out) throws IOException {
-                 if (Config.isOSPOSIXCompatible()) {
-                     out.write(("ls >" + Config.getTmpDir() + "/foo\\ bar.txt" + Config.getLineSeparator()).getBytes());
-                 } else {
-                     out.write(("ls >" + Config.getTmpDir() + "\\foo\\ bar.txt" + Config.getLineSeparator()).getBytes());
-                 }
+                 out.write(("ls < " + tmp.getName() + Config.getPathSeparator()+ "foo_bar.txt" + Config.getLineSeparator()).getBytes());
+                 out.flush();
              }
          }, new RedirectionConsoleCallback());
      }
 
      @Test
-     @Ignore
      public void redirectIn() throws Throwable {
-         invokeTestConsole(new Setup() {
-                               @Override
-                               public void call(Console console, OutputStream out) throws IOException {
-                                   if (Config.isOSPOSIXCompatible())
-                                       out.write(("ls < " + Config.getTmpDir() + "/foo\\ bar.txt" + Config.getLineSeparator()).getBytes());
-                                   else
-                                       out.write(("ls < " + Config.getTmpDir() + "\\foo\\ bar.txt" + Config.getLineSeparator()).getBytes());
-                                   out.flush();
-                               }
-                           }, new Verify() {
-                               @Override
-                               public int call(Console console, ConsoleOperation op) {
-                                   assertEquals("ls ", op.getBuffer());
-                                   try {
-                                       assertTrue(console.getShell().in().getStdIn().available() > 0);
-                                   } catch (IOException e) {
-                                       fail();
-                                   }
-                                   assertEquals(ControlOperator.NONE, op);
-                                   java.util.Scanner s = new java.util.Scanner(console.getShell().in().getStdIn()).useDelimiter("\\A");
-                                   String fileContent = s.hasNext() ? s.next() : "";
-                                   assertEquals("CONTENT OF FILE", fileContent);
-                                   return 0;
-                               }
-                           }
+         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_bar2.txt");
+         PrintWriter writer = new PrintWriter(foo, "UTF-8");
+         writer.print("foo bar");
+         writer.close();
+         invokeTestConsole(
+                 new Setup() {
+                     @Override
+                     public void call(Console console, OutputStream out) throws IOException {
+                         out.write(("ls < " + foo.getCanonicalPath()+Config.getLineSeparator()).getBytes());
+                         out.flush();
+                     }
+                 }, new Verify() {
+                     @Override
+                     public int call(Console console, ConsoleOperation op) {
+                         assertEquals("ls ", op.getBuffer());
+                         try {
+                             assertTrue(console.getShell().in().getStdIn() != null);
+                             assertTrue(console.getShell().in().getStdIn().available() > 0);
+                         }
+                         catch (IOException e) {
+                             fail();
+                         }
+                         assertEquals(ControlOperator.NONE, op.getControlOperator());
+                         java.util.Scanner s = new java.util.Scanner(console.getShell().in().getStdIn()).useDelimiter("\\A");
+                         String fileContent = s.hasNext() ? s.next() : "";
+                         assertEquals("foo bar", fileContent);
+                         return 0;
+                     }
+                 }
          );
      }
 
      @Test
-     @Ignore
      public void redirectIn2() throws Throwable {
+         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_bar3.txt");
+         PrintWriter writer = new PrintWriter(foo, "UTF-8");
+         writer.print("foo bar");
+         writer.close();
          invokeTestConsole(2, new Setup() {
                      @Override
                      public void call(Console console, OutputStream out) throws IOException {
-                         if (Config.isOSPOSIXCompatible())
-                             out.write(("ls < " + Config.getTmpDir() + "/foo\\ bar.txt | man" + Config.getLineSeparator()).getBytes());
-                         else
-                             out.write(("ls < " + Config.getTmpDir() + "\\foo\\ bar.txt | man" + Config.getLineSeparator()).getBytes());
+                         out.write(("ls < " + foo.getCanonicalPath()+" | man" + Config.getLineSeparator()).getBytes());
                          out.flush();
                      }
                  }, new Verify() {
@@ -102,15 +117,16 @@ import org.junit.Test;
                              assertEquals("ls ", op.getBuffer());
                              try {
                                  assertTrue(console.getShell().in().getStdIn().available() > 0);
-                             } catch (IOException e) {
+                             }
+                             catch (IOException e) {
                                  fail();
                              }
-                             //assertTrue(output.getStdOut().contains("CONTENT OF FILE"));
-                             assertEquals(ControlOperator.PIPE, op);
+                             assertEquals(ControlOperator.PIPE, op.getControlOperator());
                              java.util.Scanner s = new java.util.Scanner(console.getShell().in().getStdIn()).useDelimiter("\\A");
                              String fileContent = s.hasNext() ? s.next() : "";
-                             assertEquals("CONTENT OF FILE", fileContent);
-                         } else if (count == 1) {
+                             assertEquals("foo bar", fileContent);
+                         }
+                         else if (count == 1) {
                              assertEquals(" man", op.getBuffer());
                              assertEquals(ControlOperator.NONE, op.getControlOperator());
                          }
@@ -120,6 +136,19 @@ import org.junit.Test;
                  }
          );
      }
+
+    public static Path createTempDirectory() throws IOException {
+        final Path tmp;
+        if(Config.isOSPOSIXCompatible())
+            tmp = Files.createTempDirectory("temp"+Long.toString(System.nanoTime()), fileAttribute);
+        else {
+            tmp = Files.createTempDirectory("temp" + Long.toString(System.nanoTime()));
+        }
+
+        tmp.toFile().deleteOnExit();
+
+        return tmp;
+    }
 
      class RedirectionConsoleCallback implements Verify {
          private int count = 0;
@@ -136,4 +165,5 @@ import org.junit.Test;
              return 0;
          }
      }
+
 }

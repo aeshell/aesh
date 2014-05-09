@@ -30,11 +30,6 @@ public class PathResolverTest {
     private Path tempDir;
     private static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
 
-    @Test
-    public void test() {
-
-    }
-
     @Before
     public void before() throws IOException {
         tempDir = createTempDirectory();
