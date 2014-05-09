@@ -256,4 +256,15 @@ public class ParserTest {
         assertTrue(Parser.containsNonEscapedDollar("\\$foo \\$bar$"));
     }
 
+    @Test
+    public void testDoesStringContainQuote() {
+        assertFalse(Parser.doesStringContainOpenQuote("foo bar is bar"));
+        assertFalse(Parser.doesStringContainOpenQuote("\"foo bar is bar is foo is bar\""));
+        assertFalse(Parser.doesStringContainOpenQuote("\"foo bar \"is bar is \"foo is bar\""));
+        assertFalse(Parser.doesStringContainOpenQuote("\'foo bar \"is bar is \"foo is bar\'"));
+        assertTrue(Parser.doesStringContainOpenQuote("\"foo bar is bar is \"foo is bar\""));
+        assertFalse(Parser.doesStringContainOpenQuote("\"foo bar is bar is \\\"foo is bar\""));
+        assertTrue(Parser.doesStringContainOpenQuote("\"foo bar is bar is \\\"foo is bar\'"));
+    }
+
 }

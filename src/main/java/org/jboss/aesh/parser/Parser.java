@@ -405,6 +405,36 @@ public class Parser {
         return originalText;
     }
 
+    /**
+     * Check if a string contain open quotes. Escaped quotes does not count.
+     *
+     * @param text text
+     * @return true if it contains open quotes, else false
+     */
+    public static boolean doesStringContainOpenQuote(String text) {
+        boolean doubleQuote = false;
+        boolean singleQuote = false;
+        for(int i=0; i < text.length(); i++) {
+            if(text.charAt(i) == SINGLE_QUOTE) {
+                if(!doubleQuote &&
+                        (i == 0 || (i > 0 && !(text.charAt(i-1) == BACK_SLASH))))
+                    singleQuote = !singleQuote;
+            }
+            else if(text.charAt(i) == DOUBLE_QUOTE) {
+                if(!singleQuote &&
+                        (i == 0 || (i > 0 && !(text.charAt(i-1) == BACK_SLASH))))
+                    doubleQuote = !doubleQuote;
+            }
+        }
+        return doubleQuote || singleQuote;
+    }
+
+    /**
+     * Split up the text into words, escaped spaces and quotes are handled
+     *
+     * @param text test
+     * @return aeshline with all the words
+     */
     public static AeshLine findAllWords(String text) {
         List<String> textList = new ArrayList<>();
         boolean haveEscape = false;
