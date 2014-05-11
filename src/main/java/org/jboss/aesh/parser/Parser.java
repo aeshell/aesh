@@ -149,6 +149,103 @@ public class Parser {
         return completionOutput.toString();
     }
 
+    /**
+     * Format output to columns with flexible sizes and no redundant space between them
+     *
+     * @param displayList to format
+     * @param termWidth   max width
+     * @return formatted string to be outputted
+     */
+    public static String formatDisplayCompactListTerminalString(List<TerminalString> displayList, int termWidth) {
+        if (displayList == null || displayList.size() < 1)
+            return "";
+        //make sure that termWidth is > 0
+        if (termWidth < 1)
+            termWidth = 80; //setting it to default
+
+        int numRows = 1;
+
+        // increase numRows and check in loop if it's possible to format strings to columns
+        while (!canDisplayColumns(displayList, numRows, termWidth) && numRows < displayList.size()) {
+            numRows++;
+        }
+
+        int numColumns = displayList.size() / numRows;
+        if (displayList.size() % numRows > 0) {
+            numColumns++;
+        }
+
+        int[] columnsSizes = calculateColumnSizes(displayList, numColumns, numRows, termWidth);
+
+        StringBuilder stringOutput = new StringBuilder();
+
+        for (int i = 0; i < numRows; i++) {
+            for (int c = 0; c < numColumns; c++) {
+                int fetch = i + (c * numRows);
+                int nextFetch = i + ((c + 1) * numRows);
+
+                if (fetch < displayList.size()) {
+                    // don't need to format last column of row = nextFetch doesn't exit
+                    if (nextFetch < displayList.size()) {
+                        stringOutput.append(padRight(columnsSizes[c] + displayList.get(i + (c * numRows)).getANSILength(),
+                            displayList.get(i + (c * numRows)).toString()));
+                    } else {
+                        stringOutput.append(displayList.get(i + (c * numRows)).toString());
+                    }
+                } else {
+                    break;
+                }
+            }
+            stringOutput.append(Config.getLineSeparator());
+        }
+
+        return stringOutput.toString();
+    }
+
+    /**
+     * Decides if it's possible to format provided Strings into calculated number of columns while the output
+     * will not exceed terminal width
+     *
+     * @param displayList
+     * @param numRows
+     * @param terminalWidth
+     * @return true if it's possible to format strings to columns and false otherwise.
+     */
+    private static boolean canDisplayColumns(List<TerminalString> displayList, int numRows, int terminalWidth) {
+
+        int numColumns = displayList.size() / numRows;
+        if (displayList.size() % numRows > 0) {
+            numColumns++;
+        }
+
+        int[] columnSizes = calculateColumnSizes(displayList, numColumns, numRows, terminalWidth);
+
+        int totalSize = 0;
+        for (int columnSize : columnSizes) {
+            totalSize += columnSize;
+        }
+        if (totalSize > terminalWidth) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static int[] calculateColumnSizes(List<TerminalString> displayList, int numColumns, int numRows, int termWidth) {
+        int[] columnSizes = new int[numColumns];
+
+        for (int i = 0; i < displayList.size(); i++) {
+            int columnIndex = (i / numRows) % numColumns;
+            int stringSize = displayList.get(i).getCharacters().length() + 2;
+
+            if (columnSizes[columnIndex] < stringSize && stringSize <= termWidth) {
+                columnSizes[columnIndex] = stringSize;
+            }
+        }
+
+        return columnSizes;
+    }
+
     public static String padRight(int n, String s) {
         return String.format("%1$-" + n + "s", s);
     }
