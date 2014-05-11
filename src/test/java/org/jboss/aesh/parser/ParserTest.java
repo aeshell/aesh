@@ -7,9 +7,11 @@
 package org.jboss.aesh.parser;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.terminal.TerminalString;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -267,4 +269,50 @@ public class ParserTest {
         assertTrue(Parser.doesStringContainOpenQuote("\"foo bar is bar is \\\"foo is bar\'"));
     }
 
+    @Test
+    public void testFormatDisplayCompactListTerminalString() {
+        TerminalString terminalLong = new TerminalString("This string is too long to terminal width");
+
+        TerminalString terminalShort1 = new TerminalString("str1");
+        TerminalString terminalShort2 = new TerminalString("str2");
+        TerminalString terminalShort3 = new TerminalString("str3");
+        TerminalString terminalShort4 = new TerminalString("str4");
+
+        TerminalString terminalLonger1 = new TerminalString("longer1");
+        TerminalString terminalLonger2 = new TerminalString("longer2");
+        TerminalString terminalLonger3 = new TerminalString("longer3");
+
+        assertEquals(
+            terminalLong.toString() + Config.getLineSeparator(),
+            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalLong), 10)
+        );
+
+        assertEquals(
+            terminalShort1.toString() + "  " + terminalShort2.toString() + Config.getLineSeparator(),
+            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2), 20)
+        );
+
+        assertEquals(
+            terminalShort1.toString() + Config.getLineSeparator() + terminalShort2.toString() + Config.getLineSeparator(),
+            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2), 10)
+        );
+
+        assertEquals(
+            terminalShort1.toString() + "  " + terminalShort3.toString() + Config.getLineSeparator() + terminalShort2.toString() + Config.getLineSeparator(),
+            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2, terminalShort3), 15)
+        );
+
+        assertEquals(
+            terminalShort1.toString() + "  " + terminalShort3.toString() + Config.getLineSeparator() +
+                terminalShort2.toString() + "  " + terminalShort4.toString() + Config.getLineSeparator(),
+            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2, terminalShort3, terminalShort4), 15)
+        );
+
+        assertEquals(
+            terminalLonger1.toString() + "  " + terminalShort1.toString() + Config.getLineSeparator() +
+                terminalLonger2.toString() + Config.getLineSeparator() + terminalLonger3.toString() + Config.getLineSeparator(),
+            Parser.formatDisplayCompactListTerminalString(
+                Arrays.asList(terminalLonger1, terminalLonger2, terminalLonger3, terminalShort1), 15)
+        );
+    }
 }
