@@ -440,7 +440,7 @@ public class FileLister {
     public static class PosixFileNameComparator implements Comparator<String> {
         @Override
         public int compare(String o1, String o2) {
-            if(o1.length() > 1 && o2.length() > 1) {
+            if(o1.length() > 0 && o2.length() > 0) {
                 if(o1.indexOf(DOT) == 0) {
                     if(o2.indexOf(DOT) == 0)
                         return o1.substring(1).compareToIgnoreCase(o2.substring(1));
