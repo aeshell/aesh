@@ -230,7 +230,8 @@ public class AeshCompletionHandler implements CompletionHandler {
         int oldCursorPos = buffer.getCursor();
         out.print(Config.getLineSeparator());
         buffer.setCursor(oldCursorPos);
-        out.print(Parser.formatDisplayCompactListTerminalString(completions, shell.getSize().getWidth()));
+        out.print(Parser.formatDisplayListTerminalString(completions,
+                shell.getSize().getHeight(), shell.getSize().getWidth()));
         consoleBuffer.displayPrompt();
         out.print(buffer.getLine());
         //if we do a complete and the cursor is not at the end of the
