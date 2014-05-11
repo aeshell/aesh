@@ -24,10 +24,6 @@ public abstract class AeshConsoleCallback implements ConsoleCallback {
     }
 
     @Override
-    public void release() {
-    }
-
-    @Override
     public void setProcess(Process process) {
         this.process = process;
     }

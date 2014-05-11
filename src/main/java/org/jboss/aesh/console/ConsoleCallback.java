@@ -27,8 +27,6 @@ public interface ConsoleCallback {
 
     CommandOperation getInput() throws InterruptedException;
 
-    void release();
-
     void setProcess(Process process);
 
 }
