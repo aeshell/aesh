@@ -184,4 +184,25 @@ public class FileListerTest {
 
         return file.delete() && result;
     }
+
+    @Test
+    public void posixFileNameComparatorTest() {
+       FileLister.PosixFileNameComparator comparator = new FileLister.PosixFileNameComparator();
+
+       assertEquals("a".compareToIgnoreCase("b"), comparator.compare("a", "b"));
+       assertEquals("a".compareToIgnoreCase("b"), comparator.compare(".a", "b"));
+       assertEquals("a".compareToIgnoreCase("b"), comparator.compare("a", ".b"));
+
+       assertEquals("a".compareToIgnoreCase("b"), comparator.compare("A", "B"));
+
+       assertEquals("A".compareToIgnoreCase("b"), comparator.compare("A", "b"));
+       assertEquals("a".compareToIgnoreCase("B"), comparator.compare("a", "B"));
+       assertEquals("a".compareToIgnoreCase("B"), comparator.compare(".a", ".B"));
+       assertEquals("a".compareToIgnoreCase("B"), comparator.compare(".A", ".b"));
+
+       assertEquals("A".compareToIgnoreCase("b"), comparator.compare(".A", "b"));
+       assertEquals("A".compareToIgnoreCase("b"), comparator.compare("A", ".b"));
+       assertEquals("a".compareToIgnoreCase("B"), comparator.compare("a", ".B"));
+       assertEquals("a".compareToIgnoreCase("B"), comparator.compare(".a", "B"));
+    }
 }
