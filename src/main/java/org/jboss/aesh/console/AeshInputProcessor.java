@@ -19,6 +19,7 @@ import org.jboss.aesh.edit.actions.Movement;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.SearchDirection;
+import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.util.ANSI;
@@ -210,7 +211,12 @@ public class AeshInputProcessor implements InputProcessor {
                     consoleBuffer.getBuffer().updateMultiLineBuffer();
                     isCurrentLineEnding = false;
                 }
-                else  if(!historyDisabled) {
+                else if(Parser.doesStringContainOpenQuote(consoleBuffer.getBuffer().getMultiLine())) {
+                    consoleBuffer.getBuffer().setMultiLine(true);
+                    consoleBuffer.getBuffer().updateMultiLineBuffer();
+                    isCurrentLineEnding = false;
+                }
+                else if(!historyDisabled) {
                     if(consoleBuffer.getBuffer().isMultiLine())
                         addToHistory(consoleBuffer.getBuffer().getMultiLineBuffer()+consoleBuffer.getBuffer().getLine());
                     else

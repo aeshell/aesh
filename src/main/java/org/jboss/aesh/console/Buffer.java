@@ -142,7 +142,11 @@ public class Buffer {
         if(multiLineBuffer == null)
             multiLineBuffer = new StringBuilder();
 
-        multiLineBuffer.append(line.toString().substring(0, line.length() - 1));
+        String newLine = line.toString();
+        if(newLine.endsWith(" \\"))
+            multiLineBuffer.append(newLine.substring(0, newLine.length()-1));
+        else
+            multiLineBuffer.append(newLine);
         line = new StringBuilder();
         cursor = 0;
     }

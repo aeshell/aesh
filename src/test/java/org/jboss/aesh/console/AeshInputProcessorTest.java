@@ -470,6 +470,43 @@ public class AeshInputProcessorTest {
         assertEquals("FOO BAR ", consoleBuffer.getBuffer().getLineNoMask());
     }
 
+    @Test
+    public void testQuotes() throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder().shell(shell).prompt(new Prompt("aesh")).create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .create();
+
+        inputProcessor.parseOperation(new CommandOperation(Key.f));
+        inputProcessor.parseOperation(new CommandOperation(Key.o));
+        inputProcessor.parseOperation(new CommandOperation(Key.SPACE));
+        inputProcessor.parseOperation(new CommandOperation(Key.QUOTE));
+        String result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+
+        assertEquals(null, result);
+
+        inputProcessor.parseOperation(new CommandOperation(Key.o));
+        result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        assertEquals(null, result);
+
+        inputProcessor.parseOperation(new CommandOperation(Key.QUOTE));
+        result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        assertEquals("fo \"o\"", result);
+
+    }
+
     private static class TestShell implements Shell {
 
         private final PrintStream out;
