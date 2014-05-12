@@ -8,6 +8,7 @@ package org.jboss.aesh.parser;
 
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.util.ANSI;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -314,5 +315,15 @@ public class ParserTest {
             Parser.formatDisplayCompactListTerminalString(
                 Arrays.asList(terminalLonger1, terminalLonger2, terminalLonger3, terminalShort1), 15)
         );
+    }
+
+    @Test
+    public void testStripAwayAnsiPattern() {
+        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.blackText()+"foo"));
+        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.getBold()+ANSI.cyanBackground()+"foo"));
+        assertEquals("foo", Parser.stripAwayAnsiCodes("foo"+ANSI.getBold()+ANSI.cyanBackground()));
+        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.getAlternateBufferScreen()+"foo"));
+        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.getCurrentCursorPos()+"foo"));
+        assertEquals("foo bar", Parser.stripAwayAnsiCodes( "foo"+ANSI.reset()+" bar"));
     }
 }

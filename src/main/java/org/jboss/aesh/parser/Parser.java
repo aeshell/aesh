@@ -31,6 +31,7 @@ public class Parser {
     public static final char DOLLAR = '$';
     private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
     private static final Pattern spacePattern = Pattern.compile("(?<!\\\\)\\s");
+    private static final Pattern ansiPattern = Pattern.compile("\\u001B\\[[\\?]?[0-9;]*[a-zA-Z]?");
 
     /**
      * Format completions so that they look similar to GNU Readline
@@ -751,5 +752,9 @@ public class Parser {
                 startIndex++;
         }
         return false;
+    }
+
+    public static String stripAwayAnsiCodes(String text) {
+        return ansiPattern.matcher(text).replaceAll("");
     }
 }
