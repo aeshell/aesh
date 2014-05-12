@@ -374,7 +374,7 @@ public class AeshCommandLineParser implements CommandLineParser {
     }
 
     private ProcessedOption findLongOption(ProcessedCommand command, String line) {
-        ProcessedOption option = command.findLongOption(line);
+        ProcessedOption option = command.findLongOptionNoActivatorCheck(line);
         //simplest case
         if(option != null)
             return option;

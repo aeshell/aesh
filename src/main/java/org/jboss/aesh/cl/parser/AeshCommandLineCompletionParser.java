@@ -64,8 +64,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     lastWord = lastWord.substring(1);
                 if(lastWord.length() == 0)
                     return new ParsedCompleteObject(false, null, offset);
-                else if(parser.getCommand().findOption(lastWord) != null ||
-                        parser.getCommand().findLongOption(lastWord) != null)
+                else if(parser.getCommand().findOptionNoActivatorCheck(lastWord) != null ||
+                        parser.getCommand().findLongOptionNoActivatorCheck(lastWord) != null)
                     return findCompleteObjectValue(line, true);
                 else
                     return new ParsedCompleteObject(false, null, offset);
@@ -228,7 +228,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
         else if(completeObject.isOption()) {
             ProcessedOption currentOption = parser.getCommand().findOption(completeObject.getName());
             if(currentOption == null)
-                currentOption = parser.getCommand().findLongOption(completeObject.getName());
+                currentOption = parser.getCommand().findLongOptionNoActivatorCheck(completeObject.getName());
 
             //split the line on the option name. populate the object, then call the options completer
             String displayName = currentOption.getDisplayName();
@@ -245,7 +245,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             //this should be ignored at some point
             catch (CommandLineParserException | OptionValidatorException ignored) { }
 
-            if(currentOption.getCompleter() != null) {
+            if(currentOption.getCompleter() != null &&
+                    currentOption.getActivator().isActivated(parser.getCommand())) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
                                 new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), command));

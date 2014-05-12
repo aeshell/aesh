@@ -233,11 +233,28 @@ public final class ProcessedCommand {
         return null;
     }
 
+    public ProcessedOption findOptionNoActivatorCheck(String name) {
+        for(ProcessedOption option : options)
+            if(option.getShortName() != null &&
+                    option.getShortName().equals(name))
+                return option;
+
+        return null;
+    }
+
     public ProcessedOption findLongOption(String name) {
         for(ProcessedOption option : options)
             if(option.getName() != null &&
                     option.getName().equals(name) &&
                     option.getActivator().isActivated(this))
+                return option;
+
+        return null;
+    }
+
+    public ProcessedOption findLongOptionNoActivatorCheck(String name) {
+        for(ProcessedOption option : options)
+            if(option.getName() != null && option.getName().equals(name))
                 return option;
 
         return null;

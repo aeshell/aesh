@@ -3,7 +3,10 @@ package org.jboss.aesh.console.aesh;
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.completer.OptionCompleter;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshConsoleImpl;
@@ -125,6 +128,41 @@ public class AeshCommandCompletionTest {
 
     }
 
+    @Test
+    public void testRequiredAndActivatorOption() throws IOException, InterruptedException {
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .inputStream(pipedInputStream)
+                .outputStream(new PrintStream(byteArrayOutputStream))
+                .logging(true)
+                .create();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(ArqCommand.class)
+                .create();
+
+        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
+                .settings(settings)
+                .commandRegistry(registry)
+                .prompt(new Prompt(""));
+
+        AeshConsole aeshConsole = consoleBuilder.create();
+        aeshConsole.start();
+
+        outputStream.write(("arquillian-container-configuration --container arquillian-tomcat-embedded-7 --containerOption ").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        assertEquals("arquillian-container-configuration --container arquillian-tomcat-embedded-7 --containerOption managed ",
+                ((AeshConsoleImpl) aeshConsole).getBuffer());
+
+    }
+
     @CommandDefinition(name = "foo", description = "")
     public static class FooCommand implements Command {
 
@@ -179,6 +217,41 @@ public class AeshCommandCompletionTest {
             else if(completerData.getGivenCompleteValue().equals("bar")) {
                 completerData.addCompleterValue("bar 2");
             }
+        }
+    }
+
+
+    @CommandDefinition(name = "arquillian-container-configuration", description = "")
+    public static class ArqCommand implements Command {
+
+        @Option(required = true)
+        private String container;
+
+        @Option(required = true, activator = ContainerActivator.class, completer = ContainerOptionCompleter.class)
+        private String containerOption;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+            return null;
+        }
+    }
+
+    public static class ContainerActivator implements OptionActivator {
+
+        @Override
+        public boolean isActivated(ProcessedCommand processedCommand) {
+            ProcessedOption container = processedCommand.findLongOption("container");
+            return container != null && container.getValue() != null;
+        }
+    }
+
+    public static class ContainerOptionCompleter implements OptionCompleter {
+
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            if(completerInvocation.getGivenCompleteValue() == null ||
+                    completerInvocation.getGivenCompleteValue() == "")
+            completerInvocation.addCompleterValue("managed");
         }
     }
 }
