@@ -32,7 +32,7 @@ public final class ProcessedCommand {
     private String name;
     private String description;
     private CommandValidator validator;
-    private ResultHandler resultHandler;
+    private ResultHandler resultHandler = new NullResultHandler();
 
     private List<ProcessedOption> options;
     private ProcessedOption argument;
