@@ -11,5 +11,5 @@ public interface ResultHandler {
 
     void onFailure(CommandResult result);
 
-    void onValidationFailure(CommandResult result);
+    void onValidationFailure(CommandResult result, Exception exception);
 }

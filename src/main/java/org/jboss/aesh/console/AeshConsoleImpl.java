@@ -18,6 +18,7 @@ import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
+import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
@@ -273,12 +274,15 @@ public class AeshConsoleImpl implements AeshConsole {
         @SuppressWarnings("unchecked")
         public int execute(ConsoleOperation output) {
             if (output != null && output.getBuffer().trim().length() > 0) {
+                ResultHandler resultHandler = null;
                 try (CommandContainer commandContainer = getCommand(
                     Parser.findFirstWord(output.getBuffer()),
                     output.getBuffer())) {
 
                     CommandLine commandLine = commandContainer.getParser()
                         .parse(output.getBuffer());
+
+                    resultHandler = commandContainer.getParser().getCommand().getResultHandler();
 
                     commandContainer
                         .getParser()
@@ -302,10 +306,17 @@ public class AeshConsoleImpl implements AeshConsole {
                                 .enhanceCommandInvocation(
                                     new AeshCommandInvocation(console,
                                         output.getControlOperator(), this)));
+
+                    if(result == CommandResult.SUCCESS)
+                        resultHandler.onSuccess();
+                    else
+                        resultHandler.onFailure(result);
                 }
                 catch (CommandLineParserException e) {
                     getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
+                    if(resultHandler != null)
+                        resultHandler.onValidationFailure(result, e);
                 }
                 catch (CommandNotFoundException e) {
                     if (commandNotFoundHandler != null) {
@@ -324,10 +335,14 @@ public class AeshConsoleImpl implements AeshConsole {
                 catch (OptionValidatorException e) {
                     getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
+                    if(resultHandler != null)
+                        resultHandler.onValidationFailure(result, e);
                 }
                 catch (CommandValidatorException e) {
                     getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
+                    if(resultHandler != null)
+                        resultHandler.onValidationFailure(result, e);
                 }
                 catch (Exception e) {
                     logger.log(Level.SEVERE, "Exception when parsing/running: "
@@ -337,6 +352,8 @@ public class AeshConsoleImpl implements AeshConsole {
                             + output.getBuffer() + ", "
                             + e.getMessage());
                     result = CommandResult.FAILURE;
+                    if(resultHandler != null)
+                        resultHandler.onValidationFailure(result, e);
                 }
             }
             // empty line
