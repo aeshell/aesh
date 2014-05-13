@@ -326,7 +326,7 @@ public class FileLister {
     }
 
     private boolean endsWithParent() {
-        return token.lastIndexOf(parent) == token.length()-2;
+        return token.length() > 1 && token.lastIndexOf(parent) == token.length()-2;
     }
 
     private boolean startWithHome() {

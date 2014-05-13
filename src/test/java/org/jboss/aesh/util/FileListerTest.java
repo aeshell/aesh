@@ -152,6 +152,21 @@ public class FileListerTest {
         delete(test, true);
     }
 
+    @Test
+    public void testDifferentLengthsOneCompletion() {
+        new File(workingDir, "b").mkdir();
+        new File(workingDir, "bb").mkdir();
+        new File(workingDir, "bbb").mkdir();
+
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd b", 4);
+        new FileLister("b", workingDir).findMatchingDirectories(completion);
+        List<TerminalString> candidates = completion.getCompletionCandidates();
+        assertEquals(3, candidates.size());
+        assertEquals("b" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+        assertEquals("bb" + Config.getPathSeparator(), candidates.get(1).getCharacters());
+        assertEquals("bbb" + Config.getPathSeparator(), candidates.get(2).getCharacters());
+    }
+
     public static boolean delete(File file, final boolean recursive) {
         boolean result = false;
         if (recursive) {
