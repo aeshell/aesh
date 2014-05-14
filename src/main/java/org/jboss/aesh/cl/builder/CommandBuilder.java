@@ -24,14 +24,14 @@ public class CommandBuilder {
 
     private String name;
     private String description;
-    private CommandValidator validator;
+    private CommandValidator<?> validator;
     private ResultHandler resultHandler;
     private ProcessedOption argument;
     private List<ProcessedOption> options;
 
 
     public CommandBuilder() {
-        options = new ArrayList<ProcessedOption>();
+        options = new ArrayList<>();
     }
 
     public CommandBuilder name(String name) {
@@ -49,7 +49,7 @@ public class CommandBuilder {
         return this;
     }
 
-    public CommandBuilder validator(CommandValidator validator) {
+    public CommandBuilder validator(CommandValidator<?> validator) {
         this.validator = validator;
         return this;
     }
