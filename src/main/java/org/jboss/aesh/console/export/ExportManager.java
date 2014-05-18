@@ -53,10 +53,7 @@ public class ExportManager {
                 if (line.startsWith(EXPORT))
                     addVariable(line);
             }
-
-            br.close();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             LOGGER.warning("Failed to read variables from file "+exportFile+", error: "+e);
         }
     }
@@ -183,13 +180,10 @@ public class ExportManager {
             exportFile.delete();
 
         try(FileWriter fw = new FileWriter(exportFile)) {
-            for(String key : variables.keySet())
+            for(String key : variables.keySet()) {
                 fw.write(EXPORT+" "+key+"="+variables.get(key)+Config.getLineSeparator());
-
-            fw.flush();
-            fw.close();
-        }
-        catch (IOException e) {
+            }
+        } catch (IOException e) {
             LOGGER.warning("Failed to persist variables to file "+exportFile+", error: "+e);
         }
     }
