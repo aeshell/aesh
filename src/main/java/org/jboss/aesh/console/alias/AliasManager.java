@@ -37,12 +37,12 @@ public class AliasManager {
     private File aliasFile;
     private String name;
     private boolean persistAlias = false;
-    private Logger logger = LoggerUtil.getLogger(getClass().getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(AliasManager.class.getName());
 
     public AliasManager(File aliasFile, boolean persistAlias, String name) throws IOException {
         this.persistAlias = persistAlias;
         this.name = name;
-        aliases = new ArrayList<Alias>();
+        aliases = new ArrayList<>();
         if(aliasFile != null) {
             this.aliasFile = aliasFile;
             if(this.aliasFile.isFile())
@@ -51,8 +51,7 @@ public class AliasManager {
     }
 
     private void readAliasesFromFile() throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(aliasFile));
-        try {
+        try (BufferedReader br = new BufferedReader(new FileReader(aliasFile))) {
             String line;
             while((line = br.readLine()) != null) {
                 if(line.startsWith(ALIAS)) {
@@ -64,9 +63,6 @@ public class AliasManager {
                 }
             }
         }
-        finally {
-            br.close();
-        }
     }
 
     public void persist() throws IOException {
@@ -75,22 +71,15 @@ public class AliasManager {
             if(aliasFile.isFile())
                 aliasFile.delete();
 
-            FileWriter fw = null;
-            try {
-                fw = new FileWriter(aliasFile);
-                logger.info("created fileWriter");
-
+            try (FileWriter fw = new FileWriter(aliasFile)) {
+                LOGGER.info("created fileWriter");
                 Collections.sort(aliases); // not very efficient, but it'll do for now...
                 for(Alias a : aliases) {
-                    logger.info("writing to file: "+ALIAS_SPACE+a.toString());
+                    LOGGER.info("writing to file: "+ALIAS_SPACE+a.toString());
                     fw.write(ALIAS_SPACE+a.toString()+Config.getLineSeparator());
                 }
-            }
-            finally {
                 fw.flush();
-                fw.close();
             }
-
         }
     }
 
@@ -121,7 +110,7 @@ public class AliasManager {
     }
 
     public List<String> findAllMatchingNames(String name) {
-        List<String> names = new ArrayList<String>();
+        List<String> names = new ArrayList<>();
         for(Alias a : aliases)
             if(a.getName().startsWith(name))
                 names.add(a.getName());
@@ -130,7 +119,7 @@ public class AliasManager {
     }
 
     public List<String> getAllNames() {
-        List<String> names = new ArrayList<String>();
+        List<String> names = new ArrayList<>();
         for(Alias a : aliases)
             names.add(a.getName());
 
