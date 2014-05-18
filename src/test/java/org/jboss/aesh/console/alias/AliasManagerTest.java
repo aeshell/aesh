@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNull;
 public class AliasManagerTest {
 
     private AliasManager manager;
-    
+
     @Before
     public void setTup() {
         try {
@@ -32,10 +32,10 @@ public class AliasManagerTest {
             e.printStackTrace();
         }
     }
-    
+
     @Test
     public void testParseAlias() {
-        
+
         assertNull(manager.parseAlias("alias foo2='bar -s -h'"));
         assertNull(manager.parseAlias("alias foo=bar"));
         assertNull(manager.parseAlias("alias foo3=bar --help"));
@@ -56,7 +56,7 @@ public class AliasManagerTest {
 
     @Test
     public void testUnalias() {
-        
+
         manager.parseAlias("alias foo2='bar -s -h'");
         manager.parseAlias("alias foo=bar");
         manager.parseAlias("alias foo3=bar --help");
@@ -64,12 +64,12 @@ public class AliasManagerTest {
         manager.removeAlias("unalias foo3");
         assertEquals("aesh: unalias: foo3: not found"+Config.getLineSeparator(), manager.removeAlias("unalias foo3"));
     }
-    
+
     @Test
     public void testPrintAllAliases() {
         String alias = "alias foo='bar'";
         manager.parseAlias(alias);
         Assert.assertEquals(alias + Config.getLineSeparator(), manager.printAllAliases());
     }
-    
+
 }
