@@ -70,7 +70,7 @@ $ java -cp build/libs/aesh-extensions-0.55-SNAPSHOT.jar:../aesh/build/libs/aesh-
 [aesh@extensions]$ matrix 
 ```
 
-
+[! aesh matrix](https://raw.githubusercontent.com/eprogramming/aesh/master/aesh_matrix.png)
 
 Keys that are mapped by default in Æsh
 --------------------------------------------
