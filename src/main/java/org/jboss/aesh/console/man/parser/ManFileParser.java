@@ -52,8 +52,7 @@ public class ManFileParser implements FileParser {
         if(reader == null)
             throw new IOException("InputStreamReader is null, cannot read file.");
         //parse the file
-        BufferedReader br = new BufferedReader(reader);
-        try {
+        try (BufferedReader br = new BufferedReader(reader)) {
             String line = br.readLine();
             boolean foundHeader = false;
             boolean foundEmptyLine = true;
@@ -89,11 +88,7 @@ public class ManFileParser implements FileParser {
                 ManSection manSection = new ManSection().parseSection(section, columns);
                 sections.add(manSection);
             }
-
             return getAsList();
-        }
-        finally {
-            br.close();
         }
     }
 
