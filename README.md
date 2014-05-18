@@ -27,7 +27,7 @@ How to build:
 
 To get going:
 -------------
-<pre>
+```java
 import java.io.IOException;
 
 import org.jboss.aesh.console.Console;
@@ -60,7 +60,17 @@ public class Example {
         console.start();
     }
 }
-</pre>
+```
+
+Other example to run
+--------------------
+
+```shell
+$ java -cp build/libs/aesh-extensions-0.55-SNAPSHOT.jar:../aesh/build/libs/aesh-0.55-SNAPSHOT.jar AeshExampleExtension
+[aesh@extensions]$ matrix 
+```
+
+
 
 Keys that are mapped by default in Æsh
 --------------------------------------------
