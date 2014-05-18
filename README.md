@@ -62,16 +62,6 @@ public class Example {
 }
 ```
 
-Other example to run
---------------------
-
-```shell
-$ java -cp build/libs/aesh-extensions-0.55-SNAPSHOT.jar:../aesh/build/libs/aesh-0.55-SNAPSHOT.jar AeshExampleExtension
-[aesh@extensions]$ matrix 
-```
-
-![aesh matrix](https://raw.githubusercontent.com/eprogramming/aesh/master/aesh_matrix.png)
-
 Keys that are mapped by default in Æsh
 --------------------------------------------
 Note: C equals Control and M is Meta/Alt
