@@ -41,7 +41,7 @@ public class Config {
     private static boolean posixCompatible = checkPosixCompability();
     private static boolean cygwin = false;
 
-    private static Logger logger = LoggerUtil.getLogger("Config");
+    private static final Logger LOGGER = LoggerUtil.getLogger(Config.class.getName());
 
     public static boolean isOSPOSIXCompatible() {
         return posixCompatible;
@@ -117,7 +117,7 @@ public class Config {
     protected static Settings parseInputrc(Settings settings) throws IOException {
         if(!settings.getInputrc().isFile()) {
             if(settings.isLogging())
-                logger.info("Error while parsing: "+settings.getInputrc().getAbsolutePath()+" couldn't find file.");
+                LOGGER.info("Error while parsing: "+settings.getInputrc().getAbsolutePath()+" couldn't find file.");
             return settings;
         }
         SettingsBuilder builder = new SettingsBuilder(settings);
@@ -199,7 +199,7 @@ public class Config {
             }
             // should log some error
             else if(builder.create().isLogging())
-                logger.warning("Value "+value+" not accepted for: "+variable+
+                LOGGER.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+EDITING_MODE.getValues());
 
         }
@@ -207,7 +207,7 @@ public class Config {
             if(BELL_STYLE.getValues().contains(value))
                 builder.bellStyle(value);
             else if(builder.create().isLogging())
-                logger.warning("Value "+value+" not accepted for: "+variable+
+                LOGGER.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+BELL_STYLE.getValues());
         }
         else if(variable.equals(HISTORY_SIZE.getVariable())) {
@@ -216,7 +216,7 @@ public class Config {
             }
             catch (NumberFormatException nfe) {
                 if(builder.create().isLogging())
-                    logger.warning("Value "+value+" not accepted for: "
+                    LOGGER.warning("Value "+value+" not accepted for: "
                             +variable+", it must be an integer.");
             }
         }
@@ -228,7 +228,7 @@ public class Config {
                     builder.disableCompletion(false);
             }
             else if(builder.create().isLogging())
-                logger.warning("Value "+value+" not accepted for: "+variable+
+                LOGGER.warning("Value "+value+" not accepted for: "+variable+
                         ", only: "+DISABLE_COMPLETION.getValues());
         }
     }
@@ -298,13 +298,13 @@ public class Config {
           }
         catch (ClassNotFoundException e) {
             if(settings.isLogging())
-                logger.log(Level.SEVERE, "Fail while finding class: ", e);
+                LOGGER.log(Level.SEVERE, "Fail while finding class: ", e);
         } catch (InstantiationException e) {
             if(settings.isLogging())
-                logger.log(Level.SEVERE, "Fail while instantiating class: ", e);
+                LOGGER.log(Level.SEVERE, "Fail while instantiating class: ", e);
         } catch (IllegalAccessException e) {
             if(settings.isLogging())
-                logger.log(Level.SEVERE, "Fail while accessing class: ", e);
+                LOGGER.log(Level.SEVERE, "Fail while accessing class: ", e);
         }
 
         return builder.create();

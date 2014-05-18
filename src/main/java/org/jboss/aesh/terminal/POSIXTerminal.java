@@ -41,10 +41,10 @@ public class POSIXTerminal extends AbstractTerminal {
 
     private static final long TIMEOUT_PERIOD = 3000;
 
-    private static final Logger logger = LoggerUtil.getLogger(POSIXTerminal.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 
     public POSIXTerminal() {
-        super(logger);
+        super(LOGGER);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class POSIXTerminal extends AbstractTerminal {
             if ((ttyConfig.length() == 0)
                     || ((!ttyConfig.contains("=")) && (!ttyConfig.contains(":")))) {
                 if(settings.isLogging())
-                    logger.log(Level.SEVERE, "Unrecognized stty code: "+ttyConfig);
+                    LOGGER.log(Level.SEVERE, "Unrecognized stty code: "+ttyConfig);
                 throw new RuntimeException("Unrecognized stty code: " + ttyConfig);
             }
 
@@ -81,11 +81,11 @@ public class POSIXTerminal extends AbstractTerminal {
         }
         catch (IOException ioe) {
             if(settings.isLogging())
-                logger.log(Level.SEVERE, "tty failed: ",ioe);
+                LOGGER.log(Level.SEVERE, "tty failed: ",ioe);
         }
         catch (InterruptedException e) {
             if(settings.isLogging())
-                logger.log(Level.SEVERE, "failed while waiting for process to end: ",e);
+                LOGGER.log(Level.SEVERE, "failed while waiting for process to end: ",e);
             e.printStackTrace();
         }
 
@@ -137,7 +137,7 @@ public class POSIXTerminal extends AbstractTerminal {
         }
         catch (Exception e) {
             if(settings.isLogging())
-                logger.log(Level.SEVERE,"Failed to fetch terminal height: ",e);
+                LOGGER.log(Level.SEVERE,"Failed to fetch terminal height: ",e);
         }
         //cant use height < 1
         if(height < 1)
@@ -153,7 +153,7 @@ public class POSIXTerminal extends AbstractTerminal {
         }
         catch (Exception e) {
             if(settings.isLogging())
-                logger.log(Level.SEVERE,"Failed to fetch terminal width: ",e);
+                LOGGER.log(Level.SEVERE,"Failed to fetch terminal width: ",e);
         }
         //cant use with < 1
         if(width < 1)
@@ -184,7 +184,7 @@ public class POSIXTerminal extends AbstractTerminal {
                 }
                 catch (InterruptedException e) {
                     if(settings.isLogging())
-                        logger.log(Level.SEVERE,"Failed to reset terminal: ",e);
+                        LOGGER.log(Level.SEVERE,"Failed to reset terminal: ",e);
                 }
             }
         }
@@ -299,7 +299,7 @@ public class POSIXTerminal extends AbstractTerminal {
                     out.close();
             }
             catch (Exception e) {
-                logger.log(Level.SEVERE,"Failed to close streams: ",e);
+                LOGGER.log(Level.SEVERE,"Failed to close streams: ",e);
             }
         }
 

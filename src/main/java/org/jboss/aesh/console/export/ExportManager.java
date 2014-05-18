@@ -33,7 +33,7 @@ public class ExportManager {
     private Pattern variableDollarFirstPattern = Pattern.compile("\\$(\\w+|\\{(\\w+)\\})(.*)");
     private Pattern variablePattern = Pattern.compile("(.*)\\$(\\w+|\\{(\\w+)\\})(.*)");
 
-    private static final Logger logger = LoggerUtil.getLogger("ExportManager.class");
+    private static final Logger LOGGER = LoggerUtil.getLogger(ExportManager.class.getName());
 
     private static final String EXPORT = "export";
 
@@ -57,7 +57,7 @@ public class ExportManager {
             br.close();
         }
         catch (IOException e) {
-            logger.warning("Failed to read variables from file "+exportFile+", error: "+e);
+            LOGGER.warning("Failed to read variables from file "+exportFile+", error: "+e);
         }
     }
 
@@ -190,7 +190,7 @@ public class ExportManager {
             fw.close();
         }
         catch (IOException e) {
-            logger.warning("Failed to persist variables to file "+exportFile+", error: "+e);
+            LOGGER.warning("Failed to persist variables to file "+exportFile+", error: "+e);
         }
     }
 
