@@ -36,10 +36,10 @@ public class WindowsTerminal extends AbstractTerminal {
     private long ttyPropsLastFetched;
     private static long TIMEOUT_PERIOD = 2000;
 
-    private static final Logger logger = LoggerUtil.getLogger(WindowsTerminal.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(WindowsTerminal.class.getName());
 
     public WindowsTerminal() {
-        super(logger);
+        super(LOGGER);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class WindowsTerminal extends AbstractTerminal {
         ttyPropsLastFetched = System.currentTimeMillis();
         if(height < 1) {
             if(settings.isLogging())
-                logger.log(Level.SEVERE, "Fetched terminal height is "+height+", setting it to 24");
+                LOGGER.log(Level.SEVERE, "Fetched terminal height is "+height+", setting it to 24");
             height = 24;
         }
         return height;
@@ -120,7 +120,7 @@ public class WindowsTerminal extends AbstractTerminal {
         ttyPropsLastFetched = System.currentTimeMillis();
         if(width < 1) {
             if(settings.isLogging())
-                logger.log(Level.SEVERE, "Fetched terminal width is "+width+", setting it to 80");
+                LOGGER.log(Level.SEVERE, "Fetched terminal width is "+width+", setting it to 80");
             width = 80;
         }
         return width;

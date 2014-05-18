@@ -13,10 +13,8 @@ import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.TerminalTextStyle;
 import org.jboss.aesh.util.ANSI;
-import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
-import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -24,8 +22,6 @@ import java.util.logging.Logger;
 public class AeshGraphics implements Graphics {
 
     private static final String CURSOR_DOWN = ANSI.getStart()+"1B"+ANSI.getStart()+"1D";
-
-    private static Logger logger = LoggerUtil.getLogger(AeshGraphics.class.getName());
 
     private Shell shell;
     private GraphicsConfiguration graphicsConfiguration;

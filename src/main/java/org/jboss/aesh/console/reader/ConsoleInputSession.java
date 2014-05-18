@@ -30,7 +30,7 @@ public class ConsoleInputSession {
 
     private ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<>(1000);
 
-    private static final Logger logger = LoggerUtil.getLogger(ConsoleInputSession.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(ConsoleInputSession.class.getName());
 
     public ConsoleInputSession(InputStream consoleStream) {
         this.consoleStream = consoleStream;
@@ -110,7 +110,7 @@ public class ConsoleInputSession {
             consoleStream.close();
             executorService.shutdown();
             aeshInputStream.close();
-            logger.info("input stream is closed, readers finished...");
+            LOGGER.info("input stream is closed, readers finished...");
         }
     }
 

@@ -39,7 +39,7 @@ public abstract class AeshFileDisplayer implements Command {
     private TerminalPage.Search search = TerminalPage.Search.NO_SEARCH;
     private StringBuilder searchBuilder;
     private List<Integer> searchLines;
-    private Logger logger = LoggerUtil.getLogger(getClass().getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(AeshFileDisplayer.class.getName());
     private CommandInvocation commandInvocation;
     private ControlOperator operation;
     private boolean stop;
@@ -394,9 +394,9 @@ public abstract class AeshFileDisplayer implements Command {
     }
 
     private void findSearchWord(boolean forward) throws IOException {
-        logger.info("searching for: " + searchBuilder.toString());
+        LOGGER.info("searching for: " + searchBuilder.toString());
         searchLines = page.findWord(searchBuilder.toString());
-        logger.info("found: "+searchLines);
+        LOGGER.info("found: "+searchLines);
         if(searchLines.size() > 0) {
             for(Integer i : searchLines)
                 if(i > topVisibleRow) {

@@ -27,7 +27,7 @@ public class ProcessManager {
     private boolean doLogging;
     private int pidCounter;
 
-    private static final Logger logger = LoggerUtil.getLogger(ProcessManager.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(ProcessManager.class.getName());
 
     public ProcessManager(Console console, boolean log) {
         this.console = console;
@@ -39,7 +39,7 @@ public class ProcessManager {
     public void startNewProcess(ConsoleCallback callback, ConsoleOperation consoleOperation) {
         AeshProcess process = new AeshProcess(pidCounter++, this, callback, consoleOperation);
         if (doLogging)
-            logger.info("starting a new process: " + process + ", consoleOperation: " + consoleOperation);
+            LOGGER.info("starting a new process: " + process + ", consoleOperation: " + consoleOperation);
 
         executorService.execute(process);
         processes.add(process);
@@ -63,7 +63,7 @@ public class ProcessManager {
 
     public void processHaveFinished(Process process) {
         if (doLogging)
-            logger.info("process has finished: " + process);
+            LOGGER.info("process has finished: " + process);
         processes.remove(process);
         console.currentProcessFinished(process);
     }
@@ -71,14 +71,14 @@ public class ProcessManager {
     public void stop() {
         try {
             if (doLogging)
-                logger.info("number of processes in list: " + processes.size());
+                LOGGER.info("number of processes in list: " + processes.size());
             processes.clear();
             executorService.shutdown();
             executorService.awaitTermination(5, TimeUnit.MILLISECONDS);
             if (executorService.isTerminated() && doLogging)
-                logger.info("Processes are cleaned up and finished...");
+                LOGGER.info("Processes are cleaned up and finished...");
             if (executorService.isShutdown() && doLogging)
-                logger.info("Executor isShutdown..");
+                LOGGER.info("Executor isShutdown..");
         }
         catch (InterruptedException e) {
             e.printStackTrace();

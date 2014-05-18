@@ -53,8 +53,7 @@ public class AeshConsoleImpl implements AeshConsole {
     private final CommandInvocationServices commandInvocationServices;
     private final InvocationProviders invocationProviders;
 
-    private final Logger logger = LoggerUtil.getLogger(AeshConsoleImpl.class
-        .getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
     private final ManProvider manProvider;
     private final CommandNotFoundHandler commandNotFoundHandler;
     private AeshInternalCommandRegistry internalRegistry;
@@ -194,7 +193,7 @@ public class AeshConsoleImpl implements AeshConsole {
             }
         }
         catch (Exception e) {
-            logger.log(Level.SEVERE,
+            LOGGER.log(Level.SEVERE,
                     "Error retrieving command names from CommandRegistry", e);
         }
 
@@ -247,12 +246,12 @@ public class AeshConsoleImpl implements AeshConsole {
                             commandContainer.getCommand(), completeOperation, invocationProviders);
                 }
                 catch (CommandLineParserException e) {
-                    logger.warning(e.getMessage());
+                    LOGGER.warning(e.getMessage());
                 }
                 catch (CommandNotFoundException ignored) {
                 }
                 catch (Exception ex) {
-                    logger.log(Level.SEVERE,
+                    LOGGER.log(Level.SEVERE,
                         "Runtime exception when completing: "
                             + completeOperation, ex);
                 }
@@ -345,7 +344,7 @@ public class AeshConsoleImpl implements AeshConsole {
                         resultHandler.onValidationFailure(result, e);
                 }
                 catch (Exception e) {
-                    logger.log(Level.SEVERE, "Exception when parsing/running: "
+                    LOGGER.log(Level.SEVERE, "Exception when parsing/running: "
                         + output.getBuffer(), e);
                     getShell().out().println(
                         "Exception when parsing/running: "
