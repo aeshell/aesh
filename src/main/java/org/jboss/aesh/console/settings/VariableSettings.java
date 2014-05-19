@@ -7,6 +7,7 @@
 package org.jboss.aesh.console.settings;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -17,44 +18,43 @@ import java.util.List;
  */
 public enum VariableSettings {
 
-    BELL_STYLE("bell-style", new ArrayList<String>() {{ add("none"); add("visible"); add("audible"); }}),
-    BIND_TTY_SPECIAL_CHARS("bind-tty-special-chars", new ArrayList<String>() {{add("on"); add("off"); }}),
+    BELL_STYLE("bell-style", Arrays.asList("none", "visible", "audible")),
+    BIND_TTY_SPECIAL_CHARS("bind-tty-special-chars", Arrays.asList("on","off")),
     COMMENT_BEGIN("comment-begin", new ArrayList<String>()),
     COMPLETION_DISPLAY_WIDTH("completion-display-width", new ArrayList<String>()),
-    COMPLETION_IGNORE_CASE("completion-ignore-case", new ArrayList<String>() {{ add("on"); add("off");}}),
-    COMPLETION_MAP_CASE("completion-map-case", new ArrayList<String>() {{ add("on"); add("off");}}),
+    COMPLETION_IGNORE_CASE("completion-ignore-case", Arrays.asList("on","off")),
+    COMPLETION_MAP_CASE("completion-map-case", Arrays.asList("on","off")),
     COMPLETION_PREFIX_DISPLAY_LENGTH("completion-prefix-display-length", new ArrayList<String>()),
     COMPLETION_QUERY_ITEMS("completion-query-items", new ArrayList<String>()),
-    CONVERT_META("convert-meta", new ArrayList<String>() {{ add("on"); add("off");}}),
-    DISABLE_COMPLETION("disable-completion", new ArrayList<String>() {{ add("on"); add("off");}}),
-    EDITING_MODE("editing-mode", new ArrayList<String>() {{ add("vi"); add("emacs"); }}),
-    ECHO_CONTROL_CHARACTERS("echo-control-characters", new ArrayList<String>() {{ add("on"); add("off"); }}),
-    ENABLE_KEYPAD("enable-keypad", new ArrayList<String>() {{ add("on"); add("off"); }}),
-    EXPAND_TILDE("expand-tilde", new ArrayList<String>() {{ add("on"); add("off"); }}),
-    HISTORY_PRESERVE_POINT("history-preserve-point", new ArrayList<String>() {{ add("on"); add("off"); }}),
+    CONVERT_META("convert-meta", Arrays.asList("on","off")),
+    DISABLE_COMPLETION("disable-completion", Arrays.asList("on","off")),
+    EDITING_MODE("editing-mode", Arrays.asList("vi","emacs")),
+    ECHO_CONTROL_CHARACTERS("echo-control-characters", Arrays.asList("on","off")),
+    ENABLE_KEYPAD("enable-keypad", Arrays.asList("on","off")),
+    EXPAND_TILDE("expand-tilde", Arrays.asList("on","off")),
+    HISTORY_PRESERVE_POINT("history-preserve-point", Arrays.asList("on","off")),
     HISTORY_SIZE("history-size", new ArrayList<String>()),
-    HISTORY_SCROLL_MODE("history-scroll-mode", new ArrayList<String>() {{ add("on"); add("off");}}),
-    INPUT_META("input-meta", new ArrayList<String>() {{ add("on"); add("off");}}),
+    HISTORY_SCROLL_MODE("history-scroll-mode", Arrays.asList("on","off")),
+    INPUT_META("input-meta", Arrays.asList("on","off")),
     ISEARCH_TERMINATORS("isearch-terminators", new ArrayList<String>()),
-    KEYMAP("keymap", new ArrayList<String>() {{ add("emacs"); add("vi"); add("emacs-standard");
-        add("emacs-meta"); add("emacs-ctlx"); add("vi-move"); add("vi-command"); add("vi-insert");}}),
-    MARK_DIRECTORIES("mark-directories", new ArrayList<String>() {{ add("on"); add("off");}}),
-    MARK_MODIFIED_LINES("mark-modified-lines", new ArrayList<String>() {{ add("on"); add("off");}}),
-    MARK_SYMLINKED_DIRECTORIES("mark-symlinked-directories", new ArrayList<String>() {{ add("on"); add("off");}}),
-    MATCH_HIDDEN_FILES("match-hidden-files", new ArrayList<String>() {{ add("on"); add("off");}}),
-    MENU_COMPLETE_DISPLAY_PREFIX("menu-complete-display-prefix", new ArrayList<String>() {{ add("on"); add("off");}}),
-    OUTPUT_META("output-meta", new ArrayList<String>() {{ add("on"); add("off");}}),
-    PAGE_COMPLETIONS("page-completions", new ArrayList<String>() {{ add("on"); add("off");}}),
-    PRINT_COMPLETIONS_HORIZONTALLY("print-completions-horizontally", new ArrayList<String>() {{ add("on"); add("off");}}),
-    REVERT_ALL_AT_NEWLINE("revert-all-at-newline", new ArrayList<String>() {{ add("on"); add("off");}}),
-    SHOW_ALL_IF_AMBIGUOUS("show-all-if-ambiguous", new ArrayList<String>() {{ add("on"); add("off");}}),
-    SHOW_ALL_IF_UNMODIFIED("show-all-if-unmodified", new ArrayList<String>() {{ add("on"); add("off");}}),
-    SKIP_COMPLETED_TEXT("skip-completed-text", new ArrayList<String>() {{ add("on"); add("off");}}),
-    VISIBLE_STATS("visible-stats", new ArrayList<String>() {{ add("on"); add("off");}});
+    KEYMAP("keymap", Arrays.asList("emacs","vi","emacs-standard","emacs-meta","emacs-ctlx","vi-move","vi-command","vi-insert")),
+    MARK_DIRECTORIES("mark-directories", Arrays.asList("on","off")),
+    MARK_MODIFIED_LINES("mark-modified-lines", Arrays.asList("on","off")),
+    MARK_SYMLINKED_DIRECTORIES("mark-symlinked-directories", Arrays.asList("on","off")),
+    MATCH_HIDDEN_FILES("match-hidden-files", Arrays.asList("on","off")),
+    MENU_COMPLETE_DISPLAY_PREFIX("menu-complete-display-prefix", Arrays.asList("on","off")),
+    OUTPUT_META("output-meta", Arrays.asList("on","off")),
+    PAGE_COMPLETIONS("page-completions", Arrays.asList("on","off")),
+    PRINT_COMPLETIONS_HORIZONTALLY("print-completions-horizontally", Arrays.asList("on","off")),
+    REVERT_ALL_AT_NEWLINE("revert-all-at-newline", Arrays.asList("on","off")),
+    SHOW_ALL_IF_AMBIGUOUS("show-all-if-ambiguous", Arrays.asList("on","off")),
+    SHOW_ALL_IF_UNMODIFIED("show-all-if-unmodified", Arrays.asList("on","off")),
+    SKIP_COMPLETED_TEXT("skip-completed-text", Arrays.asList("on","off")),
+    VISIBLE_STATS("visible-stats", Arrays.asList("on","off"));
 
     private String variable;
     private List<String> values;
-
+    
     private VariableSettings(String variable, List<String> values) {
         this.variable = variable;
         this.values = values;

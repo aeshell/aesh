@@ -37,21 +37,14 @@ public class FileHistory extends InMemoryHistory {
      * @throws IOException io
      */
     private void readFile() throws IOException {
-        BufferedReader reader = null;
-        try {
-            if(historyFile.exists()) {
-                reader = new BufferedReader(new FileReader(historyFile));
+        if(historyFile.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(historyFile))) {
                 String line;
                 while((line = reader.readLine()) != null)
                     push(line);
+            } catch(FileNotFoundException ignored) {
+                //AESH-205
             }
-        }
-        catch(FileNotFoundException ignored) {
-            //AESH-205
-        }
-        finally {
-            if(reader != null)
-                reader.close();
         }
     }
 
@@ -62,14 +55,10 @@ public class FileHistory extends InMemoryHistory {
      */
     private void writeFile() throws IOException {
         historyFile.delete();
-
-        FileWriter fw = new FileWriter(historyFile);
-
-        for(int i=0; i < size();i++)
-            fw.write(get(i) + (Config.getLineSeparator()));
-
-        fw.flush();
-        fw.close();
+        try (FileWriter fw = new FileWriter(historyFile)) {
+            for(int i=0; i < size();i++)
+                fw.write(get(i) + (Config.getLineSeparator()));
+        }
     }
 
     @Override
