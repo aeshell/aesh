@@ -91,7 +91,7 @@ public class AeshCommandResultHandlerTest {
         private List<String> arguments;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             if(name == null)
                 return CommandResult.FAILURE;
             else

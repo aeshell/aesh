@@ -56,7 +56,7 @@ public abstract class AeshTestCase extends TestCase {
         String tmpString = null;
         console.setConsoleCallback(new AeshConsoleCallback() {
             @Override
-            public int execute(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) throws InterruptedException {
                 if(lastOnly) {
                     assertEquals(expected, output.getBuffer());
                 }

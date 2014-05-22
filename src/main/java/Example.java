@@ -173,7 +173,7 @@ public class Example {
 
         final ConsoleCallback consoleCallback = new AeshConsoleCallback() {
             @Override
-            public int execute(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) throws InterruptedException {
                 try {
                 //To change body of implemented methods use File | Settings | File Templates.
                 exampleConsole.getShell().out().println("======>\"" + output.getBuffer());
@@ -232,7 +232,7 @@ public class Example {
             private boolean hasUsername = false;
 
             @Override
-            public int execute(ConsoleOperation output) {
+            public int execute(ConsoleOperation output) throws InterruptedException {
                 if(hasUsername) {
                     password = output.getBuffer();
                     hasPassword = true;

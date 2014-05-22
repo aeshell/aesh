@@ -209,8 +209,7 @@ public class AeshConsoleImpl implements AeshConsole {
      * @return command
      * @throws CommandNotFoundException
      */
-    private CommandContainer getCommand(String name, String line)
-        throws CommandNotFoundException {
+    private CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
         try {
             return registry.getCommand(name, line);
         }
@@ -271,7 +270,7 @@ public class AeshConsoleImpl implements AeshConsole {
 
         @Override
         @SuppressWarnings("unchecked")
-        public int execute(ConsoleOperation output) {
+        public int execute(ConsoleOperation output) throws InterruptedException {
             if (output != null && output.getBuffer().trim().length() > 0) {
                 ResultHandler resultHandler = null;
                 try (CommandContainer commandContainer = getCommand(
@@ -311,48 +310,33 @@ public class AeshConsoleImpl implements AeshConsole {
                     else
                         resultHandler.onFailure(result);
                 }
-                catch (CommandLineParserException e) {
+                catch (CommandLineParserException | CommandValidatorException | OptionValidatorException e) {
                     getShell().out().println(e.getMessage());
                     result = CommandResult.FAILURE;
                     if(resultHandler != null)
                         resultHandler.onValidationFailure(result, e);
                 }
-                catch (CommandNotFoundException e) {
-                    if (commandNotFoundHandler != null) {
-                        commandNotFoundHandler.handleCommandNotFound(
-                            output.getBuffer(), getShell());
-                    }
-                    else {
-                        getShell().err().print(
-                            "Command not found: "
-                                + Parser.findFirstWord(output
-                                    .getBuffer())
-                                + Config.getLineSeparator());
-                    }
+                catch (CommandNotFoundException cnfe) {
+                    getShell().out().println(cnfe.getMessage());
                     result = CommandResult.FAILURE;
-                }
-                catch (OptionValidatorException e) {
-                    getShell().out().println(e.getMessage());
-                    result = CommandResult.FAILURE;
-                    if(resultHandler != null)
-                        resultHandler.onValidationFailure(result, e);
-                }
-                catch (CommandValidatorException e) {
-                    getShell().out().println(e.getMessage());
-                    result = CommandResult.FAILURE;
-                    if(resultHandler != null)
-                        resultHandler.onValidationFailure(result, e);
+                    if(commandNotFoundHandler != null)
+                        commandNotFoundHandler.handleCommandNotFound(output.getBuffer(), getShell());
                 }
                 catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "Exception when parsing/running: "
-                        + output.getBuffer(), e);
-                    getShell().out().println(
-                        "Exception when parsing/running: "
-                            + output.getBuffer() + ", "
-                            + e.getMessage());
-                    result = CommandResult.FAILURE;
-                    if(resultHandler != null)
-                        resultHandler.onValidationFailure(result, e);
+                    if(e instanceof InterruptedException)
+                        throw (InterruptedException) e;
+                    else {
+                        LOGGER.log(Level.SEVERE, "Exception when parsing/running: "
+                                + output.getBuffer(), e);
+                        getShell().out().println(
+                                "Exception when parsing/running: "
+                                        + output.getBuffer() + ", "
+                                        + e.getMessage()
+                        );
+                        result = CommandResult.FAILURE;
+                        if (resultHandler != null)
+                            resultHandler.onValidationFailure(result, e);
+                    }
                 }
             }
             // empty line

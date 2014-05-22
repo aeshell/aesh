@@ -20,5 +20,5 @@ public interface Command<T extends CommandInvocation> {
      * @return success or failure depending on how the execution went.
      * @throws IOException
      */
-    CommandResult execute(T commandInvocation) throws IOException;
+    CommandResult execute(T commandInvocation) throws IOException, InterruptedException;
 }

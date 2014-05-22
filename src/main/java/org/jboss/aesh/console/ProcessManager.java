@@ -43,6 +43,7 @@ public class ProcessManager {
 
         executorService.execute(process);
         processes.add(process);
+
     }
 
     // TODO: need to check if the process fetching has "focus"

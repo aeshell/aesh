@@ -74,7 +74,7 @@ public class AeshCommandValidatorTest {
         private int high;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             commandInvocation.getShell().out().println("you got foooed");
             return CommandResult.SUCCESS;
         }

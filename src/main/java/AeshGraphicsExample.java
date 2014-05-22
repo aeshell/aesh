@@ -52,7 +52,7 @@ public class AeshGraphicsExample {
     public static class ExitCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             commandInvocation.stop();
             return CommandResult.SUCCESS;
         }
@@ -65,7 +65,7 @@ public class AeshGraphicsExample {
         private Graphics g;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             invocation = commandInvocation;
             invocation.getShell().enableAlternateBuffer();
             doGfx();

@@ -176,7 +176,7 @@ public class AeshCommandCompletionTest {
         private List<String> arguments;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             return CommandResult.SUCCESS;
         }
 
@@ -192,7 +192,7 @@ public class AeshCommandCompletionTest {
         private String bar;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -231,7 +231,7 @@ public class AeshCommandCompletionTest {
         private String containerOption;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             return null;
         }
     }

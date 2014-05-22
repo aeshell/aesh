@@ -13,7 +13,7 @@ public abstract class TestConsoleCallback extends AeshConsoleCallback {
     }
 
     @Override
-    public final int execute(ConsoleOperation output) {
+    public final int execute(ConsoleOperation output) throws InterruptedException {
        try {
           return verify(output);
        } catch (Throwable e) {

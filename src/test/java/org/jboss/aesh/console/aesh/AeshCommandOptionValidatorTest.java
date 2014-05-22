@@ -183,7 +183,7 @@ public class AeshCommandOptionValidatorTest {
         private String foo;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             commandInvocation.getShell().out().println("VAL");
             return CommandResult.SUCCESS;
         }
@@ -195,7 +195,7 @@ public class AeshCommandOptionValidatorTest {
         private Integer num;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             commandInvocation.getShell().out().println("NUM");
             return CommandResult.SUCCESS;
         }
@@ -225,7 +225,7 @@ public class AeshCommandOptionValidatorTest {
         private String foo;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             commandInvocation.getShell().out().println("VAL2");
             return CommandResult.SUCCESS;
         }

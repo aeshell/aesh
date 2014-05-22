@@ -119,7 +119,7 @@ public class AeshExample {
     public static class ExitCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             commandInvocation.stop();
             return CommandResult.SUCCESS;
         }
@@ -133,7 +133,7 @@ public class AeshExample {
         private String foo;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
            if(bar == null)
                commandInvocation.getShell().out().println("NO BAR!");
             else
@@ -160,7 +160,7 @@ public class AeshExample {
         private Shell shell;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             this.shell = commandInvocation.getShell();
             if(help) {
                 shell.out().println(commandInvocation.getHelpInfo("test"));
@@ -182,7 +182,7 @@ public class AeshExample {
             shell.out().print(ANSI.getMainBufferScreen());
         }
 
-        public void processOperation(CommandInvocation invocation) throws IOException {
+        public void processOperation(CommandInvocation invocation) throws IOException, InterruptedException {
             //first ask for username, then password
             String username = promptForInput("username: ", null, invocation);
             String password = promptForInput("password: ", '*', invocation);
@@ -191,7 +191,7 @@ public class AeshExample {
         }
 
         private String promptForInput(String prompt, Character mask,
-                                      CommandInvocation invocation) throws IOException {
+                                      CommandInvocation invocation) throws IOException, InterruptedException {
 
             ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                     .shell(invocation.getShell())
@@ -202,19 +202,12 @@ public class AeshExample {
                     .create();
 
             consoleBuffer.displayPrompt();
-            try {
                 String result;
                 do {
                     result = inputProcessor.parseOperation(invocation.getInput());
                 }
                 while(result == null );
                 return result;
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-                stop();
-                return null;
-            }
         }
 
     }
@@ -243,7 +236,7 @@ public class AeshExample {
         private List<File> arguments;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             if(help) {
                 commandInvocation.getShell().out().println(commandInvocation.getHelpInfo("ls"));
             }
@@ -275,7 +268,7 @@ public class AeshExample {
         private Shell shell;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             this.shell = commandInvocation.getShell();
             if(bar) {
                 shell.out().print("are you sure you want bar? (y/n) ");

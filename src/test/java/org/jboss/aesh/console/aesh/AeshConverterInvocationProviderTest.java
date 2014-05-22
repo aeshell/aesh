@@ -87,7 +87,7 @@ public static class ConCommand implements Command {
     }
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
         commandInvocation.getShell().out().println(foo);
         commandInvocation.getShell().out().flush();
         return CommandResult.SUCCESS;

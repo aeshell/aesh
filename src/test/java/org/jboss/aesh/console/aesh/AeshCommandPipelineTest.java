@@ -76,7 +76,7 @@ public class AeshCommandPipelineTest {
         private int counter = 0;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             if(commandInvocation.getControlOperator().isPipe()) {
                 counter++;
             }
@@ -92,7 +92,7 @@ public class AeshCommandPipelineTest {
     public static class FooCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
