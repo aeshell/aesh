@@ -14,6 +14,9 @@ import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.terminal.Shell;
 
 /**
+ * A CommandInvocation is the value object passed to a Command when it is executed.
+ * It contain references to the current ControlOperator, registry, shell, ++
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface CommandInvocation {
@@ -59,7 +62,10 @@ public interface CommandInvocation {
     AeshContext getAeshContext();
 
     /**
-     * Get user input. This method will block until input is given.
+     * A blocking call that will return user input from the terminal
+     *
+     * @return user input
+     * @throws InterruptedException
      */
     CommandOperation getInput() throws InterruptedException;
 }
