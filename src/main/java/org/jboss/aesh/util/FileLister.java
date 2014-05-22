@@ -400,7 +400,4 @@ public class FileLister {
             ", lastDir='" + lastDir + '\'' +
             '}';
     }
-
-    // love this name :)
-
 }
