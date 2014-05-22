@@ -269,7 +269,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
             this.console = console;
         }
         @Override
-        public int execute(ConsoleOperation output) {
+        public int execute(ConsoleOperation output) throws InterruptedException {
             if(count == 0) {
                 assertEquals("foobar ", output.getBuffer());
             }
@@ -292,7 +292,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
             this.console = console;
         }
         @Override
-        public int execute(ConsoleOperation output) {
+        public int execute(ConsoleOperation output) throws InterruptedException {
             if(count == 0) {
                 assertEquals("less ", output.getBuffer());
             }
@@ -311,7 +311,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
             this.console = console;
         }
         @Override
-        public int execute(ConsoleOperation output) {
+        public int execute(ConsoleOperation output) throws InterruptedException {
             if(count == 0) {
                 assertEquals("foo", output.getBuffer());
             }

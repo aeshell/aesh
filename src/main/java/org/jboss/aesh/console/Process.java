@@ -22,4 +22,6 @@ public interface Process {
 
     CommandResult getExitResult();
 
+    void interrupt() throws InterruptedException;
+
 }

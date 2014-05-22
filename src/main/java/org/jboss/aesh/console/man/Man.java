@@ -75,7 +75,7 @@ public class Man extends AeshFileDisplayer {
     }
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
         if(manPages == null || manPages.size() == 0) {
             commandInvocation.getShell().out().println("What manual page do you want?");
             return CommandResult.SUCCESS;

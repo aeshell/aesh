@@ -23,7 +23,7 @@ public interface ConsoleCallback {
      * @param output the consoleOperation
      * @return 0 for success or 1/-1 for failure.
      */
-    int execute(ConsoleOperation output);
+    int execute(ConsoleOperation output) throws InterruptedException;
 
     CommandOperation getInput() throws InterruptedException;
 

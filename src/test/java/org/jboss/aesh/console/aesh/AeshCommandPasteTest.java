@@ -107,7 +107,7 @@ public class AeshCommandPasteTest {
     private static class FooCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             try {
                 Thread.sleep(100);
             }

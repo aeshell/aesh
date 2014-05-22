@@ -554,8 +554,21 @@ public class Console {
                 else {
                     parsing = false;
                 }
-
-                inputQueue.put(new CommandOperation(inc, input, position));
+                //if we get ctrl-c/d while a process is running we'll try to kill
+                if((inc == Key.CTRL_C || inc == Key.CTRL_D) &&
+                        processManager.hasRunningProcess()) {
+                    //try to kill running process
+                    try {
+                        logger.info("killing process: "+processManager.getCurrentProcess().getPID());
+                        processManager.getCurrentProcess().interrupt();
+                    }
+                    catch(InterruptedException ie) {
+                        ie.printStackTrace();
+                    }
+                }
+                else {
+                    inputQueue.put(new CommandOperation(inc, input, position));
+                }
             }
             return true;
         }

@@ -87,7 +87,7 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
 class BarCommand implements Command<FooCommandInvocation> {
 
     @Override
-    public CommandResult execute(FooCommandInvocation commandInvocation) throws IOException {
+    public CommandResult execute(FooCommandInvocation commandInvocation) throws IOException, InterruptedException {
         commandInvocation.getShell().out().println(commandInvocation.getFoo());
         return CommandResult.SUCCESS;
     }

@@ -76,7 +76,7 @@ public class AeshCommandEndOperator {
     private static class FooCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             counter++;
             return CommandResult.SUCCESS;
         }
@@ -89,7 +89,7 @@ public class AeshCommandEndOperator {
         private String info;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             assertEquals("yup", info);
             counter++;
             return CommandResult.SUCCESS;

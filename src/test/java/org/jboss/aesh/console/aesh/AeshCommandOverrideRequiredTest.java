@@ -82,7 +82,7 @@ public class AeshCommandOverrideRequiredTest {
         private boolean help;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             if(help)
                 commandInvocation.getShell().out().println("OVERRIDDEN");
             return CommandResult.SUCCESS;

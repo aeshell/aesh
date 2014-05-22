@@ -106,7 +106,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
         private String bar;
 
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             assertEquals("en", bar);
             return CommandResult.SUCCESS;
         }
@@ -135,7 +135,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
         private java.util.List<File> arguments;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             assertEquals(2, files.size());
             return CommandResult.SUCCESS;
         }
