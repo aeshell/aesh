@@ -6,10 +6,12 @@
  */
 package org.jboss.aesh.cl.completer;
 
+import java.io.File;
+
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
+import org.jboss.aesh.filters.Filter;
 import org.jboss.aesh.util.FileLister;
-import org.jboss.aesh.util.FileLister.Filter;
 
 /**
  * Completes {@link File} objects
