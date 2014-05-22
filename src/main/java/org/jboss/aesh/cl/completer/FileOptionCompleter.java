@@ -6,8 +6,6 @@
  */
 package org.jboss.aesh.cl.completer;
 
-import java.io.File;
-
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.filters.Filter;

@@ -11,7 +11,6 @@ import java.io.FileFilter;
 import static org.jboss.aesh.constants.AeshConstants.DOT;
 
 /**
- * 
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  *

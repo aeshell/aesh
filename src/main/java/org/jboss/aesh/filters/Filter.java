@@ -15,7 +15,6 @@ import org.jboss.aesh.filters.file.FileAndDirectoryNoDotNamesFilter;
 import org.jboss.aesh.filters.file.OnlyFileFilter;
 
 /**
- * 
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  *
