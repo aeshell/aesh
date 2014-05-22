@@ -22,7 +22,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.complete.CompletionRegistration;
@@ -77,10 +76,6 @@ public class Console {
     private ArrayBlockingQueue<int[]> cursorQueue;
     private transient boolean readingCursor = false;
 
-    private final Logger logger = LoggerUtil.getLogger(getClass().getName());
-
-    private static final Pattern endsWithBackslashPattern = Pattern.compile(".*\\s\\\\$");
-
     private ExecutorService readerService;
     private ExecutorService executorService;
 
@@ -92,12 +87,10 @@ public class Console {
     private InputProcessor inputProcessor;
     private CompletionHandler completionHandler;
 
-    //used to optimize text deletion
-    private static final char[] resetLineAndSetCursorToStart =
-            (ANSI.saveCursor()+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
-
     private AeshStandardStream standardStream;
     private transient boolean initiateStop = false;
+
+    private static final Logger LOGGER = LoggerUtil.getLogger(Console.class.getName());
 
     public Console(final Settings settings) {
         this.settings = settings;
@@ -105,7 +98,7 @@ public class Console {
             init();
         }
         catch (IOException e) {
-            logger.severe("Æsh failed during setup: "+e.getMessage());
+            LOGGER.severe("Æsh failed during setup: " + e.getMessage());
         }
 
     }
@@ -139,7 +132,7 @@ public class Console {
             return;
         }
         if(settings.isLogging())
-            logger.info("RESET");
+            LOGGER.info("RESET");
 
         readerService = Executors.newFixedThreadPool(1, new ThreadFactory() {
             @Override
@@ -189,7 +182,7 @@ public class Console {
 
         consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
-                //.buffer() buffer = new Buffer(settings.isAnsiConsole(), null);
+                        //.buffer() buffer = new Buffer(settings.isAnsiConsole(), null);
                 .editMode(editMode)
                 .create();
 
@@ -200,7 +193,7 @@ public class Console {
         //enable aliasing
         if(settings.isAliasEnabled()) {
             if(settings.isLogging())
-                logger.info("enable aliasmanager with file: "+settings.getAliasFile());
+                LOGGER.info("enable aliasmanager with file: "+settings.getAliasFile());
             aliasManager = new AliasManager(settings.getAliasFile(), settings.doPersistAlias(), settings.getName());
             completionHandler.addCompletion(new AliasCompletion(aliasManager));
             completionHandler.setAliasManager(aliasManager);
@@ -209,7 +202,7 @@ public class Console {
         //enable export
         if(settings.isExportEnabled()) {
             if(settings.isLogging())
-                logger.info("enabling exportManager with file: "+settings.getExportFile());
+                LOGGER.info("enabling exportManager with file: "+settings.getExportFile());
             exportManager = new ExportManager(settings.getExportFile());
             completionHandler.addCompletion(new ExportCompletion(exportManager));
         }
@@ -230,7 +223,7 @@ public class Console {
                                 doStop();
                             }
                             catch (IOException e) {
-                                logger.warning("Failed to stop aesh! "+e.getMessage());
+                                LOGGER.warning("Failed to stop aesh! " + e.getMessage());
                             }
                         }
                     }
@@ -301,20 +294,20 @@ public class Console {
 
     private PrintStream out() {
         //if redirection enabled, put it into a buffer
-        if(currentOperation != null &&
-                currentOperation.getControlOperator().isRedirectionOut()) {
+        if(currentOperation != null && currentOperation.getControlOperator().isRedirectionOut()) {
             return new PrintStream(redirectPipeOutBuffer, true);
-        } else {
+        }
+        else {
             return getInternalShell().out();
         }
     }
 
     private PrintStream err(){
         //if redirection enabled, put it into a buffer
-        if(currentOperation != null &&
-                currentOperation.getControlOperator().isRedirectionErr()) {
+        if(currentOperation != null && currentOperation.getControlOperator().isRedirectionErr()) {
             return new PrintStream(redirectPipeErrBuffer, true);
-        } else {
+        }
+        else {
             return getInternalShell().err();
         }
     }
@@ -371,7 +364,7 @@ public class Console {
                 if(exportManager != null)
                     exportManager.persistVariables();
                 if(settings.isLogging())
-                    logger.info("Done stopping reading thread. Terminal is reset");
+                    LOGGER.info("Done stopping reading thread. Terminal is reset");
                 processManager.stop();
                 readerService.shutdown();
                 executorService.shutdown();
@@ -381,7 +374,7 @@ public class Console {
                 settings.getStdErr().close();
                 settings.getStdOut().close();
                 if(settings.isLogging())
-                    logger.info("Streams are closed");
+                    LOGGER.info("Streams are closed");
             }
         }
     }
@@ -445,7 +438,7 @@ public class Console {
                     initiateStop = false;
                 }
                 catch (IOException e) {
-                    logger.warning("Stop failed: "+e.getCause());
+                    LOGGER.warning("Stop failed: " + e.getCause());
                 }
             }
             else
@@ -525,7 +518,7 @@ public class Console {
         try {
             int[] input = getTerminal().read(settings.isReadAhead());
             if(settings.isLogging()) {
-                logger.info("GOT: "+ Arrays.toString(input));
+                LOGGER.info("GOT: " + Arrays.toString(input));
             }
             if(readingCursor) {
                 if(input.length > 4) {
@@ -559,7 +552,8 @@ public class Console {
                         processManager.hasRunningProcess()) {
                     //try to kill running process
                     try {
-                        logger.info("killing process: "+processManager.getCurrentProcess().getPID());
+                        if(settings.isLogging())
+                            LOGGER.info("killing process: "+processManager.getCurrentProcess().getPID());
                         processManager.getCurrentProcess().interrupt();
                     }
                     catch(InterruptedException ie) {
@@ -575,7 +569,7 @@ public class Console {
         catch (IOException ioe) {
             ioe.printStackTrace();
             if(settings.isLogging())
-                logger.severe("Stream failure, stopping Aesh: "+ioe);
+                LOGGER.severe("Stream failure, stopping Aesh: "+ioe);
             try {
                 //if we get an ioexception/interrupted exp its either input or output failure
                 //lets just stop while we can...
@@ -600,7 +594,7 @@ public class Console {
             }
             catch (IOException | InterruptedException e) {
                 if(settings.isLogging())
-                    logger.warning("Execution exception: "+e.getMessage());
+                    LOGGER.warning("Execution exception: "+e.getMessage());
             }
         }
     }
@@ -643,7 +637,7 @@ public class Console {
         }
         catch (IOException ioe) {
             if(settings.isLogging())
-                logger.severe("Stream failure: "+ioe);
+                LOGGER.severe("Stream failure: "+ioe);
         }
     }
 
@@ -699,7 +693,7 @@ public class Console {
         //this should never happen (all overwrite_in should be parsed in parseOperations())
         else if(currentOperation.getControlOperator() == ControlOperator.OVERWRITE_IN) {
             if(settings.isLogging())
-                logger.info(settings.getName()+": syntax error while reading token: \'<\'");
+                LOGGER.info(settings.getName()+": syntax error while reading token: \'<\'");
             err().print(settings.getName() + ": syntax error while reading token: \'<\'");
             return null;
         }
@@ -770,7 +764,7 @@ public class Console {
                 }
                 else {
                     if(settings.isLogging())
-                        logger.info(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
+                        LOGGER.info(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
                     err().print(settings.getName() + ": syntax error near unexpected token '<'" + Config.getLineSeparator());
                     currentOperation = null;
                     output = new ConsoleOperation(ControlOperator.NONE, "");
@@ -778,7 +772,7 @@ public class Console {
             }
             else {
                 if(settings.isLogging())
-                    logger.info(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
+                    LOGGER.info(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
                 err().print(settings.getName() + ": syntax error near unexpected token 'newline'" + Config.getLineSeparator());
                 currentOperation = null;
                 output = new ConsoleOperation(ControlOperator.NONE, "");
@@ -795,7 +789,7 @@ public class Console {
             standardStream.setStdError(new BufferedInputStream(
                     new ByteArrayInputStream(redirectPipeErrBuffer.toString().getBytes())));
             output = op;
-                    //redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString());
+            //redirectPipeOutBuffer.toString(), redirectPipeErrBuffer.toString());
         }
 
         if(redirectPipeOutBuffer.toString().length() > 0)
@@ -875,7 +869,7 @@ public class Console {
         AeshLine line = Parser.findAllWords(fileName);
         if(line.getWords().size() > 1) {
             if(settings.isLogging())
-                logger.info(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
+                LOGGER.info(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
             err().print(settings.getName() + ": can't redirect to more than one file." + Config.getLineSeparator());
             return;
         }
@@ -899,7 +893,7 @@ public class Console {
         }
         catch (IOException e) {
             if(settings.isLogging())
-                logger.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
+                LOGGER.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
             getInternalShell().err().println(e.getMessage());
             err().flush();
         }
@@ -953,7 +947,7 @@ public class Console {
                 }
                 catch (Exception e) {
                     if(console.settings.isLogging())
-                        console.logger.log(Level.SEVERE, "Failed to find current row with ansi code: ",e);
+                        console.LOGGER.log(Level.SEVERE, "Failed to find current row with ansi code: ",e);
                     return new CursorPosition(-1,-1);
                 }
             }
@@ -985,7 +979,7 @@ public class Console {
                             row *= 10;
                             row += ((int)c & 0xF);
                         }
-                            //row.append((char) input[i]);
+                        //row.append((char) input[i]);
                     }
                 }
                 //search for the beginning which starts with esc,[

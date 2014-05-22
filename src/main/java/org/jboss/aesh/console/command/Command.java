@@ -14,11 +14,14 @@ import java.io.IOException;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface Command<T extends CommandInvocation> {
+
     /**
-     * Will be called when this command is triggered by the command line.
+     * Will be executed when this command is triggered by the command line.
      *
+     * @param commandInvocation invocation
      * @return success or failure depending on how the execution went.
      * @throws IOException
+     * @throws InterruptedException
      */
     CommandResult execute(T commandInvocation) throws IOException, InterruptedException;
 }

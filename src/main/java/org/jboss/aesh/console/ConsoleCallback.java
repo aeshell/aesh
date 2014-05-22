@@ -19,14 +19,27 @@ import org.jboss.aesh.console.command.CommandOperation;
 public interface ConsoleCallback {
 
     /**
+     * Will be executed when a return is pressed
      *
      * @param output the consoleOperation
      * @return 0 for success or 1/-1 for failure.
+     * @throws InterruptedException
      */
     int execute(ConsoleOperation output) throws InterruptedException;
 
+    /**
+     * A blocking call that will return user input from the terminal
+     *
+     * @return user input
+     * @throws InterruptedException
+     */
     CommandOperation getInput() throws InterruptedException;
 
+    /**
+     * Internally callback method
+     *
+     * @param process current process
+     */
     void setProcess(Process process);
 
 }
