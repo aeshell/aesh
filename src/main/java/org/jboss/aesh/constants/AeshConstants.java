@@ -15,11 +15,11 @@ import org.jboss.aesh.console.Config;
  */
 public interface AeshConstants {
     char ESCAPE = '\\';
-    String SPACE = " ";
-    String TILDE = "~";
-    String STAR = "*";
-    String WILDCARD = "?";
-    String DOT = ".";
+    char SPACE = ' ';
+    char TILDE = '~';
+    char STAR = '*';
+    char WILDCARD = '?';
+    char DOT = '.';
     String HOME = "~" + Config.getPathSeparator();
     String PARENT = "..";
 }

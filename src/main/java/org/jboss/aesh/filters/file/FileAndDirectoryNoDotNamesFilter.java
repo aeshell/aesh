@@ -18,6 +18,6 @@ import static org.jboss.aesh.constants.AeshConstants.DOT;
 public class FileAndDirectoryNoDotNamesFilter implements FileFilter {
     @Override
     public boolean accept(File pathname) {
-        return !pathname.getName().startsWith(DOT);
+        return !pathname.getName().startsWith(Character.toString(DOT));
     }
 }
