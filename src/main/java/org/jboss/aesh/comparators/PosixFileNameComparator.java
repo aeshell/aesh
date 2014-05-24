@@ -13,26 +13,30 @@ import java.util.Comparator;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
+ * @author <a href="mailto:robert@balent.cz">Robert Balent</a>
  *
  */
 public class PosixFileNameComparator implements Comparator<String> {
     @Override
     public int compare(String o1, String o2) {
-        if (o1.length() > 0 && o2.length() > 0) {
-            if (o1.indexOf(DOT) == 0) {
-                if (o2.indexOf(DOT) == 0)
-                    return o1.substring(1).compareToIgnoreCase(o2.substring(1));
-                else
-                    return o1.substring(1).compareToIgnoreCase(o2);
-            }
-            else {
-                if (o2.indexOf(DOT) == 0)
-                    return o1.compareToIgnoreCase(o2.substring(1));
-                else
-                    return o1.compareToIgnoreCase(o2);
-            }
+        String o1WithoutDot = o1;
+        String o2WithoutDot = o2;
+
+        if (o1.indexOf(DOT) == 0) {
+            o1WithoutDot = o1.substring(1);
         }
-        else
-            return 0;
+        if (o2.indexOf(DOT) == 0) {
+            o2WithoutDot = o2.substring(1);
+        }
+
+        // if names are same when removed dot, make without dot first
+        // if names are same when ignored case, make lower case first (by default compareTo returns upper case first)
+        if (o1WithoutDot.compareTo(o2WithoutDot) == 0) {
+            return o2.compareTo(o1);
+        } else if (o1WithoutDot.compareToIgnoreCase(o2WithoutDot) == 0) {
+            return o2WithoutDot.compareTo(o1WithoutDot);
+        } else {
+            return o1WithoutDot.compareToIgnoreCase(o2WithoutDot);
+        }
     }
 }
