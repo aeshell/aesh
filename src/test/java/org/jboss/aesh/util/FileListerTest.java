@@ -6,10 +6,14 @@
  */
 package org.jboss.aesh.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.jboss.aesh.comparators.PosixFileNameComparator;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
@@ -17,9 +21,6 @@ import org.jboss.aesh.terminal.TerminalString;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
@@ -202,7 +203,7 @@ public class FileListerTest {
 
     @Test
     public void posixFileNameComparatorTest() {
-       FileLister.PosixFileNameComparator comparator = new FileLister.PosixFileNameComparator();
+       PosixFileNameComparator comparator = new PosixFileNameComparator();
 
        assertEquals("a".compareToIgnoreCase("b"), comparator.compare("a", "b"));
        assertEquals("a".compareToIgnoreCase("b"), comparator.compare(".a", "b"));
