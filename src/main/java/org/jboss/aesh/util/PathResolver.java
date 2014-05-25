@@ -70,10 +70,12 @@ public class PathResolver {
         }
 
         if(incPath.toString().indexOf(TILDE) == 0) {
-            if(incPath.toString().length() > 1)
-                incPath = new File(Config.getPathSeparator() + incPath.toString().substring(1));
-            else
-                incPath = new File(Config.getPathSeparator());
+            if(incPath.toString().length() > 1) {
+                // directories which name starts with tilde
+                incPath = new File(cwd.toString() + Config.getPathSeparator() + incPath.toString());
+            } else {
+                incPath = new File(Config.getHomeDir());
+            }
         }
 
         //  foo1/./foo2 is changed to foo1/foo2
