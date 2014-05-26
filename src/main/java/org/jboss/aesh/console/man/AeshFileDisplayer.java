@@ -65,7 +65,7 @@ public abstract class AeshFileDisplayer implements Command {
         return commandInvocation.getShell();
     }
 
-    protected void afterAttach() throws IOException {
+    protected void afterAttach() throws IOException, InterruptedException {
         number = new StringBuilder();
         searchBuilder = new StringBuilder();
         rows = getShell().getSize().getHeight();
@@ -114,7 +114,7 @@ public abstract class AeshFileDisplayer implements Command {
         topVisibleRow = 0;
     }
 
-    public void processInput() throws IOException {
+    public void processInput() throws IOException, InterruptedException {
         try {
             while(!stop) {
                 processOperation(getCommandInvocation().getInput());
@@ -123,6 +123,7 @@ public abstract class AeshFileDisplayer implements Command {
         catch (InterruptedException e) {
             afterDetach();
             stop = true;
+            throw e;
         }
     }
 
