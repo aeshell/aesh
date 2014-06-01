@@ -50,6 +50,7 @@ import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.FileUtils;
 import org.jboss.aesh.util.LoggerUtil;
+import org.jboss.aesh.util.PathResolver;
 
 /**
  * A console reader. Supports ansi terminals
@@ -750,7 +751,8 @@ public class Console {
                     AeshLine line = Parser.findAllWords(nextOperation.getBuffer());
                     currentOperation = new ConsoleOperation(nextOperation.getControlOperator(), op.getBuffer());
 
-                    File readFile = new File(Parser.switchEscapedSpacesToSpacesInWord(line.getWords().get(0)));
+                    File fileRelativePath = new File(Parser.switchEscapedSpacesToSpacesInWord(line.getWords().get(0)));
+                    File readFile = PathResolver.resolvePath(fileRelativePath, context.getCurrentWorkingDirectory()).get(0);
                     if(readFile.isFile()) {
                         standardStream.setStdIn(new BufferedInputStream(
                                 new FileInputStream(readFile)));
@@ -883,13 +885,17 @@ public class Console {
 
         try {
             if(redirection == ControlOperator.OVERWRITE_OUT)
-                FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeOutBuffer.toString(), false);
+                FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
+                    context.getCurrentWorkingDirectory()).get(0), redirectPipeOutBuffer.toString(), false);
             else if(redirection == ControlOperator.OVERWRITE_ERR)
-                FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeErrBuffer.toString(), false);
+                FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
+                    context.getCurrentWorkingDirectory()).get(0), redirectPipeErrBuffer.toString(), false);
             else if(redirection == ControlOperator.APPEND_OUT)
-                FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeOutBuffer.toString(), true);
+                FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
+                    context.getCurrentWorkingDirectory()).get(0), redirectPipeOutBuffer.toString(), true);
             else if(redirection == ControlOperator.APPEND_ERR)
-                FileUtils.saveFile(new File(Parser.switchEscapedSpacesToSpacesInWord( fileName)), redirectPipeErrBuffer.toString(), true);
+                FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
+                    context.getCurrentWorkingDirectory()).get(0), redirectPipeErrBuffer.toString(), true);
         }
         catch (IOException e) {
             if(settings.isLogging())
