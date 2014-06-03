@@ -203,4 +203,14 @@ public interface Settings {
      * Is aesh persisting variables at shutdown
      */
     boolean doPersistExport();
+
+    /**
+     * Aesh load environment system.
+     */
+    void setExportUsesSystemEnvironment(boolean isLoad);
+
+    /**
+     * Is load environment system?
+     */
+    boolean doExportUsesSystemEnvironment();
 }

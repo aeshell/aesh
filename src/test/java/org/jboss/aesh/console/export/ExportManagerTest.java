@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -71,5 +72,16 @@ public class ExportManagerTest {
             new ExportManager(new File(Config.getTmpDir()+Config.getPathSeparator()+"aesh_variable_test"));
         assertEquals("", exportManager.getValue("$FOO3"));
         assertEquals("", exportManager.getValue("FOO3"));
+
+    }
+
+    @Test
+    public void testLoadSystemEnv() throws IOException {
+
+        ExportManager exportManager =
+                new ExportManager(new File(Config.getTmpDir()+Config.getPathSeparator()+"aesh_variable_test"), true);
+
+        String result = exportManager.getValue("PATH");
+        assertTrue(result.contains("/usr"));
     }
 }
