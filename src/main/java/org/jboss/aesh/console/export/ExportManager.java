@@ -83,6 +83,10 @@ public class ExportManager {
     public String getValue(String key) {
         if(key.indexOf(DOLLAR) == -1) {
             String value = variables.get(key);
+
+            if (value == null)
+                return "";
+
             if(value.indexOf(DOLLAR) == -1)
                 return value;
             else

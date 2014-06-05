@@ -64,4 +64,12 @@ public class ExportManagerTest {
 
         assertEquals("ls /opt /opt", exportManager.getValue("ls $FOO $FOO"));
     }
+
+    @Test
+    public void testVariableNotExist() {
+        ExportManager exportManager =
+            new ExportManager(new File(Config.getTmpDir()+Config.getPathSeparator()+"aesh_variable_test"));
+        assertEquals("", exportManager.getValue("$FOO3"));
+        assertEquals("", exportManager.getValue("FOO3"));
+    }
 }
