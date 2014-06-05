@@ -884,8 +884,10 @@ public class Console {
      * @throws IOException
      */
     private void deleteWithMaskEnabled() throws IOException {
-        if(buffer.getLineNoMask().length() > 0)
-            buffer.delete(buffer.getLineNoMask().length()-1, buffer.getLineNoMask().length());
+        if(buffer.getLineNoMask().length() > 0) {
+            buffer.delete(buffer.getLineNoMask().length() - 1, buffer.getLineNoMask().length());
+            buffer.move(-1, getTerminalSize().getWidth());
+        }
     }
 
     /**

@@ -199,7 +199,7 @@ public class Example {
             }
             if(line.getBuffer().equalsIgnoreCase("password")) {
                 line = exampleConsole.read(new Prompt("password: "), Character.valueOf((char) 0));
-                exampleConsole.pushToStdOut("password typed:" + line + "\n");
+                exampleConsole.pushToStdOut("password typed:" + line.getBuffer() + "\n");
 
             }
             //test stdErr
