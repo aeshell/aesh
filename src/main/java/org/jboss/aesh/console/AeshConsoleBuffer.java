@@ -273,6 +273,8 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         if(buffer.getPrompt().isMasking()) {
             if(buffer.getPrompt().getMask() != 0)
                 out.print(buffer.getPrompt().getMask());
+            else
+                return;
         }
         else {
             out.print(c);

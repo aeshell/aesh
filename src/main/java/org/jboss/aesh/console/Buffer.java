@@ -324,7 +324,7 @@ public class Buffer {
         if(!prompt.isMasking())
             return line.toString();
         else {
-            if(line.length() > 0)
+            if(line.length() > 0 && prompt.getMask() != '\u0000')
                 return String.format("%"+line.length()+"s", "").replace(' ', prompt.getMask());
             else
                 return "";

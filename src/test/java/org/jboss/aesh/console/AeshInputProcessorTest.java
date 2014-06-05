@@ -507,6 +507,66 @@ public class AeshInputProcessorTest {
 
     }
 
+    @Test
+    public void testMasking() throws IOException {
+         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder().shell(shell).prompt(new Prompt("aesh", '*')).create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .create();
+
+        inputProcessor.parseOperation(new CommandOperation(Key.f));
+        inputProcessor.parseOperation(new CommandOperation(Key.o));
+        inputProcessor.parseOperation(new CommandOperation(Key.o));
+
+        assertEquals("***", consoleBuffer.getBuffer().getLine());
+
+        String result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        assertEquals("foo", result);
+
+        inputProcessor.parseOperation(new CommandOperation(Key.f));
+        inputProcessor.parseOperation(new CommandOperation(Key.o));
+        inputProcessor.parseOperation(new CommandOperation(Key.o));
+        inputProcessor.parseOperation(new CommandOperation(Key.BACKSPACE));
+        inputProcessor.parseOperation(new CommandOperation(Key.BACKSPACE));
+        inputProcessor.parseOperation(new CommandOperation(Key.ONE));
+        inputProcessor.parseOperation(new CommandOperation(Key.TWO));
+
+        assertEquals("***", consoleBuffer.getBuffer().getLine());
+        result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        assertEquals("f12", result);
+
+        //test with masking set to a null char
+        consoleBuffer.setPrompt(new Prompt("aesh", '\u0000'));
+
+        inputProcessor.parseOperation(new CommandOperation(Key.f));
+        inputProcessor.parseOperation(new CommandOperation(Key.o));
+        inputProcessor.parseOperation(new CommandOperation(Key.o));
+
+        assertEquals("", consoleBuffer.getBuffer().getLine());
+        assertEquals("foo", consoleBuffer.getBuffer().getLineNoMask());
+
+        inputProcessor.parseOperation(new CommandOperation(Key.BACKSPACE));
+        inputProcessor.parseOperation(new CommandOperation(Key.BACKSPACE));
+        inputProcessor.parseOperation(new CommandOperation(Key.ONE));
+        inputProcessor.parseOperation(new CommandOperation(Key.TWO));
+        assertEquals("", consoleBuffer.getBuffer().getLine());
+
+        result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        assertEquals("f12", result);
+    }
+
     private static class TestShell implements Shell {
 
         private final PrintStream out;
