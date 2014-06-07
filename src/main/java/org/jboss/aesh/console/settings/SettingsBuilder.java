@@ -204,6 +204,11 @@ public class SettingsBuilder {
         return this;
     }
 
+    public SettingsBuilder setExportUsesSystemEnvironment(boolean isLoad) {
+        settings.setExportUsesSystemEnvironment(isLoad);
+        return this;
+    }
+
     public Settings create() {
         return settings;
     }
