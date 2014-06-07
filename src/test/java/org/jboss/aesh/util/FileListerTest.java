@@ -168,6 +168,23 @@ public class FileListerTest {
         assertEquals("bbb" + Config.getPathSeparator(), candidates.get(2).getCharacters());
     }
 
+    @Test
+    public void testWorkingDirFilePrefixCompletion() throws IOException {
+        File workingDirFile = new File("prefix");
+        workingDirFile.createNewFile();
+
+        new File(workingDir, "prefixdir").mkdir();
+
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd prefix", 9);
+        new FileLister("prefix", workingDir).findMatchingDirectories(completion);
+        List<TerminalString> candidates = completion.getCompletionCandidates();
+
+        assertEquals(1, candidates.size());
+        assertEquals("prefixdir" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+
+        delete(workingDirFile, false);
+    }
+
     public static boolean delete(File file, final boolean recursive) {
         boolean result = false;
         if (recursive) {
