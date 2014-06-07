@@ -208,13 +208,6 @@ public class FileLister {
 
                 completion.setOffset(completion.getCursor() - token.length());
             }
-            else if (isTokenAFile()) {
-                completion.getCompletionCandidates().get(0).setCharacters(token +
-                    completion.getCompletionCandidates().get(0).getCharacters());
-
-                completion.setOffset(completion.getCursor() - token.length());
-                completion.doAppendSeparator(true);
-            }
             else if (token != null) {
                 if (rest != null && token.length() > rest.length()) {
                     completion.getCompletionCandidates().get(0).setCharacters(
