@@ -204,7 +204,7 @@ public class Console {
         if(settings.isExportEnabled()) {
             if(settings.isLogging())
                 LOGGER.info("enabling exportManager with file: "+settings.getExportFile());
-            exportManager = new ExportManager(settings.getExportFile());
+            exportManager = new ExportManager(settings.getExportFile(), settings.doExportUsesSystemEnvironment());
             completionHandler.addCompletion(new ExportCompletion(exportManager));
         }
 

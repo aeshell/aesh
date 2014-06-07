@@ -60,6 +60,7 @@ public class SettingsImpl implements Settings {
     private boolean exportEnabled = true;
     private File exportFile;
     private boolean persistExport = true;
+    private boolean exportUsesSystemEnvironment = false;
 
     protected SettingsImpl() {
     }
@@ -637,5 +638,15 @@ public class SettingsImpl implements Settings {
     @Override
     public boolean doPersistExport() {
         return persistExport;
+    }
+
+    @Override
+    public void setExportUsesSystemEnvironment(boolean isLoad) {
+        this.exportUsesSystemEnvironment = isLoad;
+    }
+
+    @Override
+    public boolean doExportUsesSystemEnvironment() {
+        return this.exportUsesSystemEnvironment;
     }
 }

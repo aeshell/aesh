@@ -38,9 +38,15 @@ public class ExportManager {
     private static final String EXPORT = "export";
 
     private File exportFile;
+    private boolean exportUsesSystemEnvironment;
 
     public ExportManager(File exportFile) {
+        this(exportFile, false);
+    }
+
+    public ExportManager(File exportFile, boolean exportUsesSystemEnvironment) {
         this.exportFile = exportFile;
+        this.exportUsesSystemEnvironment = exportUsesSystemEnvironment;
         variables = new HashMap<>();
         if(exportFile.isFile())
             readVariablesFromFile();
@@ -82,7 +88,7 @@ public class ExportManager {
      */
     public String getValue(String key) {
         if(key.indexOf(DOLLAR) == -1) {
-            String value = variables.get(key);
+            String value = getVariable(key);
 
             if (value == null)
                 return "";
@@ -92,9 +98,27 @@ public class ExportManager {
             else
                 return parseValue(value);
         }
-        else {
-            return parseValue(key);
-        }
+        return parseValue(key);
+    }
+
+    private String getVariable(String key) {
+        if (this.variables.containsKey(key))
+            return this.variables.get(key);
+
+        if (this.exportUsesSystemEnvironment)
+            return System.getenv().get(key);
+
+        return null;
+    }
+
+    private boolean containsKey(String key) {
+        boolean result = false;
+        result = this.variables.containsKey(key);
+
+        if (result == false && this.exportUsesSystemEnvironment)
+            result = System.getenv().containsKey(key);
+
+        return result;
     }
 
     public String getValueIgnoreCase(String name) {
@@ -103,11 +127,24 @@ public class ExportManager {
                 return variables.get(key);
         }
 
+        if (this.exportUsesSystemEnvironment) {
+            for(String key : System.getenv().keySet()) {
+                if(key.equalsIgnoreCase(name))
+                    return System.getenv().get(key);
+            }
+        }
+
         return "";
     }
 
     private String parseValue(String value) {
-        if(value.indexOf(DOLLAR) == -1) {
+        if (value == null)
+            return "";
+
+        if(value.indexOf(DOLLAR) == -1 && exportUsesSystemEnvironment) {
+            return getVariable(value) == null ? "" : getVariable(value);
+        }
+        else if(value.indexOf(DOLLAR) == -1) {
             return value;
         }
         else {
@@ -120,18 +157,18 @@ public class ExportManager {
                         group1 = matcher.group(2);
                     String group2 = matcher.group(3);
 
-                    if(group1 != null && variables.containsKey(group1)) {
+                    if(group1 != null && containsKey(group1)) {
                         if(group2 != null && group2.indexOf(DOLLAR) > -1) {
-                            if(variables.get(group1).indexOf(DOLLAR) == -1)
-                                return variables.get(group1) + parseValue(group2);
+                            if(getVariable(group1).indexOf(DOLLAR) == -1)
+                                return getVariable(group1) + parseValue(group2);
                             else
-                                return parseValue(variables.get(group1)) + parseValue(group2);
+                                return parseValue(getVariable(group1)) + parseValue(group2);
                         }
                         else {
-                            if(variables.get(group1).indexOf(DOLLAR) == -1)
-                                return variables.get(group1) + group2;
+                            if(getVariable(group1).indexOf(DOLLAR) == -1)
+                                return getVariable(group1) + group2;
                             else
-                                return parseValue(variables.get(group1)) + group2;
+                                return parseValue(getVariable(group1)) + group2;
                         }
                     }
                     else
@@ -149,18 +186,18 @@ public class ExportManager {
                         group2 = matcher.group(3);
                     String group3 = matcher.group(4);
 
-                    if(group2 != null && variables.containsKey(group2)) {
+                    if(group2 != null && containsKey(group2)) {
                         if(group3 != null && group3.indexOf(DOLLAR) > -1) {
-                            if(variables.get(group2).indexOf(DOLLAR) == -1)
-                                return parseValue(group1) + variables.get(group2) + parseValue(group3);
+                            if(getVariable(group2).indexOf(DOLLAR) == -1)
+                                return parseValue(group1) + getVariable(group2) + parseValue(group3);
                             else
-                                return parseValue(group1) + parseValue(variables.get(group2)) + parseValue(group3);
+                                return parseValue(group1) + parseValue(getVariable(group2)) + parseValue(group3);
                         }
                         else {
-                            if(variables.get(group2).indexOf(DOLLAR) == -1)
-                                return parseValue(group1) + variables.get(group2) + group3;
+                            if(getVariable(group2).indexOf(DOLLAR) == -1)
+                                return parseValue(group1) + getVariable(group2) + group3;
                             else
-                                return parseValue(group1) + parseValue(variables.get(group2)) + group3;
+                                return parseValue(group1) + parseValue(getVariable(group2)) + group3;
                         }
                     }
                     else
@@ -175,6 +212,12 @@ public class ExportManager {
         StringBuilder builder = new StringBuilder();
         for(String key : variables.keySet()) {
             builder.append(key).append('=').append(parseValue(variables.get(key))).append(Config.getLineSeparator());
+        }
+
+        if (this.exportUsesSystemEnvironment) {
+            for (String key : System.getenv().keySet()) {
+                builder.append(key).append('=').append(parseValue(variables.get(key))).append(Config.getLineSeparator());
+            }
         }
         return builder.toString();
     }
@@ -196,6 +239,12 @@ public class ExportManager {
         List<String> names = new ArrayList<>(variables.size());
         for(String key : variables.keySet())
             names.add(key+"=");
+
+        if (this.exportUsesSystemEnvironment) {
+            for (String key : System.getenv().keySet())
+                names.add(key+"=");
+        }
+
         return names;
     }
 
@@ -203,6 +252,12 @@ public class ExportManager {
         List<String> names = new ArrayList<>(variables.size());
         for(String key : variables.keySet())
             names.add(key);
+
+        if (this.exportUsesSystemEnvironment) {
+            for (String key : System.getenv().keySet())
+                names.add(key);
+        }
+
         return names;
     }
 
@@ -211,13 +266,25 @@ public class ExportManager {
         if(index > -1)
             word = word.substring(index+1, word.length());
         List<String> keys = new ArrayList<>();
-        for(String key : variables.keySet())
-            if(key.startsWith(word)) {
-                if(index > -1)
-                    keys.add("$"+key);
+        for(String key : variables.keySet()) {
+            if (key.startsWith(word)) {
+                if (index > -1)
+                    keys.add("$" + key);
                 else
                     keys.add(key);
             }
+        }
+
+        if (this.exportUsesSystemEnvironment) {
+            for (String key : System.getenv().keySet()) {
+                if (key.startsWith(word)) {
+                    if (index > -1)
+                        keys.add("$" + key);
+                    else
+                        keys.add(key);
+                }
+            }
+        }
 
         return keys;
     }
