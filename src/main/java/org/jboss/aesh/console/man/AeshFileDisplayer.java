@@ -196,7 +196,7 @@ public abstract class AeshFileDisplayer implements Command {
 
             }
             else {
-                topVisibleRow = topVisibleRow + rows*getNumber()-1;
+                topVisibleRow = topVisibleRow + ((rows - 1) * getNumber());
                 if(topVisibleRow > (page.size()-rows-1)) {
                     topVisibleRow = page.size()-rows-1;
                     if(topVisibleRow < 0)
@@ -211,7 +211,7 @@ public abstract class AeshFileDisplayer implements Command {
         else if(operation.getInputKey() == Key.CTRL_B ||
                 operation.getInputKey() == Key.PGUP) { // ctrl-b || pgup
             if(search != Search.SEARCHING) {
-                topVisibleRow = topVisibleRow - rows*getNumber()-1;
+                topVisibleRow = topVisibleRow - ((rows - 1) * getNumber());
                 if(topVisibleRow < 0)
                     topVisibleRow = 0;
                 display();
