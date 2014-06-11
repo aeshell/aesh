@@ -12,6 +12,8 @@ import java.io.IOException;
 
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.io.DefaultFileResource;
+import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.terminal.TerminalString;
 import org.junit.Test;
 
@@ -27,15 +29,15 @@ import static org.junit.Assert.assertTrue;
 public class FileOptionCompleterTest {
 
     private AeshContext aeshContext = new AeshContext() {
-        private File cwd;
+        private FileResource cwd;
         @Override
-        public File getCurrentWorkingDirectory() {
+        public FileResource getCurrentWorkingDirectory() {
             if(cwd == null)
-                cwd = new File(Config.getUserDir());
+                cwd = new DefaultFileResource(Config.getUserDir());
             return cwd;
         }
         @Override
-        public void setCurrentWorkingDirectory(File cwd) {
+        public void setCurrentWorkingDirectory(FileResource cwd) {
             if(!cwd.isDirectory())
                 throw new IllegalArgumentException("Current working directory must be a directory");
             this.cwd = cwd;
@@ -46,7 +48,7 @@ public class FileOptionCompleterTest {
     public void testCompleterIllegalBaseDir() throws IOException {
         File file = File.createTempFile("tmp", ".tmp");
         file.deleteOnExit();
-        aeshContext.setCurrentWorkingDirectory(file);
+        aeshContext.setCurrentWorkingDirectory(new DefaultFileResource(file));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -65,7 +67,7 @@ public class FileOptionCompleterTest {
         File child = new File(file, "child.txt");
         child.createNewFile();
         child.deleteOnExit();
-        aeshContext.setCurrentWorkingDirectory(file);
+        aeshContext.setCurrentWorkingDirectory(new DefaultFileResource(file));
         FileOptionCompleter completer = new FileOptionCompleter();
         CompleterData data = new CompleterData(aeshContext, "", null);
         completer.complete(data);
@@ -86,7 +88,7 @@ public class FileOptionCompleterTest {
         File child2 = new File(file, "child2.txt");
         child2.createNewFile();
         child2.deleteOnExit();
-        aeshContext.setCurrentWorkingDirectory(file);
+        aeshContext.setCurrentWorkingDirectory(new DefaultFileResource(file));
         FileOptionCompleter completer = new FileOptionCompleter();
         CompleterData data = new CompleterData(aeshContext, "", null);
         completer.complete(data);
@@ -109,7 +111,7 @@ public class FileOptionCompleterTest {
         child2.mkdir();
         child2.deleteOnExit();
         FileOptionCompleter completer = new FileOptionCompleter();
-        aeshContext.setCurrentWorkingDirectory(file);
+        aeshContext.setCurrentWorkingDirectory(new DefaultFileResource(file));
 
         CompleterData data = new CompleterData(aeshContext, "", null);
         completer.complete(data);

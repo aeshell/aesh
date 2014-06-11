@@ -54,6 +54,11 @@ public class DefaultFileResource implements FileResource {
     }
 
     @Override
+    public boolean isDirectory() {
+        return file.isDirectory();
+    }
+
+    @Override
     public boolean exists() {
         return file.exists();
     }
@@ -61,6 +66,11 @@ public class DefaultFileResource implements FileResource {
     @Override
     public boolean mkdirs() {
         return file.mkdirs();
+    }
+
+    @Override
+    public boolean delete() {
+        return file.delete();
     }
 
     @Override

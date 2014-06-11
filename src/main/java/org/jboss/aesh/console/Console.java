@@ -9,8 +9,6 @@ package org.jboss.aesh.console;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -51,7 +49,6 @@ import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.FileUtils;
 import org.jboss.aesh.util.LoggerUtil;
-import org.jboss.aesh.util.PathResolver;
 
 /**
  * A console reader. Supports ansi terminals
@@ -889,17 +886,32 @@ public class Console {
 
         try {
             if(redirection == ControlOperator.OVERWRITE_OUT)
-                FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
-                    context.getCurrentWorkingDirectory()).get(0), redirectPipeOutBuffer.toString(), false);
+                FileUtils.saveFile( context.getCurrentWorkingDirectory().newInstance(
+                        Parser.switchEscapedSpacesToSpacesInWord(fileName)).resolve(
+                                context.getCurrentWorkingDirectory()).get(0),  redirectPipeOutBuffer.toString(), false);
+                //FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
+                //    context.getCurrentWorkingDirectory()).get(0), redirectPipeOutBuffer.toString(), false);
             else if(redirection == ControlOperator.OVERWRITE_ERR)
-                FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
-                    context.getCurrentWorkingDirectory()).get(0), redirectPipeErrBuffer.toString(), false);
+                FileUtils.saveFile( context.getCurrentWorkingDirectory().newInstance(
+                                Parser.switchEscapedSpacesToSpacesInWord(fileName)).resolve(
+                                context.getCurrentWorkingDirectory()).get(0),
+                        redirectPipeErrBuffer.toString(), false);
+                //FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
+                //    context.getCurrentWorkingDirectory()).get(0), redirectPipeErrBuffer.toString(), false);
             else if(redirection == ControlOperator.APPEND_OUT)
-                FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
-                    context.getCurrentWorkingDirectory()).get(0), redirectPipeOutBuffer.toString(), true);
+                FileUtils.saveFile( context.getCurrentWorkingDirectory().newInstance(
+                                Parser.switchEscapedSpacesToSpacesInWord(fileName)).resolve(
+                                context.getCurrentWorkingDirectory()).get(0),
+                        redirectPipeOutBuffer.toString(), true);
+                //FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
+                //    context.getCurrentWorkingDirectory()).get(0), redirectPipeOutBuffer.toString(), true);
             else if(redirection == ControlOperator.APPEND_ERR)
-                FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
-                    context.getCurrentWorkingDirectory()).get(0), redirectPipeErrBuffer.toString(), true);
+                FileUtils.saveFile( context.getCurrentWorkingDirectory().newInstance(
+                                Parser.switchEscapedSpacesToSpacesInWord(fileName)).resolve(
+                                context.getCurrentWorkingDirectory()).get(0),
+                        redirectPipeErrBuffer.toString(), true);
+                //FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
+                //    context.getCurrentWorkingDirectory()).get(0), redirectPipeErrBuffer.toString(), true);
         }
         catch (IOException e) {
             if(settings.isLogging())

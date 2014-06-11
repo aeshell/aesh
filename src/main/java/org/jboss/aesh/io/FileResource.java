@@ -36,10 +36,17 @@ public interface FileResource {
 
     /**
      * Return true if this file resource is a file, not a directory.
+     * exists() must return true for isLeaf() to return true.
      *
      * @return true if file
      */
     boolean isLeaf();
+
+    /**
+     * Check if the file denoted is a directory.
+     * @return true if directory
+     */
+    boolean isDirectory();
 
     /**
      * Check if this file resource exists.
@@ -56,6 +63,14 @@ public interface FileResource {
      * @return true if all directories have been successfully created
      */
     boolean mkdirs();
+
+    /**
+     * Deletes the file resource. If this denotes a directory, then the
+     * directory must be empty in order to be deleted.
+     *
+     * @return true if the file is deleted
+     */
+    boolean delete();
 
     /**
      * Returns the file resource of this parent, or

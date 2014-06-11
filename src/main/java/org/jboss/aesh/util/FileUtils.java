@@ -7,12 +7,12 @@
 package org.jboss.aesh.util;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.io.FileResource;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+
 
 /**
  * Helper to find proper files/directories given partial paths/filenames.
@@ -22,42 +22,39 @@ import java.io.IOException;
  */
 public class FileUtils {
 
-    public static void saveFile(File file, String text, boolean append) throws IOException {
+    public static void saveFile(FileResource file, String text, boolean append) throws IOException {
         if(file.isDirectory()) {
             throw new IOException(file+": Is a directory");
         }
-        FileWriter fileWriter = null;
         try {
-            if(file.isFile()) {
+            if(file.isLeaf()) {
                 // append text at the end of the file
-                if(append)
-                    fileWriter = new FileWriter(file, true);
-                    //overwrite the file
-                else
-                    fileWriter = new FileWriter(file, false);
+                if(!append)
+                    file.delete();
 
-                fileWriter.write(text);
-                fileWriter.flush();
+
+                file.writeFileResource().write(text.getBytes());
+                file.writeFileResource().flush();
             }
             else {
                 //create a new file and write to it
-                fileWriter = new FileWriter(file, false);
-                fileWriter.write(text);
-                fileWriter.flush();
+                //fileWriter = new FileWriter(file, false);
+                file.writeFileResource().write(text.getBytes());
+                file.writeFileResource().flush();
             }
         }
         finally {
-            if(fileWriter != null)
-                fileWriter.close();
+            if(file != null)
+                file.writeFileResource().close();
         }
     }
 
-    public static String readFile(File file) throws IOException {
+    public static String readFile(FileResource file) throws IOException {
         if(file.isDirectory()) {
             throw new IOException(file+": Is a directory");
         }
-        else if(file.isFile()) {
-            BufferedReader br = new BufferedReader(new FileReader(file));
+        else if(file.isLeaf()) {
+            BufferedReader br = new BufferedReader(new InputStreamReader(file.readFileResource()));
             try {
                 StringBuilder sb = new StringBuilder();
                 String line = br.readLine();

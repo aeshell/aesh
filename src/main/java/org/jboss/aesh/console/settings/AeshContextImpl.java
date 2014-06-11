@@ -7,10 +7,7 @@
 package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.io.FileResource;
-
-import java.io.File;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

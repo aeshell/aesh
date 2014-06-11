@@ -8,23 +8,24 @@ package org.jboss.aesh.cl.completer;
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
-import org.jboss.aesh.filters.Filter;
+import org.jboss.aesh.io.AllFileResourceFilter;
+import org.jboss.aesh.io.FileResourceFilter;
 import org.jboss.aesh.util.FileLister;
 
 /**
- * Completes {@link File} objects
+ * Completes {@link org.jboss.aesh.io.FileResource} objects
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class FileOptionCompleter implements OptionCompleter<CompleterInvocation> {
 
-    private final Filter filter;
+    private final FileResourceFilter filter;
 
     public FileOptionCompleter() {
-        this(Filter.ALL);
+        this(new AllFileResourceFilter());
     }
 
-    public FileOptionCompleter(Filter filter) {
+    public FileOptionCompleter(FileResourceFilter filter) {
         if (filter == null) {
             throw new IllegalArgumentException("A valid filter must be informed");
         }
@@ -59,7 +60,7 @@ public class FileOptionCompleter implements OptionCompleter<CompleterInvocation>
         completerData.setIgnoreStartsWith(true);
     }
 
-    public Filter getFilter() {
+    public FileResourceFilter getFilter() {
         return filter;
     }
 }

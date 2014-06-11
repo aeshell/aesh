@@ -17,6 +17,8 @@ import org.jboss.aesh.comparators.PosixFileNameComparator;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.io.DefaultFileResource;
+import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.terminal.TerminalString;
 import org.junit.After;
 import org.junit.Before;
@@ -26,22 +28,23 @@ import org.junit.Test;
  * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
  */
 public class FileListerTest {
-    private File workingDir;
+    private FileResource workingDir;
     private AeshContext aeshContext = new AeshContext() {
         @Override
-        public File getCurrentWorkingDirectory() {
-            return new File(Config.getUserDir());
+        public FileResource getCurrentWorkingDirectory() {
+            return new DefaultFileResource(Config.getUserDir());
         }
         @Override
-        public void setCurrentWorkingDirectory(File cwd) {
+        public void setCurrentWorkingDirectory(FileResource cwd) {
         }
     };
 
     @Before
     public void before() throws IOException {
-        workingDir = File.createTempFile("temp", ".FileListerTest");
-        workingDir.delete();
-        workingDir.mkdirs();
+        File tmpWorkingDir = File.createTempFile("temp", ".FileListerTest");
+        tmpWorkingDir .delete();
+        tmpWorkingDir.mkdirs();
+        workingDir = new DefaultFileResource(tmpWorkingDir);
     }
 
     @After
@@ -150,14 +153,14 @@ public class FileListerTest {
         assertEquals(1, candidates.size());
         assertEquals("test" + Config.getPathSeparator(), candidates.get(0).getCharacters());
 
-        delete(test, true);
+        delete(new DefaultFileResource(test), true);
     }
 
     @Test
     public void testDifferentLengthsOneCompletion() {
-        new File(workingDir, "b").mkdir();
-        new File(workingDir, "bb").mkdir();
-        new File(workingDir, "bbb").mkdir();
+        new File(workingDir.getAbsolutePath(), "b").mkdir();
+        new File(workingDir.getAbsolutePath(), "bb").mkdir();
+        new File(workingDir.getAbsolutePath(), "bbb").mkdir();
 
         CompleteOperation completion = new CompleteOperation(aeshContext, "cd b", 4);
         new FileLister("b", workingDir).findMatchingDirectories(completion);
@@ -173,7 +176,7 @@ public class FileListerTest {
         File workingDirFile = new File("prefix");
         workingDirFile.createNewFile();
 
-        new File(workingDir, "prefixdir").mkdir();
+        new File(workingDir.toString(), "prefixdir").mkdir();
 
         CompleteOperation completion = new CompleteOperation(aeshContext, "cd prefix", 9);
         new FileLister("prefix", workingDir).findMatchingDirectories(completion);
@@ -182,15 +185,15 @@ public class FileListerTest {
         assertEquals(1, candidates.size());
         assertEquals("prefixdir" + Config.getPathSeparator(), candidates.get(0).getCharacters());
 
-        delete(workingDirFile, false);
+        delete(new DefaultFileResource(workingDirFile), false);
     }
 
-    public static boolean delete(File file, final boolean recursive) {
+    public static boolean delete(FileResource file, final boolean recursive) {
         boolean result = false;
         if (recursive) {
             result = _deleteRecursive(file, true);
         } else {
-            if ((file.listFiles() != null) && (file.listFiles().length != 0)) {
+            if ((file.listFileResources() != null) && (file.listFileResources().size() != 0)) {
                 throw new RuntimeException("directory not empty");
             }
 
@@ -199,12 +202,12 @@ public class FileListerTest {
         return result;
     }
 
-    private static boolean _deleteRecursive(final File file, final boolean collect) {
+    private static boolean _deleteRecursive(final FileResource file, final boolean collect) {
         boolean result = true;
 
-        File[] children = file.listFiles();
+        List<FileResource> children = file.listFileResources();
         if (children != null) {
-            for (File sf : children) {
+            for (FileResource sf : children) {
                 if (sf.isDirectory()) {
                     if (!_deleteRecursive(sf, false))
                         result = false;
