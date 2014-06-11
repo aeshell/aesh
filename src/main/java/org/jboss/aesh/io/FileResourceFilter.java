@@ -11,5 +11,5 @@ package org.jboss.aesh.io;
  */
 public interface FileResourceFilter {
 
-    boolean accept(FileResource pathname);
+    boolean accept(FileResource path);
 }

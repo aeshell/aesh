@@ -11,7 +11,7 @@ package org.jboss.aesh.io;
  */
 public class NonLeafFileResourceFilter implements FileResourceFilter {
     @Override
-    public boolean accept(FileResource pathname) {
-        return !pathname.isLeaf();
+    public boolean accept(FileResource path) {
+        return !path.isLeaf();
     }
 }

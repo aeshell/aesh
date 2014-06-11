@@ -6,7 +6,14 @@
  */
 package org.jboss.aesh.io;
 
+import org.jboss.aesh.util.PathResolver;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,8 +32,19 @@ public class DefaultFileResource implements FileResource {
         this.file = file;
     }
 
+    public DefaultFileResource(String file) {
+        if(file == null)
+            throw new IllegalArgumentException("file argument cant be null");
+        this.file = new File(file);
+    }
+
     @Override
     public String getName() {
+        return file.getName();
+    }
+
+    @Override
+    public String getAbsolutePath() {
         return file.getAbsolutePath();
     }
 
@@ -41,8 +59,13 @@ public class DefaultFileResource implements FileResource {
     }
 
     @Override
-    public boolean mkdir() {
-        return file.mkdir();
+    public boolean mkdirs() {
+        return file.mkdirs();
+    }
+
+    @Override
+    public FileResource getParentResource() {
+        return new DefaultFileResource(file.getParentFile());
     }
 
     @Override
@@ -80,8 +103,36 @@ public class DefaultFileResource implements FileResource {
     }
 
     @Override
-    public List<FileResource> resolve(FileResource incPath, FileResource cwd) {
-        return null;
+    public List<FileResource> resolve(FileResource cwd) {
+        List<FileResource> files = new ArrayList<>();
+        for(File f : PathResolver.resolvePath( getFile(), ((DefaultFileResource) cwd).getFile()))
+            files.add(new DefaultFileResource(f));
+
+        return files;
+    }
+
+    @Override
+    public InputStream readFileResource() throws FileNotFoundException {
+        return new FileInputStream(file);
+    }
+
+    @Override
+    public OutputStream writeFileResource() throws FileNotFoundException {
+        return new FileOutputStream(file);
+    }
+
+    @Override
+    public String toString() {
+        return file.toString();
+    }
+
+    @Override
+    public FileResource newInstance(String path) {
+        return new DefaultFileResource(path);
+    }
+
+    public File getFile() {
+        return file;
     }
 
 }

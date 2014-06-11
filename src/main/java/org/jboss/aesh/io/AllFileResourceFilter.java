@@ -9,10 +9,9 @@ package org.jboss.aesh.io;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class LeafFileResourceFilter implements FileResourceFilter {
-
+public class AllFileResourceFilter implements FileResourceFilter {
     @Override
     public boolean accept(FileResource path) {
-        return path.isLeaf();
+        return true;
     }
 }

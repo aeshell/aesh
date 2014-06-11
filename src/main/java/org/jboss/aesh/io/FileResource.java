@@ -6,28 +6,121 @@
  */
 package org.jboss.aesh.io;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 /**
+ * FileResource is a Aesh native io class.
+ * The default implementation is based on java.io.File, but it can be specified
+ * by the Settings object when it needs to be overridden.
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface FileResource {
 
+    /**
+     * Returns the name of this file resource
+     *
+     * @return name
+     */
     String getName();
 
+    /**
+     * Returns the absolute file resource string of this
+     *
+     * @return absolute path
+     */
+    String getAbsolutePath();
+
+    /**
+     * Return true if this file resource is a file, not a directory.
+     *
+     * @return true if file
+     */
     boolean isLeaf();
 
+    /**
+     * Check if this file resource exists.
+     * @return true if exists
+     */
     boolean exists();
 
-    boolean mkdir();
+    /**
+     * Creates the directory named by this file resource, including any
+     * necessary but nonexistent parent directories.  Note that if this
+     * operation fails it may have succeeded in creating some of the necessary
+     * parent directories.
+     *
+     * @return true if all directories have been successfully created
+     */
+    boolean mkdirs();
 
+    /**
+     * Returns the file resource of this parent, or
+     * <code>null</code> if this file resource does not name a parent directory.
+     *
+     * @return parent
+     */
+    FileResource getParentResource();
+
+    /**
+     * Returns a list of file resources denoting the files in the
+     * directory denoted by this file resource.
+     *
+     * @return files and sub folders
+     */
     List<FileResource> listFileResources();
 
+    /**
+     * Returns a list of path names denoting the files in the
+     * directory denoted by this file resource filtered by argument.
+     *
+     * @param filter filter
+     * @return files and sub folders filtered
+     */
     List<FileResource> listFileResources(FileResourceFilter filter);
 
+    /**
+     * List the available filesystem roots.
+     * Can return an empty list, but never null.
+     *
+     * @return filesystem roots
+     */
     List<FileResource> listRoots();
 
-    List<FileResource> resolve(FileResource incPath, FileResource cwd);
+    /**
+     * Resolve a file that might contain (~,*,?) based on this instance and
+     * a given current working directory as argument.
+     * The argument can be null.
+     *
+     * @param cwd current working directory
+     * @return resolved files
+     */
+    List<FileResource> resolve(FileResource cwd);
 
+    /**
+     * OutputStream that will be written to this FileResource
+     *
+     * @return stream
+     * @throws FileNotFoundException if file cannot be written to or is !isLeaf()
+     */
+    OutputStream writeFileResource() throws FileNotFoundException;
+
+    /**
+     * InputStream from this FileResource
+     *
+     * @return stream
+     * @throws FileNotFoundException if the file doesn't exist
+     */
+    InputStream readFileResource() throws FileNotFoundException;
+
+    /**
+     * Return a new instance of FileResource with String as argument
+     * @param path argument
+     * @return new instance
+     */
+    FileResource newInstance(String path);
 
 }
