@@ -15,6 +15,8 @@ import org.jboss.aesh.edit.KeyOperationFactory;
 import org.jboss.aesh.edit.KeyOperationManager;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.ViEditMode;
+import org.jboss.aesh.io.DefaultFileResource;
+import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.terminal.POSIXTerminal;
 import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.terminal.WindowsTerminal;
@@ -61,6 +63,7 @@ public class SettingsImpl implements Settings {
     private File exportFile;
     private boolean persistExport = true;
     private boolean exportUsesSystemEnvironment = false;
+    private FileResource fileResource;
 
     protected SettingsImpl() {
     }
@@ -95,6 +98,7 @@ public class SettingsImpl implements Settings {
         setExportEnabled(baseSettings.isExportEnabled());
         setExportFile(baseSettings.getExportFile());
         setPersistExport(baseSettings.doPersistExport());
+        setFileResource(baseSettings.getFileResource());
     }
 
     public void resetToDefaults() {
@@ -601,7 +605,7 @@ public class SettingsImpl implements Settings {
     @Override
     public AeshContext getAeshContext() {
         if(aeshContext == null)
-            aeshContext = new AeshContextImpl();
+            aeshContext = new AeshContextImpl(getFileResource().newInstance(Config.getUserDir()));
         return aeshContext;
     }
 
@@ -648,5 +652,17 @@ public class SettingsImpl implements Settings {
     @Override
     public boolean doExportUsesSystemEnvironment() {
         return this.exportUsesSystemEnvironment;
+    }
+
+    @Override
+    public void setFileResource(FileResource fileResource) {
+        this.fileResource = fileResource;
+    }
+
+    @Override
+    public FileResource getFileResource() {
+        if(fileResource == null)
+            fileResource = new DefaultFileResource("");
+        return fileResource;
     }
 }

@@ -11,6 +11,7 @@ import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.KeyOperationManager;
 import org.jboss.aesh.edit.Mode;
+import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.terminal.Terminal;
 
 import java.io.File;
@@ -213,4 +214,14 @@ public interface Settings {
      * Is load environment system?
      */
     boolean doExportUsesSystemEnvironment();
+
+    /**
+     * Specify
+     * @param fileResource
+     */
+    void setFileResource(FileResource fileResource);
+
+    FileResource getFileResource();
+
+
 }
