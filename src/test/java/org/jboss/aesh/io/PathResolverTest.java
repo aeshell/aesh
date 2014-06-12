@@ -7,7 +7,6 @@
 package org.jboss.aesh.io;
 
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.io.PathResolver;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
