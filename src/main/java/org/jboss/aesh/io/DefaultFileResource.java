@@ -6,8 +6,6 @@
  */
 package org.jboss.aesh.io;
 
-import org.jboss.aesh.util.PathResolver;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

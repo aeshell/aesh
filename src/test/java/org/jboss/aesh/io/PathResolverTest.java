@@ -4,9 +4,10 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.util;
+package org.jboss.aesh.io;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.io.PathResolver;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
