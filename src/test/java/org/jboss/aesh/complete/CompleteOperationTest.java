@@ -12,7 +12,6 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.io.DefaultFileResource;
 import org.jboss.aesh.io.FileResource;
 
-import java.io.File;
 import java.util.List;
 
 /**

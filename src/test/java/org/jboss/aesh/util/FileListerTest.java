@@ -54,7 +54,7 @@ public class FileListerTest {
 
     @Test
     public void testFullCompletionWithSingleSubdirectory() {
-        new File(workingDir, "child").mkdir();
+        new File(workingDir.toString(), "child").mkdir();
         CompleteOperation completion = new CompleteOperation(aeshContext, "cd ", 2);
         new FileLister("", workingDir).findMatchingDirectories(completion);
 
@@ -65,7 +65,7 @@ public class FileListerTest {
 
     @Test
     public void testPartialCompletionWithSingleSubdirectory() {
-        new File(workingDir, "child").mkdir();
+        new File(workingDir.toString(), "child").mkdir();
         CompleteOperation completion = new CompleteOperation(aeshContext, "cd ch", 2);
         new FileLister("ch", workingDir).findMatchingDirectories(completion);
 
@@ -76,8 +76,8 @@ public class FileListerTest {
 
     @Test
     public void testFullCompletionWithMultipleSubdirectory() {
-        new File(workingDir, "child").mkdir();
-        new File(workingDir, "child2").mkdir();
+        new File(workingDir.toString(), "child").mkdir();
+        new File(workingDir.toString(), "child2").mkdir();
         CompleteOperation completion = new CompleteOperation(aeshContext, "cd ", 2);
         new FileLister("", workingDir).findMatchingDirectories(completion);
 
@@ -91,8 +91,8 @@ public class FileListerTest {
 
     @Test
     public void testPartialCompletionWithMultipleSubdirectory() {
-        new File(workingDir, "child").mkdir();
-        new File(workingDir, "child2").mkdir();
+        new File(workingDir.toString(), "child").mkdir();
+        new File(workingDir.toString(), "child2").mkdir();
         CompleteOperation completion = new CompleteOperation(aeshContext, "cd ch", 4);
         new FileLister("ch", workingDir).findMatchingDirectories(completion);
 
@@ -103,7 +103,7 @@ public class FileListerTest {
 
     @Test
     public void testCompletionWithSubdirectory() {
-        File test = new File(workingDir, "test");
+        File test = new File(workingDir.toString(), "test");
         test.mkdir();
         new File(test, "main2").mkdir();
         new File(test, "test2").mkdir();
@@ -118,7 +118,7 @@ public class FileListerTest {
 
     @Test
     public void testDirectoryWithoutSlashCompletion() {
-        File test = new File(workingDir, "test");
+        File test = new File(workingDir.toString(), "test");
         test.mkdir();
 
         CompleteOperation completion = new CompleteOperation(aeshContext, "cd test", 2);
@@ -130,7 +130,7 @@ public class FileListerTest {
 
     @Test
     public void testSubDirectoryWithoutSlashCompletion() {
-        File test = new File(workingDir, "test");
+        File test = new File(workingDir.toString(), "test");
         test.mkdir();
         new File(test, "child").mkdir();
 
@@ -143,12 +143,13 @@ public class FileListerTest {
 
     @Test
     public void testInWorkingDirectoryWithoutSlashCompletion() {
-        File workingDir = new File(".");
+        final File workingDir = new File(".");
         File test = new File(workingDir, "test");
         test.mkdir();
 
         CompleteOperation completion = new CompleteOperation(aeshContext, "cd test", 2);
-        new FileLister("test", workingDir).findMatchingDirectories(completion);
+        new FileLister("test", new DefaultFileResource(workingDir) {
+        }).findMatchingDirectories(completion);
         List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(1, candidates.size());
         assertEquals("test" + Config.getPathSeparator(), candidates.get(0).getCharacters());

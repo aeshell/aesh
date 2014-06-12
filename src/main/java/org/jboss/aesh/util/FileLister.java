@@ -281,23 +281,21 @@ public class FileLister {
     }
 
     private boolean isCwdAndTokenADirectory() {
-        return !cwd.newInstance(cwd.getAbsolutePath() +
-            Config.getPathSeparator() + token).isLeaf();
+        return cwd.newInstance(cwd.getAbsolutePath() +
+            Config.getPathSeparator() + token).isDirectory();
     }
 
     private boolean isCwdAndTokenAFile() {
         return cwd.newInstance(cwd.getAbsolutePath() +
-            Config.getPathSeparator() + token).isLeaf();
+                Config.getPathSeparator() + token).isLeaf();
     }
 
     private boolean isHomeAndTokenADirectory() {
-        return !cwd.newInstance(Config.getHomeDir() +
-            token.substring(1)).isLeaf();
+        return cwd.newInstance(Config.getHomeDir() + token.substring(1)).isDirectory();
     }
 
     private boolean isHomeAndTokenAFile() {
-        return cwd.newInstance(Config.getHomeDir() +
-            token.substring(1)).isLeaf();
+        return cwd.newInstance(Config.getHomeDir() + token.substring(1)).isLeaf();
     }
 
     private boolean endsWithParent() {
