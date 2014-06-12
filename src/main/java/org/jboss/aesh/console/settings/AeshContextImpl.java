@@ -7,36 +7,30 @@
 package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Config;
-
-import java.io.File;
+import org.jboss.aesh.io.FileResource;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshContextImpl implements AeshContext {
 
-    private File cwd;
+    private FileResource cwd;
 
-    AeshContextImpl(File cwd) {
-        if(cwd != null && cwd.isDirectory())
+    AeshContextImpl(FileResource cwd) {
+        if(cwd != null && (!cwd.isLeaf() && cwd.exists()))
             this.cwd = cwd;
         else
             throw new IllegalArgumentException("Current working directory must be a directory");
     }
 
-    AeshContextImpl() {
-        this.cwd = new File(Config.getUserDir());
-    }
-
     @Override
-    public File getCurrentWorkingDirectory() {
+    public FileResource getCurrentWorkingDirectory() {
         return cwd;
     }
 
     @Override
-    public void setCurrentWorkingDirectory(File cwd) {
-        if(cwd.isDirectory())
+    public void setCurrentWorkingDirectory(FileResource cwd) {
+        if(!cwd.isLeaf())
             this.cwd = cwd;
         else
             throw new IllegalArgumentException("Current working directory must be a directory");

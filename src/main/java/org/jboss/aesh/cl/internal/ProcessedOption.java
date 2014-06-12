@@ -404,7 +404,8 @@ public final class ProcessedOption {
                              AeshContext aeshContext,
                              boolean doValidation) throws OptionValidatorException {
         Object result = converter.convert(
-        invocationProviders.getConverterProvider().enhanceConverterInvocation(new AeshConverterInvocation(inputValue)));
+        invocationProviders.getConverterProvider().enhanceConverterInvocation(
+                new AeshConverterInvocation(inputValue, aeshContext)));
         //Object result =   converter.convert(inputValue);
         if(validator != null && doValidation) {
             validator.validate(

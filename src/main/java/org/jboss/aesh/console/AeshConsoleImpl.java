@@ -305,9 +305,9 @@ public class AeshConsoleImpl implements AeshConsole {
                                     new AeshCommandInvocation(console,
                                         output.getControlOperator(), this)));
 
-                    if(result == CommandResult.SUCCESS)
+                    if(result == CommandResult.SUCCESS && resultHandler != null)
                         resultHandler.onSuccess();
-                    else
+                    else if(resultHandler != null)
                         resultHandler.onFailure(result);
                 }
                 catch (CommandLineParserException | CommandValidatorException | OptionValidatorException e) {

@@ -12,8 +12,6 @@ import static org.jboss.aesh.constants.AeshConstants.PARENT;
 import static org.jboss.aesh.constants.AeshConstants.STAR;
 import static org.jboss.aesh.constants.AeshConstants.WILDCARD;
 
-import java.io.File;
-import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,7 +20,9 @@ import java.util.List;
 import org.jboss.aesh.comparators.PosixFileNameComparator;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.filters.Filter;
+import org.jboss.aesh.io.AllFileResourceFilter;
+import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.FileResourceFilter;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.TerminalString;
 
@@ -33,16 +33,14 @@ import org.jboss.aesh.terminal.TerminalString;
  */
 public class FileLister {
 
-    private static final File[] windowsRoots = File.listRoots();
-
     private String token;
-    private File cwd;
+    private FileResource cwd;
     private String rest;
     private String lastDir;
-    private FileFilter fileFilter;
+    private FileResourceFilter fileFilter;
     private Comparator fileComparator;
 
-    public FileLister(String token, File cwd) {
+    public FileLister(String token, FileResource cwd) {
         if (token == null)
             throw new IllegalArgumentException("Incoming directory cannot be null");
         if (cwd == null)
@@ -50,36 +48,26 @@ public class FileLister {
         this.token = Parser.switchEscapedSpacesToSpacesInWord(token);
         this.cwd = cwd;
         findRestAndLastDir();
-        setFileFilter(Filter.ALL);
+        setFileFilter(new AllFileResourceFilter());
     }
 
-    public FileLister(String token, File cwd, Comparator comparator) {
+    public FileLister(String token, FileResource cwd, Comparator comparator) {
         this(token, cwd);
         this.fileComparator = comparator;
     }
 
-    public FileLister(String token, File cwd, Filter filter) {
+    public FileLister(String token, FileResource cwd, FileResourceFilter filter) {
         this(token, cwd);
         setFileFilter(filter);
     }
 
-    public FileLister(String token, File cwd, Filter filter, Comparator fileComparator) {
+    public FileLister(String token, FileResource cwd, FileResourceFilter filter, Comparator fileComparator) {
         this(token, cwd, filter);
         this.fileComparator = fileComparator;
     }
 
-    public FileLister(String token, File cwd, FileFilter fileFilter) {
-        this(token, cwd);
-        this.fileFilter = fileFilter;
-    }
-
-    public FileLister(String token, File cwd, FileFilter fileFilter, Comparator fileComparator) {
-        this(token, cwd, fileFilter);
-        this.fileComparator = fileComparator;
-    }
-
-    private void setFileFilter(Filter filter) {
-        this.fileFilter = filter.getFileFilter();
+    private void setFileFilter(FileResourceFilter filter) {
+        this.fileFilter = filter;
     }
 
     /**
@@ -102,11 +90,11 @@ public class FileLister {
             if (isHomeAndTokenADirectory()) {
                 if (tokenEndsWithSlash()) {
                     completion.addCompletionCandidates(
-                        listDirectory(new File(Config.getHomeDir() + token.substring(1)), null));
+                        listDirectory(cwd.newInstance(Config.getHomeDir() + token.substring(1)), null));
                 }
                 else {
                     // completion.addCompletionCandidate(Config.getPathSeparator());
-                    List<String> tmpDirs = listDirectory(new File(Config.getHomeDir()), token.substring(2));
+                    List<String> tmpDirs = listDirectory(cwd.newInstance(Config.getHomeDir()), token.substring(2));
                     if (tmpDirs.size() == 1 || endsWithParent()) {
                         completion.addCompletionCandidate(Config.getPathSeparator());
                     }
@@ -128,14 +116,14 @@ public class FileLister {
             if (isCwdAndTokenADirectory()) {
                 if (tokenEndsWithSlash()) {
                     completion.addCompletionCandidates(
-                        listDirectory(new File(cwd.getAbsolutePath() +
+                        listDirectory(cwd.newInstance(cwd.getAbsolutePath() +
                             Config.getPathSeparator() + token), null));
                 }
                 else {
                     List<String> tmpDirs;
                     if (lastDir != null) {
                         tmpDirs = listDirectory(
-                            new File(cwd.getAbsolutePath() + Config.getPathSeparator() + lastDir), rest);
+                            cwd.newInstance(cwd.getAbsolutePath() + Config.getPathSeparator() + lastDir), rest);
                     }
                     else {
                         tmpDirs = listDirectory(cwd, rest);
@@ -168,7 +156,7 @@ public class FileLister {
             if (isTokenADirectory()) {
                 if (tokenEndsWithSlash()) {
                     completion.addCompletionCandidates(
-                        listDirectory(new File(token), null));
+                        listDirectory(cwd.newInstance(token), null));
                 }
                 else
                     completion.addCompletionCandidate(Config.getPathSeparator());
@@ -245,26 +233,25 @@ public class FileLister {
 
         if (startWithSlash()) {
             if (lastDir != null && lastDir.startsWith(Config.getPathSeparator()))
-                returnFiles = listDirectory(new File(lastDir), rest);
+                returnFiles = listDirectory(cwd.newInstance(lastDir), rest);
             else
-                returnFiles = listDirectory(new File(Config.getPathSeparator() + lastDir), rest);
+                returnFiles = listDirectory(cwd.newInstance(Config.getPathSeparator() + lastDir), rest);
         }
         else if (startWithWindowsDrive()) {
             if (lastDir != null && lastDir.length() == 2)
-                returnFiles = listDirectory(new File(lastDir + Config.getPathSeparator()), rest);
+                returnFiles = listDirectory(cwd.newInstance(lastDir + Config.getPathSeparator()), rest);
             else
-                returnFiles = listDirectory(new File(lastDir), rest);
+                returnFiles = listDirectory(cwd.newInstance(lastDir), rest);
         }
         else if (startWithHome()) {
             if (lastDir != null) {
-                returnFiles = listDirectory(new File(Config.getHomeDir() + lastDir.substring(1)), rest);
+                returnFiles = listDirectory(cwd.newInstance(Config.getHomeDir() + lastDir.substring(1)), rest);
             }
             else
-                returnFiles = listDirectory(new File(Config.getHomeDir() + Config.getPathSeparator()), rest);
+                returnFiles = listDirectory(cwd.newInstance(Config.getHomeDir() + Config.getPathSeparator()), rest);
         }
         else if (lastDir != null) {
-            returnFiles = listDirectory(new File(cwd +
-                Config.getPathSeparator() + lastDir), rest);
+            returnFiles = listDirectory(cwd.newInstance(cwd + Config.getPathSeparator() + lastDir), rest);
         }
         else
             returnFiles = listDirectory(cwd, rest);
@@ -286,31 +273,29 @@ public class FileLister {
     }
 
     private boolean isTokenADirectory() {
-        return new File(token).isDirectory();
+        return !cwd.newInstance(token).isLeaf();
     }
 
     private boolean isTokenAFile() {
-        return new File(token).isFile();
+        return cwd.newInstance(token).isLeaf();
     }
 
     private boolean isCwdAndTokenADirectory() {
-        return new File(cwd.getAbsolutePath() +
+        return cwd.newInstance(cwd.getAbsolutePath() +
             Config.getPathSeparator() + token).isDirectory();
     }
 
     private boolean isCwdAndTokenAFile() {
-        return new File(cwd.getAbsolutePath() +
-            Config.getPathSeparator() + token).isFile();
+        return cwd.newInstance(cwd.getAbsolutePath() +
+                Config.getPathSeparator() + token).isLeaf();
     }
 
     private boolean isHomeAndTokenADirectory() {
-        return new File(Config.getHomeDir() +
-            token.substring(1)).isDirectory();
+        return cwd.newInstance(Config.getHomeDir() + token.substring(1)).isDirectory();
     }
 
     private boolean isHomeAndTokenAFile() {
-        return new File(Config.getHomeDir() +
-            token.substring(1)).isFile();
+        return cwd.newInstance(Config.getHomeDir() + token.substring(1)).isLeaf();
     }
 
     private boolean endsWithParent() {
@@ -343,7 +328,7 @@ public class FileLister {
 
     private boolean startWithWindowsDrive() {
         if (!Config.isOSPOSIXCompatible()) {
-            for (File f : windowsRoots) {
+            for (FileResource f : cwd.listRoots()) {
                 if (token.startsWith(f.toString())) {
                     return true;
                 }
@@ -358,18 +343,18 @@ public class FileLister {
         return token.lastIndexOf(Config.getPathSeparator()) == token.length() - 1;
     }
 
-    private List<String> listDirectory(File path, String rest) {
+    private List<String> listDirectory(FileResource path, String rest) {
         List<String> fileNames = new ArrayList<String>();
-        if (path != null && path.isDirectory()) {
-            for (File file : path.listFiles(fileFilter)) {
+        if (path != null && !path.isLeaf()) {
+            for (FileResource file : path.list(fileFilter)) {
                 if (rest == null || rest.length() == 0)
-                    if (file.isDirectory())
+                    if (!file.isLeaf())
                         fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()) + Config.getPathSeparator());
                     else
                         fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
                 else {
                     if (file.getName().startsWith(rest)) {
-                        if (file.isDirectory())
+                        if (!file.isLeaf())
                             fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()) + Config.getPathSeparator());
                         else
                             fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));

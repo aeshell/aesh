@@ -4,15 +4,12 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.console.command.converter;
-
-import org.jboss.aesh.console.AeshContext;
+package org.jboss.aesh.io;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface ConverterInvocation {
-    String getInput();
+public interface FileResourceFilter {
 
-    AeshContext getAeshContext();
+    boolean accept(FileResource path);
 }
