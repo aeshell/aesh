@@ -148,8 +148,8 @@ public class FileListerTest {
         test.mkdir();
 
         CompleteOperation completion = new CompleteOperation(aeshContext, "cd test", 2);
-        new FileLister("test", new DefaultFileResource(workingDir) {
-        }).findMatchingDirectories(completion);
+        new FileLister("test", new DefaultFileResource(workingDir)).
+                findMatchingDirectories(completion);
         List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(1, candidates.size());
         assertEquals("test" + Config.getPathSeparator(), candidates.get(0).getCharacters());
