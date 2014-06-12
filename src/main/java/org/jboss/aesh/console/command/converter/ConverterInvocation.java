@@ -6,9 +6,13 @@
  */
 package org.jboss.aesh.console.command.converter;
 
+import org.jboss.aesh.console.AeshContext;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface ConverterInvocation {
     String getInput();
+
+    AeshContext getAeshContext();
 }

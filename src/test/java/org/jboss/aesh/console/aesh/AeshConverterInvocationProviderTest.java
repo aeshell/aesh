@@ -12,6 +12,7 @@ import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
+import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
@@ -97,9 +98,11 @@ public static class ConCommand implements Command {
 public static class FooConverterInvocation implements ConverterInvocation {
 
     private String input;
+    private AeshContext aeshContext;
 
-    public FooConverterInvocation(String input) {
+    public FooConverterInvocation(String input, AeshContext aeshContext) {
         this.input = input;
+        this.aeshContext = aeshContext;
     }
 
     public String getFoo() {
@@ -109,6 +112,11 @@ public static class FooConverterInvocation implements ConverterInvocation {
     @Override
     public String getInput() {
         return input;
+    }
+
+    @Override
+    public AeshContext getAeshContext() {
+        return aeshContext;
     }
 }
 
@@ -127,7 +135,7 @@ public static class FooConverterInvocation implements ConverterInvocation {
 public static class FooConverterProvider implements ConverterInvocationProvider<FooConverterInvocation> {
     @Override
     public FooConverterInvocation enhanceConverterInvocation(ConverterInvocation converterInvocation) {
-        return new FooConverterInvocation(converterInvocation.getInput());
+        return new FooConverterInvocation(converterInvocation.getInput(), converterInvocation.getAeshContext());
     }
 }
 
