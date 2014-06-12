@@ -346,7 +346,7 @@ public class FileLister {
     private List<String> listDirectory(FileResource path, String rest) {
         List<String> fileNames = new ArrayList<String>();
         if (path != null && !path.isLeaf()) {
-            for (FileResource file : path.listFileResources(fileFilter)) {
+            for (FileResource file : path.list(fileFilter)) {
                 if (rest == null || rest.length() == 0)
                     if (!file.isLeaf())
                         fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()) + Config.getPathSeparator());

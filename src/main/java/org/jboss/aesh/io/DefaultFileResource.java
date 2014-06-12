@@ -72,12 +72,12 @@ public class DefaultFileResource implements FileResource {
     }
 
     @Override
-    public FileResource getParentResource() {
+    public FileResource getParent() {
         return new DefaultFileResource(file.getParentFile());
     }
 
     @Override
-    public List<FileResource> listFileResources() {
+    public List<FileResource> list() {
         List<FileResource> files = new ArrayList<>();
 
         if(file != null) {
@@ -91,9 +91,9 @@ public class DefaultFileResource implements FileResource {
     }
 
     @Override
-    public List<FileResource> listFileResources(FileResourceFilter filter) {
+    public List<FileResource> list(FileResourceFilter filter) {
         List<FileResource> files = new ArrayList<>();
-        for(FileResource f : listFileResources()) {
+        for(FileResource f : list()) {
             if(filter != null && filter.accept(f))
                 files.add(f);
         }

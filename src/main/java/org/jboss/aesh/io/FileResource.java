@@ -78,7 +78,7 @@ public interface FileResource {
      *
      * @return parent
      */
-    FileResource getParentResource();
+    FileResource getParent();
 
     /**
      * Returns a list of file resources denoting the files in the
@@ -86,7 +86,7 @@ public interface FileResource {
      *
      * @return files and sub folders
      */
-    List<FileResource> listFileResources();
+    List<FileResource> list();
 
     /**
      * Returns a list of path names denoting the files in the
@@ -95,7 +95,7 @@ public interface FileResource {
      * @param filter filter
      * @return files and sub folders filtered
      */
-    List<FileResource> listFileResources(FileResourceFilter filter);
+    List<FileResource> list(FileResourceFilter filter);
 
     /**
      * List the available filesystem roots.
@@ -133,6 +133,7 @@ public interface FileResource {
 
     /**
      * Return a new instance of FileResource with String as argument
+     *
      * @param path argument
      * @return new instance
      */

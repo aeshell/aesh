@@ -194,7 +194,7 @@ public class FileListerTest {
         if (recursive) {
             result = _deleteRecursive(file, true);
         } else {
-            if ((file.listFileResources() != null) && (file.listFileResources().size() != 0)) {
+            if ((file.list() != null) && (file.list().size() != 0)) {
                 throw new RuntimeException("directory not empty");
             }
 
@@ -206,7 +206,7 @@ public class FileListerTest {
     private static boolean _deleteRecursive(final FileResource file, final boolean collect) {
         boolean result = true;
 
-        List<FileResource> children = file.listFileResources();
+        List<FileResource> children = file.list();
         if (children != null) {
             for (FileResource sf : children) {
                 if (sf.isDirectory()) {
