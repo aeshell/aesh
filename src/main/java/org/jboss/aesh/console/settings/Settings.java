@@ -11,7 +11,7 @@ import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.KeyOperationManager;
 import org.jboss.aesh.edit.Mode;
-import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.terminal.Terminal;
 
 import java.io.File;
@@ -217,11 +217,11 @@ public interface Settings {
 
     /**
      * Specify
-     * @param fileResource
+     * @param resource
      */
-    void setFileResource(FileResource fileResource);
+    void setResource(Resource resource);
 
-    FileResource getFileResource();
+    Resource getResource();
 
 
 }

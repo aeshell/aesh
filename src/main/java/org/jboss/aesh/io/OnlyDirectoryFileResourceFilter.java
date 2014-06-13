@@ -11,7 +11,7 @@ package org.jboss.aesh.io;
  */
 public class OnlyDirectoryFileResourceFilter implements FileResourceFilter {
     @Override
-    public boolean accept(FileResource path) {
+    public boolean accept(Resource path) {
         return path.isDirectory();
     }
 }

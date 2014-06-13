@@ -13,7 +13,7 @@ import org.jboss.aesh.io.FileResourceFilter;
 import org.jboss.aesh.util.FileLister;
 
 /**
- * Completes {@link org.jboss.aesh.io.FileResource} objects
+ * Completes {@link org.jboss.aesh.io.Resource} objects
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */

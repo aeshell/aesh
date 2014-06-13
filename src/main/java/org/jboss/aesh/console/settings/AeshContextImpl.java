@@ -7,16 +7,16 @@
 package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.Resource;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshContextImpl implements AeshContext {
 
-    private FileResource cwd;
+    private Resource cwd;
 
-    AeshContextImpl(FileResource cwd) {
+    AeshContextImpl(Resource cwd) {
         if(cwd != null && (!cwd.isLeaf() && cwd.exists()))
             this.cwd = cwd;
         else
@@ -24,12 +24,12 @@ public class AeshContextImpl implements AeshContext {
     }
 
     @Override
-    public FileResource getCurrentWorkingDirectory() {
+    public Resource getCurrentWorkingDirectory() {
         return cwd;
     }
 
     @Override
-    public void setCurrentWorkingDirectory(FileResource cwd) {
+    public void setCurrentWorkingDirectory(Resource cwd) {
         if(!cwd.isLeaf())
             this.cwd = cwd;
         else

@@ -9,8 +9,8 @@ package org.jboss.aesh.complete;
 import junit.framework.TestCase;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.io.DefaultFileResource;
 import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.Resource;
 
 import java.util.List;
 
@@ -21,11 +21,11 @@ public class CompleteOperationTest extends TestCase {
 
     private AeshContext aeshContext = new AeshContext() {
         @Override
-        public FileResource getCurrentWorkingDirectory() {
-            return new DefaultFileResource(Config.getUserDir());
+        public Resource getCurrentWorkingDirectory() {
+            return new FileResource(Config.getUserDir());
         }
         @Override
-        public void setCurrentWorkingDirectory(FileResource cwd) {
+        public void setCurrentWorkingDirectory(Resource cwd) {
         }
     };
 

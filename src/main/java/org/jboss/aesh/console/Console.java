@@ -38,7 +38,7 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.history.History;
-import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.CursorPosition;
@@ -749,13 +749,13 @@ public class Console {
                     AeshLine line = Parser.findAllWords(nextOperation.getBuffer());
                     currentOperation = new ConsoleOperation(nextOperation.getControlOperator(), op.getBuffer());
 
-                    FileResource fileRelativePath =
+                    Resource fileRelativePath =
                             getAeshContext().getCurrentWorkingDirectory().newInstance(
                                     Parser.switchEscapedSpacesToSpacesInWord(line.getWords().get(0)));
 
-                    FileResource readFile = fileRelativePath.resolve( context.getCurrentWorkingDirectory()).get(0);
+                    Resource readFile = fileRelativePath.resolve( context.getCurrentWorkingDirectory()).get(0);
                     if(readFile.isLeaf()) {
-                        standardStream.setStdIn(new BufferedInputStream( readFile.readFileResource()));
+                        standardStream.setStdIn(new BufferedInputStream( readFile.read()));
                                 //new FileInputStream(readFile)));
                         output = new ConsoleOperation(nextOperation.getControlOperator(),op.getBuffer());
                     }
@@ -888,7 +888,7 @@ public class Console {
             if(redirection == ControlOperator.OVERWRITE_OUT)
                 FileUtils.saveFile( context.getCurrentWorkingDirectory().newInstance(
                         Parser.switchEscapedSpacesToSpacesInWord(fileName)).resolve(
-                                context.getCurrentWorkingDirectory()).get(0),  redirectPipeOutBuffer.toString(), false);
+                        context.getCurrentWorkingDirectory()).get(0),  redirectPipeOutBuffer.toString(), false);
                 //FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
                 //    context.getCurrentWorkingDirectory()).get(0), redirectPipeOutBuffer.toString(), false);
             else if(redirection == ControlOperator.OVERWRITE_ERR)

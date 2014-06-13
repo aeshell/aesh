@@ -7,7 +7,7 @@
 package org.jboss.aesh.util;
 
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.Resource;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,7 +22,7 @@ import java.io.InputStreamReader;
  */
 public class FileUtils {
 
-    public static void saveFile(FileResource file, String text, boolean append) throws IOException {
+    public static void saveFile(Resource file, String text, boolean append) throws IOException {
         if(file.isDirectory()) {
             throw new IOException(file+": Is a directory");
         }
@@ -33,28 +33,28 @@ public class FileUtils {
                     file.delete();
 
 
-                file.writeFileResource().write(text.getBytes());
-                file.writeFileResource().flush();
+                file.write().write(text.getBytes());
+                file.write().flush();
             }
             else {
                 //create a new file and write to it
                 //fileWriter = new FileWriter(file, false);
-                file.writeFileResource().write(text.getBytes());
-                file.writeFileResource().flush();
+                file.write().write(text.getBytes());
+                file.write().flush();
             }
         }
         finally {
             if(file != null)
-                file.writeFileResource().close();
+                file.write().close();
         }
     }
 
-    public static String readFile(FileResource file) throws IOException {
+    public static String readFile(Resource file) throws IOException {
         if(file.isDirectory()) {
             throw new IOException(file+": Is a directory");
         }
         else if(file.isLeaf()) {
-            BufferedReader br = new BufferedReader(new InputStreamReader(file.readFileResource()));
+            BufferedReader br = new BufferedReader(new InputStreamReader(file.read()));
             try {
                 StringBuilder sb = new StringBuilder();
                 String line = br.readLine();

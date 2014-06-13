@@ -6,9 +6,6 @@
  */
 package org.jboss.aesh.io;
 
-import org.jboss.aesh.io.FileResource;
-import org.jboss.aesh.io.FileResourceFilter;
-
 import static org.jboss.aesh.constants.AeshConstants.DOT;
 
 /**
@@ -19,7 +16,7 @@ import static org.jboss.aesh.constants.AeshConstants.DOT;
 public class FileAndDirectoryNoDotNamesFilter implements FileResourceFilter {
 
     @Override
-    public boolean accept(FileResource pathname) {
+    public boolean accept(Resource pathname) {
         return !pathname.getName().startsWith(Character.toString(DOT));
     }
 }

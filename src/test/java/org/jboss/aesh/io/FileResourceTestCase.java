@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class DefaultFileResourceTestCase {
+public class FileResourceTestCase {
 
     private Path tempDir;
     private static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
@@ -41,16 +41,16 @@ public class DefaultFileResourceTestCase {
     @Test
     public void testDefaultFileResource() throws IOException {
         File tmp = tempDir.toFile();
-        FileResource fr1 = new DefaultFileResource(tmp);
+        Resource fr1 = new FileResource(tmp);
         assertFalse(fr1.isLeaf());
-        FileResource child1 = new DefaultFileResource(tmp + Config.getPathSeparator()+"child1");
-        FileOutputStream out = (FileOutputStream) child1.writeFileResource();
+        Resource child1 = new FileResource(tmp + Config.getPathSeparator()+"child1");
+        FileOutputStream out = (FileOutputStream) child1.write();
         out.write("foo is bar".getBytes());
         out.flush();
         out.close();
         assertTrue(child1.isLeaf());
 
-        FileInputStream in = (FileInputStream) child1.readFileResource();
+        FileInputStream in = (FileInputStream) child1.read();
         StringBuilder builder = new StringBuilder();
         int c;
         while((c = in.read()) != -1)

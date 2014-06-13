@@ -9,7 +9,7 @@ package org.jboss.aesh.console.settings;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.edit.Mode;
-import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.terminal.Terminal;
 
 import java.io.File;
@@ -58,7 +58,7 @@ public class SettingsBuilder {
         settings.setExportEnabled(baseSettings.isExportEnabled());
         settings.setExportFile(baseSettings.getExportFile());
         settings.setPersistExport(baseSettings.doPersistExport());
-        settings.setFileResource(baseSettings.getFileResource());
+        settings.setResource(baseSettings.getResource());
     }
 
     public SettingsBuilder name(String name) {
@@ -211,8 +211,8 @@ public class SettingsBuilder {
         return this;
     }
 
-    public SettingsBuilder setFileResource(FileResource fileResource) {
-        settings.setFileResource(fileResource);
+    public SettingsBuilder setFileResource(Resource resource) {
+        settings.setResource(resource);
         return this;
     }
 

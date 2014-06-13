@@ -21,7 +21,7 @@ import org.jboss.aesh.comparators.PosixFileNameComparator;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.io.AllFileResourceFilter;
-import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.io.FileResourceFilter;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.TerminalString;
@@ -34,13 +34,13 @@ import org.jboss.aesh.terminal.TerminalString;
 public class FileLister {
 
     private String token;
-    private FileResource cwd;
+    private Resource cwd;
     private String rest;
     private String lastDir;
     private FileResourceFilter fileFilter;
     private Comparator fileComparator;
 
-    public FileLister(String token, FileResource cwd) {
+    public FileLister(String token, Resource cwd) {
         if (token == null)
             throw new IllegalArgumentException("Incoming directory cannot be null");
         if (cwd == null)
@@ -51,17 +51,17 @@ public class FileLister {
         setFileFilter(new AllFileResourceFilter());
     }
 
-    public FileLister(String token, FileResource cwd, Comparator comparator) {
+    public FileLister(String token, Resource cwd, Comparator comparator) {
         this(token, cwd);
         this.fileComparator = comparator;
     }
 
-    public FileLister(String token, FileResource cwd, FileResourceFilter filter) {
+    public FileLister(String token, Resource cwd, FileResourceFilter filter) {
         this(token, cwd);
         setFileFilter(filter);
     }
 
-    public FileLister(String token, FileResource cwd, FileResourceFilter filter, Comparator fileComparator) {
+    public FileLister(String token, Resource cwd, FileResourceFilter filter, Comparator fileComparator) {
         this(token, cwd, filter);
         this.fileComparator = fileComparator;
     }
@@ -328,7 +328,7 @@ public class FileLister {
 
     private boolean startWithWindowsDrive() {
         if (!Config.isOSPOSIXCompatible()) {
-            for (FileResource f : cwd.listRoots()) {
+            for (Resource f : cwd.listRoots()) {
                 if (token.startsWith(f.toString())) {
                     return true;
                 }
@@ -343,10 +343,10 @@ public class FileLister {
         return token.lastIndexOf(Config.getPathSeparator()) == token.length() - 1;
     }
 
-    private List<String> listDirectory(FileResource path, String rest) {
+    private List<String> listDirectory(Resource path, String rest) {
         List<String> fileNames = new ArrayList<String>();
         if (path != null && !path.isLeaf()) {
-            for (FileResource file : path.list(fileFilter)) {
+            for (Resource file : path.list(fileFilter)) {
                 if (rest == null || rest.length() == 0)
                     if (!file.isLeaf())
                         fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()) + Config.getPathSeparator());

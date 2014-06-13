@@ -17,8 +17,8 @@ import org.jboss.aesh.comparators.PosixFileNameComparator;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.io.DefaultFileResource;
 import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.terminal.TerminalString;
 import org.junit.After;
 import org.junit.Before;
@@ -28,14 +28,14 @@ import org.junit.Test;
  * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
  */
 public class FileListerTest {
-    private FileResource workingDir;
+    private Resource workingDir;
     private AeshContext aeshContext = new AeshContext() {
         @Override
-        public FileResource getCurrentWorkingDirectory() {
-            return new DefaultFileResource(Config.getUserDir());
+        public Resource getCurrentWorkingDirectory() {
+            return new FileResource(Config.getUserDir());
         }
         @Override
-        public void setCurrentWorkingDirectory(FileResource cwd) {
+        public void setCurrentWorkingDirectory(Resource cwd) {
         }
     };
 
@@ -44,7 +44,7 @@ public class FileListerTest {
         File tmpWorkingDir = File.createTempFile("temp", ".FileListerTest");
         tmpWorkingDir .delete();
         tmpWorkingDir.mkdirs();
-        workingDir = new DefaultFileResource(tmpWorkingDir);
+        workingDir = new FileResource(tmpWorkingDir);
     }
 
     @After
@@ -148,13 +148,13 @@ public class FileListerTest {
         test.mkdir();
 
         CompleteOperation completion = new CompleteOperation(aeshContext, "cd test", 2);
-        new FileLister("test", new DefaultFileResource(workingDir)).
+        new FileLister("test", new FileResource(workingDir)).
                 findMatchingDirectories(completion);
         List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(1, candidates.size());
         assertEquals("test" + Config.getPathSeparator(), candidates.get(0).getCharacters());
 
-        delete(new DefaultFileResource(test), true);
+        delete(new FileResource(test), true);
     }
 
     @Test
@@ -186,10 +186,10 @@ public class FileListerTest {
         assertEquals(1, candidates.size());
         assertEquals("prefixdir" + Config.getPathSeparator(), candidates.get(0).getCharacters());
 
-        delete(new DefaultFileResource(workingDirFile), false);
+        delete(new FileResource(workingDirFile), false);
     }
 
-    public static boolean delete(FileResource file, final boolean recursive) {
+    public static boolean delete(Resource file, final boolean recursive) {
         boolean result = false;
         if (recursive) {
             result = _deleteRecursive(file, true);
@@ -203,12 +203,12 @@ public class FileListerTest {
         return result;
     }
 
-    private static boolean _deleteRecursive(final FileResource file, final boolean collect) {
+    private static boolean _deleteRecursive(final Resource file, final boolean collect) {
         boolean result = true;
 
-        List<FileResource> children = file.list();
+        List<Resource> children = file.list();
         if (children != null) {
-            for (FileResource sf : children) {
+            for (Resource sf : children) {
                 if (sf.isDirectory()) {
                     if (!_deleteRecursive(sf, false))
                         result = false;

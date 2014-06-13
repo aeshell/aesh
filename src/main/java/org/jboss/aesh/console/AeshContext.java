@@ -6,14 +6,14 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.Resource;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface AeshContext {
 
-    FileResource getCurrentWorkingDirectory();
+    Resource getCurrentWorkingDirectory();
 
-    void setCurrentWorkingDirectory(FileResource cwd);
+    void setCurrentWorkingDirectory(Resource cwd);
 }

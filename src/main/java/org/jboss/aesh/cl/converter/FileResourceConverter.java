@@ -8,15 +8,15 @@ package org.jboss.aesh.cl.converter;
 
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.command.converter.ConverterInvocation;
-import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.Resource;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class FileResourceConverter implements Converter<FileResource, ConverterInvocation> {
+public class FileResourceConverter implements Converter<Resource, ConverterInvocation> {
 
     @Override
-    public FileResource convert(ConverterInvocation converterInvocation) throws OptionValidatorException {
+    public Resource convert(ConverterInvocation converterInvocation) throws OptionValidatorException {
         return converterInvocation.getAeshContext().getCurrentWorkingDirectory().newInstance(
                 converterInvocation.getInput());
     }
