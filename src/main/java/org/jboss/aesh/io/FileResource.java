@@ -49,6 +49,13 @@ public interface FileResource {
     boolean isDirectory();
 
     /**
+     * Return true if this resource is a symbolic link.
+     *
+     * @return true if symbolic link
+     */
+    boolean isSymbolicLink();
+
+    /**
      * Check if this file resource exists.
      * @return true if exists
      */

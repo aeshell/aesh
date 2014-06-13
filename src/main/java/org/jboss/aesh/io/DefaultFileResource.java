@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +55,11 @@ public class DefaultFileResource implements FileResource {
     @Override
     public boolean isDirectory() {
         return file.isDirectory();
+    }
+
+    @Override
+    public boolean isSymbolicLink() {
+        return Files.isSymbolicLink(file.toPath());
     }
 
     @Override

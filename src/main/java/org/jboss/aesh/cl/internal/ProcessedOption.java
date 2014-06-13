@@ -401,15 +401,14 @@ public final class ProcessedOption {
 
     @SuppressWarnings("unchecked")
     private Object doConvert(String inputValue, InvocationProviders invocationProviders, Object command,
-                             AeshContext aeshContext,
-                             boolean doValidation) throws OptionValidatorException {
+                             AeshContext aeshContext, boolean doValidation) throws OptionValidatorException {
         Object result = converter.convert(
         invocationProviders.getConverterProvider().enhanceConverterInvocation(
                 new AeshConverterInvocation(inputValue, aeshContext)));
         //Object result =   converter.convert(inputValue);
         if(validator != null && doValidation) {
-            validator.validate(
-                    invocationProviders.getValidatorProvider().enhanceValidatorInvocation(new AeshValidatorInvocation(result, command, aeshContext )));
+            validator.validate( invocationProviders.getValidatorProvider().enhanceValidatorInvocation(
+                            new AeshValidatorInvocation(result, command, aeshContext )));
         }
         return result;
     }

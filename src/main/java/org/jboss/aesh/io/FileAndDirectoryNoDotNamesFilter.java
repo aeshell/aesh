@@ -4,10 +4,11 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.filters.file;
+package org.jboss.aesh.io;
 
-import java.io.File;
-import java.io.FileFilter;
+import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.FileResourceFilter;
+
 import static org.jboss.aesh.constants.AeshConstants.DOT;
 
 /**
@@ -15,9 +16,10 @@ import static org.jboss.aesh.constants.AeshConstants.DOT;
  * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  *
  */
-public class FileAndDirectoryNoDotNamesFilter implements FileFilter {
+public class FileAndDirectoryNoDotNamesFilter implements FileResourceFilter {
+
     @Override
-    public boolean accept(File pathname) {
+    public boolean accept(FileResource pathname) {
         return !pathname.getName().startsWith(Character.toString(DOT));
     }
 }
