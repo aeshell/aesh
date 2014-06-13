@@ -25,6 +25,7 @@ import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocation;
 import org.jboss.aesh.console.command.validator.AeshValidatorInvocation;
+import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.ReflectionUtil;
@@ -366,7 +367,7 @@ public final class ProcessedOption {
             try {
                 if(type == Boolean.class || type == boolean.class)
                     return BooleanOptionCompleter.class.newInstance();
-                else if(type == File.class)
+                else if(type == File.class || type == Resource.class)
                     return FileOptionCompleter.class.newInstance();
                 else
                     return null;
