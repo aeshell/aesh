@@ -20,9 +20,9 @@ import java.util.List;
 import org.jboss.aesh.comparators.PosixFileNameComparator;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.io.AllFileResourceFilter;
+import org.jboss.aesh.io.filter.AllResourceFilter;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.io.FileResourceFilter;
+import org.jboss.aesh.io.filter.ResourceFilter;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.TerminalString;
 
@@ -37,7 +37,7 @@ public class FileLister {
     private Resource cwd;
     private String rest;
     private String lastDir;
-    private FileResourceFilter fileFilter;
+    private ResourceFilter fileFilter;
     private Comparator fileComparator;
 
     public FileLister(String token, Resource cwd) {
@@ -48,7 +48,7 @@ public class FileLister {
         this.token = Parser.switchEscapedSpacesToSpacesInWord(token);
         this.cwd = cwd;
         findRestAndLastDir();
-        setFileFilter(new AllFileResourceFilter());
+        setFileFilter(new AllResourceFilter());
     }
 
     public FileLister(String token, Resource cwd, Comparator comparator) {
@@ -56,17 +56,17 @@ public class FileLister {
         this.fileComparator = comparator;
     }
 
-    public FileLister(String token, Resource cwd, FileResourceFilter filter) {
+    public FileLister(String token, Resource cwd, ResourceFilter filter) {
         this(token, cwd);
         setFileFilter(filter);
     }
 
-    public FileLister(String token, Resource cwd, FileResourceFilter filter, Comparator fileComparator) {
+    public FileLister(String token, Resource cwd, ResourceFilter filter, Comparator fileComparator) {
         this(token, cwd, filter);
         this.fileComparator = fileComparator;
     }
 
-    private void setFileFilter(FileResourceFilter filter) {
+    private void setFileFilter(ResourceFilter filter) {
         this.fileFilter = filter;
     }
 

@@ -8,8 +8,8 @@ package org.jboss.aesh.cl.completer;
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
-import org.jboss.aesh.io.AllFileResourceFilter;
-import org.jboss.aesh.io.FileResourceFilter;
+import org.jboss.aesh.io.filter.AllResourceFilter;
+import org.jboss.aesh.io.filter.ResourceFilter;
 import org.jboss.aesh.util.FileLister;
 
 /**
@@ -19,13 +19,13 @@ import org.jboss.aesh.util.FileLister;
  */
 public class FileOptionCompleter implements OptionCompleter<CompleterInvocation> {
 
-    private final FileResourceFilter filter;
+    private final ResourceFilter filter;
 
     public FileOptionCompleter() {
-        this(new AllFileResourceFilter());
+        this(new AllResourceFilter());
     }
 
-    public FileOptionCompleter(FileResourceFilter filter) {
+    public FileOptionCompleter(ResourceFilter filter) {
         if (filter == null) {
             throw new IllegalArgumentException("A valid filter must be informed");
         }
@@ -60,7 +60,7 @@ public class FileOptionCompleter implements OptionCompleter<CompleterInvocation>
         completerData.setIgnoreStartsWith(true);
     }
 
-    public FileResourceFilter getFilter() {
+    public ResourceFilter getFilter() {
         return filter;
     }
 }

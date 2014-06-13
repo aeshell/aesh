@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.io;
 
+import org.jboss.aesh.io.filter.ResourceFilter;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -114,7 +116,7 @@ public interface Resource {
      * @param filter filter
      * @return files and sub folders filtered
      */
-    List<Resource> list(FileResourceFilter filter);
+    List<Resource> list(ResourceFilter filter);
 
     /**
      * List the available filesystem roots.

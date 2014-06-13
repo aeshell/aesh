@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.io;
 
+import org.jboss.aesh.io.filter.ResourceFilter;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -108,7 +110,7 @@ public class FileResource implements Resource {
     }
 
     @Override
-    public List<Resource> list(FileResourceFilter filter) {
+    public List<Resource> list(ResourceFilter filter) {
         List<Resource> files = new ArrayList<>();
         for(Resource f : list()) {
             if(filter != null && filter.accept(f))

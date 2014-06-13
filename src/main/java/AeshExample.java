@@ -40,6 +40,7 @@ import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Key;
@@ -233,7 +234,7 @@ public class AeshExample {
         private boolean help;
 
         @Arguments
-        private List<File> arguments;
+        private List<Resource> arguments;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
@@ -251,7 +252,7 @@ public class AeshExample {
                     commandInvocation.getShell().out().println("you set file to: " + files);
 
                 if(arguments != null) {
-                    for(File f : arguments)
+                    for(Resource f : arguments)
                         commandInvocation.getShell().out().println(f.toString());
                 }
             }

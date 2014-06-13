@@ -4,7 +4,9 @@
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.jboss.aesh.io;
+package org.jboss.aesh.io.filter;
+
+import org.jboss.aesh.io.Resource;
 
 import static org.jboss.aesh.constants.AeshConstants.DOT;
 
@@ -13,7 +15,7 @@ import static org.jboss.aesh.constants.AeshConstants.DOT;
  * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  *
  */
-public class FileAndDirectoryNoDotNamesFilter implements FileResourceFilter {
+public class AndDirectoryNoDotNamesFilter implements ResourceFilter {
 
     @Override
     public boolean accept(Resource pathname) {
