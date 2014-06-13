@@ -59,6 +59,15 @@ public interface Resource {
     boolean isSymbolicLink();
 
     /**
+     * If the Resource system support symbolic links and
+     * this is a symbolic link, return the link target.
+     * The target does not need to exist.
+     *
+     * @return link target
+     */
+    Resource readSymbolicLink() throws IOException;
+
+    /**
      * Check if this file resource exists.
      * @return true if exists
      */

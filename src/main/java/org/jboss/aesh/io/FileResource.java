@@ -66,6 +66,14 @@ public class FileResource implements Resource {
     }
 
     @Override
+    public Resource readSymbolicLink() throws IOException {
+        if(isSymbolicLink())
+            return new FileResource( Files.readSymbolicLink(file.toPath()).toFile());
+        else
+            return new FileResource("");
+    }
+
+    @Override
     public boolean exists() {
         return file.exists();
     }
