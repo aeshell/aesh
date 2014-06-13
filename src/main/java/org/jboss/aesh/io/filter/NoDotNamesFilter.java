@@ -15,7 +15,7 @@ import static org.jboss.aesh.constants.AeshConstants.DOT;
  * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  *
  */
-public class AndDirectoryNoDotNamesFilter implements ResourceFilter {
+public class NoDotNamesFilter implements ResourceFilter {
 
     @Override
     public boolean accept(Resource pathname) {
