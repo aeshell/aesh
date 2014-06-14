@@ -322,21 +322,18 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             buffer.updatePrompt(prompt);
             //only update the prompt if Console is running
             //set cursor position line.length
-
-            //if(running) { we might need to do something smarter here...
-                displayPrompt(prompt);
-                if(buffer.getLine().length() > 0) {
-                    out().print(buffer.getLine());
-                    buffer.setCursor(buffer.getLine().length());
-                    out().flush();
-                }
-            //}
+            displayPrompt(prompt);
+            if(buffer.getLine().length() > 0) {
+                out().print(buffer.getLine());
+                buffer.setCursor(buffer.getLine().length());
+                out().flush();
+            }
         }
     }
 
     @Override
     public void setBufferLine(String newLine) {
-               //must make sure that there are enough space for the
+        //must make sure that there are enough space for the
         // line thats about to be injected
         if((newLine.length()+buffer.getPrompt().getLength()) >= shell.getSize().getWidth() &&
                 newLine.length() >= buffer.getLine().length()) {

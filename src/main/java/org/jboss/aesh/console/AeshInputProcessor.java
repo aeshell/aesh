@@ -27,7 +27,6 @@ import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -48,11 +47,7 @@ public class AeshInputProcessor implements InputProcessor {
     private boolean historyDisabled = false;
     private boolean searchDisabled = false;
 
-    private static final Pattern endsWithBackslashPattern = Pattern.compile(".*\\s\\\\$");
-
-    //used to optimize text deletion
-    private static final char[] resetLineAndSetCursorToStart =
-            (ANSI.saveCursor()+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
+    private static final String ENDS_WITH_BACKSLASH = " \\";
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputProcessor.class.getName());
 
@@ -206,7 +201,7 @@ public class AeshInputProcessor implements InputProcessor {
             if(!consoleBuffer.getBuffer().isMasking()) {// dont push to history if masking
 
                 //dont push lines that end with \ to history
-                if(endsWithBackslashPattern.matcher(consoleBuffer.getBuffer().getLine()).find()) {
+                if(consoleBuffer.getBuffer().getLine().endsWith(ENDS_WITH_BACKSLASH)) {
                     consoleBuffer.getBuffer().setMultiLine(true);
                     consoleBuffer.getBuffer().updateMultiLineBuffer();
                     isCurrentLineEnding = false;
