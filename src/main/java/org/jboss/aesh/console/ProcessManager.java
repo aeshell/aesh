@@ -41,8 +41,8 @@ public class ProcessManager {
         if (doLogging)
             LOGGER.info("starting a new process: " + process + ", consoleOperation: " + consoleOperation);
 
-        executorService.execute(process);
         processes.add(process);
+        executorService.execute(process);
 
     }
 
