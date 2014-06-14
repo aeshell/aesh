@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.cl.converter;
 
+import org.jboss.aesh.io.Resource;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,6 +51,7 @@ public class CLConverterManager {
         converters.put(byte.class, converters.get(Byte.class));
         converters.put(String.class, new StringConverter());
         converters.put(File.class, new FileConverter());
+        converters.put(Resource.class, new FileResourceConverter());
     }
 
     public boolean hasConverter(Class clazz) {

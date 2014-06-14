@@ -273,7 +273,7 @@ public class FileLister {
     }
 
     private boolean isTokenADirectory() {
-        return !cwd.newInstance(token).isLeaf();
+        return cwd.newInstance(token).isDirectory();
     }
 
     private boolean isTokenAFile() {
