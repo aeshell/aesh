@@ -163,4 +163,10 @@ public interface Resource {
      */
     Resource newInstance(String path);
 
+    /**
+     * Copy a file/directory to destination;
+     *
+     * @param destination
+     */
+    Resource copy(Resource destination) throws IOException;
 }
