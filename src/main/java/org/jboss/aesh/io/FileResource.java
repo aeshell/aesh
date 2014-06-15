@@ -163,6 +163,11 @@ public class FileResource implements Resource {
         return new FileResource(path);
     }
 
+    @Override
+    public Resource copy(Resource destination) throws IOException {
+        return new FileResource(Files.copy(file.toPath(), new FileResource(destination.getAbsolutePath()).getFile().toPath()).toFile());
+    }
+
     public File getFile() {
         return file;
     }
