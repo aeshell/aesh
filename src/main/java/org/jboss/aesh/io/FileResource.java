@@ -168,8 +168,17 @@ public class FileResource implements Resource {
         return new FileResource(Files.copy(file.toPath(), new FileResource(destination.getAbsolutePath()).getFile().toPath()).toFile());
     }
 
+    @Override
+    public boolean setLastModified(long time) {
+        return file.setLastModified(time);
+    }
+
+    @Override
+    public long lastModified() {
+        return file.lastModified();
+    }
+
     public File getFile() {
         return file;
     }
-
 }

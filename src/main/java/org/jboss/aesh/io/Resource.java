@@ -49,6 +49,7 @@ public interface Resource {
 
     /**
      * Check if the file denoted is a directory.
+     *
      * @return true if directory
      */
     boolean isDirectory();
@@ -71,6 +72,7 @@ public interface Resource {
 
     /**
      * Check if this file resource exists.
+     *
      * @return true if exists
      */
     boolean exists();
@@ -166,7 +168,22 @@ public interface Resource {
     /**
      * Copy a file/directory to destination;
      *
-     * @param destination
+     * @param destination local that you want copy file
      */
     Resource copy(Resource destination) throws IOException;
+
+    /**
+     * Sets the last-modified time of the file or directory named by this abstract pathname.
+     *
+     * @param time The new last-modified time, measured in milliseconds
+     * @return true if and only if the operation succeeded; false otherwise
+     */
+    boolean setLastModified(long time);
+
+    /**
+     * Returns the length of the file denoted by this abstract pathname. The return value is unspecified if this pathname denotes a directory.
+     *
+     * @return A long value representing the time the file was last modified or 0L if the file does not exist or if an I/O error occurs
+     */
+    long lastModified();
 }
