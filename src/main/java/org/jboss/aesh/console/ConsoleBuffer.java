@@ -8,6 +8,7 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.PasteManager;
+import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.EditAction;
 import org.jboss.aesh.undo.UndoManager;
 
@@ -40,6 +41,8 @@ public interface ConsoleBuffer {
     void drawLine();
 
     void drawLine(String line);
+
+    void updateCurrentAction(Action action);
 
     void syncCursor();
 

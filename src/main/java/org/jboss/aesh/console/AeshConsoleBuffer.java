@@ -38,7 +38,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     private UndoManager undoManager;
     private PasteManager pasteManager;
 
-    private Action prevAction = Action.EDIT;
+    private Action currentAction = Action.EDIT;
 
     private boolean isLogging = true;
 
@@ -130,7 +130,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             //optimize that like this.
             //NOTE: this doesnt work with history, need to find a better solution
             if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length()
-                    && prevAction != Action.HISTORY) {
+                    && currentAction != Action.HISTORY) {
                 out.print(Parser.SPACE_CHAR + ANSI.getStart() + "1D"); //move cursor to left
             }
             else {
@@ -143,6 +143,11 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             }
         }
         out.flush();
+    }
+
+    @Override
+    public void updateCurrentAction(Action action) {
+        this.currentAction = action;
     }
 
     private void redrawMultipleLines() {
@@ -399,6 +404,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     @Override
     public boolean performAction(EditAction action) throws IOException {
+        currentAction = action.getAction();
         action.doAction(buffer.getLine());
         if(action.getAction() == Action.MOVE) {
             moveCursor((action.getEnd() - action.getStart()));

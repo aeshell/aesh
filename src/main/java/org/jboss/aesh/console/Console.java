@@ -756,7 +756,6 @@ public class Console {
                     Resource readFile = fileRelativePath.resolve( context.getCurrentWorkingDirectory()).get(0);
                     if(readFile.isLeaf()) {
                         standardStream.setStdIn(new BufferedInputStream( readFile.read()));
-                                //new FileInputStream(readFile)));
                         output = new ConsoleOperation(nextOperation.getControlOperator(),op.getBuffer());
                     }
                     else {
@@ -889,29 +888,21 @@ public class Console {
                 FileUtils.saveFile( context.getCurrentWorkingDirectory().newInstance(
                         Parser.switchEscapedSpacesToSpacesInWord(fileName)).resolve(
                         context.getCurrentWorkingDirectory()).get(0),  redirectPipeOutBuffer.toString(), false);
-                //FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
-                //    context.getCurrentWorkingDirectory()).get(0), redirectPipeOutBuffer.toString(), false);
             else if(redirection == ControlOperator.OVERWRITE_ERR)
                 FileUtils.saveFile( context.getCurrentWorkingDirectory().newInstance(
                                 Parser.switchEscapedSpacesToSpacesInWord(fileName)).resolve(
                                 context.getCurrentWorkingDirectory()).get(0),
                         redirectPipeErrBuffer.toString(), false);
-                //FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
-                //    context.getCurrentWorkingDirectory()).get(0), redirectPipeErrBuffer.toString(), false);
             else if(redirection == ControlOperator.APPEND_OUT)
                 FileUtils.saveFile( context.getCurrentWorkingDirectory().newInstance(
                                 Parser.switchEscapedSpacesToSpacesInWord(fileName)).resolve(
                                 context.getCurrentWorkingDirectory()).get(0),
                         redirectPipeOutBuffer.toString(), true);
-                //FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
-                //    context.getCurrentWorkingDirectory()).get(0), redirectPipeOutBuffer.toString(), true);
             else if(redirection == ControlOperator.APPEND_ERR)
                 FileUtils.saveFile( context.getCurrentWorkingDirectory().newInstance(
                                 Parser.switchEscapedSpacesToSpacesInWord(fileName)).resolve(
                                 context.getCurrentWorkingDirectory()).get(0),
                         redirectPipeErrBuffer.toString(), true);
-                //FileUtils.saveFile(PathResolver.resolvePath(new File(Parser.switchEscapedSpacesToSpacesInWord(fileName)),
-                //    context.getCurrentWorkingDirectory()).get(0), redirectPipeErrBuffer.toString(), true);
         }
         catch (IOException e) {
             if(settings.isLogging())
