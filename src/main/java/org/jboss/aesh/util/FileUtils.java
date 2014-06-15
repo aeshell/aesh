@@ -12,6 +12,7 @@ import org.jboss.aesh.io.Resource;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 
 
 /**
@@ -26,27 +27,17 @@ public class FileUtils {
         if(file.isDirectory()) {
             throw new IOException(file+": Is a directory");
         }
-        try {
-            if(file.isLeaf()) {
-                // append text at the end of the file
-                if(!append)
-                    file.delete();
 
+        if(append && file.isLeaf()) {
+            //find method to append the text to the file
+        }
 
-                file.write().write(text.getBytes());
-                file.write().flush();
-            }
-            else {
-                //create a new file and write to it
-                //fileWriter = new FileWriter(file, false);
-                file.write().write(text.getBytes());
-                file.write().flush();
-            }
-        }
-        finally {
-            if(file != null)
-                file.write().close();
-        }
+        OutputStream out = file.write();
+
+        out.write(text.getBytes());
+        out.flush();
+        out.close();
+
     }
 
     public static String readFile(Resource file) throws IOException {
