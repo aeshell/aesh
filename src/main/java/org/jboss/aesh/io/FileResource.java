@@ -149,8 +149,8 @@ public class FileResource implements Resource {
     }
 
     @Override
-    public OutputStream write() throws FileNotFoundException {
-        return new FileOutputStream(file);
+    public OutputStream write(boolean append) throws FileNotFoundException {
+        return new FileOutputStream(file, append);
     }
 
     @Override

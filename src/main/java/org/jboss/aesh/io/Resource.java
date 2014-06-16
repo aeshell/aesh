@@ -143,8 +143,9 @@ public interface Resource {
      *
      * @return stream
      * @throws FileNotFoundException if file cannot be written to or is !isLeaf()
+     * @param append
      */
-    OutputStream write() throws FileNotFoundException;
+    OutputStream write(boolean append) throws FileNotFoundException;
 
     /**
      * InputStream from this FileResource

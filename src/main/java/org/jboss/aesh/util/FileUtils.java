@@ -28,11 +28,7 @@ public class FileUtils {
             throw new IOException(file+": Is a directory");
         }
 
-        if(append && file.isLeaf()) {
-            //find method to append the text to the file
-        }
-
-        OutputStream out = file.write();
+        OutputStream out = file.write(append);
 
         out.write(text.getBytes());
         out.flush();

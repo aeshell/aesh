@@ -44,7 +44,7 @@ public class FileResourceTestCase {
         Resource fr1 = new FileResource(tmp);
         assertFalse(fr1.isLeaf());
         Resource child1 = new FileResource(tmp + Config.getPathSeparator()+"child1");
-        FileOutputStream out = (FileOutputStream) child1.write();
+        FileOutputStream out = (FileOutputStream) child1.write(false);
         out.write("foo is bar".getBytes());
         out.flush();
         out.close();
