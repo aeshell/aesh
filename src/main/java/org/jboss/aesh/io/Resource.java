@@ -181,9 +181,9 @@ public interface Resource {
     boolean setLastModified(long time);
 
     /**
-     * Returns the length of the file denoted by this abstract pathname. The return value is unspecified if this pathname denotes a directory.
+     * Returns the last modified time of the file or directory
      *
-     * @return A long value representing the time the file was last modified or 0L if the file does not exist or if an I/O error occurs
+     * @return the new last modified time, in milliseconds
      */
     long lastModified();
 }
