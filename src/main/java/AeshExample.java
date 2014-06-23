@@ -349,13 +349,13 @@ public class AeshExample {
         }
     }
 
-    public static class ExampleValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>, File, Command> {
+    public static class ExampleValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>> {
 
         @Override
-        public ValidatorInvocation<File, Command> enhanceValidatorInvocation(ValidatorInvocation<File, Command> validatorInvocation) {
+        public ValidatorInvocation<File, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
             if(validatorInvocation.getValue() instanceof File)
-                return new DirectoryValidatorInvocation( validatorInvocation.getValue(),
-                         validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
+                return new DirectoryValidatorInvocation( (File) validatorInvocation.getValue(),
+                        (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
             else
                 return validatorInvocation;
         }
