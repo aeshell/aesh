@@ -18,6 +18,7 @@ import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
 import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
@@ -134,7 +135,8 @@ public class ParserGenerator {
         InvocationProviders invocationProviders = new AeshInvocationProviders(
                 new AeshConverterInvocationProvider(),
                 new AeshCompleterInvocationProvider(),
-                new AeshValidatorInvocationProvider());
+                new AeshValidatorInvocationProvider(),
+                new AeshOptionActivatorProvider());
         cl.getCommandPopulator().populateObject(instance,  cl.parse(input), invocationProviders, null, true);
     }
 

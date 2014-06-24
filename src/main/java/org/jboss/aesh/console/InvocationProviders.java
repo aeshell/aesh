@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
@@ -20,4 +21,6 @@ public interface InvocationProviders {
     CompleterInvocationProvider getCompleterProvider();
 
     ValidatorInvocationProvider getValidatorProvider();
+
+    OptionActivatorProvider getOptionActivatorProvider();
 }

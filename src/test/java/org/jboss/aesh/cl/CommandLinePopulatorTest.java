@@ -17,6 +17,7 @@ import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
 import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
@@ -43,7 +44,8 @@ public class CommandLinePopulatorTest {
             new AeshInvocationProviders(
                     new AeshConverterInvocationProvider(),
                     new AeshCompleterInvocationProvider(),
-                    new AeshValidatorInvocationProvider());
+                    new AeshValidatorInvocationProvider(),
+                    new AeshOptionActivatorProvider());
 
     @Rule
     public ExpectedException exception = ExpectedException.none();

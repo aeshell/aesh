@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
+import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
@@ -34,6 +36,7 @@ public class AeshConsoleBuilder {
     private CompleterInvocationProvider completerInvocationProvider;
     private ConverterInvocationProvider converterInvocationProvider;
     private ValidatorInvocationProvider validatorInvocationProvider;
+    private OptionActivatorProvider optionActivatorProvider;
 
     public AeshConsoleBuilder() {
     }
@@ -78,6 +81,11 @@ public class AeshConsoleBuilder {
         return this;
     }
 
+    public AeshConsoleBuilder optionActivatorProvider(OptionActivatorProvider optionActivatorProvider) {
+        this.optionActivatorProvider = optionActivatorProvider;
+        return this;
+    }
+
     public AeshConsoleBuilder manProvider(ManProvider manProvider) {
         this.manProvider = manProvider;
         return this;
@@ -101,10 +109,13 @@ public class AeshConsoleBuilder {
         if(validatorInvocationProvider == null)
             validatorInvocationProvider = new AeshValidatorInvocationProvider();
 
+        if(optionActivatorProvider == null)
+            optionActivatorProvider = new AeshOptionActivatorProvider();
+
         AeshConsole aeshConsole =
                 new AeshConsoleImpl(settings, registry, commandInvocationServices,
                         commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
-                        validatorInvocationProvider, manProvider);
+                        validatorInvocationProvider, optionActivatorProvider, manProvider);
 
         if(prompt != null)
             aeshConsole.setPrompt(prompt);

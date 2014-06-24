@@ -25,6 +25,7 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
@@ -65,6 +66,7 @@ public class AeshConsoleImpl implements AeshConsole {
         CompleterInvocationProvider completerInvocationProvider,
         ConverterInvocationProvider converterInvocationProvider,
         ValidatorInvocationProvider validatorInvocationProvider,
+        OptionActivatorProvider optionActivatorProvider,
         ManProvider manProvider) {
         this.registry = registry;
         this.commandInvocationServices = commandInvocationServices;
@@ -72,7 +74,7 @@ public class AeshConsoleImpl implements AeshConsole {
         this.manProvider = manProvider;
         this.invocationProviders =
             new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
-                validatorInvocationProvider);
+                validatorInvocationProvider, optionActivatorProvider);
 
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallbackImpl(this));
