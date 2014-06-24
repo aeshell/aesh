@@ -25,6 +25,7 @@ import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.container.CommandContainer;
@@ -79,7 +80,7 @@ public class AeshConsoleImpl implements AeshConsole {
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallbackImpl(this));
         console.addCompletion(new AeshCompletion());
-        processSettings(settings);
+        processAfterInit(settings);
     }
 
     @Override
@@ -172,10 +173,23 @@ public class AeshConsoleImpl implements AeshConsole {
         return console.getInputProcessor();
     }
 
-    private void processSettings(Settings settings) {
+    private void processAfterInit(Settings settings) {
         if (settings.isManEnabled()) {
             internalRegistry = new AeshInternalCommandRegistry();
             internalRegistry.addCommand(new Man(manProvider));
+        }
+        if(!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
+            //we have a custom OptionActivatorProvider, and need to process all options
+            try {
+                for (String commandName : registry.getAllCommandNames()) {
+                    registry.getCommand(commandName, "").getParser().getCommand().processAfterInit(invocationProviders);
+                }
+            }
+            catch (CommandNotFoundException e) {
+                e.printStackTrace();
+            }
+
+
         }
     }
 

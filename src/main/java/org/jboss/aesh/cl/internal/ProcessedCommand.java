@@ -17,6 +17,7 @@ import org.jboss.aesh.cl.validator.CommandValidator;
 import org.jboss.aesh.cl.validator.NullCommandValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ReflectionUtil;
 
@@ -37,10 +38,12 @@ public final class ProcessedCommand {
     private List<ProcessedOption> options;
     private ProcessedOption argument;
 
-    public ProcessedCommand(String name, String description, CommandValidator validator) {
+    public ProcessedCommand(String name, String description, CommandValidator validator,
+                            ResultHandler resultHandler) {
         setName(name);
         setDescription(description);
         setValidator(validator);
+        setResultHandler(resultHandler);
         options = new ArrayList<>();
     }
 
@@ -171,12 +174,16 @@ public final class ProcessedCommand {
     }
 
     private void setValidator(CommandValidator validator) {
+        if(validator == null)
+            validator = new NullCommandValidator();
         this.validator = validator;
     }
 
     public ResultHandler getResultHandler() { return resultHandler; }
 
     private void setResultHandler(ResultHandler resultHandler) {
+        if(resultHandler == null)
+            resultHandler = new NullResultHandler();
         this.resultHandler = resultHandler;
     }
 
@@ -379,5 +386,10 @@ public final class ProcessedCommand {
             return true;
         }
         return false;
+    }
+
+    public void processAfterInit(InvocationProviders invocationProviders) {
+        for(ProcessedOption option : options)
+            option.processAfterInit(invocationProviders);
     }
 }

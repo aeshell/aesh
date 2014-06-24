@@ -497,6 +497,10 @@ public final class ProcessedOption {
         }
     }
 
+    public void processAfterInit(InvocationProviders invocationProviders) {
+        activator = invocationProviders.getOptionActivatorProvider().enhanceOptionActivator(activator);
+    }
+
     private <String, T> Map<String, T> newHashMap() {
         return new HashMap<>();
     }
