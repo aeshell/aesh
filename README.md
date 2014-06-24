@@ -24,6 +24,9 @@ Features:
 How to build:
 -------------
 * Æsh uses Gradle (http://gradle.org) as its build tool.
+    * When you start a Gradle build via the wrapper [gradlew], Gradle will be automatically downloaded and used to run the build
+        * Windows: gradlew.bat 
+        * Linux: gradlew
 
 To get going:
 -------------
