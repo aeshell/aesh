@@ -40,6 +40,17 @@ import java.util.List;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * the idea of this test is to show how aesh could work reading a script file.
+ * this impl will only accept "foo" commands,
+ * if any other commands are found it should jump out and exit.
+ *
+ * the scriptfile:
+ * foo //this is accepted
+ *
+ * bar  //this should cause a command-not-found and should exit the reader loop
+ *
+ * foo // it should never get here, if it does, the test will fail.
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshScriptTest {
