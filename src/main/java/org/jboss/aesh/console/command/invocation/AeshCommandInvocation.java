@@ -23,11 +23,13 @@ public final class AeshCommandInvocation implements CommandInvocation {
     private final AeshConsole aeshConsole;
     private final ControlOperator controlOperator;
     private final ConsoleCallback callback;
+    private final int pid;
 
     public AeshCommandInvocation(AeshConsole aeshConsole, ControlOperator controlOperator,
-                                 ConsoleCallback callback) {
+                                 int pid, ConsoleCallback callback) {
         this.aeshConsole = aeshConsole;
         this.controlOperator = controlOperator;
+        this.pid = pid;
         this.callback = callback;
     }
     @Override
@@ -73,5 +75,10 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public CommandOperation getInput() throws InterruptedException {
         return callback.getInput();
+    }
+
+    @Override
+    public int getPid() {
+        return pid;
     }
 }

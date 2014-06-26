@@ -14,7 +14,6 @@ import org.jboss.aesh.console.command.CommandResult;
  */
 public class AeshProcess implements Runnable, Process {
 
-    private int pid;
     private ProcessManager manager;
     private ConsoleCallback consoleCallback;
     private ConsoleOperation operation;
@@ -24,17 +23,17 @@ public class AeshProcess implements Runnable, Process {
     public AeshProcess(int pid, ProcessManager manager,
                        ConsoleCallback consoleCallback,
                        ConsoleOperation consoleOperation) {
-        this.pid = pid;
         this.manager = manager;
         this.consoleCallback = consoleCallback;
         this.operation = consoleOperation;
         this.consoleCallback.setProcess(this);
+        this.operation.setPid(pid);
     }
 
     @Override
     public void run() {
         try {
-            Thread.currentThread().setName("AeshProcess: " + pid);
+            Thread.currentThread().setName("AeshProcess: " + operation.getPid());
             myThread = Thread.currentThread();
             setExitResult( consoleCallback.execute(operation));
         }
@@ -59,7 +58,7 @@ public class AeshProcess implements Runnable, Process {
 
     @Override
     public int getPID() {
-        return pid;
+        return operation.getPid();
     }
 
     private void setExitResult(int exitStatus) {
@@ -91,18 +90,18 @@ public class AeshProcess implements Runnable, Process {
 
         AeshProcess that = (AeshProcess) o;
 
-        return pid == that.pid;
+        return operation.getPid() == that.operation.getPid();
     }
 
     @Override
     public int hashCode() {
-        return pid;
+        return operation.getPid();
     }
 
     @Override
     public String toString() {
         return "AeshProcess{" +
-                "pid=" + pid +
+                "pid=" + operation.getPid() +
                 ", manager=" + manager +
                 ", consoleCallback=" + consoleCallback +
                 ", operation=" + operation +

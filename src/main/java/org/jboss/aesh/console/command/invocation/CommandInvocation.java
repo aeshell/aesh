@@ -68,4 +68,11 @@ public interface CommandInvocation {
      * @throws InterruptedException
      */
     CommandOperation getInput() throws InterruptedException;
+
+    /**
+     * The process id.
+     *
+     * @return pid
+     */
+    int getPid();
 }

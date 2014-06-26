@@ -147,6 +147,11 @@ class FooCommandInvocation implements CommandInvocation {
         return commandInvocation.getInput();
     }
 
+    @Override
+    public int getPid() {
+        return commandInvocation.getPid();
+    }
+
     public String getFoo() {
         return "FOO";
     }

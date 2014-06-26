@@ -15,6 +15,7 @@ public class ConsoleOperation {
 
     private ControlOperator controlOperator;
     private String buffer;
+    private int pid = -1;
 
 
     public ConsoleOperation(ControlOperator controlOperator, String buffer) {
@@ -30,6 +31,13 @@ public class ConsoleOperation {
         return controlOperator;
     }
 
+    public int getPid() {
+        return pid;
+    }
+
+    public void setPid(int pid) {
+        this.pid = pid;
+    }
 
     @Override
     public boolean equals(Object o) {

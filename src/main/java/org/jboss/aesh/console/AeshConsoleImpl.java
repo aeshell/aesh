@@ -319,7 +319,8 @@ public class AeshConsoleImpl implements AeshConsole {
                                     commandInvocationProvider)
                                 .enhanceCommandInvocation(
                                     new AeshCommandInvocation(console,
-                                        output.getControlOperator(), this)));
+                                        output.getControlOperator(),
+                                         output.getPid(), this)));
 
                     if(result == CommandResult.SUCCESS && resultHandler != null)
                         resultHandler.onSuccess();
