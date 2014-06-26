@@ -25,14 +25,15 @@ public class ProcessManager {
     private List<Process> processes;
     private ExecutorService executorService;
     private boolean doLogging;
-    private int pidCounter;
+    private int pidCounter = 1;
+    private int foregroundProcess = -1;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ProcessManager.class.getName());
 
     public ProcessManager(Console console, boolean log) {
         this.console = console;
         this.doLogging = log;
-        processes = new ArrayList<>(1);
+        processes = new ArrayList<>(20);
         executorService = Executors.newCachedThreadPool();
     }
 
@@ -41,9 +42,28 @@ public class ProcessManager {
         if (doLogging)
             LOGGER.info("starting a new process: " + process + ", consoleOperation: " + consoleOperation);
 
-        processes.add(process);
-        executorService.execute(process);
+        //atm we cant start a new process if there is one in the foreground
+        int currentProcess = getCurrentForegroundProcess();
+        if(currentProcess > 0) {
+            LOGGER.warning("Cannot start new process since process: "+
+                    getProcessByPid(currentProcess)+" is running in the foreground.");
+        }
+        else {
+            processes.add(process);
+            foregroundProcess = process.getPID();
+            executorService.execute(process);
+        }
+    }
 
+    private int getCurrentForegroundProcess() {
+        return foregroundProcess;
+    }
+
+    private Process getProcessByPid(int pid) {
+        for(Process p : processes)
+            if(p.getPID() == pid)
+                return p;
+        return null;
     }
 
     // TODO: need to check if the process fetching has "focus"
@@ -51,21 +71,54 @@ public class ProcessManager {
         return console.getInput();
     }
 
+    public void putProcessInBackground(int pid) {
+        if(foregroundProcess == pid) {
+            if(doLogging)
+                LOGGER.info("Putting process: "+pid+" into the background.");
+            foregroundProcess = -1;
+        }
+        else if(getProcessByPid(pid) != null) {
+            Process p = getProcessByPid(pid);
+            if(p.getStatus() == Process.Status.FOREGROUND) {
+                if(doLogging)
+                    LOGGER.warning("We have another process in the foreground: " +
+                            p + ", this should not happen!");
+                p.updateStatus(Process.Status.BACKGROUND);
+            }
+        }
+    }
+
+    public void putProcessInForeground(int pid) {
+        if(foregroundProcess == -1) {
+            Process p = getProcessByPid(pid);
+            if(p != null) {
+                p.updateStatus(Process.Status.FOREGROUND);
+                foregroundProcess = p.getPID();
+            }
+        }
+        else
+            if(doLogging)
+                LOGGER.info("We already have a process in the foreground: "+
+                        foregroundProcess+", cant add another one");
+    }
+
     /**
      * this is the current running process
      */
     public Process getCurrentProcess() {
-        return processes.get(0);
+        return getProcessByPid(foregroundProcess);
     }
 
-    public boolean hasRunningProcess() {
-        return processes.size() > 0;
+    public boolean hasForegroundProcess() {
+        return foregroundProcess > 0;
     }
 
     public void processHaveFinished(Process process) {
         if (doLogging)
             LOGGER.info("process has finished: " + process);
         processes.remove(process);
+        if(process.getStatus() == Process.Status.FOREGROUND)
+            foregroundProcess = -1;
         console.currentProcessFinished(process);
     }
 

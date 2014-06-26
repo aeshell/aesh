@@ -24,4 +24,11 @@ public interface Process {
 
     void interrupt() throws InterruptedException;
 
+    Status getStatus();
+
+    void updateStatus(Status status);
+
+    enum Status {
+        FOREGROUND,BACKGROUND
+    }
 }

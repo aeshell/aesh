@@ -215,7 +215,7 @@ public class Console {
                 }
                 else {
                     if(action != Action.IGNOREEOF) {
-                        if(processManager.hasRunningProcess())
+                        if(processManager.hasForegroundProcess())
                             stop();
                         else {
                             try {
@@ -548,7 +548,7 @@ public class Console {
                 }
                 //if we get ctrl-c/d while a process is running we'll try to kill
                 if((inc == Key.CTRL_C || inc == Key.CTRL_D) &&
-                        processManager.hasRunningProcess()) {
+                        processManager.hasForegroundProcess()) {
                     //try to kill running process
                     try {
                         if(settings.isLogging())
@@ -587,7 +587,7 @@ public class Console {
     }
 
     private void execute() {
-        while(!processManager.hasRunningProcess() && hasInput()) {
+        while(!processManager.hasForegroundProcess() && hasInput()) {
             try {
                 processInternalOperation(getInput());
             }

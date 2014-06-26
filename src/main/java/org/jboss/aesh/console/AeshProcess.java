@@ -19,6 +19,7 @@ public class AeshProcess implements Runnable, Process {
     private ConsoleOperation operation;
     private CommandResult exitResult;
     private Thread myThread;
+    private Status status;
 
     public AeshProcess(int pid, ProcessManager manager,
                        ConsoleCallback consoleCallback,
@@ -28,6 +29,7 @@ public class AeshProcess implements Runnable, Process {
         this.operation = consoleOperation;
         this.consoleCallback.setProcess(this);
         this.operation.setPid(pid);
+        status = Status.FOREGROUND;
     }
 
     @Override
@@ -81,6 +83,16 @@ public class AeshProcess implements Runnable, Process {
     public void interrupt() {
         if(myThread != null)
             myThread.interrupt();
+    }
+
+    @Override
+    public Status getStatus() {
+        return status;
+    }
+
+    @Override
+    public void updateStatus(Status status) {
+        this.status = status;
     }
 
     @Override
