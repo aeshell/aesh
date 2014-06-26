@@ -59,6 +59,7 @@ public class SettingsBuilder {
         settings.setExportFile(baseSettings.getExportFile());
         settings.setPersistExport(baseSettings.doPersistExport());
         settings.setResource(baseSettings.getResource());
+        settings.setExportUsesSystemEnvironment(baseSettings.doExportUsesSystemEnvironment());
     }
 
     public SettingsBuilder name(String name) {
