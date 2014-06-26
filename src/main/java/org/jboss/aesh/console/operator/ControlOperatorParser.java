@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  */
 public class ControlOperatorParser {
 
-    private static final Pattern controlOperatorPattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)|(\\|&)|(\\|\\|)|(\\|)|(;)|(&&)|(&)");
+    private static final Pattern controlOperatorPattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)|(\\|&)|(\\|\\|)|(\\|)|(;)|(&&)|(&)|(\")|(\')");
     private static final Pattern redirectionNoPipelinePattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)");
     private static final Pattern pipelineAndEndPattern = Pattern.compile("(\\|&)|(\\|)|(;)");
     private static final char ESCAPE = '\\';
@@ -93,33 +93,35 @@ public class ControlOperatorParser {
     public static List<ConsoleOperation> findAllControlOperators(String buffer) {
         Matcher matcher = controlOperatorPattern.matcher(buffer);
         List<ConsoleOperation> reOpList = new ArrayList<>();
+        boolean haveDoubleQuote = false;
+        boolean haveSingleQuote = false;
 
         while(matcher.find()) {
-            if(matcher.group(1) != null) {
+            if(matcher.group(1) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_OUT_AND_ERR,
                         buffer.substring(0, matcher.start(1))));
                 buffer = buffer.substring(matcher.end(1));
                 matcher = controlOperatorPattern.matcher(buffer);
             }
-            else if(matcher.group(2) != null) {
+            else if(matcher.group(2) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.APPEND_ERR,
                         buffer.substring(0, matcher.start(2))));
                 buffer = buffer.substring(matcher.end(2));
                 matcher = controlOperatorPattern.matcher(buffer);
             }
-            else if(matcher.group(3) != null) {
+            else if(matcher.group(3) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_ERR,
                         buffer.substring(0, matcher.start(3))));
                 buffer = buffer.substring(matcher.end(3));
                 matcher = controlOperatorPattern.matcher(buffer);
             }
-            else if(matcher.group(4) != null) {
+            else if(matcher.group(4) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.APPEND_OUT,
                         buffer.substring(0, matcher.start(4))));
                 buffer = buffer.substring(matcher.end(4));
                 matcher = controlOperatorPattern.matcher(buffer);
             }
-            else if(matcher.group(5) != null) {
+            else if(matcher.group(5) != null && !haveDoubleQuote && !haveSingleQuote) {
                 if(matcher.start(5) > 0 &&
                         buffer.charAt(matcher.start(5)-1) != ESCAPE &&
                         buffer.charAt(matcher.start(5)-1) != EQUALS &&
@@ -132,7 +134,7 @@ public class ControlOperatorParser {
                     matcher = controlOperatorPattern.matcher(buffer);
                 }
             }
-            else if(matcher.group(6) != null) {
+            else if(matcher.group(6) != null && !haveDoubleQuote && !haveSingleQuote) {
                 if(matcher.start(6) > 0 &&
                         buffer.charAt(matcher.start(6)-1) != ESCAPE &&
                         buffer.charAt(matcher.start(6)-1) != EQUALS &&
@@ -146,19 +148,19 @@ public class ControlOperatorParser {
                     matcher = controlOperatorPattern.matcher(buffer);
                 }
             }
-            else if(matcher.group(7) != null) {
+            else if(matcher.group(7) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.PIPE_OUT_AND_ERR,
                         buffer.substring(0, matcher.start(7))));
                 buffer = buffer.substring(matcher.end(7));
                 matcher = controlOperatorPattern.matcher(buffer);
             }
-            else if(matcher.group(8) != null) {
+            else if(matcher.group(8) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.OR,
                         buffer.substring(0, matcher.start(8))));
                 buffer = buffer.substring(matcher.end(8));
                 matcher = controlOperatorPattern.matcher(buffer);
             }
-            else if(matcher.group(9) != null) {
+            else if(matcher.group(9) != null && !haveDoubleQuote && !haveSingleQuote) {
                 if(matcher.start(9) > 0 &&
                         buffer.charAt(matcher.start(9)-1) != ESCAPE) {
                     reOpList.add( new ConsoleOperation(ControlOperator.PIPE,
@@ -167,19 +169,19 @@ public class ControlOperatorParser {
                     matcher = controlOperatorPattern.matcher(buffer);
                 }
             }
-            else if(matcher.group(10) != null) {
+            else if(matcher.group(10) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.END,
                         buffer.substring(0, matcher.start(10))));
                 buffer = buffer.substring(matcher.end(10));
                 matcher = controlOperatorPattern.matcher(buffer);
             }
-            else if(matcher.group(11) != null) {
+            else if(matcher.group(11) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.AND,
                         buffer.substring(0, matcher.start(11))));
                 buffer = buffer.substring(matcher.end(11));
                 matcher = controlOperatorPattern.matcher(buffer);
             }
-            else if(matcher.group(12) != null) {
+            else if(matcher.group(12) != null && !haveDoubleQuote && !haveSingleQuote) {
                 if(matcher.start(12) > 0 &&
                         buffer.charAt(matcher.start(12)-1) != ESCAPE) {
                     reOpList.add( new ConsoleOperation(ControlOperator.AMP,
@@ -188,7 +190,15 @@ public class ControlOperatorParser {
                     matcher = controlOperatorPattern.matcher(buffer);
                 }
             }
-        }
+            else if(matcher.group(13) != null) {
+                if((matcher.start(13) == 0 || buffer.charAt(matcher.start(13)-1) != ESCAPE) && !haveSingleQuote)
+                    haveDoubleQuote = !haveDoubleQuote;
+            }
+            else if(matcher.group(14) != null) {
+                if((matcher.start(14) == 0 || buffer.charAt(matcher.start(14)-1) != ESCAPE) && !haveDoubleQuote)
+                    haveSingleQuote = !haveSingleQuote;
+            }
+         }
         if(reOpList.size() == 0)
             reOpList.add(new ConsoleOperation( ControlOperator.NONE, buffer));
         if(buffer.trim().length() > 0)

@@ -63,7 +63,7 @@ public class ControlOperatorParserTest extends TestCase {
         assertEquals(new ConsoleOperation(ControlOperator.END, " foo"), ops.get(1));
         assertEquals(new ConsoleOperation(ControlOperator.NONE, " foo2"), ops.get(2));
 
-         ops = ControlOperatorParser.findAllControlOperators("bas & foo; foo2 && foo3; bar || foo4");
+        ops = ControlOperatorParser.findAllControlOperators("bas & foo; foo2 && foo3; bar || foo4");
         assertEquals(new ConsoleOperation(ControlOperator.AMP, "bas "), ops.get(0));
         assertEquals(new ConsoleOperation(ControlOperator.END, " foo"), ops.get(1));
         assertEquals(new ConsoleOperation(ControlOperator.AND, " foo2 "), ops.get(2));
@@ -102,6 +102,23 @@ public class ControlOperatorParserTest extends TestCase {
         assertEquals(new ConsoleOperation(ControlOperator.NONE, "ls bar<=foo"),
                 ControlOperatorParser.findAllControlOperators("ls bar<=foo").get(0));
 
+        ops = ControlOperatorParser.findAllControlOperators("bas & foo; foo2 && foo3; \"bar || foo4\"");
+        assertEquals(new ConsoleOperation(ControlOperator.AMP, "bas "), ops.get(0));
+        assertEquals(new ConsoleOperation(ControlOperator.END, " foo"), ops.get(1));
+        assertEquals(new ConsoleOperation(ControlOperator.AND, " foo2 "), ops.get(2));
+        assertEquals(new ConsoleOperation(ControlOperator.END, " foo3"), ops.get(3));
+        assertEquals(new ConsoleOperation(ControlOperator.NONE, " \"bar || foo4\""), ops.get(4));
+
+        ops = ControlOperatorParser.findAllControlOperators("\"bar < foo4\"");
+        assertEquals(new ConsoleOperation(ControlOperator.NONE, "\"bar < foo4\""), ops.get(0));
+
+        ops = ControlOperatorParser.findAllControlOperators("gah && \"bar 2> foo4\"");
+        assertEquals(new ConsoleOperation(ControlOperator.AND, "gah "), ops.get(0));
+        assertEquals(new ConsoleOperation(ControlOperator.NONE, " \"bar 2> foo4\""), ops.get(1));
+
+        ops = ControlOperatorParser.findAllControlOperators("gah > \'bar | foo4\'");
+        assertEquals(new ConsoleOperation(ControlOperator.OVERWRITE_OUT, "gah "), ops.get(0));
+        assertEquals(new ConsoleOperation(ControlOperator.NONE, " \'bar | foo4\'"), ops.get(1));
     }
 
     public void testFindLastRedirectionBeforeCursor() {
