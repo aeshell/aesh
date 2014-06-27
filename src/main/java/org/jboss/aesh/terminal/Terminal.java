@@ -6,6 +6,7 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.console.reader.AeshInputStream;
 import org.jboss.aesh.console.settings.Settings;
 
 import java.io.Closeable;
@@ -41,5 +42,7 @@ public interface Terminal extends Closeable {
     void reset() throws IOException;
 
     Shell getShell();
+
+    AeshInputStream getInputStream();
 
 }

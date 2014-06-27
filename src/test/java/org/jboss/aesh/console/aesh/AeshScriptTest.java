@@ -78,7 +78,8 @@ public class AeshScriptTest {
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(fooCommand, FooCommand.class)
-                .command(new RunCommand(resultHandler, outputStream))
+                .command(new RunCommand(resultHandler))
+                .command(ExitCommand.class)
                 .create();
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
@@ -97,7 +98,6 @@ public class AeshScriptTest {
         Thread.sleep(80);
 
 
-        aeshConsole.stop();
     }
 
     private List<String> readScriptFile() throws IOException {
@@ -117,11 +117,9 @@ public class AeshScriptTest {
     private class RunCommand implements Command {
 
         private final CommandResultHandler resultHandler;
-        private final PipedOutputStream outputStream;
 
-        public RunCommand(CommandResultHandler resultHandler, PipedOutputStream outputStream) {
+        public RunCommand(CommandResultHandler resultHandler) {
             this.resultHandler = resultHandler;
-            this.outputStream = outputStream;
         }
 
         @Override
@@ -131,17 +129,24 @@ public class AeshScriptTest {
 
             List<String> script = readScriptFile();
 
-            //PrintStream outputStream = commandInvocation.getShell().in().getStdIn();
-
             for(String line : script) {
-                if(resultHandler.failed)
-                    break;
-                outputStream.write(line.getBytes());
-                outputStream.write(Config.getLineSeparator().getBytes());
-                outputStream.flush();
-                Thread.sleep(80);
+//                if(resultHandler.failed)
+//                    break;
+                commandInvocation.executeCommand(line + Config.getLineSeparator());
+                Thread.sleep(1000);
             }
 
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name ="exit", description = "")
+    private static class ExitCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            System.out.println("EXITING");
+            commandInvocation.stop();
             return CommandResult.SUCCESS;
         }
     }
@@ -155,10 +160,12 @@ public class AeshScriptTest {
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             if(counter < 1) {
                 commandInvocation.getShell().out().println("computing...." + Config.getLineSeparator() + "finished computing, returning...");
+                System.out.println("computing...");
                 counter ++;
                 return CommandResult.SUCCESS;
             }
             else {
+                System.out.println("computing2...");
                 assertTrue(false);
                 return CommandResult.FAILURE;
             }

@@ -85,4 +85,15 @@ public interface CommandInvocation {
      * Put the current process in the foreground
      */
     void putProcessInForeground();
+
+    /**
+     * This will push the input to the input stream where aesh will
+     * parse it and execute it as a normal "user input".
+     * The input will not be visible for the user.
+     * Note that if this command still has the foreground this input
+     * will just be sitting on the queue.
+     *
+     * @param input command input
+     */
+    void executeCommand(String input);
 }

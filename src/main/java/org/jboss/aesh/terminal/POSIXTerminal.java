@@ -191,6 +191,11 @@ public class POSIXTerminal extends AbstractTerminal {
     }
 
     @Override
+    public AeshInputStream getInputStream() {
+        return input;
+    }
+
+    @Override
     public void close() throws IOException {
         try {
             inputSession.stop();

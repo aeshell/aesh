@@ -119,6 +119,11 @@ public class TestTerminal implements Terminal, Shell {
     }
 
     @Override
+    public AeshInputStream getInputStream() {
+        return input;
+    }
+
+    @Override
     public void clear() throws IOException {
     }
 

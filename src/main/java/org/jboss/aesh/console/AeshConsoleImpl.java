@@ -181,6 +181,10 @@ public class AeshConsoleImpl implements AeshConsole {
         console.putProcessInForeground(pid);
     }
 
+    public void execute(String input) {
+        console.pushToInputStream(input);
+    }
+
     private void processAfterInit(Settings settings) {
         if (settings.isManEnabled()) {
             internalRegistry = new AeshInternalCommandRegistry();

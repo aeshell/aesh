@@ -91,4 +91,9 @@ public final class AeshCommandInvocation implements CommandInvocation {
     public void putProcessInForeground() {
         aeshConsole.putProcessInForeground(pid);
     }
+
+    @Override
+    public void executeCommand(String input) {
+        aeshConsole.execute(input);
+    }
 }

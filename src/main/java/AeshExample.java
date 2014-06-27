@@ -50,11 +50,14 @@ import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.terminal.TerminalTextStyle;
 import org.jboss.aesh.util.ANSI;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,6 +105,7 @@ public class AeshExample {
                 .command(LsCommand.class)
                 .command(TestConsoleCommand.class)
                 .command(PromptCommand.class)
+                .command(RunCommand.class)
                 .create();
 
         AeshConsole aeshConsole = new AeshConsoleBuilder()
@@ -125,6 +129,43 @@ public class AeshExample {
             return CommandResult.SUCCESS;
         }
     }
+
+    @CommandDefinition(name = "run", description = "")
+    public static class RunCommand implements Command {
+
+        @Arguments
+        private List<Resource> arguments;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+
+            commandInvocation.putProcessInBackground();
+
+            if(arguments != null && arguments.size() > 0 && arguments.get(0).isLeaf()) {
+                List<String> script = readScriptFile(arguments.get(0));
+
+                for (String line : script) {
+                    commandInvocation.executeCommand(line + Config.getLineSeparator());
+                }
+            }
+
+            return CommandResult.SUCCESS;
+        }
+
+        private List<String> readScriptFile(Resource resource) throws IOException {
+            List<String> lines = new ArrayList<>();
+            BufferedReader br = new BufferedReader(new InputStreamReader(resource.read()));
+            String line = br.readLine();
+            while (line != null) {
+                if (line.trim().length() > 0 && !line.trim().startsWith("#"))
+                    lines.add(line);
+                line = br.readLine();
+            }
+
+            return lines;
+        }
+    }
+
 
     //this command use a builder defined above to specify the meta data needed
     public static class FooCommand implements Command {

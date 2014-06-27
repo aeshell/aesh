@@ -406,6 +406,10 @@ public class Console {
         processManager.putProcessInBackground(pid);
     }
 
+    protected void pushToInputStream(String input) {
+        getTerminal().getInputStream().write(input);
+    }
+
     private boolean hasInput() {
         return inputQueue.size() > 0;
     }

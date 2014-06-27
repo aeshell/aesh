@@ -162,6 +162,11 @@ class FooCommandInvocation implements CommandInvocation {
         commandInvocation.putProcessInForeground();
     }
 
+    @Override
+    public void executeCommand(String input) {
+        commandInvocation.executeCommand(input);
+    }
+
     public String getFoo() {
         return "FOO";
     }
