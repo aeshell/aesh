@@ -78,6 +78,7 @@ public class AeshScriptTest {
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(fooCommand, FooCommand.class)
+                .command(new RunCommand(resultHandler, outputStream))
                 .create();
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
@@ -90,17 +91,11 @@ public class AeshScriptTest {
 
         aeshConsole.start();
 
-        List<String> script = readScriptFile();
+        outputStream.write("run".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
+        outputStream.flush();
+        Thread.sleep(80);
 
-        for(String line : script) {
-            if(resultHandler.failed)
-                break;
-
-            outputStream.write(line.getBytes());
-            outputStream.write(Config.getLineSeparator().getBytes());
-            outputStream.flush();
-            Thread.sleep(80);
-        }
 
         aeshConsole.stop();
     }
@@ -116,6 +111,39 @@ public class AeshScriptTest {
         }
 
         return lines;
+    }
+
+    @CommandDefinition(name = "run", description = "")
+    private class RunCommand implements Command {
+
+        private final CommandResultHandler resultHandler;
+        private final PipedOutputStream outputStream;
+
+        public RunCommand(CommandResultHandler resultHandler, PipedOutputStream outputStream) {
+            this.resultHandler = resultHandler;
+            this.outputStream = outputStream;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+
+            commandInvocation.putProcessInBackground();
+
+            List<String> script = readScriptFile();
+
+            //PrintStream outputStream = commandInvocation.getShell().in().getStdIn();
+
+            for(String line : script) {
+                if(resultHandler.failed)
+                    break;
+                outputStream.write(line.getBytes());
+                outputStream.write(Config.getLineSeparator().getBytes());
+                outputStream.flush();
+                Thread.sleep(80);
+            }
+
+            return CommandResult.SUCCESS;
+        }
     }
 
     @CommandDefinition(name = "foo", description = "")

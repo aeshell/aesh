@@ -75,4 +75,14 @@ public interface CommandInvocation {
      * @return pid
      */
     int getPid();
+
+    /**
+     * Put the current process in the background
+     */
+    void putProcessInBackground();
+
+    /**
+     * Put the current process in the foreground
+     */
+    void putProcessInForeground();
 }

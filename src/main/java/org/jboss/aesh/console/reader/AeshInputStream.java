@@ -101,4 +101,9 @@ public class AeshInputStream extends InputStream {
         }
     }
 
+    //TODO: not sure if this is very smart...
+    public void write(String toBuffer) {
+        blockingQueue.add(toBuffer);
+    }
+
 }

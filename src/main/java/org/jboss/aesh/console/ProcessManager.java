@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.jboss.aesh.console.command.CommandOperation;
+import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.LoggerUtil;
 
 /**
@@ -66,9 +67,11 @@ public class ProcessManager {
         return null;
     }
 
-    // TODO: need to check if the process fetching has "focus"
-    public CommandOperation getInput() throws InterruptedException {
-        return console.getInput();
+    public CommandOperation getInput(int pid) throws InterruptedException {
+        if(foregroundProcess == pid)
+            return console.getInput();
+        else
+            return new CommandOperation(Key.UNKNOWN, new int[]{});
     }
 
     public void putProcessInBackground(int pid) {

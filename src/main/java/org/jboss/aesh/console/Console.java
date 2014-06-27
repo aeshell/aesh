@@ -398,6 +398,14 @@ public class Console {
         return inputProcessor;
     }
 
+    protected void putProcessInBackground(int pid) {
+        processManager.putProcessInBackground(pid);
+    }
+
+    protected void putProcessInForeground(int pid) {
+        processManager.putProcessInBackground(pid);
+    }
+
     private boolean hasInput() {
         return inputQueue.size() > 0;
     }

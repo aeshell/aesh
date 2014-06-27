@@ -152,6 +152,16 @@ class FooCommandInvocation implements CommandInvocation {
         return commandInvocation.getPid();
     }
 
+    @Override
+    public void putProcessInBackground() {
+        commandInvocation.putProcessInBackground();
+    }
+
+    @Override
+    public void putProcessInForeground() {
+        commandInvocation.putProcessInForeground();
+    }
+
     public String getFoo() {
         return "FOO";
     }

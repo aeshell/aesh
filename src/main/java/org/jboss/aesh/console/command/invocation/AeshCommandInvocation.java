@@ -6,7 +6,7 @@
  */
 package org.jboss.aesh.console.command.invocation;
 
-import org.jboss.aesh.console.AeshConsole;
+import org.jboss.aesh.console.AeshConsoleImpl;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.Prompt;
@@ -20,12 +20,12 @@ import org.jboss.aesh.terminal.Shell;
  */
 public final class AeshCommandInvocation implements CommandInvocation {
 
-    private final AeshConsole aeshConsole;
+    private final AeshConsoleImpl aeshConsole;
     private final ControlOperator controlOperator;
     private final ConsoleCallback callback;
     private final int pid;
 
-    public AeshCommandInvocation(AeshConsole aeshConsole, ControlOperator controlOperator,
+    public AeshCommandInvocation(AeshConsoleImpl aeshConsole, ControlOperator controlOperator,
                                  int pid, ConsoleCallback callback) {
         this.aeshConsole = aeshConsole;
         this.controlOperator = controlOperator;
@@ -80,5 +80,15 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public int getPid() {
         return pid;
+    }
+
+    @Override
+    public void putProcessInBackground() {
+        aeshConsole.putProcessInBackground(pid);
+    }
+
+    @Override
+    public void putProcessInForeground() {
+        aeshConsole.putProcessInForeground(pid);
     }
 }

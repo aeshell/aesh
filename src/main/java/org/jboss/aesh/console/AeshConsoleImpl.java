@@ -173,6 +173,14 @@ public class AeshConsoleImpl implements AeshConsole {
         return console.getInputProcessor();
     }
 
+    public void putProcessInBackground(int pid) {
+        console.putProcessInBackground(pid);
+    }
+
+    public void putProcessInForeground(int pid) {
+        console.putProcessInForeground(pid);
+    }
+
     private void processAfterInit(Settings settings) {
         if (settings.isManEnabled()) {
             internalRegistry = new AeshInternalCommandRegistry();
@@ -277,10 +285,10 @@ public class AeshConsoleImpl implements AeshConsole {
 
     class AeshConsoleCallbackImpl extends AeshConsoleCallback {
 
-        private final AeshConsole console;
+        private final AeshConsoleImpl console;
         private CommandResult result;
 
-        AeshConsoleCallbackImpl(AeshConsole aeshConsole) {
+        AeshConsoleCallbackImpl(AeshConsoleImpl aeshConsole) {
             this.console = aeshConsole;
         }
 
