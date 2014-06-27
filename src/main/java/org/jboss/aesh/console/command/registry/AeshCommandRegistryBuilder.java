@@ -33,6 +33,13 @@ public class AeshCommandRegistryBuilder {
         return this;
     }
 
+    public AeshCommandRegistryBuilder commands(Class<? extends Command>... commands) {
+        for (Class<? extends Command> c : commands) {
+            commandRegistry.addCommand(c);
+        }
+        return this;
+    }
+
     public AeshCommandRegistryBuilder command(ProcessedCommand processedCommand,
             Class<? extends Command> command) {
         commandRegistry.addCommand(new AeshCommandContainer(processedCommand, command));
