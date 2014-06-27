@@ -99,6 +99,7 @@ public class SettingsImpl implements Settings {
         setExportFile(baseSettings.getExportFile());
         setPersistExport(baseSettings.doPersistExport());
         setResource(baseSettings.getResource());
+        setExportUsesSystemEnvironment(baseSettings.doExportUsesSystemEnvironment());
     }
 
     public void resetToDefaults() {
