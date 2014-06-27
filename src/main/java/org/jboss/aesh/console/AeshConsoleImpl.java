@@ -317,19 +317,14 @@ public class AeshConsoleImpl implements AeshConsole {
                             commandLine, invocationProviders, getAeshContext(), true);
                     // validate the command before execute, only call if no
                     // options with overrideRequired is not set
-                    if (commandContainer.getParser().getCommand()
-                        .getValidator() != null
+                    if (commandContainer.getParser().getCommand() .getValidator() != null
                         && !commandLine.hasOptionWithOverrideRequired())
-                        commandContainer.getParser().getCommand()
-                            .getValidator()
+                        commandContainer.getParser().getCommand().getValidator()
                             .validate(commandContainer.getCommand());
-                    result = commandContainer
-                        .getCommand()
-                        .execute(
-                            commandInvocationServices
-                                .getCommandInvocationProvider(
-                                    commandInvocationProvider)
-                                .enhanceCommandInvocation(
+
+                    result = commandContainer.getCommand().execute(
+                            commandInvocationServices.getCommandInvocationProvider(
+                                    commandInvocationProvider).enhanceCommandInvocation(
                                     new AeshCommandInvocation(console,
                                         output.getControlOperator(),
                                          output.getPid(), this)));
