@@ -22,7 +22,8 @@ import org.jboss.aesh.console.settings.Settings;
  */
 public class TestTerminal implements Terminal, Shell {
 
-    private PrintStream writer;
+    private PrintStream outWriter;
+    private PrintStream errWriter;
     private TerminalSize size;
     private AeshInputStream input;
     private ConsoleInputSession inputSession;
@@ -33,7 +34,8 @@ public class TestTerminal implements Terminal, Shell {
     public void init(Settings settings) {
         inputSession =  new ConsoleInputSession(settings.getInputStream());
         input = inputSession.getExternalInputStream();
-        writer = new PrintStream(settings.getStdOut(), true);
+        outWriter = new PrintStream(settings.getStdOut(), true);
+        errWriter = new PrintStream(settings.getStdErr(), true);
         this.stdOut = settings.getStdOut();
         this.stdErr = settings.getStdErr();
 
@@ -122,7 +124,7 @@ public class TestTerminal implements Terminal, Shell {
 
     @Override
     public PrintStream err() {
-        return writer;
+        return errWriter;
     }
 
     @Override
@@ -132,7 +134,7 @@ public class TestTerminal implements Terminal, Shell {
 
     @Override
     public PrintStream out() {
-        return writer;
+        return outWriter;
     }
 
 }
