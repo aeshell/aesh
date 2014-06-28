@@ -89,4 +89,6 @@ public interface AeshConsole {
     boolean isRunning();
 
     ExportManager getExportManager();
+
+    Console getConsole();
 }
