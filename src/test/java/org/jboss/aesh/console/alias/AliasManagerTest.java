@@ -48,9 +48,9 @@ public class AliasManagerTest {
         assertEquals("alias foo3='bar --help'"+ Config.getLineSeparator(), out);
         out = manager.parseAlias("alias");
         StringBuilder sb = new StringBuilder();
-        sb.append("alias foo='bar'"+ Config.getLineSeparator())
-                .append("alias foo2='bar -s -h'"+ Config.getLineSeparator())
-                .append("alias foo3='bar --help'"+ Config.getLineSeparator());
+        sb.append("alias foo='bar'").append(Config.getLineSeparator())
+                .append("alias foo2='bar -s -h'").append(Config.getLineSeparator())
+                .append("alias foo3='bar --help'").append(Config.getLineSeparator());
         assertEquals(sb.toString(), out);
     }
 

@@ -348,7 +348,7 @@ public final class ProcessedOption {
     }
 
     private Converter initConverter(Class<? extends Converter> converterClass) {
-        if(converterClass != null && converterClass != NullConverter.class) {
+        if(converterClass != null && !converterClass.equals(NullConverter.class)) {
             if( CLConverterManager.getInstance().hasConverter(converterClass))
                 return CLConverterManager.getInstance().getConverter(converterClass);
             else
@@ -360,7 +360,7 @@ public final class ProcessedOption {
 
     private OptionCompleter initCompleter(Class<? extends OptionCompleter> completerClass) {
 
-        if(completerClass != null && completerClass != NullOptionCompleter.class) {
+        if(completerClass != null && !completerClass.equals(NullOptionCompleter.class)) {
                 return ReflectionUtil.newInstance(completerClass);
         }
         else {

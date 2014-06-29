@@ -156,14 +156,14 @@ public final class ProcessedCommand {
     }
 
     private CommandValidator initValidator(Class<? extends CommandValidator> validator) {
-        if(validator != null && validator != NullCommandValidator.class)
+        if(validator != null && !validator.equals(NullCommandValidator.class))
             return ReflectionUtil.newInstance(validator);
         else
             return new NullCommandValidator();
     }
 
     private ResultHandler initResultHandler(Class<? extends ResultHandler> resultHandler) {
-        if(resultHandler != null && resultHandler != NullResultHandler.class)
+        if(resultHandler != null && !resultHandler.equals(NullResultHandler.class))
             return ReflectionUtil.newInstance(resultHandler);
         else
             return new NullResultHandler();

@@ -37,7 +37,7 @@ public class Buffer {
      * @param prompt set prompt
      */
     protected Buffer(boolean ansi, Prompt prompt ) {
-        this.ansi = ansi;
+        Buffer.ansi = ansi;
         if(prompt != null)
             this.prompt = prompt;
         else

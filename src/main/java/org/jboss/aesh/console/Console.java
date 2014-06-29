@@ -104,6 +104,7 @@ public class Console {
 
     @Override
     protected void finalize() throws Throwable {
+        super.finalize();
         try {
             if(settings != null) {
                 if(settings.getTerminal() != null)
@@ -972,7 +973,7 @@ public class Console {
                 }
                 catch (Exception e) {
                     if(console.settings.isLogging())
-                        console.LOGGER.log(Level.SEVERE, "Failed to find current row with ansi code: ",e);
+                        LOGGER.log(Level.SEVERE, "Failed to find current row with ansi code: ",e);
                     return new CursorPosition(-1,-1);
                 }
             }

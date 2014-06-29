@@ -57,7 +57,7 @@ public class WindowsTerminal extends AbstractTerminal {
             this.stdErr = new PrintStream( new AnsiOutputStream(settings.getStdErr()), true);
         }
 
-        if(settings.getInputStream() == System.in) {
+        if(settings.getInputStream().equals(System.in)) {
 
         InputStream inStream = new InputStream() {
             @Override

@@ -93,13 +93,7 @@ public class TerminalCharacter {
     @Override
     public String toString() {
         if(cache == null) {
-            StringBuilder builder = new StringBuilder();
-            builder.append(ANSI.getStart());
-            builder.append(style.toString()).append(';');
-            builder.append(this.color.toString());
-            builder.append('m');
-            builder.append(getCharacter());
-            cache = builder.toString();
+            cache = ANSI.getStart() + style.toString() + ';' + this.color.toString() + 'm' + getCharacter();
         }
         return cache;
     }

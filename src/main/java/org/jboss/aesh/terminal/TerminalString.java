@@ -114,16 +114,9 @@ public class TerminalString {
     public String toString() {
         if(ignoreRendering)
             return characters;
-        StringBuilder builder = new StringBuilder();
-        builder.append(ANSI.getStart())
-                .append(style.toString())
-                .append(';')
-                .append(this.color.toString())
-                .append('m')
-                .append(getCharacters())
-                        //reset it to plain
-                .append(ANSI.reset());
-        return builder.toString();
+        return ANSI.getStart() + style.toString() + ';' +
+                this.color.toString() +
+                'm' + getCharacters() + ANSI.reset();
     }
 
     public void write(PrintStream out) {
