@@ -20,9 +20,9 @@ import java.util.List;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshLine {
-    private String errorMessage;
-    private List<String> words;
-    private ParserStatus status;
+    private final String errorMessage;
+    private final List<String> words;
+    private final ParserStatus status;
 
     public AeshLine(List<String> words, ParserStatus status, String errorMessage) {
         if(words == null)

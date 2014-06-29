@@ -46,7 +46,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class AeshCommandCompletionTest {
 
-    private KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
+    private final KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
 
     @Test
     public void testCompletion() throws Exception {

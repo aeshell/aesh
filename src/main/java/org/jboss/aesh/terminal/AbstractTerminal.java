@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractTerminal implements Terminal, Shell {
 
-    private Logger logger;
+    private final Logger logger;
     protected Settings settings;
     private boolean mainBuffer = true;
 

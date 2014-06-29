@@ -24,11 +24,11 @@ import java.util.logging.Logger;
  * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
  */
 public class ConsoleInputSession {
-    private InputStream consoleStream;
-    private AeshInputStream aeshInputStream;
-    private ExecutorService executorService;
+    private final InputStream consoleStream;
+    private final AeshInputStream aeshInputStream;
+    private final ExecutorService executorService;
 
-    private ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<>(1000);
+    private final ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<>(1000);
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ConsoleInputSession.class.getName());
 

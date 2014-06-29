@@ -18,7 +18,7 @@ import java.util.List;
 public class ManSection {
 
     private String name;
-    private List<ManParameter> parameters;
+    private final List<ManParameter> parameters;
 
     public ManSection() {
         parameters = new ArrayList<ManParameter>();

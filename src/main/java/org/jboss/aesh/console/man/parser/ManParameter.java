@@ -17,10 +17,9 @@ import java.util.List;
  */
 public class ManParameter {
 
-    List<String> out = new ArrayList<String>();
-    private static final int padding = 4;
-    private static String argPad = "  ";
-    private static String textPad = "    ";
+    final List<String> out = new ArrayList<>();
+    private final static String argPad = "  ";
+    private final static String textPad = "    ";
 
     /**
      * First line is the param/option name

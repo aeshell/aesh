@@ -13,8 +13,8 @@ import org.jboss.aesh.terminal.TerminalTextStyle;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class NullOptionRenderer implements OptionRenderer {
-    private static TerminalTextStyle style = new TerminalTextStyle();
-    private static TerminalColor color = new TerminalColor();
+    private final static TerminalTextStyle style = new TerminalTextStyle();
+    private final static TerminalColor color = new TerminalColor();
 
     @Override
     public TerminalColor getColor() {

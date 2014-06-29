@@ -241,9 +241,9 @@ public class AeshCommandOptionValidatorTest {
     }
 
     public static class TestValidatorInvocation implements ValidatorInvocation<String,Command> {
-        private String value;
-        private Command command;
-        private AeshContext aeshContext;
+        private final String value;
+        private final Command command;
+        private final AeshContext aeshContext;
 
         public TestValidatorInvocation(String value, Command command, AeshContext aeshContext) {
             this.value = value;

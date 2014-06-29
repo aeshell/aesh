@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class AeshCommandLineParser implements CommandLineParser {
 
-    private ProcessedCommand command;
+    private final ProcessedCommand command;
     private static final String EQUALS = "=";
 
     public AeshCommandLineParser(ProcessedCommand command) {

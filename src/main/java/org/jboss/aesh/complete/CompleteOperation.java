@@ -26,7 +26,7 @@ public class CompleteOperation {
     private boolean trimmed = false;
     private boolean ignoreStartsWith = false;
     private String nonTrimmedBuffer;
-    private AeshContext aeshContext;
+    private final AeshContext aeshContext;
 
 
     private char separator = ' ';
@@ -203,9 +203,8 @@ public class CompleteOperation {
             if(!ignoreOffset && offset < cursor) {
                 int pos = cursor - offset;
                 if(c.getCharacters().length() >= pos) {
-                    TerminalString ts = c;
-                    ts.setCharacters(c.getCharacters().substring(pos));
-                    fixedCandidates.add(ts);
+                    c.setCharacters(c.getCharacters().substring(pos));
+                    fixedCandidates.add(c);
                 }
                 else
                     fixedCandidates.add(new TerminalString("", true));

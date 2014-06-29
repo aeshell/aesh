@@ -34,11 +34,11 @@ public class AeshCompletionHandler implements CompletionHandler {
     private final AeshContext aeshContext;
     private boolean askDisplayCompletion = false;
     private int displayCompletionSize = 100;
-    private List<Completion> completionList;
+    private final List<Completion> completionList;
     private AliasManager aliasManager;
-    private ConsoleBuffer consoleBuffer;
-    private Shell shell;
-    private boolean doLogging;
+    private final ConsoleBuffer consoleBuffer;
+    private final Shell shell;
+    private final boolean doLogging;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshCompletionHandler.class.getName());
 

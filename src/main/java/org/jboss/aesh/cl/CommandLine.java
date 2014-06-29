@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public class CommandLine {
 
-    private List<ProcessedOption> options;
+    private final List<ProcessedOption> options;
     private ProcessedOption argument;
     private boolean parserError;
     private CommandLineParserException parserException;

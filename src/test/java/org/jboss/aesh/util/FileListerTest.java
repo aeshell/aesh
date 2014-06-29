@@ -29,7 +29,7 @@ import org.junit.Test;
  */
 public class FileListerTest {
     private Resource workingDir;
-    private AeshContext aeshContext = new AeshContext() {
+    private final AeshContext aeshContext = new AeshContext() {
         @Override
         public Resource getCurrentWorkingDirectory() {
             return new FileResource(Config.getUserDir());

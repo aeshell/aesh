@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class PathResolverTest {
     private Path tempDir;
-    private static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
+    private final static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
 
     @Before
     public void before() throws IOException {

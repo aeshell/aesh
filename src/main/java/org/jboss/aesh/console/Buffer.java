@@ -242,7 +242,7 @@ public class Buffer {
      * @param out what will be ansified
      * @return ansified string
      */
-    public static char[] printAnsi(char[] out) {
+    private static char[] printAnsi(char[] out) {
         if(!ansi)
             return new char[] {};
         //calculate length of table:

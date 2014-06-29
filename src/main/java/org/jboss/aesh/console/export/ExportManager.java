@@ -28,17 +28,17 @@ import java.util.regex.Pattern;
 public class ExportManager {
 
     private static final char DOLLAR = '$';
-    private Map<String,String> variables;
-    private Pattern exportPattern = Pattern.compile("^(export)\\s+(\\w+)\\s*=\\s*(\\S+).*$");
-    private Pattern variableDollarFirstPattern = Pattern.compile("\\$(\\w+|\\{(\\w+)\\})(.*)");
-    private Pattern variablePattern = Pattern.compile("(.*)\\$(\\w+|\\{(\\w+)\\})(.*)");
+    private final Map<String,String> variables;
+    private final Pattern exportPattern = Pattern.compile("^(export)\\s+(\\w+)\\s*=\\s*(\\S+).*$");
+    private final Pattern variableDollarFirstPattern = Pattern.compile("\\$(\\w+|\\{(\\w+)\\})(.*)");
+    private final Pattern variablePattern = Pattern.compile("(.*)\\$(\\w+|\\{(\\w+)\\})(.*)");
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ExportManager.class.getName());
 
     private static final String EXPORT = "export";
 
-    private File exportFile;
-    private boolean exportUsesSystemEnvironment;
+    private final File exportFile;
+    private final boolean exportUsesSystemEnvironment;
 
     public ExportManager(File exportFile) {
         this(exportFile, false);

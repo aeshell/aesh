@@ -21,7 +21,7 @@ public class EmacsEditMode extends AbstractEditMode {
 
     private Action mode = Action.EDIT;
 
-    private KeyOperationManager operationManager;
+    private final KeyOperationManager operationManager;
 
     public EmacsEditMode(KeyOperationManager operations) {
         this.operationManager = operations;

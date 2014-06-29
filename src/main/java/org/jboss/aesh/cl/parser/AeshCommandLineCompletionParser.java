@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class AeshCommandLineCompletionParser implements CommandLineCompletionParser {
 
-    private CommandLineParser parser;
+    private final CommandLineParser parser;
 
     public AeshCommandLineCompletionParser(CommandLineParser parser) {
         this.parser = parser;

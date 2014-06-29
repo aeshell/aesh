@@ -23,8 +23,8 @@ public class AeshGraphics implements Graphics {
 
     private static final String CURSOR_DOWN = ANSI.getStart()+"1B"+ANSI.getStart()+"1D";
 
-    private Shell shell;
-    private GraphicsConfiguration graphicsConfiguration;
+    private final Shell shell;
+    private final GraphicsConfiguration graphicsConfiguration;
     private TerminalColor currentColor;
     private TerminalTextStyle currentStyle;
 

@@ -33,9 +33,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandEndOperator {
+public class AeshCommandEndOperatorTest {
 
-    static int counter = 0;
+    private static int counter = 0;
 
     @Test
     public void testEnd() throws IOException, InterruptedException {

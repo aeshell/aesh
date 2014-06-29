@@ -262,8 +262,8 @@ public class Example {
 
     public static class ExampleConsoleCommand {
 
-        private Console console;
-        private ConsoleOperation operation;
+        private final Console console;
+        private final ConsoleOperation operation;
 
         public ExampleConsoleCommand(Console console, ConsoleOperation operation) {
             this.console = console;

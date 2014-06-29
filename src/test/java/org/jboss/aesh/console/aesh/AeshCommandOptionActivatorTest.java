@@ -41,7 +41,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class AeshCommandOptionActivatorTest {
 
-    private KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
+    private final KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
 
     @Test
     public void testOptionActivator() throws IOException, InterruptedException {
@@ -111,7 +111,7 @@ public class AeshCommandOptionActivatorTest {
 
     private static class TestOptionValidatorProvider implements OptionActivatorProvider {
 
-        private FooContext context;
+        private final FooContext context;
 
         TestOptionValidatorProvider(FooContext context) {
             this.context = context;

@@ -21,7 +21,7 @@ import java.util.Set;
  */
 public class MutableCommandRegistry implements CommandRegistry {
 
-    private Map<String,CommandContainer> registry = new HashMap<String, CommandContainer>();
+    private final Map<String,CommandContainer> registry = new HashMap<String, CommandContainer>();
 
     private CommandContainerBuilder containerBuilder;
 

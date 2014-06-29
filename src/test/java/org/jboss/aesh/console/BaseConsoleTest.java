@@ -34,7 +34,7 @@ import org.jboss.aesh.terminal.TestTerminal;
  */
 public abstract class BaseConsoleTest {
 
-    public Settings getDefaultSettings(InputStream is, SettingsBuilder builder) {
+    Settings getDefaultSettings(InputStream is, SettingsBuilder builder) {
         if(builder == null) {
             builder = new SettingsBuilder();
             builder.enableAlias(false);
@@ -53,11 +53,11 @@ public abstract class BaseConsoleTest {
         return builder.create();
     }
 
-    public Console getTestConsole(SettingsBuilder builder, InputStream is) throws IOException {
+    Console getTestConsole(SettingsBuilder builder, InputStream is) throws IOException {
         return new Console(getDefaultSettings(is, builder));
     }
 
-    public Console getTestConsole(InputStream is) throws IOException {
+    Console getTestConsole(InputStream is) throws IOException {
         return new Console(getDefaultSettings(is, null));
     }
 
@@ -80,15 +80,15 @@ public abstract class BaseConsoleTest {
         }
     }
 
-    public void invokeTestConsole(final Setup setup, final Verify verify) throws Exception {
+    protected void invokeTestConsole(final Setup setup, final Verify verify) throws Exception {
         invokeTestConsole(1,  setup, verify);
     }
 
-    public void invokeTestConsole(int callbackCount, final Setup setup, final Verify verify) throws Exception {
+    protected void invokeTestConsole(int callbackCount, final Setup setup, final Verify verify) throws Exception {
         invokeTestConsole(callbackCount, setup, verify, null);
     }
 
-    public void invokeTestConsole(int callbackCount, final Setup setup, final Verify verify, SettingsBuilder settings) throws Exception {
+    protected void invokeTestConsole(int callbackCount, final Setup setup, final Verify verify, SettingsBuilder settings) throws Exception {
         PipedOutputStream outputStream = new PipedOutputStream();
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
 

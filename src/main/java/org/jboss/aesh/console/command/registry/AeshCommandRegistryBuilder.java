@@ -17,7 +17,7 @@ import org.jboss.aesh.console.command.container.CommandContainerBuilder;
  */
 public class AeshCommandRegistryBuilder {
 
-    private MutableCommandRegistry commandRegistry;
+    private final MutableCommandRegistry commandRegistry;
 
     public AeshCommandRegistryBuilder() {
         commandRegistry = new MutableCommandRegistry();

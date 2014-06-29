@@ -27,7 +27,7 @@ public class CommandBuilder {
     private CommandValidator<?> validator;
     private ResultHandler resultHandler;
     private ProcessedOption argument;
-    private List<ProcessedOption> options;
+    private final List<ProcessedOption> options;
 
 
     public CommandBuilder() {

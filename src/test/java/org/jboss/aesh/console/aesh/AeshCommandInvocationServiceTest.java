@@ -96,7 +96,7 @@ class BarCommand implements Command<FooCommandInvocation> {
 
 class FooCommandInvocation implements CommandInvocation {
 
-    private CommandInvocation commandInvocation;
+    private final CommandInvocation commandInvocation;
 
     public FooCommandInvocation(CommandInvocation commandInvocation) {
         this.commandInvocation = commandInvocation;

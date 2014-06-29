@@ -24,9 +24,9 @@ import java.util.regex.Pattern;
  */
 public class KeyMapper {
 
-    private static Pattern quotePattern = Pattern.compile("^\"");
-    private static Pattern metaPattern = Pattern.compile("^(\\\\M|M|Meta)-"); // "M-
-    private static Pattern controlPattern = Pattern.compile("^(\\\\C|C|Control)-"); // "M-
+    private final static Pattern quotePattern = Pattern.compile("^\"");
+    private final static Pattern metaPattern = Pattern.compile("^(\\\\M|M|Meta)-"); // "M-
+    private final static Pattern controlPattern = Pattern.compile("^(\\\\C|C|Control)-"); // "M-
 
     /**
      * Parse key mapping lines that start with "

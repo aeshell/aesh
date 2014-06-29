@@ -15,8 +15,8 @@ import org.jboss.aesh.console.command.CommandResult;
 public class AeshProcess implements Runnable, Process {
 
     private ProcessManager manager;
-    private ConsoleCallback consoleCallback;
-    private ConsoleOperation operation;
+    private final ConsoleCallback consoleCallback;
+    private final ConsoleOperation operation;
     private CommandResult exitResult;
     private Thread myThread;
     private Status status;

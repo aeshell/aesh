@@ -17,7 +17,7 @@ public enum InternalCommands {
     EXPORT("export"),
     ECHO("echo");
 
-    private String command;
+    private final String command;
     InternalCommands(String alias) {
         this.command = alias;
     }

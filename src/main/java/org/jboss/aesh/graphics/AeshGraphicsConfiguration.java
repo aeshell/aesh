@@ -14,7 +14,7 @@ import org.jboss.aesh.terminal.TerminalSize;
  */
 public class AeshGraphicsConfiguration implements GraphicsConfiguration {
 
-    private Shell shell;
+    private final Shell shell;
 
     public AeshGraphicsConfiguration(Shell shell) {
         this.shell = shell;

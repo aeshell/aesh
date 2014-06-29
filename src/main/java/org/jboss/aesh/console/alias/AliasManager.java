@@ -28,14 +28,14 @@ import java.util.regex.Pattern;
  */
 public class AliasManager {
 
-    private List<Alias> aliases;
-    private Pattern aliasPattern = Pattern.compile("^(alias)\\s+(\\w+)\\s*=\\s*(.*)$");
-    private Pattern listAliasPattern = Pattern.compile("^(alias)((\\s+\\w+)+)$");
+    private final List<Alias> aliases;
+    private final Pattern aliasPattern = Pattern.compile("^(alias)\\s+(\\w+)\\s*=\\s*(.*)$");
+    private final Pattern listAliasPattern = Pattern.compile("^(alias)((\\s+\\w+)+)$");
     private static final String ALIAS = "alias";
     private static final String ALIAS_SPACE = "alias ";
     private static final String UNALIAS = "unalias";
     private File aliasFile;
-    private String name;
+    private final String name;
     private boolean persistAlias = false;
     private static final Logger LOGGER = LoggerUtil.getLogger(AliasManager.class.getName());
 
@@ -83,7 +83,7 @@ public class AliasManager {
         }
     }
 
-    public void addAlias(String name, String value) {
+    void addAlias(String name, String value) {
         Alias alias = new Alias(name, value);
         if(aliases.contains(alias)) {
             aliases.remove(alias);

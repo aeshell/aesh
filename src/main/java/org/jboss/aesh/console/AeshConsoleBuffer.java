@@ -29,18 +29,18 @@ import java.util.logging.Logger;
 public class AeshConsoleBuffer implements ConsoleBuffer {
 
     private EditMode editMode;
-    private PrintStream err;
-    private PrintStream out;
+    private final PrintStream err;
+    private final PrintStream out;
 
-    private Buffer buffer;
-    private Shell shell;
+    private final Buffer buffer;
+    private final Shell shell;
 
-    private UndoManager undoManager;
-    private PasteManager pasteManager;
+    private final UndoManager undoManager;
+    private final PasteManager pasteManager;
 
     private Action currentAction = Action.EDIT;
 
-    private boolean isLogging = true;
+    private final boolean isLogging = true;
 
     //used to optimize text deletion
     private static final char[] resetLineAndSetCursorToStart =

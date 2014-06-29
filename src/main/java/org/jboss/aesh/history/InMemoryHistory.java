@@ -17,12 +17,12 @@ import java.util.List;
  */
 public class InMemoryHistory implements History {
 
-    private List<String> historyList;
+    private final List<String> historyList;
     private int lastFetchedId = -1;
     private int lastSearchedId = 0;
     private String current;
     private SearchDirection searchDirection = SearchDirection.REVERSE;
-    private int maxSize;
+    private final int maxSize;
 
     public InMemoryHistory() {
         this(500);

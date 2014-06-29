@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class CompleteOperationTest extends TestCase {
 
-    private AeshContext aeshContext = new AeshContext() {
+    private final AeshContext aeshContext = new AeshContext() {
         @Override
         public Resource getCurrentWorkingDirectory() {
             return new FileResource(Config.getUserDir());

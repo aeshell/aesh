@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
  */
 public class ManParserUtil {
 
-    private static Pattern boldRegex = Pattern.compile("(\\*[^']+\\*)|(\'\\S+\')|(::$)");
+    private final static Pattern boldRegex = Pattern.compile("(\\*[^']+\\*)|(\'\\S+\')|(::$)");
 
     public static String convertStringToAnsi(String line) {
         StringBuilder builder = new StringBuilder();

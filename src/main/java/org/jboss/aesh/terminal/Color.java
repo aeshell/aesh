@@ -21,7 +21,7 @@ public enum Color {
     WHITE(7),
     DEFAULT(9);
 
-    private int value;
+    private final int value;
 
     Color(int value) {
         this.value = value;

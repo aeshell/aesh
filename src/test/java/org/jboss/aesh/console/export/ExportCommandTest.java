@@ -35,8 +35,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class ExportCommandTest {
 
-    private KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
-    private KeyOperation backSpace =  new KeyOperation(Key.BACKSPACE, Operation.DELETE_PREV_CHAR);
+    private final KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
+    private final KeyOperation backSpace =  new KeyOperation(Key.BACKSPACE, Operation.DELETE_PREV_CHAR);
 
     @Test
     public void testExportCompletionAndCommand() throws IOException, InterruptedException {

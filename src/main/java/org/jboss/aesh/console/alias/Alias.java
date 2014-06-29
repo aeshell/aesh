@@ -13,8 +13,8 @@ package org.jboss.aesh.console.alias;
  */
 public class Alias implements Comparable {
 
-    private String name;
-    private String value;
+    private final String name;
+    private final String value;
 
     public Alias(String name, String value) {
         this.name = name;

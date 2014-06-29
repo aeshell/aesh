@@ -19,7 +19,7 @@ public class AliasCompletion implements Completion {
     private static final String ALIAS_SPACE = "alias ";
     private static final String UNALIAS = "unalias";
     private static final String UNALIAS_SPACE = "unalias ";
-    private AliasManager manager;
+    private final AliasManager manager;
 
     public AliasCompletion(AliasManager manager) {
         this.manager = manager;

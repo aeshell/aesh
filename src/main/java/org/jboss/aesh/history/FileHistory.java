@@ -23,7 +23,7 @@ import java.io.IOException;
  */
 public class FileHistory extends InMemoryHistory {
 
-    private File historyFile;
+    private final File historyFile;
 
     public FileHistory(File file, int maxSize) throws IOException {
         super(maxSize);

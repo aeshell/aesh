@@ -21,7 +21,7 @@ public enum CharacterType {
     CONCEAL(8),
     CROSSED_OUT(9);
 
-    private int value;
+    private final int value;
 
     CharacterType(int c) {
         this.value = c;

@@ -216,7 +216,7 @@ public enum Key {
     ENTER_2(Config.isOSPOSIXCompatible() ?
             new int[]{10} : new int[]{13,10});
 
-    private int[] keyValues;
+    private final int[] keyValues;
 
     Key(int[] keyValues) {
         this.keyValues = keyValues;

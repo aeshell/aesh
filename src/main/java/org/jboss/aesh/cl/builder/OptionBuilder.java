@@ -43,7 +43,7 @@ public class OptionBuilder {
     private Converter converter;
     private String fieldName;
     private OptionCompleter completer;
-    private List<String> defaultValues;
+    private final List<String> defaultValues;
     private OptionValidator validator;
     private OptionActivator activator;
     private OptionRenderer renderer;

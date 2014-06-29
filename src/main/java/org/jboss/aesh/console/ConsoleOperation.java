@@ -13,8 +13,8 @@ import org.jboss.aesh.console.operator.ControlOperator;
  */
 public class ConsoleOperation {
 
-    private ControlOperator controlOperator;
-    private String buffer;
+    private final ControlOperator controlOperator;
+    private final String buffer;
     private int pid = -1;
 
 

@@ -13,8 +13,8 @@ import org.jboss.aesh.console.AeshContext;
  */
 public class AeshConverterInvocation implements ConverterInvocation {
 
-    private String input;
-    private AeshContext aeshContext;
+    private final String input;
+    private final AeshContext aeshContext;
 
     public AeshConverterInvocation(String input, AeshContext aeshContext) {
         this.input = input;

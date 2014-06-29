@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class KeyOperationManager {
 
-    private List<KeyOperation> operations;
+    private final List<KeyOperation> operations;
 
     public KeyOperationManager() {
        operations = new ArrayList<>();

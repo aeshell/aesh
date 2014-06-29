@@ -24,7 +24,7 @@ import java.util.List;
  */
 public class ManFileParser implements FileParser {
 
-    private List<ManSection> sections;
+    private final List<ManSection> sections;
     private String name;
     private InputStreamReader reader;
 

@@ -16,55 +16,55 @@ import org.jboss.aesh.terminal.InfocmpManager;
  */
 public class ANSI {
 
-    private static String START = "\u001B[";
-    private static String BLACK_TEXT = "\u001B[0;30m";
-    private static String RED_TEXT = "\u001B[0;31m";
-    private static String GREEN_TEXT = "\u001B[0;32m";
-    private static String YELLOW_TEXT = "\u001B[0;33m";
-    private static String BLUE_TEXT = "\u001B[0;34m";
-    private static String MAGENTA_TEXT = "\u001B[0;35m";
-    private static String CYAN_TEXT = "\u001B[0;36m";
-    private static String WHITE_TEXT = "\u001B[0;37m";
-    private static String DEFAULT_TEXT = "\u001B[0;39m";
+    private final static String START = "\u001B[";
+    private final static String BLACK_TEXT = "\u001B[0;30m";
+    private final static String RED_TEXT = "\u001B[0;31m";
+    private final static String GREEN_TEXT = "\u001B[0;32m";
+    private final static String YELLOW_TEXT = "\u001B[0;33m";
+    private final static String BLUE_TEXT = "\u001B[0;34m";
+    private final static String MAGENTA_TEXT = "\u001B[0;35m";
+    private final static String CYAN_TEXT = "\u001B[0;36m";
+    private final static String WHITE_TEXT = "\u001B[0;37m";
+    private final static String DEFAULT_TEXT = "\u001B[0;39m";
 
-    private static String BLACK_BG = "\u001B[0;40m";
-    private static String RED_BG = "\u001B[0;41m";
-    private static String GREEN_BG = "\u001B[0;42m";
-    private static String YELLOW_BG = "\u001B[0;43m";
-    private static String BLUE_BG = "\u001B[0;44m";
-    private static String MAGENTA_BG = "\u001B[0;45m";
-    private static String CYAN_BG = "\u001B[0;46m";
-    private static String WHITE_BG = "\u001B[0;47m";
-    private static String DEFAULT_BG = "\u001B[0;49m";
-    private static String ALTERNATE_BUFFER = Config.isOSPOSIXCompatible() ?
+    private final static String BLACK_BG = "\u001B[0;40m";
+    private final static String RED_BG = "\u001B[0;41m";
+    private final static String GREEN_BG = "\u001B[0;42m";
+    private final static String YELLOW_BG = "\u001B[0;43m";
+    private final static String BLUE_BG = "\u001B[0;44m";
+    private final static String MAGENTA_BG = "\u001B[0;45m";
+    private final static String CYAN_BG = "\u001B[0;46m";
+    private final static String WHITE_BG = "\u001B[0;47m";
+    private final static String DEFAULT_BG = "\u001B[0;49m";
+    private final static String ALTERNATE_BUFFER = Config.isOSPOSIXCompatible() ?
             InfocmpManager.alternateBuffer() : "\u001B[?1049h";
-    private static String MAIN_BUFFER = Config.isOSPOSIXCompatible() ?
+    private final static String MAIN_BUFFER = Config.isOSPOSIXCompatible() ?
             InfocmpManager.mainBuffer() : "\u001B[?1049l";
-    private static String INVERT_BACKGROUND = Config.isOSPOSIXCompatible() ?
+    private final static String INVERT_BACKGROUND = Config.isOSPOSIXCompatible() ?
             InfocmpManager.invertBackground() : "\u001B[7m";
-    private static String NORMAL_BACKGROUND = Config.isOSPOSIXCompatible() ?
+    private final static String NORMAL_BACKGROUND = Config.isOSPOSIXCompatible() ?
             InfocmpManager.normalBackground() : "\u001B[27m";
-    private static String RESET = "\u001B[0m";
-    private static String BOLD = Config.isOSPOSIXCompatible() ?
+    private final static String RESET = "\u001B[0m";
+    private final static String BOLD = Config.isOSPOSIXCompatible() ?
             InfocmpManager.enableBold() : "\u001B[0;1m";
-    private static String BOLD_OFF = "\u001B[0;22m";
-    private static String UNDERLINE = Config.isOSPOSIXCompatible() ?
+    private final static String BOLD_OFF = "\u001B[0;22m";
+    private final static String UNDERLINE = Config.isOSPOSIXCompatible() ?
             InfocmpManager.enableUnderline() : "\u001B[0;4m";
-    private static String UNDERLINE_OFF = Config.isOSPOSIXCompatible() ?
+    private final static String UNDERLINE_OFF = Config.isOSPOSIXCompatible() ?
             InfocmpManager.disableUnderline() : "\u001B[0;24m";
-    private static String BLINK = Config.isOSPOSIXCompatible() ?
+    private final static String BLINK = Config.isOSPOSIXCompatible() ?
             InfocmpManager.enableBlink() : "\u001B[5m";
-    private static String BLINK_OFF = "\u001B[25m";
-    private static String CURSOR_START = "\u001B[1G";
-    private static String CURSOR_ROW = "\u001B[6n";
-    private static String CLEAR_SCREEN = Config.isOSPOSIXCompatible() ?
+    private final static String BLINK_OFF = "\u001B[25m";
+    private final static String CURSOR_START = "\u001B[1G";
+    private final static String CURSOR_ROW = "\u001B[6n";
+    private final static String CLEAR_SCREEN = Config.isOSPOSIXCompatible() ?
             InfocmpManager.clearScreen() : "\u001B[2J";
-    private static String CURSOR_SAVE = Config.isOSPOSIXCompatible() ?
+    private final static String CURSOR_SAVE = Config.isOSPOSIXCompatible() ?
             InfocmpManager.saveCursor() : "\u001B[s";
-    private static String CURSOR_RESTORE = Config.isOSPOSIXCompatible() ?
+    private final static String CURSOR_RESTORE = Config.isOSPOSIXCompatible() ?
             InfocmpManager.restoreCursor() : "\u001B[u";
-    private static String CURSOR_HIDE = "\u001B[?25l";
-    private static String CURSOR_SHOW = "\u001B[?25h";
+    private final static String CURSOR_HIDE = "\u001B[?25l";
+    private final static String CURSOR_SHOW = "\u001B[?25h";
 
     private ANSI() {
     }

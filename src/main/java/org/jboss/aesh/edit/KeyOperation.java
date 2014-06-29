@@ -15,8 +15,8 @@ import org.jboss.aesh.terminal.Key;
  */
 public class KeyOperation {
 
-    private Key key;
-    private Operation operation;
+    private final Key key;
+    private final Operation operation;
     private Action workingMode = Action.NO_ACTION;
 
     public KeyOperation(Key key, Operation operation) {

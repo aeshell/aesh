@@ -32,9 +32,9 @@ import java.util.List;
 public class Man extends AeshFileDisplayer {
 
     @Arguments(completer = ManCompleter.class)
-    private List<String> manPages;
+    private final List<String> manPages;
 
-    private ManFileParser fileParser;
+    private final ManFileParser fileParser;
     private static CommandRegistry registry;
     private final ManProvider manProvider;
 

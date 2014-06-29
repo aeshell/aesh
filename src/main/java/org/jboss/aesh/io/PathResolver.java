@@ -38,7 +38,7 @@ public class PathResolver {
     private static final String SEPARATOR_WITH_CURRENT = Config.getPathSeparator()+".";
     private static final String SEPARATOR_CURRENT_SEPARATOR = Config.getPathSeparator()+"."+Config.getPathSeparator();
     private static final String CURRENT = ".";
-    private static Pattern starPattern = Pattern.compile("[\\*]+");
+    private static final Pattern starPattern = Pattern.compile("[\\*]+");
 
     /**
      * 1. find the absolute root directory
@@ -265,9 +265,9 @@ public class PathResolver {
     }
 
     static class PathCriteria {
-        private String parentPath;
-        private String childPath;
-        private String criteria;
+        private final String parentPath;
+        private final String childPath;
+        private final String criteria;
 
         PathCriteria(String parentPath, String childPath, String criteria) {
             this.parentPath = parentPath;

@@ -97,8 +97,8 @@ public static class ConCommand implements Command {
 
 public static class FooConverterInvocation implements ConverterInvocation {
 
-    private String input;
-    private AeshContext aeshContext;
+    private final String input;
+    private final AeshContext aeshContext;
 
     public FooConverterInvocation(String input, AeshContext aeshContext) {
         this.input = input;

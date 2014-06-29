@@ -17,7 +17,7 @@ import java.util.List;
 public class PasteManager {
 
     private static final int PASTE_SIZE = 10;
-    private List<StringBuilder> pasteStack;
+    private final List<StringBuilder> pasteStack;
 
     public PasteManager() {
         pasteStack = new ArrayList<StringBuilder>(PASTE_SIZE);

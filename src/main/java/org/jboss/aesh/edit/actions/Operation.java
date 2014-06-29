@@ -102,7 +102,7 @@ public enum Operation {
     INTERRUPT(Action.INTERRUPT);
 
     private Movement movement;
-    private Action action;
+    private final Action action;
     private int[] input;
 
     Operation(Action action) {

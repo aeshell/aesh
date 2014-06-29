@@ -17,7 +17,7 @@ public class ExportCompletion implements Completion {
 
     private static final String EXPORT = "export";
     private static final String EXPORT_SPACE = "export ";
-    private ExportManager exportManager;
+    private final ExportManager exportManager;
 
     public ExportCompletion(ExportManager manager) {
         this.exportManager = manager;

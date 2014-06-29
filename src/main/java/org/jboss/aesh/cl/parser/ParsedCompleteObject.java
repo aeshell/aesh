@@ -16,10 +16,10 @@ public class ParsedCompleteObject {
     private String name;
     private String value = "";
     private Class<?> type;
-    private boolean option; //if its not option, its an argument
+    private final boolean option; //if its not option, its an argument
     private boolean displayOptions = false;
     private boolean argument = false;
-    private boolean displayArguments = false;
+    private final boolean displayArguments = false;
     private boolean completeOptionName = false;
     private int offset = 0;
 

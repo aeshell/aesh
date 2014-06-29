@@ -27,9 +27,9 @@ public class CompleterData implements CompleterInvocation {
 
     private List<TerminalString> completerValues;
     private boolean appendSpace = true;
-    private String completeValue;
-    private Command command;
-    private AeshContext aeshContext;
+    private final String completeValue;
+    private final Command command;
+    private final AeshContext aeshContext;
     private int offset;
     private boolean ignoreOffset = false;
     private boolean ignoreStartsWith = false;

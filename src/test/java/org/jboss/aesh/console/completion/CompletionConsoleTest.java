@@ -43,7 +43,7 @@ import org.junit.Test;
  */
 public class CompletionConsoleTest extends BaseConsoleTest {
 
-    private KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
+    private final KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
 
     private static final byte[] LINE_SEPARATOR = Config.getLineSeparator().getBytes();
 
@@ -262,8 +262,8 @@ public class CompletionConsoleTest extends BaseConsoleTest {
 
     class CompletionConsoleCallback extends AeshConsoleCallback {
         private transient int count = 0;
-        Console console;
-        OutputStream outputStream;
+        final Console console;
+        final OutputStream outputStream;
         CompletionConsoleCallback(Console console, OutputStream outputStream) {
             this.outputStream = outputStream;
             this.console = console;
@@ -304,8 +304,8 @@ public class CompletionConsoleTest extends BaseConsoleTest {
 
     class CompletionConsoleCallback3 extends AeshConsoleCallback {
         private int count = 0;
-        Console console;
-        OutputStream outputStream;
+        final Console console;
+        final OutputStream outputStream;
         CompletionConsoleCallback3(Console console, OutputStream outputStream) {
             this.outputStream = outputStream;
             this.console = console;

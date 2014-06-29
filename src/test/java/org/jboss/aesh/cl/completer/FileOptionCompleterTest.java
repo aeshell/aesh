@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class FileOptionCompleterTest {
 
-    private AeshContext aeshContext = new AeshContext() {
+    private final AeshContext aeshContext = new AeshContext() {
         private Resource cwd;
         @Override
         public Resource getCurrentWorkingDirectory() {
