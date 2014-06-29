@@ -60,10 +60,7 @@ public class TerminalSize {
 
         TerminalSize that = (TerminalSize) o;
 
-        if (height != that.height) return false;
-        if (width != that.width) return false;
-
-        return true;
+        return height == that.height && width == that.width;
     }
 
     @Override

@@ -10,5 +10,5 @@ package org.jboss.aesh.edit;
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
 public enum Mode {
-    VI,EMACS;
+    VI,EMACS
 }

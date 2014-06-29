@@ -67,9 +67,8 @@ public class ManParameter {
 
         ManParameter that = (ManParameter) o;
 
-        if (out != null ? !out.equals(that.out) : that.out != null) return false;
+        return !(out != null ? !out.equals(that.out) : that.out != null);
 
-        return true;
     }
 
     @Override

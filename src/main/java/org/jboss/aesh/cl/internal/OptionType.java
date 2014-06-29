@@ -14,5 +14,5 @@ public enum OptionType {
     GROUP,
     ARGUMENT,
     NORMAL,
-    BOOLEAN;
+    BOOLEAN
 }

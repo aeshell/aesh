@@ -96,10 +96,8 @@ public class Config {
 
             return false;
         }
-        else if( System.getProperty("os.name").startsWith("OS/2"))
-            return false;
         else
-            return true;
+            return !System.getProperty("os.name").startsWith("OS/2");
     }
 
     /**

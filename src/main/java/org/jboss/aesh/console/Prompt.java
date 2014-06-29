@@ -114,10 +114,10 @@ public class Prompt {
         Prompt prompt1 = (Prompt) o;
 
         if (ansiString != null ? !ansiString.equals(prompt1.ansiString) : prompt1.ansiString != null) return false;
-        if (mask != null ? !mask.equals(prompt1.mask) : prompt1.mask != null) return false;
-        if (!prompt.equals(prompt1.prompt)) return false;
 
-        return true;
+        if (mask != null ? !mask.equals(prompt1.mask) : prompt1.mask != null) return false;
+
+        return prompt.equals(prompt1.prompt);
     }
 
     @Override

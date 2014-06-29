@@ -20,5 +20,5 @@ public enum Movement {
     PREV_WORD,
     NEXT_BIG_WORD,
     PREV_BIG_WORD,
-    ALL;
+    ALL
 }

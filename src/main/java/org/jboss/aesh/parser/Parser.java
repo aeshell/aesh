@@ -225,11 +225,7 @@ public class Parser {
         for (int columnSize : columnSizes) {
             totalSize += columnSize;
         }
-        if (totalSize > terminalWidth) {
-            return false;
-        }
-
-        return true;
+        return totalSize <= terminalWidth;
     }
 
     private static int[] calculateColumnSizes(List<TerminalString> displayList, int numColumns, int numRows, int termWidth) {

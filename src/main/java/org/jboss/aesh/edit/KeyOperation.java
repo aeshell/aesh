@@ -57,11 +57,9 @@ public class KeyOperation {
 
         KeyOperation that = (KeyOperation) o;
 
-        if (key != that.key) return false;
-        if (operation != that.operation) return false;
-        if (workingMode != that.workingMode) return false;
-
-        return true;
+        return key == that.key &&
+                operation == that.operation &&
+                workingMode == that.workingMode;
     }
 
     @Override

@@ -191,16 +191,14 @@ public class TerminalTextStyle {
 
         TerminalTextStyle that = (TerminalTextStyle) o;
 
-        if (blink != that.blink) return false;
-        if (bold != that.bold) return false;
-        if (crossedOut != that.crossedOut) return false;
-        if (faint != that.faint) return false;
-        if (invert != that.invert) return false;
-        if (italic != that.italic) return false;
-        if (underline != that.underline) return false;
-        if (conceal != that.conceal) return false;
-
-        return true;
+        return blink == that.blink &&
+                bold == that.bold &&
+                crossedOut == that.crossedOut &&
+                faint == that.faint &&
+                invert == that.invert &&
+                italic == that.italic &&
+                underline == that.underline &&
+                conceal == that.conceal;
     }
 
     @Override

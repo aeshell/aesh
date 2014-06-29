@@ -105,10 +105,7 @@ public class TerminalCharacter {
     }
 
     public boolean equalsIgnoreCharacter(TerminalCharacter that) {
-        if (!style.equals(that.style)) return false;
-        if (!color.equals(that.color)) return false;
-
-        return true;
+        return style.equals(that.style) && color.equals(that.color);
     }
 
     @Override
@@ -118,11 +115,9 @@ public class TerminalCharacter {
 
         TerminalCharacter that = (TerminalCharacter) o;
 
-        if (!style.equals(that.style)) return false;
-        if (character != that.character) return false;
-        if (!color.equals(that.color)) return false;
-
-        return true;
+        return style.equals(that.style) &&
+                character == that.character &&
+                color.equals(that.color);
     }
 
     @Override

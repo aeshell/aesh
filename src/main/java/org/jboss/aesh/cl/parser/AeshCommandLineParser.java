@@ -418,9 +418,8 @@ public class AeshCommandLineParser implements CommandLineParser {
 
         AeshCommandLineParser that = (AeshCommandLineParser) o;
 
-        if (!command.equals(that.command)) return false;
+        return command.equals(that.command);
 
-        return true;
     }
 
     @Override

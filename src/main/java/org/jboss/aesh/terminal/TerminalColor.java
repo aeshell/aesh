@@ -89,13 +89,11 @@ public class TerminalColor {
 
         TerminalColor that = (TerminalColor) o;
 
-        if (intBackgroundColor != that.intBackgroundColor) return false;
-        if (intTextColor != that.intTextColor) return false;
-        if (backgroundColor != that.backgroundColor) return false;
-        if (intensity != that.intensity) return false;
-        if (textColor != that.textColor) return false;
-
-        return true;
+        return intBackgroundColor == that.intBackgroundColor &&
+                intTextColor == that.intTextColor &&
+                backgroundColor == that.backgroundColor &&
+                intensity == that.intensity &&
+                textColor == that.textColor;
     }
 
     @Override

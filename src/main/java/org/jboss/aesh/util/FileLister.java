@@ -308,18 +308,12 @@ public class FileLister {
 
     private boolean containStar() {
         int index = token.indexOf(STAR);
-        if (index == 0 || (index > 0 && !(token.charAt(index - 1) == ESCAPE)))
-            return true;
-        else
-            return false;
+        return index == 0 || (index > 0 && !(token.charAt(index - 1) == ESCAPE));
     }
 
     private boolean containWildCards() {
         int index = token.indexOf(WILDCARD);
-        if (index == 0 || (index > 0 && !(token.charAt(index - 1) == ESCAPE)))
-            return true;
-        else
-            return false;
+        return index == 0 || (index > 0 && !(token.charAt(index - 1) == ESCAPE));
     }
 
     private boolean startWithSlash() {

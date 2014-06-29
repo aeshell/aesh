@@ -93,10 +93,7 @@ public class ManSection {
 
         ManSection that = (ManSection) o;
 
-        if (!name.equals(that.name)) return false;
-        if (!parameters.equals(that.parameters)) return false;
-
-        return true;
+        return name.equals(that.name) && parameters.equals(that.parameters);
     }
 
     @Override

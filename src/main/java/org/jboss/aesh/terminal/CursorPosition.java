@@ -70,9 +70,8 @@ public class CursorPosition {
         CursorPosition that = (CursorPosition) o;
 
         if (column != that.column) return false;
-        if (row != that.row) return false;
+        return row == that.row;
 
-        return true;
     }
 
     @Override

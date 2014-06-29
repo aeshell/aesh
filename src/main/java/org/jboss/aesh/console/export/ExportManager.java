@@ -115,7 +115,7 @@ public class ExportManager {
         boolean result = false;
         result = this.variables.containsKey(key);
 
-        if (result == false && this.exportUsesSystemEnvironment)
+        if (!result && this.exportUsesSystemEnvironment)
             result = System.getenv().containsKey(key);
 
         return result;

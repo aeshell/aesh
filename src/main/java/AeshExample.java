@@ -406,10 +406,7 @@ public class AeshExample {
         @Override
         public boolean isActivated(ProcessedCommand processedCommand) {
             ProcessedOption bar = processedCommand.findLongOption("bar");
-            if(bar != null && bar.getValue() != null)
-                return true;
-            else
-                return false;
+            return bar != null && bar.getValue() != null;
         }
     }
 
