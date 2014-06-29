@@ -6,12 +6,9 @@
  */
 package org.jboss.aesh.util;
 
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.io.Resource;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 
@@ -36,28 +33,4 @@ public class FileUtils {
 
     }
 
-    public static String readFile(Resource file) throws IOException {
-        if(file.isDirectory()) {
-            throw new IOException(file+": Is a directory");
-        }
-        else if(file.isLeaf()) {
-            BufferedReader br = new BufferedReader(new InputStreamReader(file.read()));
-            try {
-                StringBuilder sb = new StringBuilder();
-                String line = br.readLine();
-
-                while (line != null) {
-                    sb.append(line).append(Config.getLineSeparator());
-                    line = br.readLine();
-                }
-                return sb.toString();
-            }
-            finally {
-                br.close();
-            }
-        }
-        else {
-            throw new IOException(file+": File unknown");
-        }
-    }
 }

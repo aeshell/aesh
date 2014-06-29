@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ManPageLoaderTester {
+public class ManPageLoaderTest {
     @Test
     public void testParser() {
         ManFileParser parser = new ManFileParser();
