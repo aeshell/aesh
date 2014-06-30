@@ -18,8 +18,8 @@ import java.util.List;
 public class ManParameter {
 
     final List<String> out = new ArrayList<>();
-    private final static String argPad = "  ";
-    private final static String textPad = "    ";
+    private static final String argPad = "  ";
+    private static final String textPad = "    ";
 
     /**
      * First line is the param/option name

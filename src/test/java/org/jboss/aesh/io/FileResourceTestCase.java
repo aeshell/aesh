@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 public class FileResourceTestCase {
 
     private Path tempDir;
-    private final static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
+    private static final FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
 
 
     @Before

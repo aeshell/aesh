@@ -35,10 +35,10 @@ import static org.jboss.aesh.console.settings.VariableSettings.HISTORY_SIZE;
  */
 public class Config {
 
-    private final static String lineSeparator = System.getProperty("line.separator");
-    private final static String pathSeparator = System.getProperty("file.separator");
-    private final static String tmpDir = System.getProperty("java.io.tmpdir");
-    private final static boolean posixCompatible = checkPosixCompability();
+    private static final String lineSeparator = System.getProperty("line.separator");
+    private static final String pathSeparator = System.getProperty("file.separator");
+    private static final String tmpDir = System.getProperty("java.io.tmpdir");
+    private static final boolean posixCompatible = checkPosixCompability();
     private static boolean cygwin = false;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(Config.class.getName());

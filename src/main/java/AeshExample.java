@@ -412,8 +412,8 @@ public class AeshExample {
 
     public static class BlueBoldRenderer implements OptionRenderer {
 
-        private final static TerminalTextStyle style = new TerminalTextStyle(CharacterType.UNDERLINE);
-        private final static TerminalColor color = new TerminalColor(42, Color.DEFAULT);
+        private static final TerminalTextStyle style = new TerminalTextStyle(CharacterType.UNDERLINE);
+        private static final TerminalColor color = new TerminalColor(42, Color.DEFAULT);
 
         @Override
         public TerminalColor getColor() {

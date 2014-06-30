@@ -33,7 +33,7 @@ import org.junit.Test;
  public class ConsoleRedirectionTest extends BaseConsoleTest {
 
     private Path tempDir;
-    private final static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
+    private static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
 
     @Before
     public void before() throws IOException {
