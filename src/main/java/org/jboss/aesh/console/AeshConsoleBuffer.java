@@ -164,11 +164,15 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
                     + ", delta:" + buffer.getDelta() + ", buffer:" + buffer.getLine());
         }
 
-        out.print(ANSI.saveCursor()); //save cursor
+        //out.print(ANSI.saveCursor()); //save cursor
 
-        if(currentRow > 0)
-            for(int i=0; i<currentRow; i++)
-                out.print(Buffer.printAnsi("A")); //move to top
+        if(buffer.getDelta() > 0) {
+            if (currentRow > 0)
+                for (int i = 0; i < currentRow; i++)
+                    out.print(Buffer.printAnsi("A")); //move to top
+        }
+        else
+            clearDelta(currentRow);
 
         out.print(Buffer.printAnsi("0G")); //clear
 
@@ -177,15 +181,53 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         out.print(buffer.getLine());
         //if the current line.length < compared to previous we add spaces to the end
         // to overwrite the old chars (wtb a better way of doing this)
+        /*
         if(buffer.getDelta() < 0) {
             StringBuilder sb = new StringBuilder();
             for(int i=0; i > buffer.getDelta(); i--)
                 sb.append(' ');
             out.print(sb.toString());
         }
+        */
 
         // move cursor to saved pos
-        out.print(ANSI.restoreCursor());
+        //out.print(ANSI.restoreCursor());
+        buffer.setCursor(buffer.getLine().length());
+    }
+
+    private void clearDelta(int currentRow) {
+        if(buffer.getDelta() < 0) {
+            int currentLength = buffer.getLineWithPrompt().length();
+            int numberOfCurrentRows =  currentLength /  shell.getSize().getWidth();
+            int numberOfPrevRows =
+                    (currentLength + (buffer.getDelta()*-1)) / shell.getSize().getWidth();
+            int numberOfRowsToRemove = numberOfPrevRows - numberOfCurrentRows;
+            int numberofRows = ((buffer.getDelta()*-1)+ buffer.getLineWithPrompt().length()) /
+                    shell.getSize().getWidth();
+
+            if (numberOfRowsToRemove == 0)
+                numberOfRowsToRemove++;
+
+        LOGGER.info("numberOfRowsToRemove: "+numberOfRowsToRemove+
+                "\nnumberOfRows: "+numberofRows+
+                "\ncurrentRow: "+currentRow);
+
+            int tmpCurrentRow = currentRow;
+            while(tmpCurrentRow < numberofRows) {
+                LOGGER.info("moving cursor down a line");
+                out.print(Buffer.printAnsi("B")); //move to the last row
+                tmpCurrentRow++;
+            }
+            while(tmpCurrentRow > 0) {
+                if(numberOfRowsToRemove > 0) {
+                    LOGGER.info("deleting current line: "+numberOfRowsToRemove);
+                    out.print(Buffer.printAnsi("2K"));
+                    numberOfRowsToRemove--;
+                }
+                out.print(Buffer.printAnsi("A"));
+                tmpCurrentRow--;
+            }
+        }
     }
 
     private void redrawMultipleLinesBackspace() {

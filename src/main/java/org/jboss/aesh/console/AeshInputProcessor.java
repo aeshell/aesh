@@ -418,7 +418,7 @@ public class AeshInputProcessor implements InputProcessor {
             consoleBuffer.setBufferLine(fromHistory);
             consoleBuffer.updateCurrentAction(Action.HISTORY);
             consoleBuffer.drawLine();
-            consoleBuffer.moveCursor(-consoleBuffer.getBuffer().getCursor() + consoleBuffer.getBuffer().length());
+            //consoleBuffer.moveCursor(-consoleBuffer.getBuffer().getCursor() + consoleBuffer.getBuffer().length());
         }
     }
 
