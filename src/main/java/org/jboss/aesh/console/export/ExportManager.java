@@ -141,10 +141,7 @@ public class ExportManager {
         if (value == null)
             return "";
 
-        if(value.indexOf(DOLLAR) == -1 && exportUsesSystemEnvironment) {
-            return getVariable(value) == null ? "" : getVariable(value);
-        }
-        else if(value.indexOf(DOLLAR) == -1) {
+       if(value.indexOf(DOLLAR) == -1) {
             return value;
         }
         else {
