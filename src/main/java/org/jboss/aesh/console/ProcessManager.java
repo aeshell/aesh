@@ -6,16 +6,16 @@
  */
 package org.jboss.aesh.console;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.jboss.aesh.console.command.CommandOperation;
+import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.util.LoggerUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.util.LoggerUtil;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -23,7 +23,7 @@ import org.jboss.aesh.util.LoggerUtil;
 public class ProcessManager {
 
     private Console console;
-    private List<Process> processes;
+    private Map<Integer, Process> processes;
     private ExecutorService executorService;
     private boolean doLogging;
     private int pidCounter = 1;
@@ -34,7 +34,7 @@ public class ProcessManager {
     public ProcessManager(Console console, boolean log) {
         this.console = console;
         this.doLogging = log;
-        processes = new ArrayList<>(20);
+        processes = new HashMap<>(20);
         executorService = Executors.newCachedThreadPool();
     }
 
@@ -50,7 +50,7 @@ public class ProcessManager {
                     getProcessByPid(currentProcess)+" is running in the foreground.");
         }
         else {
-            processes.add(process);
+            processes.put(process.getPID(),process);
             foregroundProcess = process.getPID();
             executorService.execute(process);
         }
@@ -61,10 +61,7 @@ public class ProcessManager {
     }
 
     private Process getProcessByPid(int pid) {
-        for(Process p : processes)
-            if(p.getPID() == pid)
-                return p;
-        return null;
+        return processes.get(pid);
     }
 
     public CommandOperation getInput(int pid) throws InterruptedException {
@@ -119,7 +116,7 @@ public class ProcessManager {
     public void processHaveFinished(Process process) {
         if (doLogging)
             LOGGER.info("process has finished: " + process);
-        processes.remove(process);
+        processes.remove(process.getPID());
         if(process.getStatus() == Process.Status.FOREGROUND)
             foregroundProcess = -1;
         console.currentProcessFinished(process);
