@@ -110,19 +110,22 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     @Override
     public void drawLine() {
-        LOGGER.info("drawing: "+buffer.getPrompt().getPromptAsString() + buffer.getLine());
-        drawLine(buffer.getPrompt().getPromptAsString() + buffer.getLine());
+        drawLine(true);
     }
 
     @Override
-    public void drawLine(String line) {
+    public void drawLine(boolean keepCursorPosition) {
+        if(isLogging)
+            LOGGER.info("drawing: "+buffer.getPrompt().getPromptAsString() + buffer.getLine());
         //need to clear more than one line
+        String line = buffer.getPrompt().getPromptAsString() + buffer.getLine();
+
         if(line.length() > shell.getSize().getWidth() ||
                 (buffer.getDelta() < 0 && line.length()+ Math.abs(buffer.getDelta()) > shell.getSize().getWidth())) {
             if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length() && Config.isOSPOSIXCompatible())
                 redrawMultipleLinesBackspace();
             else
-                redrawMultipleLines();
+                redrawMultipleLines(keepCursorPosition);
         }
         // only clear the current line
         else {
@@ -135,11 +138,17 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             }
             else {
                 //save cursor, move the cursor to the beginning, reset line
-                out.print(resetLineAndSetCursorToStart);
+                if(keepCursorPosition)
+                    out.print(resetLineAndSetCursorToStart);
                 if(!buffer.isPromptDisabled())
                     displayPrompt();
                 //write line and restore cursor
-                out.print(buffer.getLine() + ANSI.restoreCursor());
+                if(keepCursorPosition)
+                    out.print(buffer.getLine() + ANSI.restoreCursor());
+                else {
+                    out.print(buffer.getLine());
+                    buffer.setCursor(buffer.getLine().length());
+                }
             }
         }
         out.flush();
@@ -150,7 +159,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         this.currentAction = action;
     }
 
-    private void redrawMultipleLines() {
+    private void redrawMultipleLines(boolean keepCursorPosition) {
         int currentRow = 0;
         if(buffer.getCursorWithPrompt() > 0)
             currentRow = buffer.getCursorWithPrompt() / shell.getSize().getWidth();
@@ -164,38 +173,43 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
                     + ", delta:" + buffer.getDelta() + ", buffer:" + buffer.getLine());
         }
 
-        //out.print(ANSI.saveCursor()); //save cursor
+        StringBuilder builder = new StringBuilder();
+
+        if(keepCursorPosition)
+            builder.append(ANSI.saveCursor()); //save cursor
 
         if(buffer.getDelta() > 0) {
             if (currentRow > 0)
                 for (int i = 0; i < currentRow; i++)
-                    out.print(Buffer.printAnsi("A")); //move to top
+                    builder.append(Buffer.printAnsi("A")); //move to top
         }
         else
-            clearDelta(currentRow);
+            clearDelta(currentRow, builder);
 
-        out.print(Buffer.printAnsi("0G")); //clear
+        builder.append(Buffer.printAnsi("0G")); //clear
 
-        if(!buffer.isPromptDisabled())
-            displayPrompt();
-        out.print(buffer.getLine());
-        //if the current line.length < compared to previous we add spaces to the end
-        // to overwrite the old chars (wtb a better way of doing this)
-        /*
-        if(buffer.getDelta() < 0) {
-            StringBuilder sb = new StringBuilder();
-            for(int i=0; i > buffer.getDelta(); i--)
-                sb.append(' ');
-            out.print(sb.toString());
+        if(!buffer.isPromptDisabled()) {
+            if(buffer.getPrompt().hasANSI())
+                builder.append(buffer.getPrompt().getANSI());
+            else
+                builder.append(buffer.getPrompt().getPromptAsString());
         }
-        */
+        builder.append(buffer.getLine());
+        if(buffer.getDelta() < 0)
+            builder.append(Buffer.printAnsi("K"));
 
         // move cursor to saved pos
-        //out.print(ANSI.restoreCursor());
-        buffer.setCursor(buffer.getLine().length());
+        if(keepCursorPosition) {
+            builder.append(ANSI.restoreCursor());
+            out.print(builder.toString());
+        }
+        else {
+            out.print(builder.toString());
+            buffer.setCursor(buffer.getLine().length());
+        }
     }
 
-    private void clearDelta(int currentRow) {
+    private void clearDelta(int currentRow, StringBuilder builder) {
         if(buffer.getDelta() < 0) {
             int currentLength = buffer.getLineWithPrompt().length();
             int numberOfCurrentRows =  currentLength /  shell.getSize().getWidth();
@@ -208,23 +222,17 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             if (numberOfRowsToRemove == 0)
                 numberOfRowsToRemove++;
 
-        LOGGER.info("numberOfRowsToRemove: "+numberOfRowsToRemove+
-                "\nnumberOfRows: "+numberofRows+
-                "\ncurrentRow: "+currentRow);
-
             int tmpCurrentRow = currentRow;
             while(tmpCurrentRow < numberofRows) {
-                LOGGER.info("moving cursor down a line");
-                out.print(Buffer.printAnsi("B")); //move to the last row
+                builder.append(Buffer.printAnsi("B")); //move to the last row
                 tmpCurrentRow++;
             }
             while(tmpCurrentRow > 0) {
                 if(numberOfRowsToRemove > 0) {
-                    LOGGER.info("deleting current line: "+numberOfRowsToRemove);
-                    out.print(Buffer.printAnsi("2K"));
+                    builder.append(Buffer.printAnsi("2K"));
                     numberOfRowsToRemove--;
                 }
-                out.print(Buffer.printAnsi("A"));
+                builder.append(Buffer.printAnsi("A"));
                 tmpCurrentRow--;
             }
         }

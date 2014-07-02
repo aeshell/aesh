@@ -40,7 +40,7 @@ public interface ConsoleBuffer {
 
     void drawLine();
 
-    void drawLine(String line);
+    void drawLine(boolean keepCursorPosition);
 
     void updateCurrentAction(Action action);
 
