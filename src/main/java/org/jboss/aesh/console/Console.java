@@ -35,6 +35,7 @@ import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.InMemoryHistory;
 import org.jboss.aesh.history.SearchDirection;
 import org.jboss.aesh.terminal.Terminal;
+import org.jboss.aesh.terminal.TerminalCharacter;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.undo.UndoManager;
@@ -759,8 +760,8 @@ public class Console {
         prevAction = Action.HISTORY;
         if(fromHistory != null) {
             setBufferLine(fromHistory);
-            moveCursor(-buffer.getCursor()+buffer.length());
-            redrawLine();
+            //moveCursor(-buffer.getCursor()+buffer.length());
+            redrawLine(false);
         }
     }
 
@@ -997,11 +998,19 @@ public class Console {
         }
     }
 
-    private void redrawLine() throws IOException {
-        drawLine(buffer.getPrompt().getPromptAsString() + buffer.getLine());
+    private void redrawLine(boolean keepCursorPosition) throws IOException {
+        drawLine(buffer.getPrompt().getPromptAsString() + buffer.getLine(), keepCursorPosition);
     }
 
-    private void drawLine(String line) throws IOException {
+    private void redrawLine() throws IOException {
+        drawLine(buffer.getPrompt().getPromptAsString() + buffer.getLine(), true);
+    }
+
+    private void redrawLine(String line) throws IOException {
+        drawLine(line, true);
+    }
+
+    private void drawLine(String line, boolean keepCursorPosition) throws IOException {
        //need to clear more than one line
         if(line.length() > terminal.getSize().getWidth() ||
                 (line.length()+ Math.abs(buffer.getDelta()) > terminal.getSize().getWidth())) {
@@ -1019,28 +1028,49 @@ public class Console {
                         +", delta:"+buffer.getDelta() +", buffer:"+buffer.getLine());
             }
 
-            terminal.writeToStdOut(ANSI.saveCursor()); //save cursor
+            StringBuilder builder = new StringBuilder();
 
-            if(currentRow > 0)
-                for(int i=0; i<currentRow; i++)
-                    terminal.writeToStdOut(Buffer.printAnsi("A")); //move to top
+            if(keepCursorPosition)
+                builder.append(ANSI.saveCursor()); //save cursor
 
-            terminal.writeToStdOut(Buffer.printAnsi("0G")); //clear
-
-            //terminal.writeToStdOut(line);
-            displayPrompt(buffer.getPrompt());
-            terminal.writeToStdOut(buffer.getLine());
-            //if the current line.length < compared to previous we add spaces to the end
-            // to overwrite the old chars (wtb a better way of doing this)
-            if(buffer.getDelta() < 0) {
-                StringBuilder sb = new StringBuilder();
-                for(int i=0; i > buffer.getDelta(); i--)
-                    sb.append(' ');
-                terminal.writeToStdOut(sb.toString());
+            if(buffer.getDelta() > 0) {
+                if (currentRow > 0)
+                    for (int i = 0; i < currentRow; i++)
+                        builder.append(Buffer.printAnsi("A")); //move to top
             }
+            else
+                clearDelta(currentRow, builder);
+
+            builder.append(Buffer.printAnsi("0G")); //clear
+
+            if(buffer.getPrompt().hasChars()) {
+                TerminalCharacter prev = null;
+                for(TerminalCharacter c : buffer.getPrompt().getCharacters()) {
+                    if(prev == null)
+                        builder.append(c.getAsString());
+                    else
+                        builder.append(c.getAsString(prev));
+                    prev = c;
+                }
+            }
+            else
+                builder.append(buffer.getPrompt().getPromptAsString());
+
+
+            builder.append(buffer.getLine());
+            //if(buffer.getDelta() < 0)
+            builder.append(Buffer.printAnsi("K"));
 
             // move cursor to saved pos
-            terminal.writeToStdOut(ANSI.restoreCursor());
+            if(keepCursorPosition) {
+                builder.append(ANSI.restoreCursor());
+                terminal.writeToStdOut(builder.toString());
+            }
+            else {
+                terminal.writeToStdOut(builder.toString());
+                buffer.setCursor(buffer.getLine().length());
+            }
+
         }
         // only clear the current line
         else {
@@ -1052,16 +1082,54 @@ public class Console {
             }
             else {
                 //save cursor, move the cursor to the beginning, reset line
-                terminal.writeToStdOut(resetLineAndSetCursorToStart);
+                if(keepCursorPosition)
+                    terminal.writeToStdOut(resetLineAndSetCursorToStart);
+                else {
+                    terminal.writeToStdOut(Buffer.printAnsi("0G")); //clear
+                    terminal.writeToStdOut(Buffer.printAnsi("K"));
+                }
 
                 displayPrompt(buffer.getPrompt());
                 terminal.writeToStdOut(buffer.getLine());
 
                 // move cursor to saved pos
-                terminal.writeToStdOut(ANSI.restoreCursor());
+                if(keepCursorPosition)
+                    terminal.writeToStdOut(ANSI.restoreCursor());
             }
         }
     }
+
+    private void clearDelta(int currentRow, StringBuilder builder) {
+        if(buffer.getDelta() < 0) {
+            int currentLength = buffer.getLineWithPrompt().length();
+            int numberOfCurrentRows =  currentLength /  terminal.getSize().getWidth();
+            int numberOfPrevRows =
+                    (currentLength + (buffer.getDelta()*-1)) / terminal.getSize().getWidth();
+            int numberOfRowsToRemove = numberOfPrevRows - numberOfCurrentRows;
+            int numberofRows = ((buffer.getDelta()*-1)+ buffer.getLineWithPrompt().length()) /
+                    terminal.getSize().getWidth();
+
+            if (numberOfRowsToRemove == 0)
+                numberOfRowsToRemove++;
+
+            int tmpCurrentRow = currentRow;
+            while(tmpCurrentRow < numberofRows) {
+                builder.append(Buffer.printAnsi("B")); //move to the last row
+                tmpCurrentRow++;
+            }
+            while(tmpCurrentRow > 0) {
+                if(numberOfRowsToRemove > 0) {
+                    builder.append(Buffer.printAnsi("2K"));
+                    numberOfRowsToRemove--;
+                }
+                builder.append(Buffer.printAnsi("A"));
+                tmpCurrentRow--;
+            }
+        }
+    }
+
+
+
 
     private void printSearch(String searchTerm, String result) throws IOException {
         //cursor should be placed at the index of searchTerm
@@ -1080,7 +1148,7 @@ public class Console {
         terminal.writeToStdOut(ANSI.moveCursorToBeginningOfLine());
         setBufferLine(out.toString());
         moveCursor(cursor);
-        drawLine(buffer.getLine());
+        drawLine(buffer.getLine(), true);
         buffer.disablePrompt(false);
     }
 
