@@ -417,8 +417,7 @@ public class AeshInputProcessor implements InputProcessor {
         if(fromHistory != null) {
             consoleBuffer.setBufferLine(fromHistory);
             consoleBuffer.updateCurrentAction(Action.HISTORY);
-            consoleBuffer.drawLine();
-            consoleBuffer.moveCursor(-consoleBuffer.getBuffer().getCursor() + consoleBuffer.getBuffer().length());
+            consoleBuffer.drawLine(false);
         }
     }
 
@@ -460,7 +459,7 @@ public class AeshInputProcessor implements InputProcessor {
         consoleBuffer.out().print(ANSI.getStart() + "2K");
         consoleBuffer.setBufferLine(builder.toString());
         consoleBuffer.moveCursor(cursor);
-        consoleBuffer.drawLine(consoleBuffer.getBuffer().getLine());
+        consoleBuffer.drawLine();
         consoleBuffer.getBuffer().disablePrompt(false);
         consoleBuffer.out().flush();
     }
