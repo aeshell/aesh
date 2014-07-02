@@ -14,7 +14,7 @@ targetCompatibility = 1.7
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'Aesh', 'Implementation-Version': version
+        attributes 'Implementation-Title': 'Aesh', 'Implementation-Version': version, 'Main-Class': 'AeshExample'
     }
 }
 
