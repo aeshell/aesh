@@ -1095,6 +1095,8 @@ public class Console {
                 // move cursor to saved pos
                 if(keepCursorPosition)
                     terminal.writeToStdOut(ANSI.restoreCursor());
+                else
+                    buffer.setCursor(buffer.getLine().length());
             }
         }
     }
