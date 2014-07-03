@@ -1198,7 +1198,7 @@ public class Console {
      * @throws IOException stream
      */
     private void complete() throws IOException {
-        if(completionList.size() < 1)
+        if(completionList.size() < 1 || settings.isDisableCompletion())
             return;
 
         List<CompleteOperation> possibleCompletions = new ArrayList<CompleteOperation>();
