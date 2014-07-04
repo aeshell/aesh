@@ -8,6 +8,7 @@ package org.jboss.aesh.cl.parser;
 
 import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.parser.AeshLine;
 
 import java.util.List;
 
@@ -72,6 +73,8 @@ public interface CommandLineParser {
      * @return CommandLine
      */
     CommandLine parse(String line, boolean ignoreRequirements);
+
+    CommandLine parse(AeshLine line, boolean ignoreRequirements);
 
     /**
      * Parse a command line with the defined command as base of the rules.

@@ -41,6 +41,7 @@ import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.man.Man;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.LoggerUtil;
@@ -232,18 +233,29 @@ public class AeshConsoleImpl implements AeshConsole {
      * try to return the command in the given registry if the given registry do not find the command, check if we have a
      * internal registry and if its there.
      *
-     * @param name command name
+     * @param aeshLine parsed command line
      * @param line command line
      * @return command
      * @throws CommandNotFoundException
      */
-    private CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
+    private CommandContainer getCommand(AeshLine aeshLine, String line) throws CommandNotFoundException {
         try {
-            return registry.getCommand(name, line);
+            CommandContainer commandContainer = registry.getCommand(aeshLine.getWords().get(0), line);
+            if(commandContainer.getParser().getCommand().isGroupCommand()) {
+                if(aeshLine.getWords().size() > 1) {
+                    String groupName = aeshLine.getWords().get(1);
+                }
+                //if(groupName != null)
+                    //return commandContainer.getParser().getCommand().getGroupCommand(groupName);
+                return null;
+
+            }
+            else
+                return commandContainer;
         }
         catch (CommandNotFoundException e) {
             if (internalRegistry != null) {
-                CommandContainer cc = internalRegistry.getCommand(name);
+                CommandContainer cc = internalRegistry.getCommand(aeshLine.getWords().get(0));
                 if (cc != null)
                     return cc;
             }
@@ -260,9 +272,8 @@ public class AeshConsoleImpl implements AeshConsole {
                 completeOperation.addCompletionCandidates(completedCommands);
             }
             else {
-                try (CommandContainer commandContainer = getCommand(
-                    Parser.findFirstWord(completeOperation.getBuffer()),
-                    completeOperation.getBuffer())) {
+                AeshLine aeshLine = Parser.findAllWords(completeOperation.getBuffer());
+                try (CommandContainer commandContainer = getCommand( aeshLine, completeOperation.getBuffer())) {
                     CommandLineCompletionParser completionParser = commandContainer
                         .getParser().getCompletionParser();
 
@@ -301,9 +312,8 @@ public class AeshConsoleImpl implements AeshConsole {
         public int execute(ConsoleOperation output) throws InterruptedException {
             if (output != null && output.getBuffer().trim().length() > 0) {
                 ResultHandler resultHandler = null;
-                try (CommandContainer commandContainer = getCommand(
-                    Parser.findFirstWord(output.getBuffer()),
-                    output.getBuffer())) {
+                AeshLine aeshLine = Parser.findAllWords(output.getBuffer());
+                try (CommandContainer commandContainer = getCommand( aeshLine, output.getBuffer())) {
 
                     CommandLine commandLine = commandContainer.getParser()
                         .parse(output.getBuffer());

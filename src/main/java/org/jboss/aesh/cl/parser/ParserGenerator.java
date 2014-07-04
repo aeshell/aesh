@@ -8,16 +8,19 @@ package org.jboss.aesh.cl.parser;
 
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
+import org.jboss.aesh.cl.GroupCommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionGroup;
 import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
@@ -25,7 +28,9 @@ import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,13 +46,42 @@ public class ParserGenerator {
     }
 
     public static CommandLineParser generateCommandLineParser(Class clazz) throws CommandLineParserException {
+
         CommandDefinition command = (CommandDefinition) clazz.getAnnotation(CommandDefinition.class);
-        if(command == null)
-            throw new CommandLineParserException("Commands must be annotated with @CommandDefinition");
+        if(command != null) {
+            ProcessedCommand processedCommand = new ProcessedCommand(command.name(), command.description(),
+                    command.validator(), command.resultHandler());
 
-        ProcessedCommand processedCommand = new ProcessedCommand(command.name(), command.description(),
-                command.validator(), command.resultHandler());
+            processCommand(processedCommand, clazz);
 
+            return new CommandLineParserBuilder().parameter(processedCommand).generateParser();
+        }
+        GroupCommandDefinition groupCommand = (GroupCommandDefinition) clazz.getAnnotation(GroupCommandDefinition.class);
+        if(groupCommand != null) {
+            List<ProcessedCommand> processedCommands = new ArrayList<>();
+            for(Class groupClazz : groupCommand.groupCommands()) {
+                command = (CommandDefinition) groupClazz.getAnnotation(CommandDefinition.class);
+                if(command != null) {
+                    ProcessedCommand processedCommand = new ProcessedCommand(command.name(), command.description(),
+                            command.validator(), command.resultHandler());
+
+                    processCommand(processedCommand, groupClazz);
+                    processedCommands.add(processedCommand);
+                }
+                else
+                    throw new CommandLineParserException("Commands must be annotated with @CommandDefinition");
+            }
+
+            ProcessedCommand processedGroupCommand = new ProcessedCommand(groupCommand.name(), groupCommand.description(),
+                    groupCommand.validator(), groupCommand.resultHandler(), processedCommands);
+
+            return new CommandLineParserBuilder().parameter(processedGroupCommand).generateParser();
+        }
+        else
+            throw new CommandLineParserException("Commands must be annotated with @CommandDefinition or @GroupCommandDefinition");
+    }
+
+    private static void processCommand(ProcessedCommand processedCommand, Class clazz) throws CommandLineParserException {
         for(Field field : clazz.getDeclaredFields()) {
             Option o;
             OptionGroup og;
@@ -127,7 +161,6 @@ public class ParserGenerator {
             }
         }
 
-        return new CommandLineParserBuilder().parameter(processedCommand).generateParser();
     }
 
     public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException, OptionValidatorException {

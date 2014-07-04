@@ -37,6 +37,8 @@ public final class ProcessedCommand {
 
     private List<ProcessedOption> options;
     private ProcessedOption argument;
+    private boolean groupCommand = false;
+    private List<ProcessedCommand> groupCommands;
 
     public ProcessedCommand(String name, String description, CommandValidator validator,
                             ResultHandler resultHandler) {
@@ -54,6 +56,19 @@ public final class ProcessedCommand {
         setValidator(initValidator(validator));
         setResultHandler(initResultHandler(resultHandler));
         options = new ArrayList<>();
+    }
+
+    public ProcessedCommand(String name, String description,Class<? extends CommandValidator> validator,
+                            Class<? extends ResultHandler> resultHandler, List<ProcessedCommand> groupCommands) {
+        setName(name);
+        setDescription(description);
+        setValidator(initValidator(validator));
+        setResultHandler(initResultHandler(resultHandler));
+        options = new ArrayList<>();
+        if(groupCommands.size() > 0) {
+            groupCommand = true;
+            this.groupCommands = groupCommands;
+        }
     }
 
     public ProcessedCommand(String name, String description, ProcessedOption argument) {
@@ -290,6 +305,9 @@ public final class ProcessedCommand {
            processedOption.clear();
        if(argument != null)
            argument.clear();
+       if(isGroupCommand())
+           for(ProcessedCommand p : groupCommands)
+               p.clear();
     }
 
     /**
@@ -391,5 +409,21 @@ public final class ProcessedCommand {
     public void processAfterInit(InvocationProviders invocationProviders) {
         for(ProcessedOption option : options)
             option.processAfterInit(invocationProviders);
+    }
+
+    public boolean isGroupCommand() {
+        return groupCommand;
+    }
+
+    public List<ProcessedCommand> getGroupCommands() {
+        return groupCommands;
+    }
+
+    public ProcessedCommand getGroupCommand(String name) {
+        if(groupCommand)
+            for(ProcessedCommand p : groupCommands)
+                if(p.getName().equals(name))
+                    return p;
+        return null;
     }
 }

@@ -80,6 +80,17 @@ public class AeshCommandLineParser implements CommandLineParser {
         return parse(line, false);
     }
 
+    @Override
+    public CommandLine parse(AeshLine line, boolean ignoreRequirements) {
+        if(line.getWords().size() > 0) {
+            if(command.getName().equals(line.getWords().get(0)))
+                return parse(line.getWords(), ignoreRequirements);
+        }
+        else if(line.getStatus() != ParserStatus.OK)
+            return new CommandLine(new CommandLineParserException(line.getErrorMessage()));
+
+        return new CommandLine(new CommandLineParserException("Command:"+ command +", not found in: "+line));
+    }
     /**
      * Parse a command line with the defined command as base of the rules.
      * If any options are found, but not defined in the command object an
@@ -96,15 +107,7 @@ public class AeshCommandLineParser implements CommandLineParser {
      */
     @Override
     public CommandLine parse(String line, boolean ignoreRequirements) {
-        AeshLine aeshLine = Parser.findAllWords(line);
-        if(aeshLine.getWords().size() > 0) {
-            if(command.getName().equals(aeshLine.getWords().get(0)))
-                return parse(aeshLine.getWords(), ignoreRequirements);
-        }
-        else if(aeshLine.getStatus() != ParserStatus.OK)
-            return new CommandLine(new CommandLineParserException(aeshLine.getErrorMessage()));
-
-        return new CommandLine(new CommandLineParserException("Command:"+ command +", not found in: "+line));
+        return parse(Parser.findAllWords(line), ignoreRequirements);
     }
 
     /**

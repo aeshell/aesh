@@ -7,6 +7,7 @@
 package org.jboss.aesh.console.command.registry;
 
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.GroupCommand;
 import org.jboss.aesh.console.command.container.AeshCommandContainerBuilder;
 import org.jboss.aesh.console.command.container.CommandContainer;
 
