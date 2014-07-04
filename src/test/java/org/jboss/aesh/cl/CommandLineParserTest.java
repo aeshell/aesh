@@ -135,6 +135,16 @@ public class CommandLineParserTest {
 
     }
 
+    @Test
+    public void testParseGroupCommand() throws CommandLineParserException {
+
+        CommandLineParser parser = ParserGenerator.generateCommandLineParser(GroupCommandTest.class);
+
+        CommandLine cl = parser.parse("group child1 --foo BAR");
+        assertTrue(cl.hasOption("foo"));
+        assertEquals("BAR", cl.getOptionValue("foo"));
+    }
+
     public void testParseCommandLine3() {
         /*
         try {
@@ -240,3 +250,18 @@ class Parser4Test {
     private List<String> arguments;
 }
 
+@CommandDefinition(name = "child1", description = "")
+class ChildTest1 {
+
+    @Option
+    private String foo;
+
+}
+
+@GroupCommandDefinition(name = "group", description = "", groupCommands = {ChildTest1.class})
+class GroupCommandTest {
+
+    @Option(hasValue = false)
+    private boolean help;
+
+}

@@ -18,6 +18,7 @@ import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.parser.ParserStatus;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,9 +34,36 @@ public class AeshCommandLineParser implements CommandLineParser {
 
     private final ProcessedCommand command;
     private static final String EQUALS = "=";
+    private List<AeshCommandLineParser> groupParsers;
+    private boolean isChild = false;
 
     public AeshCommandLineParser(ProcessedCommand command) {
         this.command = command;
+        if(isGroupCommand()) {
+            setupGroupParsers();
+        }
+    }
+
+    private AeshCommandLineParser(ProcessedCommand command, boolean isChild) {
+        this.command = command;
+        this.isChild = isChild;
+    }
+
+    private void setupGroupParsers() {
+        groupParsers = new ArrayList<>(this.command.getGroupCommands().size());
+        for(ProcessedCommand pc : this.command.getGroupCommands()) {
+            groupParsers.add(new AeshCommandLineParser(pc, true));
+        }
+    }
+
+    private AeshCommandLineParser getGroupCommand(String name) {
+        if(!isGroupCommand())
+            return null;
+        for(AeshCommandLineParser clp : groupParsers) {
+            if(clp.getCommand().getName().equals(name))
+                return clp;
+        }
+        return null;
     }
 
     @Override
@@ -83,8 +111,18 @@ public class AeshCommandLineParser implements CommandLineParser {
     @Override
     public CommandLine parse(AeshLine line, boolean ignoreRequirements) {
         if(line.getWords().size() > 0) {
-            if(command.getName().equals(line.getWords().get(0)))
-                return parse(line.getWords(), ignoreRequirements);
+            if(command.getName().equals(line.getWords().get(0))) {
+                if(isGroupCommand() && line.getWords().size() > 1) {
+                   AeshCommandLineParser clp = getGroupCommand(line.getWords().get(1));
+                    if(clp == null)
+                        return parse(line.getWords(), ignoreRequirements);
+                    //we have a group command
+                    else
+                        return clp.parse(line.getWords(), ignoreRequirements);
+                }
+                else
+                    return parse(line.getWords(), ignoreRequirements);
+            }
         }
         else if(line.getStatus() != ParserStatus.OK)
             return new CommandLine(new CommandLineParserException(line.getErrorMessage()));
@@ -128,8 +166,11 @@ public class AeshCommandLineParser implements CommandLineParser {
             commandLine.setArgument(command.getArgument());
         ProcessedOption active = null;
         boolean addedArgument = false;
+        int startWord = 1;
+        if(isChild)
+            startWord = 2;
         //skip first entry since that's the name of the command
-        for(int i=1; i < lines.size(); i++) {
+        for(int i=startWord; i < lines.size(); i++) {
             String parseLine = lines.get(i);
             //name
             if(parseLine.startsWith("--")) {
@@ -406,6 +447,9 @@ public class AeshCommandLineParser implements CommandLineParser {
         return null;
     }
 
+    private boolean isGroupCommand() {
+        return command.isGroupCommand();
+    }
 
     @Override
     public String toString() {
