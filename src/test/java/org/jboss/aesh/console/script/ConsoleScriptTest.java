@@ -6,7 +6,6 @@
  */
 package org.jboss.aesh.console.script;
 
-import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
