@@ -407,7 +407,7 @@ public class Console {
         processManager.putProcessInBackground(pid);
     }
 
-    protected void pushToInputStream(String input) {
+    public void pushToInputStream(String input) {
         getTerminal().getInputStream().write(input);
     }
 
