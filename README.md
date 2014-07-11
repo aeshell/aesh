@@ -28,6 +28,10 @@ How to build:
         * Windows: gradlew.bat 
         * Linux: gradlew
 
+Æsh Developer List:
+-------------------
+https://groups.google.com/forum/#!forum/aesh-dev
+
 To get going:
 -------------
 ```java
