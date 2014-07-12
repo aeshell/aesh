@@ -25,12 +25,8 @@ public class FileUtils {
             throw new IOException(file+": Is a directory");
         }
 
-        OutputStream out = file.write(append);
-
-        out.write(text.getBytes());
-        out.flush();
-        out.close();
-
+        try (OutputStream out = file.write(append);) {
+            out.write(text.getBytes());
+        }
     }
-
 }
