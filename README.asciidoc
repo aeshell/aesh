@@ -1,32 +1,32 @@
-Æsh (Another Extendable SHell)
-=========
+== Æsh (Another Extendable SHell)
 
-[![Build Status](https://travis-ci.org/aeshell/aesh.png?branch=master)](https://travis-ci.org/aeshell/aesh)
+
+image:https://travis-ci.org/aeshell/aesh.svg?branch=master["Build Status", link="https://travis-ci.org/aeshell/aesh"]
 
 Æsh is a Java library for handling console input with the goal to support most GNU Readline features.
 
 Features:
 ---------
-* Line editing
-* History (search, persistence)
-* Completion
-* Masking
-* Undo and Redo
-* Paste buffer
-* Emacs and Vi editing mode
-* Supports POSIX OS's and Windows
-* Easy to configure (history file & buffer size, edit mode, streams, possible to override terminal implementations, etc)
-* Support standard out and standard error
-* Redirect
-* Alias
-* Pipeline
+- *Line editing*
+- *History (search, persistence)*
+- *Completion*
+- *Masking*
+- *Undo and Redo*
+- *Paste buffer*
+- *Emacs and Vi editing mode*
+- *Supports POSIX OS's and Windows*
+- *Easy to configure* (history file & buffer size, edit mode, streams, possible to override terminal implementations, etc)
+- *Support standard out and standard error*
+- *Redirect*
+- *Alias*
+- *Pipeline*
 
 How to build:
 -------------
-* Æsh uses Gradle (http://gradle.org) as its build tool.
-    * When you start a Gradle build via the wrapper [gradlew], Gradle will be automatically downloaded and used to run the build
-        * Windows: gradlew.bat 
-        * Linux: gradlew
+- Æsh uses Gradle (http://gradle.org) as its build tool.
+** When you start a Gradle build via the wrapper [gradlew], Gradle will be automatically downloaded and used to run the build
+*** Windows: gradlew.bat
+*** Linux: gradlew
 
 Æsh Developer List:
 -------------------
@@ -34,7 +34,8 @@ https://groups.google.com/forum/#!forum/aesh-dev
 
 To get going:
 -------------
-```java
+[source,java]
+----
 import java.io.IOException;
 
 import org.jboss.aesh.console.Console;
@@ -67,10 +68,11 @@ public class Example {
         console.start();
     }
 }
-```
+----
+[source,java]
 
 Keys that are mapped by default in Æsh
---------------------------------------------
+--------------------------------------
 Note: C equals Control and M is Meta/Alt
 
 EMACS Mode
@@ -99,7 +101,7 @@ EMACS Mode
 
 
 VI Mode
-----------
+-------
 In command mode: About every vi command is supported, here's a few:
 
 * Move back one char : h
@@ -122,7 +124,7 @@ In command mode: About every vi command is supported, here's a few:
 * Add text into yank buffer : y + movement action
 * Enable change mode : c
 * Repeat previous action : .
-* +++ (read a vi manual)
+* \+++ (read a vi manual)
 
 In edit mode:
 
@@ -131,7 +133,7 @@ In edit mode:
 * Delete the character left of cursor : backspace
 
 Supported runtime properties:
--------------
+-----------------------------
 * aesh.terminal : specify Terminal object
 * aesh.editmode : specify either VI or EMACS edit mode
 * aesh.readinputrc : specify if Æsh should read settings from inputrc
