@@ -34,13 +34,13 @@ public class AeshCommandLineParser implements CommandLineParser {
 
     private final ProcessedCommand command;
     private static final String EQUALS = "=";
-    private List<AeshCommandLineParser> groupParsers;
+    private List<AeshCommandLineParser> childParsers;
     private boolean isChild = false;
 
     public AeshCommandLineParser(ProcessedCommand command) {
         this.command = command;
         if(isGroupCommand()) {
-            setupGroupParsers();
+            setupChildParsers();
         }
     }
 
@@ -49,17 +49,17 @@ public class AeshCommandLineParser implements CommandLineParser {
         this.isChild = isChild;
     }
 
-    private void setupGroupParsers() {
-        groupParsers = new ArrayList<>(this.command.getGroupCommands().size());
+    private void setupChildParsers() {
+        childParsers = new ArrayList<>(this.command.getGroupCommands().size());
         for(ProcessedCommand pc : this.command.getGroupCommands()) {
-            groupParsers.add(new AeshCommandLineParser(pc, true));
+            childParsers.add(new AeshCommandLineParser(pc, true));
         }
     }
 
-    private AeshCommandLineParser getGroupCommand(String name) {
+    public AeshCommandLineParser getChildParser(String name) {
         if(!isGroupCommand())
             return null;
-        for(AeshCommandLineParser clp : groupParsers) {
+        for(AeshCommandLineParser clp : childParsers) {
             if(clp.getCommand().getName().equals(name))
                 return clp;
         }
@@ -113,7 +113,7 @@ public class AeshCommandLineParser implements CommandLineParser {
         if(line.getWords().size() > 0) {
             if(command.getName().equals(line.getWords().get(0))) {
                 if(isGroupCommand() && line.getWords().size() > 1) {
-                   AeshCommandLineParser clp = getGroupCommand(line.getWords().get(1));
+                   AeshCommandLineParser clp = getChildParser(line.getWords().get(1));
                     if(clp == null)
                         return parse(line.getWords(), ignoreRequirements);
                     //we have a group command

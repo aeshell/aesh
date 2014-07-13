@@ -12,6 +12,8 @@ import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
+import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.util.ReflectionUtil;
 
 /**
@@ -94,6 +96,15 @@ public class AeshCommandContainer implements CommandContainer {
     @Override
     public String getBuildErrorMessage() {
         return errorMessage;
+    }
+
+    @Override
+    public CommandContainerResult executeCommand(AeshLine line, CommandInvocation commandInvocation) {
+        if(parser.getCommand().isGroupCommand()) {
+
+        }
+
+        return null;
     }
 
     @Override

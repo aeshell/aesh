@@ -27,9 +27,9 @@ import java.util.List;
  */
 public class AeshCommandLineCompletionParser implements CommandLineCompletionParser {
 
-    private final CommandLineParser parser;
+    private final AeshCommandLineParser parser;
 
-    public AeshCommandLineCompletionParser(CommandLineParser parser) {
+    public AeshCommandLineCompletionParser(AeshCommandLineParser parser) {
         this.parser = parser;
     }
 
@@ -45,38 +45,59 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
         if(cursor < line.length()) {
             line = line.substring(0, cursor);
         }
-        //first we check if it could be a param
-        if(Parser.findIfWordEndWithSpace(line)) {
-            //check if we try to complete just after the command name
-            if(line.trim().equals(parser.getCommand().getName())) {
-                if(parser.getCommand().getArgument() == null) {
-                    //basically an empty string except command name
-                    return new ParsedCompleteObject(true, "", 0);
-                }
-                return new ParsedCompleteObject(null, "", parser.getCommand().getArgument().getType(), false);
-            }
-
-            //else we try to complete an option,an option value or arguments
-            String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line.trim());
-            if(lastWord.startsWith("-")) {
-                int offset = lastWord.length();
-                while(lastWord.startsWith("-"))
-                    lastWord = lastWord.substring(1);
-                if(lastWord.length() == 0)
-                    return new ParsedCompleteObject(false, null, offset);
-                else if(parser.getCommand().findOptionNoActivatorCheck(lastWord) != null ||
-                        parser.getCommand().findLongOptionNoActivatorCheck(lastWord) != null)
-                    return findCompleteObjectValue(line, true);
-                else
-                    return new ParsedCompleteObject(false, null, offset);
-            }
-            //last word is a value, need to find out what option its a value for
-            else {
-                return findCompleteObjectValue(line, true);
-            }
+        //first we check if its a group command
+        if(parser.getCommand().isGroupCommand())
+            return parsingGroupCommand(line, cursor);
+        //then we check if it could be a param
+        else if(Parser.findIfWordEndWithSpace(line)) {
+            return endsWithSpace(line);
         }
+        //lastly we'll check if we can find an option
         else
             return optionFinder(line);
+    }
+
+    //we assume that this line has atleast two words,
+    // (if not it should not have called this method)
+    private ParsedCompleteObject parsingGroupCommand(String line, int cursor) throws CommandLineParserException {
+        int stripIndex = line.indexOf(' ', Parser.findFirstWord(line).length()-1);
+        AeshCommandLineParser childParser = parser.getChildParser(
+                Parser.findFirstWord(Parser.findFirstWord(line.substring(stripIndex))));
+
+        if(childParser != null)
+            return childParser.getCompletionParser().findCompleteObject(line.substring(stripIndex), cursor);
+        else
+            throw new CommandLineParserException("Could not find child for line: "+line);
+    }
+
+    private ParsedCompleteObject endsWithSpace(String line) throws CommandLineParserException {
+        //check if we try to complete just after the command name
+        if(line.trim().equals(parser.getCommand().getName())) {
+            if(parser.getCommand().getArgument() == null) {
+                //basically an empty string except command name
+                return new ParsedCompleteObject(true, "", 0);
+            }
+            return new ParsedCompleteObject(null, "", parser.getCommand().getArgument().getType(), false);
+        }
+
+        //else we try to complete an option,an option value or arguments
+        String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line.trim());
+        if(lastWord.startsWith("-")) {
+            int offset = lastWord.length();
+            while(lastWord.startsWith("-"))
+                lastWord = lastWord.substring(1);
+            if(lastWord.length() == 0)
+                return new ParsedCompleteObject(false, null, offset);
+            else if(parser.getCommand().findOptionNoActivatorCheck(lastWord) != null ||
+                    parser.getCommand().findLongOptionNoActivatorCheck(lastWord) != null)
+                return findCompleteObjectValue(line, true);
+            else
+                return new ParsedCompleteObject(false, null, offset);
+        }
+        //last word is a value, need to find out what option its a value for
+        else {
+            return findCompleteObjectValue(line, true);
+        }
     }
 
     private ParsedCompleteObject optionFinder(String line) throws CommandLineParserException {

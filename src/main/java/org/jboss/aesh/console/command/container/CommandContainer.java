@@ -8,6 +8,8 @@ package org.jboss.aesh.console.command.container;
 
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
+import org.jboss.aesh.parser.AeshLine;
 
 /**
  * A CommandContainer hold reference to the Command and
@@ -39,4 +41,6 @@ public interface CommandContainer extends AutoCloseable {
      * @return error message
      */
     String getBuildErrorMessage();
+
+    CommandContainerResult executeCommand(AeshLine line, CommandInvocation commandInvocation);
 }

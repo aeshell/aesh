@@ -243,6 +243,7 @@ public class AeshConsoleImpl implements AeshConsole {
             CommandContainer commandContainer = registry.getCommand(aeshLine.getWords().get(0), line);
             if(commandContainer.getParser().getCommand().isGroupCommand()) {
                 if(aeshLine.getWords().size() > 1) {
+                    aeshLine.getWords().remove(0);
                     String groupName = aeshLine.getWords().get(1);
                 }
                 //if(groupName != null)

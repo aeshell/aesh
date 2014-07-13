@@ -216,6 +216,17 @@ public class ParseCompleteObjectTest {
         assertTrue(pco.doDisplayOptions());
     }
 
+    @Test
+    public void testGroupCompletion() throws Exception {
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteGroupTest.class);
+        CommandLineCompletionParser completeParser = clp.getCompletionParser();
+
+        ParsedCompleteObject pco = completeParser.findCompleteObject("test child1 --en", 20);
+        assertTrue(pco.doDisplayOptions());
+        assertFalse(pco.isCompleteOptionName());
+        assertEquals("en", pco.getName());
+        assertEquals(4, pco.getOffset());
+    }
 }
 @CommandDefinition(name = "test", description = "a simple test")
 class ParseCompleteTest1 {
@@ -266,4 +277,22 @@ class ParseCompleteTest3 {
     @Option(shortName = 'D', description = "define properties",
             required = true)
     private String define;
+}
+
+@GroupCommandDefinition(name = "group", description = "groups",
+        groupCommands = {ParseCompleteGroupChild1.class, ParseCompleteGroupChild2.class})
+class ParseCompleteGroupTest {
+
+}
+
+@CommandDefinition(name = "child1", description = "im child1")
+class ParseCompleteGroupChild1 {
+    @Option
+    private String enable;
+}
+
+@CommandDefinition(name = "child2", description = "im child2")
+class ParseCompleteGroupChild2 {
+    @Option
+    private String print;
 }
