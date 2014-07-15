@@ -22,3 +22,4 @@ out
 
 # ignore compile/test files
 classes
+/bin/

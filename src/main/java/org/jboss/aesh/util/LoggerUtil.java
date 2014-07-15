@@ -15,6 +15,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.logging.StreamHandler;
 
 /**
  * butt ugly logger util, but its simple and gets the job done (hopefully not too dangerous)
@@ -32,22 +33,24 @@ public class LoggerUtil {
             if(logFile.getParentFile() != null && !logFile.getParentFile().isDirectory()) {
                 if(!logFile.getParentFile().mkdirs()) {
                     //if creating dirs failed, just create a logger without a file handler
-                    logHandler = new ConsoleHandler();
-                    logHandler.setFormatter(new SimpleFormatter());
+                    createLogHandler(new ConsoleHandler());
                     return;
                 }
             }
             else if(logFile.isDirectory()) {
                 logFile = new File(logFile.getAbsolutePath()+ Config.getPathSeparator()+"aesh.log");
             }
-            logHandler = new FileHandler(logFile.getAbsolutePath());
-            logHandler.setFormatter(new SimpleFormatter());
+            createLogHandler(new FileHandler(logFile.getAbsolutePath()));
         }
         catch (IOException e) {
-            logHandler = new ConsoleHandler();
-            logHandler.setFormatter(new SimpleFormatter());
+            createLogHandler(new ConsoleHandler());
         }
 
+    }
+
+    private static void createLogHandler(StreamHandler handler) {
+        logHandler = handler;
+        logHandler.setFormatter(new SimpleFormatter());
     }
 
     /**

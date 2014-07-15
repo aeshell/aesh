@@ -82,9 +82,7 @@ public class FileLister {
         if (token.trim().isEmpty()) {
             completion.addCompletionCandidates(listDirectory(cwd, null));
         }
-        else if (containStar()) {
-        }
-        else if (containWildCards()) {
+        else if (containStar() || containWildCards()) {
         }
         else if (startWithHome()) {
             if (isHomeAndTokenADirectory()) {

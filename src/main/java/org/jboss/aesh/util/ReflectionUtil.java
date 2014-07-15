@@ -16,13 +16,9 @@ import java.lang.reflect.Modifier;
 public class ReflectionUtil {
 
     public static <T> T newInstance(final Class<T> clazz) {
-        if(clazz.isAnonymousClass()) {
-            throw new RuntimeException("Can not create new instance of an anonymous class");
+        if(clazz.isAnonymousClass() || clazz.isInterface() || clazz.isAnnotation()) {
+            throw new RuntimeException("Can not create new instance of an " + clazz.getName());
         }
-        else if(clazz.isInterface())
-            throw new RuntimeException("Can not create new instance of an interface");
-        else if(clazz.isAnnotation())
-            throw new RuntimeException("Can not create new instance of an annotation");
 
         for(Constructor<?> constructor : clazz.getConstructors()) {
             T object = (T) instantiateWithConstructor(constructor);
@@ -47,11 +43,7 @@ public class ReflectionUtil {
                 }
                 try {
                     return constructor.newInstance();
-                } catch (InstantiationException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
             }
@@ -67,11 +59,7 @@ public class ReflectionUtil {
                 if(paramConstructor != null) {
                     try {
                         return constructor.newInstance(paramConstructor.newInstance());
-                    } catch (InstantiationException e) {
-                        e.printStackTrace();
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
+                    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
                 }
@@ -91,5 +79,4 @@ public class ReflectionUtil {
         }
         return null;
     }
-
 }
