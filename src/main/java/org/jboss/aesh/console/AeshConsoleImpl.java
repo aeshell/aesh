@@ -165,6 +165,11 @@ public class AeshConsoleImpl implements AeshConsole {
         return console.getExportManager();
     }
 
+    @Override
+    public Console getConsole() {
+        return this.console;
+    }
+
     public String getBuffer() {
         return console.getBuffer();
     }
@@ -173,17 +178,7 @@ public class AeshConsoleImpl implements AeshConsole {
         return console.getInputProcessor();
     }
 
-    public void putProcessInBackground(int pid) {
-        console.putProcessInBackground(pid);
-    }
 
-    public void putProcessInForeground(int pid) {
-        console.putProcessInForeground(pid);
-    }
-
-    public void execute(String input) {
-        console.pushToInputStream(input);
-    }
 
     private void processAfterInit(Settings settings) {
         if (settings.isManEnabled()) {

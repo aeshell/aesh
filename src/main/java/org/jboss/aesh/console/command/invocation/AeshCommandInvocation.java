@@ -6,9 +6,12 @@
  */
 package org.jboss.aesh.console.command.invocation;
 
+import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleImpl;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.ConsoleCallback;
+import org.jboss.aesh.console.ProcessDelegater;
+import org.jboss.aesh.console.ProcessManager;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
@@ -20,17 +23,19 @@ import org.jboss.aesh.terminal.Shell;
  */
 public final class AeshCommandInvocation implements CommandInvocation {
 
-    private final AeshConsoleImpl aeshConsole;
+    private final AeshConsole aeshConsole;
     private final ControlOperator controlOperator;
     private final ConsoleCallback callback;
+    private final ProcessDelegater processDelegater;
     private final int pid;
 
-    public AeshCommandInvocation(AeshConsoleImpl aeshConsole, ControlOperator controlOperator,
+    public AeshCommandInvocation(AeshConsole aeshConsole, ControlOperator controlOperator,
                                  int pid, ConsoleCallback callback) {
         this.aeshConsole = aeshConsole;
         this.controlOperator = controlOperator;
         this.pid = pid;
         this.callback = callback;
+        this.processDelegater = new ProcessDelegater(aeshConsole.getConsole());
     }
     @Override
     public ControlOperator getControlOperator() {
@@ -84,16 +89,16 @@ public final class AeshCommandInvocation implements CommandInvocation {
 
     @Override
     public void putProcessInBackground() {
-        aeshConsole.putProcessInBackground(pid);
+        processDelegater.putProcessInBackground(pid);
     }
 
     @Override
     public void putProcessInForeground() {
-        aeshConsole.putProcessInForeground(pid);
+        processDelegater.putProcessInForeground(pid);
     }
 
     @Override
     public void executeCommand(String input) {
-        aeshConsole.execute(input);
+        processDelegater.execute(input);
     }
 }
