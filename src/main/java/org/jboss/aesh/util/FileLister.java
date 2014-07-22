@@ -325,10 +325,8 @@ public class FileLister {
                     return true;
                 }
             }
-            return false;
         }
-        else
-            return false;
+        return false;
     }
 
     private boolean tokenEndsWithSlash() {
