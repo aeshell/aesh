@@ -26,4 +26,6 @@ public interface EditMode {
     void init(Console console);
 
     void setAskForCompletions(boolean askForCompletions);
+
+    void resetEOF();
 }

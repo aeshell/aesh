@@ -6,19 +6,31 @@
  */
 package org.jboss.aesh.console.eof;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.OutputStream;
-
+import org.jboss.aesh.console.AeshConsole;
+import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
+import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.aesh.AeshCommandCompletionTest;
+import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
+import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.io.PrintStream;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
@@ -50,12 +62,6 @@ public class IgnoreEofTest extends BaseConsoleTest {
                 Thread.sleep(100);
 
                 assertEquals("", console.getBuffer());
-
-                out.write(Key.CTRL_D.getFirstValue());
-                out.flush();
-                Thread.sleep(100);
-
-                assertTrue(console.isRunning());
 
                 out.write(Key.CTRL_D.getFirstValue());
                 out.flush();
@@ -123,5 +129,67 @@ public class IgnoreEofTest extends BaseConsoleTest {
                return 0;
            }
         }, builder);
+    }
+
+
+    @Test
+    public void resetEOF() throws Exception {
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .inputStream(pipedInputStream)
+                .outputStream(new PrintStream(byteArrayOutputStream))
+                .setPersistExport(false)
+                .logging(true)
+                .enableExport(true)
+                .mode(Mode.VI)
+                .readAhead(true)
+                .create();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(AeshCommandCompletionTest.FooCommand.class)
+                .create();
+
+        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
+                .settings(settings)
+                .commandRegistry(registry)
+                .prompt(new Prompt(""));
+
+        AeshConsole aeshConsole = consoleBuilder.create();
+        aeshConsole.start();
+
+        outputStream.write(("export ignoreeof = 2").getBytes());
+        outputStream.flush();
+        Thread.sleep(100);
+
+        outputStream.write(Key.CTRL_D.getFirstValue());
+        outputStream.flush();
+        Thread.sleep(100);
+
+        outputStream.write(Key.CTRL_D.getFirstValue());
+        outputStream.flush();
+        Thread.sleep(100);
+
+        outputStream.write(("foo").getBytes());
+        outputStream.flush();
+        Thread.sleep(100);
+
+        outputStream.write(Key.CTRL_D.getFirstValue());
+        outputStream.flush();
+        Thread.sleep(100);
+
+        outputStream.write(Key.CTRL_D.getFirstValue());
+        outputStream.flush();
+        Thread.sleep(100);
+
+        outputStream.write(Key.CTRL_D.getFirstValue());
+        outputStream.flush();
+        Thread.sleep(100);
+
+        assertFalse(aeshConsole.isRunning());
+
     }
 }

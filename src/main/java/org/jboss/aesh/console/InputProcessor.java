@@ -23,4 +23,6 @@ public interface InputProcessor {
     void clearBufferAndDisplayPrompt();
 
     void resetBuffer();
+
+    void resetEOF();
 }
