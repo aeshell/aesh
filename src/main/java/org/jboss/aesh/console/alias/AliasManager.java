@@ -6,9 +6,6 @@
  */
 package org.jboss.aesh.console.alias;
 
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.util.LoggerUtil;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -19,7 +16,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import org.jboss.aesh.console.Config;
+import org.jboss.aesh.util.LoggerUtil;
+import org.jboss.aesh.util.RegexUtil;
 
 /**
  * Manages Aliases
@@ -29,8 +29,7 @@ import java.util.regex.Pattern;
 public class AliasManager {
 
     private final List<Alias> aliases;
-    private final Pattern aliasPattern = Pattern.compile("^(alias)\\s+(\\w+)\\s*=\\s*(.*)$");
-    private final Pattern listAliasPattern = Pattern.compile("^(alias)((\\s+\\w+)+)$");
+
     private static final String ALIAS = "alias";
     private static final String ALIAS_SPACE = "alias ";
     private static final String UNALIAS = "unalias";
@@ -146,7 +145,7 @@ public class AliasManager {
     public String parseAlias(String buffer) {
         if(buffer.trim().equals(ALIAS))
             return printAllAliases();
-        Matcher aliasMatcher = aliasPattern.matcher(buffer);
+        Matcher aliasMatcher = RegexUtil.INSTANCE.aliasPattern.matcher(buffer);
         if(aliasMatcher.matches()) {
             String name = aliasMatcher.group(2);
             String value = aliasMatcher.group(3);
@@ -169,7 +168,7 @@ public class AliasManager {
             return null;
         }
 
-        Matcher listMatcher = listAliasPattern.matcher(buffer);
+        Matcher listMatcher = RegexUtil.INSTANCE.listAliasPattern.matcher(buffer);
         if(listMatcher.matches()) {
             StringBuilder sb = new StringBuilder();
                 for(String s : listMatcher.group(2).trim().split(" ")) {

@@ -6,12 +6,13 @@
  */
 package org.jboss.aesh.console.operator;
 
-import org.jboss.aesh.console.ConsoleOperation;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.jboss.aesh.console.ConsoleOperation;
+import org.jboss.aesh.util.RegexUtil;
 
 /**
  * Parser class for everything that contain operator and pipelines
@@ -20,14 +21,11 @@ import java.util.regex.Pattern;
  */
 public class ControlOperatorParser {
 
-    private static final Pattern controlOperatorPattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)|(\\|&)|(\\|\\|)|(\\|)|(;)|(&&)|(&)|(\")|(\')");
-    private static final Pattern redirectionNoPipelinePattern = Pattern.compile("(2>&1)|(2>>)|(2>)|(>>)|(>)|(<)");
-    private static final Pattern pipelineAndEndPattern = Pattern.compile("(\\|&)|(\\|)|(;)");
     private static final char ESCAPE = '\\';
     private static final char EQUALS = '=';
 
     public static boolean doStringContainRedirectionNoPipeline(String buffer) {
-        return redirectionNoPipelinePattern.matcher(buffer).find();
+        return RegexUtil.INSTANCE.redirectionNoPipelinePattern.matcher(buffer).find();
     }
 
     /**
@@ -37,11 +35,11 @@ public class ControlOperatorParser {
      * @return true if it contains pipeline
      */
     public static boolean doStringContainPipelineOrEnd(String buffer) {
-        return pipelineAndEndPattern.matcher(buffer).find();
+        return RegexUtil.INSTANCE.pipelineAndEndPattern.matcher(buffer).find();
     }
 
     public static int getPositionOfFirstRedirection(String buffer) {
-        Matcher matcher = redirectionNoPipelinePattern.matcher(buffer);
+        Matcher matcher = RegexUtil.INSTANCE.redirectionNoPipelinePattern.matcher(buffer);
         if(matcher.find())
             return matcher.end();
         else
@@ -56,7 +54,7 @@ public class ControlOperatorParser {
      * @return last pipeline pos before cursor
      */
     public static int findLastPipelineAndEndPositionBeforeCursor(String buffer, int cursor) {
-        return findLastRedirectionOrPipelinePositionBeforeCursor(pipelineAndEndPattern, buffer, cursor);
+        return findLastRedirectionOrPipelinePositionBeforeCursor(RegexUtil.INSTANCE.pipelineAndEndPattern, buffer, cursor);
     }
 
     /**
@@ -67,7 +65,7 @@ public class ControlOperatorParser {
      * @return last operator pos before cursor
      */
     public static int findLastRedirectionPositionBeforeCursor(String buffer, int cursor) {
-        return findLastRedirectionOrPipelinePositionBeforeCursor(redirectionNoPipelinePattern, buffer, cursor);
+        return findLastRedirectionOrPipelinePositionBeforeCursor(RegexUtil.INSTANCE.redirectionNoPipelinePattern, buffer, cursor);
     }
 
     private static int findLastRedirectionOrPipelinePositionBeforeCursor(Pattern pattern, String buffer, int cursor) {
@@ -91,7 +89,7 @@ public class ControlOperatorParser {
      * @return all RedirectionOperations
      */
     public static List<ConsoleOperation> findAllControlOperators(String buffer) {
-        Matcher matcher = controlOperatorPattern.matcher(buffer);
+        Matcher matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
         List<ConsoleOperation> reOpList = new ArrayList<>();
         boolean haveDoubleQuote = false;
         boolean haveSingleQuote = false;
@@ -101,25 +99,25 @@ public class ControlOperatorParser {
                 reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_OUT_AND_ERR,
                         buffer.substring(0, matcher.start(1))));
                 buffer = buffer.substring(matcher.end(1));
-                matcher = controlOperatorPattern.matcher(buffer);
+                matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(2) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.APPEND_ERR,
                         buffer.substring(0, matcher.start(2))));
                 buffer = buffer.substring(matcher.end(2));
-                matcher = controlOperatorPattern.matcher(buffer);
+                matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(3) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_ERR,
                         buffer.substring(0, matcher.start(3))));
                 buffer = buffer.substring(matcher.end(3));
-                matcher = controlOperatorPattern.matcher(buffer);
+                matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(4) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.APPEND_OUT,
                         buffer.substring(0, matcher.start(4))));
                 buffer = buffer.substring(matcher.end(4));
-                matcher = controlOperatorPattern.matcher(buffer);
+                matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(5) != null && !haveDoubleQuote && !haveSingleQuote) {
                 if(matcher.start(5) > 0 &&
@@ -131,7 +129,7 @@ public class ControlOperatorParser {
                     reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_OUT,
                             buffer.substring(0, matcher.start(5))));
                     buffer = buffer.substring(matcher.end(5));
-                    matcher = controlOperatorPattern.matcher(buffer);
+                    matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
                 }
             }
             else if(matcher.group(6) != null && !haveDoubleQuote && !haveSingleQuote) {
@@ -145,20 +143,20 @@ public class ControlOperatorParser {
                     reOpList.add( new ConsoleOperation(ControlOperator.OVERWRITE_IN,
                             buffer.substring(0, matcher.start(6))));
                     buffer = buffer.substring(matcher.end(6));
-                    matcher = controlOperatorPattern.matcher(buffer);
+                    matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
                 }
             }
             else if(matcher.group(7) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.PIPE_OUT_AND_ERR,
                         buffer.substring(0, matcher.start(7))));
                 buffer = buffer.substring(matcher.end(7));
-                matcher = controlOperatorPattern.matcher(buffer);
+                matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(8) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.OR,
                         buffer.substring(0, matcher.start(8))));
                 buffer = buffer.substring(matcher.end(8));
-                matcher = controlOperatorPattern.matcher(buffer);
+                matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(9) != null && !haveDoubleQuote && !haveSingleQuote) {
                 if(matcher.start(9) > 0 &&
@@ -166,20 +164,20 @@ public class ControlOperatorParser {
                     reOpList.add( new ConsoleOperation(ControlOperator.PIPE,
                             buffer.substring(0, matcher.start(9))));
                     buffer = buffer.substring(matcher.end(9));
-                    matcher = controlOperatorPattern.matcher(buffer);
+                    matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
                 }
             }
             else if(matcher.group(10) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.END,
                         buffer.substring(0, matcher.start(10))));
                 buffer = buffer.substring(matcher.end(10));
-                matcher = controlOperatorPattern.matcher(buffer);
+                matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(11) != null && !haveDoubleQuote && !haveSingleQuote) {
                 reOpList.add( new ConsoleOperation(ControlOperator.AND,
                         buffer.substring(0, matcher.start(11))));
                 buffer = buffer.substring(matcher.end(11));
-                matcher = controlOperatorPattern.matcher(buffer);
+                matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
             }
             else if(matcher.group(12) != null && !haveDoubleQuote && !haveSingleQuote) {
                 if(matcher.start(12) > 0 &&
@@ -187,7 +185,7 @@ public class ControlOperatorParser {
                     reOpList.add( new ConsoleOperation(ControlOperator.AMP,
                             buffer.substring(0, matcher.start(12))));
                     buffer = buffer.substring(matcher.end(12));
-                    matcher = controlOperatorPattern.matcher(buffer);
+                    matcher = RegexUtil.INSTANCE.controlOperatorPattern.matcher(buffer);
                 }
             }
             else if(matcher.group(13) != null) {
