@@ -372,10 +372,12 @@ public class AeshConsoleImpl implements AeshConsole {
                 result = CommandResult.FAILURE;
             }
 
-            if (result == CommandResult.SUCCESS)
+            if (result == CommandResult.SUCCESS) {
+                getInputProcessor().resetEOF();
                 return 0;
-            else
+            } else {
                 return 1;
+            }
         }
     }
 }

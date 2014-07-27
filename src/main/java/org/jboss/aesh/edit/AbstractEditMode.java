@@ -53,4 +53,8 @@ public abstract class AbstractEditMode implements EditMode {
         }
     }
 
+    @Override
+    public void resetEOF() {
+        this.eofCounter = 0;
+    }
 }
