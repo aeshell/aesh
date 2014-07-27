@@ -6,12 +6,10 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.Mode;
-import org.jboss.aesh.edit.mapper.KeyMapper;
-import org.jboss.aesh.terminal.Terminal;
-import org.jboss.aesh.util.LoggerUtil;
+import static org.jboss.aesh.console.settings.VariableSettings.BELL_STYLE;
+import static org.jboss.aesh.console.settings.VariableSettings.DISABLE_COMPLETION;
+import static org.jboss.aesh.console.settings.VariableSettings.EDITING_MODE;
+import static org.jboss.aesh.console.settings.VariableSettings.HISTORY_SIZE;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -22,12 +20,14 @@ import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static org.jboss.aesh.console.settings.VariableSettings.BELL_STYLE;
-import static org.jboss.aesh.console.settings.VariableSettings.DISABLE_COMPLETION;
-import static org.jboss.aesh.console.settings.VariableSettings.EDITING_MODE;
-import static org.jboss.aesh.console.settings.VariableSettings.HISTORY_SIZE;
+import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.edit.Mode;
+import org.jboss.aesh.edit.mapper.KeyMapper;
+import org.jboss.aesh.terminal.Terminal;
+import org.jboss.aesh.util.LoggerUtil;
+import org.jboss.aesh.util.RegexUtil;
 
 /**
  *
@@ -120,19 +120,8 @@ public class Config {
         }
         SettingsBuilder builder = new SettingsBuilder(settings);
 
-        Pattern variablePattern = Pattern.compile("^set\\s+(\\S+)\\s+(\\S+)$");
-        Pattern commentPattern = Pattern.compile("^#.*");
-        //Pattern keyNamePattern = Pattern.compile("^\\b:\\s+\\b");
-        Pattern keyQuoteNamePattern = Pattern.compile("(^\"\\\\\\S+)(\":\\s+)(\\S+)");
-        Pattern keyNamePattern = Pattern.compile("(^\\S+)(:\\s+)(\\S+)");
-        Pattern keySeqPattern = Pattern.compile("^\"keyseq:\\s+\\b");
-        Pattern startConstructs = Pattern.compile("^\\$if");
-        Pattern endConstructs = Pattern.compile("^\\$endif");
-
-        Pattern keyOperationPattern = Pattern.compile("(^\\\"\\\\M-\\[D:)(\\s+)(\\S+)");
-
         BufferedReader reader =
-                new BufferedReader( new FileReader(settings.getInputrc()));
+                new BufferedReader(new FileReader(settings.getInputrc()));
 
         String line;
         boolean constructMode = false;
@@ -140,14 +129,14 @@ public class Config {
             if(line.trim().length() < 1)
                 continue;
             //first check if its a comment
-            if(commentPattern.matcher(line).matches())
+            if(RegexUtil.INSTANCE.commentPattern.matcher(line).matches())
                 continue;
 
-            if(startConstructs.matcher(line).matches()) {
+            if(RegexUtil.INSTANCE.startConstructs.matcher(line).matches()) {
                 constructMode = true;
                 continue;
             }
-            else if(endConstructs.matcher(line).matches()) {
+            else if(RegexUtil.INSTANCE.endConstructs.matcher(line).matches()) {
                 constructMode = false;
                 continue;
             }
@@ -158,20 +147,20 @@ public class Config {
             //everything other than if/else
             else {
                 // variable settings
-                Matcher variableMatcher = variablePattern.matcher(line);
+                Matcher variableMatcher = RegexUtil.INSTANCE.variableSettingsPattern.matcher(line);
                 if(variableMatcher.matches()) {
                     parseVariables(variableMatcher.group(1), variableMatcher.group(2), builder);
                 }
                 //TODO: currently the inputrc parser is posix only
                 if(Config.isOSPOSIXCompatible()) {
-                    Matcher keyQuoteMatcher = keyQuoteNamePattern.matcher(line);
+                    Matcher keyQuoteMatcher = RegexUtil.INSTANCE.keyQuoteNamePattern.matcher(line);
                     if(keyQuoteMatcher.matches()) {
                         builder.create().getOperationManager().addOperationIgnoreWorkingMode(
                                 KeyMapper.mapQuoteKeys(keyQuoteMatcher.group(1),
                                         keyQuoteMatcher.group(3)));
                     }
                     else {
-                        Matcher keyMatcher = keyNamePattern.matcher(line);
+                        Matcher keyMatcher = RegexUtil.INSTANCE.keyNamePattern.matcher(line);
                         if(keyMatcher.matches()) {
                             builder.create().getOperationManager().addOperationIgnoreWorkingMode(KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
                         }

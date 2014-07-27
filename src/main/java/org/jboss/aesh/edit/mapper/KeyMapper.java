@@ -9,8 +9,7 @@ package org.jboss.aesh.edit.mapper;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
-
-import java.util.regex.Pattern;
+import org.jboss.aesh.util.RegexUtil;
 
 /**
  * Map key bindings to specified operation. Used when reading inputrc files.
@@ -24,10 +23,6 @@ import java.util.regex.Pattern;
  */
 public class KeyMapper {
 
-    private static final Pattern quotePattern = Pattern.compile("^\"");
-    private static final Pattern metaPattern = Pattern.compile("^(\\\\M|M|Meta)-"); // "M-
-    private static final Pattern controlPattern = Pattern.compile("^(\\\\C|C|Control)-"); // "M-
-
     /**
      * Parse key mapping lines that start with "
      *
@@ -36,7 +31,7 @@ public class KeyMapper {
      * @return proper KeyOperation
      */
     public static KeyOperation mapQuoteKeys(String keys, Operation operation) {
-        return new KeyOperation(Key.getKey(mapKeys(quotePattern.split(keys)[1])), operation);
+        return new KeyOperation(Key.getKey(mapKeys(RegexUtil.INSTANCE.quotePattern.split(keys)[1])), operation);
     }
 
     /**
@@ -83,9 +78,9 @@ public class KeyMapper {
 
         //find control/meta
         while(rest != null) {
-            if(metaPattern.matcher(rest).find()) {
+            if(RegexUtil.INSTANCE.metaPattern.matcher(rest).find()) {
                 meta = true;
-                String[] split = metaPattern.split(rest);
+                String[] split = RegexUtil.INSTANCE.metaPattern.split(rest);
                 if(split.length > 1)
                     rest = split[1];
                 else
@@ -93,9 +88,9 @@ public class KeyMapper {
                 continue;
             }
 
-            if(controlPattern.matcher(rest).find()) {
+            if(RegexUtil.INSTANCE.controlPattern.matcher(rest).find()) {
                 control = true;
-                String[] split = controlPattern.split(rest);
+                String[] split = RegexUtil.INSTANCE.controlPattern.split(rest);
                 if(split.length > 1)
                     rest = split[1];
                 else

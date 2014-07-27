@@ -6,21 +6,19 @@
  */
 package org.jboss.aesh.console.man.parser;
 
-import org.jboss.aesh.util.ANSI;
-
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import org.jboss.aesh.util.ANSI;
+import org.jboss.aesh.util.RegexUtil;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ManParserUtil {
 
-    private static final Pattern boldRegex = Pattern.compile("(\\*[^']+\\*)|(\'\\S+\')|(::$)");
-
     public static String convertStringToAnsi(String line) {
         StringBuilder builder = new StringBuilder();
-        Matcher matcher = boldRegex.matcher(line);
+        Matcher matcher = RegexUtil.INSTANCE.boldRegex.matcher(line);
         while(matcher.find()) {
             if(matcher.group(1) != null) {
                 builder.append(line.substring(0,matcher.start(1)))
@@ -29,7 +27,7 @@ public class ManParserUtil {
                         .append(ANSI.defaultText());
                         //.append(line.substring(matcher.end(1)));
                 line = line.substring(matcher.end(1));
-                matcher = boldRegex.matcher(line);
+                matcher = RegexUtil.INSTANCE.boldRegex.matcher(line);
             }
             else if(matcher.group(2) != null) {
                 builder.append(line.substring(0,matcher.start(2)))
@@ -38,12 +36,12 @@ public class ManParserUtil {
                         .append(ANSI.defaultText());
                         //.append(line.substring(matcher.end(2)));
                 line = line.substring(matcher.end(2));
-                matcher = boldRegex.matcher(line);
+                matcher = RegexUtil.INSTANCE.boldRegex.matcher(line);
             }
             else if(matcher.group(3) != null) {
                 builder.append(line.substring(0,matcher.start(3)));
                 line = line.substring(matcher.end(3));
-                matcher = boldRegex.matcher(line);
+                matcher = RegexUtil.INSTANCE.boldRegex.matcher(line);
             }
         }
         if(line.length() > 0)
