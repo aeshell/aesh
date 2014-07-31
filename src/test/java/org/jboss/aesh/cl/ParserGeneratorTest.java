@@ -27,7 +27,7 @@ public class ParserGeneratorTest {
     public void testClassGenerator() throws CommandLineParserException {
 
         Test1 test1 = new Test1();
-        CommandLineParser parser = ParserGenerator.generateCommandLineParser(test1);
+        CommandLineParser parser = ParserGenerator.generateCommandLineParser(test1).getParser();
 
         assertEquals("a simple test", parser.getCommand().getDescription());
         List<ProcessedOption> options = parser.getCommand().getOptions();
@@ -41,50 +41,50 @@ public class ParserGeneratorTest {
         assertFalse(options.get(2).hasValue());
 
         Test2 test2 = new Test2();
-        parser = ParserGenerator.generateCommandLineParser(test2);
+        parser = ParserGenerator.generateCommandLineParser(test2).getParser();
         assertEquals("more [options] file...", parser.getCommand().getDescription());
         options = parser.getCommand().getOptions();
         assertEquals("d", options.get(0).getShortName());
         assertEquals("V", options.get(1).getShortName());
 
-        parser = ParserGenerator.generateCommandLineParser(Test3.class);
+        parser = ParserGenerator.generateCommandLineParser(Test3.class).getParser();
         options = parser.getCommand().getOptions();
         assertEquals("t", options.get(0).getShortName());
         assertEquals("e", options.get(1).getShortName());
 
     }
-}
 
-@CommandDefinition(name = "test", description = "a simple test")
-class Test1 {
-    @Option(shortName = 'f', name = "foo", description = "enable foo")
-    private String foo;
+    @CommandDefinition(name = "test", description = "a simple test")
+    public class Test1 {
+        @Option(shortName = 'f', name = "foo", description = "enable foo")
+        private String foo;
 
-    @Option(shortName = 'e', description = "enable e", required = true)
-    private String e;
+        @Option(shortName = 'e', description = "enable e", required = true)
+        private String e;
 
-    @Option(description = "has enabled bar", hasValue = false)
-    private Boolean bar;
+        @Option(description = "has enabled bar", hasValue = false)
+        private Boolean bar;
 
-}
+    }
 
-@CommandDefinition(name = "test", description = "more [options] file...")
-class Test2 {
+    @CommandDefinition(name = "test", description = "more [options] file...")
+    public class Test2 {
 
-    @Option(shortName = 'd', description = "display help instead of ring bell")
-    private String display;
+        @Option(shortName = 'd', description = "display help instead of ring bell")
+        private String display;
 
-    @Option(shortName = 'V', description = "output version information and exit")
-    private String version;
-}
+        @Option(shortName = 'V', description = "output version information and exit")
+        private String version;
+    }
 
-@CommandDefinition(name = "test", description = "more [options] file...")
-class Test3 {
+    @CommandDefinition(name = "test", description = "more [options] file...")
+    public class Test3 {
 
-    @Option(shortName = 't', name = "target", description = "target directory")
-    private String target;
+        @Option(shortName = 't', name = "target", description = "target directory")
+        private String target;
 
-    @Option(shortName = 'e', description = "test run")
-    private String test;
+        @Option(shortName = 'e', description = "test run")
+        private String test;
+    }
 }
 

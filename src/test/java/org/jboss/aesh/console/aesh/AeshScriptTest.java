@@ -7,7 +7,7 @@
 package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.builder.CommandBuilder;
+import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.result.ResultHandler;
@@ -71,7 +71,7 @@ public class AeshScriptTest {
 
 
         CommandResultHandler resultHandler = new CommandResultHandler();
-        ProcessedCommand fooCommand = new CommandBuilder()
+        ProcessedCommand fooCommand = new ProcessedCommandBuilder()
                 .name("foo")
                 .resultHandler(resultHandler)
                 .generateCommand();

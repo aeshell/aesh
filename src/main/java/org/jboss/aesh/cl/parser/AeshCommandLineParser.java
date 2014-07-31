@@ -14,6 +14,7 @@ import org.jboss.aesh.cl.exception.RequiredOptionException;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.console.command.container.AeshCommandContainer;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.parser.ParserStatus;
@@ -39,21 +40,17 @@ public class AeshCommandLineParser implements CommandLineParser {
 
     public AeshCommandLineParser(ProcessedCommand command) {
         this.command = command;
-        if(isGroupCommand()) {
-            setupChildParsers();
-        }
     }
 
-    private AeshCommandLineParser(ProcessedCommand command, boolean isChild) {
+    public AeshCommandLineParser(ProcessedCommand command, boolean isChild) {
         this.command = command;
         this.isChild = isChild;
     }
 
-    private void setupChildParsers() {
-        childParsers = new ArrayList<>(this.command.getGroupCommands().size());
-        for(ProcessedCommand pc : this.command.getGroupCommands()) {
-            childParsers.add(new AeshCommandLineParser(pc, true));
-        }
+    public void addChildParser(AeshCommandLineParser commandLineParser) {
+        if(childParsers == null)
+            childParsers = new ArrayList<>();
+        childParsers.add(commandLineParser);
     }
 
     public AeshCommandLineParser getChildParser(String name) {

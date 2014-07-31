@@ -14,17 +14,22 @@ import org.jboss.aesh.cl.OptionGroup;
 import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
+import org.jboss.aesh.console.command.container.AeshCommandContainer;
+import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
 import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
+import org.jboss.aesh.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -41,23 +46,70 @@ import java.util.Map;
  */
 public class ParserGenerator {
 
-    public static CommandLineParser generateCommandLineParser(Object paramInstance) throws CommandLineParserException {
-        return generateCommandLineParser(paramInstance.getClass());
+    public static AeshCommandContainer generateCommandLineParser(Object paramInstance) throws CommandLineParserException {
+        if(paramInstance instanceof Command)
+            return doGenerateCommandLineParser(paramInstance, true, false);
+        else
+            return doGenerateCommandLineParser(paramInstance, false, false);
     }
 
-    public static CommandLineParser generateCommandLineParser(Class clazz) throws CommandLineParserException {
+    public static AeshCommandContainer generateCommandLineParser(Class clazz) throws CommandLineParserException {
+        for(Class iName : clazz.getInterfaces()) {
+            if(iName.equals(Command.class))
+                return doGenerateCommandLineParser(ReflectionUtil.newInstance(clazz), true, false);
+        }
 
+        return doGenerateCommandLineParser(ReflectionUtil.newInstance(clazz), false, false);
+    }
+
+    private static AeshCommandContainer doGenerateCommandLineParser(Object commandObject,
+                                                                    boolean clazzIsaCommand, boolean isChild) throws CommandLineParserException {
+        Class clazz = commandObject.getClass();
         CommandDefinition command = (CommandDefinition) clazz.getAnnotation(CommandDefinition.class);
         if(command != null) {
-            ProcessedCommand processedCommand = new ProcessedCommand(command.name(), command.description(),
-                    command.validator(), command.resultHandler());
+            ProcessedCommand processedCommand = new ProcessedCommandBuilder()
+                    .name(command.name())
+                    .description(command.description())
+                    .validator(command.validator())
+                    .resultHandler(command.resultHandler()).generateCommand();
 
             processCommand(processedCommand, clazz);
 
-            return new CommandLineParserBuilder().parameter(processedCommand).generateParser();
+            if(clazzIsaCommand)
+                return new AeshCommandContainer(
+                        new CommandLineParserBuilder().parameter(processedCommand).child(isChild).generateParser(), (Command) commandObject);
+            else
+            return new AeshCommandContainer(
+                    new CommandLineParserBuilder().parameter(processedCommand).child(isChild).generateParser(), null);
         }
         GroupCommandDefinition groupCommand = (GroupCommandDefinition) clazz.getAnnotation(GroupCommandDefinition.class);
         if(groupCommand != null) {
+            ProcessedCommand processedGroupCommand = new ProcessedCommandBuilder()
+                    .name(groupCommand.name())
+                    .description(groupCommand.description())
+                    .validator(groupCommand.validator())
+                    .resultHandler(groupCommand.resultHandler()).generateCommand();
+
+            AeshCommandContainer groupContainer = null;
+            if(clazzIsaCommand)
+                groupContainer = new AeshCommandContainer(
+                        new CommandLineParserBuilder().parameter(processedGroupCommand).child(isChild).generateParser(), (Command) commandObject);
+            else
+                groupContainer = new AeshCommandContainer(
+                        new CommandLineParserBuilder().parameter(processedGroupCommand).child(isChild).generateParser(), null);
+
+            for(Class groupClazz : groupCommand.groupCommands()) {
+                Object groupInstance = ReflectionUtil.newInstance(groupClazz);
+                if(groupInstance instanceof Command)
+                    groupContainer.addChild(ParserGenerator.doGenerateCommandLineParser(
+                            groupInstance, true, true));
+                else
+                    groupContainer.addChild(ParserGenerator.doGenerateCommandLineParser(
+                            groupInstance, false, true));
+            }
+
+            return groupContainer;
+            /*
             List<ProcessedCommand> processedCommands = new ArrayList<>();
             for(Class groupClazz : groupCommand.groupCommands()) {
                 command = (CommandDefinition) groupClazz.getAnnotation(CommandDefinition.class);
@@ -76,12 +128,13 @@ public class ParserGenerator {
                     groupCommand.validator(), groupCommand.resultHandler(), processedCommands);
 
             return new CommandLineParserBuilder().parameter(processedGroupCommand).generateParser();
+            */
         }
         else
             throw new CommandLineParserException("Commands must be annotated with @CommandDefinition or @GroupCommandDefinition");
     }
 
-    private static void processCommand(ProcessedCommand processedCommand, Class clazz) throws CommandLineParserException {
+    private static void processCommand(ProcessedCommand processedCommand, Class<? extends Command> clazz) throws CommandLineParserException {
         for(Field field : clazz.getDeclaredFields()) {
             Option o;
             OptionGroup og;
@@ -94,16 +147,58 @@ public class ParserGenerator {
                 else
                     optionType = OptionType.BOOLEAN;
                 if(o.name() == null || o.name().length() < 1) {
-                    processedCommand.addOption(o.shortName(), field.getName(), o.description(),
+                    processedCommand.addOption(
+                            /*
+                            o.shortName(), field.getName(), o.description(),
                             o.argument(), o.required(), ',', o.defaultValue(),
                             field.getType(), field.getName(), optionType, o.converter(),
                             o.completer(), o.validator(), o.activator(), o.renderer(), o.overrideRequired());
+                            */
+
+                            new ProcessedOptionBuilder()
+                                    .shortName(o.shortName())
+                                    .name(field.getName())
+                                    .description(o.description())
+                                    .required(o.required())
+                                    .valueSeparator(',')
+                                    .addAllDefaultValues(o.defaultValue())
+                                    .type(field.getType())
+                                    .fieldName(field.getName())
+                                    .optionType(optionType)
+                                    .converter(o.converter())
+                                    .completer(o.completer())
+                                    .validator(o.validator())
+                                    .activator(o.activator())
+                                    .renderer(o.renderer())
+                                    .overrideRequired(o.overrideRequired())
+                                    .create()
+                    );
+
                 }
                 else {
-                    processedCommand.addOption(o.shortName(), o.name(), o.description(),
-                            o.argument(), o.required(), ',', o.defaultValue(),
-                            field.getType(), field.getName(), optionType, o.converter(),
-                            o.completer(), o.validator(), o.activator(), o.renderer(), o.overrideRequired());
+                    processedCommand.addOption(
+                            //o.shortName(), o.name(), o.description(),
+                            //o.argument(), o.required(), ',', o.defaultValue(),
+                            //field.getType(), field.getName(), optionType, o.converter(),
+                            //o.completer(), o.validator(), o.activator(), o.renderer(), o.overrideRequired());
+                            new ProcessedOptionBuilder()
+                                    .shortName(o.shortName())
+                                    .name(o.name())
+                                    .description(o.description())
+                                    .required(o.required())
+                                    .valueSeparator(',')
+                                    .addAllDefaultValues(o.defaultValue())
+                                    .type(field.getType())
+                                    .fieldName(field.getName())
+                                    .optionType(optionType)
+                                    .converter(o.converter())
+                                    .completer(o.completer())
+                                    .validator(o.validator())
+                                    .activator(o.activator())
+                                    .renderer(o.renderer())
+                                    .overrideRequired(o.overrideRequired())
+                                    .create());
+
                 }
 
             }
@@ -116,14 +211,42 @@ public class ParserGenerator {
                     type = (Class) listType.getActualTypeArguments()[0];
                 }
                 if(ol.name() == null || ol.name().length() < 1) {
-                    processedCommand.addOption(ol.shortName(), field.getName(), ol.description(), "",
-                            ol.required(), ol.valueSeparator(), ol.defaultValue(), type, field.getName(), OptionType.LIST,
-                            ol.converter(), ol.completer(), ol.validator(), ol.activator(), ol.renderer());
+                    processedCommand.addOption(
+                            new ProcessedOptionBuilder()
+                                    .shortName(ol.shortName())
+                                    .name(field.getName())
+                            .description(ol.description())
+                            .required(ol.required())
+                            .valueSeparator(ol.valueSeparator())
+                            .addAllDefaultValues(ol.defaultValue())
+                            .type(type)
+                            .fieldName(field.getName())
+                            .optionType(OptionType.LIST)
+                            .converter(ol.converter())
+                            .completer(ol.completer())
+                            .validator(ol.validator())
+                            .activator(ol.activator())
+                            .renderer(ol.renderer()).create());
+
                 }
                 else {
-                    processedCommand.addOption(ol.shortName(), ol.name(), ol.description(), "",
-                            ol.required(), ol.valueSeparator(), ol.defaultValue(), type, field.getName(), OptionType.LIST,
-                            ol.converter(), ol.completer(), ol.validator(), ol.activator(), ol.renderer());
+                    processedCommand.addOption(
+                            new ProcessedOptionBuilder()
+                                    .shortName(ol.shortName())
+                                    .name(ol.name())
+                                    .description(ol.description())
+                                    .required(ol.required())
+                                    .valueSeparator(ol.valueSeparator())
+                                    .addAllDefaultValues(ol.defaultValue())
+                                    .type(type)
+                                    .fieldName(field.getName())
+                                    .optionType(OptionType.LIST)
+                                    .converter(ol.converter())
+                                    .completer(ol.completer())
+                                    .validator(ol.validator())
+                                    .activator(ol.activator())
+                                    .renderer(ol.renderer()).create());
+
                 }
             }
             else if((og = field.getAnnotation(OptionGroup.class)) != null) {
@@ -134,16 +257,28 @@ public class ParserGenerator {
                     ParameterizedType listType = (ParameterizedType) field.getGenericType();
                     type = (Class) listType.getActualTypeArguments()[1];
                 }
-                if(og.name() == null || og.name().length() < 1) {
-                    processedCommand.addOption(og.shortName(), field.getName(), og.description(),
-                            "", og.required(), ',', og.defaultValue(), type, field.getName(), OptionType.GROUP,
-                            og.converter(), og.completer(), og.validator(), og.activator(), og.renderer());
-                }
-                else {
-                    processedCommand.addOption(og.shortName(), og.name(), og.description(),
-                            "", og.required(), ',', og.defaultValue(), type, field.getName(), OptionType.GROUP,
-                            og.converter(), og.completer(), og.validator(), og.activator(), og.renderer());
-                }
+                String name;
+                if(og.name() == null || og.name().length() < 1)
+                    name = field.getName();
+                else
+                    name = og.name();
+
+                processedCommand.addOption( new ProcessedOptionBuilder()
+                        .shortName(og.shortName())
+                        .name(name)
+                        .description(og.description())
+                        .required(og.required())
+                        .valueSeparator(',')
+                        .addAllDefaultValues(og.defaultValue())
+                        .type(type)
+                        .fieldName(field.getName())
+                        .optionType(OptionType.GROUP)
+                        .converter(og.converter())
+                        .completer(og.completer())
+                        .validator(og.validator())
+                        .activator(og.activator())
+                        .renderer(og.renderer())
+                        .create());
             }
 
             else if((a = field.getAnnotation(Arguments.class)) != null) {
@@ -154,17 +289,27 @@ public class ParserGenerator {
                     ParameterizedType listType = (ParameterizedType) field.getGenericType();
                     type = (Class) listType.getActualTypeArguments()[0];
                 }
-                processedCommand.setArgument(
-                        new ProcessedOption('\u0000',"", a.description(), "", false, a.valueSeparator(),
-                                a.defaultValue(), type, field.getName(), OptionType.ARGUMENT, a.converter(),
-                                a.completer(), a.validator(), null, null));
+                processedCommand.setArgument( new ProcessedOptionBuilder()
+                        .shortName('\u0000')
+                        .name("")
+                        .description(a.description())
+                        .required(false)
+                        .valueSeparator(a.valueSeparator())
+                        .addAllDefaultValues(a.defaultValue())
+                        .type(type)
+                        .fieldName(field.getName())
+                        .optionType(OptionType.ARGUMENT)
+                        .converter(a.converter())
+                        .completer(a.completer())
+                        .validator(a.validator())
+                        .create());
             }
         }
 
     }
 
     public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException, OptionValidatorException {
-        CommandLineParser cl = generateCommandLineParser(instance.getClass());
+        CommandLineParser cl = generateCommandLineParser(instance.getClass()).getParser();
         InvocationProviders invocationProviders = new AeshInvocationProviders(
                 new AeshConverterInvocationProvider(),
                 new AeshCompleterInvocationProvider(),

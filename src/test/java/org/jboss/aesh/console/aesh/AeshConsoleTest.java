@@ -10,8 +10,8 @@ import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
-import org.jboss.aesh.cl.builder.CommandBuilder;
-import org.jboss.aesh.cl.builder.OptionBuilder;
+import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
+import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
@@ -65,10 +65,10 @@ public class AeshConsoleTest extends BaseConsoleTest {
                 .logging(true)
                 .create();
 
-        ProcessedCommand fooCommand = new CommandBuilder()
+        ProcessedCommand fooCommand = new ProcessedCommandBuilder()
                 .name("foo")
                 .description("fooing")
-                .addOption(new OptionBuilder()
+                .addOption(new ProcessedOptionBuilder()
                         .name("bar")
                         .addDefaultValue("en")
                         .addDefaultValue("to")

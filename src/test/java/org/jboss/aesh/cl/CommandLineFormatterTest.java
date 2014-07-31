@@ -7,8 +7,8 @@
 package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
-import org.jboss.aesh.cl.builder.CommandBuilder;
-import org.jboss.aesh.cl.builder.OptionBuilder;
+import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
+import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
@@ -25,10 +25,10 @@ public class CommandLineFormatterTest extends TestCase {
     }
 
     public void testFormatter() throws CommandLineParserException {
-        CommandBuilder pb = new CommandBuilder().name("man").description("[OPTION...]");
+        ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("man").description("[OPTION...]");
 
         pb.addOption(
-                new OptionBuilder()
+                new ProcessedOptionBuilder()
                         .shortName('d')
                         .name("debug")
                         .description("emit debugging messages")
@@ -36,7 +36,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .create());
 
         pb.addOption(
-                new OptionBuilder()
+                new ProcessedOptionBuilder()
                         .shortName('D')
                         .name("default")
                         .description("reset all options to their default values")
@@ -52,10 +52,10 @@ public class CommandLineFormatterTest extends TestCase {
     }
 
     public void testFormatter2() throws CommandLineParserException {
-        CommandBuilder pb = new CommandBuilder().name("man").description("[OPTION...]");
+        ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("man").description("[OPTION...]");
 
         pb.addOption(
-                new OptionBuilder()
+                new ProcessedOptionBuilder()
                         .shortName('d')
                         .name("debug")
                         .description("emit debugging messages")
@@ -63,7 +63,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .create());
 
         pb.addOption(
-                new OptionBuilder()
+                new ProcessedOptionBuilder()
                         .shortName('D')
                         .name("default")
                         .required(true)
@@ -73,7 +73,7 @@ public class CommandLineFormatterTest extends TestCase {
         );
 
         pb.addOption(
-                new OptionBuilder()
+                new ProcessedOptionBuilder()
                         .shortName('f')
                         .name("file")
                         .hasValue(true)

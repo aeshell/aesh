@@ -6,36 +6,24 @@
  */
 package org.jboss.aesh.cl.internal;
 
-import org.jboss.aesh.cl.activation.NullActivator;
 import org.jboss.aesh.cl.activation.OptionActivator;
-import org.jboss.aesh.cl.completer.BooleanOptionCompleter;
-import org.jboss.aesh.cl.completer.FileOptionCompleter;
-import org.jboss.aesh.cl.completer.NullOptionCompleter;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.Converter;
-import org.jboss.aesh.cl.converter.CLConverterManager;
-import org.jboss.aesh.cl.converter.NullConverter;
 import org.jboss.aesh.cl.exception.OptionParserException;
-import org.jboss.aesh.cl.renderer.NullOptionRenderer;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
-import org.jboss.aesh.cl.validator.NullValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocation;
 import org.jboss.aesh.console.command.validator.AeshValidatorInvocation;
-import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.ANSI;
-import org.jboss.aesh.util.ReflectionUtil;
 
-import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,62 +58,14 @@ public final class ProcessedOption {
     private OptionRenderer renderer;
     private boolean overrideRequired = false;
 
-     public ProcessedOption(char shortName, String name, String description,
-                            String argument, boolean required, char valueSeparator,
-                            List<String> defaultValue, Class<?> type, String fieldName,
-                            OptionType optionType, Converter converter, OptionCompleter completer,
-                            OptionValidator optionValidator,
-                            OptionActivator activator,
-                            OptionRenderer renderer, boolean overrideRequired) throws OptionParserException {
-         this(shortName, name, description, argument, required, valueSeparator, defaultValue,
-                 type, fieldName, optionType, null, null, null, null, null);
-         this.converter = converter;
-         this.completer = completer;
-         this.validator = optionValidator;
-         this.activator = activator;
-         if(this.validator == null)
-             this.validator = new NullValidator();
-         if(this.activator == null)
-             this.activator = new NullActivator();
-         if(renderer != null)
-             this.renderer = renderer;
-     }
-
-    public ProcessedOption(char shortName, String name, String description,
-                           String argument, boolean required, char valueSeparator,
-                           String[] defaultValue, Class<?> type, String fieldName,
-                           OptionType optionType, Class<? extends Converter> converter,
-                           Class<? extends OptionCompleter> completer,
-                           Class<? extends OptionValidator> optionValidator,
-                           Class<? extends OptionActivator> activator,
-                           Class<? extends OptionRenderer> renderer) throws OptionParserException {
-        this(shortName, name, description, argument, required, valueSeparator, Arrays.asList(defaultValue),
-                type, fieldName, optionType, converter, completer, optionValidator, activator, renderer);
-    }
-
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator,
                            List<String> defaultValue, Class<?> type, String fieldName,
-                           OptionType optionType, Class<? extends Converter> converter,
-                           Class<? extends OptionCompleter> completer,
-                           Class<? extends OptionValidator> optionValidator,
-                           Class<? extends OptionActivator> optionActivator,
-                           Class<? extends OptionRenderer> optionRenderer,
-                           boolean overrideRequired) throws OptionParserException {
-        this(shortName, name, description, argument, required, valueSeparator, defaultValue, type, fieldName,
-                optionType, converter, completer, optionValidator, optionActivator, optionRenderer);
+                           OptionType optionType, Converter converter, OptionCompleter completer,
+                           OptionValidator optionValidator,
+                           OptionActivator activator,
+                           OptionRenderer renderer, boolean overrideRequired) throws OptionParserException {
 
-        this.overrideRequired = overrideRequired;
-    }
-
-    public ProcessedOption(char shortName, String name, String description,
-                           String argument, boolean required, char valueSeparator,
-                           List<String> defaultValue, Class<?> type, String fieldName,
-                           OptionType optionType, Class<? extends Converter> converter,
-                           Class<? extends OptionCompleter> completer,
-                           Class<? extends OptionValidator> optionValidator,
-                           Class<? extends OptionActivator> optionActivator,
-                           Class<? extends OptionRenderer> optionRenderer) throws OptionParserException {
         if(shortName != '\u0000')
             this.shortName = String.valueOf(shortName);
         this.name = name;
@@ -135,23 +75,20 @@ public final class ProcessedOption {
         this.valueSeparator = valueSeparator;
         this.type = type;
         this.fieldName = fieldName;
+        this.overrideRequired = overrideRequired;
         this.optionType = optionType;
-        this.converter = initConverter(converter);
-        this.completer = initCompleter(completer);
-        this.validator = initValidator(optionValidator);
-        this.activator = initActivator(optionActivator);
-        this.renderer = initRenderer(optionRenderer);
+        this.converter = converter;
+        this.completer = completer;
+        this.validator = optionValidator;
+        this.activator = activator;
 
-        this.defaultValues = new ArrayList<>();
-        if(defaultValue != null)
-            defaultValues.addAll(defaultValue);
+        if(renderer != null)
+            this.renderer = renderer;
+
+        this.defaultValues = defaultValue;
 
         properties = new HashMap<>();
         values = new ArrayList<>();
-
-        if((shortName == Character.MIN_VALUE) && name.equals("") && optionType != OptionType.ARGUMENT) {
-            throw new OptionParserException("Either shortName or name must be set.");
-        }
     }
 
     public String getShortName() {
@@ -345,59 +282,6 @@ public final class ProcessedOption {
         }
 
         return sb.toString();
-    }
-
-    private Converter initConverter(Class<? extends Converter> converterClass) {
-        if(converterClass != null && !converterClass.equals(NullConverter.class)) {
-            if( CLConverterManager.getInstance().hasConverter(converterClass))
-                return CLConverterManager.getInstance().getConverter(converterClass);
-            else
-                return ReflectionUtil.newInstance(converterClass);
-        }
-        else
-            return CLConverterManager.getInstance().getConverter(type);
-    }
-
-    private OptionCompleter initCompleter(Class<? extends OptionCompleter> completerClass) {
-
-        if(completerClass != null && !completerClass.equals(NullOptionCompleter.class)) {
-                return ReflectionUtil.newInstance(completerClass);
-        }
-        else {
-            try {
-                if(type == Boolean.class || type == boolean.class)
-                    return BooleanOptionCompleter.class.newInstance();
-                else if(type == File.class || type == Resource.class)
-                    return FileOptionCompleter.class.newInstance();
-                else
-                    return null;
-
-            } catch (InstantiationException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
-
-    private OptionActivator initActivator(Class<? extends OptionActivator> activator) {
-        if(activator != null && activator != NullActivator.class)
-            return ReflectionUtil.newInstance(activator);
-        else
-            return new NullActivator();
-    }
-
-    private OptionValidator initValidator(Class<? extends OptionValidator> validator) {
-        if(validator != null && validator != NullValidator.class)
-            return ReflectionUtil.newInstance(validator);
-        else
-            return new NullValidator();
-    }
-
-    private OptionRenderer initRenderer(Class<? extends OptionRenderer> renderer) {
-        if(renderer != null && renderer != NullOptionRenderer.class)
-            return ReflectionUtil.newInstance(renderer);
-        else
-            return null;
     }
 
     @SuppressWarnings("unchecked")

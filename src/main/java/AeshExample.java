@@ -10,8 +10,8 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.activation.OptionActivator;
-import org.jboss.aesh.cl.builder.CommandBuilder;
-import org.jboss.aesh.cl.builder.OptionBuilder;
+import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
+import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
@@ -67,10 +67,10 @@ public class AeshExample {
 
     public static void main(String[] args) throws CommandLineParserException {
 
-        ProcessedCommand fooCommand = new CommandBuilder()
+        ProcessedCommand fooCommand = new ProcessedCommandBuilder()
                 .name("foo")
                 .description("fooing")
-                .addOption(new OptionBuilder()
+                .addOption(new ProcessedOptionBuilder()
                         .name("bar")
                         .addDefaultValue("en 1 0")
                         .addDefaultValue("to 2 0")
@@ -78,7 +78,7 @@ public class AeshExample {
                         .type(String.class)
                         .renderer(new BlueBoldRenderer())
                         .create())
-                .addOption(new OptionBuilder()
+                .addOption(new ProcessedOptionBuilder()
                         .name("foo")
                         .fieldName("foo")
                         .type(String.class)

@@ -26,7 +26,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testParseCompleteObject() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1", 100);
@@ -129,7 +129,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testParseCompleteObject2() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e ", 100);
@@ -145,7 +145,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testParseCompleteObject3() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest3.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest3.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -v 1 2 3 ", 100);
@@ -161,7 +161,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testCursorInsideBuffer() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1  asdfjeaasdfae", 12);
@@ -204,7 +204,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testCompletionWithNoArguments() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test ", 4);
@@ -218,7 +218,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testGroupCompletion() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteGroupTest.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteGroupTest.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test child1 --en", 20);
@@ -227,72 +227,73 @@ public class ParseCompleteObjectTest {
         assertEquals("en", pco.getName());
         assertEquals(4, pco.getOffset());
     }
-}
-@CommandDefinition(name = "test", description = "a simple test")
-class ParseCompleteTest1 {
 
-    @Option(name = "X", description = "enable X")
-    private String X;
+    @CommandDefinition(name = "test", description = "a simple test")
+    public class ParseCompleteTest1 {
 
-    @Option(shortName = 'f', name = "foo", description = "enable foo")
-    private Boolean foo;
+        @Option(name = "X", description = "enable X")
+        private String X;
 
-    @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
-    private String equal;
+        @Option(shortName = 'f', name = "foo", description = "enable foo")
+        private Boolean foo;
 
-    @Option(shortName = 'D', description = "define properties", required = true)
-    private String define;
+        @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
+        private String equal;
 
-    @Arguments
-    private List<String> arguments;
+        @Option(shortName = 'D', description = "define properties", required = true)
+        private String define;
 
-}
+        @Arguments
+        private List<String> arguments;
 
-@CommandDefinition(name = "test", description = "a simple test")
-class ParseCompleteTest2 {
+    }
 
-    @Option(shortName = 'X', description = "enable X")
-    private String X;
+    @CommandDefinition(name = "test", description = "a simple test")
+    public class ParseCompleteTest2 {
 
-    @Option(shortName = 'f', name = "foo", description = "enable foo")
-    private String foo;
+        @Option(shortName = 'X', description = "enable X")
+        private String X;
 
-    @Option(shortName = 'e', name = "equal", description = "enable equal", required = true, defaultValue = "false")
-    private Boolean equal;
+        @Option(shortName = 'f', name = "foo", description = "enable foo")
+        private String foo;
 
-    @Option(shortName = 'D', description = "define properties",
-            required = true)
-    private String define;
-}
+        @Option(shortName = 'e', name = "equal", description = "enable equal", required = true, defaultValue = "false")
+        private Boolean equal;
 
-@CommandDefinition(name = "test", description = "a simple test")
-class ParseCompleteTest3 {
+        @Option(shortName = 'D', description = "define properties",
+                required = true)
+        private String define;
+    }
 
-    @Option(shortName = 'X', description = "enable X")
-    private String X;
+    @CommandDefinition(name = "test", description = "a simple test")
+    public class ParseCompleteTest3 {
 
-    @OptionList(shortName = 'v', name = "value", description = "enable equal")
-    private List<String> values;
+        @Option(shortName = 'X', description = "enable X")
+        private String X;
 
-    @Option(shortName = 'D', description = "define properties",
-            required = true)
-    private String define;
-}
+        @OptionList(shortName = 'v', name = "value", description = "enable equal")
+        private List<String> values;
 
-@GroupCommandDefinition(name = "group", description = "groups",
-        groupCommands = {ParseCompleteGroupChild1.class, ParseCompleteGroupChild2.class})
-class ParseCompleteGroupTest {
+        @Option(shortName = 'D', description = "define properties",
+                required = true)
+        private String define;
+    }
 
-}
+    @GroupCommandDefinition(name = "group", description = "groups",
+            groupCommands = {ParseCompleteGroupChild1.class, ParseCompleteGroupChild2.class})
+    public class ParseCompleteGroupTest {
 
-@CommandDefinition(name = "child1", description = "im child1")
-class ParseCompleteGroupChild1 {
-    @Option
-    private String enable;
-}
+    }
 
-@CommandDefinition(name = "child2", description = "im child2")
-class ParseCompleteGroupChild2 {
-    @Option
-    private String print;
+    @CommandDefinition(name = "child1", description = "im child1")
+    public class ParseCompleteGroupChild1 {
+        @Option
+        private String enable;
+    }
+
+    @CommandDefinition(name = "child2", description = "im child2")
+    public class ParseCompleteGroupChild2 {
+        @Option
+        private String print;
+    }
 }

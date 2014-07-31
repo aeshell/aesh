@@ -7,8 +7,8 @@
 package org.jboss.aesh.cl;
 
 import junit.framework.TestCase;
-import org.jboss.aesh.cl.builder.CommandBuilder;
-import org.jboss.aesh.cl.builder.OptionBuilder;
+import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
+import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
@@ -28,10 +28,10 @@ public class BuilderTest extends TestCase {
     }
 
     public void testBuilder() throws CommandLineParserException {
-        CommandBuilder pb = new CommandBuilder();
+        ProcessedCommandBuilder pb = new ProcessedCommandBuilder();
         pb.name("foo").description("foo is bar");
         pb.addOption(
-                new OptionBuilder().description("filename given").shortName('f').name("filename")
+                new ProcessedOptionBuilder().description("filename given").shortName('f').name("filename")
                         .type(String.class).hasValue(true).create());
 
         CommandLineParser clp = new CommandLineParserBuilder(pb.generateCommand()).generateParser();
@@ -44,23 +44,23 @@ public class BuilderTest extends TestCase {
 
     public void testBuilder2() throws CommandLineParserException {
 
-        CommandBuilder pb = new CommandBuilder().name("less").description("less is more");
+        ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("less").description("less is more");
         pb.addOption(
-                new OptionBuilder().description("version").shortName('V').name("version")
+                new ProcessedOptionBuilder().description("version").shortName('V').name("version")
                         .hasValue(false).required(true).type(String.class).create());
         pb.addOption(
-                new OptionBuilder().description("is verbose").shortName('v').name("verbose")
+                new ProcessedOptionBuilder().description("is verbose").shortName('v').name("verbose")
                         .hasValue(false).type(String.class).create());
 
         pb.addOption(
-                new OptionBuilder().description("attributes").shortName('D').name("attributes")
+                new ProcessedOptionBuilder().description("attributes").shortName('D').name("attributes")
                         .isProperty(true).type(String.class).create());
 
         pb.addOption(
-                new OptionBuilder().description("values").name("values").shortName('a')
+                new ProcessedOptionBuilder().description("values").name("values").shortName('a')
                         .hasMultipleValues(true).type(String.class).create());
 
-        pb.argument(new OptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
+        pb.argument(new ProcessedOptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENT).type(String.class).create());
 
         CommandLineParser clp = new CommandLineParserBuilder(pb.generateCommand()).generateParser();
@@ -82,9 +82,9 @@ public class BuilderTest extends TestCase {
     }
 
     public void testBuilder3() throws CommandLineParserException {
-        CommandBuilder pb = new CommandBuilder().name("less").description("less is more");
+        ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("less").description("less is more");
         pb.addOption(
-                new OptionBuilder()
+                new ProcessedOptionBuilder()
                         .description("version")
                         .name("version")
                         .shortName('v')
@@ -93,7 +93,7 @@ public class BuilderTest extends TestCase {
                         .type(String.class)
                         .create());
         pb.addOption(
-                new OptionBuilder()
+                new ProcessedOptionBuilder()
                         .description("is verbose")
                         .name("verbose")
                         .hasValue(false)
@@ -101,7 +101,7 @@ public class BuilderTest extends TestCase {
                         .type(String.class)
                         .create());
 
-        pb.argument(new OptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
+        pb.argument(new ProcessedOptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENT).type(String.class).create());
 
         CommandLineParser clp = new CommandLineParserBuilder(pb.generateCommand()).generateParser();
@@ -114,11 +114,17 @@ public class BuilderTest extends TestCase {
         assertTrue(cl.hasOption('e'));
     }
 
-    public void testParameterInt() throws OptionParserException {
-        ProcessedCommand processedCommand = new ProcessedCommand("foo", "", NullCommandValidator.class, NullResultHandler.class);
-        processedCommand.addOption(new OptionBuilder().name("foo1").shortName('f').type(String.class).create());
-        processedCommand.addOption(new OptionBuilder().name("foo2").shortName('o').type(String.class).create());
-        processedCommand.addOption(new OptionBuilder().name("foo3").shortName('3').type(String.class).create());
+    public void testParameterInt() throws CommandLineParserException {
+        ProcessedCommand processedCommand =
+                new ProcessedCommandBuilder()
+                        .name("foo")
+                        .description("")
+                        .validator(NullCommandValidator.class)
+                        .resultHandler(NullResultHandler.class)
+                        .generateCommand();
+        processedCommand.addOption(new ProcessedOptionBuilder().name("foo1").shortName('f').type(String.class).create());
+        processedCommand.addOption(new ProcessedOptionBuilder().name("foo2").shortName('o').type(String.class).create());
+        processedCommand.addOption(new ProcessedOptionBuilder().name("foo3").shortName('3').type(String.class).create());
 
         assertEquals("f", processedCommand.getOptions().get(0).getShortName());
         assertEquals("o", processedCommand.getOptions().get(1).getShortName());

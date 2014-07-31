@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.console.command.container;
 
+import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.parser.ParserGenerator;
 import org.jboss.aesh.console.command.Command;
 
 /**
@@ -15,11 +17,25 @@ public class AeshCommandContainerBuilder implements CommandContainerBuilder {
 
     @Override
     public CommandContainer build(Command command) {
-        return new AeshCommandContainer(command);
+        try {
+            return ParserGenerator.generateCommandLineParser(command);
+        }
+        catch (CommandLineParserException e) {
+            e.printStackTrace();
+            return null;
+        }
+        //return new AeshCommandContainer(command);
     }
 
     @Override
     public CommandContainer build(Class<? extends Command> command) {
-        return new AeshCommandContainer(command);
+        try {
+            return ParserGenerator.generateCommandLineParser(command);
+        }
+
+        catch (CommandLineParserException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

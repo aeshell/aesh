@@ -14,8 +14,14 @@ import org.jboss.aesh.cl.internal.ProcessedCommand;
 public class CommandLineParserBuilder {
 
     private ProcessedCommand param;
+    private boolean isChild = false;
 
     public CommandLineParserBuilder() {
+    }
+
+    public CommandLineParserBuilder child(boolean isChild) {
+        this.isChild = isChild;
+        return this;
     }
 
     public CommandLineParserBuilder(ProcessedCommand param) {
@@ -28,7 +34,7 @@ public class CommandLineParserBuilder {
     }
 
     public CommandLineParser generateParser() throws IllegalArgumentException {
-        return new AeshCommandLineParser( param);
+        return new AeshCommandLineParser( param, isChild);
     }
 
 }

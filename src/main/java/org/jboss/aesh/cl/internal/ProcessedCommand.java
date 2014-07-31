@@ -14,12 +14,10 @@ import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.result.NullResultHandler;
 import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidator;
-import org.jboss.aesh.cl.validator.NullCommandValidator;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.terminal.TerminalString;
-import org.jboss.aesh.util.ReflectionUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,50 +38,13 @@ public final class ProcessedCommand {
     private boolean groupCommand = false;
     private List<ProcessedCommand> groupCommands;
 
-    public ProcessedCommand(String name, String description, CommandValidator validator,
-                            ResultHandler resultHandler) {
-        setName(name);
-        setDescription(description);
-        setValidator(validator);
-        setResultHandler(resultHandler);
-        options = new ArrayList<>();
-    }
-
-    public ProcessedCommand(String name, String description,Class<? extends CommandValidator> validator,
-                            Class<? extends ResultHandler> resultHandler) {
-        setName(name);
-        setDescription(description);
-        setValidator(initValidator(validator));
-        setResultHandler(initResultHandler(resultHandler));
-        options = new ArrayList<>();
-    }
-
-    public ProcessedCommand(String name, String description,Class<? extends CommandValidator> validator,
-                            Class<? extends ResultHandler> resultHandler, List<ProcessedCommand> groupCommands) {
-        setName(name);
-        setDescription(description);
-        setValidator(initValidator(validator));
-        setResultHandler(initResultHandler(resultHandler));
-        options = new ArrayList<>();
-        if(groupCommands.size() > 0) {
-            groupCommand = true;
-            this.groupCommands = groupCommands;
-        }
-    }
-
-    public ProcessedCommand(String name, String description, ProcessedOption argument) {
-        setName(name);
-        setDescription(description);
-        this.argument = argument;
-        options = new ArrayList<>();
-    }
-
     public ProcessedCommand(String name, String description, CommandValidator validator, ResultHandler resultHandler,
-                            ProcessedOption argument, List<ProcessedOption> options) throws OptionParserException {
+                            ProcessedOption argument, List<ProcessedOption> options,
+                            boolean isGroupCommand) throws OptionParserException {
         setName(name);
         setDescription(description);
-        setValidator(validator);
-        setResultHandler(resultHandler);
+        this.validator = validator;
+        this.resultHandler = resultHandler;
         this.argument = argument;
         this.options = new ArrayList<>();
         setOptions(options);
@@ -114,6 +75,7 @@ public final class ProcessedCommand {
      * @param defaultValue the default value
      * @param type what kind of type it is (not used)
      */
+    /*
     public void addOption(char name, String longName, String description,
                      String argument, boolean required, char valueSeparator,
                      String[] defaultValue, Class<?> type, String fieldName, OptionType optionType,
@@ -143,6 +105,7 @@ public final class ProcessedCommand {
                 argument, required, valueSeparator, defaultValues,
                 type, fieldName, optionType, converter, completer, validator, activator, renderer, overrideRequired));
     }
+    */
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
         for(ProcessedOption opt : options) {
@@ -170,37 +133,11 @@ public final class ProcessedCommand {
         this.description = description;
     }
 
-    private CommandValidator initValidator(Class<? extends CommandValidator> validator) {
-        if(validator != null && !validator.equals(NullCommandValidator.class))
-            return ReflectionUtil.newInstance(validator);
-        else
-            return new NullCommandValidator();
-    }
-
-    private ResultHandler initResultHandler(Class<? extends ResultHandler> resultHandler) {
-        if(resultHandler != null && !resultHandler.equals(NullResultHandler.class))
-            return ReflectionUtil.newInstance(resultHandler);
-        else
-            return new NullResultHandler();
-    }
-
     public CommandValidator getValidator() {
         return validator;
     }
 
-    private void setValidator(CommandValidator validator) {
-        if(validator == null)
-            validator = new NullCommandValidator();
-        this.validator = validator;
-    }
-
     public ResultHandler getResultHandler() { return resultHandler; }
-
-    private void setResultHandler(ResultHandler resultHandler) {
-        if(resultHandler == null)
-            resultHandler = new NullResultHandler();
-        this.resultHandler = resultHandler;
-    }
 
     public boolean hasArgument() {
         return argument != null && argument.hasMultipleValues();
