@@ -7,6 +7,7 @@
 
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
+import org.jboss.aesh.cl.GroupCommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.activation.OptionActivator;
@@ -105,6 +106,7 @@ public class AeshExample {
                 .command(TestConsoleCommand.class)
                 .command(PromptCommand.class)
                 .command(RunCommand.class)
+                .command(GroupCommand.class)
                 .create();
 
         AeshConsole aeshConsole = new AeshConsoleBuilder()
@@ -440,4 +442,36 @@ public class AeshExample {
         }
     }
 
+    @GroupCommandDefinition(name = "group", description = "", groupCommands = {Child1.class, Child2.class})
+    public static class GroupCommand implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            commandInvocation.getShell().out().println("only executed group, it doesnt do much...");
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "child1", description = "")
+    public static class Child1 implements Command {
+        @Option
+        private boolean foo;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            commandInvocation.getShell().out().println("foo is set to: "+foo);
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "child2", description = "")
+    public static class Child2 implements Command {
+        @Option
+        private boolean bar;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            commandInvocation.getShell().out().println("bar is set to: "+bar);
+            return CommandResult.SUCCESS;
+        }
+    }
 }
