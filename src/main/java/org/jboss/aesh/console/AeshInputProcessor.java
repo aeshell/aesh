@@ -75,11 +75,6 @@ public class AeshInputProcessor implements InputProcessor {
     }
 
     @Override
-    public void resetEOF() {
-        consoleBuffer.getEditMode().resetEOF();
-    }
-
-    @Override
     public String parseOperation(CommandOperation commandOperation) throws IOException {
 
         Operation operation = consoleBuffer.getEditMode().parseInput(commandOperation.getInputKey(),

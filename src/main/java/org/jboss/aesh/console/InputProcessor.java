@@ -24,5 +24,4 @@ public interface InputProcessor {
 
     void resetBuffer();
 
-    void resetEOF();
 }

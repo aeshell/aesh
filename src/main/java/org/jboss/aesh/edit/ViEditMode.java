@@ -99,6 +99,9 @@ public class ViEditMode extends AbstractEditMode {
     }
 
     private Operation findOperation(KeyOperation currentOperation, String buffer) {
+        //just make sure that we always clear eof when we get a new operation
+        if(currentOperation.getOperation() != Operation.EOF)
+            resetEOF();
 
         //search mode need special handling
         if(mode == Action.SEARCH) {
@@ -152,8 +155,10 @@ public class ViEditMode extends AbstractEditMode {
                 else
                     return Operation.IGNOREEOF;
             }
-            else
+            else {
+                resetEOF();
                 return Operation.NEW_LINE;
+            }
         }
 
         if(operation == Operation.NEW_LINE) {
