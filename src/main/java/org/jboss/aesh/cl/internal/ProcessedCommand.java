@@ -46,6 +46,9 @@ public final class ProcessedCommand {
         this.validator = validator;
         this.resultHandler = resultHandler;
         this.argument = argument;
+        this.groupCommand = isGroupCommand;
+        if(groupCommand)
+            groupCommands = new ArrayList<>();
         this.options = new ArrayList<>();
         setOptions(options);
     }
@@ -354,6 +357,11 @@ public final class ProcessedCommand {
 
     public List<ProcessedCommand> getGroupCommands() {
         return groupCommands;
+    }
+
+    public void addGroupCommand(ProcessedCommand processedCommand) {
+        if(groupCommand)
+            groupCommands.add(processedCommand);
     }
 
     public ProcessedCommand getGroupCommand(String name) {

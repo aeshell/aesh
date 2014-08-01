@@ -29,16 +29,6 @@ public class AeshCommandContainer implements CommandContainer {
     private String errorMessage;
     private List<CommandContainer> childCommands;
 
-    /*
-    public AeshCommandContainer(Command command) {
-        addCommand(command);
-    }
-
-    public AeshCommandContainer(Class<? extends Command> command) {
-        addCommand(command);
-    }
-    */
-
     public AeshCommandContainer(CommandLineParser parser, Command command) {
         if (parser != null && parser.getCommand() != null) {
             this.parser = parser;
@@ -46,47 +36,12 @@ public class AeshCommandContainer implements CommandContainer {
         }
     }
 
-    /*
-    public AeshCommandContainer(CommandLineParser parser,
-                                Class<? extends Command> command) {
-        if (parser != null && parser.getCommand() != null) {
-            this.parser = parser;
-            this.command = ReflectionUtil.newInstance(command);
-        }
-    }
-
-    public AeshCommandContainer(ProcessedCommand processedCommand,
-                                Class<? extends Command> command) {
-        parser = new AeshCommandLineParser(processedCommand);
-        this.command = ReflectionUtil.newInstance(command);
-    }
-    */
-
     public AeshCommandContainer(ProcessedCommand processedCommand,
                                 Command command) {
         parser = new AeshCommandLineParser(processedCommand);
         this.command = command;
     }
 
-    /*
-    private void addCommand(Class<? extends Command> command) {
-        try {
-            parser = ParserGenerator.generateCommandLineParser(command);
-            this.command = ReflectionUtil.newInstance(command);
-        } catch (CommandLineParserException e) {
-            errorMessage = e.getMessage();
-        }
-    }
-
-    private void addCommand(Command command) {
-        try {
-            parser = ParserGenerator.generateCommandLineParser(command);
-            this.command = command;
-        } catch (CommandLineParserException e) {
-            errorMessage = e.getMessage();
-        }
-    }
-    */
 
     @Override
     public Command getCommand() {

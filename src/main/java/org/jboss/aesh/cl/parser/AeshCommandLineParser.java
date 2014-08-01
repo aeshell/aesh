@@ -51,6 +51,7 @@ public class AeshCommandLineParser implements CommandLineParser {
         if(childParsers == null)
             childParsers = new ArrayList<>();
         childParsers.add(commandLineParser);
+        command.addGroupCommand(commandLineParser.getCommand());
     }
 
     public AeshCommandLineParser getChildParser(String name) {
