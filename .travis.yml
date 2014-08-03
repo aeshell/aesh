@@ -7,3 +7,6 @@ jdk:
 
 env:
    - TERM=dumb
+
+notifications:
+  irc: chat.freenode.net#aesh
