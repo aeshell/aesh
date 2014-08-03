@@ -70,23 +70,23 @@ public class ParseCompleteObjectTest {
         assertTrue(pco.doDisplayOptions());
         assertTrue(pco.isCompleteOptionName());
         assertEquals("e", pco.getName());
-        clp.getCommand().clear();
-        assertEquals("--equal", clp.getCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
+        clp.getProcessedCommand().clear();
+        assertEquals("--equal", clp.getProcessedCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
 
         pco = completeParser.findCompleteObject("test --eq", 100);
         assertTrue(pco.doDisplayOptions());
         assertFalse(pco.isCompleteOptionName());
         assertEquals("eq", pco.getName());
         assertEquals(4, pco.getOffset());
-        clp.getCommand().clear();
-        assertEquals("--equal", clp.getCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
+        clp.getProcessedCommand().clear();
+        assertEquals("--equal", clp.getProcessedCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
 
-        clp.getCommand().clear();
+        clp.getProcessedCommand().clear();
         pco = completeParser.findCompleteObject("test --", 100);
         assertTrue(pco.doDisplayOptions());
         assertEquals("", pco.getName());
         assertEquals(2, pco.getOffset());
-        assertEquals(4, clp.getCommand().getOptionLongNamesWithDash().size());
+        assertEquals(4, clp.getProcessedCommand().getOptionLongNamesWithDash().size());
 
         pco = completeParser.findCompleteObject("test --equal true  ", 100);
         assertTrue(pco.isArgument());

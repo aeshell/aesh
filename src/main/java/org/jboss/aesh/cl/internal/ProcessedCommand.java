@@ -6,21 +6,15 @@
  */
 package org.jboss.aesh.cl.internal;
 
-import org.jboss.aesh.cl.activation.OptionActivator;
-import org.jboss.aesh.cl.completer.OptionCompleter;
-import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.exception.OptionParserException;
-import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.result.NullResultHandler;
 import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidator;
-import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -63,52 +57,6 @@ public final class ProcessedCommand {
                 opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(), opt.getConverter(),
                 opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer(), opt.doOverrideRequired()));
     }
-
-    /**
-     * Add an option
-     * Name or name can be null
-     * Both argument and type can be null
-     *
-     * @param name name (short) one char
-     * @param longName multi character name
-     * @param description a description of the option
-     * @param argument what kind of argument this option can have
-     * @param required is it required?
-     * @param valueSeparator separator char
-     * @param defaultValue the default value
-     * @param type what kind of type it is (not used)
-     */
-    /*
-    public void addOption(char name, String longName, String description,
-                     String argument, boolean required, char valueSeparator,
-                     String[] defaultValue, Class<?> type, String fieldName, OptionType optionType,
-                     Class<? extends Converter> converter,
-                     Class<? extends OptionCompleter> completer,
-                     Class<? extends OptionValidator> validator,
-                     Class<? extends OptionActivator> activator,
-                     Class<? extends OptionRenderer> renderer) throws OptionParserException {
-        List<String> defaultValues = new ArrayList<>();
-        defaultValues.addAll(Arrays.asList(defaultValue));
-        options.add(new ProcessedOption(verifyThatNamesAreUnique(name, longName), longName, description,
-                argument, required, valueSeparator, defaultValues,
-                type, fieldName, optionType, converter, completer, validator, activator, renderer));
-    }
-
-    public void addOption(char name, String longName, String description,
-                     String argument, boolean required, char valueSeparator,
-                     String[] defaultValue, Class<?> type, String fieldName, OptionType optionType,
-                     Class<? extends Converter> converter,
-                     Class<? extends OptionCompleter> completer,
-                     Class<? extends OptionValidator> validator,
-                     Class<? extends OptionActivator> activator,
-                     Class<? extends OptionRenderer> renderer, boolean overrideRequired) throws OptionParserException {
-        List<String> defaultValues = new ArrayList<>();
-        defaultValues.addAll(Arrays.asList(defaultValue));
-        options.add(new ProcessedOption(verifyThatNamesAreUnique(name, longName), longName, description,
-                argument, required, valueSeparator, defaultValues,
-                type, fieldName, optionType, converter, completer, validator, activator, renderer, overrideRequired));
-    }
-    */
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
         for(ProcessedOption opt : options) {

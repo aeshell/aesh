@@ -7,7 +7,6 @@
 package org.jboss.aesh.console.command.registry;
 
 import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.GroupCommand;
 import org.jboss.aesh.console.command.container.AeshCommandContainerBuilder;
 import org.jboss.aesh.console.command.container.CommandContainer;
 
@@ -30,8 +29,8 @@ public class AeshInternalCommandRegistry {
 
     private void putIntoRegistry(CommandContainer commandContainer) {
         if(!commandContainer.haveBuildError() &&
-                !registry.containsKey(commandContainer.getParser().getCommand().getName()))
-            registry.put(commandContainer.getParser().getCommand().getName(), commandContainer);
+                !registry.containsKey(commandContainer.getParser().getProcessedCommand().getName()))
+            registry.put(commandContainer.getParser().getProcessedCommand().getName(), commandContainer);
     }
 
     public CommandContainer getCommand(String name) {

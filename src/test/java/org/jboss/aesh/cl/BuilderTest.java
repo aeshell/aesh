@@ -10,7 +10,6 @@ import junit.framework.TestCase;
 import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.parser.CommandLineParser;
@@ -106,8 +105,8 @@ public class BuilderTest extends TestCase {
 
         CommandLineParser clp = new CommandLineParserBuilder(pb.generateCommand()).generateParser();
 
-        assertEquals("version", clp.getCommand().findOption("v").getName());
-        assertEquals("verbose", clp.getCommand().findOption("e").getName());
+        assertEquals("version", clp.getProcessedCommand().findOption("v").getName());
+        assertEquals("verbose", clp.getProcessedCommand().findOption("e").getName());
 
         CommandLine cl = clp.parse("less -v -e test1.txt");
         assertTrue(cl.hasOption('v'));

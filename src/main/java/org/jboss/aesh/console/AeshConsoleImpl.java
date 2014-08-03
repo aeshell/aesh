@@ -195,7 +195,7 @@ public class AeshConsoleImpl implements AeshConsole {
             //we have a custom OptionActivatorProvider, and need to process all options
             try {
                 for (String commandName : registry.getAllCommandNames()) {
-                    registry.getCommand(commandName, "").getParser().getCommand().processAfterInit(invocationProviders);
+                    registry.getCommand(commandName, "").getParser().getProcessedCommand().processAfterInit(invocationProviders);
                 }
             }
             catch (CommandNotFoundException e) {
@@ -241,13 +241,13 @@ public class AeshConsoleImpl implements AeshConsole {
     private CommandContainer getCommand(AeshLine aeshLine, String line) throws CommandNotFoundException {
         try {
             CommandContainer commandContainer = registry.getCommand(aeshLine.getWords().get(0), line);
-            if(commandContainer.getParser().getCommand().isGroupCommand()) {
+            if(commandContainer.getParser().getProcessedCommand().isGroupCommand()) {
                 if(aeshLine.getWords().size() > 1) {
                     aeshLine.getWords().remove(0);
                     String groupName = aeshLine.getWords().get(1);
                 }
                 //if(groupName != null)
-                    //return commandContainer.getParser().getCommand().getGroupCommand(groupName);
+                    //return commandContainer.getParser().getProcessedCommand().getGroupCommand(groupName);
                 return null;
 
             }
@@ -319,7 +319,7 @@ public class AeshConsoleImpl implements AeshConsole {
                     CommandLine commandLine = commandContainer.getParser()
                         .parse(output.getBuffer());
 
-                    resultHandler = commandContainer.getParser().getCommand().getResultHandler();
+                    resultHandler = commandContainer.getParser().getProcessedCommand().getResultHandler();
 
                     commandContainer
                         .getParser()
@@ -328,9 +328,9 @@ public class AeshConsoleImpl implements AeshConsole {
                             commandLine, invocationProviders, getAeshContext(), true);
                     // validate the command before execute, only call if no
                     // options with overrideRequired is not set
-                    if (commandContainer.getParser().getCommand() .getValidator() != null
+                    if (commandContainer.getParser().getProcessedCommand() .getValidator() != null
                         && !commandLine.hasOptionWithOverrideRequired())
-                        commandContainer.getParser().getCommand().getValidator()
+                        commandContainer.getParser().getProcessedCommand().getValidator()
                             .validate(commandContainer.getCommand());
 
                     result = commandContainer.getCommand().execute(

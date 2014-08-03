@@ -9,12 +9,9 @@ package org.jboss.aesh.console.command.container;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
-import org.jboss.aesh.cl.parser.ParserGenerator;
-import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.parser.AeshLine;
-import org.jboss.aesh.util.ReflectionUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +27,7 @@ public class AeshCommandContainer implements CommandContainer {
     private List<CommandContainer> childCommands;
 
     public AeshCommandContainer(CommandLineParser parser, Command command) {
-        if (parser != null && parser.getCommand() != null) {
+        if (parser != null && parser.getProcessedCommand() != null) {
             this.parser = parser;
             this.command = command;
         }
@@ -65,7 +62,7 @@ public class AeshCommandContainer implements CommandContainer {
 
     @Override
     public CommandContainerResult executeCommand(AeshLine line, CommandInvocation commandInvocation) {
-        if(parser.getCommand().isGroupCommand()) {
+        if(parser.getProcessedCommand().isGroupCommand()) {
 
         }
 

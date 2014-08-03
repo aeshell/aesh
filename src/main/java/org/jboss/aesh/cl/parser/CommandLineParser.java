@@ -8,6 +8,7 @@ package org.jboss.aesh.cl.parser;
 
 import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.parser.AeshLine;
 
 import java.util.List;
@@ -25,7 +26,12 @@ public interface CommandLineParser {
     /**
      * @return the processed command this parser is generated from
      */
-    ProcessedCommand getCommand();
+    ProcessedCommand getProcessedCommand();
+
+    /**
+     * @return the actual command
+     */
+    Command getCommand();
 
     /**
      * @return completion parser created to work on this command

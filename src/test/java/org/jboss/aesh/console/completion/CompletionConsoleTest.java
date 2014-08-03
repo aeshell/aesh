@@ -202,21 +202,21 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         Completion completion = new Completion() {
             @Override
             public void complete(CompleteOperation co) {
-                if(parser.getCommand().getName().startsWith(co.getBuffer())) {
-                    co.addCompletionCandidate(parser.getCommand().getName());
+                if(parser.getProcessedCommand().getName().startsWith(co.getBuffer())) {
+                    co.addCompletionCandidate(parser.getProcessedCommand().getName());
                 }
                 // commandline longer than the name
-                else if(co.getBuffer().startsWith(parser.getCommand().getName())){
-                   if(co.getBuffer().length() > parser.getCommand().getName().length())  {
+                else if(co.getBuffer().startsWith(parser.getProcessedCommand().getName())){
+                   if(co.getBuffer().length() > parser.getProcessedCommand().getName().length())  {
                       if(co.getBuffer().endsWith(" --")) {
-                         for(ProcessedOption o : parser.getCommand().getOptions()) {
+                         for(ProcessedOption o : parser.getProcessedCommand().getOptions()) {
                              co.addCompletionCandidate("--"+o.getName());
                              builder.append(o.getName()+" ");
                          }
                           co.setOffset(co.getOffset());
                       }
                       else if(co.getBuffer().endsWith(" -")) {
-                          for(ProcessedOption o : parser.getCommand().getOptions()) {
+                          for(ProcessedOption o : parser.getProcessedCommand().getOptions()) {
                               co.addCompletionCandidate("-"+o.getShortName());
                               builder.append("-"+o.getShortName()+" ");
                           }

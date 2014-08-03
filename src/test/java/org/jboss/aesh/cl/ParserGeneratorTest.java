@@ -29,8 +29,8 @@ public class ParserGeneratorTest {
         Test1 test1 = new Test1();
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(test1).getParser();
 
-        assertEquals("a simple test", parser.getCommand().getDescription());
-        List<ProcessedOption> options = parser.getCommand().getOptions();
+        assertEquals("a simple test", parser.getProcessedCommand().getDescription());
+        List<ProcessedOption> options = parser.getProcessedCommand().getOptions();
         assertEquals("f", options.get(0).getShortName());
         assertEquals("foo", options.get(0).getName());
         assertEquals("e", options.get(1).getShortName());
@@ -42,13 +42,13 @@ public class ParserGeneratorTest {
 
         Test2 test2 = new Test2();
         parser = ParserGenerator.generateCommandLineParser(test2).getParser();
-        assertEquals("more [options] file...", parser.getCommand().getDescription());
-        options = parser.getCommand().getOptions();
+        assertEquals("more [options] file...", parser.getProcessedCommand().getDescription());
+        options = parser.getProcessedCommand().getOptions();
         assertEquals("d", options.get(0).getShortName());
         assertEquals("V", options.get(1).getShortName());
 
         parser = ParserGenerator.generateCommandLineParser(Test3.class).getParser();
-        options = parser.getCommand().getOptions();
+        options = parser.getProcessedCommand().getOptions();
         assertEquals("t", options.get(0).getShortName());
         assertEquals("e", options.get(1).getShortName());
 
