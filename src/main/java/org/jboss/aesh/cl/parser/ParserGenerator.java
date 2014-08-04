@@ -13,9 +13,7 @@ import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionGroup;
 import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
-import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
@@ -26,16 +24,13 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.container.AeshCommandContainer;
-import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
 import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
 import org.jboss.aesh.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -77,10 +72,17 @@ public class ParserGenerator {
 
             if(clazzIsaCommand)
                 return new AeshCommandContainer(
-                        new CommandLineParserBuilder().parameter(processedCommand).child(isChild).generateParser(), (Command) commandObject);
+                        new CommandLineParserBuilder()
+                                .processedCommand(processedCommand)
+                                .command((Command) commandObject)
+                                .child(isChild)
+                                .create(), (Command) commandObject);
             else
-            return new AeshCommandContainer(
-                    new CommandLineParserBuilder().parameter(processedCommand).child(isChild).generateParser(), null);
+                return new AeshCommandContainer(
+                        new CommandLineParserBuilder()
+                                .processedCommand(processedCommand)
+                                .child(isChild)
+                                .create(), null);
         }
         GroupCommandDefinition groupCommand = (GroupCommandDefinition) clazz.getAnnotation(GroupCommandDefinition.class);
         if(groupCommand != null) {
@@ -95,10 +97,17 @@ public class ParserGenerator {
             AeshCommandContainer groupContainer = null;
             if(clazzIsaCommand)
                 groupContainer = new AeshCommandContainer(
-                        new CommandLineParserBuilder().parameter(processedGroupCommand).child(isChild).generateParser(), (Command) commandObject);
+                        new CommandLineParserBuilder()
+                                .processedCommand(processedGroupCommand)
+                                .child(isChild)
+                                .command((Command) commandObject)
+                                .create(), (Command) commandObject);
             else
                 groupContainer = new AeshCommandContainer(
-                        new CommandLineParserBuilder().parameter(processedGroupCommand).child(isChild).generateParser(), null);
+                        new CommandLineParserBuilder()
+                                .processedCommand(processedGroupCommand)
+                                .child(isChild)
+                                .create(), null);
 
             for(Class groupClazz : groupCommand.groupCommands()) {
                 Object groupInstance = ReflectionUtil.newInstance(groupClazz);

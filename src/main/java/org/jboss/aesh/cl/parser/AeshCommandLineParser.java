@@ -43,8 +43,9 @@ public class AeshCommandLineParser implements CommandLineParser {
         this.processedCommand = processedCommand;
     }
 
-    public AeshCommandLineParser(ProcessedCommand processedCommand, boolean isChild) {
+    public AeshCommandLineParser(ProcessedCommand processedCommand, Command command, boolean isChild) {
         this.processedCommand = processedCommand;
+        this.command = command;
         this.isChild = isChild;
     }
 
@@ -165,7 +166,7 @@ public class AeshCommandLineParser implements CommandLineParser {
     @Override
     public CommandLine parse(List<String> lines, boolean ignoreRequirements) {
         processedCommand.clear();
-        CommandLine commandLine = new CommandLine();
+        CommandLine commandLine = new CommandLine(this);
         if(processedCommand.hasArgument())
             commandLine.setArgument(processedCommand.getArgument());
         ProcessedOption active = null;
@@ -458,7 +459,8 @@ public class AeshCommandLineParser implements CommandLineParser {
     @Override
     public String toString() {
         return "CommandLineParser{" +
-                "command=" + processedCommand +
+                "processedCommand=" + processedCommand +
+                "command=" + command +
                 '}';
     }
 

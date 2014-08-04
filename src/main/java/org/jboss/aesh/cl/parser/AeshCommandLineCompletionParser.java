@@ -196,7 +196,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 if(completeObject.getName() != null && completeObject.getName().length() > 0) {
                     String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( completeObject.getName()));
                     try {
-                        parser.getCommandPopulator().populateObject(command, parser.parse(rest), invocationProviders,
+                        parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(rest), invocationProviders,
                                 completeOperation.getAeshContext(), false);
                     }
                     //this should be ignored at some point
@@ -218,7 +218,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 }
                 else {
                     try {
-                        parser.getCommandPopulator().populateObject(command, parser.parse(completeOperation.getBuffer()),
+                        parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(completeOperation.getBuffer()),
                                 invocationProviders, completeOperation.getAeshContext(), false);
                     }
                     //this should be ignored at some point
@@ -260,7 +260,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( displayName));
 
             try {
-                parser.getCommandPopulator().populateObject(command, parser.parse(rest), invocationProviders,
+                parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(rest), invocationProviders,
                         completeOperation.getAeshContext(), false);
             }
             //this should be ignored at some point
@@ -270,7 +270,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     currentOption.getActivator().isActivated(parser.getProcessedCommand())) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
-                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), command));
+                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
 
                 currentOption.getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
@@ -295,7 +295,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             else if(currentOption.getDefaultValues().size() > 0) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
-                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), command));
+                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
                 new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
@@ -320,7 +320,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             String lastWord = Parser.findEscapedSpaceWordCloseToEnd(completeOperation.getBuffer());
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length() - lastWord.length());
             try {
-                parser.getCommandPopulator().populateObject(command, parser.parse(rest), invocationProviders,
+                parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(rest), invocationProviders,
                         completeOperation.getAeshContext(), false);
             }
             catch (CommandLineParserException | OptionValidatorException ignored) { }
@@ -329,7 +329,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     parser.getProcessedCommand().getArgument().getCompleter() != null) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
-                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), command));
+                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
                 parser.getProcessedCommand().getArgument().getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
@@ -352,7 +352,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     parser.getProcessedCommand().getArgument().getDefaultValues().size() > 0) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
-                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), command));
+                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
                 new DefaultValueOptionCompleter( parser.getProcessedCommand().getArgument().getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
