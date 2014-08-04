@@ -29,6 +29,7 @@ import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.container.CommandContainer;
+import org.jboss.aesh.console.command.container.CommandContainerResult;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.console.command.invocation.AeshCommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
@@ -240,19 +241,8 @@ public class AeshConsoleImpl implements AeshConsole {
      */
     private CommandContainer getCommand(AeshLine aeshLine, String line) throws CommandNotFoundException {
         try {
-            CommandContainer commandContainer = registry.getCommand(aeshLine.getWords().get(0), line);
-            if(commandContainer.getParser().getProcessedCommand().isGroupCommand()) {
-                if(aeshLine.getWords().size() > 1) {
-                    aeshLine.getWords().remove(0);
-                    String groupName = aeshLine.getWords().get(1);
-                }
-                //if(groupName != null)
-                    //return commandContainer.getParser().getProcessedCommand().getGroupCommand(groupName);
-                return null;
-
-            }
-            else
-                return commandContainer;
+            return registry.getCommand(aeshLine.getWords().get(0), line);
+            //return commandContainer;
         }
         catch (CommandNotFoundException e) {
             if (internalRegistry != null) {
@@ -316,6 +306,7 @@ public class AeshConsoleImpl implements AeshConsole {
                 AeshLine aeshLine = Parser.findAllWords(output.getBuffer());
                 try (CommandContainer commandContainer = getCommand( aeshLine, output.getBuffer())) {
 
+                    /*
                     CommandLine commandLine = commandContainer.getParser()
                         .parse(output.getBuffer());
 
@@ -339,6 +330,17 @@ public class AeshConsoleImpl implements AeshConsole {
                                     new AeshCommandInvocation(console,
                                         output.getControlOperator(),
                                          output.getPid(), this)));
+                    */
+                    CommandContainerResult ccResult =
+                            commandContainer.executeCommand(aeshLine, invocationProviders, getAeshContext(),
+                            commandInvocationServices.getCommandInvocationProvider(
+                                    commandInvocationProvider).enhanceCommandInvocation(
+                                    new AeshCommandInvocation(console,
+                                        output.getControlOperator(),
+                                         output.getPid(), this)));
+
+                    result = ccResult.getCommandResult();
+                    resultHandler = ccResult.getResultHandler();
 
                     if(result == CommandResult.SUCCESS && resultHandler != null)
                         resultHandler.onSuccess();

@@ -6,10 +6,17 @@
  */
 package org.jboss.aesh.console.command.container;
 
+import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.cl.validator.CommandValidatorException;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.parser.AeshLine;
+
+import java.io.IOException;
 
 /**
  * A CommandContainer hold reference to the Command and
@@ -42,5 +49,7 @@ public interface CommandContainer extends AutoCloseable {
      */
     String getBuildErrorMessage();
 
-    CommandContainerResult executeCommand(AeshLine line, CommandInvocation commandInvocation);
+    CommandContainerResult executeCommand(AeshLine line, InvocationProviders invocationProviders,
+                                          AeshContext aeshContext,
+                                          CommandInvocation commandInvocation) throws CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException, InterruptedException;
 }
