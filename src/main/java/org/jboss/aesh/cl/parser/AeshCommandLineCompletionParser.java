@@ -45,29 +45,13 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
         if(cursor < line.length()) {
             line = line.substring(0, cursor);
         }
-        //first we check if its a group command
-        if(parser.getProcessedCommand().isGroupCommand())
-            return parsingGroupCommand(line, cursor);
-        //then we check if it could be a param
-        else if(Parser.findIfWordEndWithSpace(line)) {
+        //first we check if it could be a param
+        if(Parser.findIfWordEndWithSpace(line)) {
             return endsWithSpace(line);
         }
         //lastly we'll check if we can find an option
         else
             return optionFinder(line);
-    }
-
-    //we assume that this line has atleast two words,
-    // (if not it should not have called this method)
-    private ParsedCompleteObject parsingGroupCommand(String line, int cursor) throws CommandLineParserException {
-        int stripIndex = line.indexOf(' ', Parser.findFirstWord(line).length()-1);
-        AeshCommandLineParser childParser = parser.getChildParser(
-                Parser.findFirstWord(Parser.findFirstWord(line.substring(stripIndex))));
-
-        if(childParser != null)
-            return childParser.getCompletionParser().findCompleteObject(line.substring(stripIndex), cursor);
-        else
-            throw new CommandLineParserException("Could not find child for line: "+line);
     }
 
     private ParsedCompleteObject endsWithSpace(String line) throws CommandLineParserException {

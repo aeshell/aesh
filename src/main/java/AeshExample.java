@@ -454,7 +454,7 @@ public class AeshExample {
     @CommandDefinition(name = "child1", description = "")
     public static class Child1 implements Command {
         @Option
-        private boolean foo;
+        private String foo;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {

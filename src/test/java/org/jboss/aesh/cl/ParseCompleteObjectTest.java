@@ -221,13 +221,13 @@ public class ParseCompleteObjectTest {
         CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteGroupTest.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
-        ParsedCompleteObject pco = completeParser.findCompleteObject("test child1 --en", 20);
+        ParsedCompleteObject pco = completeParser.findCompleteObject("group child1 --en", 20);
         assertTrue(pco.doDisplayOptions());
         assertFalse(pco.isCompleteOptionName());
         assertEquals("en", pco.getName());
         assertEquals(4, pco.getOffset());
 
-        pco = completeParser.findCompleteObject("test child1 --enable foo", 25);
+        pco = completeParser.findCompleteObject("group child1 --enable foo", 25);
         assertEquals("foo", pco.getValue());
         assertTrue(pco.isOption());
         assertEquals(String.class, pco.getType());
