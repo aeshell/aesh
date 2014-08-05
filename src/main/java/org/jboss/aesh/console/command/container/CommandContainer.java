@@ -7,6 +7,7 @@
 package org.jboss.aesh.console.command.container;
 
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
@@ -39,6 +40,9 @@ public interface CommandContainer extends AutoCloseable {
      */
     CommandLineParser getParser();
 
+    CommandLineCompletionParser getCompletionParser(AeshLine aeshLine);
+
+    boolean isGroupCommand();
     /**
      * @return true if the CommandLineParser or Command generation generated any errors
      */

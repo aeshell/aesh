@@ -226,6 +226,11 @@ public class ParseCompleteObjectTest {
         assertFalse(pco.isCompleteOptionName());
         assertEquals("en", pco.getName());
         assertEquals(4, pco.getOffset());
+
+        pco = completeParser.findCompleteObject("test child1 --enable foo", 25);
+        assertEquals("foo", pco.getValue());
+        assertTrue(pco.isOption());
+        assertEquals(String.class, pco.getType());
     }
 
     @CommandDefinition(name = "test", description = "a simple test")

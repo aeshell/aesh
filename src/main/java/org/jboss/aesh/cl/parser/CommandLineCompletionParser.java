@@ -23,7 +23,7 @@ public interface CommandLineCompletionParser {
      */
     ParsedCompleteObject findCompleteObject(String line, int cursor) throws CommandLineParserException;
 
-    void injectValuesAndComplete(ParsedCompleteObject completeObject, Command command,
+    void injectValuesAndComplete(ParsedCompleteObject completeObject,
                                  CompleteOperation completeOperation,
                                  InvocationProviders invocationProviders);
 }

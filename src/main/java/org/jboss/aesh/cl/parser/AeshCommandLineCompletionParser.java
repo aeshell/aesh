@@ -75,9 +75,9 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
         if(line.trim().equals(parser.getProcessedCommand().getName())) {
             if(parser.getProcessedCommand().getArgument() == null) {
                 //basically an empty string except command name
-                return new ParsedCompleteObject(true, "", 0);
+                return new ParsedCompleteObject(true, "", 0, this);
             }
-            return new ParsedCompleteObject(null, "", parser.getProcessedCommand().getArgument().getType(), false);
+            return new ParsedCompleteObject(null, "", parser.getProcessedCommand().getArgument().getType(), false, this);
         }
 
         //else we try to complete an option,an option value or arguments
@@ -87,12 +87,12 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             while(lastWord.startsWith("-"))
                 lastWord = lastWord.substring(1);
             if(lastWord.length() == 0)
-                return new ParsedCompleteObject(false, null, offset);
+                return new ParsedCompleteObject(false, null, offset, this);
             else if(parser.getProcessedCommand().findOptionNoActivatorCheck(lastWord) != null ||
                     parser.getProcessedCommand().findLongOptionNoActivatorCheck(lastWord) != null)
                 return findCompleteObjectValue(line, true);
             else
-                return new ParsedCompleteObject(false, null, offset);
+                return new ParsedCompleteObject(false, null, offset, this);
         }
         //last word is a value, need to find out what option its a value for
         else {
@@ -116,20 +116,20 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             else {
                 switch (lastWord) {
                     case "-":
-                        return new ParsedCompleteObject(true, "", 1);
+                        return new ParsedCompleteObject(true, "", 1, this);
                     case "--":
-                        return new ParsedCompleteObject(true, "", 2);
+                        return new ParsedCompleteObject(true, "", 2, this);
                     default:
                         //we have a complete shortName
                         if (!lastWord.startsWith("--") && lastWord.length() == 2)
                             return new ParsedCompleteObject(true,
-                                    Parser.trimOptionName(lastWord), lastWord.length(), true);
+                                    Parser.trimOptionName(lastWord), lastWord.length(), true, this);
                         else {
                             String optionName = Parser.trimOptionName(lastWord);
                             if (parser.getProcessedCommand().hasUniqueLongOption(optionName))
-                                return new ParsedCompleteObject(true, optionName, lastWord.length(), true);
+                                return new ParsedCompleteObject(true, optionName, lastWord.length(), true, this);
                             else
-                                return new ParsedCompleteObject(true, optionName, lastWord.length(), false);
+                                return new ParsedCompleteObject(true, optionName, lastWord.length(), false, this);
                         }
                 }
             }
@@ -149,7 +149,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
         if(cl.getArgument() != null && !cl.getArgument().getValues().isEmpty()) {
             return new ParsedCompleteObject("", endsWithSpace ? "" :
                     cl.getArgument().getValues().get(cl.getArgument().getValues().size() - 1),
-                    cl.getArgument().getType(), false);
+                    cl.getArgument().getType(), false, this);
         }
         //get the last option
         else if (cl.getOptions() != null && cl.getOptions().size() > 0) {
@@ -161,27 +161,27 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             if(endsWithSpace && po.getValue() != null &&  po.getValue().length() > 0 &&
                     (po.getOptionType() == OptionType.NORMAL || po.getOptionType() == OptionType.BOOLEAN)) {
                 if(cl.getArgument() == null)
-                    return new ParsedCompleteObject(true, "", 0);
+                    return new ParsedCompleteObject(true, "", 0, this);
                 else
-                    return new ParsedCompleteObject(true);
+                    return new ParsedCompleteObject(true, this);
             }
             else if(po.isLongNameUsed() || (po.getShortName() == null || po.getShortName().length() < 1))
                 return new ParsedCompleteObject(po.getName(),
                         endsWithSpace ? "" : po.getValues().get(po.getValues().size()-1),
-                        po.getType(), true);
+                        po.getType(), true, this);
             else
                 return new ParsedCompleteObject( po.getShortName(),
                         endsWithSpace ? "" : po.getValues().get(po.getValues().size()-1),
-                        po.getType(), true);
+                        po.getType(), true, this);
         }
         //probably something wrong with the parser
         else
-            return new ParsedCompleteObject(true, "", 0);
+            return new ParsedCompleteObject(true, "", 0, this);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void injectValuesAndComplete(ParsedCompleteObject completeObject, Command command,
+    public void injectValuesAndComplete(ParsedCompleteObject completeObject,
                                         CompleteOperation completeOperation,
                                         InvocationProviders invocationProviders) {
 

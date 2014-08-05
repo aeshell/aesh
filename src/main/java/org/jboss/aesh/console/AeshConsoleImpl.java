@@ -265,14 +265,14 @@ public class AeshConsoleImpl implements AeshConsole {
             else {
                 AeshLine aeshLine = Parser.findAllWords(completeOperation.getBuffer());
                 try (CommandContainer commandContainer = getCommand( aeshLine, completeOperation.getBuffer())) {
+
                     CommandLineCompletionParser completionParser = commandContainer
                         .getParser().getCompletionParser();
 
                     ParsedCompleteObject completeObject = completionParser
                             .findCompleteObject(completeOperation.getBuffer(),
                                     completeOperation.getCursor());
-                    completionParser.injectValuesAndComplete(completeObject,
-                            commandContainer.getCommand(), completeOperation, invocationProviders);
+                    completeObject.getCompletionParser().injectValuesAndComplete(completeObject, completeOperation, invocationProviders);
                 }
                 catch (CommandLineParserException e) {
                     LOGGER.warning(e.getMessage());
@@ -305,32 +305,6 @@ public class AeshConsoleImpl implements AeshConsole {
                 ResultHandler resultHandler = null;
                 AeshLine aeshLine = Parser.findAllWords(output.getBuffer());
                 try (CommandContainer commandContainer = getCommand( aeshLine, output.getBuffer())) {
-
-                    /*
-                    CommandLine commandLine = commandContainer.getParser()
-                        .parse(output.getBuffer());
-
-                    resultHandler = commandContainer.getParser().getProcessedCommand().getResultHandler();
-
-                    commandContainer
-                        .getParser()
-                        .getCommandPopulator()
-                        .populateObject(commandContainer.getCommand(),
-                            commandLine, invocationProviders, getAeshContext(), true);
-                    // validate the command before execute, only call if no
-                    // options with overrideRequired is not set
-                    if (commandContainer.getParser().getProcessedCommand() .getValidator() != null
-                        && !commandLine.hasOptionWithOverrideRequired())
-                        commandContainer.getParser().getProcessedCommand().getValidator()
-                            .validate(commandContainer.getCommand());
-
-                    result = commandContainer.getCommand().execute(
-                            commandInvocationServices.getCommandInvocationProvider(
-                                    commandInvocationProvider).enhanceCommandInvocation(
-                                    new AeshCommandInvocation(console,
-                                        output.getControlOperator(),
-                                         output.getPid(), this)));
-                    */
                     CommandContainerResult ccResult =
                             commandContainer.executeCommand(aeshLine, invocationProviders, getAeshContext(),
                             commandInvocationServices.getCommandInvocationProvider(

@@ -10,6 +10,7 @@ import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
+import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
@@ -59,6 +60,16 @@ public class AeshCommandContainer implements CommandContainer {
     }
 
     @Override
+    public CommandLineCompletionParser getCompletionParser(AeshLine aeshLine) {
+        return null;
+    }
+
+    @Override
+    public boolean isGroupCommand() {
+        return childCommands != null;
+    }
+
+    @Override
     public boolean haveBuildError() {
         return errorMessage != null;
     }
@@ -71,7 +82,9 @@ public class AeshCommandContainer implements CommandContainer {
     @Override
     public CommandContainerResult executeCommand(AeshLine line, InvocationProviders invocationProviders,
                                                  AeshContext aeshContext,
-                                                 CommandInvocation commandInvocation) throws CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException, InterruptedException {
+                                                 CommandInvocation commandInvocation)
+            throws CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException, InterruptedException {
+
         CommandLine commandLine = parser.parse(line, false);
         commandLine.getParser().getCommandPopulator().populateObject(commandLine.getParser().getCommand(), commandLine, invocationProviders, aeshContext, true);
         if(commandLine.getParser().getProcessedCommand().getValidator() != null &&
@@ -94,4 +107,6 @@ public class AeshCommandContainer implements CommandContainer {
         childCommands.add(commandContainer);
         ((AeshCommandLineParser) getParser()).addChildParser((AeshCommandLineParser) commandContainer.getParser());
     }
+
+
 }
