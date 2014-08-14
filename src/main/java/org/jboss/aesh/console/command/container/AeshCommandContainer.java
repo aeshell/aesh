@@ -40,6 +40,10 @@ public class AeshCommandContainer implements CommandContainer {
         parser = new AeshCommandLineParser(processedCommand, command);
     }
 
+    public AeshCommandContainer(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
     @Override
     public CommandLineParser getParser() {
         return parser;

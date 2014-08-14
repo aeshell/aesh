@@ -90,7 +90,8 @@ public class ProcessedCommandBuilder {
     }
 
     public ProcessedCommandBuilder addOptions(List<ProcessedOption> options) {
-        this.options.addAll(options);
+        if(options != null)
+            this.options.addAll(options);
         return this;
     }
 

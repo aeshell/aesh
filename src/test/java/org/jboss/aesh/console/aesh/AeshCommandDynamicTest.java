@@ -6,7 +6,11 @@
  */
 package org.jboss.aesh.console.aesh;
 
+import org.jboss.aesh.cl.builder.CommandBuilder;
+import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Config;
@@ -28,6 +32,8 @@ import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -47,7 +53,7 @@ public class AeshCommandDynamicTest {
                 .create();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
-                //.command()
+                .command(createGroupCommand().generate())
                 .create();
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
@@ -57,20 +63,36 @@ public class AeshCommandDynamicTest {
 
         AeshConsole aeshConsole = consoleBuilder.create();
 
-
-
+        assertEquals("group", registry.findAllCommandNames("gr").get(0));
         aeshConsole.start();
+
+        outputStream.write("group child1 --foo BAR".getBytes());
+        outputStream.write(Config.getLineSeparator().getBytes());
+        outputStream.flush();
+
+        Thread.sleep(80);
 
         aeshConsole.stop();
     }
 
-    private ProcessedCommand createGroupCommand() {
-        return null;
-        /*
-        return new ProcessedCommandBuilder()
+    private CommandBuilder createGroupCommand() {
+        CommandBuilder builder = new CommandBuilder()
                 .name("group")
                 .description("")
-                */
+                .addChild(
+                        new CommandBuilder()
+                                .name("child1")
+                                .description("")
+                                .command(new Child1Command())
+                                .addOption(new ProcessedOptionBuilder()
+                                        .optionType(OptionType.NORMAL)
+                                        .name("foo")
+                                        .fieldName("foo")
+                                        .type(String.class)
+                                        .hasValue(true)))
+                .command(new GroupCommand());
+
+        return builder;
     }
 
 
@@ -88,6 +110,7 @@ public class AeshCommandDynamicTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            assertEquals("BAR", foo);
             return CommandResult.SUCCESS;
         }
     }

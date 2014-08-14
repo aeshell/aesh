@@ -11,7 +11,7 @@ import org.jboss.aesh.cl.GroupCommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.activation.OptionActivator;
-import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
+import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
@@ -68,6 +68,26 @@ public class AeshExample {
 
     public static void main(String[] args) throws CommandLineParserException {
 
+
+        CommandBuilder fooCommand = new CommandBuilder()
+                .name("foo")
+                .description("fooing")
+                .addOption(new ProcessedOptionBuilder()
+                        .name("bar")
+                        .addDefaultValue("en 1 0")
+                        .addDefaultValue("to 2 0")
+                        .fieldName("bar")
+                        .type(String.class)
+                        .renderer(new BlueBoldRenderer())
+                        .create())
+                .addOption(new ProcessedOptionBuilder()
+                        .name("foo")
+                        .fieldName("foo")
+                        .type(String.class)
+                        .create())
+                .command(FooCommand.class);
+
+                /*
         ProcessedCommand fooCommand = new ProcessedCommandBuilder()
                 .name("foo")
                 .description("fooing")
@@ -85,6 +105,7 @@ public class AeshExample {
                         .type(String.class)
                         .create())
                 .create();
+                */
 
         SettingsBuilder builder = new SettingsBuilder().logging(true);
         builder.enableMan(true)
@@ -101,7 +122,7 @@ public class AeshExample {
         Settings settings = builder.create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
-                .command(fooCommand, FooCommand.class)
+                .command(fooCommand.generate())
                 .command(LsCommand.class)
                 .command(TestConsoleCommand.class)
                 .command(PromptCommand.class)
