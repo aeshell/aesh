@@ -10,7 +10,6 @@ import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
-import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
@@ -22,51 +21,28 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.parser.AeshLine;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshCommandContainer implements CommandContainer {
 
-    private Command command;
     private CommandLineParser parser;
     private String errorMessage;
-    private List<CommandContainer> childCommands;
 
-    public AeshCommandContainer(CommandLineParser parser, Command command) {
+    public AeshCommandContainer(CommandLineParser parser) {
         if (parser != null && parser.getProcessedCommand() != null) {
             this.parser = parser;
-            this.command = command;
         }
     }
 
-    public AeshCommandContainer(ProcessedCommand processedCommand,
-                                Command command) {
-        parser = new AeshCommandLineParser(processedCommand);
-        this.command = command;
-    }
-
-
-    @Override
-    public Command getCommand() {
-        return command;
+    public AeshCommandContainer(ProcessedCommand processedCommand, Command command) {
+        parser = new AeshCommandLineParser(processedCommand, command);
     }
 
     @Override
     public CommandLineParser getParser() {
         return parser;
-    }
-
-    @Override
-    public CommandLineCompletionParser getCompletionParser(AeshLine aeshLine) {
-        return null;
-    }
-
-    @Override
-    public boolean isGroupCommand() {
-        return childCommands != null;
     }
 
     @Override
@@ -102,11 +78,7 @@ public class AeshCommandContainer implements CommandContainer {
     }
 
     public void addChild(CommandContainer commandContainer) {
-        if(childCommands == null)
-            childCommands = new ArrayList<>();
-        childCommands.add(commandContainer);
         ((AeshCommandLineParser) getParser()).addChildParser((AeshCommandLineParser) commandContainer.getParser());
     }
-
 
 }

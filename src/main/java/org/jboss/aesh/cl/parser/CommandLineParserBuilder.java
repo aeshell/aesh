@@ -8,6 +8,7 @@ package org.jboss.aesh.cl.parser;
 
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.util.ReflectionUtil;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -15,15 +16,9 @@ import org.jboss.aesh.console.command.Command;
 public class CommandLineParserBuilder {
 
     private ProcessedCommand param;
-    private boolean isChild = false;
     private Command command;
 
     public CommandLineParserBuilder() {
-    }
-
-    public CommandLineParserBuilder child(boolean isChild) {
-        this.isChild = isChild;
-        return this;
     }
 
     public CommandLineParserBuilder processedCommand(ProcessedCommand param) {
@@ -36,8 +31,14 @@ public class CommandLineParserBuilder {
         return this;
     }
 
+    public CommandLineParserBuilder command(Class<? extends Command> command) {
+        this.command = ReflectionUtil.newInstance(command);
+        return this;
+    }
+
+
     public CommandLineParser create() throws IllegalArgumentException {
-        return new AeshCommandLineParser( param, command, isChild);
+        return new AeshCommandLineParser( param, command);
     }
 
 }

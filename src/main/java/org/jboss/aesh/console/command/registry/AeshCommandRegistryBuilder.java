@@ -54,16 +54,9 @@ public class AeshCommandRegistryBuilder {
         return this;
     }
 
-     public AeshCommandRegistryBuilder command(CommandLineParser parser,
-            Class<? extends Command> command) {
-        commandRegistry.addCommand(new AeshCommandContainer(parser,
-                ReflectionUtil.newInstance(command)));
-        return this;
-    }
 
-    public AeshCommandRegistryBuilder command(CommandLineParser parser,
-            Command command) {
-        commandRegistry.addCommand(new AeshCommandContainer(parser, command));
+    public AeshCommandRegistryBuilder command(CommandLineParser parser) {
+        commandRegistry.addCommand(new AeshCommandContainer(parser));
         return this;
     }
 

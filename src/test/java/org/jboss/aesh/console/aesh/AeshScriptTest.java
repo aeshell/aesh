@@ -160,12 +160,10 @@ public class AeshScriptTest {
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             if(counter < 1) {
                 commandInvocation.getShell().out().println("computing...." + Config.getLineSeparator() + "finished computing, returning...");
-                System.out.println("computing...");
                 counter ++;
                 return CommandResult.SUCCESS;
             }
             else {
-                System.out.println("computing2...");
                 assertTrue(false);
                 return CommandResult.FAILURE;
             }

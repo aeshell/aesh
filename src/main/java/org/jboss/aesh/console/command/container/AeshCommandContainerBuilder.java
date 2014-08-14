@@ -24,7 +24,6 @@ public class AeshCommandContainerBuilder implements CommandContainerBuilder {
             e.printStackTrace();
             return null;
         }
-        //return new AeshCommandContainer(command);
     }
 
     @Override

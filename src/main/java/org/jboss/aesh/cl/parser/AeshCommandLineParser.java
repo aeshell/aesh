@@ -43,16 +43,20 @@ public class AeshCommandLineParser implements CommandLineParser {
         this.processedCommand = processedCommand;
     }
 
-    public AeshCommandLineParser(ProcessedCommand processedCommand, Command command, boolean isChild) {
+    public AeshCommandLineParser(ProcessedCommand processedCommand, Command command ) {
         this.processedCommand = processedCommand;
         this.command = command;
-        this.isChild = isChild;
     }
 
     public void addChildParser(AeshCommandLineParser commandLineParser) {
         if(childParsers == null)
             childParsers = new ArrayList<>();
+        commandLineParser.setChild(true);
         childParsers.add(commandLineParser);
+    }
+
+    private void setChild(boolean child) {
+        isChild = child;
     }
 
     @Override

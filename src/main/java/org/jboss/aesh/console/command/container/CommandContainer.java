@@ -7,13 +7,11 @@
 package org.jboss.aesh.console.command.container;
 
 import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;
-import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.parser.AeshLine;
 
@@ -31,18 +29,10 @@ import java.io.IOException;
 public interface CommandContainer extends AutoCloseable {
 
     /**
-     * @return command
-     */
-    Command getCommand();
-
-    /**
      * @return parser generated from Command
      */
     CommandLineParser getParser();
 
-    CommandLineCompletionParser getCompletionParser(AeshLine aeshLine);
-
-    boolean isGroupCommand();
     /**
      * @return true if the CommandLineParser or Command generation generated any errors
      */
