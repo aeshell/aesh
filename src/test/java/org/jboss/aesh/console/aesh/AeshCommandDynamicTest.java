@@ -8,8 +8,6 @@ package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.internal.OptionType;
-import org.jboss.aesh.cl.internal.ProcessedCommand;
-import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
