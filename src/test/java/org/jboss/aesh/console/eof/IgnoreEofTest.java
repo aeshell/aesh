@@ -73,7 +73,11 @@ public class IgnoreEofTest extends BaseConsoleTest {
                 out.flush();
                 Thread.sleep(100);
 
-                assertFalse(console.isRunning());
+                out.write(Key.CTRL_D.getFirstValue());
+                out.flush();
+                Thread.sleep(100);
+
+                 assertFalse(console.isRunning());
             }
         }, new Verify() {
            @Override
@@ -122,7 +126,8 @@ public class IgnoreEofTest extends BaseConsoleTest {
                 out.flush();
                 Thread.sleep(100);
 
-                assertFalse(console.isRunning());            }
+                assertFalse(console.isRunning());
+            }
         }, new Verify() {
            @Override
            public int call(Console console, ConsoleOperation op) {
@@ -174,6 +179,10 @@ public class IgnoreEofTest extends BaseConsoleTest {
         Thread.sleep(100);
 
         outputStream.write(("foo").getBytes());
+        outputStream.flush();
+        Thread.sleep(100);
+
+        outputStream.write(Key.CTRL_D.getFirstValue());
         outputStream.flush();
         Thread.sleep(100);
 

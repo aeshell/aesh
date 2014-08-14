@@ -9,6 +9,7 @@ package org.jboss.aesh.console.command.registry;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.container.CommandContainer;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -25,6 +26,14 @@ public interface CommandRegistry {
      * @throws org.jboss.aesh.console.command.CommandNotFoundException
      */
     CommandContainer getCommand(String name, String line) throws CommandNotFoundException;
+
+    /**
+     * Based on input, find all commands that match or partly match
+     *
+     * @param line input
+     * @return matching/partly patching commands
+     */
+    List<String> findAllCommandNames(String line);
 
     /**
      * @return all specified command names

@@ -22,40 +22,46 @@ public class ParsedCompleteObject {
     private final boolean displayArguments = false;
     private boolean completeOptionName = false;
     private int offset = 0;
+    private CommandLineCompletionParser completionParser;
 
-    public ParsedCompleteObject(boolean displayArguments) {
+    public ParsedCompleteObject(boolean displayArguments, CommandLineCompletionParser completionParser) {
         this.option = !displayArguments;
         this.argument = !option;
+        this.completionParser = completionParser;
     }
 
-    public ParsedCompleteObject(boolean displayOptions, String name, int offset) {
+    public ParsedCompleteObject(boolean displayOptions, String name, int offset, CommandLineCompletionParser completionParser) {
         this.displayOptions = displayOptions;
         this.offset = offset;
         this.name = name;
         this.value = "";
         this.type = null;
         this.option = false;
+        this.completionParser = completionParser;
     }
 
-    public ParsedCompleteObject(boolean displayOptions, String name, int offset, boolean completeOptionName) {
-        this(displayOptions, name, offset);
+    public ParsedCompleteObject(boolean displayOptions, String name, int offset, boolean completeOptionName,
+                                CommandLineCompletionParser completionParser) {
+        this(displayOptions, name, offset, completionParser);
         this.completeOptionName = completeOptionName;
     }
 
     public ParsedCompleteObject(String name, String value,
-                                Class<?> type, boolean option, boolean completeOptionName) {
-        this(name, value, type, option);
+                                Class<?> type, boolean option, boolean completeOptionName,
+                                CommandLineCompletionParser completionParser) {
+        this(name, value, type, option, completionParser);
         this.completeOptionName = completeOptionName;
     }
 
     public ParsedCompleteObject(String name, String value,
-                                Class<?> type, boolean option) {
+                                Class<?> type, boolean option, CommandLineCompletionParser completionParser) {
         this.name = name;
         this.value = value;
         this.type = type;
         this.option = option;
         this.argument = !this.option;
         this.offset = value.length();
+        this.completionParser = completionParser;
     }
 
     public String getName() {
@@ -88,6 +94,10 @@ public class ParsedCompleteObject {
 
     public boolean isCompleteOptionName() {
         return completeOptionName;
+    }
+
+    public CommandLineCompletionParser getCompletionParser() {
+        return completionParser;
     }
 
     @Override

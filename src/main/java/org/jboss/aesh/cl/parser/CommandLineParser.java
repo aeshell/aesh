@@ -8,6 +8,8 @@ package org.jboss.aesh.cl.parser;
 
 import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.parser.AeshLine;
 
 import java.util.List;
 
@@ -24,12 +26,28 @@ public interface CommandLineParser {
     /**
      * @return the processed command this parser is generated from
      */
-    ProcessedCommand getCommand();
+    ProcessedCommand getProcessedCommand();
+
+    /**
+     * @return the actual command
+     */
+    Command getCommand();
 
     /**
      * @return completion parser created to work on this command
      */
     CommandLineCompletionParser getCompletionParser();
+
+    /**
+     * @param name command
+     * @return child parser that matches the name
+     */
+    CommandLineParser getChildParser(String name);
+
+    /**
+     * @return all the child parser
+     */
+    List<CommandLineParser> getAllChildParsers();
 
     /**
      * @return command populator to work on this command
@@ -73,6 +91,8 @@ public interface CommandLineParser {
      */
     CommandLine parse(String line, boolean ignoreRequirements);
 
+    CommandLine parse(AeshLine line, boolean ignoreRequirements);
+
     /**
      * Parse a command line with the defined command as base of the rules.
      * This method is useful when parsing a command line program thats not
@@ -85,4 +105,7 @@ public interface CommandLineParser {
      */
     CommandLine parse(List<String> lines, boolean ignoreRequirements);
 
+    void clear();
+
+    boolean isGroupCommand();
 }

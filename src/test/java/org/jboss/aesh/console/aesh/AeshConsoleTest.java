@@ -10,11 +10,11 @@ import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
-import org.jboss.aesh.cl.builder.CommandBuilder;
-import org.jboss.aesh.cl.builder.OptionBuilder;
+import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
+import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
-import org.jboss.aesh.cl.parser.AeshCommandLineParser;
+import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsole;
@@ -65,20 +65,20 @@ public class AeshConsoleTest extends BaseConsoleTest {
                 .logging(true)
                 .create();
 
-        ProcessedCommand fooCommand = new CommandBuilder()
+        ProcessedCommand fooCommand = new ProcessedCommandBuilder()
                 .name("foo")
                 .description("fooing")
-                .addOption(new OptionBuilder()
+                .addOption(new ProcessedOptionBuilder()
                         .name("bar")
                         .addDefaultValue("en")
                         .addDefaultValue("to")
                         .type(String.class)
                         .fieldName("bar")
                         .create())
-                .generateCommand();
+                .create();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(new AeshCommandLineParser(fooCommand), FooTestCommand.class)
+                .command(new CommandLineParserBuilder().processedCommand(fooCommand).command(FooTestCommand.class).create())
                 .command(LsCommand.class)
                 .create();
 

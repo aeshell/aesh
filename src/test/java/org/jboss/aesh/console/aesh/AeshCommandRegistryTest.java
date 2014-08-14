@@ -13,6 +13,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.jboss.aesh.console.AeshConsole;
@@ -53,6 +54,11 @@ public class AeshCommandRegistryTest {
             @Override
             public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
                 throw new IllegalStateException("Should not crash Aesh");
+            }
+
+            @Override
+            public List<String> findAllCommandNames(String line) {
+                return null;
             }
 
             @Override
@@ -102,6 +108,11 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
+            public List<String> findAllCommandNames(String line) {
+                return null;
+            }
+
+            @Override
             public Set<String> getAllCommandNames() {
                 return null;
             }
@@ -141,6 +152,11 @@ public class AeshCommandRegistryTest {
 
             @Override
             public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
+                return null;
+            }
+
+            @Override
+            public List<String> findAllCommandNames(String line) {
                 return null;
             }
 

@@ -7,11 +7,12 @@
 
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
+import org.jboss.aesh.cl.GroupCommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.builder.CommandBuilder;
-import org.jboss.aesh.cl.builder.OptionBuilder;
+import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
@@ -67,10 +68,11 @@ public class AeshExample {
 
     public static void main(String[] args) throws CommandLineParserException {
 
-        ProcessedCommand fooCommand = new CommandBuilder()
+
+        CommandBuilder fooCommand = new CommandBuilder()
                 .name("foo")
                 .description("fooing")
-                .addOption(new OptionBuilder()
+                .addOption(new ProcessedOptionBuilder()
                         .name("bar")
                         .addDefaultValue("en 1 0")
                         .addDefaultValue("to 2 0")
@@ -78,12 +80,32 @@ public class AeshExample {
                         .type(String.class)
                         .renderer(new BlueBoldRenderer())
                         .create())
-                .addOption(new OptionBuilder()
+                .addOption(new ProcessedOptionBuilder()
                         .name("foo")
                         .fieldName("foo")
                         .type(String.class)
                         .create())
-                .generateCommand();
+                .command(FooCommand.class);
+
+                /*
+        ProcessedCommand fooCommand = new ProcessedCommandBuilder()
+                .name("foo")
+                .description("fooing")
+                .addOption(new ProcessedOptionBuilder()
+                        .name("bar")
+                        .addDefaultValue("en 1 0")
+                        .addDefaultValue("to 2 0")
+                        .fieldName("bar")
+                        .type(String.class)
+                        .renderer(new BlueBoldRenderer())
+                        .create())
+                .addOption(new ProcessedOptionBuilder()
+                        .name("foo")
+                        .fieldName("foo")
+                        .type(String.class)
+                        .create())
+                .create();
+                */
 
         SettingsBuilder builder = new SettingsBuilder().logging(true);
         builder.enableMan(true)
@@ -100,11 +122,12 @@ public class AeshExample {
         Settings settings = builder.create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
-                .command(fooCommand, FooCommand.class)
+                .command(fooCommand.generate())
                 .command(LsCommand.class)
                 .command(TestConsoleCommand.class)
                 .command(PromptCommand.class)
                 .command(RunCommand.class)
+                .command(GroupCommand.class)
                 .create();
 
         AeshConsole aeshConsole = new AeshConsoleBuilder()
@@ -440,4 +463,36 @@ public class AeshExample {
         }
     }
 
+    @GroupCommandDefinition(name = "group", description = "", groupCommands = {Child1.class, Child2.class})
+    public static class GroupCommand implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            commandInvocation.getShell().out().println("only executed group, it doesnt do much...");
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "child1", description = "")
+    public static class Child1 implements Command {
+        @Option
+        private String foo;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            commandInvocation.getShell().out().println("foo is set to: "+foo);
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "child2", description = "")
+    public static class Child2 implements Command {
+        @Option
+        private boolean bar;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            commandInvocation.getShell().out().println("bar is set to: "+bar);
+            return CommandResult.SUCCESS;
+        }
+    }
 }

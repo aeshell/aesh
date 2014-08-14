@@ -6,23 +6,15 @@
  */
 package org.jboss.aesh.cl.internal;
 
-import org.jboss.aesh.cl.activation.OptionActivator;
-import org.jboss.aesh.cl.completer.OptionCompleter;
-import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.exception.OptionParserException;
-import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.result.NullResultHandler;
 import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidator;
-import org.jboss.aesh.cl.validator.NullCommandValidator;
-import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.terminal.TerminalString;
-import org.jboss.aesh.util.ReflectionUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -38,37 +30,12 @@ public final class ProcessedCommand {
     private List<ProcessedOption> options;
     private ProcessedOption argument;
 
-    public ProcessedCommand(String name, String description, CommandValidator validator,
-                            ResultHandler resultHandler) {
-        setName(name);
-        setDescription(description);
-        setValidator(validator);
-        setResultHandler(resultHandler);
-        options = new ArrayList<>();
-    }
-
-    public ProcessedCommand(String name, String description,Class<? extends CommandValidator> validator,
-                            Class<? extends ResultHandler> resultHandler) {
-        setName(name);
-        setDescription(description);
-        setValidator(initValidator(validator));
-        setResultHandler(initResultHandler(resultHandler));
-        options = new ArrayList<>();
-    }
-
-    public ProcessedCommand(String name, String description, ProcessedOption argument) {
-        setName(name);
-        setDescription(description);
-        this.argument = argument;
-        options = new ArrayList<>();
-    }
-
     public ProcessedCommand(String name, String description, CommandValidator validator, ResultHandler resultHandler,
-                            ProcessedOption argument, List<ProcessedOption> options) throws OptionParserException {
+                            ProcessedOption argument, List<ProcessedOption> options ) throws OptionParserException {
         setName(name);
         setDescription(description);
-        setValidator(validator);
-        setResultHandler(resultHandler);
+        this.validator = validator;
+        this.resultHandler = resultHandler;
         this.argument = argument;
         this.options = new ArrayList<>();
         setOptions(options);
@@ -83,50 +50,6 @@ public final class ProcessedCommand {
                 opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                 opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(), opt.getConverter(),
                 opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer(), opt.doOverrideRequired()));
-    }
-
-    /**
-     * Add an option
-     * Name or name can be null
-     * Both argument and type can be null
-     *
-     * @param name name (short) one char
-     * @param longName multi character name
-     * @param description a description of the option
-     * @param argument what kind of argument this option can have
-     * @param required is it required?
-     * @param valueSeparator separator char
-     * @param defaultValue the default value
-     * @param type what kind of type it is (not used)
-     */
-    public void addOption(char name, String longName, String description,
-                     String argument, boolean required, char valueSeparator,
-                     String[] defaultValue, Class<?> type, String fieldName, OptionType optionType,
-                     Class<? extends Converter> converter,
-                     Class<? extends OptionCompleter> completer,
-                     Class<? extends OptionValidator> validator,
-                     Class<? extends OptionActivator> activator,
-                     Class<? extends OptionRenderer> renderer) throws OptionParserException {
-        List<String> defaultValues = new ArrayList<>();
-        defaultValues.addAll(Arrays.asList(defaultValue));
-        options.add(new ProcessedOption(verifyThatNamesAreUnique(name, longName), longName, description,
-                argument, required, valueSeparator, defaultValues,
-                type, fieldName, optionType, converter, completer, validator, activator, renderer));
-    }
-
-    public void addOption(char name, String longName, String description,
-                     String argument, boolean required, char valueSeparator,
-                     String[] defaultValue, Class<?> type, String fieldName, OptionType optionType,
-                     Class<? extends Converter> converter,
-                     Class<? extends OptionCompleter> completer,
-                     Class<? extends OptionValidator> validator,
-                     Class<? extends OptionActivator> activator,
-                     Class<? extends OptionRenderer> renderer, boolean overrideRequired) throws OptionParserException {
-        List<String> defaultValues = new ArrayList<>();
-        defaultValues.addAll(Arrays.asList(defaultValue));
-        options.add(new ProcessedOption(verifyThatNamesAreUnique(name, longName), longName, description,
-                argument, required, valueSeparator, defaultValues,
-                type, fieldName, optionType, converter, completer, validator, activator, renderer, overrideRequired));
     }
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
@@ -155,37 +78,11 @@ public final class ProcessedCommand {
         this.description = description;
     }
 
-    private CommandValidator initValidator(Class<? extends CommandValidator> validator) {
-        if(validator != null && !validator.equals(NullCommandValidator.class))
-            return ReflectionUtil.newInstance(validator);
-        else
-            return new NullCommandValidator();
-    }
-
-    private ResultHandler initResultHandler(Class<? extends ResultHandler> resultHandler) {
-        if(resultHandler != null && !resultHandler.equals(NullResultHandler.class))
-            return ReflectionUtil.newInstance(resultHandler);
-        else
-            return new NullResultHandler();
-    }
-
     public CommandValidator getValidator() {
         return validator;
     }
 
-    private void setValidator(CommandValidator validator) {
-        if(validator == null)
-            validator = new NullCommandValidator();
-        this.validator = validator;
-    }
-
     public ResultHandler getResultHandler() { return resultHandler; }
-
-    private void setResultHandler(ResultHandler resultHandler) {
-        if(resultHandler == null)
-            resultHandler = new NullResultHandler();
-        this.resultHandler = resultHandler;
-    }
 
     public boolean hasArgument() {
         return argument != null && argument.hasMultipleValues();

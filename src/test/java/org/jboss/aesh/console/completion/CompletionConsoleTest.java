@@ -15,8 +15,8 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
 
-import org.jboss.aesh.cl.builder.CommandBuilder;
-import org.jboss.aesh.cl.builder.OptionBuilder;
+import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
+import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
@@ -190,11 +190,11 @@ public class CompletionConsoleTest extends BaseConsoleTest {
     @Test
     public void completionWithOptions() throws IOException, InterruptedException, CommandLineParserException {
 
-        final ProcessedCommand param = new CommandBuilder().name("less")
+        final ProcessedCommand param = new ProcessedCommandBuilder().name("less")
                 .description("less -options <files>")
-                .generateCommand();
+                .create();
 
-        param.addOption(new OptionBuilder().shortName('f').name("foo").hasValue(true).type(String.class).create());
+        param.addOption(new ProcessedOptionBuilder().shortName('f').name("foo").hasValue(true).type(String.class).create());
 
         final CommandLineParser parser = new AeshCommandLineParser(param);
         final StringBuilder builder = new StringBuilder();
@@ -202,21 +202,21 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         Completion completion = new Completion() {
             @Override
             public void complete(CompleteOperation co) {
-                if(parser.getCommand().getName().startsWith(co.getBuffer())) {
-                    co.addCompletionCandidate(parser.getCommand().getName());
+                if(parser.getProcessedCommand().getName().startsWith(co.getBuffer())) {
+                    co.addCompletionCandidate(parser.getProcessedCommand().getName());
                 }
                 // commandline longer than the name
-                else if(co.getBuffer().startsWith(parser.getCommand().getName())){
-                   if(co.getBuffer().length() > parser.getCommand().getName().length())  {
+                else if(co.getBuffer().startsWith(parser.getProcessedCommand().getName())){
+                   if(co.getBuffer().length() > parser.getProcessedCommand().getName().length())  {
                       if(co.getBuffer().endsWith(" --")) {
-                         for(ProcessedOption o : parser.getCommand().getOptions()) {
+                         for(ProcessedOption o : parser.getProcessedCommand().getOptions()) {
                              co.addCompletionCandidate("--"+o.getName());
                              builder.append(o.getName()+" ");
                          }
                           co.setOffset(co.getOffset());
                       }
                       else if(co.getBuffer().endsWith(" -")) {
-                          for(ProcessedOption o : parser.getCommand().getOptions()) {
+                          for(ProcessedOption o : parser.getProcessedCommand().getOptions()) {
                               co.addCompletionCandidate("-"+o.getShortName());
                               builder.append("-"+o.getShortName()+" ");
                           }

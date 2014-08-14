@@ -7,7 +7,7 @@
 package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.builder.CommandBuilder;
+import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.result.ResultHandler;
@@ -71,10 +71,10 @@ public class AeshScriptTest {
 
 
         CommandResultHandler resultHandler = new CommandResultHandler();
-        ProcessedCommand fooCommand = new CommandBuilder()
+        ProcessedCommand fooCommand = new ProcessedCommandBuilder()
                 .name("foo")
                 .resultHandler(resultHandler)
-                .generateCommand();
+                .create();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(fooCommand, FooCommand.class)
@@ -160,12 +160,10 @@ public class AeshScriptTest {
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             if(counter < 1) {
                 commandInvocation.getShell().out().println("computing...." + Config.getLineSeparator() + "finished computing, returning...");
-                System.out.println("computing...");
                 counter ++;
                 return CommandResult.SUCCESS;
             }
             else {
-                System.out.println("computing2...");
                 assertTrue(false);
                 return CommandResult.FAILURE;
             }

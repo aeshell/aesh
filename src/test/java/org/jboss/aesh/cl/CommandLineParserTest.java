@@ -27,7 +27,7 @@ public class CommandLineParserTest {
     @Test
     public void testParseCommandLine1() throws CommandLineParserException {
 
-        CommandLineParser parser = ParserGenerator.generateCommandLineParser(Parser1Test.class);
+        CommandLineParser parser = ParserGenerator.generateCommandLineParser(Parser1Test.class).getParser();
 
         CommandLine cl = parser.parse("test -f -e bar -Df=g /tmp/file.txt");
         assertEquals("f", cl.getOptions().get(0).getShortName());
@@ -113,7 +113,7 @@ public class CommandLineParserTest {
     @Test
     public void testParseCommandLine2() throws CommandLineParserException {
 
-        CommandLineParser parser = ParserGenerator.generateCommandLineParser(Parser2Test.class);
+        CommandLineParser parser = ParserGenerator.generateCommandLineParser(Parser2Test.class).getParser();
 
         CommandLine cl = parser.parse("test -d true --bar Foo.class");
         assertTrue(cl.hasOption('d'));
@@ -135,6 +135,21 @@ public class CommandLineParserTest {
 
     }
 
+    @Test
+    public void testParseGroupCommand() throws CommandLineParserException {
+        CommandLineParser parser = ParserGenerator.generateCommandLineParser(GroupCommandTest.class).getParser();
+
+        CommandLine cl = parser.parse("group child1 --foo BAR");
+        assertTrue(cl.hasOption("foo"));
+        assertEquals("BAR", cl.getOptionValue("foo"));
+
+        cl = parser.parse("group child1 --foo BAR --bar FOO");
+        assertTrue(cl.hasOption("foo"));
+        assertTrue(cl.hasOption("bar"));
+        assertEquals("BAR", cl.getOptionValue("foo"));
+        assertEquals("FOO", cl.getOptionValue("bar"));
+    }
+
     public void testParseCommandLine3() {
         /*
         try {
@@ -149,7 +164,7 @@ public class CommandLineParserTest {
 
     @Test
     public void testParseCommandLine4() throws CommandLineParserException {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(Parser4Test.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(Parser4Test.class).getParser();
 
         CommandLine cl = clp.parse("test -o bar1,bar2,bar3 foo");
         assertTrue(cl.hasOption('o'));
@@ -183,60 +198,78 @@ public class CommandLineParserTest {
         assertTrue(cl.hasOption("bar"));
         assertEquals(Integer.class, cl.getOption("bar").getType());
     }
+
+    @CommandDefinition(name = "test", description = "a simple test")
+    public class Parser1Test {
+
+        @Option(shortName = 'X', name = "X", description = "enable X", hasValue = false)
+        private Boolean enableX;
+
+        @Option(shortName = 'f', name = "foo", description = "enable foo", hasValue = false)
+        private Boolean foo;
+
+        @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
+        private String equal;
+
+        @OptionGroup(shortName = 'D', description = "define properties", required = true)
+        private Map<String,String> define;
+
+        @Arguments
+        private List<String> arguments;
+    }
+
+    @CommandDefinition(name = "test", description = "more [options] file...")
+    public class Parser2Test {
+        @Option(shortName = 'd', name = "display", description = "display help instead of ring bell")
+        private String display;
+
+        @Option(shortName = 'b', name = "bar", argument = "classname", required = true, description = "bar bar")
+        private String bar;
+
+        @Option(shortName = 'V', name = "version", description = "output version information and exit")
+        private String version;
+
+        @Arguments
+        private List<String> arguments;
+    }
+
+    @CommandDefinition(name = "test", description = "this is a command without options")
+    public class Parser3Test {}
+
+    @CommandDefinition(name = "test", description = "testing multiple values")
+    public class Parser4Test {
+        @OptionList(shortName = 'o', name="option", valueSeparator = ',')
+        private List<String> option;
+
+        @OptionList
+        private List<Integer> bar;
+
+        @OptionList(shortName = 'h', valueSeparator = ':')
+        private List<String> help;
+
+        @OptionList(shortName = 'e', valueSeparator = ' ')
+        private List<String> help2;
+
+        @Arguments
+        private List<String> arguments;
+    }
+
+    @CommandDefinition(name = "child1", description = "")
+    public class ChildTest1 {
+
+        @Option
+        private String foo;
+
+        @Option
+        private String bar;
+
+    }
+
+    @GroupCommandDefinition(name = "group", description = "", groupCommands = {ChildTest1.class})
+    public class GroupCommandTest {
+
+        @Option(hasValue = false)
+        private boolean help;
+
+    }
 }
-
-@CommandDefinition(name = "test", description = "a simple test")
-class Parser1Test {
-
-    @Option(shortName = 'X', name = "X", description = "enable X", hasValue = false)
-    private Boolean enableX;
-
-    @Option(shortName = 'f', name = "foo", description = "enable foo", hasValue = false)
-    private Boolean foo;
-
-    @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
-    private String equal;
-
-    @OptionGroup(shortName = 'D', description = "define properties", required = true)
-    private Map<String,String> define;
-
-    @Arguments
-    private List<String> arguments;
-}
-
-@CommandDefinition(name = "test", description = "more [options] file...")
-class Parser2Test {
-    @Option(shortName = 'd', name = "display", description = "display help instead of ring bell")
-    private String display;
-
-    @Option(shortName = 'b', name = "bar", argument = "classname", required = true, description = "bar bar")
-    private String bar;
-
-    @Option(shortName = 'V', name = "version", description = "output version information and exit")
-    private String version;
-
-    @Arguments
-    private List<String> arguments;
-}
-
-@CommandDefinition(name = "test", description = "this is a command without options")
-class Parser3Test {}
-
-@CommandDefinition(name = "test", description = "testing multiple values")
-class Parser4Test {
-    @OptionList(shortName = 'o', name="option", valueSeparator = ',')
-    private List<String> option;
-
-    @OptionList
-    private List<Integer> bar;
-
-    @OptionList(shortName = 'h', valueSeparator = ':')
-    private List<String> help;
-
-    @OptionList(shortName = 'e', valueSeparator = ' ')
-    private List<String> help2;
-
-    @Arguments
-    private List<String> arguments;
-}
-

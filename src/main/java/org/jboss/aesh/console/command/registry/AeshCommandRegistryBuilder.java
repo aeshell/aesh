@@ -10,7 +10,9 @@ import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.container.AeshCommandContainer;
+import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainerBuilder;
+import org.jboss.aesh.util.ReflectionUtil;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -42,7 +44,8 @@ public class AeshCommandRegistryBuilder {
 
     public AeshCommandRegistryBuilder command(ProcessedCommand processedCommand,
             Class<? extends Command> command) {
-        commandRegistry.addCommand(new AeshCommandContainer(processedCommand, command));
+        commandRegistry.addCommand(new AeshCommandContainer(processedCommand,
+                ReflectionUtil.newInstance(command)));
         return this;
     }
 
@@ -52,15 +55,14 @@ public class AeshCommandRegistryBuilder {
         return this;
     }
 
-     public AeshCommandRegistryBuilder command(CommandLineParser parser,
-            Class<? extends Command> command) {
-        commandRegistry.addCommand(new AeshCommandContainer(parser, command));
+    public AeshCommandRegistryBuilder command(CommandContainer commandContainer) {
+        commandRegistry.addCommand(commandContainer);
         return this;
     }
 
-    public AeshCommandRegistryBuilder command(CommandLineParser parser,
-            Command command) {
-        commandRegistry.addCommand(new AeshCommandContainer(parser, command));
+
+    public AeshCommandRegistryBuilder command(CommandLineParser parser) {
+        commandRegistry.addCommand(new AeshCommandContainer(parser));
         return this;
     }
 

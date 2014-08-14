@@ -62,6 +62,9 @@ public class EmacsEditMode extends AbstractEditMode {
     }
 
     private Operation findOperation(KeyOperation currentOperation, String buffer) {
+        //just make sure that we always clear eof when we get a new operation
+        if(currentOperation.getOperation() != Operation.EOF)
+            resetEOF();
         //search mode need special handling
         if(mode == Action.SEARCH) {
                 if(currentOperation.getOperation() == Operation.NEW_LINE) {
@@ -102,8 +105,10 @@ public class EmacsEditMode extends AbstractEditMode {
                     else
                         return Operation.IGNOREEOF;
                 }
-                else
+                else {
+                    resetEOF();
                     return Operation.DELETE_NEXT_CHAR;
+                }
             }
 
             return operation;

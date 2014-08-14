@@ -26,7 +26,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testParseCompleteObject() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1", 100);
@@ -70,23 +70,23 @@ public class ParseCompleteObjectTest {
         assertTrue(pco.doDisplayOptions());
         assertTrue(pco.isCompleteOptionName());
         assertEquals("e", pco.getName());
-        clp.getCommand().clear();
-        assertEquals("--equal", clp.getCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
+        clp.getProcessedCommand().clear();
+        assertEquals("--equal", clp.getProcessedCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
 
         pco = completeParser.findCompleteObject("test --eq", 100);
         assertTrue(pco.doDisplayOptions());
         assertFalse(pco.isCompleteOptionName());
         assertEquals("eq", pco.getName());
         assertEquals(4, pco.getOffset());
-        clp.getCommand().clear();
-        assertEquals("--equal", clp.getCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
+        clp.getProcessedCommand().clear();
+        assertEquals("--equal", clp.getProcessedCommand().findPossibleLongNamesWitdDash(pco.getName()).get(0).getCharacters());
 
-        clp.getCommand().clear();
+        clp.getProcessedCommand().clear();
         pco = completeParser.findCompleteObject("test --", 100);
         assertTrue(pco.doDisplayOptions());
         assertEquals("", pco.getName());
         assertEquals(2, pco.getOffset());
-        assertEquals(4, clp.getCommand().getOptionLongNamesWithDash().size());
+        assertEquals(4, clp.getProcessedCommand().getOptionLongNamesWithDash().size());
 
         pco = completeParser.findCompleteObject("test --equal true  ", 100);
         assertTrue(pco.isArgument());
@@ -129,7 +129,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testParseCompleteObject2() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e ", 100);
@@ -145,7 +145,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testParseCompleteObject3() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest3.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest3.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -v 1 2 3 ", 100);
@@ -161,7 +161,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testCursorInsideBuffer() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1  asdfjeaasdfae", 12);
@@ -198,13 +198,12 @@ public class ParseCompleteObjectTest {
 
         pco = completeParser.findCompleteObject("test --equal true foo.txt  bar.txt", 25);
         assertEquals("foo.txt", pco.getValue());
-        //assertEquals(String.class, pco.getStyle());
         assertTrue(pco.isArgument());
     }
 
     @Test
     public void testCompletionWithNoArguments() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class);
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test ", 4);
@@ -216,54 +215,123 @@ public class ParseCompleteObjectTest {
         assertTrue(pco.doDisplayOptions());
     }
 
-}
-@CommandDefinition(name = "test", description = "a simple test")
-class ParseCompleteTest1 {
+    @Test
+    public void testGroupCompletion() throws Exception {
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteGroupTest.class).getParser();
+        CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
-    @Option(name = "X", description = "enable X")
-    private String X;
+        ParsedCompleteObject pco = completeParser.findCompleteObject("group child1 --en", 20);
+        assertTrue(pco.doDisplayOptions());
+        assertFalse(pco.isCompleteOptionName());
+        assertEquals("en", pco.getName());
+        assertEquals(4, pco.getOffset());
 
-    @Option(shortName = 'f', name = "foo", description = "enable foo")
-    private Boolean foo;
+        clp.getProcessedCommand().clear();
+        pco = completeParser.findCompleteObject("group child1 --enable foo", 25);
+        assertEquals("foo", pco.getValue());
+        assertTrue(pco.isOption());
+        assertEquals(String.class, pco.getType());
 
-    @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
-    private String equal;
+        pco = completeParser.findCompleteObject("group child1 --en", 20);
+        assertTrue(pco.doDisplayOptions());
+        assertEquals("", pco.getValue());
+        assertFalse(pco.isCompleteOptionName());
+        assertEquals("en", pco.getName());
+        assertEquals(4, pco.getOffset());
 
-    @Option(shortName = 'D', description = "define properties", required = true)
-    private String define;
 
-    @Arguments
-    private List<String> arguments;
+        clp.getProcessedCommand().clear();
+        pco = completeParser.findCompleteObject("group child2 --", 100);
+        assertTrue(pco.doDisplayOptions());
+        assertEquals("", pco.getName());
+        assertEquals(2, pco.getOffset());
 
-}
 
-@CommandDefinition(name = "test", description = "a simple test")
-class ParseCompleteTest2 {
+        clp.getProcessedCommand().clear();
+        pco = completeParser.findCompleteObject("group child1 ", 100);
+        assertFalse(pco.isOption());
+        assertFalse(pco.isCompleteOptionName());
+        assertFalse(pco.isArgument());
+        assertTrue(pco.doDisplayOptions());
 
-    @Option(shortName = 'X', description = "enable X")
-    private String X;
+        clp.getProcessedCommand().clear();
+        pco = completeParser.findCompleteObject("group child1 --enable foo --", 100);
+        assertEquals("", pco.getValue());
+        assertTrue(pco.doDisplayOptions());
 
-    @Option(shortName = 'f', name = "foo", description = "enable foo")
-    private String foo;
+    }
 
-    @Option(shortName = 'e', name = "equal", description = "enable equal", required = true, defaultValue = "false")
-    private Boolean equal;
+    @CommandDefinition(name = "test", description = "a simple test")
+    public class ParseCompleteTest1 {
 
-    @Option(shortName = 'D', description = "define properties",
-            required = true)
-    private String define;
-}
+        @Option(name = "X", description = "enable X")
+        private String X;
 
-@CommandDefinition(name = "test", description = "a simple test")
-class ParseCompleteTest3 {
+        @Option(shortName = 'f', name = "foo", description = "enable foo")
+        private Boolean foo;
 
-    @Option(shortName = 'X', description = "enable X")
-    private String X;
+        @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
+        private String equal;
 
-    @OptionList(shortName = 'v', name = "value", description = "enable equal")
-    private List<String> values;
+        @Option(shortName = 'D', description = "define properties", required = true)
+        private String define;
 
-    @Option(shortName = 'D', description = "define properties",
-            required = true)
-    private String define;
+        @Arguments
+        private List<String> arguments;
+
+    }
+
+    @CommandDefinition(name = "test", description = "a simple test")
+    public class ParseCompleteTest2 {
+
+        @Option(shortName = 'X', description = "enable X")
+        private String X;
+
+        @Option(shortName = 'f', name = "foo", description = "enable foo")
+        private String foo;
+
+        @Option(shortName = 'e', name = "equal", description = "enable equal", required = true, defaultValue = "false")
+        private Boolean equal;
+
+        @Option(shortName = 'D', description = "define properties",
+                required = true)
+        private String define;
+    }
+
+    @CommandDefinition(name = "test", description = "a simple test")
+    public class ParseCompleteTest3 {
+
+        @Option(shortName = 'X', description = "enable X")
+        private String X;
+
+        @OptionList(shortName = 'v', name = "value", description = "enable equal")
+        private List<String> values;
+
+        @Option(shortName = 'D', description = "define properties",
+                required = true)
+        private String define;
+    }
+
+    @GroupCommandDefinition(name = "group", description = "groups",
+            groupCommands = {ParseCompleteGroupChild1.class, ParseCompleteGroupChild2.class})
+    public class ParseCompleteGroupTest {
+
+    }
+
+    @CommandDefinition(name = "child1", description = "im child1")
+    public class ParseCompleteGroupChild1 {
+        @Option
+        private String enable;
+
+        @Option boolean help;
+    }
+
+    @CommandDefinition(name = "child2", description = "im child2")
+    public class ParseCompleteGroupChild2 {
+        @Option
+        private String print;
+
+        @Option
+        private String help;
+    }
 }

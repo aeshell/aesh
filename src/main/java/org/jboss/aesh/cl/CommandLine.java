@@ -9,6 +9,7 @@ package org.jboss.aesh.cl;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.cl.parser.CommandLineParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,9 +30,15 @@ public class CommandLine {
     private ProcessedOption argument;
     private boolean parserError;
     private CommandLineParserException parserException;
+    private CommandLineParser parser;
 
-    public CommandLine() {
+    private CommandLine() {
         options = new ArrayList<>();
+    }
+
+    public CommandLine(CommandLineParser parser) {
+        this();
+        this.parser = parser;
     }
 
     public CommandLine(CommandLineParserException parserException) {
@@ -56,6 +63,10 @@ public class CommandLine {
                 existingOption.getProperties().putAll(option.getProperties());
         }
 
+    }
+
+    public CommandLineParser getParser() {
+        return parser;
     }
 
     public List<ProcessedOption> getOptions() {

@@ -14,10 +14,12 @@ import org.jboss.aesh.cl.exception.RequiredOptionException;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.parser.ParserStatus;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,15 +33,58 @@ import java.util.List;
  */
 public class AeshCommandLineParser implements CommandLineParser {
 
-    private final ProcessedCommand command;
+    private final ProcessedCommand processedCommand;
     private static final String EQUALS = "=";
+    private List<CommandLineParser> childParsers;
+    private boolean isChild = false;
+    private Command command;
 
-    public AeshCommandLineParser(ProcessedCommand command) {
+    public AeshCommandLineParser(ProcessedCommand processedCommand) {
+        this.processedCommand = processedCommand;
+    }
+
+    public AeshCommandLineParser(ProcessedCommand processedCommand, Command command ) {
+        this.processedCommand = processedCommand;
         this.command = command;
     }
 
+    public void addChildParser(AeshCommandLineParser commandLineParser) {
+        if(childParsers == null)
+            childParsers = new ArrayList<>();
+        commandLineParser.setChild(true);
+        childParsers.add(commandLineParser);
+    }
+
+    private void setChild(boolean child) {
+        isChild = child;
+    }
+
     @Override
-    public ProcessedCommand getCommand() {
+    public CommandLineParser getChildParser(String name) {
+        if(!isGroupCommand())
+            return null;
+        for(CommandLineParser clp : childParsers) {
+            if(clp.getProcessedCommand().getName().equals(name))
+                return clp;
+        }
+        return null;
+    }
+
+    @Override
+    public List<CommandLineParser> getAllChildParsers() {
+        if(isGroupCommand())
+            return childParsers;
+        else
+            return new ArrayList<>();
+    }
+
+    @Override
+    public ProcessedCommand getProcessedCommand() {
+        return processedCommand;
+    }
+
+    @Override
+    public Command getCommand() {
         return command;
     }
 
@@ -59,7 +104,7 @@ public class AeshCommandLineParser implements CommandLineParser {
      */
     @Override
     public String printHelp() {
-        return command.printHelp();
+        return processedCommand.printHelp();
     }
 
     /**
@@ -80,6 +125,27 @@ public class AeshCommandLineParser implements CommandLineParser {
         return parse(line, false);
     }
 
+    @Override
+    public CommandLine parse(AeshLine line, boolean ignoreRequirements) {
+        if(line.getWords().size() > 0) {
+            if(processedCommand.getName().equals(line.getWords().get(0))) {
+                if(isGroupCommand() && line.getWords().size() > 1) {
+                   CommandLineParser clp = getChildParser(line.getWords().get(1));
+                    if(clp == null)
+                        return parse(line.getWords(), ignoreRequirements);
+                    //we have a group command
+                    else
+                        return clp.parse(line.getWords(), ignoreRequirements);
+                }
+                else
+                    return parse(line.getWords(), ignoreRequirements);
+            }
+        }
+        else if(line.getStatus() != ParserStatus.OK)
+            return new CommandLine(new CommandLineParserException(line.getErrorMessage()));
+
+        return new CommandLine(new CommandLineParserException("Command:"+ processedCommand +", not found in: "+line));
+    }
     /**
      * Parse a command line with the defined command as base of the rules.
      * If any options are found, but not defined in the command object an
@@ -96,15 +162,7 @@ public class AeshCommandLineParser implements CommandLineParser {
      */
     @Override
     public CommandLine parse(String line, boolean ignoreRequirements) {
-        AeshLine aeshLine = Parser.findAllWords(line);
-        if(aeshLine.getWords().size() > 0) {
-            if(command.getName().equals(aeshLine.getWords().get(0)))
-                return parse(aeshLine.getWords(), ignoreRequirements);
-        }
-        else if(aeshLine.getStatus() != ParserStatus.OK)
-            return new CommandLine(new CommandLineParserException(aeshLine.getErrorMessage()));
-
-        return new CommandLine(new CommandLineParserException("Command:"+ command +", not found in: "+line));
+        return parse(Parser.findAllWords(line), ignoreRequirements);
     }
 
     /**
@@ -119,14 +177,17 @@ public class AeshCommandLineParser implements CommandLineParser {
      */
     @Override
     public CommandLine parse(List<String> lines, boolean ignoreRequirements) {
-        command.clear();
-        CommandLine commandLine = new CommandLine();
-        if(command.hasArgument())
-            commandLine.setArgument(command.getArgument());
+        clear();
+        CommandLine commandLine = new CommandLine(this);
+        if(processedCommand.hasArgument())
+            commandLine.setArgument(processedCommand.getArgument());
         ProcessedOption active = null;
         boolean addedArgument = false;
+        int startWord = 1;
+        if(isChild)
+            startWord = 2;
         //skip first entry since that's the name of the command
-        for(int i=1; i < lines.size(); i++) {
+        for(int i=startWord; i < lines.size(); i++) {
             String parseLine = lines.get(i);
             //name
             if(parseLine.startsWith("--")) {
@@ -143,7 +204,7 @@ public class AeshCommandLineParser implements CommandLineParser {
                     }
                 }
 
-                active = findLongOption(command, parseLine.substring(2));
+                active = findLongOption(processedCommand, parseLine.substring(2));
                 if(active != null)
                     active.setLongNameUsed(true);
                 if(active != null && active.isProperty()) {
@@ -204,7 +265,7 @@ public class AeshCommandLineParser implements CommandLineParser {
                     //if so, we only allow options (boolean) without value
                     if(parseLine.length() > 2) {
                         for(char shortName : parseLine.substring(1).toCharArray()) {
-                            active = findOption(command, String.valueOf(shortName));
+                            active = findOption(processedCommand, String.valueOf(shortName));
                             if(active != null) {
                                 if(!active.hasValue()) {
                                     active.setLongNameUsed(false);
@@ -225,7 +286,7 @@ public class AeshCommandLineParser implements CommandLineParser {
                         commandLine.setParserException(new OptionParserException("Option: - must be followed by a valid operator"));
                 }
                 else {
-                    active = findOption(command, parseLine.substring(1));
+                    active = findOption(processedCommand, parseLine.substring(1));
                     if(active != null)
                         active.setLongNameUsed(false);
 
@@ -296,7 +357,7 @@ public class AeshCommandLineParser implements CommandLineParser {
             }
             //if no command is "active", we add it as an argument
             else {
-                if(command.getArgument() == null) {
+                if(processedCommand.getArgument() == null) {
                     commandLine.setParserException(new OptionParserException("An argument was given to a command that does not support it."));
                 }
                 else {
@@ -313,7 +374,7 @@ public class AeshCommandLineParser implements CommandLineParser {
 
         //this will throw and CommandLineParserException if needed
         if(!ignoreRequirements) {
-            RequiredOptionException re = checkForMissingRequiredOptions(command, commandLine);
+            RequiredOptionException re = checkForMissingRequiredOptions(processedCommand, commandLine);
             if(re != null)
                 commandLine.setParserException(re);
         }
@@ -403,10 +464,24 @@ public class AeshCommandLineParser implements CommandLineParser {
         return null;
     }
 
+    @Override
+    public void clear() {
+        processedCommand.clear();
+        if(isGroupCommand()) {
+            for(CommandLineParser child : childParsers)
+                child.getProcessedCommand().clear();
+        }
+    }
+
+    @Override
+    public boolean isGroupCommand() {
+        return childParsers != null && childParsers.size() > 0;
+    }
 
     @Override
     public String toString() {
         return "CommandLineParser{" +
+                "processedCommand=" + processedCommand +
                 "command=" + command +
                 '}';
     }
@@ -418,12 +493,12 @@ public class AeshCommandLineParser implements CommandLineParser {
 
         AeshCommandLineParser that = (AeshCommandLineParser) o;
 
-        return command.equals(that.command);
+        return processedCommand.equals(that.processedCommand);
 
     }
 
     @Override
     public int hashCode() {
-        return command.hashCode();
+        return processedCommand.hashCode();
     }
 }

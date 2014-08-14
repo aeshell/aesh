@@ -9,12 +9,9 @@ package org.jboss.aesh.console;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
@@ -29,6 +26,7 @@ import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.container.CommandContainer;
+import org.jboss.aesh.console.command.container.CommandContainerResult;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.console.command.invocation.AeshCommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
@@ -41,6 +39,7 @@ import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.man.Man;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.LoggerUtil;
@@ -194,7 +193,7 @@ public class AeshConsoleImpl implements AeshConsole {
             //we have a custom OptionActivatorProvider, and need to process all options
             try {
                 for (String commandName : registry.getAllCommandNames()) {
-                    registry.getCommand(commandName, "").getParser().getCommand().processAfterInit(invocationProviders);
+                    registry.getCommand(commandName, "").getParser().getProcessedCommand().processAfterInit(invocationProviders);
                 }
             }
             catch (CommandNotFoundException e) {
@@ -206,7 +205,17 @@ public class AeshConsoleImpl implements AeshConsole {
     }
 
     private List<String> completeCommandName(String input) {
-        List<String> matchedCommands = new ArrayList<>();
+        List<String> matchedCommands = registry.findAllCommandNames(input);
+        if(matchedCommands == null)
+            matchedCommands = new ArrayList<>();
+        for(String internalCommand : internalRegistry.getAllCommandNames())
+            if(internalCommand.startsWith(input))
+                matchedCommands.add(internalCommand);
+
+        return matchedCommands;
+
+        /*
+
         try {
             Set<String> allCommandNames = new TreeSet<>();
             Set<String> registryCommandNames = registry.getAllCommandNames();
@@ -226,24 +235,26 @@ public class AeshConsoleImpl implements AeshConsole {
         }
 
         return matchedCommands;
+        */
     }
 
     /**
      * try to return the command in the given registry if the given registry do not find the command, check if we have a
      * internal registry and if its there.
      *
-     * @param name command name
+     * @param aeshLine parsed command line
      * @param line command line
      * @return command
      * @throws CommandNotFoundException
      */
-    private CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
+    private CommandContainer getCommand(AeshLine aeshLine, String line) throws CommandNotFoundException {
         try {
-            return registry.getCommand(name, line);
+            return registry.getCommand(aeshLine.getWords().get(0), line);
+            //return commandContainer;
         }
         catch (CommandNotFoundException e) {
             if (internalRegistry != null) {
-                CommandContainer cc = internalRegistry.getCommand(name);
+                CommandContainer cc = internalRegistry.getCommand(aeshLine.getWords().get(0));
                 if (cc != null)
                     return cc;
             }
@@ -260,17 +271,16 @@ public class AeshConsoleImpl implements AeshConsole {
                 completeOperation.addCompletionCandidates(completedCommands);
             }
             else {
-                try (CommandContainer commandContainer = getCommand(
-                    Parser.findFirstWord(completeOperation.getBuffer()),
-                    completeOperation.getBuffer())) {
+                AeshLine aeshLine = Parser.findAllWords(completeOperation.getBuffer());
+                try (CommandContainer commandContainer = getCommand( aeshLine, completeOperation.getBuffer())) {
+
                     CommandLineCompletionParser completionParser = commandContainer
                         .getParser().getCompletionParser();
 
                     ParsedCompleteObject completeObject = completionParser
                             .findCompleteObject(completeOperation.getBuffer(),
                                     completeOperation.getCursor());
-                    completionParser.injectValuesAndComplete(completeObject,
-                            commandContainer.getCommand(), completeOperation, invocationProviders);
+                    completeObject.getCompletionParser().injectValuesAndComplete(completeObject, completeOperation, invocationProviders);
                 }
                 catch (CommandLineParserException e) {
                     LOGGER.warning(e.getMessage());
@@ -301,33 +311,18 @@ public class AeshConsoleImpl implements AeshConsole {
         public int execute(ConsoleOperation output) throws InterruptedException {
             if (output != null && output.getBuffer().trim().length() > 0) {
                 ResultHandler resultHandler = null;
-                try (CommandContainer commandContainer = getCommand(
-                    Parser.findFirstWord(output.getBuffer()),
-                    output.getBuffer())) {
-
-                    CommandLine commandLine = commandContainer.getParser()
-                        .parse(output.getBuffer());
-
-                    resultHandler = commandContainer.getParser().getCommand().getResultHandler();
-
-                    commandContainer
-                        .getParser()
-                        .getCommandPopulator()
-                        .populateObject(commandContainer.getCommand(),
-                            commandLine, invocationProviders, getAeshContext(), true);
-                    // validate the command before execute, only call if no
-                    // options with overrideRequired is not set
-                    if (commandContainer.getParser().getCommand() .getValidator() != null
-                        && !commandLine.hasOptionWithOverrideRequired())
-                        commandContainer.getParser().getCommand().getValidator()
-                            .validate(commandContainer.getCommand());
-
-                    result = commandContainer.getCommand().execute(
+                AeshLine aeshLine = Parser.findAllWords(output.getBuffer());
+                try (CommandContainer commandContainer = getCommand( aeshLine, output.getBuffer())) {
+                    CommandContainerResult ccResult =
+                            commandContainer.executeCommand(aeshLine, invocationProviders, getAeshContext(),
                             commandInvocationServices.getCommandInvocationProvider(
                                     commandInvocationProvider).enhanceCommandInvocation(
                                     new AeshCommandInvocation(console,
                                         output.getControlOperator(),
                                          output.getPid(), this)));
+
+                    result = ccResult.getCommandResult();
+                    resultHandler = ccResult.getResultHandler();
 
                     if(result == CommandResult.SUCCESS && resultHandler != null)
                         resultHandler.onSuccess();
@@ -373,7 +368,6 @@ public class AeshConsoleImpl implements AeshConsole {
             }
 
             if (result == CommandResult.SUCCESS) {
-                getInputProcessor().resetEOF();
                 return 0;
             } else {
                 return 1;
