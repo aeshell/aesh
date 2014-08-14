@@ -45,6 +45,8 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
         if(cursor < line.length()) {
             line = line.substring(0, cursor);
         }
+
+        parser.clear();
         //first we check if it could be a param
         if(Parser.findIfWordEndWithSpace(line)) {
             return endsWithSpace(line);
@@ -55,15 +57,27 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
     }
 
     private ParsedCompleteObject endsWithSpace(String line) throws CommandLineParserException {
+        CommandLine cl = parser.parse(line, true);
         //check if we try to complete just after the command name
-        if(line.trim().equals(parser.getProcessedCommand().getName())) {
-            if(parser.getProcessedCommand().getArgument() == null) {
-                //basically an empty string except command name
-                return new ParsedCompleteObject(true, "", 0, this);
+        if(parser.isGroupCommand()) {
+            if (line.trim().equals(parser.getProcessedCommand().getName() + " " +
+                    cl.getParser().getProcessedCommand().getName())) {
+                if (cl.getParser().getProcessedCommand().getArgument() == null) {
+                    //basically an empty string except command name
+                    return new ParsedCompleteObject(true, "", 0, cl.getParser().getCompletionParser());
+                }
+                return new ParsedCompleteObject(null, "", cl.getParser().getProcessedCommand().getArgument().getType(),
+                        false, getCorrectCompletionParser(line));
             }
-            return new ParsedCompleteObject(null, "", parser.getProcessedCommand().getArgument().getType(), false, this);
         }
-
+        else if(line.trim().equals(cl.getParser().getProcessedCommand().getName())) {
+            if(cl.getParser().getProcessedCommand().getArgument() == null) {
+                //basically an empty string except command name
+                return new ParsedCompleteObject(true, "", 0, cl.getParser().getCompletionParser());
+            }
+            return new ParsedCompleteObject(null, "", cl.getParser().getProcessedCommand().getArgument().getType(),
+                    false, getCorrectCompletionParser(line));
+        }
         //else we try to complete an option,an option value or arguments
         String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line.trim());
         if(lastWord.startsWith("-")) {
@@ -71,12 +85,12 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             while(lastWord.startsWith("-"))
                 lastWord = lastWord.substring(1);
             if(lastWord.length() == 0)
-                return new ParsedCompleteObject(false, null, offset, this);
-            else if(parser.getProcessedCommand().findOptionNoActivatorCheck(lastWord) != null ||
-                    parser.getProcessedCommand().findLongOptionNoActivatorCheck(lastWord) != null)
+                return new ParsedCompleteObject(false, null, offset, getCorrectCompletionParser(line));
+            else if(cl.getParser().getProcessedCommand().findOptionNoActivatorCheck(lastWord) != null ||
+                    cl.getParser().getProcessedCommand().findLongOptionNoActivatorCheck(lastWord) != null)
                 return findCompleteObjectValue(line, true);
             else
-                return new ParsedCompleteObject(false, null, offset, this);
+                return new ParsedCompleteObject(false, null, offset, getCorrectCompletionParser(line));
         }
         //last word is a value, need to find out what option its a value for
         else {
@@ -100,20 +114,21 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             else {
                 switch (lastWord) {
                     case "-":
-                        return new ParsedCompleteObject(true, "", 1, this);
+                        return new ParsedCompleteObject(true, "", 1, getCorrectCompletionParser(line));
                     case "--":
-                        return new ParsedCompleteObject(true, "", 2, this);
+                        return new ParsedCompleteObject(true, "", 2, getCorrectCompletionParser(line));
                     default:
                         //we have a complete shortName
                         if (!lastWord.startsWith("--") && lastWord.length() == 2)
                             return new ParsedCompleteObject(true,
-                                    Parser.trimOptionName(lastWord), lastWord.length(), true, this);
+                                    Parser.trimOptionName(lastWord), lastWord.length(), true, getCorrectCompletionParser(line));
                         else {
                             String optionName = Parser.trimOptionName(lastWord);
-                            if (parser.getProcessedCommand().hasUniqueLongOption(optionName))
-                                return new ParsedCompleteObject(true, optionName, lastWord.length(), true, this);
+                            CommandLine cl = parser.parse(line, true);
+                            if (cl.getParser().getProcessedCommand().hasUniqueLongOption(optionName))
+                                return new ParsedCompleteObject(true, optionName, lastWord.length(), true, cl.getParser().getCompletionParser());
                             else
-                                return new ParsedCompleteObject(true, optionName, lastWord.length(), false, this);
+                                return new ParsedCompleteObject(true, optionName, lastWord.length(), false, cl.getParser().getCompletionParser());
                         }
                 }
             }
@@ -133,7 +148,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
         if(cl.getArgument() != null && !cl.getArgument().getValues().isEmpty()) {
             return new ParsedCompleteObject("", endsWithSpace ? "" :
                     cl.getArgument().getValues().get(cl.getArgument().getValues().size() - 1),
-                    cl.getArgument().getType(), false, this);
+                    cl.getArgument().getType(), false, cl.getParser().getCompletionParser());
         }
         //get the last option
         else if (cl.getOptions() != null && cl.getOptions().size() > 0) {
@@ -145,22 +160,22 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             if(endsWithSpace && po.getValue() != null &&  po.getValue().length() > 0 &&
                     (po.getOptionType() == OptionType.NORMAL || po.getOptionType() == OptionType.BOOLEAN)) {
                 if(cl.getArgument() == null)
-                    return new ParsedCompleteObject(true, "", 0, this);
+                    return new ParsedCompleteObject(true, "", 0, cl.getParser().getCompletionParser());
                 else
-                    return new ParsedCompleteObject(true, this);
+                    return new ParsedCompleteObject(true, cl.getParser().getCompletionParser());
             }
             else if(po.isLongNameUsed() || (po.getShortName() == null || po.getShortName().length() < 1))
                 return new ParsedCompleteObject(po.getName(),
                         endsWithSpace ? "" : po.getValues().get(po.getValues().size()-1),
-                        po.getType(), true, this);
+                        po.getType(), true, cl.getParser().getCompletionParser());
             else
                 return new ParsedCompleteObject( po.getShortName(),
                         endsWithSpace ? "" : po.getValues().get(po.getValues().size()-1),
-                        po.getType(), true, this);
+                        po.getType(), true, cl.getParser().getCompletionParser());
         }
         //probably something wrong with the parser
         else
-            return new ParsedCompleteObject(true, "", 0, this);
+            return new ParsedCompleteObject(true, "", 0, getCorrectCompletionParser(line));
     }
 
     @Override
@@ -354,6 +369,20 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 }
                 completeOperation.doAppendSeparator( completions.isAppendSpace());
             }
+        }
+    }
+
+    private CommandLineCompletionParser getCorrectCompletionParser(String line) {
+        if(!parser.isGroupCommand())
+            return this;
+        else {
+            String childLine = line.trim().substring(parser.getProcessedCommand().getName().length());
+            String child = Parser.findFirstWord(childLine);
+            CommandLineParser childParser = parser.getChildParser(child);
+            if(childParser != null)
+                return childParser.getCompletionParser();
+            else
+                return this;
         }
     }
 

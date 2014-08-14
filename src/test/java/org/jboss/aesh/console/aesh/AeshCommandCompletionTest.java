@@ -8,6 +8,7 @@ package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
+import org.jboss.aesh.cl.GroupCommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.completer.OptionCompleter;
@@ -40,6 +41,7 @@ import java.io.PrintStream;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -47,6 +49,7 @@ import static org.junit.Assert.assertEquals;
 public class AeshCommandCompletionTest {
 
     private final KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
+    private final KeyOperation enter =  new KeyOperation(Key.ENTER, Operation.NEW_LINE);
 
     @Test
     public void testCompletion() throws Exception {
@@ -169,6 +172,58 @@ public class AeshCommandCompletionTest {
 
     }
 
+    @Test
+    public void testGroupCommand() throws IOException, InterruptedException {
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .inputStream(pipedInputStream)
+                .outputStream(new PrintStream(byteArrayOutputStream))
+                .logging(true)
+                .create();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(GitCommand.class)
+                .create();
+
+        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
+                .settings(settings)
+                .commandRegistry(registry)
+                .prompt(new Prompt(""));
+
+        AeshConsole aeshConsole = consoleBuilder.create();
+        aeshConsole.start();
+
+        outputStream.write(("git rebase --").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        assertEquals("git rebase --force ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+
+        outputStream.write(("tr").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        assertEquals("git rebase --force true ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        outputStream.write(enter.getFirstValue());
+        outputStream.flush();
+
+        outputStream.write(("git rebase --fo").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        assertEquals("git rebase --force ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+
+
+        aeshConsole.stop();
+     }
+
     @CommandDefinition(name = "foo", description = "")
     public static class FooCommand implements Command {
 
@@ -259,5 +314,40 @@ public class AeshCommandCompletionTest {
                     completerInvocation.getGivenCompleteValue() == "")
             completerInvocation.addCompleterValue("managed");
         }
+    }
+
+    @GroupCommandDefinition(name = "git", description = "", groupCommands = {GitCommit.class, GitRebase.class})
+    public static class GitCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "commit", description = "")
+    public static class GitCommit implements Command {
+
+        @Option(shortName = 'a', hasValue = false)
+        private boolean all;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "rebase", description = "")
+    public static class GitRebase implements Command {
+
+        @Option
+        private boolean force;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            assertTrue(force);
+            return CommandResult.SUCCESS;
+        }
+
     }
 }

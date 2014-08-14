@@ -208,7 +208,15 @@ public class AeshConsoleImpl implements AeshConsole {
     }
 
     private List<String> completeCommandName(String input) {
-        List<String> matchedCommands = new ArrayList<>();
+        List<String> matchedCommands = registry.findAllCommandNames(input);
+        for(String internalCommand : internalRegistry.getAllCommandNames())
+            if(internalCommand.startsWith(input))
+                matchedCommands.add(internalCommand);
+
+        return matchedCommands;
+
+        /*
+
         try {
             Set<String> allCommandNames = new TreeSet<>();
             Set<String> registryCommandNames = registry.getAllCommandNames();
@@ -228,6 +236,7 @@ public class AeshConsoleImpl implements AeshConsole {
         }
 
         return matchedCommands;
+        */
     }
 
     /**

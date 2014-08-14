@@ -91,10 +91,9 @@ public class ParserGenerator {
                     .description(groupCommand.description())
                     .validator(groupCommand.validator())
                     .resultHandler(groupCommand.resultHandler())
-                    .groupCommand(true)
                     .generateCommand();
 
-            AeshCommandContainer groupContainer = null;
+            AeshCommandContainer groupContainer;
             if(clazzIsaCommand)
                 groupContainer = new AeshCommandContainer(
                         new CommandLineParserBuilder()
@@ -120,26 +119,6 @@ public class ParserGenerator {
             }
 
             return groupContainer;
-            /*
-            List<ProcessedCommand> processedCommands = new ArrayList<>();
-            for(Class groupClazz : groupCommand.groupCommands()) {
-                command = (CommandDefinition) groupClazz.getAnnotation(CommandDefinition.class);
-                if(command != null) {
-                    ProcessedCommand processedCommand = new ProcessedCommand(command.name(), command.description(),
-                            command.validator(), command.resultHandler());
-
-                    processCommand(processedCommand, groupClazz);
-                    processedCommands.add(processedCommand);
-                }
-                else
-                    throw new CommandLineParserException("Commands must be annotated with @CommandDefinition");
-            }
-
-            ProcessedCommand processedGroupCommand = new ProcessedCommand(groupCommand.name(), groupCommand.description(),
-                    groupCommand.validator(), groupCommand.resultHandler(), processedCommands);
-
-            return new CommandLineParserBuilder().parameter(processedGroupCommand).generateParser();
-            */
         }
         else
             throw new CommandLineParserException("Commands must be annotated with @CommandDefinition or @GroupCommandDefinition");

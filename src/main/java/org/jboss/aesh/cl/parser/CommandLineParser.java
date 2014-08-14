@@ -39,6 +39,17 @@ public interface CommandLineParser {
     CommandLineCompletionParser getCompletionParser();
 
     /**
+     * @param name command
+     * @return child parser that matches the name
+     */
+    CommandLineParser getChildParser(String name);
+
+    /**
+     * @return all the child parser
+     */
+    List<CommandLineParser> getAllChildParsers();
+
+    /**
      * @return command populator to work on this command
      */
     CommandPopulator getCommandPopulator();
@@ -94,4 +105,7 @@ public interface CommandLineParser {
      */
     CommandLine parse(List<String> lines, boolean ignoreRequirements);
 
+    void clear();
+
+    boolean isGroupCommand();
 }

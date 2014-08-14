@@ -227,10 +227,39 @@ public class ParseCompleteObjectTest {
         assertEquals("en", pco.getName());
         assertEquals(4, pco.getOffset());
 
+        clp.getProcessedCommand().clear();
         pco = completeParser.findCompleteObject("group child1 --enable foo", 25);
         assertEquals("foo", pco.getValue());
         assertTrue(pco.isOption());
         assertEquals(String.class, pco.getType());
+
+        pco = completeParser.findCompleteObject("group child1 --en", 20);
+        assertTrue(pco.doDisplayOptions());
+        assertEquals("", pco.getValue());
+        assertFalse(pco.isCompleteOptionName());
+        assertEquals("en", pco.getName());
+        assertEquals(4, pco.getOffset());
+
+
+        clp.getProcessedCommand().clear();
+        pco = completeParser.findCompleteObject("group child2 --", 100);
+        assertTrue(pco.doDisplayOptions());
+        assertEquals("", pco.getName());
+        assertEquals(2, pco.getOffset());
+
+
+        clp.getProcessedCommand().clear();
+        pco = completeParser.findCompleteObject("group child1 ", 100);
+        assertFalse(pco.isOption());
+        assertFalse(pco.isCompleteOptionName());
+        assertFalse(pco.isArgument());
+        assertTrue(pco.doDisplayOptions());
+
+        clp.getProcessedCommand().clear();
+        pco = completeParser.findCompleteObject("group child1 --enable foo --", 100);
+        assertEquals("", pco.getValue());
+        assertTrue(pco.doDisplayOptions());
+
     }
 
     @CommandDefinition(name = "test", description = "a simple test")
@@ -294,11 +323,16 @@ public class ParseCompleteObjectTest {
     public class ParseCompleteGroupChild1 {
         @Option
         private String enable;
+
+        @Option boolean help;
     }
 
     @CommandDefinition(name = "child2", description = "im child2")
     public class ParseCompleteGroupChild2 {
         @Option
         private String print;
+
+        @Option
+        private String help;
     }
 }

@@ -35,7 +35,7 @@ public class AeshCommandLineParser implements CommandLineParser {
 
     private final ProcessedCommand processedCommand;
     private static final String EQUALS = "=";
-    private List<AeshCommandLineParser> childParsers;
+    private List<CommandLineParser> childParsers;
     private boolean isChild = false;
     private Command command;
 
@@ -53,17 +53,25 @@ public class AeshCommandLineParser implements CommandLineParser {
         if(childParsers == null)
             childParsers = new ArrayList<>();
         childParsers.add(commandLineParser);
-        processedCommand.addGroupCommand(commandLineParser.getProcessedCommand());
     }
 
-    public AeshCommandLineParser getChildParser(String name) {
+    @Override
+    public CommandLineParser getChildParser(String name) {
         if(!isGroupCommand())
             return null;
-        for(AeshCommandLineParser clp : childParsers) {
+        for(CommandLineParser clp : childParsers) {
             if(clp.getProcessedCommand().getName().equals(name))
                 return clp;
         }
         return null;
+    }
+
+    @Override
+    public List<CommandLineParser> getAllChildParsers() {
+        if(isGroupCommand())
+            return childParsers;
+        else
+            return new ArrayList<>();
     }
 
     @Override
@@ -118,7 +126,7 @@ public class AeshCommandLineParser implements CommandLineParser {
         if(line.getWords().size() > 0) {
             if(processedCommand.getName().equals(line.getWords().get(0))) {
                 if(isGroupCommand() && line.getWords().size() > 1) {
-                   AeshCommandLineParser clp = getChildParser(line.getWords().get(1));
+                   CommandLineParser clp = getChildParser(line.getWords().get(1));
                     if(clp == null)
                         return parse(line.getWords(), ignoreRequirements);
                     //we have a group command
@@ -165,7 +173,7 @@ public class AeshCommandLineParser implements CommandLineParser {
      */
     @Override
     public CommandLine parse(List<String> lines, boolean ignoreRequirements) {
-        processedCommand.clear();
+        clear();
         CommandLine commandLine = new CommandLine(this);
         if(processedCommand.hasArgument())
             commandLine.setArgument(processedCommand.getArgument());
@@ -452,8 +460,18 @@ public class AeshCommandLineParser implements CommandLineParser {
         return null;
     }
 
-    private boolean isGroupCommand() {
-        return processedCommand.isGroupCommand();
+    @Override
+    public void clear() {
+        processedCommand.clear();
+        if(isGroupCommand()) {
+            for(CommandLineParser child : childParsers)
+                child.getProcessedCommand().clear();
+        }
+    }
+
+    @Override
+    public boolean isGroupCommand() {
+        return childParsers != null && childParsers.size() > 0;
     }
 
     @Override

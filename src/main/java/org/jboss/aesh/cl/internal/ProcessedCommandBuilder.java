@@ -29,7 +29,6 @@ public class ProcessedCommandBuilder {
     private ResultHandler resultHandler;
     private ProcessedOption argument;
     private final List<ProcessedOption> options;
-    private boolean groupCommand;
 
 
     public ProcessedCommandBuilder() {
@@ -95,11 +94,6 @@ public class ProcessedCommandBuilder {
         return this;
     }
 
-    public ProcessedCommandBuilder groupCommand(boolean groupCommand) {
-        this.groupCommand = groupCommand;
-        return this;
-    }
-
     public ProcessedCommand generateCommand() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
@@ -110,6 +104,6 @@ public class ProcessedCommandBuilder {
         if(resultHandler == null)
             resultHandler = new NullResultHandler();
 
-        return  new ProcessedCommand(name, description, validator, resultHandler, argument, options, groupCommand);
+        return  new ProcessedCommand(name, description, validator, resultHandler, argument, options );
     }
 }

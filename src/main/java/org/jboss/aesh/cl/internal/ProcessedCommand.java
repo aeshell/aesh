@@ -29,20 +29,14 @@ public final class ProcessedCommand {
 
     private List<ProcessedOption> options;
     private ProcessedOption argument;
-    private boolean groupCommand = false;
-    private List<ProcessedCommand> groupCommands;
 
     public ProcessedCommand(String name, String description, CommandValidator validator, ResultHandler resultHandler,
-                            ProcessedOption argument, List<ProcessedOption> options,
-                            boolean isGroupCommand) throws OptionParserException {
+                            ProcessedOption argument, List<ProcessedOption> options ) throws OptionParserException {
         setName(name);
         setDescription(description);
         this.validator = validator;
         this.resultHandler = resultHandler;
         this.argument = argument;
-        this.groupCommand = isGroupCommand;
-        if(groupCommand)
-            groupCommands = new ArrayList<>();
         this.options = new ArrayList<>();
         setOptions(options);
     }
@@ -193,9 +187,6 @@ public final class ProcessedCommand {
            processedOption.clear();
        if(argument != null)
            argument.clear();
-       if(isGroupCommand())
-           for(ProcessedCommand p : groupCommands)
-               p.clear();
     }
 
     /**
@@ -297,26 +288,5 @@ public final class ProcessedCommand {
     public void processAfterInit(InvocationProviders invocationProviders) {
         for(ProcessedOption option : options)
             option.processAfterInit(invocationProviders);
-    }
-
-    public boolean isGroupCommand() {
-        return groupCommand;
-    }
-
-    public List<ProcessedCommand> getGroupCommands() {
-        return groupCommands;
-    }
-
-    public void addGroupCommand(ProcessedCommand processedCommand) {
-        if(groupCommand)
-            groupCommands.add(processedCommand);
-    }
-
-    public ProcessedCommand getGroupCommand(String name) {
-        if(groupCommand)
-            for(ProcessedCommand p : groupCommands)
-                if(p.getName().equals(name))
-                    return p;
-        return null;
     }
 }

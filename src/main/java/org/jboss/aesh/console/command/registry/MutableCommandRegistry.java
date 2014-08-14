@@ -6,13 +6,17 @@
  */
 package org.jboss.aesh.console.command.registry;
 
+import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.container.AeshCommandContainerBuilder;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainerBuilder;
+import org.jboss.aesh.parser.Parser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,6 +39,25 @@ public class MutableCommandRegistry implements CommandRegistry {
             return registry.get(name);
         else
             throw new CommandNotFoundException("Command: "+name+" was not found.");
+    }
+
+    @Override
+    public List<String> findAllCommandNames(String line) {
+        List<String> names = new ArrayList<>();
+        for(CommandContainer command : registry.values()) {
+            if(command.getParser().getProcessedCommand().getName().startsWith(line))
+                names.add(command.getParser().getProcessedCommand().getName());
+            else if(command.getParser().isGroupCommand() &&
+                    line.startsWith(command.getParser().getProcessedCommand().getName())) {
+                String groupLine = Parser.trimInFront( line.substring(command.getParser().getProcessedCommand().getName().length()));
+                int diff = line.length() - groupLine.length();
+                for(CommandLineParser child : command.getParser().getAllChildParsers()) {
+                    if(child.getProcessedCommand().getName().startsWith(groupLine))
+                        names.add(line.substring(0, diff) + child.getProcessedCommand().getName());
+                }
+            }
+        }
+        return names;
     }
 
     @Override
