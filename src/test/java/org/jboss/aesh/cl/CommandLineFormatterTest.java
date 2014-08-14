@@ -44,7 +44,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .create());
 
         CommandLineParser clp = new CommandLineParserBuilder()
-                .processedCommand(pb.generateCommand())
+                .processedCommand(pb.create())
                 .create();
 
         assertEquals("Usage: man [OPTION...]"+ Config.getLineSeparator()+
@@ -85,7 +85,7 @@ public class CommandLineFormatterTest extends TestCase {
                         .create());
 
 
-        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.generateCommand()).create();
+        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
         assertEquals("Usage: man [OPTION...]"+
                         Config.getLineSeparator()+

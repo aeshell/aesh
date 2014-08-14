@@ -66,7 +66,7 @@ public class ParserGenerator {
                     .name(command.name())
                     .description(command.description())
                     .validator(command.validator())
-                    .resultHandler(command.resultHandler()).generateCommand();
+                    .resultHandler(command.resultHandler()).create();
 
             processCommand(processedCommand, clazz);
 
@@ -91,7 +91,7 @@ public class ParserGenerator {
                     .description(groupCommand.description())
                     .validator(groupCommand.validator())
                     .resultHandler(groupCommand.resultHandler())
-                    .generateCommand();
+                    .create();
 
             AeshCommandContainer groupContainer;
             if(clazzIsaCommand)

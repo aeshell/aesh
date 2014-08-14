@@ -33,7 +33,7 @@ public class BuilderTest extends TestCase {
                 new ProcessedOptionBuilder().description("filename given").shortName('f').name("filename")
                         .type(String.class).hasValue(true).create());
 
-        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.generateCommand()).create();
+        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
         CommandLine cl = clp.parse("foo -f test1.txt");
         assertTrue(cl.hasOption('f'));
@@ -62,7 +62,7 @@ public class BuilderTest extends TestCase {
         pb.argument(new ProcessedOptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENT).type(String.class).create());
 
-        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.generateCommand()).create();
+        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
         CommandLine cl = clp.parse("less -V test1.txt");
         assertTrue(cl.hasOption('V'));
@@ -103,7 +103,7 @@ public class BuilderTest extends TestCase {
         pb.argument(new ProcessedOptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENT).type(String.class).create());
 
-        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.generateCommand()).create();
+        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
         assertEquals("version", clp.getProcessedCommand().findOption("v").getName());
         assertEquals("verbose", clp.getProcessedCommand().findOption("e").getName());
@@ -120,7 +120,7 @@ public class BuilderTest extends TestCase {
                         .description("")
                         .validator(NullCommandValidator.class)
                         .resultHandler(NullResultHandler.class)
-                        .generateCommand();
+                        .create();
         processedCommand.addOption(new ProcessedOptionBuilder().name("foo1").shortName('f').type(String.class).create());
         processedCommand.addOption(new ProcessedOptionBuilder().name("foo2").shortName('o').type(String.class).create());
         processedCommand.addOption(new ProcessedOptionBuilder().name("foo3").shortName('3').type(String.class).create());

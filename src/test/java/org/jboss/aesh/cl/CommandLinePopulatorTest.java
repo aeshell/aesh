@@ -253,7 +253,7 @@ public class CommandLinePopulatorTest {
                 .addOption(new ProcessedOptionBuilder().shortName('i').name("int1").fieldName("int1").type(Integer.class).create())
                 .addOption(new ProcessedOptionBuilder().shortName('n').fieldName("int2").type(int.class).addDefaultValue("12345").create());
 
-        CommandLineParser parser =  new AeshCommandLineParser( commandBuilder.generateCommand());
+        CommandLineParser parser =  new AeshCommandLineParser( commandBuilder.create());
 
         TestPopulator1A test1 = new TestPopulator1A();
         AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();

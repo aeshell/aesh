@@ -94,7 +94,7 @@ public class ProcessedCommandBuilder {
         return this;
     }
 
-    public ProcessedCommand generateCommand() throws CommandLineParserException {
+    public ProcessedCommand create() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
 
