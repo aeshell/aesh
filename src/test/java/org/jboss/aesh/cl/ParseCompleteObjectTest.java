@@ -198,7 +198,6 @@ public class ParseCompleteObjectTest {
 
         pco = completeParser.findCompleteObject("test --equal true foo.txt  bar.txt", 25);
         assertEquals("foo.txt", pco.getValue());
-        //assertEquals(String.class, pco.getStyle());
         assertTrue(pco.isArgument());
     }
 

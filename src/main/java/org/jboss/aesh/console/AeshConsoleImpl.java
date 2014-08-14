@@ -9,12 +9,9 @@ package org.jboss.aesh.console;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
@@ -209,6 +206,8 @@ public class AeshConsoleImpl implements AeshConsole {
 
     private List<String> completeCommandName(String input) {
         List<String> matchedCommands = registry.findAllCommandNames(input);
+        if(matchedCommands == null)
+            matchedCommands = new ArrayList<>();
         for(String internalCommand : internalRegistry.getAllCommandNames())
             if(internalCommand.startsWith(input))
                 matchedCommands.add(internalCommand);

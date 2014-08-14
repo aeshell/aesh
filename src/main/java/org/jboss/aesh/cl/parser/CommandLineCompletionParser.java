@@ -9,7 +9,6 @@ package org.jboss.aesh.cl.parser;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.InvocationProviders;
-import org.jboss.aesh.console.command.Command;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
