@@ -272,7 +272,10 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
 
                 currentOption.getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-                completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
+                if(completions.getOffset() > 0)
+                    completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
+                else if(completeObject.getValue() != null)
+                    completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
                 completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
                 completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
 
@@ -296,7 +299,10 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                                 new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
                 new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-                completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
+                if(completions.getOffset() > 0)
+                    completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
+                else if(completeObject.getValue() != null)
+                    completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
                 completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
                 completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
 
@@ -330,7 +336,10 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                                 new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
                 parser.getProcessedCommand().getArgument().getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-                completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
+                if(completions.getOffset() > 0)
+                    completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
+                else if(completeObject.getValue() != null)
+                    completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
                 completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
                 completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
 
@@ -353,7 +362,10 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                                 new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
                 new DefaultValueOptionCompleter( parser.getProcessedCommand().getArgument().getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-                completeOperation.setOffset( completeOperation.getCursor() - completeObject.getOffset());
+                if(completions.getOffset() > 0)
+                    completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
+                else if(completeObject.getValue() != null)
+                    completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
                 completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
                 completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
 
