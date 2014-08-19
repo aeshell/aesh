@@ -30,7 +30,7 @@ public class InfocmpManager {
             return home;
     }
 
-    public static int[] getCursorHome() {
+    public static int[] getHome() {
         int[] home = InfocmpHandler.getInstance().getAsInts("home");
         if(home.length == 0) {
             LOGGER.warning("Failed to get cursor home from infocmp, using default");
@@ -42,6 +42,16 @@ public class InfocmpManager {
 
     public static int[] getEnd() {
         int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("end");
+        if(infocmpValue.length == 0) {
+            LOGGER.warning("Failed to get end from infocmp, using default");
+            return new int[]{27,91,70}; //use default value
+        }
+        else
+            return infocmpValue;
+    }
+
+    public static int[] getKeyEnd() {
+        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("kend");
         if(infocmpValue.length == 0) {
             LOGGER.warning("Failed to get end from infocmp, using default");
             return new int[]{27,79,70}; //use default value
