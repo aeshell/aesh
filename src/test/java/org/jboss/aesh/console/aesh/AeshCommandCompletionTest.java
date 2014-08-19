@@ -197,19 +197,19 @@ public class AeshCommandCompletionTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
-        outputStream.write(("git rebase --").getBytes());
+        outputStream.write(("git rebase --f").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
         Thread.sleep(80);
         assertEquals("git rebase --force ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
-        outputStream.write(("tr").getBytes());
+        outputStream.write(("--t").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
         Thread.sleep(80);
-        assertEquals("git rebase --force true ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        assertEquals("git rebase --force --test ", ((AeshConsoleImpl) aeshConsole).getBuffer());
         outputStream.write(enter.getFirstValue());
         outputStream.flush();
 
@@ -220,6 +220,12 @@ public class AeshCommandCompletionTest {
         Thread.sleep(80);
         assertEquals("git rebase --force ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
+        outputStream.write(("--test bar").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        assertEquals("git rebase --force --test barFOO ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         aeshConsole.stop();
      }
@@ -340,8 +346,11 @@ public class AeshCommandCompletionTest {
     @CommandDefinition(name = "rebase", description = "")
     public static class GitRebase implements Command {
 
-        @Option
+        @Option(hasValue = false)
         private boolean force;
+
+        @Option(completer = RebaseTestCompleter.class)
+        private String test;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
@@ -349,5 +358,13 @@ public class AeshCommandCompletionTest {
             return CommandResult.SUCCESS;
         }
 
+        public class RebaseTestCompleter implements OptionCompleter {
+
+            @Override
+            public void complete(CompleterInvocation completerInvocation) {
+                assertEquals(true, ((GitRebase) completerInvocation.getCommand()).force);
+                completerInvocation.addCompleterValue("barFOO");
+            }
+        }
     }
 }

@@ -258,8 +258,9 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( displayName));
 
             try {
-                parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(rest), invocationProviders,
-                        completeOperation.getAeshContext(), false);
+                List<String> words = Parser.findAllWords(rest).getWords();
+                parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(words, true),
+                        invocationProviders, completeOperation.getAeshContext(), false);
             }
             //this should be ignored at some point
             catch (CommandLineParserException | OptionValidatorException ignored) { }
@@ -318,8 +319,9 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             String lastWord = Parser.findEscapedSpaceWordCloseToEnd(completeOperation.getBuffer());
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length() - lastWord.length());
             try {
-                parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(rest), invocationProviders,
-                        completeOperation.getAeshContext(), false);
+                List<String> words = Parser.findAllWords(rest).getWords();
+                parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(words, true),
+                        invocationProviders, completeOperation.getAeshContext(), false);
             }
             catch (CommandLineParserException | OptionValidatorException ignored) { }
 

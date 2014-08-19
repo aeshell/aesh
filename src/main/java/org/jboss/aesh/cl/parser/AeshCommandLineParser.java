@@ -59,6 +59,10 @@ public class AeshCommandLineParser implements CommandLineParser {
         isChild = child;
     }
 
+    public boolean isChild() {
+        return isChild;
+    }
+
     @Override
     public CommandLineParser getChildParser(String name) {
         if(!isGroupCommand())
