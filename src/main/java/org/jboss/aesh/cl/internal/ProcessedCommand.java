@@ -289,4 +289,8 @@ public final class ProcessedCommand {
         for(ProcessedOption option : options)
             option.processAfterInit(invocationProviders);
     }
+
+    public boolean containsArgumentWithDefaultValues() {
+        return getArgument() != null && getArgument().hasDefaultValue();
+    }
 }

@@ -389,6 +389,10 @@ public final class ProcessedOption {
         return new HashMap<>();
     }
 
+    public boolean hasDefaultValue() {
+        return getDefaultValues() != null && getDefaultValues().size() > 0;
+    }
+
     @Override
     public String toString() {
         return "ProcessedOption{" +
