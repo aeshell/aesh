@@ -346,8 +346,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 }
 
             }
-            else if(parser.getProcessedCommand().getArgument() != null &&
-                    parser.getProcessedCommand().getArgument().getDefaultValues().size() > 0) {
+            else if(parser.getProcessedCommand().containsArgumentWithDefaultValues()) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
                                 new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
