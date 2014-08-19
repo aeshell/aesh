@@ -272,10 +272,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
 
                 currentOption.getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-                if(completions.getOffset() > 0)
-                    completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
-                else if(completeObject.getValue() != null)
-                    completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
+                completionSetOffSet(completeObject, completeOperation, completions);
                 completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
                 completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
 
@@ -299,10 +296,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                                 new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
                 new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-                if(completions.getOffset() > 0)
-                    completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
-                else if(completeObject.getValue() != null)
-                    completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
+                completionSetOffSet(completeObject, completeOperation, completions);
                 completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
                 completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
 
@@ -336,10 +330,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                                 new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
                 parser.getProcessedCommand().getArgument().getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-                if(completions.getOffset() > 0)
-                    completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
-                else if(completeObject.getValue() != null)
-                    completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
+                completionSetOffSet(completeObject, completeOperation, completions);
                 completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
                 completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
 
@@ -362,10 +353,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                                 new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
                 new DefaultValueOptionCompleter( parser.getProcessedCommand().getArgument().getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-                if(completions.getOffset() > 0)
-                    completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
-                else if(completeObject.getValue() != null)
-                    completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
+                completionSetOffSet(completeObject, completeOperation, completions);
                 completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
                 completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
 
@@ -381,6 +369,13 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 completeOperation.doAppendSeparator( completions.isAppendSpace());
             }
         }
+    }
+
+    private void completionSetOffSet(ParsedCompleteObject completeObject, CompleteOperation completeOperation, CompleterInvocation completions) {
+        if(completions.getOffset() > 0)
+            completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
+        else if(completeObject.getValue() != null)
+            completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
     }
 
     private CommandLineCompletionParser getCorrectCompletionParser(String line) {
