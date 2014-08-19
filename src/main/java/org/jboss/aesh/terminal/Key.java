@@ -193,8 +193,12 @@ public enum Key {
             InfocmpManager.getPgDown() : new int[]{WINDOWS_ESC.getFirstValue(),81}),
     HOME(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getKeyHome() : new int[]{WINDOWS_ESC.getFirstValue(),71}),
+    HOME_2(Config.isOSPOSIXCompatible() ?
+            InfocmpManager.getHome() : new int[]{WINDOWS_ESC.getFirstValue(),71}),
     END(Config.isOSPOSIXCompatible() ?
             InfocmpManager.getEnd() : new int[]{WINDOWS_ESC.getFirstValue(),79}),
+    END_2(Config.isOSPOSIXCompatible() ?
+            InfocmpManager.getKeyEnd() : new int[]{WINDOWS_ESC.getFirstValue(),79}),
     META_CTRL_J(Config.isOSPOSIXCompatible() ?
             new int[]{ESC.getFirstValue(),10} : new int[]{0,36}),
     META_CTRL_D(new int[]{ESC.getFirstValue(),4}),
