@@ -8,5 +8,7 @@ jdk:
 env:
    - TERM=dumb
 
+before_install: ./gradlew clean
+
 notifications:
   irc: chat.freenode.net#aesh
