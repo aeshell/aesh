@@ -91,6 +91,8 @@ public class ParserGenerator {
                     .resultHandler(groupCommand.resultHandler())
                     .create();
 
+            processCommand(processedGroupCommand, clazz);
+
             AeshCommandContainer groupContainer;
             if(clazzIsaCommand)
                 groupContainer = new AeshCommandContainer(

@@ -197,6 +197,14 @@ public class AeshCommandCompletionTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
+        outputStream.write(("git --").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        assertEquals("git --help ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        outputStream.write(enter.getFirstValue());
+
         outputStream.write(("git rebase --").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
@@ -324,6 +332,9 @@ public class AeshCommandCompletionTest {
 
     @GroupCommandDefinition(name = "git", description = "", groupCommands = {GitCommit.class, GitRebase.class})
     public static class GitCommand implements Command {
+
+        @Option(hasValue = false)
+        private boolean help;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
