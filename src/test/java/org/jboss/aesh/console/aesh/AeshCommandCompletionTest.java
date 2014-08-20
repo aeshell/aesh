@@ -197,14 +197,14 @@ public class AeshCommandCompletionTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
-        outputStream.write(("git rebase --f").getBytes());
+        outputStream.write(("git rebase --").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
         Thread.sleep(80);
         assertEquals("git rebase --force ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
-        outputStream.write(("--t").getBytes());
+        outputStream.write(("--").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
@@ -349,7 +349,7 @@ public class AeshCommandCompletionTest {
         @Option(hasValue = false)
         private boolean force;
 
-        @Option(completer = RebaseTestCompleter.class)
+        @Option(completer = RebaseTestCompleter.class, activator = RebaseTestActivator.class)
         private String test;
 
         @Override
@@ -365,6 +365,14 @@ public class AeshCommandCompletionTest {
                 assertEquals(true, ((GitRebase) completerInvocation.getCommand()).force);
                 completerInvocation.addCompleterValue("barFOO");
             }
+        }
+    }
+
+    public static class RebaseTestActivator implements OptionActivator {
+        @Override
+        public boolean isActivated(ProcessedCommand processedCommand) {
+            ProcessedOption option = processedCommand.findLongOption("force");
+            return option != null && option.getValue() != null && option.getValue().equals("true");
         }
     }
 }

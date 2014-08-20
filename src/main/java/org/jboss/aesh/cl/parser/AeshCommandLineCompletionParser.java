@@ -189,12 +189,12 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 completeOperation.addCompletionCandidate("");
             }
             else {
-                parser.parse(completeOperation.getBuffer(), true);
                 //we have partial/full name
                 if(completeObject.getName() != null && completeObject.getName().length() > 0) {
                     String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( completeObject.getName()));
+                    List<String> words = Parser.findAllWords(rest).getWords();
                     try {
-                        parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(rest), invocationProviders,
+                        parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(words, true), invocationProviders,
                                 completeOperation.getAeshContext(), false);
                     }
                     //this should be ignored at some point
@@ -216,7 +216,10 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 }
                 else {
                     try {
-                        parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(completeOperation.getBuffer()),
+                        List<String> words = Parser.findAllWords(completeOperation.getBuffer()).getWords();
+                        if(words.get(words.size()-1).equals("--") || words.get(words.size()-1).equals("-"))
+                            words.remove(words.size()-1);
+                        parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(words, true),
                                 invocationProviders, completeOperation.getAeshContext(), false);
                     }
                     //this should be ignored at some point
