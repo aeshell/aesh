@@ -20,63 +20,76 @@ public class ReflectionUtil {
             throw new RuntimeException("Can not create new instance of an " + clazz.getName());
         }
 
+        T instance = null;
         for(Constructor<?> constructor : clazz.getConstructors()) {
-            T object = (T) instantiateWithConstructor(constructor);
-            if(object != null)
-                return object;
+            instance = (T) instantiateWithConstructor(constructor);
+            if (isValidInstance(instance)) return instance;
         }
 
         for(Constructor<?> constructor : clazz.getDeclaredConstructors()) {
-            T object = (T) instantiateWithConstructor(constructor);
-            if(object != null)
-                return object;
+            instance = (T) instantiateWithConstructor(constructor);
+            if (isValidInstance(instance)) return instance;
         }
 
         throw new RuntimeException("Could not instantiate class: "+clazz+", no access to constructors.");
     }
 
+    private static <T> boolean isValidInstance(T instance) {
+        if (instance != null) {
+            return true;
+        }
+        return false;
+    }
+
     private static <T> T instantiateWithConstructor(Constructor<T> constructor) {
-            if(constructor.getParameterTypes().length == 0) {
-                if(Modifier.isPrivate( constructor.getModifiers()) ||
-                        Modifier.isProtected( constructor.getModifiers())) {
-                    constructor.setAccessible(true);
-                }
-                try {
-                    return constructor.newInstance();
-                } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-            }
-            //inner classes require parent class as parameter
-            else if(constructor.getParameterTypes().length == 1) {
-                if(Modifier.isPrivate( constructor.getModifiers()) ||
-                        Modifier.isProtected( constructor.getModifiers())) {
-                    constructor.setAccessible(true);
-                }
+        T instance = null;
+        if(constructor.getParameterTypes().length == 0) {
+            instance = newInstanceWithoutParameterTypes(constructor);
+        }
 
-                Constructor paramConstructor = getConstructorWithNoParams( constructor.getParameterTypes()[0]);
+        if(constructor.getParameterTypes().length == 1) {
+            instance = newInstanceWithParameterTypes(constructor);
+        }
 
-                if(paramConstructor != null) {
-                    try {
-                        return constructor.newInstance(paramConstructor.newInstance());
-                    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        return null;
+        return isValidInstance(instance) ? instance : null;
+    }
+
+    private static <T> T newInstanceWithoutParameterTypes(Constructor<T> constructor) {
+        try {
+            setAccessible(constructor);
+            return constructor.newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static <T> T newInstanceWithParameterTypes(Constructor<T> constructor) {
+        Constructor paramConstructor = getConstructorWithNoParams( constructor.getParameterTypes()[0]);
+        if (paramConstructor == null) return null;
+        setAccessible(constructor);
+        try {
+            return constructor.newInstance(paramConstructor.newInstance());
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static <T> void setAccessible(Constructor<T> constructor) {
+        if(Modifier.isPrivate(constructor.getModifiers()) ||
+                Modifier.isProtected( constructor.getModifiers())) {
+            constructor.setAccessible(true);
+        }
     }
 
     private static Constructor getConstructorWithNoParams(Class clazz) {
         for(Constructor constructor : clazz.getConstructors()) {
             if(constructor.getParameterTypes().length == 0) {
-                if(Modifier.isPrivate( constructor.getModifiers()) ||
-                        Modifier.isProtected( constructor.getModifiers())) {
-                    constructor.setAccessible(true);
-                }
+                setAccessible(constructor);
                 return constructor;
             }
         }
-        return null;
+       return null;
     }
 }
