@@ -69,7 +69,7 @@ public class AeshCommandContainer implements CommandContainer {
         commandLine.getParser().getCommandPopulator().populateObject(commandLine.getParser().getCommand(), commandLine, invocationProviders, aeshContext, true);
         if(commandLine.getParser().getProcessedCommand().getValidator() != null &&
                 !commandLine.hasOptionWithOverrideRequired())
-            parser.getProcessedCommand().getValidator().validate(commandLine.getParser().getCommand());
+            commandLine.getParser().getProcessedCommand().getValidator().validate(commandLine.getParser().getCommand());
 
         CommandResult result = commandLine.getParser().getCommand().execute(commandInvocation);
 
