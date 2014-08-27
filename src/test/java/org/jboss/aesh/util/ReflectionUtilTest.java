@@ -20,17 +20,17 @@ public class ReflectionUtilTest {
     @Test
     public void testNewInstance() {
 
-        String foo = (String) ReflectionUtil.newInstance(String.class);
+        String foo = ReflectionUtil.newInstance(String.class);
 
         assertNotNull(foo);
 
-        Foo1 foo1 = (Foo1) ReflectionUtil.newInstance(Foo1.class);
+        Foo1 foo1 = ReflectionUtil.newInstance(Foo1.class);
         assertNotNull(foo1);
 
-        Foo2 foo2 = (Foo2) ReflectionUtil.newInstance(Foo2.class);
+        Foo2 foo2 = ReflectionUtil.newInstance(Foo2.class);
         assertNotNull(foo2);
 
-        Foo3 foo3 = (Foo3) ReflectionUtil.newInstance(Foo3.class);
+        Foo3 foo3 = ReflectionUtil.newInstance(Foo3.class);
         assertNotNull(foo3);
 
         class FooConverter implements Converter<FooConverter, ConverterInvocation> {
@@ -41,9 +41,19 @@ public class ReflectionUtilTest {
             }
         }
 
-        FooConverter foo4 = (FooConverter) ReflectionUtil.newInstance(FooConverter.class);
+        FooConverter foo4 = ReflectionUtil.newInstance(FooConverter.class);
         assertNotNull(foo4);
 
+    }
+
+    @Test
+    public void testNewInstanceWithClassWithManyConstructors() {
+        Foo5 foo5 = ReflectionUtil.newInstance(Foo5.class);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testExceptionWithConstructorWithMoreThanOneParam() {
+        Foo4 foo4 = ReflectionUtil.newInstance(Foo4.class);
     }
 
     public class Foo1 {
@@ -56,5 +66,25 @@ public class ReflectionUtilTest {
 
     class Foo3 {
 
+    }
+
+    class Foo4 {
+        public Foo4(String x, String y) {
+
+        }
+    }
+
+    class Foo5 {
+        public Foo5() {
+
+        }
+
+        public Foo5(String x) {
+
+        }
+
+        public Foo5(String x, String y) {
+
+        }
     }
 }
