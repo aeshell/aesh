@@ -21,7 +21,7 @@
    <scm>
       <connection>scm:git:git://github.com/aeshell/aesh.git</connection>
       <developerConnection>scm:git:ssh://git@github.com/aeshell/aesh.git</developerConnection>
-      <url>http://aeshell.github.com/</url>
+      <url>http://aeshell.github.io/</url>
       <tag>HEAD</tag>
    </scm>
 
