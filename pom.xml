@@ -55,7 +55,6 @@
             <configuration>
                <redirectTestOutputToFile>true</redirectTestOutputToFile>
                <trimStackTrace>false</trimStackTrace>
-               <printSummary>true</printSummary>
                <includes>
                   <include>**/*TestCase.java</include>
                   <include>**/*Test.java</include>
@@ -63,7 +62,6 @@
                <excludes>
                   <exclude>**/ConsoleRedirectionTest.java</exclude>
                </excludes>
-               <useFile>true</useFile>
             </configuration>
          </plugin>
          <plugin>
@@ -86,15 +84,5 @@
          </plugin>
       </plugins>
    </build>
-
-   <reporting>
-      <plugins>
-         <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>findbugs-maven-plugin</artifactId>
-            <version>2.5.4-SNAPSHOT</version>
-         </plugin>
-      </plugins>
-   </reporting>
 
 </project>
