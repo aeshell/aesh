@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ackage org.jboss.aesh.console.command.activator;
+ */
+package org.jboss.aesh.console.command.activator;
 
 import org.jboss.aesh.cl.activation.OptionActivator;
 

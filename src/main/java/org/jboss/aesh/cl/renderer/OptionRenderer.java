@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ackage org.jboss.aesh.cl.renderer;
+ */
+package org.jboss.aesh.cl.renderer;
 
 import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalTextStyle;

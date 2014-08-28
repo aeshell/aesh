@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ackage org.jboss.aesh.cl.internal;
+ */
+package org.jboss.aesh.cl.internal;
 
 import org.jboss.aesh.cl.activation.NullActivator;
 import org.jboss.aesh.cl.activation.OptionActivator;

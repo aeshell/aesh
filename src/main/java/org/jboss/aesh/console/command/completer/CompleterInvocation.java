@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ackage org.jboss.aesh.console.command.completer;
+ */
+package org.jboss.aesh.console.command.completer;
 
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.command.Command;
