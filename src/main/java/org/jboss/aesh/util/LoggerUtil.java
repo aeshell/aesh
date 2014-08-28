@@ -22,6 +22,7 @@ import java.util.logging.StreamHandler;
  * warning: made it even uglier when Settings was changed to not be a Singleton... gah!
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  */
 public class LoggerUtil {
 
@@ -30,14 +31,9 @@ public class LoggerUtil {
     private static void createLogHandler(String log) {
         try {
             File logFile = new File(log);
-            if(logFile.getParentFile() != null && !logFile.getParentFile().isDirectory()) {
-                if(!logFile.getParentFile().mkdirs()) {
-                    //if creating dirs failed, just create a logger without a file handler
-                    createLogHandler(new ConsoleHandler());
-                    return;
-                }
-            }
-            else if(logFile.isDirectory()) {
+            createDirsToParentFile(logFile);
+
+            if(logFile.isDirectory()) {
                 logFile = new File(logFile.getAbsolutePath()+ Config.getPathSeparator()+"aesh.log");
             }
             createLogHandler(new FileHandler(logFile.getAbsolutePath()));
@@ -48,19 +44,24 @@ public class LoggerUtil {
 
     }
 
+    private static void createDirsToParentFile(File logFile) {
+        if(isCreateNewDirsToParent(logFile)) {
+            createLogHandler(new ConsoleHandler());
+            return;
+        }
+    }
+
+    private static boolean isCreateNewDirsToParent(File logFile) {
+        return logFile.getParentFile() != null && !logFile.getParentFile().isDirectory() && !logFile.getParentFile().mkdirs();
+    }
+
     private static void createLogHandler(StreamHandler handler) {
         logHandler = handler;
         logHandler.setFormatter(new SimpleFormatter());
     }
 
-    /**
-     *
-     * @param name class
-     * @return logger
-     */
     public static synchronized Logger getLogger(String name) {
         if(logHandler == null) {
-            //just create a default logHandler
             createLogHandler(Config.getTmpDir()+Config.getPathSeparator()+"aesh.log");
         }
 
