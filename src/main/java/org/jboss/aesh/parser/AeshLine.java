@@ -25,15 +25,15 @@ public class AeshLine {
     private final ParserStatus status;
 
     public AeshLine(List<String> words, ParserStatus status, String errorMessage) {
-        if(words == null)
-            this.words = new ArrayList<>(0);
-        else {
-            this.words = new ArrayList<>(words.size());
-            this.words.addAll(words);
-        }
-
         this.status = status;
         this.errorMessage = errorMessage;
+
+        if(words == null) {
+            this.words = new ArrayList<>(0);
+            return;
+        }
+
+        this.words = words;
     }
 
     public String getErrorMessage() {

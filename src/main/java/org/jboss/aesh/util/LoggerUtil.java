@@ -31,7 +31,7 @@ public class LoggerUtil {
     private static void createLogHandler(String log) {
         try {
             File logFile = new File(log);
-            createDirsToParentFile(logFile);
+            createLogHandlerToFile(logFile);
 
             if(logFile.isDirectory()) {
                 logFile = new File(logFile.getAbsolutePath()+ Config.getPathSeparator()+"aesh.log");
@@ -44,14 +44,14 @@ public class LoggerUtil {
 
     }
 
-    private static void createDirsToParentFile(File logFile) {
-        if(isCreateNewDirsToParent(logFile)) {
+    private static void createLogHandlerToFile(File logFile) {
+        if(isCreateANewHandler(logFile)) {
             createLogHandler(new ConsoleHandler());
             return;
         }
     }
 
-    private static boolean isCreateNewDirsToParent(File logFile) {
+    private static boolean isCreateANewHandler(File logFile) {
         return logFile.getParentFile() != null && !logFile.getParentFile().isDirectory() && !logFile.getParentFile().mkdirs();
     }
 
