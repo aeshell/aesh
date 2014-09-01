@@ -42,6 +42,8 @@ public class AliasManager {
     private final List<Alias> aliases;
     private final Pattern aliasPattern = Pattern.compile("^(alias)\\s+(\\w+)\\s*=\\s*(.*)$");
     private final Pattern listAliasPattern = Pattern.compile("^(alias)((\\s+\\w+)+)$");
+    private final Pattern aliasHelpPattern = Pattern.compile("^(" + ALIAS + ")\\s+\\-\\-help$");
+    private final Pattern unaliasHelpPattern = Pattern.compile("^(" + UNALIAS + ")\\s+\\-\\-help$");
     private static final String ALIAS = "alias";
     private static final String ALIAS_SPACE = "alias ";
     private static final String UNALIAS = "unalias";
@@ -139,7 +141,9 @@ public class AliasManager {
 
     public String removeAlias(String buffer) {
         if(buffer.trim().equals(UNALIAS))
-            return "unalias: usage: unalias name [name ...]"+Config.getLineSeparator();
+            return unaliasUsage();
+        if (unaliasHelpPattern.matcher(buffer).matches())
+            return unaliasUsage();
 
         buffer = buffer.substring(UNALIAS.length()).trim();
         for(String s : buffer.split(" ")) {
@@ -157,6 +161,8 @@ public class AliasManager {
     public String parseAlias(String buffer) {
         if(buffer.trim().equals(ALIAS))
             return printAllAliases();
+        if (aliasHelpPattern.matcher(buffer).matches())
+            return aliasUsage();
         Matcher aliasMatcher = aliasPattern.matcher(buffer);
         if(aliasMatcher.matches()) {
             String name = aliasMatcher.group(2);
@@ -165,16 +171,16 @@ public class AliasManager {
                 if(value.endsWith("'"))
                     value = value.substring(1,value.length()-1);
                 else
-                    return "alias: usage: alias [name[=value] ... ]"+Config.getLineSeparator();
+                    return aliasUsage();
             }
             else if(value.startsWith("\"")) {
                 if(value.endsWith("\""))
                     value = value.substring(1,value.length()-1);
                 else
-                    return "alias: usage: alias [name[=value] ... ]"+Config.getLineSeparator();
+                    return aliasUsage();
             }
             if(name.contains(" "))
-                return "alias: usage: alias [name[=value] ... ]"+Config.getLineSeparator();
+                return aliasUsage();
 
             addAlias(name, value);
             return null;
@@ -197,6 +203,14 @@ public class AliasManager {
             return sb.toString();
         }
         return null;
+    }
+
+    private String aliasUsage() {
+        return "alias: usage: alias [name[=value] ... ]"+Config.getLineSeparator();
+    }
+
+    private String unaliasUsage() {
+        return "unalias: usage: unalias name [name ...]"+Config.getLineSeparator();
     }
 
 }
