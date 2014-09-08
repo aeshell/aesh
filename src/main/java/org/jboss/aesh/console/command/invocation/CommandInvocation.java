@@ -107,4 +107,17 @@ public interface CommandInvocation {
      * @param input command input
      */
     void executeCommand(String input);
+
+   /**
+    * Print a message on console
+    * @param msg
+    */
+    void print(String msg);
+
+    /**
+     * Print a new line with a message on console;
+     * @param msg
+     */
+    void println(String msg);
+
 }
