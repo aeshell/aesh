@@ -141,10 +141,10 @@ public class CommandBuilder {
 
     public CommandContainer generate() {
         try {
-            if(parserException != null)
+            if(parserException != null) {
                 return new AeshCommandContainer(parserException.getMessage());
-            else
-                return new AeshCommandContainer(generateParser());
+            }
+            return new AeshCommandContainer(generateParser());
         }
         catch (CommandLineParserException e) {
             return new AeshCommandContainer(e.getMessage());
