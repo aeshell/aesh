@@ -35,18 +35,27 @@ public class DefaultValueOptionCompleter implements OptionCompleter<CompleterInv
 
     @Override
     public void complete(CompleterInvocation completerData) {
+        completeDataWithoutValues(completerData);
+        completeDataWithValues(completerData);
+    }
+
+    private void completeDataWithoutValues(CompleterInvocation completerData) {
         if(completerData.getGivenCompleteValue() == null ||
-                completerData.getGivenCompleteValue().length() == 0)
+                completerData.getGivenCompleteValue().length() == 0) {
             completerData.addAllCompleterValues(defaultValues);
-        else {
-            for(String value : defaultValues) {
-                if(value.startsWith(completerData.getGivenCompleteValue()))
-                    completerData.addCompleterValue(value);
+            return;
+        }
+
+        for(String value : defaultValues) {
+            if(value.startsWith(completerData.getGivenCompleteValue())) {
+                completerData.addCompleterValue(value);
             }
         }
+    }
+
+    private void completeDataWithValues(CompleterInvocation completerData) {
         if(completerData.getCompleterValues().size() == 1 &&
                 completerData.getCompleterValues().get(0).containSpaces()) {
-
             String tmpData = Parser.switchSpacesToEscapedSpacesInWord(
                     completerData.getCompleterValues().get(0).getCharacters());
             completerData.clearCompleterValues();
