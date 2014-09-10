@@ -27,8 +27,8 @@ apply plugin: 'checkstyle'
 group = 'org.jboss.aesh'
 version = '0.57-SNAPSHOT'
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
 
 jar {
     manifest {
@@ -58,7 +58,6 @@ mainClassName = "Example"
 
 idea {
     project {
-        jdkName = "1.7"
         ipr {
             withXml { provider ->
                 provider.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
@@ -79,5 +78,5 @@ idea {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.12'
+    gradleVersion = '2.1'
 }
