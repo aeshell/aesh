@@ -107,4 +107,15 @@ public final class AeshCommandInvocation implements CommandInvocation {
     public void executeCommand(String input) {
         aeshConsole.execute(input);
     }
+
+   @Override
+   public void print(String msg) {
+      this.aeshConsole.getShell().out().print(msg);
+   }
+
+    @Override
+    public void println(String msg) {
+        this.aeshConsole.getShell().out().println(msg);
+    }
+
 }

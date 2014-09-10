@@ -178,6 +178,16 @@ class FooCommandInvocation implements CommandInvocation {
         commandInvocation.executeCommand(input);
     }
 
+    @Override
+    public void print(String msg) {
+        commandInvocation.print(msg);
+    }
+
+    @Override
+    public void println(String msg) {
+        commandInvocation.println(msg);
+    }
+
     public String getFoo() {
         return "FOO";
     }
