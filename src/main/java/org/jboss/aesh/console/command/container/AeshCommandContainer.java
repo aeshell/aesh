@@ -17,26 +17,15 @@
  */
 package org.jboss.aesh.console.command.container;
 
-import org.jboss.aesh.cl.CommandLine;
-import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
-import org.jboss.aesh.cl.validator.CommandValidatorException;
-import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
-import org.jboss.aesh.parser.AeshLine;
-
-import java.io.IOException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandContainer implements CommandContainer {
+public class AeshCommandContainer extends DefaultCommandContainer {
 
     private CommandLineParser parser;
     private String errorMessage;
@@ -68,23 +57,6 @@ public class AeshCommandContainer implements CommandContainer {
     @Override
     public String getBuildErrorMessage() {
         return errorMessage;
-    }
-
-    @Override
-    public CommandContainerResult executeCommand(AeshLine line, InvocationProviders invocationProviders,
-                                                 AeshContext aeshContext,
-                                                 CommandInvocation commandInvocation)
-            throws CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException, InterruptedException {
-
-        CommandLine commandLine = parser.parse(line, false);
-        commandLine.getParser().getCommandPopulator().populateObject(commandLine.getParser().getCommand(), commandLine, invocationProviders, aeshContext, true);
-        if(commandLine.getParser().getProcessedCommand().getValidator() != null &&
-                !commandLine.hasOptionWithOverrideRequired())
-            commandLine.getParser().getProcessedCommand().getValidator().validate(commandLine.getParser().getCommand());
-
-        CommandResult result = commandLine.getParser().getCommand().execute(commandInvocation);
-
-        return new CommandContainerResult(commandLine.getParser().getProcessedCommand().getResultHandler(), result);
     }
 
     @Override
