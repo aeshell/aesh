@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.cl.parser;
+package org.jboss.aesh.cl.populator;
 
 import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;
