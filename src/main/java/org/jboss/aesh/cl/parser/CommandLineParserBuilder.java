@@ -18,8 +18,6 @@
 package org.jboss.aesh.cl.parser;
 
 import org.jboss.aesh.cl.internal.ProcessedCommand;
-import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.util.ReflectionUtil;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

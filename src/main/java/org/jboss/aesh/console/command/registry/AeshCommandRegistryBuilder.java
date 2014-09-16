@@ -23,7 +23,6 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.container.AeshCommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainerBuilder;
-import org.jboss.aesh.util.ReflectionUtil;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
