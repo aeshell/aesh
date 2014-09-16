@@ -53,16 +53,8 @@ public class AeshCommandRegistryBuilder {
         return this;
     }
 
-    public AeshCommandRegistryBuilder command(ProcessedCommand processedCommand,
-            Class<? extends Command> command) {
-        commandRegistry.addCommand(new AeshCommandContainer(processedCommand,
-                ReflectionUtil.newInstance(command)));
-        return this;
-    }
-
-    public AeshCommandRegistryBuilder command(ProcessedCommand processedCommand,
-            Command command) {
-        commandRegistry.addCommand(new AeshCommandContainer(processedCommand, command));
+    public AeshCommandRegistryBuilder command(ProcessedCommand processedCommand) {
+        commandRegistry.addCommand(new AeshCommandContainer(processedCommand));
         return this;
     }
 

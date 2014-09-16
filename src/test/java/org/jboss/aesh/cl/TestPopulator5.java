@@ -20,8 +20,12 @@ package org.jboss.aesh.cl;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 
+import java.io.IOException;
 import java.util.Currency;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +33,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 @CommandDefinition(name = "test", description = "a simple test")
-public class TestPopulator5 {
+public class TestPopulator5 implements Command {
 
     @Option(shortName = 'v', validator = LongOptionValidator.class)
     private Long veryLong;
@@ -88,6 +92,11 @@ public class TestPopulator5 {
 
     public Boolean getBar() {
         return bar;
+    }
+
+    @Override
+    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        return CommandResult.SUCCESS;
     }
 
     public class LongOptionValidator implements OptionValidator {

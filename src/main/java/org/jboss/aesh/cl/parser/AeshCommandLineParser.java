@@ -25,7 +25,6 @@ import org.jboss.aesh.cl.exception.RequiredOptionException;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
-import org.jboss.aesh.cl.populator.AeshCommandPopulator;
 import org.jboss.aesh.cl.populator.CommandPopulator;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.parser.AeshLine;
@@ -44,31 +43,26 @@ import java.util.List;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandLineParser implements CommandLineParser {
+public class AeshCommandLineParser<C extends Command> implements CommandLineParser<C> {
 
-    private final ProcessedCommand processedCommand;
+    private final ProcessedCommand<C> processedCommand;
     private static final String EQUALS = "=";
-    private List<CommandLineParser> childParsers;
+    private List<CommandLineParser<C>> childParsers;
     private boolean isChild = false;
-    private Command command;
 
-    public AeshCommandLineParser(ProcessedCommand processedCommand) {
+    public AeshCommandLineParser(ProcessedCommand<C> processedCommand) {
         this.processedCommand = processedCommand;
     }
 
-    public AeshCommandLineParser(ProcessedCommand processedCommand, Command command ) {
-        this.processedCommand = processedCommand;
-        this.command = command;
-    }
-
-    public void addChildParser(AeshCommandLineParser commandLineParser) {
+    public void addChildParser(CommandLineParser<C> commandLineParser) {
         if(childParsers == null)
             childParsers = new ArrayList<>();
         commandLineParser.setChild(true);
         childParsers.add(commandLineParser);
     }
 
-    private void setChild(boolean child) {
+    @Override
+    public void setChild(boolean child) {
         isChild = child;
     }
 
@@ -77,7 +71,7 @@ public class AeshCommandLineParser implements CommandLineParser {
     }
 
     @Override
-    public CommandLineParser getChildParser(String name) {
+    public CommandLineParser<C> getChildParser(String name) {
         if(!isGroupCommand())
             return null;
         for(CommandLineParser clp : childParsers) {
@@ -88,21 +82,21 @@ public class AeshCommandLineParser implements CommandLineParser {
     }
 
     @Override
-    public List<CommandLineParser> getAllChildParsers() {
+    public List<CommandLineParser<C>> getAllChildParsers() {
         if(isGroupCommand())
             return childParsers;
         else
-            return new ArrayList<>();
+           return new ArrayList<>();
     }
 
     @Override
-    public ProcessedCommand getProcessedCommand() {
+    public ProcessedCommand<C> getProcessedCommand() {
         return processedCommand;
     }
 
     @Override
-    public Command getCommand() {
-        return command;
+    public C getCommand() {
+        return processedCommand.getCommand();
     }
 
     @Override
@@ -112,7 +106,7 @@ public class AeshCommandLineParser implements CommandLineParser {
 
     @Override
     public CommandPopulator getCommandPopulator() {
-        return new AeshCommandPopulator(this);
+        return processedCommand.getCommandPopulator();
     }
 
     /**
@@ -143,11 +137,11 @@ public class AeshCommandLineParser implements CommandLineParser {
     }
 
     @Override
-    public CommandLine parse(AeshLine line, boolean ignoreRequirements) {
+    public CommandLine<C> parse(AeshLine line, boolean ignoreRequirements) {
         if(line.getWords().size() > 0) {
             if(processedCommand.getName().equals(line.getWords().get(0))) {
                 if(isGroupCommand() && line.getWords().size() > 1) {
-                   CommandLineParser clp = getChildParser(line.getWords().get(1));
+                   CommandLineParser<C> clp = getChildParser(line.getWords().get(1));
                     if(clp == null)
                         return parse(line.getWords(), ignoreRequirements);
                     //we have a group command
@@ -159,9 +153,9 @@ public class AeshCommandLineParser implements CommandLineParser {
             }
         }
         else if(line.getStatus() != ParserStatus.OK)
-            return new CommandLine(new CommandLineParserException(line.getErrorMessage()));
+            return new CommandLine<>(new CommandLineParserException(line.getErrorMessage()));
 
-        return new CommandLine(new CommandLineParserException("Command:"+ processedCommand +", not found in: "+line));
+        return new CommandLine<>(new CommandLineParserException("Command:"+ processedCommand +", not found in: "+line));
     }
     /**
      * Parse a command line with the defined command as base of the rules.
@@ -193,9 +187,9 @@ public class AeshCommandLineParser implements CommandLineParser {
      * @return CommandLine
      */
     @Override
-    public CommandLine parse(List<String> lines, boolean ignoreRequirements) {
+    public CommandLine<C> parse(List<String> lines, boolean ignoreRequirements) {
         clear();
-        CommandLine commandLine = new CommandLine(this);
+        CommandLine<C> commandLine = new CommandLine<>(this);
         if(processedCommand.hasArgument())
             commandLine.setArgument(processedCommand.getArgument());
         ProcessedOption active = null;
@@ -399,7 +393,7 @@ public class AeshCommandLineParser implements CommandLineParser {
         return commandLine;
     }
 
-    private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand command, CommandLine commandLine) {
+    private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand<C> command, CommandLine<C> commandLine) {
         for(ProcessedOption o : command.getOptions())
             if(o.isRequired()) {
                 boolean found = false;
@@ -499,7 +493,7 @@ public class AeshCommandLineParser implements CommandLineParser {
     public String toString() {
         return "CommandLineParser{" +
                 "processedCommand=" + processedCommand +
-                "command=" + command +
+                "command=" + processedCommand.getCommand() +
                 '}';
     }
 

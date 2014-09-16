@@ -27,7 +27,6 @@ import org.jboss.aesh.util.ReflectionUtil;
 public class CommandLineParserBuilder {
 
     private ProcessedCommand param;
-    private Command command;
 
     public CommandLineParserBuilder() {
     }
@@ -37,19 +36,8 @@ public class CommandLineParserBuilder {
         return this;
     }
 
-    public CommandLineParserBuilder command(Command command) {
-        this.command = command;
-        return this;
-    }
-
-    public CommandLineParserBuilder command(Class<? extends Command> command) {
-        this.command = ReflectionUtil.newInstance(command);
-        return this;
-    }
-
-
     public CommandLineParser create() throws IllegalArgumentException {
-        return new AeshCommandLineParser( param, command);
+        return new AeshCommandLineParser(param);
     }
 
 }

@@ -18,10 +18,13 @@
 package org.jboss.aesh.cl.internal;
 
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.populator.AeshCommandPopulator;
+import org.jboss.aesh.cl.populator.CommandPopulator;
 import org.jboss.aesh.cl.result.NullResultHandler;
 import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidator;
 import org.jboss.aesh.cl.validator.NullCommandValidator;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.util.ReflectionUtil;
 
 import java.util.ArrayList;
@@ -32,7 +35,7 @@ import java.util.List;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ProcessedCommandBuilder {
+public class ProcessedCommandBuilder<T extends Command> {
 
     private String name;
     private String description;
@@ -40,7 +43,8 @@ public class ProcessedCommandBuilder {
     private ResultHandler resultHandler;
     private ProcessedOption argument;
     private final List<ProcessedOption> options;
-
+    private CommandPopulator populator;
+    private T command;
 
     public ProcessedCommandBuilder() {
         options = new ArrayList<>();
@@ -95,6 +99,21 @@ public class ProcessedCommandBuilder {
         return this;
     }
 
+    public ProcessedCommandBuilder populator(CommandPopulator populator) {
+        this.populator = populator;
+        return this;
+    }
+
+    public ProcessedCommandBuilder command(T command) {
+        this.command = command;
+        return this;
+    }
+
+    public ProcessedCommandBuilder command(Class<T> command) {
+        this.command = ReflectionUtil.newInstance(command);
+        return this;
+    }
+
     public ProcessedCommandBuilder addOption(ProcessedOption option) {
         this.options.add(option);
         return this;
@@ -106,7 +125,7 @@ public class ProcessedCommandBuilder {
         return this;
     }
 
-    public ProcessedCommand create() throws CommandLineParserException {
+    public ProcessedCommand<T> create() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
 
@@ -116,6 +135,6 @@ public class ProcessedCommandBuilder {
         if(resultHandler == null)
             resultHandler = new NullResultHandler();
 
-        return  new ProcessedCommand(name, description, validator, resultHandler, argument, options );
+        return new ProcessedCommand(name, command, description, validator, resultHandler, argument, options, populator);
     }
 }

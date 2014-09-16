@@ -33,17 +33,17 @@ import java.util.List;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandLineParser {
+public interface CommandLineParser<C extends Command> {
 
     /**
      * @return the processed command this parser is generated from
      */
-    ProcessedCommand getProcessedCommand();
+    ProcessedCommand<C> getProcessedCommand();
 
     /**
      * @return the actual command
      */
-    Command getCommand();
+    C getCommand();
 
     /**
      * @return completion parser created to work on this command
@@ -54,12 +54,12 @@ public interface CommandLineParser {
      * @param name command
      * @return child parser that matches the name
      */
-    CommandLineParser getChildParser(String name);
+    CommandLineParser<C> getChildParser(String name);
 
     /**
      * @return all the child parser
      */
-    List<CommandLineParser> getAllChildParsers();
+    List<CommandLineParser<C>> getAllChildParsers();
 
     /**
      * @return command populator to work on this command
@@ -85,7 +85,7 @@ public interface CommandLineParser {
      * @param line input
      * @return CommandLine
      */
-    CommandLine parse(String line);
+    CommandLine<C> parse(String line);
 
     /**
      * Parse a command line with the defined command as base of the rules.
@@ -101,9 +101,9 @@ public interface CommandLineParser {
      * @param ignoreRequirements if we should ignore
      * @return CommandLine
      */
-    CommandLine parse(String line, boolean ignoreRequirements);
+    CommandLine<C> parse(String line, boolean ignoreRequirements);
 
-    CommandLine parse(AeshLine line, boolean ignoreRequirements);
+    CommandLine<C> parse(AeshLine line, boolean ignoreRequirements);
 
     /**
      * Parse a command line with the defined command as base of the rules.
@@ -115,9 +115,11 @@ public interface CommandLineParser {
      * @param ignoreRequirements if we should ignore
      * @return CommandLine
      */
-    CommandLine parse(List<String> lines, boolean ignoreRequirements);
+    CommandLine<C> parse(List<String> lines, boolean ignoreRequirements);
 
     void clear();
 
     boolean isGroupCommand();
+
+    void setChild(boolean b);
 }

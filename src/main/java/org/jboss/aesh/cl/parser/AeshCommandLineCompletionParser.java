@@ -26,6 +26,7 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.TerminalString;
@@ -37,9 +38,9 @@ import java.util.List;
  */
 public class AeshCommandLineCompletionParser implements CommandLineCompletionParser {
 
-    private final AeshCommandLineParser parser;
+    private final AeshCommandLineParser<? extends Command> parser;
 
-    public AeshCommandLineCompletionParser(AeshCommandLineParser parser) {
+    public AeshCommandLineCompletionParser(AeshCommandLineParser<? extends Command> parser) {
         this.parser = parser;
     }
 
@@ -152,7 +153,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
      * If endsWithSpace is true we set the value to an empty string to indicate a value
      */
     private ParsedCompleteObject findCompleteObjectValue(String line, boolean endsWithSpace) throws CommandLineParserException {
-        CommandLine cl = parser.parse(line, true);
+        CommandLine<? extends Command> cl = parser.parse(line, true);
 
         //the last word is an argument
         if(cl.getArgument() != null && !cl.getArgument().getValues().isEmpty()) {
@@ -205,7 +206,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( completeObject.getName()));
                     List<String> words = Parser.findAllWords(rest).getWords();
                     try {
-                        parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(words, true), invocationProviders,
+                        parser.getCommandPopulator().populateObject(parser.parse(words, true), invocationProviders,
                                 completeOperation.getAeshContext(), false);
                     }
                     //this should be ignored at some point
@@ -230,7 +231,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                         List<String> words = Parser.findAllWords(completeOperation.getBuffer()).getWords();
                         if(words.get(words.size()-1).equals("--") || words.get(words.size()-1).equals("-"))
                             words.remove(words.size()-1);
-                        parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(words, true),
+                        parser.getCommandPopulator().populateObject(parser.parse(words, true),
                                 invocationProviders, completeOperation.getAeshContext(), false);
                     }
                     //this should be ignored at some point
@@ -273,7 +274,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
 
             try {
                 List<String> words = Parser.findAllWords(rest).getWords();
-                parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(words, true),
+                parser.getCommandPopulator().populateObject(parser.parse(words, true),
                         invocationProviders, completeOperation.getAeshContext(), false);
             }
             //this should be ignored at some point
@@ -334,7 +335,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length() - lastWord.length());
             try {
                 List<String> words = Parser.findAllWords(rest).getWords();
-                parser.getCommandPopulator().populateObject(parser.getCommand(), parser.parse(words, true),
+                parser.getCommandPopulator().populateObject(parser.parse(words, true),
                         invocationProviders, completeOperation.getAeshContext(), false);
             }
             catch (CommandLineParserException | OptionValidatorException ignored) { }

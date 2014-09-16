@@ -52,24 +52,15 @@ import java.util.Map;
  */
 public class ParserGenerator {
 
-    public static AeshCommandContainer generateCommandLineParser(Object paramInstance) throws CommandLineParserException {
-        if(paramInstance instanceof Command)
-            return doGenerateCommandLineParser(paramInstance, true, false);
-        else
-            return doGenerateCommandLineParser(paramInstance, false, false);
+    public static AeshCommandContainer generateCommandLineParser(Command paramInstance) throws CommandLineParserException {
+        return doGenerateCommandLineParser(paramInstance);
     }
 
-    public static AeshCommandContainer generateCommandLineParser(Class clazz) throws CommandLineParserException {
-        for(Class iName : clazz.getInterfaces()) {
-            if(iName.equals(Command.class))
-                return doGenerateCommandLineParser(ReflectionUtil.newInstance(clazz), true, false);
-        }
-
-        return doGenerateCommandLineParser(ReflectionUtil.newInstance(clazz), false, false);
+    public static AeshCommandContainer generateCommandLineParser(Class<? extends Command> clazz) throws CommandLineParserException {
+        return doGenerateCommandLineParser(ReflectionUtil.newInstance(clazz));
     }
 
-    private static AeshCommandContainer doGenerateCommandLineParser(Object commandObject,
-                                                                    boolean clazzIsaCommand, boolean isChild) throws CommandLineParserException {
+    private static AeshCommandContainer doGenerateCommandLineParser(Command commandObject) throws CommandLineParserException {
         Class clazz = commandObject.getClass();
         CommandDefinition command = (CommandDefinition) clazz.getAnnotation(CommandDefinition.class);
         if(command != null) {
@@ -77,54 +68,40 @@ public class ParserGenerator {
                     .name(command.name())
                     .description(command.description())
                     .validator(command.validator())
+                    .command(commandObject)
                     .resultHandler(command.resultHandler()).create();
 
             processCommand(processedCommand, clazz);
 
-            if(clazzIsaCommand)
-                return new AeshCommandContainer(
-                        new CommandLineParserBuilder()
-                                .processedCommand(processedCommand)
-                                .command((Command) commandObject)
-                                .create());
-            else
-                return new AeshCommandContainer(
-                        new CommandLineParserBuilder()
-                                .processedCommand(processedCommand)
-                                .create());
+            return new AeshCommandContainer(
+                    new CommandLineParserBuilder()
+                            .processedCommand(processedCommand)
+                            .create());
         }
+
         GroupCommandDefinition groupCommand = (GroupCommandDefinition) clazz.getAnnotation(GroupCommandDefinition.class);
         if(groupCommand != null) {
             ProcessedCommand processedGroupCommand = new ProcessedCommandBuilder()
                     .name(groupCommand.name())
                     .description(groupCommand.description())
                     .validator(groupCommand.validator())
+                    .command(commandObject)
                     .resultHandler(groupCommand.resultHandler())
                     .create();
 
             processCommand(processedGroupCommand, clazz);
 
             AeshCommandContainer groupContainer;
-            if(clazzIsaCommand)
-                groupContainer = new AeshCommandContainer(
-                        new CommandLineParserBuilder()
-                                .processedCommand(processedGroupCommand)
-                                .command((Command) commandObject)
-                                .create());
-            else
-                groupContainer = new AeshCommandContainer(
-                        new CommandLineParserBuilder()
-                                .processedCommand(processedGroupCommand)
-                                .create());
 
-            for(Class groupClazz : groupCommand.groupCommands()) {
-                Object groupInstance = ReflectionUtil.newInstance(groupClazz);
-                if(groupInstance instanceof Command)
-                    groupContainer.addChild(ParserGenerator.doGenerateCommandLineParser(
-                            groupInstance, true, true));
-                else
-                    groupContainer.addChild(ParserGenerator.doGenerateCommandLineParser(
-                            groupInstance, false, true));
+            groupContainer = new AeshCommandContainer(
+                    new CommandLineParserBuilder()
+                            .processedCommand(processedGroupCommand)
+                            .create());
+
+
+            for(Class<? extends Command> groupClazz : groupCommand.groupCommands()) {
+                Command groupInstance = ReflectionUtil.newInstance(groupClazz);
+                    groupContainer.addChild(ParserGenerator.doGenerateCommandLineParser(groupInstance));
             }
 
             return groupContainer;
@@ -307,14 +284,14 @@ public class ParserGenerator {
 
     }
 
-    public static void parseAndPopulate(Object instance, String input) throws CommandLineParserException, OptionValidatorException {
-        CommandLineParser cl = generateCommandLineParser(instance.getClass()).getParser();
+    public static void parseAndPopulate(Command instance, String input) throws CommandLineParserException, OptionValidatorException {
+        CommandLineParser cl = generateCommandLineParser(instance).getParser();
         InvocationProviders invocationProviders = new AeshInvocationProviders(
                 new AeshConverterInvocationProvider(),
                 new AeshCompleterInvocationProvider(),
                 new AeshValidatorInvocationProvider(),
                 new AeshOptionActivatorProvider());
-        cl.getCommandPopulator().populateObject(instance,  cl.parse(input), invocationProviders, null, true);
+        cl.getCommandPopulator().populateObject( cl.parse(input), invocationProviders, null, true);
     }
 
 }

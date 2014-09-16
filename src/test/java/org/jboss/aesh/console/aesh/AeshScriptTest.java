@@ -85,10 +85,11 @@ public class AeshScriptTest {
         ProcessedCommand fooCommand = new ProcessedCommandBuilder()
                 .name("foo")
                 .resultHandler(resultHandler)
+                .command(FooCommand.class)
                 .create();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(fooCommand, FooCommand.class)
+                .command(fooCommand)
                 .command(new RunCommand(resultHandler))
                 .command(ExitCommand.class)
                 .create();

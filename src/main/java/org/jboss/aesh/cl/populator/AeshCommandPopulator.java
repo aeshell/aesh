@@ -19,11 +19,12 @@ package org.jboss.aesh.cl.populator;
 
 import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
-import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.console.command.Command;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -31,44 +32,43 @@ import java.lang.reflect.Modifier;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandPopulator implements CommandPopulator<Object> {
+public class AeshCommandPopulator implements CommandPopulator<Object, Command> {
 
-    private final CommandLineParser commandLineParser;
+    private final Object instance;
 
-    public AeshCommandPopulator(CommandLineParser commandLineParser) {
-        this.commandLineParser = commandLineParser;
+    public AeshCommandPopulator(Object instance) {
+        this.instance = instance;
     }
 
     /**
      * Populate a Command instance with the values parsed from a command line
      * If any parser errors are detected it will throw an exception
-     * @param instance command
      * @param line command line
      * @param validate do validation or not
      * @throws CommandLineParserException
      */
     @Override
-    public void populateObject(Object instance, CommandLine line, InvocationProviders invocationProviders,
+    public void populateObject(CommandLine<Command> line, InvocationProviders invocationProviders,
                                AeshContext aeshContext, boolean validate)
             throws CommandLineParserException, OptionValidatorException {
         if(line.hasParserError())
             throw line.getParserException();
-        for(ProcessedOption option: commandLineParser.getProcessedCommand().getOptions()) {
+        for(ProcessedOption option : line.getParser().getProcessedCommand().getOptions()) {
             if(line.hasOption(option.getName()))
-                line.getOption(option.getName()).injectValueIntoField(instance, invocationProviders, aeshContext, validate);
+                line.getOption(option.getName()).injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             else if(option.getDefaultValues().size() > 0) {
-                option.injectValueIntoField(instance, invocationProviders, aeshContext, validate);
+                option.injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             }
             else
-                resetField(instance, option.getFieldName(), option.hasValue());
+                resetField(getObject(), option.getFieldName(), option.hasValue());
         }
         if((line.getArgument() != null && line.getArgument().getValues().size() > 0) ||
-                (commandLineParser.getProcessedCommand().getArgument() != null &&
-                        commandLineParser.getProcessedCommand().getArgument().getDefaultValues().size() > 0)) {
-            line.getArgument().injectValueIntoField(instance, invocationProviders, aeshContext, validate);
+                (line.getParser().getProcessedCommand().getArgument() != null &&
+                        line.getParser().getProcessedCommand().getArgument().getDefaultValues().size() > 0)) {
+            line.getArgument().injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
         }
         else if(line.getArgument() != null)
-            resetField(instance, line.getArgument().getFieldName(), true);
+            resetField(getObject(), line.getArgument().getFieldName(), true);
     }
 
     /**
@@ -119,6 +119,11 @@ public class AeshCommandPopulator implements CommandPopulator<Object> {
         catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public Object getObject() {
+        return instance;
     }
 
 }

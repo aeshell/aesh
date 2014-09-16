@@ -17,10 +17,15 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
+
+import java.io.IOException;
 import java.util.List;
 
 @CommandDefinition(name = "test", description = "a simple test")
-public class TestPopulator1 {
+public class TestPopulator1 implements Command {
 
     @Option(shortName = 'X', name = "X", description = "enable X", hasValue = false)
     private Boolean enableX;
@@ -61,5 +66,10 @@ public class TestPopulator1 {
 
     public Integer getInt1() {
         return int1;
+    }
+
+    @Override
+    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        return CommandResult.SUCCESS;
     }
 }

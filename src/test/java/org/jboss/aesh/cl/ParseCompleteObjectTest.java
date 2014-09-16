@@ -21,8 +21,12 @@ import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.cl.parser.ParserGenerator;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -37,7 +41,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testParseCompleteObject() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class).getParser();
+        CommandLineParser<ParseCompleteTest1> clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1", 100);
@@ -273,7 +277,7 @@ public class ParseCompleteObjectTest {
     }
 
     @CommandDefinition(name = "test", description = "a simple test")
-    public class ParseCompleteTest1 {
+    public class ParseCompleteTest1 extends TestCommand {
 
         @Option(name = "X", description = "enable X")
         private String X;
@@ -293,7 +297,7 @@ public class ParseCompleteObjectTest {
     }
 
     @CommandDefinition(name = "test", description = "a simple test")
-    public class ParseCompleteTest2 {
+    public class ParseCompleteTest2 extends TestCommand {
 
         @Option(shortName = 'X', description = "enable X")
         private String X;
@@ -310,7 +314,7 @@ public class ParseCompleteObjectTest {
     }
 
     @CommandDefinition(name = "test", description = "a simple test")
-    public class ParseCompleteTest3 {
+    public class ParseCompleteTest3 extends TestCommand {
 
         @Option(shortName = 'X', description = "enable X")
         private String X;
@@ -325,12 +329,12 @@ public class ParseCompleteObjectTest {
 
     @GroupCommandDefinition(name = "group", description = "groups",
             groupCommands = {ParseCompleteGroupChild1.class, ParseCompleteGroupChild2.class})
-    public class ParseCompleteGroupTest {
+    public class ParseCompleteGroupTest extends TestCommand {
 
     }
 
     @CommandDefinition(name = "child1", description = "im child1")
-    public class ParseCompleteGroupChild1 {
+    public class ParseCompleteGroupChild1 extends TestCommand {
         @Option
         private String enable;
 
@@ -338,11 +342,18 @@ public class ParseCompleteObjectTest {
     }
 
     @CommandDefinition(name = "child2", description = "im child2")
-    public class ParseCompleteGroupChild2 {
+    public class ParseCompleteGroupChild2 extends TestCommand {
         @Option
         private String print;
 
         @Option
         private String help;
+    }
+
+    public class TestCommand implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
     }
 }

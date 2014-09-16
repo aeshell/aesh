@@ -41,6 +41,7 @@ import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
@@ -207,7 +208,7 @@ public class CompletionConsoleTest extends BaseConsoleTest {
 
         param.addOption(new ProcessedOptionBuilder().shortName('f').name("foo").hasValue(true).type(String.class).create());
 
-        final CommandLineParser parser = new AeshCommandLineParser(param);
+        final CommandLineParser<Command> parser = new AeshCommandLineParser(param);
         final StringBuilder builder = new StringBuilder();
 
         Completion completion = new Completion() {

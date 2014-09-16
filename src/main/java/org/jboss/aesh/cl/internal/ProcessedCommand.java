@@ -18,11 +18,14 @@
 package org.jboss.aesh.cl.internal;
 
 import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.populator.AeshCommandPopulator;
+import org.jboss.aesh.cl.populator.CommandPopulator;
 import org.jboss.aesh.cl.result.NullResultHandler;
 import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidator;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
@@ -31,24 +34,31 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public final class ProcessedCommand {
+public final class ProcessedCommand<C extends Command> {
 
     private String name;
     private String description;
     private CommandValidator validator;
     private ResultHandler resultHandler = new NullResultHandler();
+    private CommandPopulator populator;
 
     private List<ProcessedOption> options;
     private ProcessedOption argument;
+    private C command;
 
-    public ProcessedCommand(String name, String description, CommandValidator validator, ResultHandler resultHandler,
-                            ProcessedOption argument, List<ProcessedOption> options ) throws OptionParserException {
+    public ProcessedCommand(String name, C command, String description, CommandValidator validator, ResultHandler resultHandler,
+                            ProcessedOption argument, List<ProcessedOption> options, CommandPopulator populator ) throws OptionParserException {
         setName(name);
         setDescription(description);
         this.validator = validator;
         this.resultHandler = resultHandler;
         this.argument = argument;
         this.options = new ArrayList<>();
+        this.command = command;
+        if(populator == null)
+            this.populator = new AeshCommandPopulator(this.command);
+        else
+            this.populator = populator;
         setOptions(options);
     }
 
@@ -105,6 +115,14 @@ public final class ProcessedCommand {
 
     public void setArgument(ProcessedOption argument) {
         this.argument = argument;
+    }
+
+    public CommandPopulator getCommandPopulator() {
+        return populator;
+    }
+
+    public C getCommand() {
+        return command;
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {

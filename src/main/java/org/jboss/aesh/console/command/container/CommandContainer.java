@@ -23,6 +23,7 @@ import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.parser.AeshLine;
 
@@ -37,12 +38,12 @@ import java.io.IOException;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandContainer extends AutoCloseable {
+public interface CommandContainer<T extends Command> extends AutoCloseable {
 
     /**
      * @return parser generated from Command
      */
-    CommandLineParser getParser();
+    CommandLineParser<T> getParser();
 
     /**
      * @return true if the CommandLineParser or Command generation generated any errors

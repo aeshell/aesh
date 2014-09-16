@@ -21,6 +21,7 @@ import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.exception.OptionParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.console.command.Command;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,19 +36,19 @@ import java.util.Map;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CommandLine {
+public class CommandLine<T extends Command> {
 
     private final List<ProcessedOption> options;
     private ProcessedOption argument;
     private boolean parserError;
     private CommandLineParserException parserException;
-    private CommandLineParser parser;
+    private CommandLineParser<T> parser;
 
     private CommandLine() {
         options = new ArrayList<>();
     }
 
-    public CommandLine(CommandLineParser parser) {
+    public CommandLine(CommandLineParser<T> parser) {
         this();
         this.parser = parser;
     }
@@ -76,7 +77,7 @@ public class CommandLine {
 
     }
 
-    public CommandLineParser getParser() {
+    public CommandLineParser<T> getParser() {
         return parser;
     }
 

@@ -21,6 +21,7 @@ import org.jboss.aesh.cl.result.NullResultHandler;
 import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidator;
 import org.jboss.aesh.cl.validator.NullCommandValidator;
+import org.jboss.aesh.console.command.Command;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -43,6 +44,6 @@ public @interface GroupCommandDefinition {
 
     Class<? extends ResultHandler> resultHandler() default NullResultHandler.class;
 
-    Class[] groupCommands() default {};
+    Class<? extends Command>[] groupCommands() default {};
 
 }

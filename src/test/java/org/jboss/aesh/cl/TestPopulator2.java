@@ -17,12 +17,17 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 @CommandDefinition(name = "test", description = "a simple test")
-public class TestPopulator2 {
+public class TestPopulator2 implements Command {
 
     @OptionList(shortName = 'b')
     private Set<String> basicSet;
@@ -51,5 +56,10 @@ public class TestPopulator2 {
 
     public List<Short> getImplList() {
         return implList;
+    }
+
+    @Override
+    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        return CommandResult.SUCCESS;
     }
 }

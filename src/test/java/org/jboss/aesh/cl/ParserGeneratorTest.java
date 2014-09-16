@@ -21,8 +21,12 @@ import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.List;
 
 import static junit.framework.TestCase.assertTrue;
@@ -66,7 +70,7 @@ public class ParserGeneratorTest {
     }
 
     @CommandDefinition(name = "test", description = "a simple test")
-    public class Test1 {
+    public class Test1 implements Command {
         @Option(shortName = 'f', name = "foo", description = "enable foo")
         private String foo;
 
@@ -76,26 +80,40 @@ public class ParserGeneratorTest {
         @Option(description = "has enabled bar", hasValue = false)
         private Boolean bar;
 
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
     }
 
     @CommandDefinition(name = "test", description = "more [options] file...")
-    public class Test2 {
+    public class Test2 implements Command {
 
         @Option(shortName = 'd', description = "display help instead of ring bell")
         private String display;
 
         @Option(shortName = 'V', description = "output version information and exit")
         private String version;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
     }
 
     @CommandDefinition(name = "test", description = "more [options] file...")
-    public class Test3 {
+    public class Test3 implements Command {
 
         @Option(shortName = 't', name = "target", description = "target directory")
         private String target;
 
         @Option(shortName = 'e', description = "test run")
         private String test;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
     }
 }
 

@@ -36,7 +36,7 @@ import java.util.Set;
  */
 public class MutableCommandRegistry implements CommandRegistry {
 
-    private final Map<String,CommandContainer> registry = new HashMap<String, CommandContainer>();
+    private final Map<String,CommandContainer<Command>> registry = new HashMap<>();
 
     private CommandContainerBuilder containerBuilder;
 
@@ -55,7 +55,7 @@ public class MutableCommandRegistry implements CommandRegistry {
     @Override
     public List<String> findAllCommandNames(String line) {
         List<String> names = new ArrayList<>();
-        for(CommandContainer command : registry.values()) {
+        for(CommandContainer<Command> command : registry.values()) {
             if(command.getParser().getProcessedCommand().getName().startsWith(line))
                 names.add(command.getParser().getProcessedCommand().getName());
             else if(command.getParser().isGroupCommand() &&

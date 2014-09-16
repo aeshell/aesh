@@ -27,6 +27,7 @@ import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
 import org.jboss.aesh.cl.result.NullResultHandler;
 import org.jboss.aesh.cl.validator.NullCommandValidator;
+import org.jboss.aesh.console.command.Command;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -125,7 +126,7 @@ public class BuilderTest extends TestCase {
     }
 
     public void testParameterInt() throws CommandLineParserException {
-        ProcessedCommand processedCommand =
+        ProcessedCommand<Command> processedCommand =
                 new ProcessedCommandBuilder()
                         .name("foo")
                         .description("")

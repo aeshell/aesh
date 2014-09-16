@@ -20,8 +20,13 @@ package org.jboss.aesh.cl;
 import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;
+import org.jboss.aesh.cl.populator.CommandPopulator;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -38,9 +43,9 @@ public class CommandLineParserTest {
     @Test
     public void testParseCommandLine1() throws CommandLineParserException {
 
-        CommandLineParser parser = ParserGenerator.generateCommandLineParser(Parser1Test.class).getParser();
+        CommandLineParser<Parser1Test> parser = ParserGenerator.generateCommandLineParser(Parser1Test.class).getParser();
 
-        CommandLine cl = parser.parse("test -f -e bar -Df=g /tmp/file.txt");
+        CommandLine<Parser1Test> cl = parser.parse("test -f -e bar -Df=g /tmp/file.txt");
         assertEquals("f", cl.getOptions().get(0).getShortName());
         assertEquals("e", cl.getOptions().get(1).getShortName());
         assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
@@ -211,7 +216,7 @@ public class CommandLineParserTest {
     }
 
     @CommandDefinition(name = "test", description = "a simple test")
-    public class Parser1Test {
+    public class Parser1Test extends TestingCommand {
 
         @Option(shortName = 'X', name = "X", description = "enable X", hasValue = false)
         private Boolean enableX;
@@ -230,7 +235,7 @@ public class CommandLineParserTest {
     }
 
     @CommandDefinition(name = "test", description = "more [options] file...")
-    public class Parser2Test {
+    public class Parser2Test extends TestingCommand {
         @Option(shortName = 'd', name = "display", description = "display help instead of ring bell")
         private String display;
 
@@ -245,10 +250,10 @@ public class CommandLineParserTest {
     }
 
     @CommandDefinition(name = "test", description = "this is a command without options")
-    public class Parser3Test {}
+    public class Parser3Test extends TestingCommand {}
 
     @CommandDefinition(name = "test", description = "testing multiple values")
-    public class Parser4Test {
+    public class Parser4Test  extends TestingCommand{
         @OptionList(shortName = 'o', name="option", valueSeparator = ',')
         private List<String> option;
 
@@ -266,7 +271,7 @@ public class CommandLineParserTest {
     }
 
     @CommandDefinition(name = "child1", description = "")
-    public class ChildTest1 {
+    public class ChildTest1 extends TestingCommand {
 
         @Option
         private String foo;
@@ -277,10 +282,17 @@ public class CommandLineParserTest {
     }
 
     @GroupCommandDefinition(name = "group", description = "", groupCommands = {ChildTest1.class})
-    public class GroupCommandTest {
+    public class GroupCommandTest extends TestingCommand {
 
         @Option(hasValue = false)
         private boolean help;
 
+    }
+
+    public class TestingCommand implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
     }
 }

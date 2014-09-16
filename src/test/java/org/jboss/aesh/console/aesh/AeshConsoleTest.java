@@ -79,6 +79,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
         ProcessedCommand fooCommand = new ProcessedCommandBuilder()
                 .name("foo")
                 .description("fooing")
+                .command(FooTestCommand.class)
                 .addOption(new ProcessedOptionBuilder()
                         .name("bar")
                         .addDefaultValue("en")
@@ -89,7 +90,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
                 .create();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(new CommandLineParserBuilder().processedCommand(fooCommand).command(FooTestCommand.class).create())
+                .command(new CommandLineParserBuilder().processedCommand(fooCommand).create())
                 .command(LsCommand.class)
                 .create();
 

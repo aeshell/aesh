@@ -155,7 +155,7 @@ public class CommandBuilder {
         if(command == null)
             throw new CommandLineParserException("Command object is null, cannot create command");
         ProcessedCommand processedCommand = generateProcessedCommand();
-        AeshCommandLineParser parser = new AeshCommandLineParser(processedCommand, command);
+        AeshCommandLineParser parser = new AeshCommandLineParser(processedCommand);
         if(children != null) {
             for(CommandBuilder builder : children) {
                 parser.addChildParser(builder.generateParser());
@@ -167,6 +167,7 @@ public class CommandBuilder {
     private ProcessedCommand generateProcessedCommand() throws CommandLineParserException {
         return new ProcessedCommandBuilder()
                 .name(name)
+                .command(command)
                 .description(description)
                 .addOptions(options)
                 .resultHandler(resultHandler)

@@ -17,11 +17,16 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
+
+import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
 @CommandDefinition(name = "test", description = "a simple test")
-public class TestPopulator3 {
+public class TestPopulator3 implements Command {
 
     @OptionGroup(shortName = 'b')
     private Map<String, String> basicMap;
@@ -38,5 +43,10 @@ public class TestPopulator3 {
 
     public Map<String, Integer> getIntegerMap() {
         return integerMap;
+    }
+
+    @Override
+    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        return CommandResult.SUCCESS;
     }
 }

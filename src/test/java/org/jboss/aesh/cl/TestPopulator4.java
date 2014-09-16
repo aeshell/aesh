@@ -17,13 +17,18 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
 @CommandDefinition(name = "test", description = "a simple test")
-public class TestPopulator4 {
+public class TestPopulator4 implements Command {
 
     @Option
     private Long veryLong;
@@ -50,5 +55,10 @@ public class TestPopulator4 {
 
     public Set<File> getArguments() {
         return arguments;
+    }
+
+    @Override
+    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        return CommandResult.SUCCESS;
     }
 }

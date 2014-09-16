@@ -25,7 +25,7 @@ import org.jboss.aesh.console.command.Command;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandContainer extends DefaultCommandContainer {
+public class AeshCommandContainer<T extends Command> extends DefaultCommandContainer {
 
     private CommandLineParser parser;
     private String errorMessage;
@@ -36,8 +36,8 @@ public class AeshCommandContainer extends DefaultCommandContainer {
         }
     }
 
-    public AeshCommandContainer(ProcessedCommand processedCommand, Command command) {
-        parser = new AeshCommandLineParser(processedCommand, command);
+    public AeshCommandContainer(ProcessedCommand processedCommand) {
+        parser = new AeshCommandLineParser(processedCommand );
     }
 
     public AeshCommandContainer(String errorMessage) {
@@ -45,7 +45,7 @@ public class AeshCommandContainer extends DefaultCommandContainer {
     }
 
     @Override
-    public CommandLineParser getParser() {
+    public CommandLineParser<T> getParser() {
         return parser;
     }
 
