@@ -18,10 +18,6 @@
 package org.jboss.aesh.cl.parser;
 
 import org.jboss.aesh.cl.CommandLine;
-import org.jboss.aesh.cl.exception.ArgumentParserException;
-import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.exception.OptionParserException;
-import org.jboss.aesh.cl.exception.RequiredOptionException;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;

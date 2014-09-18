@@ -20,7 +20,6 @@ package org.jboss.aesh.cl.parser;
 import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.DefaultValueOptionCompleter;
-import org.jboss.aesh.cl.exception.CommandLineParserException;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.validator.OptionValidatorException;

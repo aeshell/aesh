@@ -23,7 +23,7 @@ import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
 import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
-import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
 import org.jboss.aesh.cl.validator.OptionValidator;

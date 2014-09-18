@@ -26,7 +26,7 @@ import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.converter.CLConverterManager;
 import org.jboss.aesh.cl.converter.NullConverter;
-import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.parser.OptionParserException;
 import org.jboss.aesh.cl.renderer.NullOptionRenderer;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.NullValidator;

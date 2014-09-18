@@ -19,7 +19,7 @@ package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
-import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.console.AeshConsole;

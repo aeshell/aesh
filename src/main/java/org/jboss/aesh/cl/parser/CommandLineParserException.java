@@ -15,18 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.cl.exception;
+package org.jboss.aesh.cl.parser;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class OptionParserException extends CommandLineParserException {
+public class CommandLineParserException extends Exception {
 
-    public OptionParserException(String msg) {
+    public CommandLineParserException(String msg) {
         super(msg);
     }
 
-    public OptionParserException(String msg, Throwable cause) {
-        super(msg, cause);
+    public CommandLineParserException(String msg, Throwable cause) {
+       super(msg, cause);
     }
 }
