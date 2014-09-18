@@ -17,7 +17,7 @@
  */
 package org.jboss.aesh.cl.internal;
 
-import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.parser.OptionParserException;
 import org.jboss.aesh.cl.populator.AeshCommandPopulator;
 import org.jboss.aesh.cl.populator.CommandPopulator;
 import org.jboss.aesh.cl.result.NullResultHandler;

@@ -18,7 +18,7 @@
 package org.jboss.aesh.cl.populator;
 
 import org.jboss.aesh.cl.CommandLine;
-import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;

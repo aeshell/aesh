@@ -20,7 +20,7 @@ package org.jboss.aesh.cl.internal;
 import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.completer.OptionCompleter;
 import org.jboss.aesh.cl.converter.Converter;
-import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.parser.OptionParserException;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;

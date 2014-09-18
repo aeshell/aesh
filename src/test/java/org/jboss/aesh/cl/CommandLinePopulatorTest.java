@@ -19,8 +19,8 @@ package org.jboss.aesh.cl;
 
 import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
-import org.jboss.aesh.cl.exception.CommandLineParserException;
-import org.jboss.aesh.cl.exception.OptionParserException;
+import org.jboss.aesh.cl.parser.CommandLineParserException;
+import org.jboss.aesh.cl.parser.OptionParserException;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;

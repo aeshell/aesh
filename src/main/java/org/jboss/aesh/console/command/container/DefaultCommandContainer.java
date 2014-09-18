@@ -18,7 +18,7 @@
 package org.jboss.aesh.console.command.container;
 
 import org.jboss.aesh.cl.CommandLine;
-import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;

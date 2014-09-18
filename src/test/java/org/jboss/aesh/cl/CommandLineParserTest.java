@@ -17,7 +17,7 @@
  */
 package org.jboss.aesh.cl;
 
-import org.jboss.aesh.cl.exception.CommandLineParserException;
+import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;
 import org.jboss.aesh.console.command.Command;
