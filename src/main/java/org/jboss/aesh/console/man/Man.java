@@ -91,17 +91,17 @@ public class Man extends AeshFileDisplayer {
             commandInvocation.getShell().out().println("What manual page do you want?");
             return CommandResult.SUCCESS;
         }
-        if(manPages.size() > 0) {
-            InputStream inputStream = manProvider.getManualDocument(manPages.get(0));
-            if(inputStream != null) {
-                setCommandInvocation(commandInvocation);
-                fileParser.setInput(inputStream);
-                afterAttach();
-            }
-            else {
-                commandInvocation.getShell().out().println("No manual entry for "+manPages.get(0));
-                return CommandResult.SUCCESS;
-            }
+
+        if(manPages.size() <= 0) {
+            commandInvocation.getShell().out().println("No manual entry for "+manPages.get(0));
+            return CommandResult.SUCCESS;
+        }
+
+        InputStream inputStream = manProvider.getManualDocument(manPages.get(0));
+        if(inputStream != null) {
+            setCommandInvocation(commandInvocation);
+            fileParser.setInput(inputStream);
+            afterAttach();
         }
 
         return CommandResult.SUCCESS;
