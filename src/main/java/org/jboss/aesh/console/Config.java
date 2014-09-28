@@ -133,68 +133,53 @@ public class Config {
 
         Pattern variablePattern = Pattern.compile("^set\\s+(\\S+)\\s+(\\S+)$");
         Pattern commentPattern = Pattern.compile("^#.*");
-        //Pattern keyNamePattern = Pattern.compile("^\\b:\\s+\\b");
         Pattern keyQuoteNamePattern = Pattern.compile("(^\"\\\\\\S+)(\":\\s+)(\\S+)");
         Pattern keyNamePattern = Pattern.compile("(^\\S+)(:\\s+)(\\S+)");
-        Pattern keySeqPattern = Pattern.compile("^\"keyseq:\\s+\\b");
         Pattern startConstructs = Pattern.compile("^\\$if");
         Pattern endConstructs = Pattern.compile("^\\$endif");
 
-        Pattern keyOperationPattern = Pattern.compile("(^\\\"\\\\M-\\[D:)(\\s+)(\\S+)");
+        try(BufferedReader reader =
+                new BufferedReader( new FileReader(settings.getInputrc()))) {
 
-        BufferedReader reader =
-                new BufferedReader( new FileReader(settings.getInputrc()));
+            String line;
+            boolean constructMode = false;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().length() < 1)
+                    continue;
+                //first check if its a comment
+                if (commentPattern.matcher(line).matches())
+                    continue;
 
-        String line;
-        boolean constructMode = false;
-        while( (line = reader.readLine()) != null) {
-            if(line.trim().length() < 1)
-                continue;
-            //first check if its a comment
-            if(commentPattern.matcher(line).matches())
-                continue;
-
-            if(startConstructs.matcher(line).matches()) {
-                constructMode = true;
-                continue;
-            }
-            else if(endConstructs.matcher(line).matches()) {
-                constructMode = false;
-                continue;
-            }
-
-            if(constructMode) {
-
-            }
-            //everything other than if/else
-            else {
-                // variable settings
-                Matcher variableMatcher = variablePattern.matcher(line);
-                if(variableMatcher.matches()) {
-                    parseVariables(variableMatcher.group(1), variableMatcher.group(2), builder);
+                if (startConstructs.matcher(line).matches()) {
+                    constructMode = true;
+                    continue;
+                } else if (endConstructs.matcher(line).matches()) {
+                    constructMode = false;
+                    continue;
                 }
-                //TODO: currently the inputrc parser is posix only
-                if(Config.isOSPOSIXCompatible()) {
-                    Matcher keyQuoteMatcher = keyQuoteNamePattern.matcher(line);
-                    if(keyQuoteMatcher.matches()) {
-                        builder.create().getOperationManager().addOperationIgnoreWorkingMode(
-                                KeyMapper.mapQuoteKeys(keyQuoteMatcher.group(1),
-                                        keyQuoteMatcher.group(3)));
+
+                if (!constructMode) {
+                    Matcher variableMatcher = variablePattern.matcher(line);
+                    if (variableMatcher.matches()) {
+                        parseVariables(variableMatcher.group(1), variableMatcher.group(2), builder);
                     }
-                    else {
-                        Matcher keyMatcher = keyNamePattern.matcher(line);
-                        if(keyMatcher.matches()) {
-                            builder.create().getOperationManager().addOperationIgnoreWorkingMode(KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
+                    //TODO: currently the inputrc parser is posix only
+                    if (Config.isOSPOSIXCompatible()) {
+                        Matcher keyQuoteMatcher = keyQuoteNamePattern.matcher(line);
+                        if (keyQuoteMatcher.matches()) {
+                            builder.create().getOperationManager().addOperationIgnoreWorkingMode(
+                                    KeyMapper.mapQuoteKeys(keyQuoteMatcher.group(1),
+                                            keyQuoteMatcher.group(3)));
+                        } else {
+                            Matcher keyMatcher = keyNamePattern.matcher(line);
+                            if (keyMatcher.matches()) {
+                                builder.create().getOperationManager().addOperationIgnoreWorkingMode(KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
+                            }
                         }
                     }
                 }
             }
-
         }
-
-        //finally close
-        reader.close();
-
         return builder.create();
     }
 
