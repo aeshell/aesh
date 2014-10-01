@@ -976,7 +976,7 @@ public class Console {
         public CursorPosition getCursor() {
             if(console.settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
                 try {
-                    out().print(ANSI.getCurrentCursorPos());
+                    out().print(ANSI.CURSOR_ROW);
                     out().flush();
                     console.readingCursor = true;
 

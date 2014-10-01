@@ -73,15 +73,13 @@ public class Man extends AeshFileDisplayer {
         }
         else if(getSearchStatus() == TerminalPage.Search.NOT_FOUND) {
             clearBottomLine();
-            writeToConsole(ANSI.getInvertedBackground()+
-                    "Pattern not found (press RETURN)"+
-                    ANSI.defaultText());
+            writeToConsole(ANSI.INVERT_BACKGROUND + "Pattern not found (press RETURN)" + ANSI.DEFAULT_TEXT);
         }
         else if(getSearchStatus() == TerminalPage.Search.NO_SEARCH ||
                 getSearchStatus() == TerminalPage.Search.RESULT) {
-            writeToConsole(ANSI.getInvertedBackground());
+            writeToConsole(ANSI.INVERT_BACKGROUND);
             writeToConsole("Manual page "+ fileParser.getName()+" line "+getTopVisibleRow()+
-                    " (press h for help or q to quit)"+ ANSI.defaultText());
+                    " (press h for help or q to quit)"+ ANSI.DEFAULT_TEXT);
         }
     }
 

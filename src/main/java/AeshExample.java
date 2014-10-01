@@ -247,12 +247,12 @@ public class AeshExample {
         }
 
         private void display() {
-            shell.out().print(ANSI.getAlternateBufferScreen());
+            shell.out().print(ANSI.ALTERNATE_BUFFER);
             shell.out().flush();
         }
 
         private void stop() {
-            shell.out().print(ANSI.getMainBufferScreen());
+            shell.out().print(ANSI.MAIN_BUFFER);
         }
 
         public void processOperation(CommandInvocation invocation) throws IOException, InterruptedException {

@@ -37,23 +37,23 @@ public class ManParameterTest {
 
         List<String> input = new ArrayList<String>();
         input.add("*-a, --attribute*='ATTRIBUTE'::");
-        assertEquals("  "+ ANSI.getBold()+
+        assertEquals("  "+ ANSI.BOLD+
                 "-a, --attribute"+
-                ANSI.defaultText()+
-                "="+ ANSI.getUnderline()+
+                ANSI.DEFAULT_TEXT+
+                "="+ ANSI.UNDERLINE+
                 "ATTRIBUTE"+
-                ANSI.defaultText()+ Config.getLineSeparator(),
+                ANSI.DEFAULT_TEXT+ Config.getLineSeparator(),
                 new ManParameter().parseParams(input, 80).printToTerminal());
 
         input.clear();
         input.add("*-a, --attribute*='ATTRIBUTE'::");
         input.add("   Backend output file format");
-        assertEquals("  "+ ANSI.getBold()+
+        assertEquals("  "+ ANSI.BOLD+
                 "-a, --attribute"+
-                ANSI.defaultText()+
-                "="+ ANSI.getUnderline()+
+                ANSI.DEFAULT_TEXT+
+                "="+ ANSI.UNDERLINE+
                 "ATTRIBUTE"+
-                ANSI.defaultText()+ Config.getLineSeparator()+
+                ANSI.DEFAULT_TEXT+ Config.getLineSeparator()+
                 "    Backend output file format"+" "+ Config.getLineSeparator()+
                 " "+ Config.getLineSeparator(),
                 new ManParameter().parseParams(input, 80).printToTerminal());

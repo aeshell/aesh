@@ -32,7 +32,7 @@ import java.io.IOException;
  */
 public class AeshGraphics implements Graphics {
 
-    private static final String CURSOR_DOWN = ANSI.getStart()+"1B"+ANSI.getStart()+"1D";
+    private static final String CURSOR_DOWN = ANSI.START+"1B"+ANSI.START+"1D";
 
     private final Shell shell;
     private final GraphicsConfiguration graphicsConfiguration;
@@ -43,7 +43,7 @@ public class AeshGraphics implements Graphics {
         this.shell = shell;
         this.graphicsConfiguration = graphicsConfiguration;
         currentColor = new TerminalColor();
-        shell.out().print(ANSI.hideCursor());
+        shell.out().print(ANSI.CURSOR_HIDE);
     }
 
     @Override
@@ -63,7 +63,7 @@ public class AeshGraphics implements Graphics {
     @Override
     public void cleanup() {
         shell.out().print(new TerminalColor(Color.DEFAULT, Color.DEFAULT).fullString());
-        shell.out().print(ANSI.showCursor());
+        shell.out().print(ANSI.CURSOR_SHOW);
         shell.out().flush();
     }
 

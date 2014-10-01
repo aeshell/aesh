@@ -118,7 +118,7 @@ public class TerminalColor {
     }
 
     public String fullString() {
-       return ANSI.getStart()+toString()+"m";
+       return ANSI.START+toString()+"m";
     }
 
     public String toString() {

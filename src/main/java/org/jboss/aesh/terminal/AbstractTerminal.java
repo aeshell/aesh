@@ -51,7 +51,7 @@ public abstract class AbstractTerminal implements Terminal, Shell {
             try {
                 StringBuilder col = new StringBuilder(4);
                 StringBuilder row = new StringBuilder(4);
-                out().print(ANSI.getCurrentCursorPos());
+                out().print(ANSI.CURSOR_ROW);
                 out().flush();
                 boolean gotSep = false;
                 //read the position
@@ -97,7 +97,7 @@ public abstract class AbstractTerminal implements Terminal, Shell {
 
     @Override
     public void clear() {
-        out().print(ANSI.clearScreen());
+        out().print(ANSI.CLEAR_SCREEN);
         out().flush();
     }
 
@@ -109,7 +109,7 @@ public abstract class AbstractTerminal implements Terminal, Shell {
     @Override
     public void enableAlternateBuffer() {
         if(isMainBuffer()) {
-            out().print(ANSI.getAlternateBufferScreen());
+            out().print(ANSI.ALTERNATE_BUFFER);
             out().flush();
             mainBuffer = false;
         }
@@ -118,7 +118,7 @@ public abstract class AbstractTerminal implements Terminal, Shell {
     @Override
     public void enableMainBuffer() {
         if(!isMainBuffer()) {
-            out().print(ANSI.getMainBufferScreen());
+            out().print(ANSI.MAIN_BUFFER);
             out().flush();
             mainBuffer = true;
         }

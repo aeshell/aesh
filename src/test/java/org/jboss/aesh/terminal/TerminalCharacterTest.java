@@ -34,7 +34,7 @@ public class TerminalCharacterTest {
     public void testTerminalCharacterAsString() {
         TerminalCharacter character = new TerminalCharacter('c', new TerminalTextStyle(CharacterType.BOLD));
 
-        assertEquals(ANSI.getStart()+
+        assertEquals(ANSI.START+
                 CharacterType.BOLD.getValue()+";"+
                 3+ Color.DEFAULT.getValue()+";"+
                 4+Color.DEFAULT.getValue()+
@@ -46,7 +46,7 @@ public class TerminalCharacterTest {
     public void testPrevCharacterAsString() {
         TerminalCharacter c1 = new TerminalCharacter('c', new TerminalTextStyle(CharacterType.BOLD));
 
-        assertEquals(ANSI.getStart() +
+        assertEquals(ANSI.START +
                 CharacterType.BOLD.getValue() + ";" +
                 3+Color.DEFAULT.getValue() + ";" +
                 4+Color.DEFAULT.getValue() +
@@ -56,7 +56,7 @@ public class TerminalCharacterTest {
         TerminalCharacter c2 = new TerminalCharacter('f', new TerminalColor(Color.DEFAULT, Color.BLUE),
                 new TerminalTextStyle(CharacterType.CROSSED_OUT));
 
-         assertEquals(ANSI.getStart() +
+         assertEquals(ANSI.START +
                  BOLD_OFF + ";" +
                 CharacterType.CROSSED_OUT.getValue() + ";" +
                 4+Color.BLUE.getValue() +
@@ -70,16 +70,16 @@ public class TerminalCharacterTest {
 
         c4 = new TerminalCharacter('g', new TerminalColor(Color.RED, Color.BLUE), new TerminalTextStyle(CharacterType.BOLD));
 
-         assertEquals(ANSI.getStart() + CharacterType.BOLD.getValue() + "mg", c4.toString(c3));
+         assertEquals(ANSI.START + CharacterType.BOLD.getValue() + "mg", c4.toString(c3));
 
         c3 = new TerminalCharacter('f', new TerminalColor(Color.RED, Color.BLUE), new TerminalTextStyle(CharacterType.BOLD));
         c4 = new TerminalCharacter('g');
 
-        assertEquals(ANSI.getStart() + "22;39;49mg", c4.toString(c3));
+        assertEquals(ANSI.START + "22;39;49mg", c4.toString(c3));
 
         c4 = new TerminalCharacter('g', new TerminalTextStyle(CharacterType.INVERT));
 
-        assertEquals(ANSI.getStart() + "22;7;39;49mg", c4.toString(c3));
+        assertEquals(ANSI.START + "22;7;39;49mg", c4.toString(c3));
     }
 
     @Test

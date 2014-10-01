@@ -46,26 +46,24 @@ public class ManSectionTest {
         ManSection section = new ManSection().parseSection(input, 80);
         assertEquals("OPTIONS",section.getName());
 
-        assertEquals(ANSI.getBold()+"OPTIONS"+ ANSI.defaultText()+
+        assertEquals(ANSI.BOLD+"OPTIONS"+ ANSI.DEFAULT_TEXT+
                 Config.getLineSeparator()+
-                "  "+ ANSI.getBold()+
+                "  "+ ANSI.BOLD+
                 "-a, --attribute"+
-                ANSI.defaultText()+
-                "="+ ANSI.getUnderline()+
+                ANSI.DEFAULT_TEXT+
+                "="+ ANSI.UNDERLINE+
                 "ATTRIBUTE"+
-                ANSI.defaultText()+ Config.getLineSeparator()+
+                ANSI.DEFAULT_TEXT+ Config.getLineSeparator()+
                 "    Define or delete document attribute. "+ Config.getLineSeparator()+
                 " "+ Config.getLineSeparator()+
-                "  "+ ANSI.getBold()+
+                "  "+ ANSI.BOLD+
                 "-b, --backend"+
-                ANSI.defaultText()+
-                "="+ ANSI.getUnderline()+
+                ANSI.DEFAULT_TEXT+
+                "="+ ANSI.UNDERLINE+
                 "BACKEND"+
-                ANSI.defaultText()+ Config.getLineSeparator()+
+                ANSI.DEFAULT_TEXT+ Config.getLineSeparator()+
                 "    Define or delete document attribute. "+ Config.getLineSeparator()+
                 " "+ Config.getLineSeparator(),
                 section.printToTerminal());
-
-
     }
 }

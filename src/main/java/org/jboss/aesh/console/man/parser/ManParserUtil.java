@@ -35,18 +35,18 @@ public class ManParserUtil {
         while(matcher.find()) {
             if(matcher.group(1) != null) {
                 builder.append(line.substring(0,matcher.start(1)))
-                        .append(ANSI.getBold())
+                        .append(ANSI.BOLD)
                         .append(line.substring(matcher.start(1)+1,matcher.end(1)-1))
-                        .append(ANSI.defaultText());
+                        .append(ANSI.DEFAULT_TEXT);
                         //.append(line.substring(matcher.end(1)));
                 line = line.substring(matcher.end(1));
                 matcher = boldRegex.matcher(line);
             }
             else if(matcher.group(2) != null) {
                 builder.append(line.substring(0,matcher.start(2)))
-                        .append(ANSI.getUnderline())
+                        .append(ANSI.UNDERLINE)
                         .append(line.substring(matcher.start(2)+1,matcher.end(2)-1))
-                        .append(ANSI.defaultText());
+                        .append(ANSI.DEFAULT_TEXT);
                         //.append(line.substring(matcher.end(2)));
                 line = line.substring(matcher.end(2));
                 matcher = boldRegex.matcher(line);

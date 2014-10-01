@@ -55,7 +55,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     //used to optimize text deletion
     private static final char[] resetLineAndSetCursorToStart =
-            (ANSI.saveCursor()+ANSI.getStart()+"0G"+ANSI.getStart()+"2K").toCharArray();
+            (ANSI.CURSOR_SAVE+ANSI.START+"0G"+ANSI.START+"2K").toCharArray();
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshConsoleBuffer.class.getName());
 
@@ -145,7 +145,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             //NOTE: this doesnt work with history, need to find a better solution
             if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length()
                     && currentAction != Action.HISTORY) {
-                out.print(Parser.SPACE_CHAR + ANSI.getStart() + "1D"); //move cursor to left
+                out.print(Parser.SPACE_CHAR + ANSI.START + "1D"); //move cursor to left
             }
             else {
                 //save cursor, move the cursor to the beginning, reset line
@@ -155,7 +155,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
                     displayPrompt();
                 //write line and restore cursor
                 if(keepCursorPosition)
-                    out.print(buffer.getLine() + ANSI.restoreCursor());
+                    out.print(buffer.getLine() + ANSI.CURSOR_RESTORE);
                 else {
                     out.print(buffer.getLine());
                     buffer.setCursor(buffer.getLine().length());
@@ -187,7 +187,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         StringBuilder builder = new StringBuilder();
 
         if(keepCursorPosition)
-            builder.append(ANSI.saveCursor()); //save cursor
+            builder.append(ANSI.CURSOR_SAVE); //save cursor
 
         if(buffer.getDelta() > 0) {
             if (currentRow > 0)
@@ -211,7 +211,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
         // move cursor to saved pos
         if(keepCursorPosition) {
-            builder.append(ANSI.restoreCursor());
+            builder.append(ANSI.CURSOR_RESTORE);
             out.print(builder.toString());
         }
         else {
@@ -250,7 +250,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     }
 
     private void redrawMultipleLinesBackspace() {
-        out.print(Parser.SPACE_CHAR + ANSI.getStart() + "1D"); //move cursor to left
+        out.print(Parser.SPACE_CHAR + ANSI.START + "1D"); //move cursor to left
     }
 
     @Override
@@ -455,11 +455,11 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     private void displayPrompt(Prompt prompt) {
         if(prompt.hasANSI()) {
-            out.print(ANSI.getStart() + "0G" + ANSI.getStart() + "2K");
+            out.print(ANSI.START + "0G" + ANSI.START + "2K");
             out.print(prompt.getANSI());
         }
         else
-            out.print(ANSI.getStart() + "0G" + ANSI.getStart() + "2K" + prompt.getPromptAsString());
+            out.print(ANSI.START + "0G" + ANSI.START + "2K" + prompt.getPromptAsString());
         out.flush();
     }
 
@@ -561,7 +561,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         if(!Config.isOSPOSIXCompatible())
             out().print(Config.getLineSeparator());
         //first clear console
-        out().print(ANSI.clearScreen());
+        out().print(ANSI.CLEAR_SCREEN);
         //move cursor to correct position
         out().print(Buffer.printAnsi("1;1H"));
         //then write prompt
