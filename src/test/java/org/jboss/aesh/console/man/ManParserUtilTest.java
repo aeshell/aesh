@@ -30,27 +30,27 @@ public class ManParserUtilTest {
 
     @Test
     public void testBoldParser() {
-        assertEquals(ANSI.getBold()+"foo"+ ANSI.defaultText(),
+        assertEquals(ANSI.BOLD+"foo"+ ANSI.DEFAULT_TEXT,
                 ManParserUtil.convertStringToAnsi("*foo*"));
 
-        assertEquals("12"+ ANSI.getBold()+"foo"+ ANSI.defaultText(),
+        assertEquals("12"+ ANSI.BOLD+"foo"+ ANSI.DEFAULT_TEXT,
                 ManParserUtil.convertStringToAnsi("12*foo*"));
 
-        assertEquals("12"+ ANSI.getBold()+"foo"+ ANSI.defaultText()+"34",
+        assertEquals("12"+ ANSI.BOLD+"foo"+ ANSI.DEFAULT_TEXT+"34",
                 ManParserUtil.convertStringToAnsi("12*foo*34"));
 
-        assertEquals("12"+ ANSI.getUnderline()+"foo"+ ANSI.defaultText()+"34",
+        assertEquals("12"+ ANSI.UNDERLINE+"foo"+ ANSI.DEFAULT_TEXT+"34",
                 ManParserUtil.convertStringToAnsi("12'foo'34"));
 
         assertEquals("Define or delete document attribute. "+
-                ANSI.getUnderline()+
+                ANSI.UNDERLINE+
                 "ATTRIBUTE"+
-                ANSI.defaultText()+
+                ANSI.DEFAULT_TEXT+
                 " is formatted like",
                 ManParserUtil.convertStringToAnsi("Define or delete document attribute. 'ATTRIBUTE' is formatted like"));
 
 
-        assertEquals(ANSI.getBold()+"ZIP_FILE"+ ANSI.defaultText(),
+        assertEquals(ANSI.BOLD+"ZIP_FILE"+ ANSI.DEFAULT_TEXT,
                 ManParserUtil.convertStringToAnsi("*ZIP_FILE*::"));
     }
 }

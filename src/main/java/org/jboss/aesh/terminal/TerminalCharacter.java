@@ -76,7 +76,7 @@ public class TerminalCharacter {
             return String.valueOf(character);
         else {
             StringBuilder builder = new StringBuilder();
-            builder.append(ANSI.getStart());
+            builder.append(ANSI.START);
             if(!style.equals(prev.getStyle())) {
                 builder.append(style.getValueComparedToPrev(prev.getStyle()));
             }
@@ -104,7 +104,7 @@ public class TerminalCharacter {
     @Override
     public String toString() {
         if(cache == null) {
-            cache = ANSI.getStart() + style.toString() + ';' + this.color.toString() + 'm' + getCharacter();
+            cache = ANSI.START + style.toString() + ';' + this.color.toString() + 'm' + getCharacter();
         }
         return cache;
     }

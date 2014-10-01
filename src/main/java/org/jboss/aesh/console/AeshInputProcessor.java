@@ -466,8 +466,8 @@ public class AeshInputProcessor implements InputProcessor {
         builder.append(result);
         consoleBuffer.getBuffer().disablePrompt(true);
         consoleBuffer.moveCursor(-consoleBuffer.getBuffer().getCursor());
-        consoleBuffer.out().print(ANSI.moveCursorToBeginningOfLine());
-        consoleBuffer.out().print(ANSI.getStart() + "2K");
+        consoleBuffer.out().print(ANSI.CURSOR_START);
+        consoleBuffer.out().print(ANSI.START + "2K");
         consoleBuffer.setBufferLine(builder.toString());
         consoleBuffer.moveCursor(cursor);
         consoleBuffer.drawLine();

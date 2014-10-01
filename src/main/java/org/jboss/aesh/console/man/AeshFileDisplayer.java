@@ -105,7 +105,7 @@ public abstract class AeshFileDisplayer implements Command {
                 afterDetach();
             }
             else {
-                getShell().out().print(ANSI.getAlternateBufferScreen());
+                getShell().out().print(ANSI.ALTERNATE_BUFFER);
 
                 if(this.page.getFileName() != null)
                     display();
@@ -119,7 +119,7 @@ public abstract class AeshFileDisplayer implements Command {
 
     protected void afterDetach() throws IOException {
         if(!operation.isRedirectionOut())
-            getShell().out().print(ANSI.getMainBufferScreen());
+            getShell().out().print(ANSI.MAIN_BUFFER);
 
         page.clear();
         topVisibleRow = 0;
@@ -363,9 +363,9 @@ public abstract class AeshFileDisplayer implements Command {
     private void displaySearchLine(String line, String searchWord) throws IOException {
         int start = line.indexOf(searchWord);
         getShell().out().print(line.substring(0,start));
-        getShell().out().print(ANSI.getInvertedBackground());
+        getShell().out().print(ANSI.INVERT_BACKGROUND);
         getShell().out().print(searchWord);
-        getShell().out().print(ANSI.reset());
+        getShell().out().print(ANSI.RESET);
         getShell().out().print(line.substring(start + searchWord.length(), line.length()));
         getShell().out().flush();
     }

@@ -78,7 +78,7 @@ public class ManSection {
 
     public List<String> getAsList() {
         List<String> out = new ArrayList<String>();
-        out.add(ANSI.getBold()+name+ ANSI.defaultText());
+        out.add(ANSI.BOLD+name+ ANSI.DEFAULT_TEXT);
         for(ManParameter param : parameters)
             out.addAll(param.getAsList());
 
@@ -89,7 +89,7 @@ public class ManSection {
 
     public String printToTerminal() {
         StringBuilder builder = new StringBuilder();
-        builder.append(ANSI.getBold()).append(name).append(ANSI.defaultText());
+        builder.append(ANSI.BOLD).append(name).append(ANSI.DEFAULT_TEXT);
         builder.append(Config.getLineSeparator());
         for(ManParameter param : parameters)
             builder.append(param.printToTerminal());

@@ -330,11 +330,11 @@ public class ParserTest {
 
     @Test
     public void testStripAwayAnsiPattern() {
-        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.blackText()+"foo"));
-        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.getBold()+ANSI.cyanBackground()+"foo"));
-        assertEquals("foo", Parser.stripAwayAnsiCodes("foo"+ANSI.getBold()+ANSI.cyanBackground()));
-        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.getAlternateBufferScreen()+"foo"));
-        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.getCurrentCursorPos()+"foo"));
-        assertEquals("foo bar", Parser.stripAwayAnsiCodes( "foo"+ANSI.reset()+" bar"));
+        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.BLACK_TEXT+"foo"));
+        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.BOLD+ANSI.CYAN_BG+"foo"));
+        assertEquals("foo", Parser.stripAwayAnsiCodes("foo"+ANSI.BOLD+ANSI.CYAN_BG));
+        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.ALTERNATE_BUFFER+"foo"));
+        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.CURSOR_ROW+"foo"));
+        assertEquals("foo bar", Parser.stripAwayAnsiCodes( "foo"+ANSI.RESET+" bar"));
     }
 }

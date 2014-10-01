@@ -101,9 +101,9 @@ public class CommandLineFormatterTest extends TestCase {
         assertEquals("Usage: man [OPTION...]"+
                         Config.getLineSeparator()+
                         "  -d, --debug            emit debugging messages"+Config.getLineSeparator()+
-                        ANSI.getBold()+
+                        ANSI.BOLD+
                         "  -D, --default"+
-                        ANSI.getBoldOff()+
+                        ANSI.BOLD_OFF+
                         "          reset all options to their default values"+Config.getLineSeparator()+
                         "  -f, --file=<filename>  set the filename"+Config.getLineSeparator(),
                 clp.printHelp());

@@ -266,7 +266,7 @@ public final class ProcessedOption {
     public String getFormattedOption(int offset, int descriptionStart, int width) {
         StringBuilder sb = new StringBuilder();
         if(required)
-            sb.append(ANSI.getBold());
+            sb.append(ANSI.BOLD);
         if(offset > 0)
             sb.append(String.format("%" + offset+ "s", ""));
         if(shortName != null)
@@ -280,7 +280,7 @@ public final class ProcessedOption {
             sb.append("=<").append(argument).append(">");
         }
         if(required)
-            sb.append(ANSI.getBoldOff());
+            sb.append(ANSI.BOLD_OFF);
         if(description != null && description.length() > 0) {
             //int descOffset = descriptionStart - sb.length();
             int descOffset = descriptionStart - getFormattedLength() - offset;

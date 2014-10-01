@@ -286,7 +286,7 @@ public class Example {
         private void init() {
             try {
                 if(!operation.getControlOperator().isRedirectionOut()) {
-                    console.getShell().out().print(ANSI.getAlternateBufferScreen());
+                    console.getShell().out().print(ANSI.ALTERNATE_BUFFER);
                     console.getShell().out().println("print alternate screen...");
                     console.getShell().out().flush();
                 }
@@ -327,7 +327,7 @@ public class Example {
 
         public void processOperation(CommandOperation operation) throws IOException {
             if(operation.getInput()[0] == 'q') {
-                console.getShell().out().print(ANSI.getMainBufferScreen());
+                console.getShell().out().print(ANSI.MAIN_BUFFER);
             }
             else if(operation.getInput()[0] == 'a') {
                 readFromFile();

@@ -83,8 +83,8 @@ public class TerminalString {
             return 0;
         else {
             if (ansiLength == 0)
-                ansiLength = ANSI.getStart().length() + color.getLength() +
-                        style.getLength() + ANSI.reset().length() +2 ; // ; + m
+                ansiLength = ANSI.START.length() + color.getLength() +
+                        style.getLength() + ANSI.RESET.length() +2 ; // ; + m
             return ansiLength;
         }
     }
@@ -106,7 +106,7 @@ public class TerminalString {
             return characters;
         else {
             StringBuilder builder = new StringBuilder();
-            builder.append(ANSI.getStart())
+            builder.append(ANSI.START)
                     .append(style.getValueComparedToPrev(prev.getStyle()));
 
             if(!this.color.equals(prev.color)) {
@@ -125,9 +125,9 @@ public class TerminalString {
     public String toString() {
         if(ignoreRendering)
             return characters;
-        return ANSI.getStart() + style.toString() + ';' +
+        return ANSI.START + style.toString() + ';' +
                 this.color.toString() +
-                'm' + getCharacters() + ANSI.reset();
+                'm' + getCharacters() + ANSI.RESET;
     }
 
     public void write(PrintStream out) {
@@ -135,7 +135,7 @@ public class TerminalString {
             out.print(characters);
         }
         else {
-            out.print(ANSI.getStart());
+            out.print(ANSI.START);
             out.print(style.toString());
             out.print(';');
             this.color.write(out);
