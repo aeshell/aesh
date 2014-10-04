@@ -39,74 +39,74 @@ import java.util.List;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CommandBuilder {
+public class CommandBuilder<C extends Command> {
 
     private String name;
     private String description;
-    private Command command;
+    private C command;
     private CommandValidator<?> validator;
     private ResultHandler resultHandler;
     private ProcessedOption argument;
     private List<ProcessedOption> options;
-    private List<CommandBuilder> children;
+    private List<CommandBuilder<? extends Command>> children;
     private CommandLineParserException parserException;
 
     public CommandBuilder() {
     }
 
-    public CommandBuilder name(String name) {
+    public CommandBuilder<C> name(String name) {
         this.name = name;
         return this;
     }
 
-    public CommandBuilder description(String description) {
+    public CommandBuilder<C> description(String description) {
         this.description = description;
         return this;
     }
 
-    public CommandBuilder command(Command command) {
+    public CommandBuilder<C> command(C command) {
         this.command = command;
         return this;
     }
 
-    public CommandBuilder command(Class<? extends Command> command) {
+    public CommandBuilder<C> command(Class<C> command) {
         this.command = ReflectionUtil.newInstance(command);
         return this;
     }
 
-    public CommandBuilder validator(CommandValidator<?> commandValidator) {
+    public CommandBuilder<C> validator(CommandValidator<?> commandValidator) {
         this.validator = commandValidator;
         return this;
     }
 
-    public CommandBuilder validator(Class<? extends CommandValidator> commandValidator) {
+    public CommandBuilder<C> validator(Class<? extends CommandValidator> commandValidator) {
         this.validator = ReflectionUtil.newInstance(commandValidator);
         return this;
     }
 
-    public CommandBuilder resultHandler(ResultHandler resultHandler) {
+    public CommandBuilder<C> resultHandler(ResultHandler resultHandler) {
         this.resultHandler = resultHandler;
         return this;
     }
 
-    public CommandBuilder resultHandler(Class<? extends ResultHandler> resultHandler) {
+    public CommandBuilder<C> resultHandler(Class<? extends ResultHandler> resultHandler) {
         this.resultHandler = ReflectionUtil.newInstance(resultHandler);
         return this;
     }
 
-    public CommandBuilder argument(ProcessedOption argument) {
+    public CommandBuilder<C> argument(ProcessedOption argument) {
         this.argument = argument;
         return this;
     }
 
-    public CommandBuilder addOption(ProcessedOption option) {
+    public CommandBuilder<C> addOption(ProcessedOption option) {
         if(options == null)
             options = new ArrayList<>();
         options.add(option);
         return this;
     }
 
-    public CommandBuilder addOption(ProcessedOptionBuilder option) {
+    public CommandBuilder<C> addOption(ProcessedOptionBuilder option) {
         if(options == null)
             options = new ArrayList<>();
         try {
@@ -118,54 +118,54 @@ public class CommandBuilder {
         return this;
     }
 
-    public CommandBuilder addOptions(List<ProcessedOption> options) {
+    public CommandBuilder<C> addOptions(List<ProcessedOption> options) {
         if(this.options == null)
             this.options = new ArrayList<>();
         this.options.addAll(options);
         return this;
     }
 
-    public CommandBuilder addChild(CommandBuilder child) {
+    public CommandBuilder<C> addChild(CommandBuilder<? extends Command> child) {
         if(children == null)
             children = new ArrayList<>();
         this.children.add(child);
         return this;
     }
 
-    public CommandBuilder addChildren(List<CommandBuilder> children) {
+    public CommandBuilder<C> addChildren(List<CommandBuilder<? extends Command>> children) {
         if(this.children == null)
             this.children = new ArrayList<>();
         this.children.addAll(children);
         return this;
     }
 
-    public CommandContainer generate() {
+    public CommandContainer<C> generate() {
         try {
             if(parserException != null) {
-                return new AeshCommandContainer(parserException.getMessage());
+                return new AeshCommandContainer<>(parserException.getMessage());
             }
-            return new AeshCommandContainer(generateParser());
+            return new AeshCommandContainer<>(generateParser());
         }
         catch (CommandLineParserException e) {
-            return new AeshCommandContainer(e.getMessage());
+            return new AeshCommandContainer<>(e.getMessage());
         }
     }
 
-    private AeshCommandLineParser generateParser() throws CommandLineParserException {
+    private AeshCommandLineParser<C> generateParser() throws CommandLineParserException {
         if(command == null)
             throw new CommandLineParserException("Command object is null, cannot create command");
-        ProcessedCommand processedCommand = generateProcessedCommand();
-        AeshCommandLineParser parser = new AeshCommandLineParser(processedCommand);
+        ProcessedCommand<C> processedCommand = generateProcessedCommand();
+        AeshCommandLineParser<C> parser = new AeshCommandLineParser<>(processedCommand);
         if(children != null) {
-            for(CommandBuilder builder : children) {
+            for(CommandBuilder<? extends Command> builder : children) {
                 parser.addChildParser(builder.generateParser());
             }
         }
         return parser;
     }
 
-    private ProcessedCommand generateProcessedCommand() throws CommandLineParserException {
-        return new ProcessedCommandBuilder()
+    private ProcessedCommand<C> generateProcessedCommand() throws CommandLineParserException {
+        return new ProcessedCommandBuilder<C>()
                 .name(name)
                 .command(command)
                 .description(description)

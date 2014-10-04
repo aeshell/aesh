@@ -34,7 +34,7 @@ import java.util.List;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ProcessedCommandBuilder<T extends Command> {
+public class ProcessedCommandBuilder<C extends Command> {
 
     private String name;
     private String description;
@@ -43,33 +43,33 @@ public class ProcessedCommandBuilder<T extends Command> {
     private ProcessedOption argument;
     private final List<ProcessedOption> options;
     private CommandPopulator populator;
-    private T command;
+    private C command;
 
     public ProcessedCommandBuilder() {
         options = new ArrayList<>();
     }
 
-    public ProcessedCommandBuilder name(String name) {
+    public ProcessedCommandBuilder<C> name(String name) {
         this.name = name;
         return this;
     }
 
-    public ProcessedCommandBuilder description(String usage) {
+    public ProcessedCommandBuilder<C> description(String usage) {
         this.description = usage;
         return this;
     }
 
-    public ProcessedCommandBuilder argument(ProcessedOption argument) {
+    public ProcessedCommandBuilder<C> argument(ProcessedOption argument) {
         this.argument = argument;
         return this;
     }
 
-    public ProcessedCommandBuilder validator(CommandValidator<?> validator) {
+    public ProcessedCommandBuilder<C> validator(CommandValidator<?> validator) {
         this.validator = validator;
         return this;
     }
 
-    public ProcessedCommandBuilder validator(Class<? extends CommandValidator> validator) {
+    public ProcessedCommandBuilder<C> validator(Class<? extends CommandValidator> validator) {
         this.validator = initValidator(validator);
         return this;
     }
@@ -81,7 +81,7 @@ public class ProcessedCommandBuilder<T extends Command> {
             return new NullCommandValidator();
     }
 
-    public ProcessedCommandBuilder resultHandler(Class<? extends ResultHandler> resultHandler) {
+    public ProcessedCommandBuilder<C> resultHandler(Class<? extends ResultHandler> resultHandler) {
         this.resultHandler = initResultHandler(resultHandler);
         return this;
     }
@@ -93,38 +93,38 @@ public class ProcessedCommandBuilder<T extends Command> {
             return new NullResultHandler();
     }
 
-    public ProcessedCommandBuilder resultHandler(ResultHandler resultHandler) {
+    public ProcessedCommandBuilder<C> resultHandler(ResultHandler resultHandler) {
         this.resultHandler = resultHandler;
         return this;
     }
 
-    public ProcessedCommandBuilder populator(CommandPopulator populator) {
+    public ProcessedCommandBuilder<C> populator(CommandPopulator populator) {
         this.populator = populator;
         return this;
     }
 
-    public ProcessedCommandBuilder command(T command) {
+    public ProcessedCommandBuilder<C> command(C command) {
         this.command = command;
         return this;
     }
 
-    public ProcessedCommandBuilder command(Class<T> command) {
+    public ProcessedCommandBuilder<C> command(Class<C> command) {
         this.command = ReflectionUtil.newInstance(command);
         return this;
     }
 
-    public ProcessedCommandBuilder addOption(ProcessedOption option) {
+    public ProcessedCommandBuilder<C> addOption(ProcessedOption option) {
         this.options.add(option);
         return this;
     }
 
-    public ProcessedCommandBuilder addOptions(List<ProcessedOption> options) {
+    public ProcessedCommandBuilder<C> addOptions(List<ProcessedOption> options) {
         if(options != null)
             this.options.addAll(options);
         return this;
     }
 
-    public ProcessedCommand<T> create() throws CommandLineParserException {
+    public ProcessedCommand<C> create() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
 
@@ -134,6 +134,6 @@ public class ProcessedCommandBuilder<T extends Command> {
         if(resultHandler == null)
             resultHandler = new NullResultHandler();
 
-        return new ProcessedCommand(name, command, description, validator, resultHandler, argument, options, populator);
+        return new ProcessedCommand<>(name, command, description, validator, resultHandler, argument, options, populator);
     }
 }
