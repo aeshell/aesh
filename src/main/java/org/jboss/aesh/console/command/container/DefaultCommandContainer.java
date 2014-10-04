@@ -23,6 +23,7 @@ import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.parser.AeshLine;
@@ -32,7 +33,7 @@ import java.io.IOException;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public abstract class DefaultCommandContainer implements CommandContainer {
+public abstract class DefaultCommandContainer<C extends Command> implements CommandContainer<C> {
 
     @Override
     public CommandContainerResult executeCommand(AeshLine line, InvocationProviders invocationProviders,

@@ -25,9 +25,9 @@ import org.jboss.aesh.console.command.Command;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandContainer<T extends Command> extends DefaultCommandContainer {
+public class AeshCommandContainer<C extends Command> extends DefaultCommandContainer<C> {
 
-    private CommandLineParser parser;
+    private CommandLineParser<C> parser;
     private String errorMessage;
 
     public AeshCommandContainer(CommandLineParser parser) {
@@ -36,8 +36,8 @@ public class AeshCommandContainer<T extends Command> extends DefaultCommandConta
         }
     }
 
-    public AeshCommandContainer(ProcessedCommand processedCommand) {
-        parser = new AeshCommandLineParser(processedCommand );
+    public AeshCommandContainer(ProcessedCommand<C> processedCommand) {
+        parser = new AeshCommandLineParser<>(processedCommand );
     }
 
     public AeshCommandContainer(String errorMessage) {
@@ -45,7 +45,7 @@ public class AeshCommandContainer<T extends Command> extends DefaultCommandConta
     }
 
     @Override
-    public CommandLineParser<T> getParser() {
+    public CommandLineParser<C> getParser() {
         return parser;
     }
 
@@ -64,8 +64,8 @@ public class AeshCommandContainer<T extends Command> extends DefaultCommandConta
 
     }
 
-    public void addChild(CommandContainer commandContainer) {
-        ((AeshCommandLineParser) getParser()).addChildParser((AeshCommandLineParser) commandContainer.getParser());
+    public void addChild(CommandContainer<?> commandContainer) {
+        getParser().addChildParser(commandContainer.getParser());
     }
 
 }

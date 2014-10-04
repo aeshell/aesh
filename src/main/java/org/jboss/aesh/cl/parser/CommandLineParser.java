@@ -54,12 +54,14 @@ public interface CommandLineParser<C extends Command> {
      * @param name command
      * @return child parser that matches the name
      */
-    CommandLineParser<C> getChildParser(String name);
+    CommandLineParser<? extends Command> getChildParser(String name);
+
+    void addChildParser(CommandLineParser<? extends Command> childParser);
 
     /**
      * @return all the child parser
      */
-    List<CommandLineParser<C>> getAllChildParsers();
+    List<CommandLineParser<? extends Command>> getAllChildParsers();
 
     /**
      * @return command populator to work on this command
@@ -85,7 +87,7 @@ public interface CommandLineParser<C extends Command> {
      * @param line input
      * @return CommandLine
      */
-    CommandLine<C> parse(String line);
+    CommandLine<? extends Command> parse(String line);
 
     /**
      * Parse a command line with the defined command as base of the rules.
@@ -101,9 +103,9 @@ public interface CommandLineParser<C extends Command> {
      * @param ignoreRequirements if we should ignore
      * @return CommandLine
      */
-    CommandLine<C> parse(String line, boolean ignoreRequirements);
+    CommandLine<? extends Command> parse(String line, boolean ignoreRequirements);
 
-    CommandLine<C> parse(AeshLine line, boolean ignoreRequirements);
+    CommandLine<? extends Command> parse(AeshLine line, boolean ignoreRequirements);
 
     /**
      * Parse a command line with the defined command as base of the rules.
@@ -115,7 +117,7 @@ public interface CommandLineParser<C extends Command> {
      * @param ignoreRequirements if we should ignore
      * @return CommandLine
      */
-    CommandLine<C> parse(List<String> lines, boolean ignoreRequirements);
+    CommandLine<? extends Command> parse(List<String> lines, boolean ignoreRequirements);
 
     void clear();
 

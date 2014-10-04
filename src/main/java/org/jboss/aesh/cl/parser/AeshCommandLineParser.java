@@ -43,14 +43,15 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
     private final ProcessedCommand<C> processedCommand;
     private static final String EQUALS = "=";
-    private List<CommandLineParser<C>> childParsers;
+    private List<CommandLineParser<? extends Command>> childParsers;
     private boolean isChild = false;
 
     public AeshCommandLineParser(ProcessedCommand<C> processedCommand) {
         this.processedCommand = processedCommand;
     }
 
-    public void addChildParser(CommandLineParser<C> commandLineParser) {
+    @Override
+    public void addChildParser(CommandLineParser<? extends Command> commandLineParser) {
         if(childParsers == null)
             childParsers = new ArrayList<>();
         commandLineParser.setChild(true);
@@ -67,7 +68,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public CommandLineParser<C> getChildParser(String name) {
+    public CommandLineParser<? extends Command> getChildParser(String name) {
         if(!isGroupCommand())
             return null;
         for(CommandLineParser clp : childParsers) {
@@ -78,7 +79,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public List<CommandLineParser<C>> getAllChildParsers() {
+    public List<CommandLineParser<? extends Command>> getAllChildParsers() {
         if(isGroupCommand())
             return childParsers;
         else
@@ -128,16 +129,16 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      * @return CommandLine
      */
     @Override
-    public CommandLine parse(String line) {
+    public CommandLine<? extends Command> parse(String line) {
         return parse(line, false);
     }
 
     @Override
-    public CommandLine<C> parse(AeshLine line, boolean ignoreRequirements) {
+    public CommandLine<? extends Command> parse(AeshLine line, boolean ignoreRequirements) {
         if(line.getWords().size() > 0) {
             if(processedCommand.getName().equals(line.getWords().get(0))) {
                 if(isGroupCommand() && line.getWords().size() > 1) {
-                   CommandLineParser<C> clp = getChildParser(line.getWords().get(1));
+                   CommandLineParser<? extends Command> clp = getChildParser(line.getWords().get(1));
                     if(clp == null)
                         return parse(line.getWords(), ignoreRequirements);
                     //we have a group command
@@ -168,7 +169,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      * @return CommandLine
      */
     @Override
-    public CommandLine parse(String line, boolean ignoreRequirements) {
+    public CommandLine<? extends Command> parse(String line, boolean ignoreRequirements) {
         return parse(Parser.findAllWords(line), ignoreRequirements);
     }
 
@@ -183,9 +184,9 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      * @return CommandLine
      */
     @Override
-    public CommandLine<C> parse(List<String> lines, boolean ignoreRequirements) {
+    public CommandLine<? extends Command> parse(List<String> lines, boolean ignoreRequirements) {
         clear();
-        CommandLine<C> commandLine = new CommandLine<>(this);
+        CommandLine<? extends Command> commandLine = new CommandLine<>(this);
         if(processedCommand.hasArgument())
             commandLine.setArgument(processedCommand.getArgument());
         ProcessedOption active = null;
@@ -389,7 +390,8 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         return commandLine;
     }
 
-    private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand<C> command, CommandLine<C> commandLine) {
+    private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand<C> command,
+                                                                   CommandLine<? extends Command> commandLine) {
         for(ProcessedOption o : command.getOptions())
             if(o.isRequired()) {
                 boolean found = false;
