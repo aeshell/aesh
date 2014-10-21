@@ -92,6 +92,16 @@ public class EmacsEditMode extends AbstractEditMode {
                 }
                 else if(currentOperation.getOperation() == Operation.DELETE_PREV_CHAR) {
                     return Operation.SEARCH_DELETE;
+                } else if(currentOperation.getOperation() == Operation.ESCAPE ||
+                        (currentOperation.getOperation() == Operation.MOVE_NEXT_CHAR && currentOperation.getWorkingMode() != Action.NO_ACTION)||
+                        (currentOperation.getOperation() == Operation.MOVE_PREV_CHAR && currentOperation.getWorkingMode() != Action.NO_ACTION)) {
+                    mode = Action.EDIT;
+                    return Operation.SEARCH_EXIT;
+                } else if (currentOperation.getOperation() == Operation.HISTORY_PREV) {
+                    return Operation.HISTORY_PREV;
+                } else if (currentOperation.getOperation() == Operation.HISTORY_NEXT) {
+                    mode = Action.EDIT;
+                    return Operation.SEARCH_EXIT;
                 }
                 //if we got more than one we know that it started with esc
                 // search input
