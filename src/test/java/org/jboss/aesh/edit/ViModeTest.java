@@ -365,6 +365,163 @@ public class ViModeTest {
 
     }
 
+    @Test
+    public void testSearchWithArrownRight() throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .persistHistory(false)
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .mode(Mode.VI)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .shell(shell)
+                .prompt(new Prompt("aesh"))
+                .editMode(settings.getEditMode())
+                .create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .enableSearch(true)
+                .create();
+
+        consoleBuffer.writeString("asdf jkl");
+        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+
+        consoleBuffer.writeString("footing");
+        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+
+        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
+        inputProcessor.parseOperation(new CommandOperation(Key.a));
+        inputProcessor.parseOperation(new CommandOperation(Key.RIGHT));
+
+        assertEquals("asdf jkl", consoleBuffer.getBuffer().getLine());
+    }
+
+    @Test
+    public void testSearchWithArrownLeft() throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .persistHistory(false)
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .mode(Mode.VI)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .shell(shell)
+                .prompt(new Prompt("aesh"))
+                .editMode(settings.getEditMode())
+                .create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .enableSearch(true)
+                .create();
+
+        consoleBuffer.writeString("asdf jkl");
+        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+
+        consoleBuffer.writeString("footing");
+        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+
+        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
+        inputProcessor.parseOperation(new CommandOperation(Key.a));
+        inputProcessor.parseOperation(new CommandOperation(Key.LEFT));
+
+        assertEquals("asdf jkl", consoleBuffer.getBuffer().getLine());
+
+    }
+
+    @Test
+    public void testSearchWithArrownUp() throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .persistHistory(false)
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .mode(Mode.VI)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .shell(shell)
+                .prompt(new Prompt("aesh"))
+                .editMode(settings.getEditMode())
+                .create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .enableSearch(true)
+                .create();
+
+        consoleBuffer.writeString("asdf jkl");
+        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+
+        consoleBuffer.writeString("footing");
+        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+
+        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
+        inputProcessor.parseOperation(new CommandOperation(Key.a));
+        inputProcessor.parseOperation(new CommandOperation(Key.UP));
+
+        assertEquals("footing", consoleBuffer.getBuffer().getLine());
+
+    }
+
+    @Test
+    public void testSearchWithArrownDown() throws IOException, InterruptedException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .persistHistory(false)
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .mode(Mode.VI)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .shell(shell)
+                .prompt(new Prompt("aesh"))
+                .editMode(settings.getEditMode())
+                .create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .enableSearch(true)
+                .create();
+
+        consoleBuffer.writeString("asdf jkl");
+        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+
+        consoleBuffer.writeString("footing");
+        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+
+        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
+        inputProcessor.parseOperation(new CommandOperation(Key.a));
+        inputProcessor.parseOperation(new CommandOperation(Key.DOWN));
+        assertEquals("asdf jkl", consoleBuffer.getBuffer().getLine());
+    }
+
     private static class TestShell implements Shell {
 
         private final PrintStream out;
