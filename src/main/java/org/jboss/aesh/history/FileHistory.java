@@ -20,6 +20,7 @@
 package org.jboss.aesh.history;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.settings.FileAccessPermission;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -37,10 +38,16 @@ import java.io.IOException;
 public class FileHistory extends InMemoryHistory {
 
     private final File historyFile;
+    private final FileAccessPermission historyFilePermission;
 
     public FileHistory(File file, int maxSize) throws IOException {
+        this(file, maxSize, null);
+    }
+
+    public FileHistory(File file, int maxSize, FileAccessPermission historyFilePermission) throws IOException {
         super(maxSize);
         historyFile = file;
+        this.historyFilePermission = historyFilePermission;
         readFile();
     }
 
@@ -71,6 +78,15 @@ public class FileHistory extends InMemoryHistory {
         try (FileWriter fw = new FileWriter(historyFile)) {
             for(int i=0; i < size();i++)
                 fw.write(get(i) + (Config.getLineSeparator()));
+        }
+        if (historyFilePermission != null) {
+            historyFile.setReadable(false, false);
+            historyFile.setReadable(historyFilePermission.isReadable(), historyFilePermission.isReadableOwnerOnly());
+            historyFile.setWritable(false, false);
+            historyFile.setWritable(historyFilePermission.isWritable(), historyFilePermission.isWritableOwnerOnly());
+            historyFile.setExecutable(false, false);
+            historyFile.setExecutable(historyFilePermission.isExecutable(),
+                    historyFilePermission.isExecutableOwnerOnly());
         }
     }
 

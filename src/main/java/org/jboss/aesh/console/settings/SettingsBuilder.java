@@ -45,6 +45,7 @@ public class SettingsBuilder {
         settings.setName(baseSettings.getName());
         settings.setMode(baseSettings.getMode());
         settings.setHistoryFile(baseSettings.getHistoryFile());
+        settings.setHistoryFilePermission(baseSettings.getHistoryFilePermission());
         settings.setHistorySize(baseSettings.getHistorySize());
         settings.setBellStyle(baseSettings.getBellStyle());
         settings.setAnsiConsole(baseSettings.isAnsiConsole());
@@ -87,6 +88,11 @@ public class SettingsBuilder {
 
     public SettingsBuilder historyFile(File history) {
         settings.setHistoryFile(history);
+        return this;
+    }
+
+    public SettingsBuilder historyFilePermission(FileAccessPermission fileAccessPermission) {
+        settings.setHistoryFilePermission(fileAccessPermission);
         return this;
     }
 

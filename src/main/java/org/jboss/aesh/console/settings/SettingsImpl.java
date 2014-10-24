@@ -48,6 +48,7 @@ public class SettingsImpl implements Settings {
     private String name;
     private Mode editMode = Mode.EMACS;
     private File historyFile;
+    private FileAccessPermission historyFilePermission;
     private int historySize = 500;
     private boolean historyDisabled = false;
     private boolean historyPersistent = true;
@@ -85,6 +86,7 @@ public class SettingsImpl implements Settings {
         setName(baseSettings.getName());
         setMode(baseSettings.getMode());
         setHistoryFile(baseSettings.getHistoryFile());
+        setHistoryFilePermission(baseSettings.getHistoryFilePermission());
         setHistorySize(baseSettings.getHistorySize());
         setBellStyle(baseSettings.getBellStyle());
         setAnsiConsole(baseSettings.isAnsiConsole());
@@ -119,6 +121,7 @@ public class SettingsImpl implements Settings {
         setName("aesh");
         editMode = Mode.EMACS;
         historyFile = null;
+        historyFilePermission = null;
         historySize = 500;
         historyDisabled = false;
         historyPersistent = true;
@@ -208,6 +211,20 @@ public class SettingsImpl implements Settings {
                 operationManager.addOperations(KeyOperationFactory.generateViMode());
         }
         return operationManager;
+    }
+
+    /**
+     * @return the historyFilePermission
+     */
+    public FileAccessPermission getHistoryFilePermission() {
+        return historyFilePermission;
+    }
+
+    /**
+     * @param historyFilePermission the historyFilePermission to set
+     */
+    public void setHistoryFilePermission(FileAccessPermission historyFilePermission) {
+        this.historyFilePermission = historyFilePermission;
     }
 
     /**
