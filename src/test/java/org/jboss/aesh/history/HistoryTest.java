@@ -20,7 +20,10 @@
 package org.jboss.aesh.history;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -29,6 +32,7 @@ import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
+import org.jboss.aesh.console.settings.FileAccessPermission;
 import org.junit.Test;
 
 /**
@@ -110,5 +114,57 @@ public class HistoryTest extends BaseConsoleTest {
         assertEquals("3", history.getPreviousFetch());
         assertEquals("2", history.getPreviousFetch());
         assertEquals("2", history.getPreviousFetch());
+    }
+
+    @Test
+    public void testFileHistoryPermission() throws IOException{
+        File historyFile = new File("aesh-history-file.test.1");
+        historyFile.deleteOnExit();
+        int maxSize = 10;
+        FileAccessPermission perm = new FileAccessPermission();
+        perm.setExecutable(false);
+        perm.setExecutableOwnerOnly(false);
+        perm.setReadable(true);
+        perm.setReadableOwnerOnly(true);
+        perm.setWritable(true);
+        perm.setWritableOwnerOnly(true);
+        History history = new FileHistory(historyFile, maxSize, perm);
+        history.push("1");
+        history.stop(); // it will write history to local file
+        assertTrue(historyFile.canRead());
+        assertFalse(historyFile.canExecute());
+        assertTrue(historyFile.canWrite());
+
+        historyFile = new File("aesh-history-file.test.2");
+        historyFile.deleteOnExit();
+        perm = new FileAccessPermission();
+        perm.setExecutable(true);
+        perm.setExecutableOwnerOnly(true);
+        perm.setReadable(false);
+        perm.setReadableOwnerOnly(true);
+        perm.setWritable(true);
+        perm.setWritableOwnerOnly(true);
+        history = new FileHistory(historyFile, maxSize, perm);
+        history.push("1");
+        history.stop(); // it will write history to local file
+        assertFalse(historyFile.canRead());
+        assertTrue(historyFile.canExecute());
+        assertTrue(historyFile.canWrite());
+
+        historyFile = new File("aesh-history-file.test.3");
+        historyFile.deleteOnExit();
+        perm = new FileAccessPermission();
+        perm.setExecutable(false);
+        perm.setExecutableOwnerOnly(true);
+        perm.setReadable(false);
+        perm.setReadableOwnerOnly(true);
+        perm.setWritable(false);
+        perm.setWritableOwnerOnly(true);
+        history = new FileHistory(historyFile, maxSize, perm);
+        history.push("1");
+        history.stop(); // it will write history to local file
+        assertFalse(historyFile.canRead());
+        assertFalse(historyFile.canExecute());
+        assertFalse(historyFile.canWrite());
     }
 }

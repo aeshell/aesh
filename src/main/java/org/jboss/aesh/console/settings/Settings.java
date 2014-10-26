@@ -71,6 +71,13 @@ public interface Settings {
     File getHistoryFile();
 
     /**
+     * Get history file access permission, this is used when write to history file.
+     *
+     * <code>null</code> means default file permission revealed by system.
+     */
+    FileAccessPermission getHistoryFilePermission();
+
+    /**
      * Get history size
      */
     int getHistorySize();

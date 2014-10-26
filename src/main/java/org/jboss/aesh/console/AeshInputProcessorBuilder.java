@@ -102,7 +102,7 @@ public class AeshInputProcessorBuilder {
             if(settings != null && !settings.isHistoryDisabled()) {
                 if(settings != null) {
                     if(settings.isHistoryPersistent())
-                        history = new FileHistory(settings.getHistoryFile(), settings.getHistorySize());
+                        history = new FileHistory(settings.getHistoryFile(), settings.getHistorySize(), settings.getHistoryFilePermission());
                     else
                         history = new InMemoryHistory(settings.getHistorySize());
 
