@@ -24,9 +24,10 @@ import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Logger;
 
@@ -41,7 +42,7 @@ public class ConsoleInputSession {
     private final AeshInputStream aeshInputStream;
     private final ExecutorService executorService;
 
-    private final ArrayBlockingQueue<String> blockingQueue = new ArrayBlockingQueue<>(1000);
+    private final BlockingQueue<String> blockingQueue = new LinkedBlockingQueue<>(1000);
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ConsoleInputSession.class.getName());
 

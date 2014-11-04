@@ -21,7 +21,7 @@ package org.jboss.aesh.console.reader;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.terminal.Key;
@@ -31,12 +31,12 @@ import org.jboss.aesh.terminal.Key;
  */
 public class AeshInputStream extends InputStream {
 
-    private final ArrayBlockingQueue<String> blockingQueue;
+    private final BlockingQueue<String> blockingQueue;
     private String b;
     private int c;
     private transient boolean stopped = false;
 
-    public AeshInputStream(ArrayBlockingQueue<String> blockingQueue) {
+    public AeshInputStream(BlockingQueue<String> blockingQueue) {
         this.blockingQueue = blockingQueue;
     }
 
