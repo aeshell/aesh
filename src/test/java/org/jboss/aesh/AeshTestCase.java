@@ -59,7 +59,6 @@ public abstract class AeshTestCase extends TestCase {
         builder.terminal(new TestTerminal());
         builder.inputStream(new ByteArrayInputStream(buffer.getBytes()));
         builder.outputStream(new PrintStream(new ByteArrayOutputStream()));
-        builder.readAhead(false);
         builder.mode(Mode.EMACS);
         if(!Config.isOSPOSIXCompatible())
             builder.ansi(false);
@@ -92,7 +91,6 @@ public abstract class AeshTestCase extends TestCase {
         builder.terminal(new TestTerminal());
         builder.inputStream(new ByteArrayInputStream(buffer.getBytes()));
         builder.outputStream(new PrintStream(new ByteArrayOutputStream()));
-        builder.readAhead(false);
         builder.mode(Mode.VI);
         if(!Config.isOSPOSIXCompatible())
             builder.ansi(false);

@@ -164,7 +164,6 @@ public class IgnoreEofTest extends BaseConsoleTest {
                 .logging(true)
                 .enableExport(true)
                 .mode(Mode.VI)
-                .readAhead(true)
                 .create();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
