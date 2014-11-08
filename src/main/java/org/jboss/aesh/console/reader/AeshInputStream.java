@@ -29,7 +29,7 @@ import java.io.InputStream;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshInputStream {
+public class AeshInputStream extends InputStream {
 
     private transient boolean reading;
     private final InputStream consoleStream;
@@ -138,4 +138,13 @@ public class AeshInputStream {
         reading = false;
     }
 
+    @Override
+    public int read() throws IOException {
+        return consoleStream.read();
+    }
+
+    @Override
+    public int available() throws IOException {
+        return consoleStream.available();
+    }
 }

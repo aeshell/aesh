@@ -60,7 +60,6 @@ public class SettingsBuilder {
         settings.setReadInputrc(baseSettings.doReadInputrc());
         settings.setHistoryDisabled(baseSettings.isHistoryDisabled());
         settings.setHistoryPersistent(baseSettings.isHistoryPersistent());
-        settings.setReadAhead(baseSettings.isReadAhead());
         settings.setAliasFile(baseSettings.getAliasFile());
         settings.setAliasEnabled(baseSettings.isAliasEnabled());
         settings.setPersistAlias(baseSettings.doPersistAlias());
@@ -163,11 +162,6 @@ public class SettingsBuilder {
 
     public SettingsBuilder persistHistory(boolean persistHistory) {
         settings.setHistoryPersistent(persistHistory);
-        return this;
-    }
-
-    public SettingsBuilder readAhead(boolean readAhead) {
-        settings.setReadAhead(readAhead);
         return this;
     }
 

@@ -421,7 +421,7 @@ public class Console {
     }
 
     public void pushToInputStream(String input) {
-        getTerminal().getInputStream().write(input);
+        //getTerminal().getInputStream().write(input);
     }
 
     private boolean hasInput() {
@@ -541,7 +541,7 @@ public class Console {
 
     private boolean read() {
         try {
-            int[] input = getTerminal().read(settings.isReadAhead());
+            int[] input = getTerminal().read();
             if(settings.isLogging()) {
                 LOGGER.info("GOT: " + Arrays.toString(input));
             }

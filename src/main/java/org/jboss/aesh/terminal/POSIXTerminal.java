@@ -29,7 +29,6 @@ import java.util.logging.Logger;
 
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.reader.AeshInputStream;
-import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
 

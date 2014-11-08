@@ -149,12 +149,6 @@ public interface Settings {
     boolean isHistoryPersistent();
 
     /**
-     * Do aesh read ahead
-     * @return
-     */
-    boolean isReadAhead();
-
-    /**
      * Location of alias file
      */
     File getAliasFile();

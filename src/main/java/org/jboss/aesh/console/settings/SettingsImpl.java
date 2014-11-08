@@ -63,7 +63,6 @@ public class SettingsImpl implements Settings {
     private boolean isLogging = false;
     private String logFile;
     private boolean disableCompletion = false;
-    private boolean readAhead = true;
     private QuitHandler quitHandler;
     private KeyOperationManager operationManager = new KeyOperationManager();
     private File aliasFile;
@@ -101,7 +100,6 @@ public class SettingsImpl implements Settings {
         setReadInputrc(baseSettings.doReadInputrc());
         setHistoryDisabled(baseSettings.isHistoryDisabled());
         setHistoryPersistent(baseSettings.isHistoryPersistent());
-        setReadAhead(baseSettings.isReadAhead());
         setAliasFile(baseSettings.getAliasFile());
         setAliasEnabled(baseSettings.isAliasEnabled());
         setPersistAlias(baseSettings.doPersistAlias());
@@ -529,29 +527,6 @@ public class SettingsImpl implements Settings {
      */
     public void setHistoryPersistent(boolean historyPersistent) {
         this.historyPersistent = historyPersistent;
-    }
-
-    /**
-     * Read all bytes on buffer if its available
-     * Set to true by default
-     * WARNING: Do not set this to false if unsure
-     *
-     * @return readAhead
-     */
-    @Override
-    public boolean isReadAhead() {
-        return readAhead;
-    }
-
-    /**
-     * Read all bytes on buffer if its available
-     * Set to true by default
-     * WARNING: Do not set this to false if unsure
-     *
-     * @param readAhead read
-     */
-    public void setReadAhead(boolean readAhead) {
-        this.readAhead = readAhead;
     }
 
     public void setAliasFile(File file) {
