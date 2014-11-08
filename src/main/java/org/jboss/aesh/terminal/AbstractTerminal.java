@@ -57,7 +57,7 @@ public abstract class AbstractTerminal implements Terminal, Shell {
                 out().flush();
                 boolean gotSep = false;
                 //read the position
-                int[] input = read(true);
+                int[] input = read();
 
                 for(int i=2; i < input.length-1; i++) {
                     if(input[i] == 59) // we got a ';' which is the separator

@@ -19,59 +19,50 @@
  */
 package org.jboss.aesh.console.reader;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.concurrent.BlockingQueue;
-
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.terminal.Key;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshInputStream extends InputStream {
+public class AeshInputStream {
 
-    private final BlockingQueue<String> blockingQueue;
-    private String b;
-    private int c;
-    private transient boolean stopped = false;
+    private transient boolean reading;
+    private final InputStream consoleStream;
+    private static final int BUFFER_SIZE = 1024;
+    private final byte[] bBuf = new byte[BUFFER_SIZE];
+    private static final int[] NULL_INPUT = new int[] {-1};
 
-    public AeshInputStream(BlockingQueue<String> blockingQueue) {
-        this.blockingQueue = blockingQueue;
-    }
+    //private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputStream2.class.getName());
 
-    @Override
-    public int read() throws IOException {
-        if(stopped && blockingQueue.size() == 0)
-            return -1;
-        try {
-            if (b == null || c == b.length()) {
-                b = blockingQueue.take();
-                c = 0;
-            }
-
-            if (b != null && !(b.length() == 0)) {
-                return b.charAt(c++);
-            }
-        } catch (InterruptedException e) {
-            //
-        }
-        return -1;
+    public AeshInputStream(InputStream consoleStream) {
+        this.consoleStream = consoleStream;
+        reading = true;
     }
 
     public int[] readAll() {
-        if(stopped && blockingQueue.size() == 0)
+        if(!reading)
             return new int[] {-1};
         try {
             if(Config.isOSPOSIXCompatible()) {
-                String out = blockingQueue.take();
+                //LOGGER.info("trying to read");
+                String out = readFromStream();
+                //LOGGER.info("read: "+out);
+                if(out == null)
+                    return NULL_INPUT;
                 int[] input = new int[out.length()];
                 for(int i=0; i < out.length(); i++)
                     input[i] = out.charAt(i);
                 return input;
             }
             else {
-                String out = blockingQueue.take();
+                String out = readFromStream();
+                if(out == null)
+                    return NULL_INPUT;
                 //hack to make multi-value input work (arrows ++)
                 if (!out.isEmpty() &&
                         (out.charAt(0) == Key.WINDOWS_ESC.getAsChar() ||
@@ -85,7 +76,9 @@ public class AeshInputStream extends InputStream {
                     else {
                         //Otherwise, set the first char to WINDOWS_ESC, then we can reduce the number of different key's in the future
                         input[0] = Key.WINDOWS_ESC.getAsChar();
-                        String out2 = blockingQueue.take();
+                        String out2 = readFromStream();
+                        if(out2 == null)
+                            return NULL_INPUT;
                         input[1] = out2.charAt(0);
                     }
 
@@ -100,30 +93,49 @@ public class AeshInputStream extends InputStream {
             }
 
         }
+        catch (IOException e) {
+            e.printStackTrace();
+            return new int[] {-1};
+        }
         catch (InterruptedException e) {
+            e.printStackTrace();
             return new int[] {-1};
         }
     }
 
-    @Override
-    public int available() {
-        if (b != null)
-            return b.length();
-        else
-            return 0;
-    }
-
-    @Override
-    public void close() throws IOException {
-        if(!stopped) {
-            stopped = true;
-            blockingQueue.add("");
+    private String readFromStream() throws IOException, InterruptedException {
+        if(Config.isOSPOSIXCompatible()) {
+            while (reading) {
+                int read = consoleStream.available();
+                if (read > 0) {
+                    if(read > BUFFER_SIZE)
+                        read = BUFFER_SIZE;
+                    consoleStream.read(bBuf, 0, read);
+                    return new String(bBuf, 0, read);
+                }
+                else if (read < 0) {
+                    return null;
+                }
+                Thread.sleep(5);
+            }
         }
+        else {
+            while (reading) {
+                int read = consoleStream.read(bBuf);
+                if (read > 0) {
+                    return new String(bBuf, 0, read);
+                }
+                else if (read < 0) {
+                    return null;
+                }
+                Thread.sleep(10);
+            }
+        }
+        return null;
     }
 
-    //TODO: not sure if this is very smart...
-    public void write(String toBuffer) {
-        blockingQueue.add(toBuffer);
+    public void stop() {
+        reading = false;
     }
 
 }

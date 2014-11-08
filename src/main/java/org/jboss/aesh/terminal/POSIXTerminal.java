@@ -48,7 +48,6 @@ public class POSIXTerminal extends AbstractTerminal {
     private boolean restored = false;
 
     private AeshInputStream input;
-    private ConsoleInputSession inputSession;
     private PrintStream stdOut;
     private PrintStream stdErr;
 
@@ -103,9 +102,7 @@ public class POSIXTerminal extends AbstractTerminal {
         }
 
         //setting up input
-        //input =  new ConsoleInputSession(settings.getInputStream()).getExternalInputStream();
-        inputSession =  new ConsoleInputSession(settings.getInputStream());
-        input = inputSession.getExternalInputStream();
+        input = new AeshInputStream(settings.getInputStream());
 
         this.stdOut = settings.getStdOut();
         this.stdErr = settings.getStdErr();
@@ -116,22 +113,8 @@ public class POSIXTerminal extends AbstractTerminal {
      * @see org.jboss.aesh.terminal.Terminal
      */
     @Override
-    public int[] read(boolean readAhead) throws IOException {
-        if(readAhead) {
-            return input.readAll();
-        }
-        int input = this.input.read();
-        int available = this.input.available();
-        if(available > 1) {
-            int[] in = new int[available];
-            in[0] = input;
-            for(int c=1; c < available; c++ )
-                in[c] = this.input.read();
-
-            return in;
-        }
-        else
-            return new int[] {input};
+    public int[] read() throws IOException {
+        return input.readAll();
     }
 
     @Override
@@ -210,12 +193,7 @@ public class POSIXTerminal extends AbstractTerminal {
 
     @Override
     public void close() throws IOException {
-        try {
-            inputSession.stop();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        //input.close();
+        input.stop();
     }
 
     private boolean propertiesTimedOut() {

@@ -31,7 +31,6 @@ import org.fusesource.jansi.AnsiOutputStream;
 import org.fusesource.jansi.WindowsAnsiOutputStream;
 import org.fusesource.jansi.internal.WindowsSupport;
 import org.jboss.aesh.console.reader.AeshInputStream;
-import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -71,48 +70,34 @@ public class WindowsTerminal extends AbstractTerminal {
         }
 
         if(settings.getInputStream().equals(System.in)) {
+            InputStream inStream = new InputStream() {
+                @Override
+                public int read() throws IOException {
+                    return WindowsSupport.readByte();
+                }
 
-        InputStream inStream = new InputStream() {
-            @Override
-            public int read() throws IOException {
-                return WindowsSupport.readByte();
-            }
+                @Override
+                public int read(byte[] in) throws IOException {
+                    byte[] tmp = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(WindowsSupport.readByte()).array();
+                    in[0] = tmp[0];
+                    return 1;
+                }
 
-            @Override
-            public int read(byte[] in) throws IOException {
-                byte[] tmp = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(WindowsSupport.readByte()).array();
-                in[0] = tmp[0];
-                return 1;
-            }
-
-            public void close() {
-                WindowsSupport.flushConsoleInputBuffer();
-            }
-        };
-            this.input = new ConsoleInputSession(inStream).getExternalInputStream();
+                public void close() {
+                    WindowsSupport.flushConsoleInputBuffer();
+                }
+            };
+            this.input = new AeshInputStream(inStream);
+            //this.input = new ConsoleInputSession(inStream).getExternalInputStream();
         }
         else {
-            this.input = new ConsoleInputSession(settings.getInputStream()).getExternalInputStream();
+            this.input = new AeshInputStream(settings.getInputStream());
         }
     }
 
     @Override
-    public int[] read(boolean readAhead) throws IOException {
-         if(readAhead) {
-            return input.readAll();
-        }
-        int input = this.input.read();
-        int available = this.input.available();
-        if(available > 1) {
-            int[] in = new int[available];
-            in[0] = input;
-            for(int c=1; c < available; c++ )
-                in[c] = this.input.read();
-
-            return in;
-        }
-        else
-            return new int[] {input};
+    public int[] read() throws IOException {
+        return input.readAll();
     }
 
     private int getHeight() {
@@ -169,7 +154,7 @@ public class WindowsTerminal extends AbstractTerminal {
 
     @Override
     public void close() throws IOException {
-        input.close();
+        input.stop();
     }
 
     private boolean propertiesTimedOut() {

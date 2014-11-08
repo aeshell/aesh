@@ -43,7 +43,7 @@ public interface Terminal extends Closeable {
      * @return whats read
      * @throws IOException
      */
-    int[] read(boolean readAhead) throws IOException;
+    int[] read() throws IOException;
 
     boolean isEchoEnabled();
 
