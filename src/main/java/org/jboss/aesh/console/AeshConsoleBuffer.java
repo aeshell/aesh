@@ -53,7 +53,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     private Action currentAction = Action.EDIT;
 
-    private final boolean isLogging = true;
+    private final boolean isLogging = false;
 
     //used to optimize text deletion
     private static final char[] resetLineAndSetCursorToStart =
