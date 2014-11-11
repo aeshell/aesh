@@ -20,7 +20,6 @@
 package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.cl.CommandLine;
-import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOption;
@@ -29,7 +28,6 @@ import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.populator.CommandPopulator;
-import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshContext;
@@ -40,7 +38,6 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.container.AeshCommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainer;
-import org.jboss.aesh.console.command.container.CommandContainerBuilder;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
@@ -184,7 +181,7 @@ class CustomPopulator implements CommandPopulator<Object, Command> {
     }
 
     @Override
-    public void populateObject(CommandLine<Command> line, InvocationProviders invocationProviders, AeshContext aeshContext, boolean validate) throws CommandLineParserException, OptionValidatorException {
+    public void populateObject(CommandLine<Command> line, InvocationProviders invocationProviders, AeshContext aeshContext, boolean validate) throws CommandLineParserException {
         if(line.hasParserError())
             throw line.getParserException();
         for(ProcessedOption option : line.getParser().getProcessedCommand().getOptions()) {
