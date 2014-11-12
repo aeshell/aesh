@@ -19,11 +19,7 @@
  */
 package org.jboss.aesh.util;
 
-import static org.jboss.aesh.constants.AeshConstants.ESCAPE;
-import static org.jboss.aesh.constants.AeshConstants.HOME;
-import static org.jboss.aesh.constants.AeshConstants.PARENT;
-import static org.jboss.aesh.constants.AeshConstants.STAR;
-import static org.jboss.aesh.constants.AeshConstants.WILDCARD;
+import static org.jboss.aesh.constants.AeshConstants.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,8 +29,8 @@ import java.util.List;
 import org.jboss.aesh.comparators.PosixFileNameComparator;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.io.filter.AllResourceFilter;
 import org.jboss.aesh.io.Resource;
+import org.jboss.aesh.io.filter.AllResourceFilter;
 import org.jboss.aesh.io.filter.ResourceFilter;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.TerminalString;
@@ -100,12 +96,13 @@ public class FileLister {
         else if (startWithHome()) {
             if (isHomeAndTokenADirectory()) {
                 if (tokenEndsWithSlash()) {
-                    completion.addCompletionCandidates(
-                        listDirectory(cwd.newInstance(Config.getHomeDir() + token.substring(1)), null));
+                    completion.addCompletionCandidates(listDirectory(
+                        cwd.newInstance(Config.getHomeDir() + token.substring(1)), null));
                 }
                 else {
                     // completion.addCompletionCandidate(Config.getPathSeparator());
-                    List<String> tmpDirs = listDirectory(cwd.newInstance(Config.getHomeDir()), token.substring(2));
+                    List<String> tmpDirs = listDirectory(cwd.newInstance(Config.getHomeDir()),
+                        token.substring(2));
                     if (tmpDirs.size() == 1 || endsWithParent()) {
                         completion.addCompletionCandidate(Config.getPathSeparator());
                     }
@@ -126,15 +123,16 @@ public class FileLister {
         else if (!startWithSlash() && !startWithWindowsDrive()) {
             if (isCwdAndTokenADirectory()) {
                 if (tokenEndsWithSlash()) {
-                    completion.addCompletionCandidates(
-                        listDirectory(cwd.newInstance(cwd.getAbsolutePath() +
-                            Config.getPathSeparator() + token), null));
+                    completion.addCompletionCandidates(listDirectory(
+                        cwd.newInstance(cwd.getAbsolutePath() + Config.getPathSeparator()
+                            + token), null));
                 }
                 else {
                     List<String> tmpDirs;
                     if (lastDir != null) {
                         tmpDirs = listDirectory(
-                            cwd.newInstance(cwd.getAbsolutePath() + Config.getPathSeparator() + lastDir), rest);
+                            cwd.newInstance(cwd.getAbsolutePath() + Config.getPathSeparator()
+                                + lastDir), rest);
                     }
                     else {
                         tmpDirs = listDirectory(cwd, rest);
@@ -166,8 +164,7 @@ public class FileLister {
         else if (startWithSlash() || startWithWindowsDrive()) {
             if (isTokenADirectory()) {
                 if (tokenEndsWithSlash()) {
-                    completion.addCompletionCandidates(
-                        listDirectory(cwd.newInstance(token), null));
+                    completion.addCompletionCandidates(listDirectory(cwd.newInstance(token), null));
                 }
                 else
                     completion.addCompletionCandidate(Config.getPathSeparator());
@@ -189,41 +186,57 @@ public class FileLister {
 
         // try to find if more than one filename start with the same word
         if (completion.getCompletionCandidates().size() > 1) {
-            String startsWith = Parser.findStartsWithTerminalString(completion.getCompletionCandidates());
+            String startsWith = Parser.findStartsWithTerminalString(completion
+                .getCompletionCandidates());
             if (startsWith.contains(" "))
                 startsWith = Parser.switchEscapedSpacesToSpacesInWord(startsWith);
-            if (startsWith != null && startsWith.length() > 0 && rest != null &&
-                startsWith.length() > rest.length()) {
+            if (startsWith != null && startsWith.length() > 0 && rest != null
+                && startsWith.length() > rest.length()) {
                 completion.getCompletionCandidates().clear();
-                completion.addCompletionCandidate(Parser.switchSpacesToEscapedSpacesInWord(startsWith));
+                completion.addCompletionCandidate(Parser
+                    .switchSpacesToEscapedSpacesInWord(startsWith));
             }
         }
 
-        // new offset tweaking to match the "common" way of returning completions
+        // new offset tweaking to match the "common" way of returning
+        // completions
         if (completion.getCompletionCandidates().size() == 1) {
-            if (isTokenADirectory() && !tokenEndsWithSlash() && (startWithSlash() || startWithWindowsDrive())) {
-                completion.getCompletionCandidates().get(0).setCharacters(token +
-                    completion.getCompletionCandidates().get(0).getCharacters());
+            if (isTokenADirectory() && !tokenEndsWithSlash()
+                && (startWithSlash() || startWithWindowsDrive())) {
+                completion
+                    .getCompletionCandidates()
+                    .get(0)
+                    .setCharacters(
+                        token + completion.getCompletionCandidates().get(0).getCharacters());
 
                 completion.setOffset(completion.getCursor() - token.length());
             }
             else if (token != null) {
                 if (rest != null && token.length() > rest.length()) {
-                    completion.getCompletionCandidates().get(0).setCharacters(
-                        Parser.switchSpacesToEscapedSpacesInWord(
-                            token.substring(0, token.length() - rest.length())) +
-                            completion.getCompletionCandidates().get(0).getCharacters());
+                    completion
+                        .getCompletionCandidates()
+                        .get(0)
+                        .setCharacters(
+                            Parser.switchSpacesToEscapedSpacesInWord(token.substring(0,
+                                token.length() - rest.length()))
+                                + completion.getCompletionCandidates().get(0)
+                                    .getCharacters());
 
                     completion.setOffset(completion.getCursor() - token.length());
                 }
                 else if (rest != null && token.length() == rest.length()) {
-                    completion.setOffset(completion.getCursor() - (rest.length() + Parser.findNumberOfSpacesInWord(rest)));
+                    completion.setOffset(completion.getCursor()
+                        - (rest.length() + Parser.findNumberOfSpacesInWord(rest)));
                 }
                 else {
                     if (token.endsWith(Config.getPathSeparator()))
-                        completion.getCompletionCandidates().get(0).setCharacters(
-                            Parser.switchSpacesToEscapedSpacesInWord(token) +
-                                completion.getCompletionCandidates().get(0).getCharacters());
+                        completion
+                            .getCompletionCandidates()
+                            .get(0)
+                            .setCharacters(
+                                Parser.switchSpacesToEscapedSpacesInWord(token)
+                                    + completion.getCompletionCandidates().get(0)
+                                        .getCharacters());
 
                     completion.setOffset(completion.getCursor() - token.length());
                 }
@@ -246,23 +259,28 @@ public class FileLister {
             if (lastDir != null && lastDir.startsWith(Config.getPathSeparator()))
                 returnFiles = listDirectory(cwd.newInstance(lastDir), rest);
             else
-                returnFiles = listDirectory(cwd.newInstance(Config.getPathSeparator() + lastDir), rest);
+                returnFiles = listDirectory(cwd.newInstance(Config.getPathSeparator() + lastDir),
+                    rest);
         }
         else if (startWithWindowsDrive()) {
             if (lastDir != null && lastDir.length() == 2)
-                returnFiles = listDirectory(cwd.newInstance(lastDir + Config.getPathSeparator()), rest);
+                returnFiles = listDirectory(cwd.newInstance(lastDir + Config.getPathSeparator()),
+                    rest);
             else
                 returnFiles = listDirectory(cwd.newInstance(lastDir), rest);
         }
         else if (startWithHome()) {
             if (lastDir != null) {
-                returnFiles = listDirectory(cwd.newInstance(Config.getHomeDir() + lastDir.substring(1)), rest);
+                returnFiles = listDirectory(
+                    cwd.newInstance(Config.getHomeDir() + lastDir.substring(1)), rest);
             }
             else
-                returnFiles = listDirectory(cwd.newInstance(Config.getHomeDir() + Config.getPathSeparator()), rest);
+                returnFiles = listDirectory(
+                    cwd.newInstance(Config.getHomeDir() + Config.getPathSeparator()), rest);
         }
         else if (lastDir != null) {
-            returnFiles = listDirectory(cwd.newInstance(cwd + Config.getPathSeparator() + lastDir), rest);
+            returnFiles = listDirectory(cwd.newInstance(cwd + Config.getPathSeparator() + lastDir),
+                rest);
         }
         else
             returnFiles = listDirectory(cwd, rest);
@@ -292,13 +310,12 @@ public class FileLister {
     }
 
     private boolean isCwdAndTokenADirectory() {
-        return cwd.newInstance(cwd.getAbsolutePath() +
-            Config.getPathSeparator() + token).isDirectory();
+        return cwd.newInstance(cwd.getAbsolutePath() + Config.getPathSeparator() + token)
+            .isDirectory();
     }
 
     private boolean isCwdAndTokenAFile() {
-        return cwd.newInstance(cwd.getAbsolutePath() +
-                Config.getPathSeparator() + token).isLeaf();
+        return cwd.newInstance(cwd.getAbsolutePath() + Config.getPathSeparator() + token).isLeaf();
     }
 
     private boolean isHomeAndTokenADirectory() {
@@ -352,15 +369,30 @@ public class FileLister {
             for (Resource file : path.list(fileFilter)) {
                 if (rest == null || rest.length() == 0)
                     if (!file.isLeaf())
-                        fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()) + Config.getPathSeparator());
+                        fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName())
+                            + Config.getPathSeparator());
                     else
                         fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
                 else {
                     if (file.getName().startsWith(rest)) {
                         if (!file.isLeaf())
-                            fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()) + Config.getPathSeparator());
+                            fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName())
+                                + Config.getPathSeparator());
                         else
                             fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
+                    }
+
+                    if (!Config.isOSPOSIXCompatible()) {
+                        if (rest.indexOf("/") != -1) {
+                            if (file.getName().startsWith(rest.substring(0, rest.indexOf("/")))) {
+                                if (!file.isLeaf())
+                                    fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file
+                                        .getName()) + Config.getPathSeparator());
+                                else
+                                    fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file
+                                        .getName()));
+                            }
+                        }
                     }
                 }
             }
@@ -374,11 +406,7 @@ public class FileLister {
 
     @Override
     public String toString() {
-        return "FileLister{" +
-            "token='" + token + '\'' +
-            ", cwd=" + cwd +
-            ", rest='" + rest + '\'' +
-            ", lastDir='" + lastDir + '\'' +
-            '}';
+        return "FileLister{" + "token='" + token + '\'' + ", cwd=" + cwd + ", rest='" + rest + '\''
+            + ", lastDir='" + lastDir + '\'' + '}';
     }
 }
