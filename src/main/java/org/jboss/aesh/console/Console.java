@@ -162,7 +162,7 @@ public class Console {
         buffer = new Buffer(null);
         if(settings.isHistoryPersistent())
             history = new FileHistory(settings.getHistoryFile().getAbsolutePath(),
-                    settings.getHistorySize());
+                    settings.getHistorySize(), settings.getHistoryFilePermission());
         else
             history = new InMemoryHistory(settings.getHistorySize());
 
