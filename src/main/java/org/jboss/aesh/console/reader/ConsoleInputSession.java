@@ -36,7 +36,11 @@ public class ConsoleInputSession {
             public int read() throws IOException {
                 try {
                     if (b == null || c == b.length()) {
-                        b = blockingQueue.poll(365, TimeUnit.DAYS);
+                        if (connected) {
+                            b = blockingQueue.poll(365, TimeUnit.DAYS);
+                        } else {
+                            b = blockingQueue.poll(); // if reader is closed, there's no point in waiting
+                        }
                         c = 0;
                     }
 
