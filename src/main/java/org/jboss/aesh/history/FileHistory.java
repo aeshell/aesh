@@ -8,6 +8,7 @@ package org.jboss.aesh.history;
 
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.util.LoggerUtil;
+import org.jboss.aesh.console.settings.FileAccessPermission;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,10 +28,12 @@ public class FileHistory extends InMemoryHistory {
 
     private String historyFile;
     private static final Logger LOGGER = LoggerUtil.getLogger(FileHistory.class.getName());
+    private final FileAccessPermission historyFilePermission;
 
-    public FileHistory(String fileName, int maxSize) throws IOException {
+    public FileHistory(String fileName, int maxSize, FileAccessPermission historyFilePermission) throws IOException {
         super(maxSize);
         historyFile = fileName;
+        this.historyFilePermission = historyFilePermission;
 
         readFile();
 
@@ -78,11 +81,30 @@ public class FileHistory extends InMemoryHistory {
 
         FileWriter fw = new FileWriter(historyFile);
 
-        for(int i=0; i < size();i++)
+        for(int i=0; i < size();i++) {
             fw.write(get(i) + (Config.getLineSeparator()));
+        }
+        if (historyFilePermission != null) {
+            File file = new File(historyFile);
+            file.setReadable(false, false);
+            file.setReadable(historyFilePermission.isReadable(), historyFilePermission.isReadableOwnerOnly());
+            file.setWritable(false, false);
+            file.setWritable(historyFilePermission.isWritable(), historyFilePermission.isWritableOwnerOnly());
+            file.setExecutable(false, false);
+            file.setExecutable(historyFilePermission.isExecutable(),
+                    historyFilePermission.isExecutableOwnerOnly());
+        }
 
         fw.flush();
         fw.close();
+    }
+
+    public void stop() {
+        try {
+            writeFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }
