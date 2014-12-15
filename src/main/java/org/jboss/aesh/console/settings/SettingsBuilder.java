@@ -41,38 +41,7 @@ public class SettingsBuilder {
     }
 
     public SettingsBuilder(Settings baseSettings) {
-        settings = new SettingsImpl();
-        settings.setName(baseSettings.getName());
-        settings.setMode(baseSettings.getMode());
-        settings.setHistoryFile(baseSettings.getHistoryFile());
-        settings.setHistoryFilePermission(baseSettings.getHistoryFilePermission());
-        settings.setHistorySize(baseSettings.getHistorySize());
-        settings.setBellStyle(baseSettings.getBellStyle());
-        settings.setAnsiConsole(baseSettings.isAnsiConsole());
-        settings.setInputStream(baseSettings.getInputStream());
-        settings.setStdOut(baseSettings.getStdOut());
-        settings.setStdErr(baseSettings.getStdErr());
-        settings.setTerminal(baseSettings.getTerminal());
-        settings.setInputrc(baseSettings.getInputrc());
-        settings.setLogging(baseSettings.isLogging());
-        settings.setDisableCompletion(baseSettings.isDisableCompletion());
-        settings.setLogFile(baseSettings.getLogFile());
-        settings.setReadInputrc(baseSettings.doReadInputrc());
-        settings.setHistoryDisabled(baseSettings.isHistoryDisabled());
-        settings.setHistoryPersistent(baseSettings.isHistoryPersistent());
-        settings.setAliasFile(baseSettings.getAliasFile());
-        settings.setAliasEnabled(baseSettings.isAliasEnabled());
-        settings.setPersistAlias(baseSettings.doPersistAlias());
-        settings.setQuitHandler(baseSettings.getQuitHandler());
-        settings.setInterruptHook(baseSettings.getInterruptHook());
-        settings.enableOperatorParser(baseSettings.isOperatorParserEnabled());
-        settings.setManEnabled(baseSettings.isManEnabled());
-        settings.setAeshContext(baseSettings.getAeshContext());
-        settings.setExportEnabled(baseSettings.isExportEnabled());
-        settings.setExportFile(baseSettings.getExportFile());
-        settings.setPersistExport(baseSettings.doPersistExport());
-        settings.setResource(baseSettings.getResource());
-        settings.setExportUsesSystemEnvironment(baseSettings.doExportUsesSystemEnvironment());
+       settings = (SettingsImpl) baseSettings.clone();
     }
 
     public SettingsBuilder name(String name) {

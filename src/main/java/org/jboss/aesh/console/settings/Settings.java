@@ -36,7 +36,7 @@ import java.io.PrintStream;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface Settings {
+public interface Settings extends Cloneable {
     /**
      * Get the name of the cli
      * Default is "aesh"
@@ -237,5 +237,6 @@ public interface Settings {
 
     Resource getResource();
 
+    Object clone();
 
 }

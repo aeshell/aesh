@@ -671,4 +671,12 @@ public class SettingsImpl implements Settings {
             resource = new FileResource("");
         return resource;
     }
+
+    public Object clone() {
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
