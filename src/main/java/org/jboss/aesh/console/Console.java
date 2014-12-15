@@ -152,6 +152,7 @@ public class Console {
             public Thread newThread(Runnable runnable) {
                 Thread thread = Executors.defaultThreadFactory().newThread(runnable);
                 thread.setName("Aesh Read Loop " + runnable.hashCode());
+                thread.setDaemon(true);
                 return thread;
             }
         });
@@ -351,6 +352,16 @@ public class Console {
 
     public void stop() {
         initiateStop = true;
+        //we need to make sure that we finish the data we
+        // have already parsed and put into the queue before we quit
+        while(!inputQueue.isEmpty()) {
+            try {
+                Thread.sleep(10);
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         try {
             getTerminal().close();
         }

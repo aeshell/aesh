@@ -37,8 +37,6 @@ public class AeshInputStream extends InputStream {
     private final byte[] bBuf = new byte[BUFFER_SIZE];
     private static final int[] NULL_INPUT = new int[] {-1};
 
-    //private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputStream2.class.getName());
-
     public AeshInputStream(InputStream consoleStream) {
         this.consoleStream = consoleStream;
         reading = true;
@@ -104,31 +102,13 @@ public class AeshInputStream extends InputStream {
     }
 
     private String readFromStream() throws IOException, InterruptedException {
-        if(Config.isOSPOSIXCompatible()) {
-            while (reading) {
-                int read = consoleStream.available();
-                if (read > 0) {
-                    if(read > BUFFER_SIZE)
-                        read = BUFFER_SIZE;
-                    consoleStream.read(bBuf, 0, read);
-                    return new String(bBuf, 0, read);
-                }
-                else if (read < 0) {
-                    return null;
-                }
-                Thread.sleep(5);
+        while (reading) {
+            int read = consoleStream.read(bBuf);
+            if (read > 0) {
+                return new String(bBuf, 0, read);
             }
-        }
-        else {
-            while (reading) {
-                int read = consoleStream.read(bBuf);
-                if (read > 0) {
-                    return new String(bBuf, 0, read);
-                }
-                else if (read < 0) {
-                    return null;
-                }
-                Thread.sleep(10);
+            else if (read < 0) {
+                return null;
             }
         }
         return null;

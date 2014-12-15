@@ -115,6 +115,7 @@ public class IgnoreEofTest extends BaseConsoleTest {
                 String BUF = "a";
 
                 out.write(BUF.getBytes());
+                out.flush();
                 Thread.sleep(100);
 
                 assertEquals(BUF, console.getBuffer());

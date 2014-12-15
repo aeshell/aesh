@@ -129,7 +129,7 @@ public abstract class BaseConsoleTest {
 
         setup.call(console, outputStream);
 
-        if (!latch.await(500, TimeUnit.MILLISECONDS)) {
+        if (!latch.await(5000, TimeUnit.MILLISECONDS)) {
             fail("Failed waiting for Console to finish");
         }
         console.stop();
