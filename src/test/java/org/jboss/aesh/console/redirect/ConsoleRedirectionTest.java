@@ -64,18 +64,6 @@ import org.junit.Test;
      }
 
      @Test
-     public void redirectionCommands() throws Throwable {
-         final File tmp = tempDir.toFile();
-         invokeTestConsole(new Setup() {
-             @Override
-             public void call(Console console, OutputStream out) throws IOException {
-                 out.write(("ls < " + tmp.getName() + Config.getPathSeparator()+ "foo_bar.txt" + Config.getLineSeparator()).getBytes());
-                 out.flush();
-             }
-         }, new RedirectionConsoleCallback());
-     }
-
-     @Test
      public void redirectIn() throws Throwable {
          final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_bar2.txt");
          PrintWriter writer = new PrintWriter(foo, "UTF-8");
