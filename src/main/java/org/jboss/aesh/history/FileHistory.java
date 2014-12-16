@@ -21,6 +21,7 @@ package org.jboss.aesh.history;
 
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.settings.FileAccessPermission;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,6 +29,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -39,13 +42,17 @@ public class FileHistory extends InMemoryHistory {
 
     private final File historyFile;
     private final FileAccessPermission historyFilePermission;
+    private final boolean logging;
+    private static final Logger LOGGER = LoggerUtil.getLogger(FileHistory.class.getName());
 
-    public FileHistory(File file, int maxSize) throws IOException {
-        this(file, maxSize, null);
+    public FileHistory(File file, int maxSize, boolean logging) throws IOException {
+        this(file, maxSize, null, logging);
     }
 
-    public FileHistory(File file, int maxSize, FileAccessPermission historyFilePermission) throws IOException {
+    public FileHistory(File file, int maxSize, FileAccessPermission historyFilePermission,
+                       boolean logging) throws IOException {
         super(maxSize);
+        this.logging = logging;
         historyFile = file;
         this.historyFilePermission = historyFilePermission;
         readFile();
@@ -94,8 +101,10 @@ public class FileHistory extends InMemoryHistory {
     public void stop() {
        try {
            writeFile();
-       } catch (IOException e) {
-           e.printStackTrace();
+       }
+       catch (IOException e) {
+           if(logging)
+               LOGGER.log(Level.WARNING, "Failed when trying to write history file", e);
        }
     }
 

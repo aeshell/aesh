@@ -100,18 +100,17 @@ public class AeshInputProcessorBuilder {
                 throw new IllegalArgumentException("ConsoleBuffer must be provided to create InputProcessor");
 
             if(settings != null && !settings.isHistoryDisabled()) {
-                if(settings != null) {
-                    if(settings.isHistoryPersistent())
-                        history = new FileHistory(settings.getHistoryFile(), settings.getHistorySize(), settings.getHistoryFilePermission());
-                    else
-                        history = new InMemoryHistory(settings.getHistorySize());
-
-                }
+                if(settings.isHistoryPersistent())
+                    history =
+                            new FileHistory(settings.getHistoryFile(), settings.getHistorySize(),
+                                    settings.getHistoryFilePermission(), settings.isLogging());
+                else
+                    history = new InMemoryHistory(settings.getHistorySize());
 
             }
             else {
                 if(persistHistory && historyFile != null)
-                    history = new FileHistory(historyFile, historySize);
+                    history = new FileHistory(historyFile, historySize, false);
                 else
                     history = new InMemoryHistory(historySize);
             }

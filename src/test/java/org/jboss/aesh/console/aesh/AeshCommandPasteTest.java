@@ -61,6 +61,7 @@ public class AeshCommandPasteTest {
             .inputStream(pipedInputStream)
             .outputStream(new PrintStream(byteArrayOutputStream))
             .setPersistExport(false)
+            .persistHistory(false)
             .logging(true)
             .create();
 
@@ -93,6 +94,7 @@ public class AeshCommandPasteTest {
             .inputStream(pipedInputStream)
             .outputStream(new PrintStream(byteArrayOutputStream))
             .setPersistExport(false)
+            .persistHistory(false)
             .logging(true)
             .create();
 

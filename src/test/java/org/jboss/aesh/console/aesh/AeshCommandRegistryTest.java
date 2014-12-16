@@ -141,10 +141,10 @@ public class AeshCommandRegistryTest {
 
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
-        Thread.sleep(80);
+        Thread.sleep(100);
         outputStream.write(WRITTEN.getBytes());
         outputStream.flush();
-        Thread.sleep(80);
+        Thread.sleep(100);
 
         assertEquals(WRITTEN, ((AeshConsoleImpl) aeshConsole).getBuffer().trim());
 

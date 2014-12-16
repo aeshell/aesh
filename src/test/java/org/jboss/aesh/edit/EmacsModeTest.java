@@ -58,6 +58,7 @@ public class EmacsModeTest extends AeshTestCase {
                 .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
+                .persistHistory(false)
                 .enableAlias(false)
                 .mode(Mode.EMACS)
                 .create();
@@ -106,6 +107,7 @@ public class EmacsModeTest extends AeshTestCase {
 
         Settings settings = new SettingsBuilder()
                 .terminal(new TestTerminal())
+                .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)

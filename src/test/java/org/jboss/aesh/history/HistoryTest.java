@@ -128,7 +128,7 @@ public class HistoryTest extends BaseConsoleTest {
         perm.setReadableOwnerOnly(true);
         perm.setWritable(true);
         perm.setWritableOwnerOnly(true);
-        History history = new FileHistory(historyFile, maxSize, perm);
+        History history = new FileHistory(historyFile, maxSize, perm, false);
         history.push("1");
         history.stop(); // it will write history to local file
         assertTrue(historyFile.canRead());
@@ -144,7 +144,7 @@ public class HistoryTest extends BaseConsoleTest {
         perm.setReadableOwnerOnly(true);
         perm.setWritable(true);
         perm.setWritableOwnerOnly(true);
-        history = new FileHistory(historyFile, maxSize, perm);
+        history = new FileHistory(historyFile, maxSize, perm, false);
         history.push("1");
         history.stop(); // it will write history to local file
         assertFalse(historyFile.canRead());
@@ -160,7 +160,7 @@ public class HistoryTest extends BaseConsoleTest {
         perm.setReadableOwnerOnly(true);
         perm.setWritable(false);
         perm.setWritableOwnerOnly(true);
-        history = new FileHistory(historyFile, maxSize, perm);
+        history = new FileHistory(historyFile, maxSize, perm, false);
         history.push("1");
         history.stop(); // it will write history to local file
         assertFalse(historyFile.canRead());

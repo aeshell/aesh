@@ -55,6 +55,7 @@ public class IgnoreEofTest extends BaseConsoleTest {
         SettingsBuilder builder = new SettingsBuilder();
         builder.enableAlias(true);
         builder.persistAlias(false);
+        builder.persistHistory(false);
         builder.mode(Mode.VI);
 
         invokeTestConsole(1, new Setup() {
@@ -105,6 +106,7 @@ public class IgnoreEofTest extends BaseConsoleTest {
         SettingsBuilder builder = new SettingsBuilder();
         builder.enableAlias(true);
         builder.persistAlias(false);
+        builder.persistHistory(false);
         builder.mode(Mode.EMACS);
 
         invokeTestConsole(1, new Setup() {
@@ -164,6 +166,7 @@ public class IgnoreEofTest extends BaseConsoleTest {
                 .setPersistExport(false)
                 .logging(true)
                 .enableExport(true)
+                .persistHistory(false)
                 .mode(Mode.VI)
                 .create();
 

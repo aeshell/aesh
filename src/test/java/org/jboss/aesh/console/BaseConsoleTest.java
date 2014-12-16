@@ -51,6 +51,7 @@ public abstract class BaseConsoleTest {
         if(builder == null) {
             builder = new SettingsBuilder();
             builder.enableAlias(false);
+            builder.persistHistory(false);
         }
         builder.readInputrc(false);
         builder.terminal(new TestTerminal());
