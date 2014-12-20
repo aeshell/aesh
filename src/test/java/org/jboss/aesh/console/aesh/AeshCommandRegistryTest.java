@@ -78,6 +78,10 @@ public class AeshCommandRegistryTest {
             public Set<String> getAllCommandNames() {
                 throw new IllegalStateException("Should not crash Aesh");
             }
+
+            @Override public void removeCommand(String name) {
+
+            }
         };
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder().settings(settings).commandRegistry(registry)
@@ -129,6 +133,10 @@ public class AeshCommandRegistryTest {
             public Set<String> getAllCommandNames() {
                 return null;
             }
+
+            @Override public void removeCommand(String name) {
+
+            }
         };
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
@@ -176,6 +184,10 @@ public class AeshCommandRegistryTest {
             @Override
             public Set<String> getAllCommandNames() {
                 return new HashSet<>();
+            }
+
+            @Override public void removeCommand(String name) {
+
             }
         };
 

@@ -52,4 +52,6 @@ public interface CommandRegistry {
      * @return all specified command names
      */
     Set<String> getAllCommandNames();
+
+    void removeCommand(String name);
 }
