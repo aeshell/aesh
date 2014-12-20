@@ -90,7 +90,7 @@ public class Parser {
         if(numRows * numColumns < displayList.size())
             numRows++;
 
-        // build the completion listing
+        // create the completion listing
         StringBuilder completionOutput = new StringBuilder();
         for(int i=0; i < numRows; i++) {
             for(int c=0; c < numColumns; c++) {
@@ -140,7 +140,7 @@ public class Parser {
 
         StringBuilder completionOutput = new StringBuilder();
         if(numRows > 1) {
-            // build the completion listing
+            // create the completion listing
             for(int i=0; i < numRows; i++) {
                 for(int c=0; c < numColumns; c++) {
                     int fetch = i + (c * numRows);

@@ -23,10 +23,11 @@ import org.jboss.aesh.console.command.Command;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href="mailto:danielsoro@gmail.com>Daniel Cunha (soro)</a>
  */
 public interface CommandContainerBuilder {
 
-    CommandContainer build(Command command);
+    CommandContainer create(Command command);
 
-    CommandContainer build(Class<? extends Command> command);
+    CommandContainer create(Class<? extends Command> command);
 }

@@ -37,7 +37,7 @@ public class AeshInternalCommandRegistry {
     private final Map<String, CommandContainer> registry = new HashMap<String, CommandContainer>();
 
     public void addCommand(Command command) {
-        putIntoRegistry(new AeshCommandContainerBuilder().build(command));
+        putIntoRegistry(new AeshCommandContainerBuilder().create(command));
     }
 
     private void putIntoRegistry(CommandContainer commandContainer) {

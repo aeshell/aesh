@@ -36,7 +36,7 @@ import java.io.IOException;
  * the CommandLineParser generated from the Command.
  *
  * CommandRegistry will not put any CommandContainer objects in the registry
- * if it have any build errors.
+ * if it have any create errors.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
