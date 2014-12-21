@@ -96,6 +96,7 @@ public class MutableCommandRegistry implements CommandRegistry {
             registry.put(commandContainer.getParser().getProcessedCommand().getName(), commandContainer);
     }
 
+    @Override
     public void removeCommand(String name) {
         if(registry.containsKey(name))
             registry.remove(name);
