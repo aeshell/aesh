@@ -83,11 +83,11 @@ public class MutableCommandRegistry implements CommandRegistry {
     }
 
     public void addCommand(Command command) {
-        putIntoRegistry(getBuilder().build(command));
+        putIntoRegistry(getBuilder().create(command));
     }
 
     public void addCommand(Class<? extends Command> command) {
-        putIntoRegistry(getBuilder().build(command));
+        putIntoRegistry(getBuilder().create(command));
     }
 
     private void putIntoRegistry(CommandContainer commandContainer) {

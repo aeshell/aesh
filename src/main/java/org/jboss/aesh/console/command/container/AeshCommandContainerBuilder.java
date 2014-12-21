@@ -29,7 +29,7 @@ import org.jboss.aesh.console.command.Command;
 public class AeshCommandContainerBuilder implements CommandContainerBuilder {
 
     @Override
-    public CommandContainer build(Command command) {
+    public CommandContainer create(Command command) {
         try {
             return ParserGenerator.generateCommandLineParser(command);
         }
@@ -40,7 +40,7 @@ public class AeshCommandContainerBuilder implements CommandContainerBuilder {
     }
 
     @Override
-    public CommandContainer build(Class<? extends Command> command) {
+    public CommandContainer create(Class<? extends Command> command) {
         try {
             return ParserGenerator.generateCommandLineParser(command);
         }

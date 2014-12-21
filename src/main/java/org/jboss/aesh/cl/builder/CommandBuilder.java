@@ -141,32 +141,32 @@ public class CommandBuilder<C extends Command> {
         return this;
     }
 
-    public CommandContainer<C> generate() {
+    public CommandContainer<C> create() {
         try {
             if(parserException != null) {
                 return new AeshCommandContainer<>(parserException.getMessage());
             }
-            return new AeshCommandContainer<>(generateParser());
+            return new AeshCommandContainer<>(createParser());
         }
         catch (CommandLineParserException e) {
             return new AeshCommandContainer<>(e.getMessage());
         }
     }
 
-    private AeshCommandLineParser<C> generateParser() throws CommandLineParserException {
+    private AeshCommandLineParser<C> createParser() throws CommandLineParserException {
         if(command == null)
             throw new CommandLineParserException("Command object is null, cannot create command");
-        ProcessedCommand<C> processedCommand = generateProcessedCommand();
+        ProcessedCommand<C> processedCommand = createProcessedCommand();
         AeshCommandLineParser<C> parser = new AeshCommandLineParser<>(processedCommand);
         if(children != null) {
             for(CommandBuilder<? extends Command> builder : children) {
-                parser.addChildParser(builder.generateParser());
+                parser.addChildParser(builder.createParser());
             }
         }
         return parser;
     }
 
-    private ProcessedCommand<C> generateProcessedCommand() throws CommandLineParserException {
+    private ProcessedCommand<C> createProcessedCommand() throws CommandLineParserException {
         return new ProcessedCommandBuilder<C>()
                 .name(name)
                 .command(command)

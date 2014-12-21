@@ -64,7 +64,7 @@ public class AeshCommandDynamicTest {
                 .create();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(createGroupCommand().generate())
+                .command(createGroupCommand().create())
                 .create();
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()

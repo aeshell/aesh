@@ -133,7 +133,7 @@ public class AeshExample {
         Settings settings = builder.create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
-                .command(fooCommand.generate())
+                .command(fooCommand.create())
                 .command(LsCommand.class)
                 .command(TestConsoleCommand.class)
                 .command(PromptCommand.class)
