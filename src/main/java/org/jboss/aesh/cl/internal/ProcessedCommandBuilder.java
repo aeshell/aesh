@@ -35,8 +35,9 @@ import java.util.List;
  * Build a {@link org.jboss.aesh.cl.internal.ProcessedCommand} object using the Builder pattern.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  */
-public class ProcessedCommandBuilder<C extends Command> {
+public class ProcessedCommandBuilder {
 
     private String name;
     private String description;
@@ -45,33 +46,33 @@ public class ProcessedCommandBuilder<C extends Command> {
     private ProcessedOption argument;
     private final List<ProcessedOption> options;
     private CommandPopulator populator;
-    private C command;
+    private Command command;
 
     public ProcessedCommandBuilder() {
         options = new ArrayList<>();
     }
 
-    public ProcessedCommandBuilder<C> name(String name) {
+    public ProcessedCommandBuilder name(String name) {
         this.name = name;
         return this;
     }
 
-    public ProcessedCommandBuilder<C> description(String usage) {
+    public ProcessedCommandBuilder description(String usage) {
         this.description = usage;
         return this;
     }
 
-    public ProcessedCommandBuilder<C> argument(ProcessedOption argument) {
+    public ProcessedCommandBuilder argument(ProcessedOption argument) {
         this.argument = argument;
         return this;
     }
 
-    public ProcessedCommandBuilder<C> validator(CommandValidator<?> validator) {
+    public ProcessedCommandBuilder validator(CommandValidator<?> validator) {
         this.validator = validator;
         return this;
     }
 
-    public ProcessedCommandBuilder<C> validator(Class<? extends CommandValidator> validator) {
+    public ProcessedCommandBuilder validator(Class<? extends CommandValidator> validator) {
         this.validator = initValidator(validator);
         return this;
     }
@@ -83,7 +84,7 @@ public class ProcessedCommandBuilder<C extends Command> {
             return new NullCommandValidator();
     }
 
-    public ProcessedCommandBuilder<C> resultHandler(Class<? extends ResultHandler> resultHandler) {
+    public ProcessedCommandBuilder resultHandler(Class<? extends ResultHandler> resultHandler) {
         this.resultHandler = initResultHandler(resultHandler);
         return this;
     }
@@ -95,38 +96,38 @@ public class ProcessedCommandBuilder<C extends Command> {
             return new NullResultHandler();
     }
 
-    public ProcessedCommandBuilder<C> resultHandler(ResultHandler resultHandler) {
+    public ProcessedCommandBuilder resultHandler(ResultHandler resultHandler) {
         this.resultHandler = resultHandler;
         return this;
     }
 
-    public ProcessedCommandBuilder<C> populator(CommandPopulator populator) {
+    public ProcessedCommandBuilder populator(CommandPopulator populator) {
         this.populator = populator;
         return this;
     }
 
-    public ProcessedCommandBuilder<C> command(C command) {
+    public ProcessedCommandBuilder command(Command command) {
         this.command = command;
         return this;
     }
 
-    public ProcessedCommandBuilder<C> command(Class<C> command) {
+    public ProcessedCommandBuilder command(Class<? extends Command> command) {
         this.command = ReflectionUtil.newInstance(command);
         return this;
     }
 
-    public ProcessedCommandBuilder<C> addOption(ProcessedOption option) {
+    public ProcessedCommandBuilder addOption(ProcessedOption option) {
         this.options.add(option);
         return this;
     }
 
-    public ProcessedCommandBuilder<C> addOptions(List<ProcessedOption> options) {
+    public ProcessedCommandBuilder addOptions(List<ProcessedOption> options) {
         if(options != null)
             this.options.addAll(options);
         return this;
     }
 
-    public ProcessedCommand<C> create() throws CommandLineParserException {
+    public ProcessedCommand create() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
 
@@ -136,6 +137,6 @@ public class ProcessedCommandBuilder<C extends Command> {
         if(resultHandler == null)
             resultHandler = new NullResultHandler();
 
-        return new ProcessedCommand<>(name, command, description, validator, resultHandler, argument, options, populator);
+        return new ProcessedCommand(name, command, description, validator, resultHandler, argument, options, populator);
     }
 }
