@@ -432,7 +432,7 @@ public class Console {
     }
 
     public void pushToInputStream(String input) {
-        //getTerminal().getInputStream().write(input);
+        getInternalShell().out().print(input);
     }
 
     private boolean hasInput() {
