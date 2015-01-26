@@ -33,7 +33,11 @@ public abstract class AeshConsoleCallback implements ConsoleCallback {
 
     @Override
     public CommandOperation getInput() throws InterruptedException {
-        return process.getInput();
+        if( process != null ) {
+            return process.getInput();
+        }else{
+            return null;
+        }
     }
 
     @Override
