@@ -21,10 +21,11 @@ package org.jboss.aesh.terminal;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 
-import org.jboss.aesh.console.reader.AeshInputStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
+import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
 
 /**
@@ -37,17 +38,15 @@ public class TestTerminal implements Terminal, Shell {
     private PrintStream outWriter;
     private PrintStream errWriter;
     private TerminalSize size;
-    private AeshInputStream input;
-    private PrintStream stdOut;
-    private PrintStream stdErr;
+    private ConsoleInputSession input;
+    private InputStream in;
 
     @Override
     public void init(Settings settings) {
-        input =  new AeshInputStream(settings.getInputStream());
+        input =  new ConsoleInputSession(settings.getInputStream());
+        in = settings.getInputStream();
         outWriter = new PrintStream(settings.getStdOut(), true);
         errWriter = new PrintStream(settings.getStdErr(), true);
-        this.stdOut = settings.getStdOut();
-        this.stdErr = settings.getStdErr();
 
         size = new TerminalSize(24,80);
     }
@@ -110,11 +109,6 @@ public class TestTerminal implements Terminal, Shell {
     }
 
     @Override
-    public AeshInputStream getInputStream() {
-        return input;
-    }
-
-    @Override
     public void clear() throws IOException {
     }
 
@@ -125,12 +119,17 @@ public class TestTerminal implements Terminal, Shell {
 
     @Override
     public AeshStandardStream in() {
-        return new AeshStandardStream(new BufferedInputStream(input));
+        return new AeshStandardStream(new BufferedInputStream(in));
     }
 
     @Override
     public PrintStream out() {
         return outWriter;
+    }
+
+    @Override
+    public void writeToInputStream(String data) {
+        input.writeToInput(data);
     }
 
 }

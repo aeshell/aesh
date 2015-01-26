@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 import org.fusesource.jansi.AnsiOutputStream;
 import org.fusesource.jansi.WindowsAnsiOutputStream;
 import org.fusesource.jansi.internal.WindowsSupport;
-import org.jboss.aesh.console.reader.AeshInputStream;
+import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -43,7 +43,7 @@ public class WindowsTerminal extends AbstractTerminal {
     private PrintStream stdOut;
     private PrintStream stdErr;
     private TerminalSize size;
-    private AeshInputStream input;
+    private ConsoleInputSession input;
 
     private long ttyPropsLastFetched;
     private static long TIMEOUT_PERIOD = 2000;
@@ -87,11 +87,11 @@ public class WindowsTerminal extends AbstractTerminal {
                     WindowsSupport.flushConsoleInputBuffer();
                 }
             };
-            this.input = new AeshInputStream(inStream);
+            this.input = new ConsoleInputSession(inStream);
             //this.input = new ConsoleInputSession(inStream).getExternalInputStream();
         }
         else {
-            this.input = new AeshInputStream(settings.getInputStream());
+            this.input = new ConsoleInputSession(settings.getInputStream());
         }
     }
 
@@ -148,8 +148,8 @@ public class WindowsTerminal extends AbstractTerminal {
     }
 
     @Override
-    public AeshInputStream getInputStream() {
-        return input;
+    public void writeToInputStream(String data) {
+        input.writeToInput(data);
     }
 
     @Override

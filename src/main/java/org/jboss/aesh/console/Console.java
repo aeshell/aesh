@@ -432,7 +432,7 @@ public class Console {
     }
 
     public void pushToInputStream(String input) {
-        //getTerminal().getInputStream().write(input);
+        getTerminal().writeToInputStream(input);
     }
 
     private boolean hasInput() {
@@ -571,35 +571,7 @@ public class Console {
                 return false;
             }
 
-            boolean parsing = true;
-            //use a position instead of changing the array
-            int position = 0;
-            //if we get a paste or have input lag this should parse it correctly...
-            while(parsing) {
-                Key inc = Key.findStartKey(input, position);
-                if(input.length > inc.getKeyValues().length+position) {
-                    position += inc.getKeyValues().length;
-                }
-                else {
-                    parsing = false;
-                }
-                //if we get ctrl-c/d while a process is running we'll try to kill
-                if((inc == Key.CTRL_C || inc == Key.CTRL_D) &&
-                        processManager.hasForegroundProcess()) {
-                    //try to kill running process
-                    try {
-                        if(settings.isLogging())
-                            LOGGER.info("killing process: "+processManager.getCurrentProcess().getPID());
-                        processManager.getCurrentProcess().interrupt();
-                    }
-                    catch(InterruptedException ie) {
-                        ie.printStackTrace();
-                    }
-                }
-                else {
-                    inputQueue.put(new CommandOperation(inc, input, position));
-                }
-            }
+            parseInput(input);
             return true;
         }
         catch (IOException ioe) {
@@ -620,6 +592,38 @@ public class Console {
         catch (InterruptedException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    private void parseInput(int[] input) throws InterruptedException {
+        boolean parsing = true;
+        //use a position instead of changing the array
+        int position = 0;
+        //if we get a paste or have input lag this should parse it correctly...
+        while(parsing) {
+            Key inc = Key.findStartKey(input, position);
+            if(input.length > inc.getKeyValues().length+position) {
+                position += inc.getKeyValues().length;
+            }
+            else {
+                parsing = false;
+            }
+            //if we get ctrl-c/d while a process is running we'll try to kill
+            if((inc == Key.CTRL_C || inc == Key.CTRL_D) &&
+                    processManager.hasForegroundProcess()) {
+                //try to kill running process
+                try {
+                    if(settings.isLogging())
+                        LOGGER.info("killing process: "+processManager.getCurrentProcess().getPID());
+                    processManager.getCurrentProcess().interrupt();
+                }
+                catch(InterruptedException ie) {
+                    ie.printStackTrace();
+                }
+            }
+            else {
+                inputQueue.put(new CommandOperation(inc, input, position));
+            }
         }
     }
 

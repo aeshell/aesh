@@ -28,7 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.reader.AeshInputStream;
+import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -46,7 +46,7 @@ public class POSIXTerminal extends AbstractTerminal {
     private long ttyPropsLastFetched;
     private boolean restored = false;
 
-    private AeshInputStream input;
+    private ConsoleInputSession input;
     private PrintStream stdOut;
     private PrintStream stdErr;
 
@@ -101,7 +101,8 @@ public class POSIXTerminal extends AbstractTerminal {
         }
 
         //setting up input
-        input = new AeshInputStream(settings.getInputStream());
+        //input = new AeshInputStream(settings.getInputStream());
+        input = new ConsoleInputSession(settings.getInputStream());
 
         this.stdOut = settings.getStdOut();
         this.stdErr = settings.getStdErr();
@@ -186,8 +187,8 @@ public class POSIXTerminal extends AbstractTerminal {
     }
 
     @Override
-    public AeshInputStream getInputStream() {
-        return input;
+    public void writeToInputStream(String data) {
+       input.writeToInput(data);
     }
 
     @Override
