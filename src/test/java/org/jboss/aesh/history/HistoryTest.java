@@ -118,7 +118,7 @@ public class HistoryTest extends BaseConsoleTest {
 
     @Test
     public void testFileHistoryPermission() throws IOException{
-        File historyFile = new File("aesh-history-file.test.1");
+        File historyFile = new File(System.getProperty("java.io.tmpdir"), "aesh-history-file.test.1");
         historyFile.deleteOnExit();
         int maxSize = 10;
         FileAccessPermission perm = new FileAccessPermission();
@@ -135,7 +135,7 @@ public class HistoryTest extends BaseConsoleTest {
         assertFalse(historyFile.canExecute());
         assertTrue(historyFile.canWrite());
 
-        historyFile = new File("aesh-history-file.test.2");
+        historyFile = new File(System.getProperty("java.io.tmpdir"), "aesh-history-file.test.2");
         historyFile.deleteOnExit();
         perm = new FileAccessPermission();
         perm.setExecutable(true);
@@ -151,7 +151,7 @@ public class HistoryTest extends BaseConsoleTest {
         assertTrue(historyFile.canExecute());
         assertTrue(historyFile.canWrite());
 
-        historyFile = new File("aesh-history-file.test.3");
+        historyFile = new File(System.getProperty("java.io.tmpdir"), "aesh-history-file.test.3");
         historyFile.deleteOnExit();
         perm = new FileAccessPermission();
         perm.setExecutable(false);

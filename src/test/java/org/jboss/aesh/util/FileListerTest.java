@@ -156,11 +156,11 @@ public class FileListerTest {
 
     @Test
     public void testInWorkingDirectoryWithoutSlashCompletion() {
-        final File workingDir = new File(".");
+        final File workingDir = new File(System.getProperty("java.io.tmpdir"));
         File test = new File(workingDir, "test");
         test.mkdir();
 
-        CompleteOperation completion = new CompleteOperation(aeshContext, "cd test", 2);
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd /tmp/test", 2);
         new FileLister("test", new FileResource(workingDir)).
                 findMatchingDirectories(completion);
         List<TerminalString> candidates = completion.getCompletionCandidates();
@@ -187,7 +187,7 @@ public class FileListerTest {
 
     @Test
     public void testWorkingDirFilePrefixCompletion() throws IOException {
-        File workingDirFile = new File("prefix");
+        File workingDirFile = new File(System.getProperty("java.io.tmpdir"), "prefix");
         workingDirFile.createNewFile();
 
         new File(workingDir.toString(), "prefixdir").mkdir();
