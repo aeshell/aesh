@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.console.reader;
 
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
@@ -46,17 +45,14 @@ public class ConsoleInputSession {
     private static final Logger LOGGER = LoggerUtil.getLogger(ConsoleInputSession.class.getName());
 
     public ConsoleInputSession(InputStream consoleStream) {
-        if(Config.isOSPOSIXCompatible())
-            executorService = Executors.newSingleThreadExecutor();
-        else
-            executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable runnable) {
-                    Thread thread = Executors.defaultThreadFactory().newThread(runnable);
-                    thread.setDaemon(true);
-                    return thread;
-                }
-            });
+        executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable runnable) {
+                Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
         aeshInputStream = new AeshInputStream(consoleStream);
         startReader();
     }
