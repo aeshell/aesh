@@ -42,6 +42,7 @@ import org.junit.Test;
  */
 public class FileListerTest {
     private Resource workingDir;
+    private static final String PATH_SEPARATOR = Config.getPathSeparator();
     private final AeshContext aeshContext = new AeshContext() {
         @Override
         public Resource getCurrentWorkingDirectory() {
@@ -143,29 +144,34 @@ public class FileListerTest {
 
     @Test
     public void testSubDirectoryWithoutSlashCompletion() {
-        File test = new File(workingDir.toString(), "test");
+        File test = new File(workingDir.toString(), "test123");
         test.mkdir();
-        new File(test, "child").mkdir();
+        File child = new File(test, "child");
+        child.mkdir();
 
-        CompleteOperation completion = new CompleteOperation(aeshContext, "cd test/child", 2);
-        new FileLister("test/child", workingDir).findMatchingDirectories(completion);
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd test123"+PATH_SEPARATOR+"child", 2);
+        new FileLister("test123"+PATH_SEPARATOR+"child", workingDir).findMatchingDirectories(completion);
         List<TerminalString> candidates = completion.getCompletionCandidates();
+        System.out.println(candidates);
         assertEquals(1, candidates.size());
-        assertEquals("test/child" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+        assertEquals("test123"+PATH_SEPARATOR+"child" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+        child.delete();
+        test.delete();
     }
 
     @Test
     public void testInWorkingDirectoryWithoutSlashCompletion() {
         final File workingDir = new File(System.getProperty("java.io.tmpdir"));
-        File test = new File(workingDir, "test");
+        File test = new File(workingDir, "test123");
         test.mkdir();
 
-        CompleteOperation completion = new CompleteOperation(aeshContext, "cd /tmp/test", 2);
-        new FileLister("test", new FileResource(workingDir)).
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd "+PATH_SEPARATOR+
+                System.getProperty("java.io.tmpdir")+PATH_SEPARATOR+"test123", 2);
+        new FileLister("test123", new FileResource(workingDir)).
                 findMatchingDirectories(completion);
         List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(1, candidates.size());
-        assertEquals("test" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+        assertEquals("test123" + Config.getPathSeparator(), candidates.get(0).getCharacters());
 
         delete(new FileResource(test), true);
     }
