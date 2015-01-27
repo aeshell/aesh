@@ -94,7 +94,7 @@ public class AeshGraphicsExample {
             }
             catch (InterruptedException ignored) { }
             if(g != null)
-                g.cleanup();
+                g.clearAndShowCursor();
             invocation.getShell().enableMainBuffer();
         }
 
