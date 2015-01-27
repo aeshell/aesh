@@ -35,8 +35,9 @@ public abstract class AeshConsoleCallback implements ConsoleCallback {
     public CommandOperation getInput() throws InterruptedException {
         if( process != null ) {
             return process.getInput();
-        }else{
-            return null;
+        }
+        else {
+            return new CommandOperation(null, null, 0);
         }
     }
 
