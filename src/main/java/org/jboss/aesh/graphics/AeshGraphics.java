@@ -53,6 +53,9 @@ public class AeshGraphics implements Graphics {
         shell.out().flush();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void clear() {
         try {
@@ -62,9 +65,12 @@ public class AeshGraphics implements Graphics {
         catch (IOException ignored) { }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void cleanup() {
-        shell.out().print(new TerminalColor(Color.DEFAULT, Color.DEFAULT).fullString());
+    public void clearAndShowCursor() {
+        clear();
         shell.out().print(ANSI.CURSOR_SHOW);
         shell.out().flush();
     }

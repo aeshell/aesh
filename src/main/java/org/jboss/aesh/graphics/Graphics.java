@@ -36,14 +36,14 @@ public interface Graphics {
     void flush();
 
     /**
-     * Clear the entire terminal screen
+     * Clear the entire terminal screen.
      */
     void clear();
 
     /**
-     * Reset current terminal color to default and enable visible cursor
+     * Clear the entire terminal screen and enable visible cursor.
      */
-    void cleanup();
+    void clearAndShowCursor();
 
     TerminalColor getColor();
 

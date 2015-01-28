@@ -77,6 +77,10 @@ idea {
     }
 }
 
+task docs(type: Javadoc) {
+    source = sourceSets.main.allJava
+}
+
 task wrapper(type: Wrapper) {
     gradleVersion = '2.2'
 }
