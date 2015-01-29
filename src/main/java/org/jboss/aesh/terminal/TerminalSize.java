@@ -30,8 +30,9 @@ public class TerminalSize {
 
     /**
      * Initializes a TerminalSize with height and width.
+     *
      * @param height int
-     * @param width int
+     * @param width  int
      */
     public TerminalSize(int height, int width) {
         setHeight(height);
@@ -40,6 +41,7 @@ public class TerminalSize {
 
     /**
      * Gets the width of current and not readjusted terminal screen.
+     *
      * @return int
      */
     public int getWidth() {
@@ -49,16 +51,18 @@ public class TerminalSize {
     /**
      * Sets the width of terminal screen.<br>
      * This method throw an IllegalArgumentException in case width < 1.
+     *
      * @param width int
      */
     public void setWidth(int width) {
-        if(width < 1)
+        if (width < 1)
             throw new IllegalArgumentException("Terminal width cannot be less than 1");
         this.width = width;
     }
 
     /**
      * Gets the height of current and not readjusted terminal screen.
+     *
      * @return int
      */
     public int getHeight() {
@@ -68,33 +72,36 @@ public class TerminalSize {
     /**
      * Sets the height of terminal screen.<br>
      * This method throw an IllegalArgumentException in case height < 1.
+     *
      * @param height int
      */
     public void setHeight(int height) {
-        if(height < 1)
+        if (height < 1)
             throw new IllegalArgumentException("Terminal height cannot be less than 1");
         this.height = height;
     }
-    
+
     /**
      * Gets the center width of current and not readjusted terminal screen.
+     *
      * @return int
      */
     public int getCenterWidth() {
         return getWidth() / 2;
     }
-    
+
     /**
      * Gets the center height of current and not readjusted terminal screen.
+     *
      * @return int
      */
     public int getCenterHeight() {
         return getHeight() / 2;
     }
-    
+
     public boolean isPositionWithinSize(CursorPosition pos) {
         return (pos.getRow() > -1 && pos.getColumn() > -1 &&
-        pos.getRow() < height && pos.getColumn() < width);
+                pos.getRow() < height && pos.getColumn() < width);
     }
 
     @Override
