@@ -77,6 +77,8 @@ idea {
     }
 }
 
+install.dependsOn 'check'
+
 task docs(type: Javadoc) {
     source = sourceSets.main.allJava
 }
