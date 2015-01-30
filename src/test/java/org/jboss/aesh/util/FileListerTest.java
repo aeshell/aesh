@@ -152,7 +152,6 @@ public class FileListerTest {
         CompleteOperation completion = new CompleteOperation(aeshContext, "cd test123"+PATH_SEPARATOR+"child", 2);
         new FileLister("test123"+PATH_SEPARATOR+"child", workingDir).findMatchingDirectories(completion);
         List<TerminalString> candidates = completion.getCompletionCandidates();
-        System.out.println(candidates);
         assertEquals(1, candidates.size());
         assertEquals("test123"+PATH_SEPARATOR+"child" + Config.getPathSeparator(), candidates.get(0).getCharacters());
         child.delete();
