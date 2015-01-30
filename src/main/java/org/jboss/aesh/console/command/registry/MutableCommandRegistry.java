@@ -90,6 +90,20 @@ public class MutableCommandRegistry implements CommandRegistry {
         putIntoRegistry(getBuilder().create(command));
     }
 
+    public void addAllCommands(List<Command> commands) {
+        if(commands != null) {
+            for(Command command : commands)
+                addCommand(command);
+        }
+    }
+
+    public void addAllCommandContainers(List<CommandContainer> commands) {
+        if(commands != null) {
+            for(CommandContainer command : commands)
+                addCommand(command);
+        }
+    }
+
     private void putIntoRegistry(CommandContainer commandContainer) {
         if(!commandContainer.haveBuildError() &&
                 !registry.containsKey(commandContainer.getParser().getProcessedCommand().getName()))

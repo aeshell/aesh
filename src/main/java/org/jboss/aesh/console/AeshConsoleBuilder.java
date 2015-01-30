@@ -19,6 +19,7 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
@@ -35,6 +36,9 @@ import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -50,8 +54,11 @@ public class AeshConsoleBuilder {
     private ConverterInvocationProvider converterInvocationProvider;
     private ValidatorInvocationProvider validatorInvocationProvider;
     private OptionActivatorProvider optionActivatorProvider;
+    private List<Command> commands;
+    private String execute;
 
     public AeshConsoleBuilder() {
+        commands = new ArrayList<>();
     }
 
     public AeshConsoleBuilder commandRegistry(CommandRegistry registry) {
@@ -104,12 +111,26 @@ public class AeshConsoleBuilder {
         return this;
     }
 
+    public AeshConsoleBuilder addCommand(Command command) {
+        commands.add(command);
+        return this;
+    }
+
+    public AeshConsoleBuilder executeAtStart(String execute) {
+        this.execute = execute;
+        return this;
+    }
+
     public AeshConsole create() {
         if(settings == null)
             settings = new SettingsBuilder().create();
         if(registry == null) {
             registry = new MutableCommandRegistry();
         }
+
+        if(commands.size() > 0 && registry instanceof MutableCommandRegistry)
+            ((MutableCommandRegistry) registry).addAllCommands(commands);
+
         if(commandInvocationServices == null)
             commandInvocationServices = new CommandInvocationServices();
 
@@ -125,13 +146,15 @@ public class AeshConsoleBuilder {
         if(optionActivatorProvider == null)
             optionActivatorProvider = new AeshOptionActivatorProvider();
 
-        AeshConsole aeshConsole =
+        AeshConsoleImpl aeshConsole =
                 new AeshConsoleImpl(settings, registry, commandInvocationServices,
                         commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
                         validatorInvocationProvider, optionActivatorProvider, manProvider);
 
         if(prompt != null)
             aeshConsole.setPrompt(prompt);
+        if(execute != null)
+            aeshConsole.execute(execute);
 
         return aeshConsole;
     }

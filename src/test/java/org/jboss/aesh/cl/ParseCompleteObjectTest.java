@@ -51,6 +51,9 @@ public class ParseCompleteObjectTest {
         assertEquals(String.class, pco.getType());
         assertTrue(pco.isOption());
 
+        pco = completeParser.findCompleteObject("test -X", 100);
+        assertFalse(pco.isOption());
+
         pco = completeParser.findCompleteObject("test -f false --equal tru", 100);
         assertEquals("tru", pco.getValue());
         assertEquals(String.class, pco.getType());
