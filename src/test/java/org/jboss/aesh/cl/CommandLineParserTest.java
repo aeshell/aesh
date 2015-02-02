@@ -216,6 +216,41 @@ public class CommandLineParserTest {
         assertEquals(Integer.class, cl.getOption("bar").getType());
     }
 
+    @Test
+    public void testParseCommandLine5() throws CommandLineParserException {
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(Parser5Test.class).getParser();
+
+        CommandLine cl = clp.parse("test  --foo  \"-X1 X2 -X3\" --baz -wrong --bar -q \"-X4 -X5\"",true);
+        assertTrue(cl.hasOption("foo"));
+        assertEquals(3, cl.getOptionValues("foo").size());
+        assertEquals("-X1", cl.getOptionValues("foo").get(0));
+        assertEquals("X2", cl.getOptionValues("foo").get(1));
+        assertEquals("-X3", cl.getOptionValues("foo").get(2));
+        assertTrue(cl.hasOption("bar"));
+        assertTrue(cl.hasOption("baz"));
+        assertFalse(cl.hasOption("wrong"));
+        assertTrue(cl.hasOption("qux"));
+        assertEquals(2, cl.getOptionValues("qux").size());
+        assertEquals("-X4", cl.getOptionValues("qux").get(0));
+        assertEquals("-X5", cl.getOptionValues("qux").get(1));
+
+
+        cl = clp.parse("test  --foo -X1 X2 -X3 --baz -wrong --bar -q -X4 -X5",true);
+        assertTrue(cl.hasOption("foo"));
+        assertEquals(3, cl.getOptionValues("foo").size());
+        assertEquals("-X1", cl.getOptionValues("foo").get(0));
+        assertEquals("X2", cl.getOptionValues("foo").get(1));
+        assertEquals("-X3", cl.getOptionValues("foo").get(2));
+        assertTrue(cl.hasOption("bar"));
+        assertTrue(cl.hasOption("baz"));
+        assertFalse(cl.hasOption("wrong"));
+        assertTrue(cl.hasOption("qux"));
+        assertEquals(2, cl.getOptionValues("qux").size());
+        assertEquals("-X4", cl.getOptionValues("qux").get(0));
+        assertEquals("-X5", cl.getOptionValues("qux").get(1));
+
+    }
+
     @CommandDefinition(name = "test", description = "a simple test")
     public class Parser1Test extends TestingCommand {
 
@@ -266,6 +301,24 @@ public class CommandLineParserTest {
 
         @OptionList(shortName = 'e', valueSeparator = ' ')
         private List<String> help2;
+
+        @Arguments
+        private List<String> arguments;
+    }
+
+    @CommandDefinition(name = "test", description = "testing multiple values")
+    public class Parser5Test  extends TestingCommand{
+        @OptionList(shortName = 'f', name="foo", valueSeparator=' ')
+        private List<String> foo;
+
+        @Option(shortName = 'b', name="bar", hasValue = false)
+        private Boolean bar;
+
+        @Option(shortName = 'z', name="baz", hasValue = false)
+        private Boolean baz;
+
+        @OptionList(shortName = 'q', name="qux", valueSeparator=' ')
+        private List<String> qux;
 
         @Arguments
         private List<String> arguments;
