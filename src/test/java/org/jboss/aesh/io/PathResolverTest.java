@@ -211,6 +211,15 @@ public class PathResolverTest {
         assertTrue(actual.contains(child111));
     }
 
+
+    @Test
+    public void testResolveWithWindowsRootPath() throws IOException {
+        Resource root = new FileResource("C:\\users\\me");
+        List<Resource> restult = root.resolve(root);
+        assertEquals(1, restult.size());
+        assertEquals(root.getAbsolutePath(), restult.get(0).getAbsolutePath());
+    }
+
     /* private testing...
     @Test
     public void testNIO() {
