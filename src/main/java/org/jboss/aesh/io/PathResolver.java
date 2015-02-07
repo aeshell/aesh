@@ -47,6 +47,7 @@ public class PathResolver {
     private static final String PARENT = "..";
     private static final String PARENT_WITH_SEPARATOR = ".."+ Config.getPathSeparator();
     private static final String ROOT = Config.getPathSeparator();
+    private static final String DRIVER_SEPARATOR = ":";
     private static final String CURRENT_WITH_SEPARATOR = "."+Config.getPathSeparator();
     private static final String SEPARATOR_WITH_CURRENT = Config.getPathSeparator()+".";
     private static final String SEPARATOR_CURRENT_SEPARATOR = Config.getPathSeparator()+"."+Config.getPathSeparator();
@@ -108,8 +109,8 @@ public class PathResolver {
             incPath = new File(incPath.toString().substring(0, incPath.toString().length()-SEPARATOR_WITH_CURRENT.length()));
         }
 
-        //parentPath do not start with / and cwd is not / either
-        if(incPath.toString().indexOf(ROOT) != 0 && !cwd.toString().equals(ROOT)) {
+        //parentPath do not start with / or by a windows driver letter and cwd is not / either
+        if( incPath.toString().indexOf(ROOT) != 0 && incPath.toString().indexOf(DRIVER_SEPARATOR) == -1 && !cwd.toString().equals(ROOT)) {
             if(cwd.toString().endsWith(Config.getPathSeparator()))
                 incPath = new File(cwd.toString() + incPath.toString());
             else
