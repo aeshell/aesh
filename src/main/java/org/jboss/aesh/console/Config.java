@@ -291,6 +291,11 @@ public class Config {
                         disableCompletion.equalsIgnoreCase("false"))
                     builder.disableCompletion(Boolean.parseBoolean(disableCompletion));
 
+            String ansi = System.getProperty("aesh.ansi");
+            if(ansi != null && ansi.length() > 0)
+                if(ansi.equalsIgnoreCase("true") || ansi.equalsIgnoreCase("false"))
+                    builder.ansi(Boolean.parseBoolean(ansi));
+
           }
         catch (ClassNotFoundException e) {
             if(settings.isLogging())
