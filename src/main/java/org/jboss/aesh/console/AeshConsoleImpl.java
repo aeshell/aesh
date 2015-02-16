@@ -92,7 +92,7 @@ public class AeshConsoleImpl implements AeshConsole {
         console = new Console(settings);
         console.setConsoleCallback(new AeshConsoleCallbackImpl(this));
         console.addCompletion(new AeshCompletion());
-        processAfterInit(settings);
+        processAfterInit(console.getSettings());
     }
 
     @Override
@@ -202,19 +202,23 @@ public class AeshConsoleImpl implements AeshConsole {
             internalRegistry = new AeshInternalCommandRegistry();
             internalRegistry.addCommand(new Man(manProvider));
         }
-        if(!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
-            //we have a custom OptionActivatorProvider, and need to process all options
-            try {
-                for (String commandName : registry.getAllCommandNames()) {
-                    registry.getCommand(commandName, "").getParser().getProcessedCommand().processAfterInit(invocationProviders);
+        try {
+            for(String commandName : registry.getAllCommandNames()) {
+                if(!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
+                    //we have a custom OptionActivatorProvider, and need to process all options
+                    registry.getCommand(commandName, "").getParser().getProcessedCommand().updateInvocationProviders(invocationProviders);
+                }
+                if(!settings.isAnsiConsole()) {
+                    registry.getCommand(commandName, "").getParser().getProcessedCommand().updateSettings(settings);
                 }
             }
-            catch (CommandNotFoundException e) {
-                e.printStackTrace();
-            }
-
-
         }
+        catch(Exception e) {
+            if(console.getSettings().isLogging())
+                LOGGER.log(Level.WARNING, "Exception while iterating commands.",e);
+        }
+
+
     }
 
     private List<String> completeCommandName(String input) {

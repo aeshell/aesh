@@ -70,6 +70,7 @@ public final class ProcessedOption {
     private OptionActivator activator;
     private OptionRenderer renderer;
     private boolean overrideRequired = false;
+    private boolean ansiMode = true;
 
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator,
@@ -242,7 +243,7 @@ public final class ProcessedOption {
     }
 
     public TerminalString getRenderedNameWithDashes() {
-        if(renderer == null)
+        if(renderer == null || !ansiMode)
             return new TerminalString("--"+name, true);
         else
             return new TerminalString("--"+name, renderer.getColor(), renderer.getTextType());
@@ -267,7 +268,7 @@ public final class ProcessedOption {
     //TODO: add offset, offset for descriptionstart and break on width
     public String getFormattedOption(int offset, int descriptionStart, int width) {
         StringBuilder sb = new StringBuilder();
-        if(required)
+        if(required && ansiMode)
             sb.append(ANSI.BOLD);
         if(offset > 0)
             sb.append(String.format("%" + offset+ "s", ""));
@@ -281,7 +282,7 @@ public final class ProcessedOption {
         if(argument != null && argument.length() > 0) {
             sb.append("=<").append(argument).append(">");
         }
-        if(required)
+        if(required && ansiMode)
             sb.append(ANSI.BOLD_OFF);
         if(description != null && description.length() > 0) {
             //int descOffset = descriptionStart - sb.length();
@@ -394,8 +395,12 @@ public final class ProcessedOption {
         }
     }
 
-    public void processAfterInit(InvocationProviders invocationProviders) {
+    public void updateInvocationProviders(InvocationProviders invocationProviders) {
         activator = invocationProviders.getOptionActivatorProvider().enhanceOptionActivator(activator);
+    }
+
+    public void updateAnsiMode(boolean ansiMode) {
+        this.ansiMode = ansiMode;
     }
 
     private <String, T> Map<String, T> newHashMap() {

@@ -51,6 +51,8 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     private final UndoManager undoManager;
     private final PasteManager pasteManager;
 
+    private final boolean ansiMode;
+
     private Action currentAction = Action.EDIT;
 
     private final boolean isLogging = false;
@@ -61,10 +63,11 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshConsoleBuffer.class.getName());
 
-    AeshConsoleBuffer(Prompt prompt, Shell shell, EditMode editMode) {
+    AeshConsoleBuffer(Prompt prompt, Shell shell, EditMode editMode, boolean ansi) {
         this.out = shell.out();
         this.err = shell.err();
-        this.buffer = new Buffer(prompt);
+        this.ansiMode = ansi;
+        this.buffer = new Buffer(ansiMode, prompt);
         this.shell = shell;
         pasteManager = new PasteManager();
         undoManager = new UndoManager();
@@ -110,15 +113,17 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     @Override
     public void moveCursor(int where) {
-        if(editMode.getMode() == Mode.VI &&
-                (editMode.getCurrentAction() == Action.MOVE ||
-                        editMode.getCurrentAction() == Action.DELETE)) {
-            out.print(buffer.move(where, shell.getSize().getWidth(), true));
+        if(ansiMode) {
+            if(editMode.getMode() == Mode.VI &&
+                    (editMode.getCurrentAction() == Action.MOVE ||
+                            editMode.getCurrentAction() == Action.DELETE)) {
+                out.print(buffer.move(where, shell.getSize().getWidth(), true));
+            }
+            else {
+                out.print(buffer.move(where, shell.getSize().getWidth()));
+            }
+            out.flush();
         }
-        else {
-            out.print(buffer.move(where, shell.getSize().getWidth()));
-        }
-        out.flush();
     }
 
     @Override
@@ -132,6 +137,13 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             LOGGER.info("drawing: "+buffer.getPrompt().getPromptAsString() + buffer.getLine());
         //need to clear more than one line
         String line = buffer.getPrompt().getPromptAsString() + buffer.getLine();
+        //if we're not in ansi mode, just write the string again:
+        if(!ansiMode) {
+            out.print(Config.getLineSeparator());
+            out.print(line);
+            out.flush();
+            return;
+        }
 
         if(line.length() > shell.getSize().getWidth() ||
                 (buffer.getDelta() < 0 && line.length()+ Math.abs(buffer.getDelta()) > shell.getSize().getWidth())) {
@@ -257,7 +269,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     @Override
     public void syncCursor() {
-        if(buffer.getCursor() != buffer.getLine().length()) {
+        if(buffer.getCursor() != buffer.getLine().length() && ansiMode) {
             out.print(Buffer.printAnsi((
                     Math.abs(buffer.getCursor() -
                             buffer.getLine().length()) + "D")));
@@ -355,6 +367,12 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             out.print((char) 13);
         }
 
+        // if we're not in ansi, just flush and return
+        if(!ansiMode) {
+            out.flush();
+            return;
+        }
+
         // if we insert somewhere other than the end of the line we need to redraw from cursor
         if(buffer.getCursor() < buffer.length()) {
             //check if we just started a new line, if we did we need to make sure that we add one
@@ -369,7 +387,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
                 if(totalRows > 0 && buffer.totalLength() % shell.getSize().getWidth() == 0)
                     totalRows--;
 
-                if(ansiCurrentRow+(totalRows-currentRow) > shell.getSize().getHeight()) {
+                if(ansiCurrentRow+(totalRows-currentRow) > shell.getSize().getHeight() && ansiMode) {
                     out.print(Buffer.printAnsi("1S")); //adding a line
                     out.print(Buffer.printAnsi("1A")); // moving up a line
                 }
@@ -390,11 +408,13 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             buffer.updatePrompt(prompt);
             //only update the prompt if Console is running
             //set cursor position line.length
-            displayPrompt(prompt);
-            if(buffer.getLine().length() > 0) {
-                out().print(buffer.getLine());
-                buffer.setCursor(buffer.getLine().length());
-                out().flush();
+            if(ansiMode) {
+                displayPrompt(prompt);
+                if(buffer.getLine().length() > 0) {
+                    out().print(buffer.getLine());
+                    buffer.setCursor(buffer.getLine().length());
+                    out().flush();
+                }
             }
         }
     }
@@ -456,12 +476,16 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     }
 
     private void displayPrompt(Prompt prompt) {
-        if(prompt.hasANSI()) {
+        if(prompt.hasANSI() && ansiMode) {
             out.print(ANSI.START + "0G" + ANSI.START + "2K");
             out.print(prompt.getANSI());
         }
-        else
-            out.print(ANSI.START + "0G" + ANSI.START + "2K" + prompt.getPromptAsString());
+        else {
+            if(ansiMode)
+                out.print(ANSI.START + "0G" + ANSI.START + "2K" + prompt.getPromptAsString());
+            else
+                out.print(prompt.getPromptAsString());
+        }
         out.flush();
     }
 
@@ -559,19 +583,21 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
      */
     @Override
     public void clear(boolean includeBuffer) {
-        //(windows fix)
-        if(!Config.isOSPOSIXCompatible())
-            out().print(Config.getLineSeparator());
-        //first clear console
-        out().print(ANSI.CLEAR_SCREEN);
-        //move cursor to correct position
-        out().print(Buffer.printAnsi("1;1H"));
-        //then write prompt
-        if(includeBuffer) {
-            displayPrompt();
-            out().print(buffer.getLine());
+        if(ansiMode) {
+            //(windows fix)
+            if(!Config.isOSPOSIXCompatible())
+                out().print(Config.getLineSeparator());
+            //first clear console
+            out().print(ANSI.CLEAR_SCREEN);
+            //move cursor to correct position
+            out().print(Buffer.printAnsi("1;1H"));
+            //then write prompt
+            if(includeBuffer) {
+                displayPrompt();
+                out().print(buffer.getLine());
+            }
+            out().flush();
         }
-        out().flush();
     }
 
 }

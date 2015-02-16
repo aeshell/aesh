@@ -131,6 +131,10 @@ public class Console {
         }
     }
 
+    protected Settings getSettings() {
+        return settings;
+    }
+
     /**
      * Reset the Console with Settings
      * Can only be called after stop()
@@ -196,8 +200,8 @@ public class Console {
 
         consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
-                        //.buffer() buffer = new Buffer(settings.isAnsiConsole(), null);
                 .editMode(editMode)
+                .ansi(settings.isAnsiConsole())
                 .create();
 
         completionHandler = new AeshCompletionHandler(context, consoleBuffer, shell, true);

@@ -28,6 +28,7 @@ import org.jboss.aesh.cl.validator.CommandValidator;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
@@ -316,9 +317,14 @@ public final class ProcessedCommand<C extends Command> {
         return false;
     }
 
-    public void processAfterInit(InvocationProviders invocationProviders) {
+    public void updateInvocationProviders(InvocationProviders invocationProviders) {
         for(ProcessedOption option : options)
-            option.processAfterInit(invocationProviders);
+            option.updateInvocationProviders(invocationProviders);
+    }
+
+    public void updateSettings(Settings settings) {
+        for(ProcessedOption option : options)
+            option.updateAnsiMode(settings.isAnsiConsole());
     }
 
     public boolean containsArgumentWithDefaultValues() {

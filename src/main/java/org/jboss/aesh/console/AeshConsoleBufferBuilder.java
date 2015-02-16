@@ -33,6 +33,7 @@ public class AeshConsoleBufferBuilder {
     private Prompt prompt;
     private Shell shell;
     private EditMode editMode;
+    private boolean ansiMode = true;
 
     public AeshConsoleBufferBuilder() {
     }
@@ -52,6 +53,11 @@ public class AeshConsoleBufferBuilder {
         return this;
     }
 
+    public AeshConsoleBufferBuilder ansi(boolean ansi) {
+        this.ansiMode = ansi;
+        return this;
+    }
+
     public ConsoleBuffer create() {
         if(shell == null)
             throw new IllegalArgumentException("Shell must be provided to create ConsoleBuffer");
@@ -60,6 +66,6 @@ public class AeshConsoleBufferBuilder {
         if(prompt == null)
             prompt = new Prompt("");
 
-        return new AeshConsoleBuffer(prompt, shell, editMode);
+        return new AeshConsoleBuffer(prompt, shell, editMode, ansiMode);
     }
 }
