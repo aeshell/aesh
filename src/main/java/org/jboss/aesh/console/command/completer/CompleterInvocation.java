@@ -23,6 +23,7 @@ import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.terminal.TerminalString;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -43,13 +44,13 @@ public interface CompleterInvocation {
 
     List<TerminalString> getCompleterValues();
 
-    void setCompleterValues(List<String> completerValues);
+    void setCompleterValues(Collection<String> completerValues);
 
     void setCompleterValuesTerminalString(List<TerminalString> completerValues);
 
     void clearCompleterValues();
 
-    void addAllCompleterValues(List<String> completerValues);
+    void addAllCompleterValues(Collection<String> completerValues);
 
     void addCompleterValue(String value);
 
