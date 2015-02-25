@@ -25,6 +25,7 @@ import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -70,7 +71,7 @@ public class CompleterData implements CompleterInvocation {
     }
 
     @Override
-    public void setCompleterValues(List<String> completerValues) {
+    public void setCompleterValues(Collection<String> completerValues) {
         for(String s : completerValues)
             this.completerValues.add(new TerminalString(s, true));
     }
@@ -86,7 +87,7 @@ public class CompleterData implements CompleterInvocation {
     }
 
     @Override
-    public void addAllCompleterValues(List<String> completerValues) {
+    public void addAllCompleterValues(Collection<String> completerValues) {
         for(String s : completerValues)
             this.completerValues.add(new TerminalString(s, true));
     }
