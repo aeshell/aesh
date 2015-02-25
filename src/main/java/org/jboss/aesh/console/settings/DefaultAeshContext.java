@@ -20,16 +20,22 @@
 package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.Config;
+import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshContextImpl implements AeshContext {
+public class DefaultAeshContext implements AeshContext {
 
     private Resource cwd;
 
-    AeshContextImpl(Resource cwd) {
+    public DefaultAeshContext() {
+        this(new FileResource("").newInstance(Config.getUserDir()));
+    }
+
+    public DefaultAeshContext(Resource cwd) {
         if(cwd != null && (!cwd.isLeaf() && cwd.exists()))
             this.cwd = cwd;
         else
