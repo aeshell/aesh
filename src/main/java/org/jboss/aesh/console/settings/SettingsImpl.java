@@ -611,7 +611,7 @@ public class SettingsImpl implements Settings {
     @Override
     public AeshContext getAeshContext() {
         if(aeshContext == null)
-            aeshContext = new AeshContextImpl(getResource().newInstance(Config.getUserDir()));
+            aeshContext = new DefaultAeshContext(getResource().newInstance(Config.getUserDir()));
         return aeshContext;
     }
 
