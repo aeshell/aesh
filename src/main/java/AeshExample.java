@@ -307,7 +307,7 @@ public class AeshExample {
         @Option(hasValue = false, description = "display this help and exit")
         private boolean help;
 
-        @Arguments
+        @Arguments(description = "files or directories thats listed")
         private List<Resource> arguments;
 
         @Override

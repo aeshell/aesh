@@ -261,8 +261,14 @@ public final class ProcessedCommand<C extends Command> {
                 maxLength = o.getFormattedLength();
 
         StringBuilder sb = new StringBuilder();
+        if(getOptions().size() > 0)
+           sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
         for(ProcessedOption o : getOptions())
             sb.append(o.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
+        if(argument != null) {
+            sb.append(Config.getLineSeparator()).append("Arguments:").append(Config.getLineSeparator());
+            sb.append(argument.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
+        }
         return "Usage: "+getName()+" "+ getDescription()+ Config.getLineSeparator()+sb.toString();
     }
 

@@ -274,7 +274,7 @@ public final class ProcessedOption {
             sb.append(String.format("%" + offset+ "s", ""));
         if(shortName != null)
             sb.append("-").append(shortName);
-        if(name != null) {
+        if(name != null && name.length() > 0) {
             if(shortName != null)
                 sb.append(", ");
             sb.append("--").append(name);

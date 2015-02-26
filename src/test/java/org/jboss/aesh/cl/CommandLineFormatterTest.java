@@ -61,8 +61,10 @@ public class CommandLineFormatterTest extends TestCase {
                 .create();
 
         assertEquals("Usage: man [OPTION...]"+ Config.getLineSeparator()+
-                "  -d, --debug    emit debugging messages"+Config.getLineSeparator()+
-                "  -D, --default  reset all options to their default values"+Config.getLineSeparator(),
+                        Config.getLineSeparator()+
+                        "Options:"+ Config.getLineSeparator()+
+                        "  -d, --debug    emit debugging messages"+Config.getLineSeparator()+
+                        "  -D, --default  reset all options to their default values"+Config.getLineSeparator(),
                 clp.printHelp());
     }
 
@@ -100,8 +102,9 @@ public class CommandLineFormatterTest extends TestCase {
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
-        assertEquals("Usage: man [OPTION...]"+
+        assertEquals("Usage: man [OPTION...]"+ Config.getLineSeparator()+
                         Config.getLineSeparator()+
+                        "Options:"+ Config.getLineSeparator()+
                         "  -d, --debug            emit debugging messages"+Config.getLineSeparator()+
                         ANSI.BOLD+
                         "  -D, --default"+
