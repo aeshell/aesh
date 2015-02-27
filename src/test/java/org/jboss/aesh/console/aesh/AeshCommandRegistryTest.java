@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +34,7 @@ import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshConsoleImpl;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
@@ -77,6 +79,11 @@ public class AeshCommandRegistryTest {
             @Override
             public Set<String> getAllCommandNames() {
                 throw new IllegalStateException("Should not crash Aesh");
+            }
+
+            @Override
+            public Collection<CommandContainer<Command>> getAllCommands() {
+                return null;
             }
 
             @Override public void removeCommand(String name) {
@@ -134,6 +141,11 @@ public class AeshCommandRegistryTest {
                 return null;
             }
 
+            @Override
+            public Collection<CommandContainer<Command>> getAllCommands() {
+                return null;
+            }
+
             @Override public void removeCommand(String name) {
 
             }
@@ -184,6 +196,11 @@ public class AeshCommandRegistryTest {
             @Override
             public Set<String> getAllCommandNames() {
                 return new HashSet<>();
+            }
+
+            @Override
+            public Collection<CommandContainer<Command>> getAllCommands() {
+                return null;
             }
 
             @Override public void removeCommand(String name) {

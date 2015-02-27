@@ -19,11 +19,13 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
+import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
@@ -37,16 +39,19 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  */
 public class AeshConsoleBuilder {
 
     private Settings settings;
     private Prompt prompt;
     private CommandRegistry registry;
+    private MutableCommandRegistry registryChildren;
     private CommandInvocationServices commandInvocationServices;
     private CommandNotFoundHandler commandNotFoundHandler;
     private ManProvider manProvider;
@@ -59,6 +64,7 @@ public class AeshConsoleBuilder {
 
     public AeshConsoleBuilder() {
         commands = new ArrayList<>();
+        registryChildren = new MutableCommandRegistry();
     }
 
     public AeshConsoleBuilder commandRegistry(CommandRegistry registry) {
@@ -128,8 +134,24 @@ public class AeshConsoleBuilder {
             registry = new MutableCommandRegistry();
         }
 
-        if(commands.size() > 0 && registry instanceof MutableCommandRegistry)
-            ((MutableCommandRegistry) registry).addAllCommands(commands);
+
+        if(commands.size() > 0 && registry instanceof MutableCommandRegistry) {
+            MutableCommandRegistry registryCommand = (MutableCommandRegistry) registry;
+            registryCommand.addAllCommands(commands);
+        }
+
+        Collection<CommandContainer<Command>> allCommands = registry.getAllCommands();
+        if (allCommands != null) {
+            for (CommandContainer<Command> commandContainer : allCommands) {
+                List<CommandLineParser<? extends Command>> commandContainerChildren = commandContainer.getChildren();
+                if (commandContainerChildren != null && !commandContainerChildren.isEmpty()) {
+                    for (CommandLineParser commandLineParser : commandContainerChildren) {
+                        registryChildren.addCommand(commandLineParser.getProcessedCommand().getCommand());
+                    }
+                }
+            }
+        }
+
 
         if(commandInvocationServices == null)
             commandInvocationServices = new CommandInvocationServices();
@@ -147,7 +169,7 @@ public class AeshConsoleBuilder {
             optionActivatorProvider = new AeshOptionActivatorProvider();
 
         AeshConsoleImpl aeshConsole =
-                new AeshConsoleImpl(settings, registry, commandInvocationServices,
+                new AeshConsoleImpl(settings, registry, registryChildren, commandInvocationServices,
                         commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
                         validatorInvocationProvider, optionActivatorProvider, manProvider);
 

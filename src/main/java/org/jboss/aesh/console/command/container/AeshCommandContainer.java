@@ -24,8 +24,11 @@ import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.console.command.Command;
 
+import java.util.List;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  */
 public class AeshCommandContainer<C extends Command> extends DefaultCommandContainer<C> {
 
@@ -64,6 +67,11 @@ public class AeshCommandContainer<C extends Command> extends DefaultCommandConta
     @Override
     public void close() {
 
+    }
+
+    @Override
+    public List<CommandLineParser<? extends Command>> getChildren() {
+        return getParser().getAllChildParsers();
     }
 
     public void addChild(CommandContainer<?> commandContainer) {
