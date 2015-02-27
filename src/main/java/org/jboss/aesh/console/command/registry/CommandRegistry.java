@@ -19,9 +19,11 @@
  */
 package org.jboss.aesh.console.command.registry;
 
+import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.container.CommandContainer;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -52,6 +54,8 @@ public interface CommandRegistry {
      * @return all specified command names
      */
     Set<String> getAllCommandNames();
+
+    Collection<CommandContainer<Command>> getAllCommands();
 
     void removeCommand(String name);
 }

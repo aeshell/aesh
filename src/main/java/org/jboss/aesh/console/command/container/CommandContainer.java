@@ -30,6 +30,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.parser.AeshLine;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * A CommandContainer hold reference to the Command and
@@ -39,6 +40,7 @@ import java.io.IOException;
  * if it have any create errors.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  */
 public interface CommandContainer<T extends Command> extends AutoCloseable {
 
@@ -66,4 +68,6 @@ public interface CommandContainer<T extends Command> extends AutoCloseable {
     CommandContainerResult executeCommand(AeshLine line, InvocationProviders invocationProviders,
                                           AeshContext aeshContext,
                                           CommandInvocation commandInvocation) throws CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException, InterruptedException;
+
+    List<CommandLineParser<? extends Command>> getChildren();
 }

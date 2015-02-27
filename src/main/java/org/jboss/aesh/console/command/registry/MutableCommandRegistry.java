@@ -28,6 +28,7 @@ import org.jboss.aesh.console.command.container.CommandContainerBuilder;
 import org.jboss.aesh.parser.Parser;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import java.util.Set;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  */
 public class MutableCommandRegistry implements CommandRegistry {
 
@@ -86,6 +88,11 @@ public class MutableCommandRegistry implements CommandRegistry {
         return registry.keySet();
     }
 
+    @Override
+    public Collection<CommandContainer<Command>> getAllCommands() {
+        return registry.values();
+    }
+
     public void addCommand(CommandContainer container) {
         putIntoRegistry(container);
     }
@@ -94,8 +101,10 @@ public class MutableCommandRegistry implements CommandRegistry {
         putIntoRegistry(getBuilder().create(command));
     }
 
-    public void addCommand(Class<? extends Command> command) {
-        putIntoRegistry(getBuilder().create(command));
+    public void addCommand(Class<? extends Command>... commands) {
+        for (Class<? extends Command> command : commands) {
+            putIntoRegistry(getBuilder().create(command));
+        }
     }
 
     public void addAllCommands(List<Command> commands) {
@@ -113,7 +122,7 @@ public class MutableCommandRegistry implements CommandRegistry {
     }
 
     private void putIntoRegistry(CommandContainer commandContainer) {
-        if(!commandContainer.haveBuildError() &&
+        if(commandContainer != null && !commandContainer.haveBuildError() &&
                 !registry.containsKey(commandContainer.getParser().getProcessedCommand().getName()))
             registry.put(commandContainer.getParser().getProcessedCommand().getName(), commandContainer);
     }
