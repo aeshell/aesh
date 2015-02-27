@@ -24,6 +24,7 @@ import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.populator.CommandPopulator;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
@@ -114,7 +115,20 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      */
     @Override
     public String printHelp() {
-        return processedCommand.printHelp();
+        if(childParsers != null && childParsers.size() > 0) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(processedCommand.printHelp())
+                    .append(Config.getLineSeparator())
+                    .append(processedCommand.getName())
+                    .append(" commands:")
+                    .append(Config.getLineSeparator());
+            for(CommandLineParser child : childParsers)
+                sb.append("    ").append(child.getProcessedCommand().getName()).append(Config.getLineSeparator());
+
+            return sb.toString();
+        }
+        else
+            return processedCommand.printHelp();
     }
 
     /**

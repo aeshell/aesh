@@ -20,6 +20,7 @@
 package org.jboss.aesh.console.command.container;
 
 import org.jboss.aesh.cl.CommandLine;
+import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
@@ -52,5 +53,20 @@ public abstract class DefaultCommandContainer<C extends Command> implements Comm
         CommandResult result = commandLine.getParser().getCommand().execute(commandInvocation);
 
         return new CommandContainerResult(commandLine.getParser().getProcessedCommand().getResultHandler(), result);
+    }
+
+    @Override
+    public String printHelp(String childCommandName) {
+       if(getParser().isGroupCommand() && childCommandName.contains(" ")) {
+           String[] names = childCommandName.split(" ");
+           if(names.length > 1 && names[1].length() > 0) {
+              CommandLineParser child = getParser().getChildParser(names[1]);
+               if(child != null)
+                   return child.printHelp();
+           }
+           return "Child command "+names[1]+" not found.";
+       }
+       else
+           return getParser().printHelp();
     }
 }

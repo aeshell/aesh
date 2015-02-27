@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.cl;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
@@ -27,17 +26,18 @@ import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.util.ANSI;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CommandLineFormatterTest extends TestCase {
+public class CommandLineFormatterTest {
 
-    public CommandLineFormatterTest(String name) {
-        super(name);
-    }
 
-    public void testFormatter() throws CommandLineParserException {
+    @Test
+    public void formatter() throws CommandLineParserException {
         ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("man").description("[OPTION...]");
 
         pb.addOption(
@@ -68,7 +68,8 @@ public class CommandLineFormatterTest extends TestCase {
                 clp.printHelp());
     }
 
-    public void testFormatter2() throws CommandLineParserException {
+    @Test
+    public void formatter2() throws CommandLineParserException {
         ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("man").description("[OPTION...]");
 
         pb.addOption(
@@ -112,6 +113,60 @@ public class CommandLineFormatterTest extends TestCase {
                         "          reset all options to their default values"+Config.getLineSeparator()+
                         "  -f, --file=<filename>  set the filename"+Config.getLineSeparator(),
                 clp.printHelp());
+    }
+
+    @Test
+    public void groupFormatter() throws CommandLineParserException {
+        ProcessedCommandBuilder git = new ProcessedCommandBuilder().name("git").description("[OPTION...]");
+        git.addOption(
+                new ProcessedOptionBuilder()
+                        .shortName('h')
+                        .name("help")
+                        .description("display help info")
+                        .type(boolean.class)
+                        .create()
+        );
+
+        ProcessedCommandBuilder rebase = new ProcessedCommandBuilder().name("rebase").description("[OPTION...]");
+        rebase.addOption(
+                new ProcessedOptionBuilder()
+                        .shortName('f')
+                        .name("foo")
+                        .required(true)
+                        .description("reset all options to their default values")
+                        .type(String.class)
+                        .create()
+        );
+
+        ProcessedCommandBuilder branch = new ProcessedCommandBuilder().name("branch").description("branching");
+        branch.addOption(
+                new ProcessedOptionBuilder()
+                        .shortName('b')
+                        .name("bar")
+                        .required(true)
+                        .description("reset all options to their default values")
+                        .type(String.class)
+                        .create()
+        );
+
+
+        CommandLineParser clpGit = new CommandLineParserBuilder().processedCommand(git.create()).create();
+        CommandLineParser clpBranch = new CommandLineParserBuilder().processedCommand(branch.create()).create();
+        CommandLineParser clpRebase = new CommandLineParserBuilder().processedCommand(rebase.create()).create();
+
+        clpGit.addChildParser(clpBranch);
+        clpGit.addChildParser(clpRebase);
+
+         assertEquals("Usage: git [OPTION...]" + Config.getLineSeparator() +
+                         Config.getLineSeparator() +
+                         "Options:" + Config.getLineSeparator() +
+                         "  -h, --help  display help info" + Config.getLineSeparator()
+                         + Config.getLineSeparator()+"git commands:"+Config.getLineSeparator()+
+                         "    branch"+Config.getLineSeparator()+
+                         "    rebase"+Config.getLineSeparator(),
+                 clpGit.printHelp());
+
+
     }
 
 }

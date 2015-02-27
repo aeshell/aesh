@@ -474,23 +474,37 @@ public class AeshExample {
         }
     }
 
-    @GroupCommandDefinition(name = "group", description = "", groupCommands = {Child1.class, Child2.class})
+    @GroupCommandDefinition(name = "group", description = "This is a group command",
+            groupCommands = {Child1.class, Child2.class})
     public static class GroupCommand implements Command {
+
+        @Option(hasValue = false, description = "display this help option")
+        private boolean help;
+
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
-            commandInvocation.getShell().out().println("only executed group, it doesnt do much...");
+            if(help)
+                commandInvocation.getShell().out().println(commandInvocation.getHelpInfo("group"));
+            else
+                commandInvocation.getShell().out().println("only executed group, it doesnt do much...");
             return CommandResult.SUCCESS;
         }
     }
 
     @CommandDefinition(name = "child1", description = "")
     public static class Child1 implements Command {
-        @Option
+
+        @Option(description = "set foo")
         private String foo;
+        @Option(hasValue = false, description = "display this help option")
+        private boolean help;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
-            commandInvocation.getShell().out().println("foo is set to: "+foo);
+            if(help)
+                commandInvocation.getShell().out().println(commandInvocation.getHelpInfo("group child1"));
+            else
+                commandInvocation.getShell().out().println("foo is set to: "+foo);
             return CommandResult.SUCCESS;
         }
     }
