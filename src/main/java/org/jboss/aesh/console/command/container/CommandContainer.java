@@ -53,6 +53,12 @@ public interface CommandContainer<T extends Command> extends AutoCloseable {
     boolean haveBuildError();
 
     /**
+     * @param childCommandName (for group commands)
+     * @return help info
+     */
+    String printHelp(String childCommandName);
+
+    /**
      * @return error message
      */
     String getBuildErrorMessage();

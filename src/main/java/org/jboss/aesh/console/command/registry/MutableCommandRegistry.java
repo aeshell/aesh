@@ -50,6 +50,14 @@ public class MutableCommandRegistry implements CommandRegistry {
     public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
         if(registry.containsKey(name))
             return registry.get(name);
+        //group command
+        else if(name.contains(" ")) {
+            String[] names = name.split(" ");
+            if(registry.containsKey(names[0])) {
+                return registry.get(names[0]);
+            }
+            throw new CommandNotFoundException("Command: "+names[0]+" was not found.");
+        }
         else
             throw new CommandNotFoundException("Command: "+name+" was not found.");
     }

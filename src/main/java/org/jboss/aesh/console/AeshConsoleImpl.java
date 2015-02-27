@@ -138,7 +138,7 @@ public class AeshConsoleImpl implements AeshConsole {
     public String getHelpInfo(String commandName) {
         try (CommandContainer commandContainer = registry.getCommand(commandName, "")) {
             if (commandContainer != null)
-                return commandContainer.getParser().printHelp();
+                return commandContainer.printHelp(commandName);
         }
         catch (Exception e) { // ignored
         }
