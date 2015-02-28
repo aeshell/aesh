@@ -36,6 +36,7 @@ import org.jboss.aesh.util.LoggerUtil;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -239,6 +240,7 @@ public class AeshCompletionHandler implements CompletionHandler {
      */
     private void displayCompletions(List<TerminalString> completions, Buffer buffer,
                                     PrintStream out) throws IOException {
+        Collections.sort(completions);
         //printNewline reset cursor pos, so we need to store it
         int oldCursorPos = buffer.getCursor();
         out.print(Config.getLineSeparator());

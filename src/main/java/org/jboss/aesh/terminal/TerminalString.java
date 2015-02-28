@@ -29,7 +29,7 @@ import java.io.PrintStream;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class TerminalString {
+public class TerminalString implements Comparable<TerminalString> {
 
     private String characters;
     private TerminalTextStyle style;
@@ -180,4 +180,8 @@ public class TerminalString {
         return result;
     }
 
+    @Override
+    public int compareTo(TerminalString terminalString) {
+        return this.characters.compareTo(terminalString.getCharacters());
+    }
 }
