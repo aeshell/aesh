@@ -308,6 +308,8 @@ public class Console {
         displayPrompt();
         startReader();
         startExecutor();
+        if(settings.getExecuteAtStart() != null)
+            pushToInputStream(settings.getExecuteAtStart());
     }
 
     private PrintStream out() {

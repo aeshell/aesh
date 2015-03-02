@@ -77,6 +77,7 @@ public class SettingsImpl implements Settings {
     private boolean persistExport = true;
     private boolean exportUsesSystemEnvironment = false;
     private Resource resource;
+    private String execute;
 
     protected SettingsImpl() {
     }
@@ -113,6 +114,7 @@ public class SettingsImpl implements Settings {
         setPersistExport(baseSettings.doPersistExport());
         setResource(baseSettings.getResource());
         setExportUsesSystemEnvironment(baseSettings.doExportUsesSystemEnvironment());
+        setExecuteAtStart(baseSettings.getExecuteAtStart());
     }
 
     public void resetToDefaults() {
@@ -663,6 +665,19 @@ public class SettingsImpl implements Settings {
     @Override
     public void setResource(Resource resource) {
         this.resource = resource;
+    }
+
+    @Override
+    public void setExecuteAtStart(String execute) {
+        if(execute.endsWith(Config.getLineSeparator()))
+            this.execute = execute;
+        else
+            this.execute = execute + Config.getLineSeparator();
+    }
+
+    @Override
+    public String getExecuteAtStart() {
+        return execute;
     }
 
     @Override

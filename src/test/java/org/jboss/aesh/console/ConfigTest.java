@@ -87,6 +87,7 @@ public class ConfigTest {
         System.setProperty("aesh.historysize", "42");
         System.setProperty("aesh.logging", "false");
         System.setProperty("aesh.disablecompletion", "true");
+        System.setProperty("aesh.execute", "foo -f --bar");
 
         SettingsBuilder builder = new SettingsBuilder();
         Settings settings = Config.readRuntimeProperties(builder.create());
@@ -101,6 +102,8 @@ public class ConfigTest {
         assertEquals(settings.isLogging(), false);
         assertEquals(settings.isDisableCompletion(), true);
 
+        assertEquals(settings.getExecuteAtStart(), "foo -f --bar"+Config.getLineSeparator());
+
         System.setProperty("aesh.terminal", "");
         System.setProperty("aesh.editmode", "");
         System.setProperty("aesh.historypersistent", "");
@@ -108,5 +111,6 @@ public class ConfigTest {
         System.setProperty("aesh.historysize", "");
         System.setProperty("aesh.logging", "");
         System.setProperty("aesh.disablecompletion", "");
+        System.setProperty("aesh.execute", "");
     }
 }

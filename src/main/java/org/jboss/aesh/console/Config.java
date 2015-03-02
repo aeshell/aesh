@@ -296,6 +296,9 @@ public class Config {
                 if(ansi.equalsIgnoreCase("true") || ansi.equalsIgnoreCase("false"))
                     builder.ansi(Boolean.parseBoolean(ansi));
 
+            String execute = System.getProperty("aesh.execute");
+            if(execute != null && execute.length() > 0)
+                builder.setExecuteAtStart(execute);
           }
         catch (ClassNotFoundException e) {
             if(settings.isLogging())

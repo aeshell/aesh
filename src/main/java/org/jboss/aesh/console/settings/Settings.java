@@ -235,6 +235,16 @@ public interface Settings extends Cloneable {
      */
     void setResource(Resource resource);
 
+    /**
+     * @param execute specify a string that will be pushed to the input stream at start
+     */
+    void setExecuteAtStart(String execute);
+
+    /**
+     * @return execute at start string
+     */
+    String getExecuteAtStart();
+
     Resource getResource();
 
     Object clone();

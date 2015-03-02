@@ -199,6 +199,11 @@ public class SettingsBuilder {
         return this;
     }
 
+    public SettingsBuilder setExecuteAtStart(String execute) {
+        settings.setExecuteAtStart(execute);
+        return this;
+    }
+
     public Settings create() {
         return settings;
     }
