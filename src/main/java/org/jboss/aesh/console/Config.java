@@ -23,6 +23,8 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.mapper.KeyMapper;
+import org.jboss.aesh.io.FileResource;
+import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -299,6 +301,13 @@ public class Config {
             String execute = System.getProperty("aesh.execute");
             if(execute != null && execute.length() > 0)
                 builder.setExecuteAtStart(execute);
+
+            String executeFile = System.getProperty("aesh.executefile");
+            if(executeFile != null && executeFile.length() > 0) {
+               Resource resourceFile =  new FileResource(executeFile);
+                if(resourceFile.isLeaf())
+                    builder.setExecuteFileAtStart(resourceFile);
+            }
           }
         catch (ClassNotFoundException e) {
             if(settings.isLogging())

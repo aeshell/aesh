@@ -78,6 +78,7 @@ public class SettingsImpl implements Settings {
     private boolean exportUsesSystemEnvironment = false;
     private Resource resource;
     private String execute;
+    private Resource executeFileAtStart;
 
     protected SettingsImpl() {
     }
@@ -678,6 +679,16 @@ public class SettingsImpl implements Settings {
     @Override
     public String getExecuteAtStart() {
         return execute;
+    }
+
+    @Override
+    public void setExecuteFileAtStart(Resource executeFileAtStart) {
+        this.executeFileAtStart = executeFileAtStart;
+    }
+
+    @Override
+    public Resource getExecuteFileAtStart() {
+        return executeFileAtStart;
     }
 
     @Override

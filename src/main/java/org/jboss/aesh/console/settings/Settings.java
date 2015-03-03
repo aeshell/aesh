@@ -245,6 +245,16 @@ public interface Settings extends Cloneable {
      */
     String getExecuteAtStart();
 
+    /**
+     * @param executeFileAtStart file that will be read, parsed and executed at start
+     */
+    void setExecuteFileAtStart(Resource executeFileAtStart);
+
+    /**
+     * @return execute file at start
+     */
+    Resource getExecuteFileAtStart();
+
     Resource getResource();
 
     Object clone();

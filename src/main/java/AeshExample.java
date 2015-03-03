@@ -130,7 +130,7 @@ public class AeshExample {
                     }
                 });
                 */
-        Settings settings = builder.setExecuteAtStart("foo").create();
+        Settings settings = builder.create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
                 .command(fooCommand.create())

@@ -20,9 +20,11 @@
 package org.jboss.aesh.console;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -310,6 +312,9 @@ public class Console {
         startExecutor();
         if(settings.getExecuteAtStart() != null)
             pushToInputStream(settings.getExecuteAtStart());
+        if(settings.getExecuteFileAtStart() != null) {
+            readExecuteFile();
+        }
     }
 
     private PrintStream out() {
@@ -959,6 +964,25 @@ public class Console {
         }
         redirectPipeOutBuffer = new ByteArrayOutputStream();
         redirectPipeErrBuffer = new ByteArrayOutputStream();
+    }
+
+    private void readExecuteFile() {
+        if(settings.getExecuteFileAtStart() != null && settings.getExecuteFileAtStart().isLeaf()) {
+            LOGGER.info("reading file");
+            try {
+                BufferedReader reader = new BufferedReader( new InputStreamReader(settings.getExecuteFileAtStart().read()));
+                String line;
+                while( ( line = reader.readLine() ) != null ) {
+                    if(line.length() > 0) {
+                        LOGGER.info("pushing: "+line);
+                        pushToInputStream(line + Config.getLineSeparator());
+                    }
+                }
+            }
+            catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private static class ConsoleShell implements Shell {

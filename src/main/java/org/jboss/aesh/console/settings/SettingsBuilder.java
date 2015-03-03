@@ -204,6 +204,11 @@ public class SettingsBuilder {
         return this;
     }
 
+    public SettingsBuilder setExecuteFileAtStart(Resource executeFile) {
+        settings.setExecuteFileAtStart(executeFile);
+        return this;
+    }
+
     public Settings create() {
         return settings;
     }
