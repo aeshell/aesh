@@ -373,12 +373,6 @@ public class Console {
                 e.printStackTrace();
             }
         }
-        try {
-            getTerminal().close();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -388,29 +382,27 @@ public class Console {
      * @throws IOException stream
      */
     private void doStop() throws IOException {
-        if(running) {
-            try {
-                running = false;
-                getTerminal().close();
-                getTerminal().reset();
-                inputProcessor.getHistory().stop();
-                if(aliasManager != null)
-                    aliasManager.persist();
-                if(exportManager != null)
-                    exportManager.persistVariables();
-                if(settings.isLogging())
-                    LOGGER.info("Done stopping reading thread. Terminal is reset");
-                processManager.stop();
-                readerService.shutdown();
-                executorService.shutdown();
-            }
-            finally {
-                settings.getInputStream().close();
-                settings.getStdErr().close();
-                settings.getStdOut().close();
-                if(settings.isLogging())
-                    LOGGER.info("Streams are closed");
-            }
+        try {
+            running = false;
+            getTerminal().close();
+            getTerminal().reset();
+            inputProcessor.getHistory().stop();
+            if(aliasManager != null)
+                aliasManager.persist();
+            if(exportManager != null)
+                exportManager.persistVariables();
+            if(settings.isLogging())
+                LOGGER.info("Done stopping reading thread. Terminal is reset");
+            processManager.stop();
+            readerService.shutdown();
+            executorService.shutdown();
+        }
+        finally {
+            settings.getInputStream().close();
+            settings.getStdErr().close();
+            settings.getStdOut().close();
+            if(settings.isLogging())
+                LOGGER.info("Streams are closed");
         }
     }
 
