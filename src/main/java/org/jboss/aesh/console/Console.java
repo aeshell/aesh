@@ -363,6 +363,7 @@ public class Console {
 
     public void stop() {
         initiateStop = true;
+        LOGGER.info("setting initiateStop = true");
         //we need to make sure that we finish the data we
         // have already parsed and put into the queue before we quit
         while(!inputQueue.isEmpty()) {
@@ -372,6 +373,14 @@ public class Console {
             catch (InterruptedException e) {
                 e.printStackTrace();
             }
+        }
+
+        try {
+            doStop();
+        }
+        catch(IOException e) {
+            if(settings.isLogging())
+                LOGGER.warning("Exception while stopping: "+e);
         }
     }
 
@@ -383,28 +392,25 @@ public class Console {
      */
     private void doStop() throws IOException {
         if(running) {
-            try {
-                running = false;
-                getTerminal().close();
-                getTerminal().reset();
-                inputProcessor.getHistory().stop();
-                if(aliasManager != null)
-                    aliasManager.persist();
-                if(exportManager != null)
-                    exportManager.persistVariables();
-                if(settings.isLogging())
-                    LOGGER.info("Done stopping reading thread. Terminal is reset");
-                processManager.stop();
-                readerService.shutdown();
-                executorService.shutdown();
-            }
-            finally {
-                settings.getInputStream().close();
-                settings.getStdErr().close();
-                settings.getStdOut().close();
-                if(settings.isLogging())
-                    LOGGER.info("Streams are closed");
-            }
+            running = false;
+            getTerminal().close();
+            getTerminal().reset();
+            inputProcessor.getHistory().stop();
+            if(aliasManager != null)
+                aliasManager.persist();
+            if(exportManager != null)
+                exportManager.persistVariables();
+            processManager.stop();
+            readerService.shutdown();
+            executorService.shutdown();
+            if(settings.isLogging())
+                LOGGER.info("Done stopping services. Terminal is reset");
+
+            settings.getInputStream().close();
+            settings.getStdErr().close();
+            settings.getStdOut().close();
+            if(settings.isLogging())
+                LOGGER.info("Streams are closed");
         }
     }
 
