@@ -167,6 +167,7 @@ public class AeshInputProcessor implements InputProcessor {
         else if(action == Action.EXIT || action == Action.EOF ||
                 action == Action.INTERRUPT || action == Action.IGNOREEOF) {
             if(interruptHook != null) {
+                consoleBuffer.out().print(Config.getLineSeparator());
                 interruptHook.handleInterrupt(action);
             }
         }
