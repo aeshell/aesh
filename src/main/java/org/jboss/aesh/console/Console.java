@@ -363,7 +363,6 @@ public class Console {
 
     public void stop() {
         initiateStop = true;
-        LOGGER.info("setting initiateStop = true");
         //we need to make sure that we finish the data we
         // have already parsed and put into the queue before we quit
         while(!inputQueue.isEmpty()) {
@@ -373,14 +372,6 @@ public class Console {
             catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
-
-        try {
-            doStop();
-        }
-        catch(IOException e) {
-            if(settings.isLogging())
-                LOGGER.warning("Exception while stopping: "+e);
         }
     }
 
