@@ -331,6 +331,7 @@ public class AeshInputProcessor implements InputProcessor {
                     consoleBuffer.setBufferLine(search.getResult());
                     consoleBuffer.drawLine();
                     consoleBuffer.out().println();
+                    history.push(consoleBuffer.getBuffer().getLineNoMask());
                     search.setResult( consoleBuffer.getBuffer().getLineNoMask());
                     search.setFinished(true);
                     return;
