@@ -60,6 +60,8 @@ public abstract class AeshTestCase extends TestCase {
         builder.inputStream(new ByteArrayInputStream(buffer.getBytes()));
         builder.outputStream(new PrintStream(new ByteArrayOutputStream()));
         builder.mode(Mode.EMACS);
+        builder.enableAlias(false);
+        builder.persistAlias(false);
         if(!Config.isOSPOSIXCompatible())
             builder.ansi(false);
 

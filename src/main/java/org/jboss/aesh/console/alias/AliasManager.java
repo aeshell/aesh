@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,6 +53,7 @@ public class AliasManager {
     private File aliasFile;
     private final String name;
     private boolean persistAlias = false;
+
     private static final Logger LOGGER = LoggerUtil.getLogger(AliasManager.class.getName());
 
     public AliasManager(File aliasFile, boolean persistAlias, String name) throws IOException {
@@ -80,8 +82,9 @@ public class AliasManager {
         }
     }
 
-    public void persist() throws IOException {
+    public void persist() {
         if(persistAlias && aliasFile != null) {
+
             //just do it easily and remove the current file
             if(aliasFile.isFile())
                 aliasFile.delete();
@@ -94,6 +97,9 @@ public class AliasManager {
                     fw.write(ALIAS_SPACE+a.toString()+Config.getLineSeparator());
                 }
                 fw.flush();
+            }
+            catch(IOException e) {
+                LOGGER.log(Level.WARNING, "Could not persist to alias file:", e);
             }
         }
     }

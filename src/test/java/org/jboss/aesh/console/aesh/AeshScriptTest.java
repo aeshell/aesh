@@ -50,6 +50,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -67,6 +68,8 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshScriptTest {
+
+    private static int counter = 0;
 
     @Test
     public void scriptPoc() throws IOException, CommandLineParserException, InterruptedException {
@@ -109,9 +112,9 @@ public class AeshScriptTest {
         outputStream.write("run".getBytes());
         outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
-        Thread.sleep(80);
+        Thread.sleep(200);
 
-
+        assertEquals(2, counter);
     }
 
     private List<String> readScriptFile() throws IOException {
@@ -144,10 +147,7 @@ public class AeshScriptTest {
             List<String> script = readScriptFile();
 
             for(String line : script) {
-//                if(resultHandler.failed)
-//                    break;
                 commandInvocation.executeCommand(line + Config.getLineSeparator());
-                Thread.sleep(1000);
             }
 
             return CommandResult.SUCCESS;
@@ -159,7 +159,7 @@ public class AeshScriptTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
-            System.out.println("EXITING");
+            commandInvocation.getShell().out().println("EXITING");
             commandInvocation.stop();
             return CommandResult.SUCCESS;
         }
@@ -168,11 +168,9 @@ public class AeshScriptTest {
     @CommandDefinition(name = "foo", description = "")
     private static class FooCommand implements Command {
 
-        private int counter = 0;
-
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
-            if(counter < 1) {
+            if(counter < 2) {
                 commandInvocation.getShell().out().println("computing...." + Config.getLineSeparator() + "finished computing, returning...");
                 counter ++;
                 return CommandResult.SUCCESS;
