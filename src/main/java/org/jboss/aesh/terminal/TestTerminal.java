@@ -132,4 +132,9 @@ public class TestTerminal implements Terminal, Shell {
         input.writeToInput(data);
     }
 
+    @Override
+    public void changeOutputStream(PrintStream output) {
+        outWriter = output;
+    }
+
 }

@@ -23,6 +23,7 @@ import org.jboss.aesh.console.settings.Settings;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.PrintStream;
 
 /**
  * Generic interface for Terminals
@@ -57,4 +58,9 @@ public interface Terminal extends Closeable {
 
     void writeToInputStream(String data);
 
+    /**
+     * During runtime, change the output stream
+     * @param output stream
+     */
+    void changeOutputStream(PrintStream output);
 }

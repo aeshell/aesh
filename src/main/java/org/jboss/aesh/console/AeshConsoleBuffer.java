@@ -43,7 +43,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     private EditMode editMode;
     private final PrintStream err;
-    private final PrintStream out;
+    private PrintStream out;
 
     private final Buffer buffer;
     private final Shell shell;
@@ -89,6 +89,11 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     @Override
     public PrintStream err() {
         return err;
+    }
+
+    @Override
+    public void changeOutputBuffer(PrintStream output) {
+        out = output;
     }
 
     @Override

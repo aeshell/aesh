@@ -153,6 +153,11 @@ public class WindowsTerminal extends AbstractTerminal {
     }
 
     @Override
+    public void changeOutputStream(PrintStream output) {
+        stdOut = output;
+    }
+
+    @Override
     public void close() throws IOException {
         input.stop();
     }

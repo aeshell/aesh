@@ -37,6 +37,8 @@ public interface ConsoleBuffer {
 
     PrintStream err();
 
+    void changeOutputBuffer(PrintStream output);
+
     Buffer getBuffer();
 
     void setEditMode(EditMode editMode);

@@ -20,6 +20,7 @@
 package org.jboss.aesh.console;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -195,6 +196,10 @@ public class AeshConsoleImpl implements AeshConsole {
 
     public void execute(String input) {
         console.pushToInputStream(input);
+    }
+
+    public void changeOutputStream(PrintStream output) {
+        console.changeOutputStream(output);
     }
 
     private void processAfterInit(Settings settings) {

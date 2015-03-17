@@ -301,6 +301,13 @@ public class Console {
         return consoleCallback;
     }
 
+    public void changeOutputStream(PrintStream output) {
+      if(output != null) {
+          consoleBuffer.changeOutputBuffer(output);
+          getTerminal().changeOutputStream(output);
+      }
+    }
+
     public synchronized void start() {
         if(running)
             throw new IllegalStateException("Not allowed to start the Console without stopping it first");
