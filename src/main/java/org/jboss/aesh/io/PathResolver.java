@@ -72,10 +72,6 @@ public class PathResolver {
             incPath = new File(incPath.toString().substring(CURRENT_WITH_SEPARATOR.length()));
         }
 
-        //if incPath == ., clear it
-        if(incPath.toString().equals(CURRENT))
-            incPath = new File("");
-
         if(incPath.toString().startsWith(TILDE_WITH_SEPARATOR)) {
             if(Config.getHomeDir().endsWith(Config.getPathSeparator()))
                 incPath = new File(Config.getHomeDir()+incPath.toString().substring(2));
@@ -102,11 +98,6 @@ public class PathResolver {
                 incPath = new File(incPath.toString().substring(0, index) +
                         incPath.toString().substring(index+2, incPath.toString().length()));
             }
-        }
-
-        // foo1/foo2/. is changed to foo1/foo2
-        if(incPath.toString().endsWith(SEPARATOR_WITH_CURRENT)) {
-            incPath = new File(incPath.toString().substring(0, incPath.toString().length()-SEPARATOR_WITH_CURRENT.length()));
         }
 
         //parentPath do not start with / or by a windows driver letter and cwd is not / either

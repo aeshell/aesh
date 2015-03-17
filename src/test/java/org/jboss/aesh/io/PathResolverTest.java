@@ -94,7 +94,6 @@ public class PathResolverTest {
         assertEquals(child11, PathResolver.resolvePath(new File("child1"+Config.getPathSeparator()+"child11"), tmp).get(0));
 
         assertEquals(child11, PathResolver.resolvePath(new File("."+Config.getPathSeparator()+"child11"), child1).get(0));
-        assertEquals(child1, PathResolver.resolvePath(new File("."+Config.getPathSeparator()), child1).get(0));
 
         assertEquals(child1, PathResolver.resolvePath(
                 new File(".."+Config.getPathSeparator()+"child1"+Config.getPathSeparator()), child1).get(0));
@@ -108,9 +107,6 @@ public class PathResolverTest {
 
         assertEquals(child11, PathResolver.resolvePath(new File("."+Config.getPathSeparator()+".."+
                 Config.getPathSeparator()+"child1"+Config.getPathSeparator()+"."+Config.getPathSeparator()+"child11"), child1).get(0));
-        assertEquals(child11, PathResolver.resolvePath(new File("."+Config.getPathSeparator()+".."+
-                Config.getPathSeparator()+"child1"+Config.getPathSeparator()+"."+
-                Config.getPathSeparator()+"child11"+Config.getPathSeparator()+"."), child1).get(0));
 
         System.setProperty("user.home", tempDir.toString()+Config.getPathSeparator()+"home");
         assertEquals(new File(Config.getHomeDir()), PathResolver.resolvePath(new File("~/../home"), child1).get(0));

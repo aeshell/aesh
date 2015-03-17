@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.jboss.aesh.comparators.PosixFileNameComparator;
 import org.jboss.aesh.complete.CompleteOperation;
@@ -46,12 +47,15 @@ import org.jboss.aesh.terminal.TerminalString;
  */
 public class FileLister {
 
+    private static final String SEPARATOR_AND_DOT = Config.getPathSeparator()+".";
     private String token;
     private Resource cwd;
     private String rest;
     private String lastDir;
     private ResourceFilter fileFilter;
     private Comparator fileComparator;
+
+    private static Logger LOGGER = LoggerUtil.getLogger(FileLister.class.getName());
 
     public FileLister(String token, Resource cwd) {
         if (token == null)
@@ -284,7 +288,7 @@ public class FileLister {
     }
 
     private boolean isTokenADirectory() {
-        return cwd.newInstance(token).isDirectory();
+        return cwd.newInstance(token).isDirectory() && !token.endsWith(SEPARATOR_AND_DOT);
     }
 
     private boolean isTokenAFile() {
