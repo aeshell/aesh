@@ -25,7 +25,7 @@ apply plugin: 'application'
 apply plugin: 'checkstyle'
 
 group = 'org.jboss.aesh'
-version = '0.58-SNAPSHOT'
+version = '0.58'
 
 sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_7
