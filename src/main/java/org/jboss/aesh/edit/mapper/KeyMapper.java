@@ -19,6 +19,7 @@
  */
 package org.jboss.aesh.edit.mapper;
 
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
@@ -60,7 +61,6 @@ public class KeyMapper {
      * @return proper KeyOperation
      */
     public static KeyOperation mapQuoteKeys(String keys, String operation) {
-        //return new KeyOperation(Key.getKey(mapKeys(quotePattern.split(keys)[1])),
         return new KeyOperation(Key.getKey(mapKeys(keys.substring(1))),
                 OperationMapper.mapToFunction(operation));
     }
@@ -172,7 +172,7 @@ public class KeyMapper {
         for(int i=0; i < random.length(); i++) {
             converted[i] = lookupControlKey(Character.toLowerCase(random.charAt(i)));
             if(converted[i] == -1)
-                throw new RuntimeException("ERROR parsing "+random+" keys to aesh. Check your inputrc.");
+                throw new IllegalArgumentException("ERROR parsing "+random+" keys to aesh. Check your inputrc.");
         }
 
         return converted;
@@ -208,6 +208,7 @@ public class KeyMapper {
             case 'y' : return 25;
             case 'z' : return 26;
             case '[' : return 27;
+            case '?' : return Config.isOSPOSIXCompatible() ? 127 : 8;
         }
 
         return -1;
