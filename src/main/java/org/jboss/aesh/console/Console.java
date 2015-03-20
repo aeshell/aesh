@@ -380,6 +380,13 @@ public class Console {
                 e.printStackTrace();
             }
         }
+
+        try {
+            doStop();
+        }
+        catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Exception during stop: ", e);
+        }
     }
 
     /**
@@ -388,7 +395,7 @@ public class Console {
      * before its used.
      * @throws IOException stream
      */
-    private void doStop() throws IOException {
+    private synchronized void doStop() throws IOException {
         if(running) {
             running = false;
             getTerminal().close();
