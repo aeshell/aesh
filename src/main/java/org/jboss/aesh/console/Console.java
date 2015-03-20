@@ -449,6 +449,30 @@ public class Console {
     }
 
     /**
+     * Read from the input stream and return when user have pressed enter.
+     * This method will block until enter is pressed or because of interruption.
+     *
+     * @return input
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    public String getInputLine() throws InterruptedException, IOException {
+        String result;
+        try {
+            do {
+                result = inputProcessor.parseOperation(getInput());
+            }
+            while(result == null);
+
+            return result;
+        }
+        catch(InterruptedException e) {
+           LOGGER.log(Level.WARNING, "GOT INTERRUPTED: ",e);
+           throw e;
+        }
+    }
+
+    /**
      * @return get the current shell
      */
     private Shell getInternalShell() {

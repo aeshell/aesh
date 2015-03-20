@@ -213,15 +213,7 @@ public class Example {
                     //exampleConsole.attachProcess(test);
                     //man = new ExampleConsoleCommand(exampleConsole, output);
                     exampleConsole.getShell().out().println("trying to wait for input");
-                    CommandOperation co = null;
-                    try {
-                        co = getInput();
-                    }
-                    catch (InterruptedException e) {
-                        e.printStackTrace();
-                        return -1;
-                    }
-                    exampleConsole.getShell().out().println("got: " + co.toString());
+                    exampleConsole.getShell().out().println("got: " + exampleConsole.getInputLine());
                     //exampleConsole.attachProcess(test);
                 }
                 else if(output.getBuffer().startsWith("login")) {
