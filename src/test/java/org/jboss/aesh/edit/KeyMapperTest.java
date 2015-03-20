@@ -76,6 +76,8 @@ public class KeyMapperTest {
             assertEquals(new KeyOperation(Key.META_CTRL_D, Operation.MOVE_PREV_CHAR), o2);
             o2 = KeyMapper.mapKeys("C-a", "beginning-of-line");
             assertEquals(new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING), o2);
+            o2 = KeyMapper.mapKeys("C-?", "backward-delete-char");
+            assertEquals(new KeyOperation(Key.BACKSPACE, Operation.DELETE_PREV_CHAR), o2);
         }
     }
 }

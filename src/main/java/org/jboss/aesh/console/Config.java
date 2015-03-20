@@ -142,8 +142,8 @@ public class Config {
         Pattern startConstructs = Pattern.compile("^\\$if");
         Pattern endConstructs = Pattern.compile("^\\$endif");
 
-        try(BufferedReader reader =
-                new BufferedReader( new FileReader(settings.getInputrc()))) {
+        try {
+            BufferedReader reader = new BufferedReader( new FileReader(settings.getInputrc()));
 
             String line;
             boolean constructMode = false;
@@ -183,6 +183,13 @@ public class Config {
                     }
                 }
             }
+        }
+        catch(IOException e) {
+           LOGGER.log(Level.WARNING, "Failed to read .inputrc: ", e);
+        }
+        //KeyMapper throws IllegalArgumentException if it fails parsing the file
+        catch(IllegalArgumentException iae) {
+            LOGGER.log(Level.WARNING, "Exception during reading of inputrc: ", iae);
         }
         return builder.create();
     }
