@@ -109,6 +109,13 @@ public interface Resource {
     boolean delete();
 
     /**
+     * Move a file/directory.
+     *
+     * @param target the target file/directory.
+     */
+    void move(Resource target) throws IOException;
+
+    /**
      * Returns the file resource of this parent, or
      * <code>null</code> if this file resource does not name a parent directory.
      *

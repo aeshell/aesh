@@ -31,6 +31,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -101,6 +102,12 @@ public class FileResource implements Resource {
     @Override
     public boolean delete() {
         return file.delete();
+    }
+
+    @Override
+    public void move(Resource target) throws IOException {
+        FileResource destination = (FileResource) target;
+        Files.move(this.file.toPath(), destination.file.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override
