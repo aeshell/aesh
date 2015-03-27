@@ -451,7 +451,7 @@ public class Console {
         getTerminal().writeToInputStream(input);
     }
 
-    private boolean hasInput() {
+    public boolean hasInput() {
         return inputQueue.size() > 0;
     }
 
