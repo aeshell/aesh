@@ -207,4 +207,18 @@ public interface Resource {
      * @return the new last modified time, in milliseconds
      */
     long lastModified();
+
+    /**
+     * Sets the last-accessed time of the file or directory named by this abstract pathname.
+     *
+     * @param time The new last-accessed time, measured in milliseconds
+     */
+    void setLastAccessed(long time) throws IOException;
+
+    /**
+     * Returns the last accessed time of the file or directory
+     *
+     * @return the last accessed time, in milliseconds
+     */
+    long lastAccessed() throws IOException;
 }

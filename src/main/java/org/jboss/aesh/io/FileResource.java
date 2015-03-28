@@ -31,6 +31,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
@@ -196,6 +197,19 @@ public class FileResource implements Resource {
     @Override
     public long lastModified() {
         return file.lastModified();
+    }
+
+    @Override
+    public void setLastAccessed(long time) throws IOException {
+        FileTime fileTime = FileTime.fromMillis(time);
+        Files.setAttribute(file.toPath(), "lastAccessTime", fileTime);
+    }
+
+    @Override
+    public long lastAccessed() throws IOException {
+        BasicFileAttributes bfa = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+        FileTime lastAccessed = bfa.lastAccessTime();
+        return lastAccessed.toMillis();
     }
 
     public File getFile() {
