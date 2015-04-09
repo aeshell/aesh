@@ -23,7 +23,11 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.util.LoggerUtil;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -41,7 +45,7 @@ public class KeyMapper {
     private static final Pattern quotePattern = Pattern.compile("^\"");
     private static final Pattern metaPattern = Pattern.compile("^(\\\\M|M|Meta)-"); // "M-
     private static final Pattern controlPattern = Pattern.compile("^(\\\\C|C|Control)-"); // "M-
-
+    private static final Logger LOGGER = LoggerUtil.getLogger(KeyMapper.class.getName());
     /**
      * Parse key mapping lines that start with "
      *
@@ -168,14 +172,27 @@ public class KeyMapper {
     }
 
     private static int[] convertRandomControlKeys(String random) {
-        int[] converted = new int[random.length()];
-        for(int i=0; i < random.length(); i++) {
-            converted[i] = lookupControlKey(Character.toLowerCase(random.charAt(i)));
-            if(converted[i] == -1)
-                throw new IllegalArgumentException("ERROR parsing "+random+" keys to aesh. Check your inputrc.");
+        final int length = random.length();
+        final int[] tmpArray = new int[length];
+        
+        int index = 0;
+        for(int i=0; i < length; i++) {
+            final int converted = lookupControlKey(Character.toLowerCase(random.charAt(i)));
+            if(converted == -1){
+                LOGGER.warning("ERROR parsing "+random+" keys to aesh. Check your inputrc. Ignoring entry!");
+            } else {
+                tmpArray[index++] = converted;
+            }
         }
-
-        return converted;
+        if( index != length){
+           final int[] trimmedArray = new int[index];
+           for(int i = 0; i<index;i++){
+               trimmedArray[i] = tmpArray[i];
+           }
+           return trimmedArray;
+        } else {
+           return tmpArray;
+        }
     }
 
     private static int lookupControlKey(char c) {
