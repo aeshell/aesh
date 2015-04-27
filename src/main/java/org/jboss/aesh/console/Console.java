@@ -439,12 +439,18 @@ public class Console {
         return inputProcessor;
     }
 
-    protected void putProcessInBackground(int pid) {
+    /**
+     * Put the current process in the background
+     */
+    public void putProcessInBackground(int pid) {
         processManager.putProcessInBackground(pid);
     }
 
-    protected void putProcessInForeground(int pid) {
-        processManager.putProcessInBackground(pid);
+    /**
+     * Put the current process in the foreground
+     */
+    public void putProcessInForeground(int pid) {
+        processManager.putProcessInForeground(pid);
     }
 
     public void pushToInputStream(String input) {
