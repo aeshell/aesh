@@ -57,7 +57,6 @@ public class AeshInputProcessor implements InputProcessor {
 
     private Action prevAction = Action.EDIT;
 
-    private boolean historyDisabled = false;
     private boolean searchDisabled = false;
 
     private static final String ENDS_WITH_BACKSLASH = " \\";
@@ -68,16 +67,20 @@ public class AeshInputProcessor implements InputProcessor {
                        History history,
                        CompletionHandler completionHandler,
                        InputProcessorInterruptHook interruptHook,
-                       boolean historyDisabled, boolean searchDisabled) {
+                       boolean historyEnabled, boolean searchEnabled) {
 
         this.consoleBuffer = consoleBuffer;
         this.history = history;
+        if(historyEnabled){
+            history.enable();
+        }else {
+            history.disable();
+        }
         this.completionHandler = completionHandler;
         this.interruptHook = interruptHook;
-        this.historyDisabled = !historyDisabled;
-        this.searchDisabled = !searchDisabled;
+        this.searchDisabled = !searchEnabled;
         //make sure that search is disabled if history is
-        if(this.historyDisabled)
+        if(!history.isEnabled())
             this.searchDisabled = true;
     }
 
@@ -171,7 +174,7 @@ public class AeshInputProcessor implements InputProcessor {
                 interruptHook.handleInterrupt(action);
             }
         }
-        else if(action == Action.HISTORY && !historyDisabled) {
+        else if(action == Action.HISTORY && history.isEnabled()) {
             if(operation.getMovement() == Movement.NEXT)
                 getHistoryElement(true);
             else if(operation.getMovement() == Movement.PREV)
@@ -204,7 +207,7 @@ public class AeshInputProcessor implements InputProcessor {
         }
 
         //a hack to get history working
-        if(action == Action.HISTORY && !historyDisabled)
+        if(action == Action.HISTORY && history.isEnabled())
             prevAction = action;
 
         //in the end we check for a newline
@@ -225,7 +228,7 @@ public class AeshInputProcessor implements InputProcessor {
                     consoleBuffer.getBuffer().updateMultiLineBuffer();
                     isCurrentLineEnding = false;
                 }
-                else if(!historyDisabled) {
+                else if(history.isEnabled()) {
                     if(consoleBuffer.getBuffer().isMultiLine())
                         addToHistory(consoleBuffer.getBuffer().getMultiLineBuffer()+consoleBuffer.getBuffer().getLine());
                     else
