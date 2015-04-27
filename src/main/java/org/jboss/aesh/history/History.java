@@ -25,34 +25,48 @@ import java.util.List;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface History {
+public abstract class History {
 
-    void push(String entry);
+    private boolean enabled = true;
 
-    String find(String search);
+    public boolean isEnabled() {
+        return enabled;
+    }
 
-    String get(int index);
+    public void enable() {
+        this.enabled = true;
+    }
 
-    int size();
+    public void disable(){
+        this.enabled = false;
+    }
 
-    void setSearchDirection(SearchDirection direction);
+    public abstract void push(String entry);
 
-    SearchDirection getSearchDirection();
+    public abstract String find(String search);
 
-    String getNextFetch();
+    public abstract String get(int index);
 
-    String getPreviousFetch();
+    public abstract int size();
 
-    String search(String search);
+    public abstract void setSearchDirection(SearchDirection direction);
 
-    void setCurrent(String line);
+    public abstract SearchDirection getSearchDirection();
 
-    String getCurrent();
+    public abstract String getNextFetch();
 
-    List<String> getAll();
+    public abstract String getPreviousFetch();
 
-    void clear();
+    public abstract String search(String search);
 
-    void stop();
+    public abstract void setCurrent(String line);
+
+    public abstract String getCurrent();
+
+    public abstract List<String> getAll();
+
+    public abstract void clear();
+
+    public abstract void stop();
 
 }

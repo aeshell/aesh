@@ -28,7 +28,7 @@ import java.util.List;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class InMemoryHistory implements History {
+public class InMemoryHistory extends History {
 
     private final List<String> historyList;
     private int lastFetchedId = -1;
