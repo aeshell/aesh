@@ -106,7 +106,9 @@ public final class ProcessedCommand<C extends Command> {
         return validator;
     }
 
-    public ResultHandler getResultHandler() { return resultHandler; }
+    public ResultHandler getResultHandler() {
+      return resultHandler;
+    }
 
     public boolean hasArgument() {
         return argument != null && argument.hasMultipleValues();

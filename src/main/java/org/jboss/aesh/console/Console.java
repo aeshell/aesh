@@ -505,7 +505,9 @@ public class Console {
             try {
                 tmpOutput = parseCurrentOperation();
             }
-            catch (IOException e) { e.printStackTrace(); }
+            catch (IOException e) {
+              e.printStackTrace();
+            }
 
             if(tmpOutput != null && !readerService.isShutdown())
                 processManager.startNewProcess(consoleCallback, tmpOutput);

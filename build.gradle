@@ -84,5 +84,5 @@ task docs(type: Javadoc) {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.2'
+    gradleVersion = '2.4'
 }
