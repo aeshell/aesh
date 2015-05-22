@@ -25,8 +25,6 @@ import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.LoggerUtil;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -174,7 +172,7 @@ public class KeyMapper {
     private static int[] convertRandomControlKeys(String random) {
         final int length = random.length();
         final int[] tmpArray = new int[length];
-        
+
         int index = 0;
         for(int i=0; i < length; i++) {
             final int converted = lookupControlKey(Character.toLowerCase(random.charAt(i)));

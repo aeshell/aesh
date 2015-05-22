@@ -80,8 +80,12 @@ public abstract class AeshTestCase extends TestCase {
             }
         });
         console.start();
-        try { Thread.sleep(100); }
-        catch (InterruptedException e) { }
+        try {
+            Thread.sleep(100);
+        }
+        catch (InterruptedException e) {
+
+        }
         console.stop();
 
     }
