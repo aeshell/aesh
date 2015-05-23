@@ -81,8 +81,5 @@ public class ANSI {
 
     private ANSI() {
     }
-
-    public static String moveCursor(int x, int y) {
-       return new StringBuilder().append(START).append(y).append(';').append(x).append('H').toString();
-    }
+    
 }
