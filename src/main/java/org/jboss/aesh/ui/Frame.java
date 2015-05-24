@@ -26,4 +26,5 @@ package org.jboss.aesh.ui;
  */
 public class Frame extends Component {
 
+    private String title;
 }
