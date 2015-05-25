@@ -81,5 +81,4 @@ public class ANSI {
 
     private ANSI() {
     }
-    
 }
