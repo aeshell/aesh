@@ -52,6 +52,7 @@ public class ConsoleInputSession {
             public Thread newThread(Runnable runnable) {
                 Thread thread = Executors.defaultThreadFactory().newThread(runnable);
                 thread.setDaemon(true);
+                thread.setName("Aesh InputStream Reader");
                 return thread;
             }
         });
@@ -98,6 +99,7 @@ public class ConsoleInputSession {
     public void stop() {
         if(!executorService.isShutdown()) {
             try {
+                aeshInputStream.stop();
                 aeshInputStream.close();
                 executorService.shutdown();
                 try {
