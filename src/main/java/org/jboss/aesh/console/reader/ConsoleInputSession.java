@@ -43,6 +43,7 @@ public class ConsoleInputSession {
     private final BlockingQueue<int[]> blockingQueue = new LinkedBlockingQueue<>(1000);
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ConsoleInputSession.class.getName());
+    private static final int[] NULL_INPUT = new int[] {-1};
 
     public ConsoleInputSession(InputStream consoleStream) {
         executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
@@ -89,7 +90,7 @@ public class ConsoleInputSession {
             return blockingQueue.take();
         }
         catch(InterruptedException e) {
-            return new int[] {-1};
+            return NULL_INPUT;
         }
     }
 
@@ -98,6 +99,12 @@ public class ConsoleInputSession {
             try {
                 aeshInputStream.close();
                 executorService.shutdown();
+                try {
+                  // Unlock thread on blockingQueue.take() by sending the end input. 
+                  blockingQueue.put(NULL_INPUT);
+                } catch (InterruptedException e) {
+                  e.printStackTrace();
+                }
                 LOGGER.info("input stream is closed, readers finished...");
             }
             catch(IOException e) {
