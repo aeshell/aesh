@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -100,15 +101,16 @@ public class ConsoleInputSession {
                 aeshInputStream.close();
                 executorService.shutdown();
                 try {
-                  // Unlock thread on blockingQueue.take() by sending the end input. 
-                  blockingQueue.put(NULL_INPUT);
-                } catch (InterruptedException e) {
-                  e.printStackTrace();
+                    // Unlock thread on blockingQueue.take() by sending the end input.
+                    blockingQueue.put(NULL_INPUT);
+                }
+                catch (InterruptedException e) {
+                    LOGGER.log(Level.SEVERE, "Failed when pushing -1 to blockingQueue.", e);
                 }
                 LOGGER.info("input stream is closed, readers finished...");
             }
             catch(IOException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, "Failed when trying to close streams", e);
             }
         }
     }
