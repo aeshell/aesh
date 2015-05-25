@@ -98,7 +98,13 @@ public class ConsoleInputSession {
                 aeshInputStream.stop();
                 aeshInputStream.close();
                 executorService.shutdownNow();
-                //blockingQueue.add(NULL_INPUT);
+                try {
+                    // Unlock thread on blockingQueue.take() by sending the end input.
+                    blockingQueue.put(NULL_INPUT);
+                }
+                catch (InterruptedException e) {
+                    LOGGER.log(Level.SEVERE, "Failed when pushing -1 to blockingQueue.", e);
+                }
                 LOGGER.info("input stream is closed, readers finished...");
             }
             catch(IOException e) {
