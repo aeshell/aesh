@@ -34,14 +34,14 @@ import java.util.logging.Logger;
  */
 public class AeshInputStream extends InputStream {
 
+    private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputStream.class.getName());
+
     private transient boolean reading;
     private final InputStream consoleStream;
     private static final int BUFFER_SIZE = 1024;
     private final byte[] bBuf = new byte[BUFFER_SIZE];
     private static final int MINUS_ONE = -1;
     private static final int[] NULL_INPUT = new int[] {MINUS_ONE};
-
-    private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputStream.class.getName());
 
     public AeshInputStream(InputStream consoleStream) {
         this.consoleStream = consoleStream;
@@ -108,14 +108,16 @@ public class AeshInputStream extends InputStream {
 
         }
         catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Reader thread got IO exception while reading: ", e);
+           if(reading)
+              LOGGER.log(Level.SEVERE, "Reader thread got IO exception while reading: ", e);
             reading = false;
-            return new int[] {-1};
+            return NULL_INPUT;
         }
         catch (InterruptedException e) {
-            LOGGER.log(Level.SEVERE, "Reader thread got Interrupted while reading: ", e);
+            if(reading)
+               LOGGER.log(Level.SEVERE, "Reader thread got Interrupted while reading: ", e);
             reading = false;
-            return new int[] {-1};
+            return NULL_INPUT;
         }
     }
 
