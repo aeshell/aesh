@@ -516,6 +516,7 @@ public class Console {
         }
         else {
             inputProcessor.resetBuffer();
+            /*
             if(initiateStop) {
                 try {
                     doStop();
@@ -526,6 +527,8 @@ public class Console {
                 }
             }
             else
+            */
+            if(!initiateStop)
                 displayPrompt();
         }
     }
@@ -614,8 +617,12 @@ public class Console {
             //close thread, exit
             if(input.length == 0 || input[0] == -1) {
                 //dont have to initiate it twice
-                if(!initiateStop)
+                if(!initiateStop) {
+                    LOGGER.info("Received null input or -1, initiating stop");
                     stop();
+                }
+                else
+                    LOGGER.info("Received null input or -1, already stopped, so ignoring");
                 return false;
             }
 

@@ -67,7 +67,6 @@ public class ConsoleInputSession {
                 try {
                     while (!executorService.isShutdown()) {
                         blockingQueue.put(aeshInputStream.readAll());
-                        Thread.sleep(10);
                     }
                 }
                 catch (RuntimeException e) {
@@ -101,14 +100,7 @@ public class ConsoleInputSession {
             try {
                 aeshInputStream.stop();
                 aeshInputStream.close();
-                executorService.shutdown();
-                try {
-                    // Unlock thread on blockingQueue.take() by sending the end input.
-                    blockingQueue.put(NULL_INPUT);
-                }
-                catch (InterruptedException e) {
-                    LOGGER.log(Level.SEVERE, "Failed when pushing -1 to blockingQueue.", e);
-                }
+                executorService.shutdownNow();
                 LOGGER.info("input stream is closed, readers finished...");
             }
             catch(IOException e) {

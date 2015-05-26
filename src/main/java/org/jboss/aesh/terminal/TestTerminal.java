@@ -100,6 +100,7 @@ public class TestTerminal implements Terminal, Shell {
 
     @Override
     public void close() throws IOException {
+        in.close();
         input.stop();
     }
 

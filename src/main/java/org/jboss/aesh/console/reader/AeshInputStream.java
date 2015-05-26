@@ -21,9 +21,12 @@ package org.jboss.aesh.console.reader;
 
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -36,6 +39,8 @@ public class AeshInputStream extends InputStream {
     private static final int BUFFER_SIZE = 1024;
     private final byte[] bBuf = new byte[BUFFER_SIZE];
     private static final int[] NULL_INPUT = new int[] {-1};
+
+    private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputStream.class.getName());
 
     public AeshInputStream(InputStream consoleStream) {
         this.consoleStream = consoleStream;
@@ -50,8 +55,10 @@ public class AeshInputStream extends InputStream {
                 //LOGGER.info("trying to read");
                 String out = readFromStream();
                 //LOGGER.info("read: "+out);
-                if(out == null)
+                if(out == null) {
+                    reading = false;
                     return NULL_INPUT;
+                }
                 int[] input = new int[out.length()];
                 for(int i=0; i < out.length(); i++)
                     input[i] = out.charAt(i);
@@ -59,8 +66,10 @@ public class AeshInputStream extends InputStream {
             }
             else {
                 String out = readFromStream();
-                if(out == null)
+                if(out == null) {
+                    reading = false;
                     return NULL_INPUT;
+                }
                 //hack to make multi-value input work (arrows ++)
                 if (!out.isEmpty() &&
                         (out.charAt(0) == Key.WINDOWS_ESC.getAsChar() ||
@@ -75,8 +84,10 @@ public class AeshInputStream extends InputStream {
                         //Otherwise, set the first char to WINDOWS_ESC, then we can reduce the number of different key's in the future
                         input[0] = Key.WINDOWS_ESC.getAsChar();
                         String out2 = readFromStream();
-                        if(out2 == null)
+                        if(out2 == null) {
+                            reading = false;
                             return NULL_INPUT;
+                        }
                         input[1] = out2.charAt(0);
                     }
 
@@ -92,11 +103,13 @@ public class AeshInputStream extends InputStream {
 
         }
         catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Reader thread got IO exception while reading: ", e);
+            reading = false;
             return new int[] {-1};
         }
         catch (InterruptedException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Reader thread got Interrupted while reading: ", e);
+            reading = false;
             return new int[] {-1};
         }
     }
