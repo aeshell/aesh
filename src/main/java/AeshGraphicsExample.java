@@ -29,9 +29,8 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.graphics.AeshGraphicsConfiguration;
+import org.jboss.aesh.graphics.AeshGraphics;
 import org.jboss.aesh.graphics.Graphics;
-import org.jboss.aesh.graphics.GraphicsConfiguration;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.TerminalColor;
@@ -100,8 +99,9 @@ public class AeshGraphicsExample {
 
         private void doGfx() {
             try {
-                GraphicsConfiguration gc = new AeshGraphicsConfiguration(invocation.getShell());
-                g = gc.getGraphics();
+                g = new AeshGraphics(invocation.getShell());
+
+                g.translate(50,50);
 
                 g.setColor(new TerminalColor(Color.BLUE, Color.DEFAULT));
                 g.drawRect(20, 10, 20, 4);

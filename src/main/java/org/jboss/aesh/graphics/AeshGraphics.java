@@ -23,8 +23,8 @@ import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalColor;
-import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.TerminalTextStyle;
+import org.jboss.aesh.ui.Rectangle;
 import org.jboss.aesh.util.ANSI;
 
 import java.io.IOException;
@@ -37,15 +37,15 @@ public class AeshGraphics implements Graphics {
     private static final String CURSOR_DOWN = ANSI.START+"1B"+ANSI.START+"1D";
 
     private final Shell shell;
-    private final GraphicsConfiguration graphicsConfiguration;
     private TerminalColor currentColor;
     private TerminalTextStyle currentStyle;
+    private Rectangle bounds;
 
-    AeshGraphics(Shell shell, GraphicsConfiguration graphicsConfiguration) {
+    public AeshGraphics(Shell shell) {
         this.shell = shell;
-        this.graphicsConfiguration = graphicsConfiguration;
         currentColor = new TerminalColor();
         shell.out().print(ANSI.CURSOR_HIDE);
+        bounds = new Rectangle(0, 0, shell.getSize().getWidth(), shell.getSize().getHeight());
     }
 
     @Override
@@ -81,6 +81,28 @@ public class AeshGraphics implements Graphics {
     }
 
     @Override
+    public void setBounds(Rectangle rectangle) {
+        this.bounds = new Rectangle(rectangle);
+    }
+
+    @Override
+    public Rectangle getBounds() {
+        return bounds;
+    }
+
+    @Override
+    public void translate(int x, int y) {
+        int width = bounds.getWidth();
+        if(width + x > shell.getSize().getWidth())
+            width = shell.getSize().getWidth()-x;
+        int height = bounds.getHeight();
+        if(height + y > shell.getSize().getHeight())
+            height = shell.getSize().getHeight()-y;
+
+        bounds = new Rectangle(x, y, width, height);
+    }
+
+    @Override
     public void setColor(TerminalColor color) {
         this.currentColor = color;
     }
@@ -109,22 +131,53 @@ public class AeshGraphics implements Graphics {
     public void drawLine(int x1, int y1, int x2, int y2) {
         if(currentColor != null)
             shell.out().print(currentColor.fullString());
+        boolean insideStartBounds = bounds.isInside(x1, y1);
+        boolean insideEndBounds = bounds.isInside(x2,y2);
+        if(!insideStartBounds && !insideEndBounds)
+            return;
+        if(!insideEndBounds || !insideStartBounds)
+            insideEndBounds = false;
+        else
+            insideEndBounds = true;
+
         int dx = x2 - x1;
         int dy = y2 -y1;
         int y = 0;
         for(int i=x1; i < x2; i++) {
             y = y1 + (dy) * (i - x1)/(dx);
-            shell.setCursor(new CursorPosition(y,i));
-            shell.out().print('x');
+            if(insideEndBounds) {
+                shell.setCursor(new CursorPosition(y, i));
+                shell.out().print('x');
+            }
+            else {
+                if(bounds.isInside(i, y)) {
+                    shell.setCursor(new CursorPosition(y, i));
+                    shell.out().print('x');
+                }
+            }
         }
     }
 
     @Override
     public void drawString(String str, int x, int y) {
-        if(currentColor != null)
-            shell.out().print(currentColor.fullString());
-        shell.setCursor(new CursorPosition(y,x));
-        shell.out().print(str);
+        if(bounds.isInside(x, y)) {
+            if (currentColor != null)
+                shell.out().print(currentColor.fullString());
+            if(bounds.isInside(x+str.length(), y)) {
+                shell.setCursor(new CursorPosition(y, x));
+                shell.out().print(str);
+            }
+            else {
+                int length =- (x+str.length() - (bounds.getX() + bounds.getWidth()));
+                shell.setCursor(new CursorPosition(y, x));
+                shell.out().print(str.substring(0,length));
+            }
+        }
+        else if(bounds.isInside(x+str.length(), y)) {
+            int length = x+str.length()-bounds.getX();
+
+            drawString();
+        }
     }
 
     @Override
@@ -173,27 +226,39 @@ public class AeshGraphics implements Graphics {
 
 
     private void drawHorizontalLine(int x, int y, int width) {
-        TerminalSize terminalSize = graphicsConfiguration.getBounds();
-        if(terminalSize.getHeight() > y && terminalSize.getWidth() > y) {
-            if(terminalSize.getWidth() < x + width)
-                width = terminalSize.getWidth() - x-1;
-            shell.setCursor(new CursorPosition(y,x));
-            char[] line = new char[width];
-            for(int i=0; i < line.length; i++) {
-                if(i == 0 || i == line.length-1)
-                    line[i] = 'x';
-                else
-                    line[i] = '-';
-            }
-            shell.out().print(line);
+        //check that we start in bounds
+        if(x < bounds.getX()) {
+            //if x + width < x, just return
+            if((x+width) < bounds.getX())
+                return;
+            width =- (bounds.getX()-x);
+            x = bounds.getX();
         }
+        //if x is outside of our boundaries, just return
+        if(x > bounds.getX() + bounds.getWidth())
+            return;
+        // if y is ourside our boundaries, just return
+        if(y < bounds.getY() || y > (bounds.getY()+bounds.getHeight()))
+            return;
+
+        //if(bounds.getHeight() > y && bounds.getWidth() > x) {
+        //    if(bounds.getWidth() < x + width)
+        //        width = bounds.getWidth() - x-1;
+        shell.setCursor(new CursorPosition(y,x));
+        char[] line = new char[width];
+        for(int i=0; i < line.length; i++) {
+            if(i == 0 || i == line.length-1)
+                line[i] = 'x';
+            else
+                line[i] = '-';
+        }
+        shell.out().print(line);
     }
 
     private void drawVerticalLine(int x, int y, int length) {
-        TerminalSize terminalSize = graphicsConfiguration.getBounds();
-        if(terminalSize.getHeight() > y && terminalSize.getWidth() > y) {
-            if(terminalSize.getHeight() < y + length)
-                length = terminalSize.getHeight() - y-1;
+        if(bounds.getHeight() > y && bounds.getWidth() > x) {
+            if(bounds.getHeight() < y + length)
+                length = bounds.getHeight() - y-1;
             shell.setCursor(new CursorPosition(y,x));
             for(int i=0; i < length; i++) {
                 shell.out().print('|');

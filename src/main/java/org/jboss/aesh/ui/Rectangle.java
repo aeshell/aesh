@@ -79,6 +79,10 @@ public class Rectangle implements Serializable {
         return new Rectangle(x, y, width, height);
     }
 
+    public boolean isInside(int x, int y) {
+        return x >= this.x && x <= (this.x+this.width) && y >= this.y && y <= (this.y+this.height);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

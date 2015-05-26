@@ -39,7 +39,7 @@ public class AeshGraphicsConfigurationTest {
     public void testAeshGraphicsConfiguration() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Shell shell = new TestShell(new PrintStream(baos), System.err);
-        AeshGraphicsConfiguration agc = new AeshGraphicsConfiguration(shell);
+        Graphics agc = new AeshGraphics(shell);
 
         Assert.assertEquals("TerminalSize{height=80, width=20}", agc.getBounds().toString());
         Assert.assertEquals(shell.getSize().getWidth() / 2, shell.getSize().getCenterWidth());

@@ -21,6 +21,7 @@ package org.jboss.aesh.graphics;
 
 import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalTextStyle;
+import org.jboss.aesh.ui.Rectangle;
 
 /**
  * Simple Terminal Graphics API
@@ -36,7 +37,7 @@ public interface Graphics {
     void flush();
 
     /**
-     * Clear the entire terminal screen.
+     * Clear the bounds of the graphics area
      */
     void clear();
 
@@ -45,7 +46,28 @@ public interface Graphics {
      */
     void clearAndShowCursor();
 
+    /**
+     * @return the current TerminalColor
+     */
     TerminalColor getColor();
+
+    /**
+     * Set the graphics boundaries
+     * @param rectangle boundaries
+     */
+    void setBounds(Rectangle rectangle);
+
+    /**
+     * @return get the graphics boundaries
+     */
+    Rectangle getBounds();
+
+    /**
+     * Set the point of origin (upper left corner) of this graphics context
+     * @param x coordinate
+     * @param y coordinate
+     */
+    void translate(int x, int y);
 
     /**
      * Sets this graphics context's current color to the specified color.
