@@ -309,7 +309,7 @@ public class SettingsImpl implements Settings {
     @Override
     public InputStream getInputStream() {
         if(inputStream == null) {
-                inputStream = System.in;
+            inputStream = System.in;
         }
         return inputStream;
     }

@@ -369,24 +369,7 @@ public class Console {
     }
 
     public void stop() {
-        initiateStop = true;
-        //we need to make sure that we finish the data we
-        // have already parsed and put into the queue before we quit
-        while(!inputQueue.isEmpty()) {
-            try {
-                Thread.sleep(10);
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            doStop();
-        }
-        catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Exception during stop: ", e);
-        }
+       initiateStop = true;
     }
 
     /**
@@ -398,6 +381,23 @@ public class Console {
     private synchronized void doStop() throws IOException {
         if(running) {
             running = false;
+            //we need to make sure that we finish the data we
+            // have already parsed and put into the queue before we quit
+            // - to prevent a deadlock we add a counter
+            int counter = 0;
+            while(!inputQueue.isEmpty() && counter < 10) {
+                try {
+                    Thread.sleep(10);
+                    counter++;
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(counter == 10) {
+                LOGGER.log(Level.WARNING, "InputQueue still contains items after stop: "+inputQueue.toString());
+            }
+
             getTerminal().close();
             getTerminal().reset();
             inputProcessor.getHistory().stop();
@@ -500,6 +500,7 @@ public class Console {
     }
 
     public void currentProcessFinished(Process process) {
+        //piped/redirect commands
         if(currentOperation != null) {
             ConsoleOperation tmpOutput = null;
             try {
@@ -516,19 +517,15 @@ public class Console {
         }
         else {
             inputProcessor.resetBuffer();
-            /*
-            if(initiateStop) {
+            if(initiateStop && running) {
                 try {
                     doStop();
-                    initiateStop = false;
                 }
                 catch (IOException e) {
                     LOGGER.warning("Stop failed: " + e.getCause());
                 }
             }
-            else
-            */
-            if(!initiateStop)
+            else if(running || !inputQueue.isEmpty())
                 displayPrompt();
         }
     }
@@ -565,9 +562,8 @@ public class Console {
                         doStop();
                     }
                     catch (IOException e) {
-                        e.printStackTrace();
+                        LOGGER.log(Level.WARNING, "Exception while stopping aesh from reader:", e);
                     }
-
                 }
             }
         };
@@ -585,14 +581,14 @@ public class Console {
                     }
                 }
                 catch (InterruptedException ie) {
-                    ie.printStackTrace();
+                    LOGGER.log(Level.WARNING, "Exception while executing:", ie);
                 }
                 finally {
                     try {
                         doStop();
                     }
                     catch (IOException e) {
-                        e.printStackTrace();
+                        LOGGER.log(Level.WARNING, "Exception while stopping aesh from executor:", e);
                     }
 
                 }
@@ -703,7 +699,8 @@ public class Console {
     private void processOperationResult(String result) {
         try {
             //if the input length is 0 we should exit quickly
-            if(result.length() == 0) {
+            //if we are stopping, dont print the prompt
+            if(result.length() == 0 && running) {
                 inputProcessor.clearBufferAndDisplayPrompt();
                 return;
             }

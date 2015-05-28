@@ -50,10 +50,10 @@ public class ConsoleInputSession {
         executorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
-                Thread thread = Executors.defaultThreadFactory().newThread(runnable);
-                thread.setDaemon(true);
-                thread.setName("Aesh InputStream Reader");
-                return thread;
+                Thread inputThread = Executors.defaultThreadFactory().newThread(runnable);
+                inputThread.setName("Aesh InputStream Reader");
+                inputThread.setDaemon(true);
+                return inputThread;
             }
         });
         aeshInputStream = new AeshInputStream(consoleStream);
@@ -70,12 +70,14 @@ public class ConsoleInputSession {
                     }
                 }
                 catch (RuntimeException e) {
+                    LOGGER.log(Level.WARNING, "Got runtime exception in reader: ",e);
                     if (!executorService.isShutdown()) {
                         executorService.shutdown();
                         throw e;
                     }
                 }
                 catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Got exception in reader: ",e);
                     if (!executorService.isShutdown()) {
                         executorService.shutdown();
                     }
@@ -100,7 +102,7 @@ public class ConsoleInputSession {
             try {
                 aeshInputStream.stop();
                 aeshInputStream.close();
-                executorService.shutdownNow();
+                executorService.shutdown();
                 LOGGER.info("input stream is closed, readers finished...");
             }
             catch(IOException e) {
