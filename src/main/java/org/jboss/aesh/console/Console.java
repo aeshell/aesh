@@ -381,6 +381,9 @@ public class Console {
     private synchronized void doStop() throws IOException {
         if(running) {
             running = false;
+            if(initiateStop)
+                initiateStop = false;
+
             //we need to make sure that we finish the data we
             // have already parsed and put into the queue before we quit
             // - to prevent a deadlock we add a counter
@@ -611,14 +614,15 @@ public class Console {
                 }
             }
             //close thread, exit
-            if(input.length == 0 || input[0] == -1) {
+            if(input.length == 0 || input[0] == -1 || initiateStop) {
                 //dont have to initiate it twice
-                if(!initiateStop) {
-                    LOGGER.info("Received null input or -1, initiating stop");
-                    stop();
+                if(running) {
+                    LOGGER.info("Received null input or -1, or stop() has been called, initiating stop");
+                    doStop();
                 }
-                else
-                    LOGGER.info("Received null input or -1, already stopped, so ignoring");
+                else {
+                    LOGGER.info("Received null input or -1, or stop() has been called, already stopped, so ignoring");
+                }
                 return false;
             }
 
