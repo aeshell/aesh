@@ -102,7 +102,7 @@ public class ConsoleInputSession {
             try {
                 aeshInputStream.stop();
                 aeshInputStream.close();
-                executorService.shutdown();
+                executorService.shutdownNow();
                 LOGGER.info("input stream is closed, readers finished...");
             }
             catch(IOException e) {
