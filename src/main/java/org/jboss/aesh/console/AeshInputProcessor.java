@@ -300,8 +300,11 @@ public class AeshInputProcessor implements InputProcessor {
 
             case PREV_WORD:
                 history.setSearchDirection(SearchDirection.REVERSE);
-                if (search.getSearchTerm().length() > 0)
+                if (search.getSearchTerm().length() > 0) {
                     search.setResult( history.search(search.getSearchTerm().toString()));
+                } else {
+                    search.setResult(history.getPreviousFetch());
+                }
                 break;
 
             case NEXT_WORD:
