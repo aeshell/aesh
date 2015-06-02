@@ -235,7 +235,11 @@ public class Console {
                     settings.getInterruptHook().handleInterrupt(Console.this, action);
                 }
                 else {
-                    if(action != Action.IGNOREEOF) {
+                    if(action == Action.IGNOREEOF) {
+                        displayPrompt();
+                    }
+                    else {
+                        stop();
                         if(processManager.hasForegroundProcess())
                             stop();
                         else {
@@ -370,6 +374,12 @@ public class Console {
 
     public void stop() {
        initiateStop = true;
+        try {
+            doStop();
+        }
+        catch(IOException e) {
+            LOGGER.log(Level.WARNING, "Got exception during stop: ", e);
+        }
     }
 
     /**
@@ -394,7 +404,7 @@ public class Console {
                     counter++;
                 }
                 catch (InterruptedException e) {
-                    e.printStackTrace();
+                    LOGGER.log(Level.WARNING, "Exception while waiting on inputqueue to flush: ", e);
                 }
             }
             if(counter == 10) {
@@ -519,17 +529,10 @@ public class Console {
             inputProcessor.clearBufferAndDisplayPrompt();
         }
         else {
-            inputProcessor.resetBuffer();
-            if(initiateStop && running) {
-                try {
-                    doStop();
-                }
-                catch (IOException e) {
-                    LOGGER.warning("Stop failed: " + e.getCause());
-                }
-            }
-            else if(running || !inputQueue.isEmpty())
+            if(running || !inputQueue.isEmpty()) {
+                inputProcessor.resetBuffer();
                 displayPrompt();
+            }
         }
     }
 
@@ -561,12 +564,8 @@ public class Console {
                     while(read()) { }
                 }
                 finally {
-                    try {
-                        doStop();
-                    }
-                    catch (IOException e) {
-                        LOGGER.log(Level.WARNING, "Exception while stopping aesh from reader:", e);
-                    }
+                    if(!initiateStop || running)
+                        stop();
                 }
             }
         };
@@ -587,13 +586,8 @@ public class Console {
                     LOGGER.log(Level.WARNING, "Exception while executing:", ie);
                 }
                 finally {
-                    try {
-                        doStop();
-                    }
-                    catch (IOException e) {
-                        LOGGER.log(Level.WARNING, "Exception while stopping aesh from executor:", e);
-                    }
-
+                    if(!initiateStop || running)
+                        stop();
                 }
             }
         };
@@ -618,7 +612,7 @@ public class Console {
                 //dont have to initiate it twice
                 if(running) {
                     LOGGER.info("Received null input or -1, or stop() has been called, initiating stop");
-                    doStop();
+                    stop();
                 }
                 else {
                     LOGGER.info("Received null input or -1, or stop() has been called, already stopped, so ignoring");
@@ -630,22 +624,16 @@ public class Console {
             return true;
         }
         catch (IOException ioe) {
-            ioe.printStackTrace();
             if(settings.isLogging())
-                LOGGER.severe("Stream failure, stopping Aesh: "+ioe);
-            try {
-                //if we get an ioexception/interrupted exp its either input or output failure
-                //lets just stop while we can...
-                doStop();
-                return false;
-            }
-            catch (IOException ignored) {
-                ignored.printStackTrace();
-                return false;
-            }
+                LOGGER.log(Level.SEVERE, "Stream failure, stopping Aesh: ",ioe);
+            //if we get an ioexception/interrupted exp its either input or output failure
+            //lets just stop while we can...
+            stop();
+            return false;
         }
         catch (InterruptedException e) {
-            e.printStackTrace();
+            if(settings.isLogging())
+                LOGGER.log(Level.SEVERE, "Stream failure, stopping Aesh: ",e);
             return false;
         }
     }

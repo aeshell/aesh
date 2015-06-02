@@ -65,22 +65,17 @@ public class ConsoleInputSession {
             @Override
             public void run() {
                 try {
-                    while (!executorService.isShutdown()) {
+                    while (aeshInputStream.isReading()) {
                         blockingQueue.put(aeshInputStream.readAll());
                     }
                 }
                 catch (RuntimeException e) {
                     LOGGER.log(Level.WARNING, "Got runtime exception in reader: ",e);
-                    if (!executorService.isShutdown()) {
-                        executorService.shutdown();
-                        throw e;
-                    }
+                    stop();
+                    throw e;
                 }
                 catch (Exception e) {
                     LOGGER.log(Level.WARNING, "Got exception in reader: ",e);
-                    if (!executorService.isShutdown()) {
-                        executorService.shutdown();
-                    }
                     stop();
                 }
             }
@@ -103,6 +98,7 @@ public class ConsoleInputSession {
                 aeshInputStream.stop();
                 aeshInputStream.close();
                 executorService.shutdownNow();
+                //blockingQueue.add(NULL_INPUT);
                 LOGGER.info("input stream is closed, readers finished...");
             }
             catch(IOException e) {

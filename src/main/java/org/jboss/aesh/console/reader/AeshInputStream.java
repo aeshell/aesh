@@ -38,7 +38,8 @@ public class AeshInputStream extends InputStream {
     private final InputStream consoleStream;
     private static final int BUFFER_SIZE = 1024;
     private final byte[] bBuf = new byte[BUFFER_SIZE];
-    private static final int[] NULL_INPUT = new int[] {-1};
+    private static final int MINUS_ONE = -1;
+    private static final int[] NULL_INPUT = new int[] {MINUS_ONE};
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputStream.class.getName());
 
@@ -62,6 +63,10 @@ public class AeshInputStream extends InputStream {
                 int[] input = new int[out.length()];
                 for(int i=0; i < out.length(); i++)
                     input[i] = out.charAt(i);
+
+                if(input.length == 1 && input[0] == MINUS_ONE)
+                    reading = false;
+
                 return input;
             }
             else {
@@ -140,4 +145,9 @@ public class AeshInputStream extends InputStream {
     public int available() throws IOException {
         return consoleStream.available();
     }
+
+    public boolean isReading() {
+        return reading;
+    }
+
 }
