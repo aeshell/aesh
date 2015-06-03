@@ -105,7 +105,7 @@ public class AeshInputProcessor implements InputProcessor {
         if (action == Action.EDIT) {
             consoleBuffer.writeChars(operation.getInput());
         }
-        //make sure that every action except delete is ignored when masking is enabled
+        //make sure that every action except delete and interrupt (ctrl-c) is ignored when masking is enabled
         else if(consoleBuffer.getBuffer().isMasking()) {
             if(action == Action.DELETE) {
                 if(consoleBuffer.getBuffer().getPrompt().getMask() == 0)
@@ -113,6 +113,11 @@ public class AeshInputProcessor implements InputProcessor {
                 else
                     consoleBuffer.performAction(EditActionManager.parseAction(operation, consoleBuffer.getBuffer().getCursor(),
                             consoleBuffer.getBuffer().length(), consoleBuffer.getEditMode().getMode()));
+            }else if(action == Action.INTERRUPT) {
+                if (interruptHook != null) {
+                    consoleBuffer.out().print(Config.getLineSeparator());
+                    interruptHook.handleInterrupt(action);
+                }
             }
         }
         // For search movement is used a bit differently.
