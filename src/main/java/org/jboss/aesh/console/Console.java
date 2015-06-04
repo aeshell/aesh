@@ -374,12 +374,12 @@ public class Console {
 
     public void stop() {
        initiateStop = true;
-        try {
-            doStop();
-        }
-        catch(IOException e) {
-            LOGGER.log(Level.WARNING, "Got exception during stop: ", e);
-        }
+       try {
+           doStop();
+       }
+       catch(IOException e) {
+           LOGGER.log(Level.WARNING, "Got exception during stop: ", e);
+       }
     }
 
     /**
