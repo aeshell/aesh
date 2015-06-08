@@ -45,6 +45,8 @@ import java.util.logging.Logger;
  */
 public class AeshCompletionHandler implements CompletionHandler {
 
+    private volatile boolean enabled = true;
+
     private final AeshContext aeshContext;
     private boolean askDisplayCompletion = false;
     private int displayCompletionSize = 100;
@@ -63,6 +65,11 @@ public class AeshCompletionHandler implements CompletionHandler {
         this.consoleBuffer = consoleBuffer;
         this.shell = shell;
         this.doLogging = doLogging;
+    }
+
+    @Override
+    public void setEnabled(boolean enabled){
+        this.enabled = enabled;
     }
 
     @Override
@@ -111,6 +118,9 @@ public class AeshCompletionHandler implements CompletionHandler {
      */
     @Override
     public void complete(PrintStream out, Buffer buffer) throws IOException {
+        if(!enabled)
+            return;
+
         if(completionList.size() < 1)
             return;
 

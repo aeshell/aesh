@@ -51,7 +51,7 @@ public class ConfigTest {
 
         assertEquals(settings.getHistorySize(), 300);
 
-        assertEquals(settings.isDisableCompletion(), true);
+        assertEquals(settings.isCompletionDisabled(), true);
 
     }
 
@@ -100,7 +100,7 @@ public class ConfigTest {
         assertEquals(settings.isHistoryDisabled(), true);
         assertEquals(settings.getHistorySize(), 42);
         assertEquals(settings.isLogging(), false);
-        assertEquals(settings.isDisableCompletion(), true);
+        assertEquals(settings.isCompletionDisabled(), true);
 
         assertEquals(settings.getExecuteAtStart(), "foo -f --bar"+Config.getLineSeparator());
 

@@ -33,6 +33,8 @@ public interface InputProcessor {
 
     History getHistory();
 
+    CompletionHandler getCompleter();
+
     void clearBufferAndDisplayPrompt();
 
     void resetBuffer();

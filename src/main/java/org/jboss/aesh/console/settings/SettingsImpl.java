@@ -97,7 +97,7 @@ public class SettingsImpl implements Settings {
         setTerminal(baseSettings.getTerminal());
         setInputrc(baseSettings.getInputrc());
         setLogging(baseSettings.isLogging());
-        setDisableCompletion(baseSettings.isDisableCompletion());
+        setDisableCompletion(baseSettings.isCompletionDisabled());
         setLogFile(baseSettings.getLogFile());
         setReadInputrc(baseSettings.doReadInputrc());
         setHistoryDisabled(baseSettings.isHistoryDisabled());
@@ -433,7 +433,7 @@ public class SettingsImpl implements Settings {
      * @return dis completion
      */
     @Override
-    public boolean isDisableCompletion() {
+    public boolean isCompletionDisabled() {
         return disableCompletion;
     }
 

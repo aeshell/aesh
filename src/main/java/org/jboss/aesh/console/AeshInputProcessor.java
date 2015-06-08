@@ -270,6 +270,11 @@ public class AeshInputProcessor implements InputProcessor {
     }
 
     @Override
+    public CompletionHandler getCompleter(){
+        return completionHandler;
+    }
+
+    @Override
     public void clearBufferAndDisplayPrompt() {
         consoleBuffer.getBuffer().reset();
         consoleBuffer.getUndoManager().clear();
