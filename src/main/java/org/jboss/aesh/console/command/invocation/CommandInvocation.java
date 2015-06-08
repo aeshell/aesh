@@ -83,6 +83,15 @@ public interface CommandInvocation {
     CommandOperation getInput() throws InterruptedException;
 
     /**
+     * A blocking call that will return user input from the terminal
+     * after the user has pressed enter.
+     *
+     * @return user input line
+     * @throws InterruptedException
+     */
+    String getInputLine() throws InterruptedException;
+
+    /**
      * The process id.
      *
      * @return pid

@@ -31,6 +31,8 @@ public interface Process {
 
     CommandOperation getInput() throws InterruptedException;
 
+    String getInputLine() throws InterruptedException;
+
     int getPID();
 
     CommandResult getExitResult();

@@ -42,6 +42,14 @@ public abstract class AeshConsoleCallback implements ConsoleCallback {
     }
 
     @Override
+    public String getInputLine()  throws InterruptedException {
+        if(process != null)
+            return process.getInputLine();
+        else
+            return null;
+    }
+
+    @Override
     public void setProcess(Process process) {
         this.process = process;
     }

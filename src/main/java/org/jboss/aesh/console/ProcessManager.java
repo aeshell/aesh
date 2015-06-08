@@ -23,6 +23,7 @@ import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.LoggerUtil;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -82,6 +83,13 @@ public class ProcessManager {
             return console.getInput();
         else
             return new CommandOperation(Key.UNKNOWN, new int[]{});
+    }
+
+    public String getInputLine(int pid) throws InterruptedException {
+        if(foregroundProcess == pid)
+            return console.getInputLine();
+        else
+            return "";
     }
 
     public void putProcessInBackground(int pid) {

@@ -259,10 +259,15 @@ public class AeshExample {
 
         public void processOperation(CommandInvocation invocation) throws IOException, InterruptedException {
             //first ask for username, then password
-            String username = promptForInput("username: ", null, invocation);
+            String username = promptForUsername(invocation);
             String password = promptForInput("password: ", '*', invocation);
 
-            shell.out().println("we got username: "+username+", password: "+password);
+            shell.out().println("we got username: " + username + ", password: " + password);
+        }
+
+        private String promptForUsername(CommandInvocation invocation) throws InterruptedException {
+            invocation.print("username: ");
+            return invocation.getInputLine();
         }
 
         private String promptForInput(String prompt, Character mask,

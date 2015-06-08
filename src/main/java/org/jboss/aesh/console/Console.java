@@ -489,9 +489,8 @@ public class Console {
      *
      * @return input
      * @throws InterruptedException
-     * @throws IOException
      */
-    public String getInputLine() throws InterruptedException, IOException {
+    public String getInputLine() throws InterruptedException {
         String result;
         try {
             do {
@@ -504,6 +503,10 @@ public class Console {
         catch(InterruptedException e) {
            LOGGER.log(Level.WARNING, "GOT INTERRUPTED: ",e);
            throw e;
+        }
+        catch(IOException ioe) {
+            LOGGER.log(Level.WARNING, "Failure while reading input: ",ioe);
+            return null;
         }
     }
 

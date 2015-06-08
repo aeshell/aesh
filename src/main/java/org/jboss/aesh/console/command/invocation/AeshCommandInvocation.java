@@ -91,6 +91,11 @@ public final class AeshCommandInvocation implements CommandInvocation {
     }
 
     @Override
+    public String getInputLine() throws InterruptedException {
+        return callback.getInputLine();
+    }
+
+    @Override
     public int getPid() {
         return pid;
     }
