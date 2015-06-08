@@ -161,6 +161,11 @@ class FooCommandInvocation implements CommandInvocation {
     }
 
     @Override
+    public String getInputLine() throws InterruptedException {
+        return commandInvocation.getInputLine();
+    }
+
+    @Override
     public int getPid() {
         return commandInvocation.getPid();
     }
