@@ -202,6 +202,81 @@ public class CompletionConsoleTest extends BaseConsoleTest {
     }
 
     @Test
+    public void disableCompletion() throws Exception {
+        invokeTestConsole(3, new Setup() {
+            @Override
+            public void call(Console console, OutputStream out) throws IOException {
+                Completion completion = new Completion() {
+                    @Override
+                    public void complete(CompleteOperation co) {
+                        if(co.getBuffer().equals("foo"))
+                            co.addCompletionCandidate("foobar");
+                    }
+                };
+                console.addCompletion(completion);
+
+                Completion completion2 = new Completion() {
+                    @Override
+                    public void complete(CompleteOperation co) {
+                        if(co.getBuffer().equals("bar")) {
+                            co.addCompletionCandidate("barfoo");
+                            co.doAppendSeparator(false);
+                        }
+                    }
+                };
+                console.addCompletion(completion2);
+
+                Completion completion3 = new Completion() {
+                    @Override
+                    public void complete(CompleteOperation co) {
+                        if(co.getBuffer().equals("le")) {
+                            co.addCompletionCandidate("less");
+                            co.setSeparator(':');
+                        }
+                    }
+                };
+                console.addCompletion(completion3);
+
+                out.write("foo".getBytes());
+                out.write(completeChar.getFirstValue());
+                out.write(LINE_SEPARATOR);
+                out.flush();
+
+
+                out.write("bar".getBytes());
+                out.write(completeChar.getFirstValue());
+                out.write(LINE_SEPARATOR);
+                out.flush();
+
+
+                out.write("le".getBytes());
+                out.write(completeChar.getFirstValue());
+                out.write(LINE_SEPARATOR);
+                out.flush();
+            }
+        }, new Verify() {
+            private int count = 0;
+
+            @Override
+            public int call(Console console, ConsoleOperation op) {
+                if (count == 0){
+                    assertEquals("foobar ", op.getBuffer());
+                    console.setCompletionEnabled(false);
+                }
+                else if (count == 1){
+                    assertEquals("bar", op.getBuffer());
+                    console.setCompletionEnabled(true);
+                }
+                else if(count == 2) {
+                    assertEquals("less:", op.getBuffer());
+                }
+                count++;
+                return 0;
+            }
+        });
+    }
+
+    @Test
     public void completionWithOptions() throws IOException, InterruptedException, CommandLineParserException {
 
         final ProcessedCommand param = new ProcessedCommandBuilder().name("less")

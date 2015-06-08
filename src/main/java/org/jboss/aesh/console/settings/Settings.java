@@ -126,7 +126,7 @@ public interface Settings extends Cloneable {
     /**
      * Is completion disabled
      */
-    boolean isDisableCompletion();
+    boolean isCompletionDisabled();
 
     /**
      * Get location of log file

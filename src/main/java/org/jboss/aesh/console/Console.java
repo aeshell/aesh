@@ -372,6 +372,15 @@ public class Console {
         };
     }
 
+    /**
+     * Runtime enable/disable of completion capabilities
+     *
+     * @param completionEnabled
+     */
+    public void setCompletionEnabled(boolean completionEnabled){
+        completionHandler.setEnabled(completionEnabled);
+    }
+
     public void stop() {
        initiateStop = true;
        try {

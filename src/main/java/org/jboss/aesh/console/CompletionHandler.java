@@ -30,6 +30,8 @@ import java.io.PrintStream;
  */
 public interface CompletionHandler {
 
+    void setEnabled(boolean enabled);
+
     void addCompletion(Completion completion);
 
     void removeCompletion(Completion completion);
