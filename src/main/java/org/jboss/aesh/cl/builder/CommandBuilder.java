@@ -26,6 +26,7 @@ import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
+import org.jboss.aesh.cl.populator.CommandPopulator;
 import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidator;
 import org.jboss.aesh.console.command.Command;
@@ -53,6 +54,7 @@ public class CommandBuilder {
     private List<ProcessedOption> options;
     private List<CommandBuilder> children;
     private CommandLineParserException parserException;
+    private CommandPopulator<?, ? extends Command> populator;
 
     public CommandBuilder() {
     }
@@ -84,6 +86,11 @@ public class CommandBuilder {
 
     public CommandBuilder validator(Class<? extends CommandValidator> commandValidator) {
         this.validator = ReflectionUtil.newInstance(commandValidator);
+        return this;
+    }
+
+    public CommandBuilder populator(CommandPopulator<?, ? extends Command> populator) {
+        this.populator = populator;
         return this;
     }
 
@@ -176,6 +183,7 @@ public class CommandBuilder {
                 .resultHandler(resultHandler)
                 .validator(validator)
                 .argument(argument)
+                .populator(populator)
                 .create();
     }
 }

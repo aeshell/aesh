@@ -70,4 +70,11 @@ public class AeshCommandContainer<C extends Command> extends DefaultCommandConta
         getParser().addChildParser(commandContainer.getParser());
     }
 
+    @Override
+    public String toString() {
+        return "AeshCommandContainer{" +
+                "parser=" + parser +
+                ", errorMessage='" + errorMessage + '\'' +
+                '}';
+    }
 }
