@@ -122,7 +122,7 @@ public class Buffer {
     }
 
     protected int getCursor() {
-        return (prompt.isMasking() && prompt.getMask() == 0) ? 0 : cursor;
+        return (prompt.isMasking() && prompt.getMask() == 0) ? 1 : cursor;
     }
 
     protected int getCursorWithPrompt() {
