@@ -335,6 +335,7 @@ public class AeshConsoleImpl implements AeshConsole {
                 ResultHandler resultHandler = null;
                 AeshLine aeshLine = Parser.findAllWords(output.getBuffer());
                 try (CommandContainer commandContainer = getCommand( aeshLine, output.getBuffer())) {
+                    resultHandler = commandContainer.getParser().getProcessedCommand().getResultHandler();
                     CommandContainerResult ccResult =
                             commandContainer.executeCommand(aeshLine, invocationProviders, getAeshContext(),
                             commandInvocationServices.getCommandInvocationProvider(
@@ -344,7 +345,6 @@ public class AeshConsoleImpl implements AeshConsole {
                                          output.getPid(), this)));
 
                     result = ccResult.getCommandResult();
-                    resultHandler = ccResult.getResultHandler();
 
                     if(result == CommandResult.SUCCESS && resultHandler != null)
                         resultHandler.onSuccess();
