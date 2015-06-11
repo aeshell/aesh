@@ -230,34 +230,14 @@ public class AeshConsoleImpl implements AeshConsole {
         List<String> matchedCommands = registry.findAllCommandNames(input);
         if(matchedCommands == null)
             matchedCommands = new ArrayList<>();
-        for(String internalCommand : internalRegistry.getAllCommandNames())
-            if(internalCommand.startsWith(input))
-                matchedCommands.add(internalCommand);
-
-        return matchedCommands;
-
-        /*
-
-        try {
-            Set<String> allCommandNames = new TreeSet<>();
-            Set<String> registryCommandNames = registry.getAllCommandNames();
-            if(registryCommandNames != null)
-                allCommandNames.addAll(registryCommandNames);
-            if (internalRegistry != null) {
-                allCommandNames.addAll(internalRegistry.getAllCommandNames());
-            }
-            for (String commandName : allCommandNames) {
-                if (commandName.startsWith(input))
-                    matchedCommands.add(commandName);
-            }
-        }
-        catch (Exception e) {
-            LOGGER.log(Level.SEVERE,
-                    "Error retrieving command names from CommandRegistry", e);
+        if(internalRegistry != null) {
+            for (String internalCommand : internalRegistry.getAllCommandNames())
+                if (internalCommand.startsWith(input))
+                    matchedCommands.add(internalCommand);
         }
 
         return matchedCommands;
-        */
+
     }
 
     /**
