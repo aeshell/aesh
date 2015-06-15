@@ -178,7 +178,7 @@ public class AeshCompletionHandler implements CompletionHandler {
                 startsWith = Parser.findStartsWithOperation(possibleCompletions);
 
             if(startsWith.length() > 0 ) {
-                if(startsWith.contains(" "))
+                if(startsWith.contains(" ") && !possibleCompletions.get(0).doIgnoreNonEscapedSpace())
                     displayCompletion(new TerminalString(Parser.switchSpacesToEscapedSpacesInWord(startsWith), true),
                             buffer, out,
                             false, possibleCompletions.get(0).getSeparator());

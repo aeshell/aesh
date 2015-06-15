@@ -52,6 +52,8 @@ public interface CommandLineParser<C extends Command> {
      */
     CommandLineCompletionParser getCompletionParser();
 
+    List<String> getAllNames();
+
     /**
      * @param name command
      * @return child parser that matches the name

@@ -22,6 +22,8 @@ package org.jboss.aesh.console.aesh;
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
+import org.jboss.aesh.cl.parser.OptionParserException;
+import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Config;
@@ -73,8 +75,9 @@ public class AeshCommandDynamicTest {
                 .prompt(new Prompt(""));
 
         AeshConsole aeshConsole = consoleBuilder.create();
-
-        assertEquals("group", registry.findAllCommandNames("gr").get(0));
+        CompleteOperation co = new CompleteOperation(aeshConsole.getAeshContext(), "gr", 2);
+        registry.completeCommandName(co);
+        assertEquals("group", co.getCompletionCandidates().get(0).toString());
         aeshConsole.start();
 
         outputStream.write("group child1 --foo BAR".getBytes());
@@ -86,10 +89,11 @@ public class AeshCommandDynamicTest {
         aeshConsole.stop();
     }
 
-    private CommandBuilder createGroupCommand() {
+    private CommandBuilder createGroupCommand() throws OptionParserException {
         CommandBuilder builder = new CommandBuilder()
                 .name("group")
                 .description("")
+                .addOption(new ProcessedOptionBuilder().name("foo").type(Boolean.class).create())
                 .addChild(
                         new CommandBuilder()
                                 .name("child1")

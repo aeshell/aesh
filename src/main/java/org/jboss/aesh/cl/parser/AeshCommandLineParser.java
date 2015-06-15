@@ -66,6 +66,22 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         isChild = child;
     }
 
+    @Override
+    public List<String> getAllNames() {
+        if(isGroupCommand()) {
+            List<String> names = new ArrayList<>(childParsers.size());
+            for(CommandLineParser child : childParsers) {
+                names.add(processedCommand.getName()+" "+child.getProcessedCommand().getName());
+            }
+            return names;
+        }
+        else {
+            List<String> names = new ArrayList<>(1);
+            names.add(processedCommand.getName());
+            return names;
+        }
+    }
+
     public boolean isChild() {
         return isChild;
     }

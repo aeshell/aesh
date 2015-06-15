@@ -311,6 +311,9 @@ public final class ProcessedCommand<C extends Command> {
         return false;
     }
 
+    public boolean hasOptions() {
+        return getOptions() != null && getOptions().size() > 0;
+    }
 
     //will only return true if the optionName equals an option and it does
     //not start with another option name

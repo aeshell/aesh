@@ -21,14 +21,16 @@ package org.jboss.aesh.console.registry;
 
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.GroupCommandDefinition;
+import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
+import org.jboss.aesh.terminal.TerminalString;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -47,33 +49,40 @@ public class MutableCommandRegistryTest {
         registry.addCommand(Command3.class);
         registry.addCommand(GroupCommand1.class);
 
-        List<String> commands = registry.findAllCommandNames("fo");
-        assertEquals(1, commands.size());
-        assertEquals("foo", commands.get(0));
+        CompleteOperation co = new CompleteOperation(null, "fo", 3);
+        registry.completeCommandName(co);
+        assertEquals(1, co.getCompletionCandidates().size());
+        assertEquals("foo", co.getCompletionCandidates().get(0).toString());
 
-        commands = registry.findAllCommandNames("foo");
-        assertEquals(1, commands.size());
-        assertEquals("foo", commands.get(0));
+        co = new CompleteOperation(null, "foo", 4);
+        registry.completeCommandName(co);
+        assertEquals(1, co.getCompletionCandidates().size());
+        assertEquals("foo", co.getCompletionCandidates().get(0).toString());
 
-        commands = registry.findAllCommandNames("");
-        assertEquals(4, commands.size());
-        assertTrue(commands.contains("bar"));
-        assertTrue(commands.contains("group"));
+        co = new CompleteOperation(null, "", 0);
+        registry.completeCommandName(co);
+        assertEquals(4, co.getCompletionCandidates().size());
+        assertTrue(co.getCompletionCandidates().contains(new TerminalString("bar", true)));
+        assertTrue(co.getCompletionCandidates().contains(new TerminalString("group", true)));
 
-        commands = registry.findAllCommandNames("group he");
-        assertEquals(1, commands.size());
-        assertEquals("group help", commands.get(0));
+        co = new CompleteOperation(null, "group he", 0);
+        registry.completeCommandName(co);
+        assertEquals(1, co.getCompletionCandidates().size());
+        assertEquals("group help", co.getCompletionCandidates().get(0).toString());
 
-        commands = registry.findAllCommandNames("group ");
-        assertEquals(1, commands.size());
-        assertEquals("group help", commands.get(0));
+        co = new CompleteOperation(null, "group ", 0);
+        registry.completeCommandName(co);
+        assertEquals(1, co.getCompletionCandidates().size());
+        assertEquals("group help", co.getCompletionCandidates().get(0).toString());
 
-        commands = registry.findAllCommandNames("group   ");
-        assertEquals(1, commands.size());
-        assertEquals("group   help", commands.get(0));
+        co = new CompleteOperation(null, "group   ", 0);
+        registry.completeCommandName(co);
+        assertEquals(1, co.getCompletionCandidates().size());
+        assertEquals("group   help", co.getCompletionCandidates().get(0).toString());
 
-        commands = registry.findAllCommandNames("group help ");
-        assertEquals(0, commands.size());
+        co = new CompleteOperation(null, "group help ", 0);
+        registry.completeCommandName(co);
+        assertEquals(0, co.getCompletionCandidates().size());
 
     }
 
@@ -104,6 +113,10 @@ public class MutableCommandRegistryTest {
 
     @GroupCommandDefinition(name = "group", description = "", groupCommands = {Command3.class})
     public class GroupCommand1 implements Command {
+
+        @Option
+        private boolean help;
+
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             return CommandResult.SUCCESS;

@@ -26,9 +26,9 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
+import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshConsoleImpl;
@@ -70,8 +70,7 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
-            public List<String> findAllCommandNames(String line) {
-                return null;
+            public void completeCommandName(CompleteOperation completeOperation) {
             }
 
             @Override
@@ -125,8 +124,7 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
-            public List<String> findAllCommandNames(String line) {
-                return null;
+            public void completeCommandName(CompleteOperation completeOperation) {
             }
 
             @Override
@@ -177,8 +175,7 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
-            public List<String> findAllCommandNames(String line) {
-                return null;
+            public void completeCommandName(CompleteOperation completeOperation) {
             }
 
             @Override

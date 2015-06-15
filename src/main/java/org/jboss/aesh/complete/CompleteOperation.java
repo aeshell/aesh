@@ -40,6 +40,7 @@ public class CompleteOperation {
     private boolean ignoreStartsWith = false;
     private String nonTrimmedBuffer;
     private final AeshContext aeshContext;
+    private boolean ignoreNonEscapedSpace = false;
 
 
     private char separator = ' ';
@@ -247,6 +248,14 @@ public class CompleteOperation {
 
     public void setIgnoreStartsWith(boolean ignoreStartsWith) {
         this.ignoreStartsWith = ignoreStartsWith;
+    }
+
+    public boolean doIgnoreNonEscapedSpace() {
+        return ignoreNonEscapedSpace;
+    }
+
+    public void setIgnoreNonEscapedSpace(boolean ignoreNonEscapedSpace) {
+        this.ignoreNonEscapedSpace = ignoreNonEscapedSpace;
     }
 
     @Override

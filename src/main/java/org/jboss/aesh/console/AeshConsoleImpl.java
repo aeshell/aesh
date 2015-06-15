@@ -21,8 +21,6 @@ package org.jboss.aesh.console;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -226,18 +224,13 @@ public class AeshConsoleImpl implements AeshConsole {
 
     }
 
-    private List<String> completeCommandName(String input) {
-        List<String> matchedCommands = registry.findAllCommandNames(input);
-        if(matchedCommands == null)
-            matchedCommands = new ArrayList<>();
+    private void completeCommandName(CompleteOperation co) {
+        registry.completeCommandName(co);
         if(internalRegistry != null) {
             for (String internalCommand : internalRegistry.getAllCommandNames())
-                if (internalCommand.startsWith(input))
-                    matchedCommands.add(internalCommand);
+                if (internalCommand.startsWith(co.getBuffer()))
+                    co.addCompletionCandidate(internalCommand);
         }
-
-        return matchedCommands;
-
     }
 
     /**
@@ -268,11 +261,9 @@ public class AeshConsoleImpl implements AeshConsole {
 
         @Override
         public void complete(CompleteOperation completeOperation) {
-            List<String> completedCommands = completeCommandName(completeOperation.getBuffer());
-            if (completedCommands != null && completedCommands.size() > 0) {
-                completeOperation.addCompletionCandidates(completedCommands);
-            }
-            else {
+            completeCommandName(completeOperation);
+            if (completeOperation.getCompletionCandidates().size() < 1) {
+
                 AeshLine aeshLine = Parser.findAllWords(completeOperation.getBuffer());
                 try (CommandContainer commandContainer = getCommand( aeshLine, completeOperation.getBuffer())) {
 
