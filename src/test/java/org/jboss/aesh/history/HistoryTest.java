@@ -81,6 +81,36 @@ public class HistoryTest extends BaseConsoleTest {
     }
 
     @Test
+    public void testSearch() {
+        History history = new InMemoryHistory(20);
+        history.push("foo1");
+        history.push("foo2");
+        history.push("foo3");
+
+        history.setSearchDirection(SearchDirection.REVERSE);
+        assertEquals("foo3",history.search("foo") );
+        assertEquals("foo2",history.search("foo") );
+        assertEquals("foo1",history.search("foo") );
+
+        history.setSearchDirection(SearchDirection.FORWARD);
+        assertEquals("foo1",history.search("foo") );
+        assertEquals("foo2",history.search("foo") );
+        assertEquals("foo3",history.search("foo") );
+
+        history.setSearchDirection(SearchDirection.REVERSE);
+        assertEquals("foo3",history.search("foo") );
+        assertEquals("foo2",history.search("foo") );
+        assertEquals("foo1",history.search("foo") );
+
+        history.setSearchDirection(SearchDirection.REVERSE);
+
+        assertEquals("foo3",history.search("foo") );
+        assertEquals("foo2",history.search("foo") );
+        assertEquals("foo1",history.search("foo") );
+        assertEquals("foo3",history.search("foo") );
+    }
+
+    @Test
     public void testHistorySize() {
         History history = new InMemoryHistory(20);
 

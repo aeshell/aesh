@@ -309,7 +309,8 @@ public class AeshInputProcessor implements InputProcessor {
                 break;
 
             case PREV_WORD:
-                history.setSearchDirection(SearchDirection.REVERSE);
+                if(history.getSearchDirection() != SearchDirection.REVERSE)
+                    history.setSearchDirection(SearchDirection.REVERSE);
                 if (search.getSearchTerm().length() > 0) {
                     search.setResult( history.search(search.getSearchTerm().toString()));
                 } else {
@@ -318,7 +319,8 @@ public class AeshInputProcessor implements InputProcessor {
                 break;
 
             case NEXT_WORD:
-                history.setSearchDirection(SearchDirection.FORWARD);
+                if(history.getSearchDirection() != SearchDirection.FORWARD)
+                    history.setSearchDirection(SearchDirection.FORWARD);
                 if(search.getSearchTerm().length() > 0)
                     search.setResult(history.search(search.getSearchTerm().toString()));
                 break;
@@ -350,6 +352,7 @@ public class AeshInputProcessor implements InputProcessor {
                     history.push(consoleBuffer.getBuffer().getLineNoMask());
                     search.setResult( consoleBuffer.getBuffer().getLineNoMask());
                     search.setFinished(true);
+                    consoleBuffer.getBuffer().reset();
                     return;
                 }
                 else {

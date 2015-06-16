@@ -255,7 +255,8 @@ public class AeshInputProcessorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
-        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder().shell(shell).prompt(new Prompt("aesh")).create();
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .ansi(false).shell(shell).prompt(new Prompt("aesh")).create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
@@ -278,10 +279,12 @@ public class AeshInputProcessorTest {
         inputProcessor.parseOperation(edit);
         edit = new CommandOperation(Key.r);
         inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.ONE);
+        inputProcessor.parseOperation(edit);
 
         edit = new CommandOperation(Key.ENTER);
         String result = inputProcessor.parseOperation(edit);
-        assertEquals("foo bar", result);
+        assertEquals("foo bar1", result);
 
         result = inputProcessor.parseOperation(edit);
         assertEquals("", result);
@@ -292,7 +295,37 @@ public class AeshInputProcessorTest {
         inputProcessor.parseOperation(edit);
         edit = new CommandOperation(Key.ENTER);
         result = inputProcessor.parseOperation(edit);
-        assertEquals("foo bar", result);
+        assertEquals("foo bar1", result);
+
+        edit = new CommandOperation(Key.f);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.o);
+        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.SPACE);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.b);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.a);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.r);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.TWO);
+        inputProcessor.parseOperation(edit);
+
+        edit = new CommandOperation(Key.ENTER);
+        result = inputProcessor.parseOperation(edit);
+        assertEquals("foo bar2", result);
+
+        edit = new CommandOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(edit);
+        edit = new CommandOperation(Key.f);
+        inputProcessor.parseOperation(edit);
+        assertEquals("(reverse-i-search) `f': foo bar2", consoleBuffer.getBuffer().getLine());
+
+        edit = new CommandOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(edit);
+        assertEquals("(reverse-i-search) `f': foo bar1", consoleBuffer.getBuffer().getLine());
     }
 
     @Test
