@@ -19,6 +19,7 @@
  */
 package org.jboss.aesh.util;
 
+import static org.jboss.aesh.constants.AeshConstants.DOT;
 import static org.jboss.aesh.constants.AeshConstants.ESCAPE;
 import static org.jboss.aesh.constants.AeshConstants.HOME;
 import static org.jboss.aesh.constants.AeshConstants.PARENT;
@@ -128,7 +129,7 @@ public class FileLister {
             }
         }
         else if (!startWithSlash() && !startWithWindowsDrive()) {
-            if (isCwdAndTokenADirectory()) {
+            if (isCwdAndTokenADirectory() && !isDot()) {
                 if (tokenEndsWithSlash()) {
                     completion.addCompletionCandidates(
                         listDirectory(cwd.newInstance(cwd.getAbsolutePath() +
@@ -333,6 +334,10 @@ public class FileLister {
 
     private boolean startWithSlash() {
         return token.indexOf(Config.getPathSeparator()) == 0;
+    }
+
+    private boolean isDot() {
+        return token.charAt(0) == DOT;
     }
 
     private boolean startWithWindowsDrive() {

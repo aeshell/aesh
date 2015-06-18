@@ -87,6 +87,16 @@ public class FileOptionCompleterTest {
         assertNotNull(data.getCompleterValues());
         assertEquals(1, data.getCompleterValues().size());
         assertEquals(child.getName(), data.getCompleterValues().get(0).getCharacters());
+
+        File secretFile = new File(file, ".secret.txt");
+        secretFile.createNewFile();
+        secretFile.deleteOnExit();
+        data = new CompleterData(aeshContext, ".", null);
+        completer.complete(data);
+        assertNotNull(data.getCompleterValues());
+        assertEquals(1, data.getCompleterValues().size());
+        assertEquals(secretFile.getName(), data.getCompleterValues().get(0).getCharacters());
+
     }
 
     @Test

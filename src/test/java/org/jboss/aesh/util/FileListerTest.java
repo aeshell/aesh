@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 import org.jboss.aesh.comparators.PosixFileNameComparator;
@@ -64,6 +65,25 @@ public class FileListerTest {
     @After
     public void after() {
         delete(workingDir, true);
+    }
+
+    @Test
+    public void testFileNameStartingWithDotCompletion() throws IOException {
+        Files.createFile(new File(workingDir.toString()+Config.getPathSeparator()+".testfile").toPath());
+
+        CompleteOperation completion = new CompleteOperation(aeshContext, "cd .", 2);
+        new FileLister("", workingDir).findMatchingDirectories(completion);
+
+        List<TerminalString> candidates = completion.getCompletionCandidates();
+        assertEquals(1, candidates.size());
+        assertEquals(".testfile", candidates.get(0).getCharacters());
+
+        completion = new CompleteOperation(aeshContext, ".", 1);
+        new FileLister("", workingDir).findMatchingDirectories(completion);
+
+        candidates = completion.getCompletionCandidates();
+        assertEquals(1, candidates.size());
+        assertEquals(".testfile", candidates.get(0).getCharacters());
     }
 
     @Test
