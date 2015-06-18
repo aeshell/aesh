@@ -45,6 +45,7 @@ public class Parser {
     private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
     private static final Pattern spacePattern = Pattern.compile("(?<!\\\\)\\s");
     private static final Pattern ansiPattern = Pattern.compile("\\u001B\\[[\\?]?[0-9;]*[a-zA-Z]?");
+    private static final char NULL_CHAR = '\u0000';
 
     /**
      * Format completions so that they look similar to GNU Readline
@@ -430,7 +431,7 @@ public class Parser {
             if(foundBackslash)
                 return switchEscapedSpacesToSpacesInWord(text.substring(start,end));
             else
-                return text.substring(start,end);
+                return text.substring(start, end);
         }
         else {
             return text.trim();
@@ -547,7 +548,9 @@ public class Parser {
         boolean haveEscape = false;
         boolean haveSingleQuote = false;
         boolean haveDoubleQuote = false;
+        boolean ternaryQuote = false;
         StringBuilder builder = new StringBuilder();
+        char prev = NULL_CHAR;
 
         for(char c : text.toCharArray()) {
             if(c == SPACE_CHAR) {
@@ -587,16 +590,29 @@ public class Parser {
                     haveSingleQuote = true;
             }
             else if(c == DOUBLE_QUOTE) {
-                if(haveEscape) {
+                if(haveEscape || (ternaryQuote && prev != DOUBLE_QUOTE)) {
                     builder.append(c);
                     haveEscape = false;
                 }
                 else if(haveDoubleQuote) {
-                    if(builder.length() > 0) {
-                        textList.add(builder.toString());
-                        builder = new StringBuilder();
+                    if(!ternaryQuote && prev == DOUBLE_QUOTE)
+                        ternaryQuote = true;
+                    else if(ternaryQuote && prev == DOUBLE_QUOTE){
+                        if(builder.length() > 0) {
+                            builder.deleteCharAt(builder.length()-1);
+                            textList.add(builder.toString());
+                            builder = new StringBuilder();
+                        }
+                        haveDoubleQuote = false;
+                        ternaryQuote = false;
                     }
-                    haveDoubleQuote = false;
+                    else {
+                        if(builder.length() > 0) {
+                            textList.add(builder.toString());
+                            builder = new StringBuilder();
+                        }
+                        haveDoubleQuote = false;
+                    }
                 }
                 else
                     haveDoubleQuote = true;
@@ -608,6 +624,7 @@ public class Parser {
             }
             else
                 builder.append(c);
+            prev = c;
         }
         //if the escape was the last char, add it to the builder
         if(haveEscape)

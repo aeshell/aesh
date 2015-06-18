@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -39,7 +40,7 @@ public class ParserTest {
 
     @Test
     public void testFindStartsWith() {
-        List<String> completionList = new ArrayList<String>(3);
+        List<String> completionList = new ArrayList<>(3);
         completionList.add("foobar");
         completionList.add("foobaz");
         completionList.add("foobor");
@@ -198,6 +199,23 @@ public class ParserTest {
     }
 
     @Test
+    public void testFindAllTernaryQuotedWords() {
+        AeshLine line = Parser.findAllWords("\"\"  \"\"");
+        assertEquals("  ", line.getWords().get(0));
+        line = Parser.findAllWords("\"\"  foo bar \"\"");
+        assertEquals("  foo bar ", line.getWords().get(0));
+
+        line = Parser.findAllWords("\"\"  \"foo bar\" \"\"");
+        assertEquals("  \"foo bar\" ", line.getWords().get(0));
+
+        line = Parser.findAllWords("gah bah-bah  \"\"  \"foo bar\" \"\" boo");
+        assertEquals("gah", line.getWords().get(0));
+        assertEquals("bah-bah", line.getWords().get(1));
+        assertEquals("  \"foo bar\" ", line.getWords().get(2));
+        assertEquals("boo", line.getWords().get(3));
+    }
+
+    @Test
     public void testSplitBySizeKeepWords() {
         String words = "foo to bar is how it is i guess";
         List<String> out = Parser.splitBySizeKeepWords(words, 10);
@@ -240,7 +258,7 @@ public class ParserTest {
     //verify divide by zero fix
     @Test
     public void testFormatDisplayList() {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         String s1 = "this is a loooooong string thats longer than the terminal width";
         list.add(s1);
 
@@ -298,7 +316,7 @@ public class ParserTest {
 
         assertEquals(
             terminalLong.toString() + Config.getLineSeparator(),
-            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalLong), 10)
+            Parser.formatDisplayCompactListTerminalString(Collections.singletonList(terminalLong), 10)
         );
 
         assertEquals(
