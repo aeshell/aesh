@@ -306,8 +306,8 @@ public final class ProcessedOption {
                 new AeshConverterInvocation(inputValue, aeshContext)));
         //Object result =   converter.convert(inputValue);
         if(validator != null && doValidation) {
-            validator.validate( invocationProviders.getValidatorProvider().enhanceValidatorInvocation(
-                            new AeshValidatorInvocation(result, command, aeshContext )));
+            validator.validate(invocationProviders.getValidatorProvider().enhanceValidatorInvocation(
+                    new AeshValidatorInvocation(result, command, aeshContext)));
         }
         return result;
     }
@@ -318,7 +318,7 @@ public final class ProcessedOption {
         if(converter == null)
             return;
         try {
-            Field field = instance.getClass().getDeclaredField(fieldName);
+            Field field = getField(instance.getClass(), fieldName);
             if(!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
             if(!Modifier.isPublic(instance.getClass().getModifiers())) {
@@ -406,6 +406,18 @@ public final class ProcessedOption {
     private <String, T> Map<String, T> newHashMap() {
         return new HashMap<>();
     }
+
+    private Field getField(Class clazz, String fieldName) throws NoSuchFieldException {
+        try {
+            return clazz.getDeclaredField(fieldName);
+        }
+        catch(NoSuchFieldException nsfe) {
+            if(clazz.getSuperclass() != null)
+                return getField(clazz.getSuperclass(), fieldName);
+            else throw nsfe;
+        }
+    }
+
 
     public boolean hasDefaultValue() {
         return getDefaultValues() != null && getDefaultValues().size() > 0;

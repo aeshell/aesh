@@ -251,6 +251,16 @@ public class CommandLineParserTest {
 
     }
 
+    @Test
+    public void testSubClass() throws CommandLineParserException {
+        CommandLineParser clp = ParserGenerator.generateCommandLineParser(SubHelp.class).getParser();
+
+        CommandLine cl = clp.parse("subhelp --foo bar -h",true);
+        assertTrue(cl.hasOption("foo"));
+        assertTrue(cl.hasOption("h"));
+        assertEquals("bar", cl.getOptionValue("foo"));
+    }
+
     @CommandDefinition(name = "test", description = "a simple test")
     public class Parser1Test extends TestingCommand {
 
@@ -344,6 +354,25 @@ public class CommandLineParserTest {
     }
 
     public class TestingCommand implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+
+    public class HelpClass {
+
+        @Option(name = "help", shortName = 'h', hasValue = false)
+        private boolean help;
+    }
+
+    @CommandDefinition(name = "subhelp", description = "")
+    public class SubHelp extends HelpClass implements Command {
+
+        @Option
+        private String foo;
+
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             return CommandResult.SUCCESS;

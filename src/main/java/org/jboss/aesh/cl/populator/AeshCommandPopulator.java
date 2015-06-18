@@ -90,7 +90,7 @@ public class AeshCommandPopulator implements CommandPopulator<Object, Command> {
 
     private void resetField(Object instance, String fieldName, boolean hasValue) {
         try {
-            Field field = instance.getClass().getDeclaredField(fieldName);
+            Field field = getField(instance.getClass(), fieldName);
             if(!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
             if(field.getType().isPrimitive()) {
@@ -119,6 +119,17 @@ public class AeshCommandPopulator implements CommandPopulator<Object, Command> {
         }
         catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
+        }
+    }
+
+    private Field getField(Class clazz, String fieldName) throws NoSuchFieldException {
+        try {
+            return clazz.getDeclaredField(fieldName);
+        }
+        catch(NoSuchFieldException nsfe) {
+            if(clazz.getSuperclass() != null)
+                return getField(clazz.getSuperclass(), fieldName);
+            else throw nsfe;
         }
     }
 

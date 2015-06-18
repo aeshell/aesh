@@ -355,4 +355,20 @@ public class CommandLinePopulatorTest {
         catch (CommandLineParserException | OptionValidatorException e) {
         }
     }
-}
+    @Test
+    public void testSub() throws Exception {
+        CommandLineParser parser = ParserGenerator.generateCommandLineParser(SubHelp.class).getParser();
+
+        SubHelp test1 = (SubHelp) parser.getCommand();
+        AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();
+
+        parser.getCommandPopulator().populateObject(parser.parse("subhelp -e enable -h"), invocationProviders, aeshContext, true);
+
+        assertEquals("enable", test1.equal);
+        assertTrue("enable", test1.doHelp());
+
+        parser.getCommandPopulator().populateObject(parser.parse("subhelp -e enable"), invocationProviders, aeshContext, true);
+        assertEquals("enable", test1.equal);
+        assertFalse("enable", test1.doHelp());
+    }
+ }
