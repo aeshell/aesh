@@ -122,7 +122,7 @@ public class Buffer {
     }
 
     protected int getCursor() {
-        return (prompt.isMasking() && prompt.getMask() == 0) ? 1 : cursor;
+        return (prompt.isMasking() && prompt.getMask() == 0) ? 0 : cursor;
     }
 
     protected int getCursorWithPrompt() {
@@ -212,6 +212,15 @@ public class Buffer {
         int row = newRow - currentRow;
 
         setCursor(getCursor() + move);
+
+        // 0 Masking separates the UI cursor position from the 'real' cursor position.
+        // Cursor movement still has to occur, via moveCursor and setCursor above,
+        // to put new characters in the correct location in the invisible line,
+        // but this method should always return an empty character so the UI cursor does not move.
+        if(prompt.isMasking() && prompt.getMask() == 0){
+            return new char[0];
+        }
+
         int cursor = getCursorWithPrompt() % termWidth;
         if(cursor == 0 && getCursorWithPrompt() > 0)
             cursor = termWidth;
