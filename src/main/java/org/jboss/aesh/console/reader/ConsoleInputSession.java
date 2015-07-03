@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.console.reader;
 
-import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +42,7 @@ public class ConsoleInputSession {
 
     private final BlockingQueue<int[]> blockingQueue = new LinkedBlockingQueue<>(1000);
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(ConsoleInputSession.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ConsoleInputSession.class.getName());
     private static final int[] NULL_INPUT = new int[] {-1};
 
     public ConsoleInputSession(InputStream consoleStream) {

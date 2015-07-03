@@ -28,7 +28,6 @@ import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.ANSI;
-import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -52,7 +51,7 @@ public abstract class AeshFileDisplayer implements Command {
     private TerminalPage.Search search = TerminalPage.Search.NO_SEARCH;
     private StringBuilder searchBuilder;
     private List<Integer> searchLines;
-    private static final Logger LOGGER = LoggerUtil.getLogger(AeshFileDisplayer.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AeshFileDisplayer.class.getName());
     private CommandInvocation commandInvocation;
     private ControlOperator operation;
     private boolean stop;

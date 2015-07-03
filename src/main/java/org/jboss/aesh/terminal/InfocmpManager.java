@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.logging.Logger;
 
@@ -31,7 +30,7 @@ import java.util.logging.Logger;
  */
 public class InfocmpManager {
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(InfocmpManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(InfocmpManager.class.getName());
 
     public static int[] getKeyHome() {
         int[] home = InfocmpHandler.getInstance().getAsInts("khome");

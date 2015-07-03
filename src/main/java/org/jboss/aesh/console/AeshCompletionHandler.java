@@ -31,7 +31,6 @@ import org.jboss.aesh.edit.actions.PrevWordAction;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalString;
-import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -56,7 +55,7 @@ public class AeshCompletionHandler implements CompletionHandler {
     private final Shell shell;
     private final boolean doLogging;
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(AeshCompletionHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AeshCompletionHandler.class.getName());
 
     public AeshCompletionHandler(AeshContext aeshContext, ConsoleBuffer consoleBuffer,
                                  Shell shell, boolean doLogging) {

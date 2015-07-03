@@ -21,7 +21,6 @@ package org.jboss.aesh.console.reader;
 
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +33,7 @@ import java.util.logging.Logger;
  */
 public class AeshInputStream extends InputStream {
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputStream.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AeshInputStream.class.getName());
 
     private transient boolean reading;
     private final InputStream consoleStream;
