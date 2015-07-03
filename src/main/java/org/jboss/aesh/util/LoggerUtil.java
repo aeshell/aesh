@@ -34,25 +34,30 @@ public class LoggerUtil {
      */
     public static synchronized Logger getLogger(String name) {
         if(logHandler == null) {
-            try {
-                File logFile = new File(Settings.getInstance().getLogFile());
-                if(logFile.getParentFile() != null && !logFile.getParentFile().isDirectory()) {
-                    if(!logFile.getParentFile().mkdirs()) {
-                        //if creating dirs failed, just create a logger without a file handler
-                        return Logger.getLogger(name);
-                    }
-                }
-                else if(logFile.isDirectory()) {
-                    Settings.getInstance().setLogFile(Settings.getInstance().getLogFile()+ Config.getPathSeparator()+"aesh.log");
-                }
-                logHandler = new FileHandler(Settings.getInstance().getLogFile());
-                logHandler.setFormatter(new SimpleFormatter());
-            }
-            catch (IOException e) {
-                //just use a consolehandler, set level to severe..
+            if (!Settings.getInstance().isLogging()) {
                 logHandler = new ConsoleHandler();
                 logHandler.setFormatter(new SimpleFormatter());
-                logHandler.setLevel(Level.SEVERE);
+            } else {
+                try {
+                    File logFile = new File(Settings.getInstance().getLogFile());
+                    if(logFile.getParentFile() != null && !logFile.getParentFile().isDirectory()) {
+                        if(!logFile.getParentFile().mkdirs()) {
+                            //if creating dirs failed, just create a logger without a file handler
+                            return Logger.getLogger(name);
+                        }
+                    }
+                    else if(logFile.isDirectory()) {
+                        Settings.getInstance().setLogFile(Settings.getInstance().getLogFile() + Config.getPathSeparator() + "aesh.log");
+                    }
+                    logHandler = new FileHandler(Settings.getInstance().getLogFile());
+                    logHandler.setFormatter(new SimpleFormatter());
+                }
+                catch (IOException e) {
+                    //just use a consolehandler, set level to severe..
+                    logHandler = new ConsoleHandler();
+                    logHandler.setFormatter(new SimpleFormatter());
+                    logHandler.setLevel(Level.SEVERE);
+                }
             }
         }
 
