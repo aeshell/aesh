@@ -21,7 +21,6 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +41,7 @@ public class ProcessManager {
     private int pidCounter = 1;
     private int foregroundProcess = -1;
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(ProcessManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ProcessManager.class.getName());
 
     public ProcessManager(Console console, boolean log) {
         this.console = console;

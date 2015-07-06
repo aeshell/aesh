@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,7 +38,7 @@ public class InfocmpHandler {
     private static final String ESCAPE = "\\E";
     private static final String ESC_AS_STRING = "\u001B";
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(InfocmpHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(InfocmpHandler.class.getName());
 
     private static class InfocmpHolder {
         static final InfocmpHandler INSTANCE = new InfocmpHandler();

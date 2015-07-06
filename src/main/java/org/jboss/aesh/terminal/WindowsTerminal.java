@@ -32,7 +32,6 @@ import org.fusesource.jansi.WindowsAnsiOutputStream;
 import org.fusesource.jansi.internal.WindowsSupport;
 import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.util.LoggerUtil;
 
 /**
  *
@@ -48,7 +47,7 @@ public class WindowsTerminal extends AbstractTerminal {
     private long ttyPropsLastFetched;
     private static long TIMEOUT_PERIOD = 2000;
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(WindowsTerminal.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(WindowsTerminal.class.getName());
 
     public WindowsTerminal() {
         super(LOGGER);

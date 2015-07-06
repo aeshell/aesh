@@ -54,7 +54,6 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.util.LoggerUtil;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -66,7 +65,7 @@ public class AeshConsoleImpl implements AeshConsole {
     private final CommandInvocationServices commandInvocationServices;
     private final InvocationProviders invocationProviders;
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(AeshConsoleImpl.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AeshConsoleImpl.class.getName());
     private final ManProvider manProvider;
     private final CommandNotFoundHandler commandNotFoundHandler;
     private AeshInternalCommandRegistry internalRegistry;
