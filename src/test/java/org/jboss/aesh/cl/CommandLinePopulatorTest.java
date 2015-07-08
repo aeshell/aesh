@@ -41,6 +41,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Currency;
 
 import static org.junit.Assert.assertNotNull;
@@ -71,7 +72,7 @@ public class CommandLinePopulatorTest {
         TestPopulator1 test1 = (TestPopulator1) parser.getCommand();
         AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -e enable --X -f -i 2 -n=3"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -e enable --X -f -i 2 -n=3"), invocationProviders, aeshContext, true, null);
 
         assertEquals("enable", test1.equal);
         assertTrue(test1.getEnableX());
@@ -80,26 +81,26 @@ public class CommandLinePopulatorTest {
         assertEquals(3, test1.int2);
         assertEquals("foo", test1.arguments.get(0));
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2 --X"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2 --X"), invocationProviders, aeshContext, true, null);
         assertTrue(test1.getEnableX());
         assertFalse(test1.foo);
         assertEquals(42, test1.getInt1().intValue());
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2 --X -i 5"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2 --X -i 5"), invocationProviders, aeshContext, true, null);
         assertTrue(test1.getEnableX());
         assertFalse(test1.foo);
         assertEquals(5, test1.getInt1().intValue());
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2 -Xb"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2 -Xb"), invocationProviders, aeshContext, true, null);
         assertTrue(test1.getEnableX());
         assertTrue(test1.bar);
         assertFalse(test1.foo);
         assertEquals(42, test1.getInt1().intValue());
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2 -X"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2 -X"), invocationProviders, aeshContext, true, null);
         assertTrue(test1.getEnableX());
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2\\ "), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2\\ "), invocationProviders, aeshContext, true, null);
         assertEquals("enable2 ", test1.getEqual());
         assertFalse(test1.getEnableX());
 
@@ -111,40 +112,40 @@ public class CommandLinePopulatorTest {
         TestPopulator2 test2 = (TestPopulator2) parser.getCommand();
         AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -b s1,s2,s3,s4"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -b s1,s2,s3,s4"), invocationProviders, aeshContext, true, null);
         assertNotNull(test2.getBasicSet());
         assertEquals(4, test2.getBasicSet().size());
         assertTrue(test2.getBasicSet().contains("s3"));
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -b=s1,s2,s3,s4"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -b=s1,s2,s3,s4"), invocationProviders, aeshContext, true, null);
         assertNotNull(test2.getBasicSet());
         assertEquals(4, test2.getBasicSet().size());
         assertTrue(test2.getBasicSet().contains("s3"));
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -b s1,s2,s3,s4"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -b s1,s2,s3,s4"), invocationProviders, aeshContext, true, null);
         assertNotNull(test2.getBasicSet());
         assertEquals(4, test2.getBasicSet().size());
         assertTrue(test2.getBasicSet().contains("s3"));
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -b=s1\\ s2\\ s3,s4"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -b=s1\\ s2\\ s3,s4"), invocationProviders, aeshContext, true, null);
         assertNotNull(test2.getBasicSet());
         assertEquals(2, test2.getBasicSet().size());
         assertTrue(test2.getBasicSet().contains("s4"));
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -a 1,2,3,4"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -a 1,2,3,4"), invocationProviders, aeshContext, true, null);
         assertNull(test2.getBasicSet());
         assertNotNull(test2.getBasicList());
         assertEquals(4, test2.getBasicList().size());
         assertEquals((Object) 1, test2.getBasicList().get(0));
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -a=1,2,3,4"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -a=1,2,3,4"), invocationProviders, aeshContext, true, null);
         assertNull(test2.getBasicSet());
         assertNotNull(test2.getBasicList());
         assertEquals(4, test2.getBasicList().size());
         assertEquals((Object) 1, test2.getBasicList().get(0));
 
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -a 3,4 --basicSet foo,bar"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -a 3,4 --basicSet foo,bar"), invocationProviders, aeshContext, true, null);
 
         assertNotNull(test2.getBasicList());
         assertNotNull(test2.getBasicSet());
@@ -152,7 +153,7 @@ public class CommandLinePopulatorTest {
         assertEquals(2, test2.getBasicSet().size());
         assertTrue(test2.getBasicSet().contains("foo"));
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -a 3,4 --basicSet=foo,bar"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -a 3,4 --basicSet=foo,bar"), invocationProviders, aeshContext, true, null);
 
         assertNotNull(test2.getBasicList());
         assertNotNull(test2.getBasicSet());
@@ -160,17 +161,17 @@ public class CommandLinePopulatorTest {
         assertEquals(2, test2.getBasicSet().size());
         assertTrue(test2.getBasicSet().contains("foo"));
 
-        parser.getCommandPopulator().populateObject(parser.parse("test "), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test "), invocationProviders, aeshContext, true, null);
         assertNull(test2.getBasicList());
         assertNull(test2.getBasicSet());
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -i 10,12,0"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -i 10,12,0"), invocationProviders, aeshContext, true, null);
         assertNotNull(test2.getImplList());
         assertEquals(3, test2.getImplList().size());
         assertEquals(Short.valueOf("12"), test2.getImplList().get(1));
 
         //just to verify that we dont accept arguments
-        parser.getCommandPopulator().populateObject(parser.parse("test text.txt"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test text.txt"), invocationProviders, aeshContext, true, null);
         exception.expect(OptionParserException.class);
 
     }
@@ -182,11 +183,11 @@ public class CommandLinePopulatorTest {
             parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class).getParser();
             TestPopulator5 test5 = (TestPopulator5) parser.getCommand();
             AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();
-            parser.getCommandPopulator().populateObject(parser.parse("test --strings foo1 --bar "), invocationProviders, aeshContext, true);
+            parser.getCommandPopulator().populateObject(parser.parse("test --strings foo1 --bar "), invocationProviders, aeshContext, true, null);
 
             assertEquals("foo1", test5.getStrings().get(0));
 
-        } catch (CommandLineParserException | OptionValidatorException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -197,7 +198,7 @@ public class CommandLinePopulatorTest {
         TestPopulator3 test3 = parser.getCommand();
         AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -bX1=foo -bX2=bar"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -bX1=foo -bX2=bar"), invocationProviders, aeshContext, true, null);
 
         assertNotNull(test3.getBasicMap());
         assertNull(test3.getIntegerMap());
@@ -205,15 +206,15 @@ public class CommandLinePopulatorTest {
         assertTrue(test3.getBasicMap().containsKey("X2"));
         assertEquals("foo", test3.getBasicMap().get("X1"));
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -iI1=42 -iI12=43"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -iI1=42 -iI12=43"), invocationProviders, aeshContext, true, null);
         assertNotNull(test3.getIntegerMap());
         assertEquals(2, test3.getIntegerMap().size());
         assertEquals(new Integer("42"), test3.getIntegerMap().get("I1"));
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -iI12"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -iI12"), invocationProviders, aeshContext, true, null);
         exception.expect(OptionParserException.class);
 
-        parser.getCommandPopulator().populateObject(parser.parse("test --integerMapI12="), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test --integerMapI12="), invocationProviders, aeshContext, true, null);
         exception.expect(OptionParserException.class);
 
     }
@@ -224,7 +225,7 @@ public class CommandLinePopulatorTest {
         TestPopulator4 test4 =  parser.getCommand();
         AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();
 
-        parser.getCommandPopulator().populateObject(parser.parse("test test2.txt test4.txt"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test test2.txt test4.txt"), invocationProviders, aeshContext, true, null);
 
         assertNotNull(test4.getArguments());
         assertEquals(2, test4.getArguments().size());
@@ -276,7 +277,7 @@ public class CommandLinePopulatorTest {
         //TestPopulator1A test1 = (TestPopulator1A) parser.getCommandPopulator().getObject();
         AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -e enable --XX -f -i 2 -n=3"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -e enable --XX -f -i 2 -n=3"), invocationProviders, aeshContext, true, null);
 
         assertEquals("enable", test1.equal);
         assertTrue(test1.getEnableX());
@@ -284,11 +285,11 @@ public class CommandLinePopulatorTest {
         assertEquals(2, test1.getInt1().intValue());
         assertEquals(3, test1.int2);
 
-        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test -e enable2"), invocationProviders, aeshContext, true, null);
         assertFalse(test1.getEnableX());
         assertFalse(test1.foo);
 
-        parser.getCommandPopulator().populateObject(parser.parse("test"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test"), invocationProviders, aeshContext, true, null);
         assertEquals("en", test1.equal);
         assertEquals(12345, test1.int2);
     }
@@ -299,13 +300,13 @@ public class CommandLinePopulatorTest {
         TestPopulator5 test5 = parser.getCommand();
         AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();
 
-        parser.getCommandPopulator().populateObject(parser.parse("test test2.txt test4.txt"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test test2.txt test4.txt"), invocationProviders, aeshContext, true, null);
 
         assertNotNull(test5.getArguments());
         assertEquals(2, test5.getArguments().size());
         assertTrue(test5.getArguments().contains("test4.txt"));
 
-        parser.getCommandPopulator().populateObject(parser.parse("test --currency NOK"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("test --currency NOK"), invocationProviders, aeshContext, true, null);
         assertNull(test5.getArguments());
         assertEquals(Currency.getInstance("NOK"), test5.getCurrency());
 
@@ -318,13 +319,13 @@ public class CommandLinePopulatorTest {
             TestPopulator5 test5 = parser.getCommand();
             AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();
 
-            parser.getCommandPopulator().populateObject(parser.parse("test -v 42"), invocationProviders, aeshContext, true);
+            parser.getCommandPopulator().populateObject(parser.parse("test -v 42"), invocationProviders, aeshContext, true, null);
 
             assertEquals(new Long(42), test5.getVeryLong());
 
-            parser.getCommandPopulator().populateObject(parser.parse("test --veryLong 101"), invocationProviders, aeshContext, true);
+            parser.getCommandPopulator().populateObject(parser.parse("test --veryLong 101"), invocationProviders, aeshContext, true, null);
         }
-        catch (CommandLineParserException e) {
+        catch (CommandLineParserException | InterruptedException | IOException e) {
             e.printStackTrace();
         }
     }
@@ -337,22 +338,22 @@ public class CommandLinePopulatorTest {
             TestPopulator5 test5 = parser.getCommand();
             AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();
 
-            parser.getCommandPopulator().populateObject(parser.parse("test --longs 42;43;44 -v 42"), invocationProviders, aeshContext, true);
+            parser.getCommandPopulator().populateObject(parser.parse("test --longs 42;43;44 -v 42"), invocationProviders, aeshContext, true, null);
             assertEquals(3, test5.getLongs().size());
             assertEquals(new Long(42), test5.getLongs().get(0));
             assertEquals(new Long(44), test5.getLongs().get(2));
             assertEquals(new Long(42), test5.getVeryLong());
 
-            parser.getCommandPopulator().populateObject(parser.parse("test --longs 42 --veryLong 42"), invocationProviders, aeshContext, true);
+            parser.getCommandPopulator().populateObject(parser.parse("test --longs 42 --veryLong 42"), invocationProviders, aeshContext, true, null);
             assertEquals(1, test5.getLongs().size());
             assertEquals(new Long(42), test5.getLongs().get(0));
             assertEquals(new Long(42), test5.getVeryLong());
 
-            parser.getCommandPopulator().populateObject(parser.parse("test --longs 42;43;132"), invocationProviders, aeshContext, true);
+            parser.getCommandPopulator().populateObject(parser.parse("test --longs 42;43;132"), invocationProviders, aeshContext, true, null);
             exception.expect(OptionValidatorException.class);
 
         }
-        catch (CommandLineParserException | OptionValidatorException e) {
+        catch (Exception e) {
         }
     }
     @Test
@@ -362,12 +363,12 @@ public class CommandLinePopulatorTest {
         SubHelp test1 = (SubHelp) parser.getCommand();
         AeshContext aeshContext = new SettingsBuilder().create().getAeshContext();
 
-        parser.getCommandPopulator().populateObject(parser.parse("subhelp -e enable -h"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("subhelp -e enable -h"), invocationProviders, aeshContext, true, null);
 
         assertEquals("enable", test1.equal);
         assertTrue("enable", test1.doHelp());
 
-        parser.getCommandPopulator().populateObject(parser.parse("subhelp -e enable"), invocationProviders, aeshContext, true);
+        parser.getCommandPopulator().populateObject(parser.parse("subhelp -e enable"), invocationProviders, aeshContext, true, null);
         assertEquals("enable", test1.equal);
         assertFalse("enable", test1.doHelp());
     }

@@ -20,15 +20,25 @@
 package org.jboss.aesh.cl.populator;
 
 import org.jboss.aesh.cl.CommandLine;
+import org.jboss.aesh.cl.internal.ProcessedInputPrompt;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.AeshConsoleBufferBuilder;
 import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.AeshInputProcessorBuilder;
+import org.jboss.aesh.console.ConsoleBuffer;
+import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -50,8 +60,8 @@ public class AeshCommandPopulator implements CommandPopulator<Object, Command> {
      */
     @Override
     public void populateObject(CommandLine<Command> line, InvocationProviders invocationProviders,
-                               AeshContext aeshContext, boolean validate)
-            throws CommandLineParserException, OptionValidatorException {
+                               AeshContext aeshContext, boolean validate, CommandInvocation commandInvocation)
+            throws CommandLineParserException, OptionValidatorException, InterruptedException, IOException {
         if(line.hasParserError())
             throw line.getParserException();
         for(ProcessedOption option : line.getParser().getProcessedCommand().getOptions()) {
@@ -70,6 +80,35 @@ public class AeshCommandPopulator implements CommandPopulator<Object, Command> {
         }
         else if(line.getArgument() != null)
             resetField(getObject(), line.getArgument().getFieldName(), true);
+
+		if (commandInvocation != null) {
+			// sort by order
+			Collections.sort(line.getParser().getProcessedCommand().getInputPrompts(),
+					new Comparator<ProcessedInputPrompt>() {
+						@Override
+						public int compare(ProcessedInputPrompt o1, ProcessedInputPrompt o2) {
+							return Integer.compare(o1.getOrder(), o2.getOrder());
+						}
+					});
+			// prompt for input and set value on command
+			for (ProcessedInputPrompt inputPrompt : line.getParser().getProcessedCommand().getInputPrompts()) {
+				ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+						.shell(commandInvocation.getShell())
+						.prompt(new Prompt(inputPrompt.getPrompt(), inputPrompt.getMask()))
+						.create();
+				InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+						.consoleBuffer(consoleBuffer)
+						.create();
+				consoleBuffer.displayPrompt();
+				String result;
+				do {
+					result = inputProcessor.parseOperation(commandInvocation.getInput());
+				}
+				while(result == null );
+
+				inputPrompt.injectValueIntoField(instance, result);
+			}
+		}
     }
 
     /**

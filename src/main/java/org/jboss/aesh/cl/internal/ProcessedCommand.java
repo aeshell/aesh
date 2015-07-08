@@ -46,6 +46,7 @@ public final class ProcessedCommand<C extends Command> {
     private CommandPopulator populator;
 
     private List<ProcessedOption> options;
+	private List<ProcessedInputPrompt> inputPrompts;
     private ProcessedOption argument;
     private C command;
 
@@ -57,6 +58,7 @@ public final class ProcessedCommand<C extends Command> {
         this.resultHandler = resultHandler;
         this.argument = argument;
         this.options = new ArrayList<>();
+		this.inputPrompts = new ArrayList<>();
         this.command = command;
         if(populator == null)
             this.populator = new AeshCommandPopulator(this.command);
@@ -85,6 +87,14 @@ public final class ProcessedCommand<C extends Command> {
                     opt.doOverrideRequired()));
         }
     }
+
+	public List<ProcessedInputPrompt> getInputPrompts() {
+		return inputPrompts;
+	}
+
+	public void addInputPrompt(ProcessedInputPrompt ip) throws OptionParserException {
+		inputPrompts.add(ip);
+	}
 
     public String getName() {
         return name;

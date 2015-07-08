@@ -47,7 +47,7 @@ import java.util.Set;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public final class ProcessedOption {
+public final class ProcessedOption extends CommandFieldValueInjector {
 
     private String shortName;
     private String name;
@@ -262,7 +262,7 @@ public final class ProcessedOption {
             sb.append("=<").append(argument).append(">");
         }
 
-        return sb.length();
+		return sb.length();
     }
 
     //TODO: add offset, offset for descriptionstart and break on width
@@ -318,7 +318,7 @@ public final class ProcessedOption {
         if(converter == null)
             return;
         try {
-            Field field = getField(instance.getClass(), fieldName);
+            Field field = getField(instance.getClass(), fieldName, instance);
             if(!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
             if(!Modifier.isPublic(instance.getClass().getModifiers())) {
@@ -406,18 +406,6 @@ public final class ProcessedOption {
     private <String, T> Map<String, T> newHashMap() {
         return new HashMap<>();
     }
-
-    private Field getField(Class clazz, String fieldName) throws NoSuchFieldException {
-        try {
-            return clazz.getDeclaredField(fieldName);
-        }
-        catch(NoSuchFieldException nsfe) {
-            if(clazz.getSuperclass() != null)
-                return getField(clazz.getSuperclass(), fieldName);
-            else throw nsfe;
-        }
-    }
-
 
     public boolean hasDefaultValue() {
         return getDefaultValues() != null && getDefaultValues().size() > 0;
