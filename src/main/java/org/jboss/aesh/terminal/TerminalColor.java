@@ -95,6 +95,14 @@ public class TerminalColor {
         this.intensity = intensity;
     }
 
+    public Color getTextColor() {
+        return textColor;
+    }
+
+    public Color getBackgroundColor() {
+        return backgroundColor;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

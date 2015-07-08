@@ -168,26 +168,58 @@ public class AeshGraphics implements Graphics {
                 shell.out().print(str);
             }
             else {
-                int length =- (x+str.length() - (bounds.getX() + bounds.getWidth()));
+                int length = (x+str.length() - (bounds.getX() + bounds.getWidth()));
                 shell.setCursor(new CursorPosition(y, x));
                 shell.out().print(str.substring(0,length));
             }
         }
         else if(bounds.isInside(x+str.length(), y)) {
-            int length = x+str.length()-bounds.getX();
-
-            drawString();
+            int rest = x+str.length()-bounds.getX();
+            drawString(str.substring(rest), x + rest, y);
         }
     }
 
     @Override
     public void fillRect(int x, int y, int width, int height) {
-        if(currentColor != null)
+        //the whole rect is inside bounds
+        if(bounds.isInside(x, y) && bounds.isInside(x+width, y+height)) {
+            doFillRect(x, y, width, height);
+        }
+        //start point is inside bounds, but not end point
+        else if(bounds.isInside(x, y)) {
+            int newWidth = width;
+            int newHeight = height;
+            //x axis is within bounds
+            if(!bounds.isInside(x+width, y)) {
+                //
+               newWidth =- (x+width - (bounds.getX() + bounds.getWidth()));
+            }
+            if(!bounds.isInside(x, y+height))
+                newHeight = - (y+height - (bounds.getY() + bounds.getHeight()));
+
+            doFillRect(x, y, newWidth, newHeight);
+        }
+        //end points are inside bounds, but not start points
+        else {
+            if(bounds.isInside(bounds.getX(), y)) {
+                width = width - (bounds.getX() - x);
+                x = bounds.getX();
+            }
+            if(bounds.isInside(x, bounds.getY())) {
+                height = height - (bounds.getY() - y);
+                y = bounds.getY();
+            }
+            doFillRect(x, y, width, height);
+        }
+    }
+
+    private void doFillRect(int x, int y, int width, int height) {
+        if (currentColor != null)
             shell.out().print(currentColor.fullString());
 
-        for(int j=0; j < height; j++) {
-            shell.setCursor(new CursorPosition(y+j,x));
-            for(int i=0; i < width; i++)
+        for (int j = 0; j < height; j++) {
+            shell.setCursor(new CursorPosition(y + j, x));
+            for (int i = 0; i < width; i++)
                 shell.out().print(' ');
         }
     }
@@ -220,8 +252,10 @@ public class AeshGraphics implements Graphics {
     }
 
     private void drawPixel(int x, int y) {
-        shell.setCursor(new CursorPosition(y,x));
-        shell.out().print('x');
+        if(bounds.isInside(x, y)) {
+            shell.setCursor(new CursorPosition(y, x));
+            shell.out().print('x');
+        }
     }
 
 
@@ -237,7 +271,7 @@ public class AeshGraphics implements Graphics {
         //if x is outside of our boundaries, just return
         if(x > bounds.getX() + bounds.getWidth())
             return;
-        // if y is ourside our boundaries, just return
+        // if y is outside our boundaries, just return
         if(y < bounds.getY() || y > (bounds.getY()+bounds.getHeight()))
             return;
 

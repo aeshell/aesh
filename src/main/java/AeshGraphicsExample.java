@@ -101,7 +101,7 @@ public class AeshGraphicsExample {
             try {
                 g = new AeshGraphics(invocation.getShell());
 
-                g.translate(50,50);
+                g.translate(15,15);
 
                 g.setColor(new TerminalColor(Color.BLUE, Color.DEFAULT));
                 g.drawRect(20, 10, 20, 4);
