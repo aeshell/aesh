@@ -25,6 +25,9 @@ import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
+
+import java.io.IOException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -40,7 +43,8 @@ public interface CommandPopulator<T, C extends Command> {
      * @throws CommandLineParserException
      */
     void populateObject(CommandLine<C> line, InvocationProviders invocationProviders,
-                        AeshContext aeshContext, boolean validate) throws CommandLineParserException, OptionValidatorException;
+                        AeshContext aeshContext, boolean validate, CommandInvocation commandInvocation)
+			throws CommandLineParserException, OptionValidatorException, InterruptedException, IOException;
 
     /**
      * @return the object instance that will be populated.

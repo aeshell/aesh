@@ -181,7 +181,8 @@ class CustomPopulator implements CommandPopulator<Object, Command> {
     }
 
     @Override
-    public void populateObject(CommandLine<Command> line, InvocationProviders invocationProviders, AeshContext aeshContext, boolean validate) throws CommandLineParserException {
+    public void populateObject(CommandLine<Command> line, InvocationProviders invocationProviders,
+			AeshContext aeshContext, boolean validate, CommandInvocation commandInvocation) throws CommandLineParserException {
         if(line.hasParserError())
             throw line.getParserException();
         for(ProcessedOption option : line.getParser().getProcessedCommand().getOptions()) {

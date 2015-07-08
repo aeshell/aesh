@@ -45,7 +45,8 @@ public abstract class DefaultCommandContainer<C extends Command> implements Comm
             throws CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException, InterruptedException {
 
         CommandLine commandLine = getParser().parse(line, false);
-        commandLine.getParser().getCommandPopulator().populateObject(commandLine, invocationProviders, aeshContext, true);
+        commandLine.getParser().getCommandPopulator().populateObject(commandLine, invocationProviders, aeshContext, true,
+				commandInvocation);
         if(commandLine.getParser().getProcessedCommand().getValidator() != null &&
                 !commandLine.hasOptionWithOverrideRequired())
             commandLine.getParser().getProcessedCommand().getValidator().validate(commandLine.getParser().getCommand());

@@ -22,12 +22,14 @@ package org.jboss.aesh.cl.parser;
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.GroupCommandDefinition;
+import org.jboss.aesh.cl.InputPrompt;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionGroup;
 import org.jboss.aesh.cl.OptionList;
-import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
+import org.jboss.aesh.cl.internal.ProcessedInputPrompt;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshInvocationProviders;
@@ -40,6 +42,7 @@ import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
 import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
 import org.jboss.aesh.util.ReflectionUtil;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
@@ -124,6 +127,7 @@ public class ParserGenerator {
         OptionGroup og;
         OptionList ol;
         Arguments a;
+		InputPrompt ip;
         if((o = field.getAnnotation(Option.class)) != null) {
             OptionType optionType;
             if(o.hasValue())
@@ -264,7 +268,6 @@ public class ParserGenerator {
                     .renderer(og.renderer())
                     .create());
         }
-
         else if((a = field.getAnnotation(Arguments.class)) != null) {
             if(!Collection.class.isAssignableFrom(field.getType()))
                 throw new CommandLineParserException("Arguments field must be instance of Collection");
@@ -288,16 +291,24 @@ public class ParserGenerator {
                     .validator(a.validator())
                     .create());
         }
+		else if((ip = field.getAnnotation(InputPrompt.class)) != null) {
+			processedCommand.addInputPrompt(new ProcessedInputPrompt(
+					ip.prompt(),
+					ip.inputMask(),
+					ip.order(),
+					field.getName()));
+		}
     }
 
-   public static void parseAndPopulate(Command instance, String input) throws CommandLineParserException, OptionValidatorException {
+   public static void parseAndPopulate(Command instance, String input) throws CommandLineParserException,
+		   OptionValidatorException, InterruptedException, IOException {
         CommandLineParser cl = generateCommandLineParser(instance).getParser();
         InvocationProviders invocationProviders = new AeshInvocationProviders(
                 new AeshConverterInvocationProvider(),
                 new AeshCompleterInvocationProvider(),
                 new AeshValidatorInvocationProvider(),
                 new AeshOptionActivatorProvider());
-        cl.getCommandPopulator().populateObject( cl.parse(input), invocationProviders, null, true);
+        cl.getCommandPopulator().populateObject( cl.parse(input), invocationProviders, null, true, null);
     }
 
 }

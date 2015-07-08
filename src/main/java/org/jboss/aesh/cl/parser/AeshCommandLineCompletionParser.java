@@ -24,7 +24,6 @@ import org.jboss.aesh.cl.completer.CompleterData;
 import org.jboss.aesh.cl.completer.DefaultValueOptionCompleter;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedOption;
-import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
@@ -208,10 +207,10 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     List<String> words = Parser.findAllWords(rest).getWords();
                     try {
                         parser.getCommandPopulator().populateObject(parser.parse(words, true), invocationProviders,
-                                completeOperation.getAeshContext(), false);
+                                completeOperation.getAeshContext(), false, null);
                     }
                     //this should be ignored at some point
-                    catch (CommandLineParserException | OptionValidatorException ignored) { }
+                    catch (Exception ignored) { }
                     List<TerminalString> optionNamesWithDash = parser.getProcessedCommand().findPossibleLongNamesWitdDash(completeObject.getName());
                     if(optionNamesWithDash.size() > 0) {
                         //only one param
@@ -233,10 +232,10 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                         if(words.get(words.size()-1).equals("--") || words.get(words.size()-1).equals("-"))
                             words.remove(words.size()-1);
                         parser.getCommandPopulator().populateObject(parser.parse(words, true),
-                                invocationProviders, completeOperation.getAeshContext(), false);
+                                invocationProviders, completeOperation.getAeshContext(), false, null);
                     }
                     //this should be ignored at some point
-                    catch (CommandLineParserException | OptionValidatorException ignored) { }
+                    catch (Exception ignored) { }
                     List<TerminalString> optionNamesWithDash = parser.getProcessedCommand().getOptionLongNamesWithDash();
 
                     if(optionNamesWithDash.size() > 1)
@@ -276,10 +275,10 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             try {
                 List<String> words = Parser.findAllWords(rest).getWords();
                 parser.getCommandPopulator().populateObject(parser.parse(words, true),
-                        invocationProviders, completeOperation.getAeshContext(), false);
+                        invocationProviders, completeOperation.getAeshContext(), false, null);
             }
             //this should be ignored at some point
-            catch (CommandLineParserException | OptionValidatorException ignored) { }
+            catch (Exception ignored) { }
 
             if(currentOption.getCompleter() != null &&
                     currentOption.getActivator().isActivated(parser.getProcessedCommand())) {
@@ -337,9 +336,9 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             try {
                 List<String> words = Parser.findAllWords(rest).getWords();
                 parser.getCommandPopulator().populateObject(parser.parse(words, true),
-                        invocationProviders, completeOperation.getAeshContext(), false);
+                        invocationProviders, completeOperation.getAeshContext(), false, null);
             }
-            catch (CommandLineParserException | OptionValidatorException ignored) { }
+            catch (Exception ignored) { }
 
             if(parser.getProcessedCommand().getArgument() != null &&
                     parser.getProcessedCommand().getArgument().getCompleter() != null) {
