@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.util.LoggerUtil;
 
 /**
  * Terminal that should work on most POSIX systems
@@ -51,7 +52,7 @@ public class POSIXTerminal extends AbstractTerminal {
 
     private static final long TIMEOUT_PERIOD = 3000;
 
-    private static final Logger LOGGER = Logger.getLogger(POSIXTerminal.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(POSIXTerminal.class.getName());
 
     public POSIXTerminal() {
         super(LOGGER);

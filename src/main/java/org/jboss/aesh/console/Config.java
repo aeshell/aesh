@@ -26,6 +26,7 @@ import org.jboss.aesh.edit.mapper.KeyMapper;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.terminal.Terminal;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -55,7 +56,7 @@ public class Config {
     private static final boolean posixCompatible = checkPosixCompability();
     private static boolean cygwin = false;
 
-    private static final Logger LOGGER = Logger.getLogger(Config.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(Config.class.getName());
 
     public static boolean isOSPOSIXCompatible() {
         return posixCompatible;

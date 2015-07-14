@@ -20,6 +20,7 @@
 package org.jboss.aesh.console.export;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -45,7 +46,7 @@ public class ExportManager {
     private final Pattern variableDollarFirstPattern = Pattern.compile("\\$(\\w+|\\{(\\w+)\\})(.*)");
     private final Pattern variablePattern = Pattern.compile("(.*)\\$(\\w+|\\{(\\w+)\\})(.*)");
 
-    private static final Logger LOGGER = Logger.getLogger(ExportManager.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(ExportManager.class.getName());
 
     private static final String EXPORT = "export";
 

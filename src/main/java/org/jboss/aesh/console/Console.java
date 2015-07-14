@@ -23,7 +23,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -34,13 +33,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.FileHandler;
-import java.util.logging.SimpleFormatter;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.LogManager;
 
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.complete.CompletionRegistration;
@@ -69,6 +63,7 @@ import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.FileUtils;
+import org.jboss.aesh.util.LoggerUtil;
 
 /**
  * A console reader. Supports ansi terminals
@@ -109,7 +104,7 @@ public class Console {
     private AeshStandardStream standardStream;
     private volatile boolean initiateStop = false;
 
-    private static final Logger LOGGER = Logger.getLogger(Console.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(Console.class.getName());
 
     public Console(final Settings settings) {
         this.settings = settings;
@@ -155,9 +150,6 @@ public class Console {
         if(readerService != null && !readerService.isShutdown()) {
             return;
         }
-
-        initLogs(settings, "aesh.log");
-
         if(settings.isLogging())
             LOGGER.info("RESET");
 
@@ -269,37 +261,6 @@ public class Console {
                 .settings(settings)
                 .interruptHook(interruptHook)
                 .create();
-    }
-
-    // Assign handler properties to root logger so that subsequent logs utilise them
-    private void initLogs(Settings settings, String logName) {
-        Logger log = LogManager.getLogManager().getLogger("");
-        Handler logHandler;
-        if (!settings.isLogging()) {
-            logHandler = new ConsoleHandler();
-        } else {
-            final String logPath = settings.getLogFile() == null
-                    ? Config.getTmpDir() + Config.getPathSeparator() + logName
-                    : settings.getLogFile();
-
-            File logFile = new File(logPath);
-            // If parentFile exists & its not a dir and path of parent can be created, then proceed to create FileHandler
-            if (logFile.getParentFile() != null && (logFile.getParentFile().isDirectory() || logFile.getParentFile().mkdir())) {
-                // If specified log file is a directory, then create log file within that dir
-                if (logFile.isDirectory())
-                    logFile = new File(logFile.getAbsolutePath() + Config.getPathSeparator() + logName);
-
-                try {
-                    logHandler = new FileHandler(logFile.getAbsolutePath());
-                } catch (IOException e) {
-                    logHandler = new ConsoleHandler();
-                }
-            } else {
-                logHandler = new ConsoleHandler();
-            }
-        }
-        logHandler.setFormatter(new SimpleFormatter());
-        log.addHandler(logHandler);
     }
 
     /**

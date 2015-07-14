@@ -36,6 +36,7 @@ import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.util.ANSI;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -60,7 +61,7 @@ public class AeshInputProcessor implements InputProcessor {
 
     private static final String ENDS_WITH_BACKSLASH = " \\";
 
-    private static final Logger LOGGER = Logger.getLogger(AeshInputProcessor.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputProcessor.class.getName());
 
     AeshInputProcessor(ConsoleBuffer consoleBuffer,
                        History history,

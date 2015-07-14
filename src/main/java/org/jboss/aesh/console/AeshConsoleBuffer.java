@@ -30,6 +30,7 @@ import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.undo.UndoManager;
 import org.jboss.aesh.util.ANSI;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -60,7 +61,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     private static final char[] resetLineAndSetCursorToStart =
             (ANSI.CURSOR_SAVE+ANSI.START+"0G"+ANSI.START+"2K").toCharArray();
 
-    private static final Logger LOGGER = Logger.getLogger(AeshConsoleBuffer.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(AeshConsoleBuffer.class.getName());
 
     AeshConsoleBuffer(Prompt prompt, Shell shell, EditMode editMode, boolean ansi) {
         this.out = shell.out();

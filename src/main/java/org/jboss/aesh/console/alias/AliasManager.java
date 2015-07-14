@@ -20,6 +20,7 @@
 package org.jboss.aesh.console.alias;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -53,7 +54,7 @@ public class AliasManager {
     private final String name;
     private boolean persistAlias = false;
 
-    private static final Logger LOGGER = Logger.getLogger(AliasManager.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(AliasManager.class.getName());
 
     public AliasManager(File aliasFile, boolean persistAlias, String name) throws IOException {
         this.persistAlias = persistAlias;

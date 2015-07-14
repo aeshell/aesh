@@ -23,6 +23,7 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -42,7 +43,7 @@ public class KeyMapper {
     private static final Pattern quotePattern = Pattern.compile("^\"");
     private static final Pattern metaPattern = Pattern.compile("^(\\\\M|M|Meta)-"); // "M-
     private static final Pattern controlPattern = Pattern.compile("^(\\\\C|C|Control)-"); // "M-
-    private static final Logger LOGGER = Logger.getLogger(KeyMapper.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(KeyMapper.class.getName());
     /**
      * Parse key mapping lines that start with "
      *

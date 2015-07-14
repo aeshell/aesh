@@ -27,6 +27,7 @@ import org.jboss.aesh.console.command.container.AeshCommandContainerBuilder;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainerBuilder;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,7 +49,7 @@ public class MutableCommandRegistry implements CommandRegistry {
         this.containerBuilder = containerBuilder;
     }
 
-    private static final Logger LOGGER = Logger.getLogger(MutableCommandRegistry.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(MutableCommandRegistry.class.getName());
 
     public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
         if(registry.containsKey(name))

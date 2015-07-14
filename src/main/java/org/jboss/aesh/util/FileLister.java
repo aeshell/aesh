@@ -56,7 +56,7 @@ public class FileLister {
     private ResourceFilter fileFilter;
     private Comparator fileComparator;
 
-    private static Logger LOGGER = Logger.getLogger(FileLister.class.getName());
+    private static Logger LOGGER = LoggerUtil.getLogger(FileLister.class.getName());
 
     public FileLister(String token, Resource cwd) {
         if (token == null)
