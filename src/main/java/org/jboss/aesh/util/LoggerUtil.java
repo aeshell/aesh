@@ -22,10 +22,14 @@ package org.jboss.aesh.util;
 import org.jboss.aesh.console.Config;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
+import java.util.logging.LogManager;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
@@ -40,6 +44,20 @@ import java.util.logging.StreamHandler;
 public class LoggerUtil {
 
     private static Handler logHandler;
+    private static boolean doLog = true;
+    private static final Handler dummyHandler = new Handler() {
+        @Override
+        public void publish(LogRecord record) {
+        }
+
+        @Override
+        public void flush() {
+        }
+
+        @Override
+        public void close() throws SecurityException {
+        }
+    };
 
     private static void createLogHandler(String log) {
         try {
@@ -47,20 +65,18 @@ public class LoggerUtil {
             createLogHandlerToFile(logFile);
 
             if(logFile.isDirectory()) {
-                logFile = new File(logFile.getAbsolutePath()+ Config.getPathSeparator()+"aesh.log");
+                logFile = new File(logFile.getAbsolutePath() + Config.getPathSeparator() + "aesh.log");
             }
             createLogHandler(new FileHandler(logFile.getAbsolutePath()));
         }
-        catch (IOException e) {
+        catch(IOException e) {
             createLogHandler(new ConsoleHandler());
         }
-
     }
 
     private static void createLogHandlerToFile(File logFile) {
         if(isCreateANewHandler(logFile)) {
             createLogHandler(new ConsoleHandler());
-            return;
         }
     }
 
@@ -74,19 +90,54 @@ public class LoggerUtil {
     }
 
     public static synchronized Logger getLogger(String name) {
-        if(logHandler == null) {
-            createLogHandler(Config.getTmpDir()+Config.getPathSeparator()+"aesh.log");
+       if(!doLog) {
+           Logger log = Logger.getLogger(name);
+           log.setUseParentHandlers(false);
+           log.addHandler(dummyHandler);
+
+           return log;
         }
+        else {
+            if(logHandler == null) {
+                createLogHandler(Config.getTmpDir() + Config.getPathSeparator() + "aesh.log");
+            }
 
-        if(logHandler == null) {
-            return Logger.getLogger(name);
+            if(logHandler == null) {
+                return Logger.getLogger(name);
+            }
+
+            Logger log = Logger.getLogger(name);
+            log.setUseParentHandlers(false);
+            log.addHandler(logHandler);
+
+            return log;
         }
+    }
 
-        Logger log =  Logger.getLogger(name);
-        log.setUseParentHandlers(false);
-        log.addHandler(logHandler);
+    public static synchronized void doNotLog() {
+        doLog = false;
+        for(Enumeration<String> loggerEnum = LogManager.getLogManager().getLoggerNames(); loggerEnum.hasMoreElements();){
+            Logger logger = LogManager.getLogManager().getLogger(loggerEnum.nextElement());
+            logger.removeHandler(logHandler);
+            logger.addHandler(dummyHandler);
+         }
+        removeLogFiles();
+    }
 
-        return log;
+    private static void removeLogFiles() {
+        final File folder = new File(Config.getTmpDir());
+        if(folder.isDirectory()) {
+            final File[] files = folder.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(final File dir, final String name) {
+                    return name.contains("aesh.log");
+                }
+            });
+
+            for(final File file : files) {
+                file.delete();
+            }
+        }
     }
 
 }
