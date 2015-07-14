@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -227,16 +228,27 @@ public class ExportManager {
     }
 
     public void persistVariables() {
-        if (exportFile.isFile())
-            exportFile.delete();
+        boolean keepGoing = true;
+        try {
+            if (exportFile.isFile())
+                keepGoing = exportFile.delete();
 
-        try (FileWriter fw = new FileWriter(exportFile)) {
-            for (String key : variables.keySet()) {
-                fw.write(EXPORT + " " + key + "=" + variables.get(key) + Config.getLineSeparator());
+            if(keepGoing) {
+                exportFile.mkdirs();
+                keepGoing = exportFile.createNewFile();
+            }
+
+            if(keepGoing) {
+                FileWriter fw = new FileWriter(exportFile);
+                for(String key : variables.keySet()) {
+                    fw.write(EXPORT + " " + key + "=" + variables.get(key) + Config.getLineSeparator());
+                }
+                fw.flush();
+                fw.close();
             }
         }
         catch (IOException e) {
-            LOGGER.warning("Failed to persist variables to file " + exportFile + ", error: " + e);
+            LOGGER.log(Level.WARNING, "Failed to persist variables to file " + exportFile, e);
         }
     }
 

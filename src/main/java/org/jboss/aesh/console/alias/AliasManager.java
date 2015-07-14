@@ -85,18 +85,28 @@ public class AliasManager {
     public void persist() {
         if(persistAlias && aliasFile != null) {
 
+            try {
             //just do it easily and remove the current file
-            if(aliasFile.isFile())
-                aliasFile.delete();
+                boolean keepGoing = true;
+                if(aliasFile.isFile())
+                    keepGoing = aliasFile.delete();
 
-            try (FileWriter fw = new FileWriter(aliasFile)) {
-                LOGGER.info("created fileWriter");
-                Collections.sort(aliases); // not very efficient, but it'll do for now...
-                for(Alias a : aliases) {
-                    LOGGER.info("writing to file: "+ALIAS_SPACE+a.toString());
-                    fw.write(ALIAS_SPACE+a.toString()+Config.getLineSeparator());
+                if(keepGoing) {
+                    aliasFile.mkdirs();
+                    keepGoing = aliasFile.createNewFile();
                 }
-                fw.flush();
+
+                if(keepGoing) {
+                    FileWriter fw = new FileWriter(aliasFile);
+                    LOGGER.info("created fileWriter");
+                    Collections.sort(aliases); // not very efficient, but it'll do for now...
+                    for(Alias a : aliases) {
+                        LOGGER.info("writing to file: " + ALIAS_SPACE + a.toString());
+                        fw.write(ALIAS_SPACE + a.toString() + Config.getLineSeparator());
+                    }
+                    fw.flush();
+                    fw.close();
+                }
             }
             catch(IOException e) {
                 LOGGER.log(Level.WARNING, "Could not persist to alias file:", e);
