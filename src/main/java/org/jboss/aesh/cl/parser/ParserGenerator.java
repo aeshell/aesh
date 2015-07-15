@@ -291,7 +291,8 @@ public class ParserGenerator {
         }
     }
 
-    public static void parseAndPopulate(Command instance, String commandName, String input[]) throws CommandLineParserException, OptionValidatorException {
+    public static void parseAndPopulate(Command instance, String commandName, String... input)
+            throws CommandLineParserException, OptionValidatorException {
         StringBuilder builder = new StringBuilder(commandName);
         for(String s : input)
             builder.append(" ").append(s);
