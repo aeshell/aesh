@@ -70,7 +70,8 @@ public class ParserGenerator {
                     .description(command.description())
                     .validator(command.validator())
                     .command(commandObject)
-                    .resultHandler(command.resultHandler()).create();
+                    .resultHandler(command.resultHandler())
+                    .create();
 
             processCommand(processedCommand, clazz);
 
@@ -86,7 +87,7 @@ public class ParserGenerator {
                     .name(groupCommand.name())
                     .description(groupCommand.description())
                     .validator(groupCommand.validator())
-                    .command(commandObject)
+                    .command((Command) commandObject)
                     .resultHandler(groupCommand.resultHandler())
                     .create();
 
@@ -290,8 +291,16 @@ public class ParserGenerator {
         }
     }
 
+    public static void parseAndPopulate(Command instance, String commandName, String input[]) throws CommandLineParserException, OptionValidatorException {
+        StringBuilder builder = new StringBuilder(commandName);
+        for(String s : input)
+            builder.append(" ").append(s);
+
+        parseAndPopulate(instance, builder.toString());
+    }
+
    public static void parseAndPopulate(Command instance, String input) throws CommandLineParserException, OptionValidatorException {
-        CommandLineParser cl = generateCommandLineParser(instance).getParser();
+        CommandLineParser cl = doGenerateCommandLineParser(instance).getParser();
         InvocationProviders invocationProviders = new AeshInvocationProviders(
                 new AeshConverterInvocationProvider(),
                 new AeshCompleterInvocationProvider(),
