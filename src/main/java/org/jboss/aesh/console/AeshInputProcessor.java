@@ -289,6 +289,16 @@ public class AeshInputProcessor implements InputProcessor {
      */
     private void doSearch(Search search) throws IOException {
 
+        // Interrupted by CTRL+C.  Exit search and, unlike ESC, do not use the current result on the restored line.  Clear it.
+        if (search.getOperation() == Operation.SEARCH_INTERRUPT) {
+            consoleBuffer.moveCursor(-consoleBuffer.getBuffer().getCursor());
+            consoleBuffer.setBufferLine("");
+            consoleBuffer.drawLine();
+            consoleBuffer.out().print(Buffer.printAnsi((consoleBuffer.getBuffer().getPrompt().getLength() + 1) + "G"));
+            consoleBuffer.out().flush();
+            return;
+        }
+
         switch (search.getOperation().getMovement()) {
             //init a previous doSearch
             case PREV:

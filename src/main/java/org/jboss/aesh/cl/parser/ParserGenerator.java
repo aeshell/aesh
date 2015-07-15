@@ -188,7 +188,7 @@ public class ParserGenerator {
         }
         else if((ol = field.getAnnotation(OptionList.class)) != null) {
             if(!Collection.class.isAssignableFrom(field.getType()))
-                throw new CommandLineParserException("OptionGroup field must be instance of Collection");
+                throw new CommandLineParserException("OptionList field must be instance of Collection");
             Class type = Object.class;
             if(field.getGenericType() != null) {
                 ParameterizedType listType = (ParameterizedType) field.getGenericType();
