@@ -118,7 +118,10 @@ public class ViEditMode extends AbstractEditMode {
 
         //search mode need special handling
         if(mode == Action.SEARCH) {
-            if(currentOperation.getOperation() == Operation.NEW_LINE) {
+            if (currentOperation.getOperation() == Operation.INTERRUPT) {
+                mode = Action.EDIT;
+                return Operation.SEARCH_INTERRUPT;
+            } else if(currentOperation.getOperation() == Operation.NEW_LINE) {
                 mode = Action.EDIT;
                 return Operation.SEARCH_END;
             }

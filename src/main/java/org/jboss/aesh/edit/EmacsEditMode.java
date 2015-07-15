@@ -61,6 +61,7 @@ public class EmacsEditMode extends AbstractEditMode {
         if(currentOperation != null)
             return findOperation(currentOperation, buffer);
         else if (mode == Action.SEARCH) {
+            // ESC is handled here, since it's not mapped to an operation when in emacs mode.
             if(in == Key.ESC) {
                 mode = Action.EDIT;
                 return Operation.SEARCH_EXIT;
@@ -80,7 +81,10 @@ public class EmacsEditMode extends AbstractEditMode {
             resetEOF();
         //search mode need special handling
         if(mode == Action.SEARCH) {
-                if(currentOperation.getOperation() == Operation.NEW_LINE) {
+                if (currentOperation.getOperation() == Operation.INTERRUPT) {
+                    mode = Action.EDIT;
+                    return Operation.SEARCH_INTERRUPT;
+                } else if(currentOperation.getOperation() == Operation.NEW_LINE) {
                     mode = Action.EDIT;
                     return Operation.SEARCH_END;
                 }
@@ -92,8 +96,7 @@ public class EmacsEditMode extends AbstractEditMode {
                 }
                 else if(currentOperation.getOperation() == Operation.DELETE_PREV_CHAR) {
                     return Operation.SEARCH_DELETE;
-                } else if(currentOperation.getOperation() == Operation.ESCAPE ||
-                        (currentOperation.getOperation() == Operation.MOVE_NEXT_CHAR && currentOperation.getWorkingMode() != Action.NO_ACTION)||
+                } else if((currentOperation.getOperation() == Operation.MOVE_NEXT_CHAR && currentOperation.getWorkingMode() != Action.NO_ACTION)||
                         (currentOperation.getOperation() == Operation.MOVE_PREV_CHAR && currentOperation.getWorkingMode() != Action.NO_ACTION)) {
                     mode = Action.EDIT;
                     return Operation.SEARCH_EXIT;

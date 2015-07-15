@@ -38,6 +38,7 @@ public enum Operation {
     SEARCH_DELETE(Movement.PREV_BIG_WORD, Action.SEARCH),
     SEARCH_EXIT(Movement.NEXT_BIG_WORD, Action.SEARCH),
     SEARCH_INPUT(Movement.ALL, Action.SEARCH),
+    SEARCH_INTERRUPT(Action.SEARCH),
     NEW_LINE(Action.NEWLINE),
     NO_ACTION(Movement.PREV, Action.NO_ACTION),
     COMPLETE(Movement.NEXT, Action.COMPLETE),
