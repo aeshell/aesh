@@ -22,7 +22,6 @@ package org.jboss.aesh.util;
 import org.jboss.aesh.console.Config;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.logging.ConsoleHandler;
@@ -44,7 +43,7 @@ import java.util.logging.StreamHandler;
 public class LoggerUtil {
 
     private static Handler logHandler;
-    private static boolean doLog = true;
+    private static boolean doLog = false;
     private static final Handler dummyHandler = new Handler() {
         @Override
         public void publish(LogRecord record) {
@@ -114,30 +113,21 @@ public class LoggerUtil {
         }
     }
 
-    public static synchronized void doNotLog() {
-        doLog = false;
-        for(Enumeration<String> loggerEnum = LogManager.getLogManager().getLoggerNames(); loggerEnum.hasMoreElements();){
-            Logger logger = LogManager.getLogManager().getLogger(loggerEnum.nextElement());
-            logger.removeHandler(logHandler);
-            logger.addHandler(dummyHandler);
-         }
-        removeLogFiles();
-    }
-
-    private static void removeLogFiles() {
-        final File folder = new File(Config.getTmpDir());
-        if(folder.isDirectory()) {
-            final File[] files = folder.listFiles(new FilenameFilter() {
-                @Override
-                public boolean accept(final File dir, final String name) {
-                    return name.contains("aesh.log");
-                }
-            });
-
-            for(final File file : files) {
-                file.delete();
+    public static synchronized void doLog() {
+        if(!doLog) {
+            doLog = true;
+            createLogHandler(Config.getTmpDir() + Config.getPathSeparator() + "aesh.log");
+            for(Enumeration<String> loggerEnum = LogManager.getLogManager().getLoggerNames(); loggerEnum.hasMoreElements(); ) {
+                Logger logger = LogManager.getLogManager().getLogger(loggerEnum.nextElement());
+                removeAllHandlers(logger);
+                logger.addHandler(logHandler);
             }
         }
+    }
+
+    private static void removeAllHandlers(Logger logger) {
+        for(Handler handler : logger.getHandlers())
+            logger.removeHandler(handler);
     }
 
 }

@@ -211,8 +211,8 @@ public class SettingsBuilder {
     }
 
     public Settings create() {
-        if(!settings.isLogging())
-            LoggerUtil.doNotLog();
+        if(settings.isLogging())
+            LoggerUtil.doLog();
         return settings;
     }
 }
