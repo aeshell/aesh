@@ -213,6 +213,13 @@ public class ParserTest {
         assertEquals("bah-bah", line.getWords().get(1));
         assertEquals("  \"foo bar\" ", line.getWords().get(2));
         assertEquals("boo", line.getWords().get(3));
+
+
+        line = Parser.findAllWords(" \"\"/s-ramp/wsdl/Operation[xp2:matches(@name, 'submit.*')]\"\"");
+        assertEquals("/s-ramp/wsdl/Operation[xp2:matches(@name, 'submit.*')]", line.getWords().get(0));
+
+        line = Parser.findAllWords(" \"\"/s-ramp/ext/${type} \\ \"\"");
+        assertEquals("/s-ramp/ext/${type} \\ ", line.getWords().get(0));
     }
 
     @Test

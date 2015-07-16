@@ -567,7 +567,7 @@ public class Parser {
                 }
             }
             else if(c == BACK_SLASH) {
-                if(haveEscape) {
+                if(haveEscape || ternaryQuote) {
                     builder.append(c);
                     haveEscape = false;
                 }
@@ -575,7 +575,7 @@ public class Parser {
                     haveEscape = true;
             }
             else if(c == SINGLE_QUOTE) {
-                if(haveEscape) {
+                if(haveEscape || ternaryQuote) {
                     builder.append(c);
                     haveEscape = false;
                 }
