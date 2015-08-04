@@ -483,6 +483,10 @@ public class Console {
         return inputQueue.size() > 0;
     }
 
+    public boolean hasRunningProcesses() {
+        return processManager.hasForegroundProcess();
+    }
+
     /**
      * Read from the input stream and return when user have pressed enter.
      * This method will block until enter is pressed or because of interruption.
