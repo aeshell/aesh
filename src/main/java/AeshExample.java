@@ -211,8 +211,11 @@ public class AeshExample {
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
            if(bar == null)
                commandInvocation.getShell().out().println("NO BAR!");
-            else
+            else {
                commandInvocation.getShell().out().println("you set bar to: " + bar);
+               commandInvocation.getShell().out().println("lets work a bit...... ");
+               Thread.sleep(2000);
+           }
             return CommandResult.SUCCESS;
         }
     }
