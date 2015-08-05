@@ -19,19 +19,19 @@
  */
 package org.jboss.aesh.parser;
 
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.terminal.TerminalString;
-import org.jboss.aesh.util.ANSI;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.jboss.aesh.console.Config;
+import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.util.ANSI;
+import org.junit.Test;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -63,24 +63,24 @@ public class ParserTest {
         assertEquals("foo", Parser.findCurrentWordFromCursor("foobar", 2));
         assertEquals("", Parser.findCurrentWordFromCursor("ls  ", 3));
         assertEquals("foo", Parser.findCurrentWordFromCursor("ls  foo", 6));
-        assertEquals("foo", Parser.findCurrentWordFromCursor("ls  foo bar", 6) );
-        assertEquals("bar", Parser.findCurrentWordFromCursor("ls  foo bar", 10) );
-        assertEquals("ba", Parser.findCurrentWordFromCursor("ls  foo bar", 9) );
-        assertEquals("foo", Parser.findCurrentWordFromCursor("ls foo ", 6) );
-        assertEquals("o", Parser.findCurrentWordFromCursor("ls o org/jboss/aeshell/Shell.class", 4) );
-        assertEquals("", Parser.findCurrentWordFromCursor("ls  org/jboss/aeshell/Shell.class", 3) );
+        assertEquals("foo", Parser.findCurrentWordFromCursor("ls  foo bar", 6));
+        assertEquals("bar", Parser.findCurrentWordFromCursor("ls  foo bar", 10));
+        assertEquals("ba", Parser.findCurrentWordFromCursor("ls  foo bar", 9));
+        assertEquals("foo", Parser.findCurrentWordFromCursor("ls foo ", 6));
+        assertEquals("o", Parser.findCurrentWordFromCursor("ls o org/jboss/aeshell/Shell.class", 4));
+        assertEquals("", Parser.findCurrentWordFromCursor("ls  org/jboss/aeshell/Shell.class", 3));
     }
 
     @Test
     public void testFindCurrentWordWithEscapedSpaceToCursor() {
         assertEquals("foo bar", Parser.findCurrentWordFromCursor("foo\\ bar", 7));
         assertEquals("foo ba", Parser.findCurrentWordFromCursor("foo\\ bar", 6));
-        assertEquals("foo bar", Parser.findCurrentWordFromCursor("ls  foo\\ bar", 11) );
+        assertEquals("foo bar", Parser.findCurrentWordFromCursor("ls  foo\\ bar", 11));
     }
 
     @Test
     public void testFindClosestWholeWordToCursor() {
-        assertEquals("foo", Parser.findWordClosestToCursor("ls  foo bar", 6) );
+        assertEquals("foo", Parser.findWordClosestToCursor("ls  foo bar", 6));
 
         assertEquals("", Parser.findWordClosestToCursor(" ", 1));
         assertEquals("foo", Parser.findWordClosestToCursor("foo bar", 1));
@@ -89,8 +89,8 @@ public class ParserTest {
         assertEquals("foobar", Parser.findWordClosestToCursor("foobar", 2));
         assertEquals("", Parser.findWordClosestToCursor("ls  ", 3));
 
-        assertEquals("o", Parser.findWordClosestToCursor("ls o org/jboss/aeshell/Shell.class", 4) );
-        assertEquals("", Parser.findWordClosestToCursor("ls  org/jboss/aeshell/Shell.class", 3) );
+        assertEquals("o", Parser.findWordClosestToCursor("ls o org/jboss/aeshell/Shell.class", 4));
+        assertEquals("", Parser.findWordClosestToCursor("ls  org/jboss/aeshell/Shell.class", 3));
 
         assertEquals("foo", Parser.findWordClosestToCursor("foo bar foo", 3));
     }
@@ -98,7 +98,7 @@ public class ParserTest {
     @Test
     public void testFindClosestWholeWordToCursorEscapedSpace() {
         assertEquals("foo bar", Parser.findWordClosestToCursor("foo\\ bar", 7));
-        assertEquals("foo bar", Parser.findWordClosestToCursor("ls  foo\\ bar", 11) );
+        assertEquals("foo bar", Parser.findWordClosestToCursor("ls  foo\\ bar", 11));
     }
 
     @Test
@@ -125,10 +125,10 @@ public class ParserTest {
 
     @Test
     public void testChangeWordWithSpaces() {
-        assertEquals("foo bar", Parser.switchEscapedSpacesToSpacesInWord("foo\\ bar") );
-        assertEquals(" foo bar", Parser.switchEscapedSpacesToSpacesInWord("\\ foo\\ bar") );
-        assertEquals(" foo bar ", Parser.switchEscapedSpacesToSpacesInWord("\\ foo\\ bar\\ ") );
-        assertEquals(" foo bar", Parser.switchEscapedSpacesToSpacesInWord("\\ foo bar") );
+        assertEquals("foo bar", Parser.switchEscapedSpacesToSpacesInWord("foo\\ bar"));
+        assertEquals(" foo bar", Parser.switchEscapedSpacesToSpacesInWord("\\ foo\\ bar"));
+        assertEquals(" foo bar ", Parser.switchEscapedSpacesToSpacesInWord("\\ foo\\ bar\\ "));
+        assertEquals(" foo bar", Parser.switchEscapedSpacesToSpacesInWord("\\ foo bar"));
 
         assertEquals("foo\\ bar", Parser.switchSpacesToEscapedSpacesInWord("foo bar"));
         assertEquals("\\ foo\\ bar", Parser.switchSpacesToEscapedSpacesInWord(" foo bar"));
@@ -150,7 +150,6 @@ public class ParserTest {
         line = Parser.findAllWords("cd A\\ Directory\\ With\\ Spaces");
         assertEquals("cd", line.getWords().get(0));
         assertEquals("A Directory With Spaces", line.getWords().get(1));
-
 
         line = Parser.findAllWords("cd A\\ ");
         assertEquals("cd", line.getWords().get(0));
@@ -195,7 +194,7 @@ public class ParserTest {
 
         line = Parser.findAllWords("man -f='foo/bar/' Example\\ 1\"");
         assertEquals(ParserStatus.UNCLOSED_QUOTE, line.getStatus());
-        //assertTrue(line.haveBuildError());
+        // assertTrue(line.haveBuildError());
     }
 
     @Test
@@ -213,7 +212,6 @@ public class ParserTest {
         assertEquals("bah-bah", line.getWords().get(1));
         assertEquals("  \"foo bar\" ", line.getWords().get(2));
         assertEquals("boo", line.getWords().get(3));
-
 
         line = Parser.findAllWords(" \"\"/s-ramp/wsdl/Operation[xp2:matches(@name, 'submit.*')]\"\"");
         assertEquals("/s-ramp/wsdl/Operation[xp2:matches(@name, 'submit.*')]", line.getWords().get(0));
@@ -262,20 +260,20 @@ public class ParserTest {
         assertEquals("foo", Parser.trimInFront("foo"));
     }
 
-    //verify divide by zero fix
+    // verify divide by zero fix
     @Test
     public void testFormatDisplayList() {
         List<String> list = new ArrayList<>();
         String s1 = "this is a loooooong string thats longer than the terminal width";
         list.add(s1);
 
-        assertEquals(s1+"  "+ Config.getLineSeparator(), Parser.formatDisplayList(list, 20, 20));
+        assertEquals(s1 + "  " + Config.getLineSeparator(), Parser.formatDisplayList(list, 20, 20));
     }
 
     @Test
     public void testPadLeft() {
-        assertEquals(" foo", Parser.padLeft(4,"foo"));
-        assertEquals("   foo", Parser.padLeft(6,"foo"));
+        assertEquals(" foo", Parser.padLeft(4, "foo"));
+        assertEquals("   foo", Parser.padLeft(6, "foo"));
     }
 
     @Test
@@ -323,45 +321,46 @@ public class ParserTest {
 
         assertEquals(
             terminalLong.toString() + Config.getLineSeparator(),
-            Parser.formatDisplayCompactListTerminalString(Collections.singletonList(terminalLong), 10)
-        );
+            Parser.formatDisplayCompactListTerminalString(Collections.singletonList(terminalLong), 10));
 
         assertEquals(
             terminalShort1.toString() + "  " + terminalShort2.toString() + Config.getLineSeparator(),
-            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2), 20)
-        );
+            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2), 20));
 
         assertEquals(
             terminalShort1.toString() + Config.getLineSeparator() + terminalShort2.toString() + Config.getLineSeparator(),
-            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2), 10)
-        );
+            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2), 10));
 
         assertEquals(
             terminalShort1.toString() + "  " + terminalShort3.toString() + Config.getLineSeparator() + terminalShort2.toString() + Config.getLineSeparator(),
-            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2, terminalShort3), 15)
-        );
+            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2, terminalShort3), 15));
 
         assertEquals(
             terminalShort1.toString() + "  " + terminalShort3.toString() + Config.getLineSeparator() +
                 terminalShort2.toString() + "  " + terminalShort4.toString() + Config.getLineSeparator(),
-            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2, terminalShort3, terminalShort4), 15)
-        );
+            Parser.formatDisplayCompactListTerminalString(Arrays.asList(terminalShort1, terminalShort2, terminalShort3, terminalShort4), 15));
 
         assertEquals(
             terminalLonger1.toString() + "  " + terminalShort1.toString() + Config.getLineSeparator() +
                 terminalLonger2.toString() + Config.getLineSeparator() + terminalLonger3.toString() + Config.getLineSeparator(),
             Parser.formatDisplayCompactListTerminalString(
-                Arrays.asList(terminalLonger1, terminalLonger2, terminalLonger3, terminalShort1), 15)
-        );
+                Arrays.asList(terminalLonger1, terminalLonger2, terminalLonger3, terminalShort1), 15));
     }
 
     @Test
     public void testStripAwayAnsiPattern() {
-        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.BLACK_TEXT+"foo"));
-        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.BOLD+ANSI.CYAN_BG+"foo"));
-        assertEquals("foo", Parser.stripAwayAnsiCodes("foo"+ANSI.BOLD+ANSI.CYAN_BG));
-        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.ALTERNATE_BUFFER+"foo"));
-        assertEquals("foo", Parser.stripAwayAnsiCodes( ANSI.CURSOR_ROW+"foo"));
-        assertEquals("foo bar", Parser.stripAwayAnsiCodes( "foo"+ANSI.RESET+" bar"));
+        assertEquals("foo", Parser.stripAwayAnsiCodes(ANSI.BLACK_TEXT + "foo"));
+        assertEquals("foo", Parser.stripAwayAnsiCodes(ANSI.BOLD + ANSI.CYAN_BG + "foo"));
+        assertEquals("foo", Parser.stripAwayAnsiCodes("foo" + ANSI.BOLD + ANSI.CYAN_BG));
+        assertEquals("foo", Parser.stripAwayAnsiCodes(ANSI.ALTERNATE_BUFFER + "foo"));
+        assertEquals("foo", Parser.stripAwayAnsiCodes(ANSI.CURSOR_ROW + "foo"));
+        assertEquals("foo bar", Parser.stripAwayAnsiCodes("foo" + ANSI.RESET + " bar"));
+    }
+
+    @Test
+    public void testOriginalInput() {
+        String input = "echo foo -i bar";
+        AeshLine line = Parser.findAllWords(input);
+        assertEquals(input, line.getOriginalInput());
     }
 }
