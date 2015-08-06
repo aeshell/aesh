@@ -19,34 +19,39 @@
  */
 package org.jboss.aesh.parser;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Immutable value object that contain a parsed command line.
- * The command line is splitted into words based on white spaces.
- * Escaped whitespaces, single and double quotes are also parsed.
+ * Immutable value object that contain a parsed command line. The command line is split into words based on white spaces.
+ * Escaped white spaces, single and double quotes are also parsed.
  *
  * This object have not been populated to any Commands yet.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshLine {
+
+    private final String originalInput;
     private final String errorMessage;
     private final List<String> words;
     private final ParserStatus status;
 
-    public AeshLine(List<String> words, ParserStatus status, String errorMessage) {
+    public AeshLine(String originalInput, List<String> words, ParserStatus status, String errorMessage) {
+        this.originalInput = originalInput;
         this.status = status;
         this.errorMessage = errorMessage;
 
-        if(words == null) {
+        if (words == null) {
             this.words = new ArrayList<>(0);
             return;
         }
 
         this.words = words;
+    }
+
+    public String getOriginalInput() {
+        return originalInput;
     }
 
     public String getErrorMessage() {
@@ -64,9 +69,10 @@ public class AeshLine {
     @Override
     public String toString() {
         return "AeshLine{" +
-                "errorMessage='" + errorMessage + '\'' +
-                ", words=" + words +
-                ", status=" + status +
-                '}';
+            "errorMessage='" + errorMessage + '\'' +
+            ", words=" + words +
+            ", status=" + status +
+            ", originalInput=" + originalInput +
+            '}';
     }
 }
