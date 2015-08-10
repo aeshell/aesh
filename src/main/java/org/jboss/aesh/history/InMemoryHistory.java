@@ -54,13 +54,15 @@ public class InMemoryHistory extends History {
     @Override
     public void push(String entry) {
         if(entry != null && entry.trim().length() > 0) {
-            if(historyList.contains(entry.trim())) {
-               historyList.remove(entry.trim());
+            // Don't add repeated lines to the history
+            if(historyList.size() > 0 && historyList.get(historyList.size()-1).equals(entry.trim())) {
+               return;
             }
-            else {
-                if(historyList.size() >= maxSize)
-                    historyList.remove(0);
+
+            if(historyList.size() >= maxSize) {
+                historyList.remove(0);
             }
+
             historyList.add(entry.trim());
             lastFetchedId = size();
             lastSearchedId = 0;

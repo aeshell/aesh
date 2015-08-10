@@ -140,10 +140,12 @@ public class HistoryTest extends BaseConsoleTest {
         history.push("2");
         history.push("3");
         history.push("1");
+        history.push("1");
         assertEquals("1", history.getPreviousFetch());
         assertEquals("3", history.getPreviousFetch());
         assertEquals("2", history.getPreviousFetch());
-        assertEquals("2", history.getPreviousFetch());
+        assertEquals("1", history.getPreviousFetch());
+        assertEquals(4, history.getAll().size());
     }
 
     @Test
