@@ -147,7 +147,7 @@ public class Parser {
                     int fetch = i + (c * numRows);
                     if (fetch < displayList.size())
                         completionOutput.append(padRight(maxLength + displayList.get(i + (c * numRows)).getANSILength(),
-                            displayList.get(i + (c * numRows)).toString()));
+                                displayList.get(i + (c * numRows)).toString()));
                     else
                         break;
                 }
@@ -203,7 +203,7 @@ public class Parser {
                     // don't need to format last column of row = nextFetch doesn't exit
                     if (nextFetch < displayList.size()) {
                         stringOutput.append(padRight(columnsSizes[c] + displayList.get(i + (c * numRows)).getANSILength(),
-                            displayList.get(i + (c * numRows)).toString()));
+                                displayList.get(i + (c * numRows)).toString()));
                     }
                     else {
                         stringOutput.append(displayList.get(i + (c * numRows)).toString());
@@ -335,7 +335,7 @@ public class Parser {
         StringBuilder builder = new StringBuilder();
         for (String completion : completionList)
             while (builder.length() < completion.length() &&
-                startsWith(completion.substring(0, builder.length() + 1), completionList))
+                    startsWith(completion.substring(0, builder.length() + 1), completionList))
                 builder.append(completion.charAt(builder.length()));
 
         return builder.toString();
@@ -359,7 +359,7 @@ public class Parser {
         StringBuilder builder = new StringBuilder();
         for (TerminalString completion : completionList)
             while (builder.length() < completion.getCharacters().length() &&
-                startsWithTerminalString(completion.getCharacters().substring(0, builder.length() + 1), completionList))
+                    startsWithTerminalString(completion.getCharacters().substring(0, builder.length() + 1), completionList))
                 builder.append(completion.getCharacters().charAt(builder.length()));
 
         return builder.toString();
@@ -475,14 +475,14 @@ public class Parser {
 
             if (doWordContainOnlyEscapedSpace(rest)) {
                 if (cursor > 1 &&
-                    text.charAt(cursor) == SPACE_CHAR && text.charAt(cursor - 1) == SPACE_CHAR)
+                        text.charAt(cursor) == SPACE_CHAR && text.charAt(cursor - 1) == SPACE_CHAR)
                     return "";
                 else
                     return switchEscapedSpacesToSpacesInWord(rest);
             }
             else {
                 if (cursor > 1 &&
-                    text.charAt(cursor) == SPACE_CHAR && text.charAt(cursor - 1) == SPACE_CHAR)
+                        text.charAt(cursor) == SPACE_CHAR && text.charAt(cursor - 1) == SPACE_CHAR)
                     return "";
                 // only if it contains a ' ' and its not at the end of the string
                 if (rest.trim().contains(SPACE))
@@ -524,12 +524,12 @@ public class Parser {
         for (int i = 0; i < text.length(); i++) {
             if (text.charAt(i) == SINGLE_QUOTE) {
                 if (!doubleQuote &&
-                    (i == 0 || (i > 0 && !(text.charAt(i - 1) == BACK_SLASH))))
+                        (i == 0 || (i > 0 && !(text.charAt(i - 1) == BACK_SLASH))))
                     singleQuote = !singleQuote;
             }
             else if (text.charAt(i) == DOUBLE_QUOTE) {
                 if (!singleQuote &&
-                    (i == 0 || (i > 0 && !(text.charAt(i - 1) == BACK_SLASH))))
+                        (i == 0 || (i > 0 && !(text.charAt(i - 1) == BACK_SLASH))))
                     doubleQuote = !doubleQuote;
             }
         }
@@ -651,7 +651,7 @@ public class Parser {
 
     /**
      * find number of spaces in the given word. escaped spaces are not counted
-     * 
+     *
      * @param word to check
      * @return number of spaces
      */
