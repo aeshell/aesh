@@ -90,6 +90,10 @@ public class ConsoleScriptTest extends BaseConsoleTest {
                     count++;
                 }
                 else if(count == 3) {
+                    assertEquals("bar", output.getBuffer());
+                    count++;
+                }
+                else if(count == 4) {
                     assertEquals("exit", output.getBuffer());
                 }
             }
