@@ -60,10 +60,9 @@ import static org.junit.Assert.assertTrue;
  *
  * the scriptfile:
  * foo //this is accepted
+ * foo // also accepted
  *
- * bar  //this should cause a command-not-found and should exit the reader loop
- *
- * foo // it should never get here, if it does, the test will fail.
+ * exit //should exit
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -95,6 +94,7 @@ public class AeshScriptTest {
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(fooCommand)
+                .command(BarCommand.class)
                 .command(new RunCommand(resultHandler))
                 .command(ExitCommand.class)
                 .create();
@@ -114,7 +114,7 @@ public class AeshScriptTest {
         outputStream.flush();
         Thread.sleep(200);
 
-        assertEquals(2, counter);
+        assertEquals(3, counter);
     }
 
     private List<String> readScriptFile() throws IOException {
@@ -172,7 +172,24 @@ public class AeshScriptTest {
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
             if(counter < 2) {
                 commandInvocation.getShell().out().println("computing...." + Config.getLineSeparator() + "finished computing, returning...");
-                counter ++;
+                counter++;
+                return CommandResult.SUCCESS;
+            }
+            else {
+                assertTrue(false);
+                return CommandResult.FAILURE;
+            }
+        }
+    }
+
+    @CommandDefinition(name = "bar", description = "")
+    private static class BarCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            if(counter < 3) {
+                commandInvocation.getShell().out().println("baring...." + Config.getLineSeparator() + "finished baring, returning...");
+                counter++;
                 return CommandResult.SUCCESS;
             }
             else {
