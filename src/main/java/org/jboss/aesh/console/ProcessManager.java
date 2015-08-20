@@ -36,7 +36,7 @@ import java.util.logging.Logger;
 public class ProcessManager {
 
     private Console console;
-    private Map<Integer, Process> processes;
+    private volatile Map<Integer, Process> processes;
     private ExecutorService executorService;
     private boolean doLogging;
     private int pidCounter = 1;
@@ -131,6 +131,10 @@ public class ProcessManager {
 
     public boolean hasForegroundProcess() {
         return foregroundProcess > 0;
+    }
+
+    public boolean hasProcesses() {
+        return !processes.isEmpty();
     }
 
     public void processHaveFinished(Process process) {
