@@ -77,6 +77,9 @@ public class Console {
     private ConsoleCallback consoleCallback;
 
     private volatile boolean running = false;
+    private volatile boolean initiateStop = false;
+    private volatile boolean reading = false;
+
     private ByteArrayOutputStream redirectPipeOutBuffer;
     private ByteArrayOutputStream redirectPipeErrBuffer;
     private List<ConsoleOperation> operations;
@@ -102,7 +105,6 @@ public class Console {
     private CompletionHandler completionHandler;
 
     private AeshStandardStream standardStream;
-    private volatile boolean initiateStop = false;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(Console.class.getName());
 
@@ -573,6 +575,7 @@ public class Console {
      * operations/completions/etc
      */
     private void startReader() {
+        reading = true;
         Runnable reader = new Runnable() {
             @Override
             public void run() {
@@ -580,8 +583,7 @@ public class Console {
                     while(read()) { }
                 }
                 finally {
-                    if(!initiateStop || running)
-                        stop();
+                    reading = false;
                 }
             }
         };
@@ -625,14 +627,7 @@ public class Console {
             }
             //close thread, exit
             if(input.length == 0 || input[0] == -1 || initiateStop) {
-                //dont have to initiate it twice
-                if(running) {
-                    LOGGER.info("Received null input or -1, or stop() has been called, initiating stop");
-                    stop();
-                }
-                else {
-                    LOGGER.info("Received null input or -1, or stop() has been called, already stopped, so ignoring");
-                }
+                LOGGER.info("Received null input or -1, or stop() has been called, stop reading");
                 return false;
             }
 
@@ -695,6 +690,11 @@ public class Console {
                 if(settings.isLogging())
                     LOGGER.warning("Execution exception: "+e.getMessage());
             }
+        }
+
+        if(!processManager.hasProcesses() && !hasInput() && !reading ){
+            consoleBuffer.out().print(Config.getLineSeparator());
+            stop();
         }
     }
 
