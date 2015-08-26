@@ -119,8 +119,10 @@ public class LoggerUtil {
             createLogHandler(Config.getTmpDir() + Config.getPathSeparator() + "aesh.log");
             for(Enumeration<String> loggerEnum = LogManager.getLogManager().getLoggerNames(); loggerEnum.hasMoreElements(); ) {
                 Logger logger = LogManager.getLogManager().getLogger(loggerEnum.nextElement());
-                removeAllHandlers(logger);
-                logger.addHandler(logHandler);
+                if (logger != null) {
+                    removeAllHandlers(logger);
+                    logger.addHandler(logHandler);
+                }
             }
         }
     }
