@@ -422,8 +422,6 @@ public class Console {
                 LOGGER.log(Level.WARNING, "InputQueue still contains items after stop: "+inputQueue.toString());
             }
 
-            getTerminal().close();
-            getTerminal().reset();
             inputProcessor.getHistory().stop();
             if(aliasManager != null)
                 aliasManager.persist();
@@ -441,6 +439,9 @@ public class Console {
             if(settings.isLogging())
                 LOGGER.info("Streams are closed");
         }
+
+        getTerminal().close();
+        getTerminal().reset();
     }
 
     /**
