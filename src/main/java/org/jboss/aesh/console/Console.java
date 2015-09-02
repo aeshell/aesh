@@ -79,6 +79,8 @@ public class Console {
     private volatile boolean running = false;
     private volatile boolean initiateStop = false;
     private volatile boolean reading = false;
+    private volatile int[] readingInput = null;
+    private volatile boolean processing = false;
 
     private ByteArrayOutputStream redirectPipeOutBuffer;
     private ByteArrayOutputStream redirectPipeErrBuffer;
@@ -312,6 +314,24 @@ public class Console {
           consoleBuffer.changeOutputBuffer(output);
           getTerminal().changeOutputStream(output);
       }
+    }
+
+    /**
+     * Returns true if the console is waiting for input and no foreground process is executing.
+     *
+     * @return
+     */
+    public boolean isWaiting(){
+        return (!processing && !processManager.hasForegroundProcess() && !getTerminal().hasInput() && readingInput == null && !hasInput());
+    }
+
+    /**
+     * Returns true if the console is waiting for input and no process, foreground or background, is executing.
+     *
+     * @return
+     */
+    public boolean isWaitingWithoutBackgroundProcess(){
+        return (!processing && !processManager.hasProcesses() && !getTerminal().hasInput() && readingInput == null && !hasInput());
     }
 
     public synchronized void start() {
@@ -614,24 +634,24 @@ public class Console {
 
     private boolean read() {
         try {
-            int[] input = getTerminal().read();
+            readingInput = getTerminal().read();
             if(settings.isLogging()) {
-                LOGGER.info("GOT: " + Arrays.toString(input));
+                LOGGER.info("GOT: " + Arrays.toString(readingInput));
             }
             if(readingCursor) {
-                if(input.length > 4) {
-                    cursorQueue.add(input);
+                if(readingInput.length > 4) {
+                    cursorQueue.add(readingInput);
                     readingCursor = false;
                     return true;
                 }
             }
             //close thread, exit
-            if(input.length == 0 || input[0] == -1 || initiateStop) {
+            if(readingInput.length == 0 || readingInput[0] == -1 || initiateStop) {
                 LOGGER.info("Received null input or -1, or stop() has been called, stop reading");
                 return false;
             }
 
-            parseInput(input);
+            parseInput(readingInput);
             return true;
         }
         catch (IOException ioe) {
@@ -646,6 +666,8 @@ public class Console {
             if(settings.isLogging())
                 LOGGER.log(Level.SEVERE, "Stream failure, stopping Aesh: ",e);
             return false;
+        }finally {
+            readingInput = null;
         }
     }
 
@@ -683,12 +705,15 @@ public class Console {
 
     private void execute() {
         while(!processManager.hasForegroundProcess() && hasInput()) {
+            processing = true;
             try {
                 processInternalOperation(getInput());
             }
             catch (IOException | InterruptedException e) {
                 if(settings.isLogging())
                     LOGGER.warning("Execution exception: "+e.getMessage());
+            }finally {
+                processing = false;
             }
         }
 

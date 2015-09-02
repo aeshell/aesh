@@ -92,6 +92,10 @@ public class ConsoleInputSession {
         }
     }
 
+    public boolean hasInput(){
+        return blockingQueue.peek() == null ? false : true;
+    }
+
     public void stop() {
         if(!executorService.isShutdown()) {
             try {

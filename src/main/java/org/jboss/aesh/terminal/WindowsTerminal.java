@@ -100,6 +100,11 @@ public class WindowsTerminal extends AbstractTerminal {
         return input.readAll();
     }
 
+    @Override
+    public boolean hasInput() {
+        return input.hasInput();
+    }
+
     private int getHeight() {
         int height;
         height = WindowsSupport.getWindowsTerminalHeight();
