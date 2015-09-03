@@ -198,7 +198,6 @@ public class POSIXTerminal extends AbstractTerminal {
 
     @Override
     public void close() throws IOException {
-        settings.getInputStream().close();
         input.stop();
     }
 

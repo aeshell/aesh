@@ -433,7 +433,6 @@ public class Console {
             if(settings.isLogging())
                 LOGGER.info("Done stopping services. Terminal is reset");
 
-            settings.getInputStream().close();
             settings.getStdErr().close();
             settings.getStdOut().close();
             if(settings.isLogging())
