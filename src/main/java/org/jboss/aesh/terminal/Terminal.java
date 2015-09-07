@@ -45,6 +45,13 @@ public interface Terminal extends Closeable {
      */
     int[] read() throws IOException;
 
+    /**
+     * Check if the terminal has input waiting to be read.
+     *
+     * @return
+     */
+    boolean hasInput();
+
     boolean isEchoEnabled();
 
     /**

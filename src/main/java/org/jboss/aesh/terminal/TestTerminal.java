@@ -57,6 +57,11 @@ public class TestTerminal implements Terminal, Shell {
     }
 
     @Override
+    public boolean hasInput() {
+        return input.hasInput();
+    }
+
+    @Override
     public TerminalSize getSize() {
         return size;
     }

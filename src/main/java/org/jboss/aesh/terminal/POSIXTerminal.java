@@ -118,6 +118,11 @@ public class POSIXTerminal extends AbstractTerminal {
     }
 
     @Override
+    public boolean hasInput() {
+        return input.hasInput();
+    }
+
+    @Override
     public TerminalSize getSize() {
         if(propertiesTimedOut()) {
             size.setHeight(getHeight());
