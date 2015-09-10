@@ -105,8 +105,6 @@ public class TestTerminal implements Terminal, Shell {
 
     @Override
     public void close() throws IOException {
-        if(in != System.in)
-            in.close();
         input.stop();
     }
 
