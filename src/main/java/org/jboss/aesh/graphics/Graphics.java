@@ -21,7 +21,6 @@ package org.jboss.aesh.graphics;
 
 import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalTextStyle;
-import org.jboss.aesh.ui.Rectangle;
 
 /**
  * Simple Terminal Graphics API

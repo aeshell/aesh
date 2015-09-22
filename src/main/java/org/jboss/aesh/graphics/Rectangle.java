@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.ui;
+package org.jboss.aesh.graphics;
 
 import java.io.Serializable;
 
@@ -79,8 +79,24 @@ public class Rectangle implements Serializable {
         return new Rectangle(x, y, width, height);
     }
 
+    public boolean isInside(Point p) {
+        return isInside(p.getX(), p.getY());
+    }
+
     public boolean isInside(int x, int y) {
         return x >= this.x && x <= (this.x+this.width) && y >= this.y && y <= (this.y+this.height);
+    }
+
+    public Point getCenter() {
+        return new Point((x+width) / 2, (y+height) / 2);
+    }
+
+    public int getCenterPointX() {
+        return (x+width) / 2;
+    }
+
+    public int getCenterPointY() {
+        return (y+height) / 2;
     }
 
     @Override

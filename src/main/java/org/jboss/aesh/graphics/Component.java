@@ -2,7 +2,6 @@ package org.jboss.aesh.graphics;
 
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalTextStyle;
-import org.jboss.aesh.ui.Rectangle;
 
 /**
  * Created by stalep on 7/5/15.
@@ -38,4 +37,11 @@ public abstract class Component {
     public TerminalTextStyle getTextStyle() {
         return graphics.getTextStyle();
     }
+
+    public void paintBorder() {
+        graphics.drawRect(getBounds().getX(), getBounds().getY(),
+                getBounds().getWidth(), getBounds().getHeight());
+    }
+
+    public abstract void paint();
 }

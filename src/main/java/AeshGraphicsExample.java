@@ -31,6 +31,7 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.graphics.AeshGraphics;
 import org.jboss.aesh.graphics.Graphics;
+import org.jboss.aesh.graphics.ShellFrame;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.TerminalColor;
@@ -50,6 +51,7 @@ public class AeshGraphicsExample {
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
                 .command(new GraphicsCommand())
+                .command(new GfxCommand())
                 .create();
         AeshConsole aeshConsole = new AeshConsoleBuilder()
                 .commandRegistry(registry)
@@ -71,7 +73,7 @@ public class AeshGraphicsExample {
     }
 
     @CommandDefinition(name = "gfx", description = "")
-    public static class GraphicsCommand implements Command {
+    public static class GfxCommand implements Command {
 
         private CommandInvocation invocation;
         private Graphics g;
@@ -159,5 +161,57 @@ public class AeshGraphicsExample {
         }
 
     }
+    @CommandDefinition(name = "graphics", description = "")
+    public static class GraphicsCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+            //ShellFrame frame = new ShellFrame(commandInvocation.getShell());
+            //frame.setTitle("Testing");
+            //frame.paint();
+            commandInvocation.getShell().enableAlternateBuffer();
+
+            testGfx(commandInvocation);
+
+            while(commandInvocation.getInput().getInputKey() != Key.q) {
+
+            }
+
+            commandInvocation.getShell().enableMainBuffer();
+            return CommandResult.SUCCESS;
+        }
+
+        private void testGfx(CommandInvocation commandInvocation) throws InterruptedException {
+
+
+            Graphics g = new AeshGraphics(commandInvocation.getShell());
+
+
+            g.setColor(new TerminalColor(Color.BLUE, Color.BLUE));
+            g.fillRect(20, 10, 20, 4);
+            Thread.sleep(500);
+            g.flush();
+
+            g.translate(5,5);
+            g.setColor(new TerminalColor(Color.WHITE, Color.WHITE));
+            g.fillRect(20, 10, 20, 4);
+            Thread.sleep(500);
+            g.flush();
+
+            g.translate(15,10);
+
+            g.setColor(new TerminalColor(Color.GREEN, Color.GREEN));
+            g.fillRect(20, 10, 20, 4);
+            Thread.sleep(500);
+
+            g.translate(10,7);
+            g.setColor(new TerminalColor(Color.RED, Color.DEFAULT));
+            g.fillRect(20, 10, 20, 4);
+            g.flush();
+
+        }
+    }
+
+
 
 }

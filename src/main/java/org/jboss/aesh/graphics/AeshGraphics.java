@@ -24,10 +24,11 @@ import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalTextStyle;
-import org.jboss.aesh.ui.Rectangle;
 import org.jboss.aesh.util.ANSI;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -40,12 +41,15 @@ public class AeshGraphics implements Graphics {
     private TerminalColor currentColor;
     private TerminalTextStyle currentStyle;
     private Rectangle bounds;
+    private Point translatedPoint;
+    private final static Logger LOGGER = LoggerUtil.getLogger(AeshGraphics.class.getName());
 
     public AeshGraphics(Shell shell) {
         this.shell = shell;
         currentColor = new TerminalColor();
         shell.out().print(ANSI.CURSOR_HIDE);
         bounds = new Rectangle(0, 0, shell.getSize().getWidth(), shell.getSize().getHeight());
+        translatedPoint = new Point(0,0);
     }
 
     @Override
@@ -92,6 +96,9 @@ public class AeshGraphics implements Graphics {
 
     @Override
     public void translate(int x, int y) {
+
+        LOGGER.info("bounds before translate: "+bounds);
+
         int width = bounds.getWidth();
         if(width + x > shell.getSize().getWidth())
             width = shell.getSize().getWidth()-x;
@@ -99,7 +106,9 @@ public class AeshGraphics implements Graphics {
         if(height + y > shell.getSize().getHeight())
             height = shell.getSize().getHeight()-y;
 
-        bounds = new Rectangle(x, y, width, height);
+        bounds = new Rectangle(0, 0, width, height);
+        translatedPoint = new Point(x,y);
+        LOGGER.info("translating to: "+bounds);
     }
 
     @Override
@@ -183,6 +192,7 @@ public class AeshGraphics implements Graphics {
     public void fillRect(int x, int y, int width, int height) {
         //the whole rect is inside bounds
         if(bounds.isInside(x, y) && bounds.isInside(x+width, y+height)) {
+            LOGGER.info("IS INSIDE");
             doFillRect(x, y, width, height);
         }
         //start point is inside bounds, but not end point
@@ -217,6 +227,8 @@ public class AeshGraphics implements Graphics {
         if (currentColor != null)
             shell.out().print(currentColor.fullString());
 
+        x += translatedPoint.getX();
+        y += translatedPoint.getY();
         for (int j = 0; j < height; j++) {
             shell.setCursor(new CursorPosition(y + j, x));
             for (int i = 0; i < width; i++)
@@ -230,6 +242,9 @@ public class AeshGraphics implements Graphics {
             shell.out().print(currentColor.fullString());
         int x = radius, y = 0;
         int radiusError = 1-x;
+
+        x0 += translatedPoint.getX();
+        y0 += translatedPoint.getY();
 
         while(x >= y) {
             drawPixel(x + x0, y + y0);
@@ -253,7 +268,7 @@ public class AeshGraphics implements Graphics {
 
     private void drawPixel(int x, int y) {
         if(bounds.isInside(x, y)) {
-            shell.setCursor(new CursorPosition(y, x));
+            shell.setCursor(new CursorPosition(y+translatedPoint.getY(), x+translatedPoint.getX()));
             shell.out().print('x');
         }
     }
@@ -278,7 +293,9 @@ public class AeshGraphics implements Graphics {
         //if(bounds.getHeight() > y && bounds.getWidth() > x) {
         //    if(bounds.getWidth() < x + width)
         //        width = bounds.getWidth() - x-1;
-        shell.setCursor(new CursorPosition(y,x));
+        shell.setCursor( new CursorPosition(
+                y+translatedPoint.getY(),
+                x+translatedPoint.getX()));
         char[] line = new char[width];
         for(int i=0; i < line.length; i++) {
             if(i == 0 || i == line.length-1)
@@ -290,10 +307,11 @@ public class AeshGraphics implements Graphics {
     }
 
     private void drawVerticalLine(int x, int y, int length) {
+
         if(bounds.getHeight() > y && bounds.getWidth() > x) {
             if(bounds.getHeight() < y + length)
                 length = bounds.getHeight() - y-1;
-            shell.setCursor(new CursorPosition(y,x));
+            shell.setCursor(new CursorPosition(y+translatedPoint.getY(),x+translatedPoint.getX()));
             for(int i=0; i < length; i++) {
                 shell.out().print('|');
                 shell.out().print(CURSOR_DOWN);
