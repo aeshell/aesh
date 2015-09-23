@@ -101,7 +101,7 @@ public class TerminalSize {
 
     public boolean isPositionWithinSize(CursorPosition pos) {
         return (pos.getRow() > -1 && pos.getColumn() > -1 &&
-                pos.getRow() < height && pos.getColumn() < width);
+                pos.getRow() <= height && pos.getColumn() <= width);
     }
 
     @Override

@@ -107,7 +107,8 @@ public class AeshGraphics implements Graphics {
             height = shell.getSize().getHeight()-y;
 
         bounds = new Rectangle(0, 0, width, height);
-        translatedPoint = new Point(x,y);
+        translatedPoint = new Point(x+translatedPoint.getX(),y+translatedPoint.getY());
+
         LOGGER.info("translating to: "+bounds);
     }
 
@@ -131,9 +132,10 @@ public class AeshGraphics implements Graphics {
         if(currentColor != null)
             shell.out().print(currentColor.fullString());
         drawHorizontalLine(x, y, width);
+        LOGGER.info("drawingHorizontal: "+x+", "+(y+height)+", "+width);
         drawHorizontalLine(x,y+height,width);
         drawVerticalLine(x, y+1, height-1);
-        drawVerticalLine(x+width-1,y+1,height-1);
+        drawVerticalLine(x+width,y+1,height-1);
     }
 
     @Override
@@ -296,6 +298,9 @@ public class AeshGraphics implements Graphics {
         shell.setCursor( new CursorPosition(
                 y+translatedPoint.getY(),
                 x+translatedPoint.getX()));
+        LOGGER.info("moved cursor to: x="+(x+translatedPoint.getX())+", y="+(y+translatedPoint.getY()));
+        LOGGER.info("BOUNDS: "+bounds);
+        LOGGER.info("Cursor: "+shell.getCursor());
         char[] line = new char[width];
         for(int i=0; i < line.length; i++) {
             if(i == 0 || i == line.length-1)
@@ -308,9 +313,9 @@ public class AeshGraphics implements Graphics {
 
     private void drawVerticalLine(int x, int y, int length) {
 
-        if(bounds.getHeight() > y && bounds.getWidth() > x) {
+        if(bounds.getHeight() >= y && bounds.getWidth() >= x) {
             if(bounds.getHeight() < y + length)
-                length = bounds.getHeight() - y-1;
+                length = bounds.getHeight() - y;
             shell.setCursor(new CursorPosition(y+translatedPoint.getY(),x+translatedPoint.getX()));
             for(int i=0; i < length; i++) {
                 shell.out().print('|');

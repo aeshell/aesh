@@ -166,12 +166,12 @@ public class AeshGraphicsExample {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
-            //ShellFrame frame = new ShellFrame(commandInvocation.getShell());
-            //frame.setTitle("Testing");
-            //frame.paint();
             commandInvocation.getShell().enableAlternateBuffer();
+            ShellFrame frame = new ShellFrame(commandInvocation.getShell());
+            frame.setTitle("Testing");
+            frame.paint();
 
-            testGfx(commandInvocation);
+            //testGfx(commandInvocation);
 
             while(commandInvocation.getInput().getInputKey() != Key.q) {
 
@@ -186,27 +186,36 @@ public class AeshGraphicsExample {
 
             Graphics g = new AeshGraphics(commandInvocation.getShell());
 
+            g.setColor(new TerminalColor(Color.DEFAULT, Color.DEFAULT));
+            g.clear();
 
             g.setColor(new TerminalColor(Color.BLUE, Color.BLUE));
-            g.fillRect(20, 10, 20, 4);
+            //g.fillRect(20, 10, 20, 4);
+            g.drawCircle(20, 10, 10);
             Thread.sleep(500);
             g.flush();
 
             g.translate(5,5);
             g.setColor(new TerminalColor(Color.WHITE, Color.WHITE));
-            g.fillRect(20, 10, 20, 4);
+            //g.fillRect(20, 10, 20, 4);
+            g.drawCircle(20, 10, 10);
             Thread.sleep(500);
             g.flush();
 
-            g.translate(15,10);
+            g.translate(10,5);
 
             g.setColor(new TerminalColor(Color.GREEN, Color.GREEN));
-            g.fillRect(20, 10, 20, 4);
+           // g.fillRect(20, 10, 20, 4);
+            g.drawCircle(20, 10, 10);
             Thread.sleep(500);
 
-            g.translate(10,7);
+            g.translate(0,2);
+            g.setColor(new TerminalColor(Color.RED, Color.RED));
+            //g.fillRect(20, 10, 20, 4);
+            g.drawCircle(20, 10, 10);
+            g.flush();
+
             g.setColor(new TerminalColor(Color.RED, Color.DEFAULT));
-            g.fillRect(20, 10, 20, 4);
             g.flush();
 
         }
