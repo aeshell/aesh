@@ -25,6 +25,7 @@ import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -41,6 +42,8 @@ public class ProcessManager {
     private boolean doLogging;
     private int pidCounter = 1;
     private int foregroundProcess = -1;
+
+    private Stack<Process> backgroundStack = new Stack<Process>();
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ProcessManager.class.getName());
 
@@ -116,10 +119,16 @@ public class ProcessManager {
                 foregroundProcess = p.getPID();
             }
         }
-        else
-            if(doLogging)
-                LOGGER.info("We already have a process in the foreground: "+
-                        foregroundProcess+", cant add another one");
+        else {
+            Process p = getProcessByPid(pid);
+            if(p != null) {
+                backgroundStack.push(getProcessByPid(pid));
+            }
+            if (doLogging)
+                LOGGER.info("We already have a process in the foreground: " +
+                        foregroundProcess + ", pushing: " + pid + " to background stack. " +
+                        "Will be pulled when current process ends.");
+        }
     }
 
     /**
@@ -141,8 +150,13 @@ public class ProcessManager {
         if (doLogging)
             LOGGER.info("process has finished: " + process);
         processes.remove(process.getPID());
-        if(process.getStatus() == Process.Status.FOREGROUND)
-            foregroundProcess = -1;
+        if(process.getStatus() == Process.Status.FOREGROUND) {
+            if(backgroundStack.isEmpty()) {
+                foregroundProcess = -1;
+            }else{
+                foregroundProcess = backgroundStack.pop().getPID();
+            }
+        }
         console.currentProcessFinished(process);
     }
 
