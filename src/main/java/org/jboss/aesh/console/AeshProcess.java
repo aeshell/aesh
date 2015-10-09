@@ -35,8 +35,8 @@ public class AeshProcess implements Runnable, Process {
     private Status status;
 
     public AeshProcess(int pid, ProcessManager manager,
-                       ConsoleCallback consoleCallback,
-                       ConsoleOperation consoleOperation) {
+        ConsoleCallback consoleCallback,
+        ConsoleOperation consoleOperation) {
         this.manager = manager;
         this.consoleCallback = consoleCallback;
         this.operation = consoleOperation;
@@ -50,11 +50,11 @@ public class AeshProcess implements Runnable, Process {
         try {
             Thread.currentThread().setName("AeshProcess: " + operation.getPid());
             myThread = Thread.currentThread();
-            setExitResult( consoleCallback.execute(operation));
+            setExitResult(consoleCallback.execute(operation));
         }
         catch (InterruptedException e) {
             setExitResult(-1);
-            //e.printStackTrace();
+            // e.printStackTrace();
         }
         finally {
             manager.processHaveFinished(this);
@@ -82,13 +82,11 @@ public class AeshProcess implements Runnable, Process {
     }
 
     private void setExitResult(int exitStatus) {
-        if(exitStatus == 0) {
+        if (exitStatus == 0) {
             exitResult = CommandResult.SUCCESS;
-            exitResult.setResultValue(0);
         }
         else {
-            exitResult = CommandResult.FAILURE;
-            exitResult.setResultValue(exitStatus);
+            exitResult = CommandResult.valueOf(exitStatus);
         }
     }
 
@@ -99,7 +97,7 @@ public class AeshProcess implements Runnable, Process {
 
     @Override
     public void interrupt() {
-        if(myThread != null)
+        if (myThread != null)
             myThread.interrupt();
     }
 
@@ -115,8 +113,10 @@ public class AeshProcess implements Runnable, Process {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof AeshProcess)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof AeshProcess))
+            return false;
 
         AeshProcess that = (AeshProcess) o;
 
@@ -131,10 +131,10 @@ public class AeshProcess implements Runnable, Process {
     @Override
     public String toString() {
         return "AeshProcess{" +
-                "pid=" + operation.getPid() +
-                ", manager=" + manager +
-                ", consoleCallback=" + consoleCallback +
-                ", operation=" + operation +
-                '}';
+            "pid=" + operation.getPid() +
+            ", manager=" + manager +
+            ", consoleCallback=" + consoleCallback +
+            ", operation=" + operation +
+            '}';
     }
 }
