@@ -20,19 +20,71 @@
 package org.jboss.aesh.console.command;
 
 /**
+ * The result of a command execution
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href="mailto:ggastald@redhat.com">George Gastaldi</a>
  */
-public enum CommandResult {
-    SUCCESS,
-    FAILURE;
+public class CommandResult {
+    public static final CommandResult SUCCESS = new CommandResult(0);
+    public static final CommandResult FAILURE = new CommandResult(-1);
 
-    private int result = 0;
+    private final int result;
 
-    public void setResultValue(int result) {
+    /**
+     * Converts the given result integer into a {@link CommandResult}
+     *
+     * @param result
+     * @return {@link CommandResult#SUCCESS} if result == 0, {@link CommandResult#FAILURE} if result == -1 or a new instance if
+     *         different from -1 and 0
+     */
+    public static CommandResult valueOf(final int result) {
+        if (result == 0) {
+            return SUCCESS;
+        }
+        else if (result == -1) {
+            return FAILURE;
+        }
+        else {
+            return new CommandResult(result);
+        }
+    }
+
+    private CommandResult(int result) {
         this.result = result;
     }
 
     public int getResultValue() {
         return result;
+    }
+
+    public boolean isSuccess() {
+        return getResultValue() == 0;
+    }
+
+    public boolean isFailure() {
+        return getResultValue() != 0;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + this.result;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CommandResult other = (CommandResult) obj;
+        if (result != other.result)
+            return false;
+        return true;
     }
 }
