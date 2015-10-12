@@ -117,7 +117,6 @@ public enum Operation {
 
     private Movement movement;
     private final Action action;
-    private int[] input;
 
     Operation(Action action) {
         this.action = action;
@@ -136,11 +135,4 @@ public enum Operation {
         return action;
     }
 
-    public void setInput(int[] input) {
-        this.input = input;
-    }
-
-    public int[] getInput() {
-        return input;
-    }
 }
