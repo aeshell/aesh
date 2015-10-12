@@ -23,12 +23,15 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Assume;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author <a href="mailto:gnodet@gmail.com">Guillaume Nodet</a>
@@ -132,6 +135,8 @@ public class FailingBehaviors extends BaseConsoleTest {
     public void testThreadSafety() throws Exception {
         Assume.assumeTrue(Config.isOSPOSIXCompatible());
 
+        final AtomicBoolean result = new AtomicBoolean(true);
+
         List<Thread> threads = new ArrayList<>();
         for (int i = 'a'; i <= 'f'; i++) {
             final char finalI = (char) i;
@@ -157,7 +162,9 @@ public class FailingBehaviors extends BaseConsoleTest {
                             public int call(Console console, ConsoleOperation op) {
                                 String line = op.getBuffer();
                                 for (int k = 0; k < line.length(); k++) {
-                                    assertEquals(finalI, line.charAt(k));
+                                    if (finalI != line.charAt(k)) {
+                                        result.set(false);
+                                    }
                                 }
                                 return 0;
                             }
@@ -174,6 +181,7 @@ public class FailingBehaviors extends BaseConsoleTest {
         for (Thread th : threads) {
             th.join();
         }
+        assertTrue(result.get());
     }
 
 }
