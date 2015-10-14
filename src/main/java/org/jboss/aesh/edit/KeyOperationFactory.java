@@ -45,6 +45,8 @@ public class KeyOperationFactory {
             keys.add(new KeyOperation(Key.ENTER_2, Operation.NEW_LINE));
         }
 
+        keys.add(new KeyOperation(Key.CTRL_M, Operation.NEW_LINE));
+
         keys.add(new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING));
         keys.add(new KeyOperation(Key.CTRL_B, Operation.MOVE_PREV_CHAR));
         keys.add(new KeyOperation(Key.CTRL_C, Operation.INTERRUPT));
