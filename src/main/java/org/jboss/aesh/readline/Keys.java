@@ -62,6 +62,7 @@ public enum Keys implements KeyEvent {
   SHIFT_RIGHT("", 27, ']', '1', ';', '2', 'C'),
   SHIFT_LEFT("", 27, ']', '1', ';', '2', 'D');
 
+
   final String name;
   final int[] sequence;
 

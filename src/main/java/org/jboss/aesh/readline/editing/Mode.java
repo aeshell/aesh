@@ -6,15 +6,14 @@
  */
 package org.jboss.aesh.readline.editing;
 
+import org.jboss.aesh.readline.Action;
 import org.jboss.aesh.readline.KeyEvent;
-
-import java.awt.event.ActionEvent;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface Mode {
 
-    ActionEvent parse(KeyEvent event);
+    Action parse(KeyEvent event);
 
 }
