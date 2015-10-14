@@ -19,8 +19,16 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.terminal.utils.Curses;
+import org.jboss.aesh.terminal.utils.InfoCmp;
+import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 import org.jboss.aesh.util.LoggerUtil;
 
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -34,7 +42,7 @@ public class InfocmpManager {
     private static final Logger LOGGER = LoggerUtil.getLogger(InfocmpManager.class.getName());
 
     public static int[] getKeyHome() {
-        int[] home = InfocmpHandler.getInstance().getAsInts("khome");
+        int[] home = getCurrentTranslatedCapabilityAsInts("khome");
         if(home.length == 0) {
             LOGGER.info("Failed to get key home from infocmp, using default");
             return new int[]{27,79,72}; //use default value
@@ -44,7 +52,7 @@ public class InfocmpManager {
     }
 
     public static int[] getHome() {
-        int[] home = InfocmpHandler.getInstance().getAsInts("home");
+        int[] home = getCurrentTranslatedCapabilityAsInts("home");
         if(home.length == 0) {
             LOGGER.info("Failed to get cursor home from infocmp, using default");
             return new int[]{27,91,72}; //use default value
@@ -54,7 +62,7 @@ public class InfocmpManager {
     }
 
     public static int[] getEnd() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("end");
+        int[] infocmpValue = getCurrentTranslatedCapabilityAsInts("end");
         if(infocmpValue.length == 0) {
             LOGGER.info("Failed to get end from infocmp, using default");
             return new int[]{27,91,70}; //use default value
@@ -64,7 +72,7 @@ public class InfocmpManager {
     }
 
     public static int[] getKeyEnd() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("kend");
+        int[] infocmpValue = getCurrentTranslatedCapabilityAsInts("kend");
         if(infocmpValue.length == 0) {
             LOGGER.info("Failed to get end from infocmp, using default");
             return new int[]{27,79,70}; //use default value
@@ -74,7 +82,7 @@ public class InfocmpManager {
     }
 
     public static int[] getPgUp() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("kpp");
+        int[] infocmpValue = getCurrentTranslatedCapabilityAsInts("kpp");
         if(infocmpValue.length == 0) {
             LOGGER.info("Failed to get pgup from infocmp, using default");
             return new int[]{27,91,53,126}; //use default value
@@ -84,7 +92,7 @@ public class InfocmpManager {
     }
 
     public static int[] getPgDown() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("knp");
+        int[] infocmpValue = getCurrentTranslatedCapabilityAsInts("knp");
         if(infocmpValue.length == 0) {
             LOGGER.info("Failed to get pgdown from infocmp, using default");
             return new int[]{27,91,54,126}; //use default value
@@ -94,7 +102,7 @@ public class InfocmpManager {
     }
 
     public static int[] getLeft() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("kcub1");
+        int[] infocmpValue = getCurrentTranslatedCapabilityAsInts("kcub1");
         if(infocmpValue.length == 0) {
             LOGGER.info("Failed to get left from infocmp, using default");
             return new int[]{27,79,68}; //use default value
@@ -104,7 +112,7 @@ public class InfocmpManager {
     }
 
     public static int[] getRight() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("cuf1");
+        int[] infocmpValue = getCurrentTranslatedCapabilityAsInts("cuf1");
         if(infocmpValue.length == 0) {
             LOGGER.info("Failed to get right from infocmp, using default");
             return new int[]{27,79,68}; //use default value
@@ -114,7 +122,7 @@ public class InfocmpManager {
     }
 
     public static int[] getUp() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("kcuu1");
+        int[] infocmpValue = getCurrentTranslatedCapabilityAsInts("kcuu1");
         if(infocmpValue.length == 0) {
             LOGGER.info("Failed to get up from infocmp, using default");
             return new int[]{27,79,65}; //use default value
@@ -124,7 +132,7 @@ public class InfocmpManager {
     }
 
     public static int[] getDown() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("kcud1");
+        int[] infocmpValue = getCurrentTranslatedCapabilityAsInts("kcud1");
         if(infocmpValue.length == 0) {
             LOGGER.info("Failed to get down from infocmp, using default");
             return new int[]{27,79,66}; //use default value
@@ -134,7 +142,7 @@ public class InfocmpManager {
     }
 
     public static int[] getIns() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("kich1");
+        int[] infocmpValue = getCurrentTranslatedCapabilityAsInts("kich1");
         if(infocmpValue.length == 0) {
             LOGGER.info("Failed to get insert from infocmp, using default");
             return new int[]{27,91,50,126}; //use default value
@@ -145,7 +153,7 @@ public class InfocmpManager {
     }
 
     public static int[] getDelete() {
-        int[] infocmpValue = InfocmpHandler.getInstance().getAsInts("kdch1");
+        int[] infocmpValue = getCurrentTranslatedCapabilityAsInts("kdch1");
         if(infocmpValue.length == 0) {
             LOGGER.info("Failed to get delete from infocmp, using default");
             return new int[]{27,91,51,126}; //use default value
@@ -155,7 +163,7 @@ public class InfocmpManager {
     }
 
     public static String saveCursor() {
-        String cursor = InfocmpHandler.getInstance().get("sc");
+        String cursor = getCurrentTranslatedCapability("sc");
         if(cursor.length() == 0) {
             LOGGER.info("Failed to get save_cursor from infocmp, using default");
             return "\u001B[s";
@@ -165,7 +173,7 @@ public class InfocmpManager {
     }
 
     public static String restoreCursor() {
-        String cursor = InfocmpHandler.getInstance().get("rc");
+        String cursor = getCurrentTranslatedCapability("rc");
         if(cursor.length() == 0) {
             LOGGER.info("Failed to get restore_cursor from infocmp, using default");
             return "\u001B[u";
@@ -175,7 +183,7 @@ public class InfocmpManager {
     }
 
     public static String clearScreen() {
-        String clear = InfocmpHandler.getInstance().get("clear");
+        String clear = getCurrentTranslatedCapability("clear");
         if(clear.length() == 0) {
             LOGGER.info("Failed to get clear from infocmp, using default");
             return "\u001B[2J";
@@ -185,7 +193,7 @@ public class InfocmpManager {
     }
 
     public static String alternateBuffer() {
-        String buffer = InfocmpHandler.getInstance().get("smcup");
+        String buffer = getCurrentTranslatedCapability("smcup");
         if(buffer.length() == 0) {
             LOGGER.info("Failed to get alternate buffer from infocmp, using default");
             return "\u001B[?1049h";
@@ -195,7 +203,7 @@ public class InfocmpManager {
     }
 
     public static String mainBuffer() {
-        String buffer = InfocmpHandler.getInstance().get("rmcup");
+        String buffer = getCurrentTranslatedCapability("rmcup");
         if(buffer.length() == 0) {
             LOGGER.info("Failed to get main buffer from infocmp, using default");
             return "\u001B[?1049l";
@@ -205,7 +213,7 @@ public class InfocmpManager {
     }
 
     public static String invertBackground() {
-        String buffer = InfocmpHandler.getInstance().get("smso");
+        String buffer = getCurrentTranslatedCapability("smso");
         if(buffer.length() == 0) {
             LOGGER.info("Failed to invert background from infocmp, using default");
             return "\u001B[7m";
@@ -215,7 +223,7 @@ public class InfocmpManager {
     }
 
     public static String normalBackground() {
-        String buffer = InfocmpHandler.getInstance().get("rmso");
+        String buffer = getCurrentTranslatedCapability("rmso");
         if(buffer.length() == 0) {
             LOGGER.info("Failed to reset to normal background from infocmp, using default");
             return "\u001B[27m";
@@ -225,7 +233,7 @@ public class InfocmpManager {
     }
 
     public static String enableBold() {
-        String bold = InfocmpHandler.getInstance().get("bold");
+        String bold = getCurrentTranslatedCapability("bold");
         if(bold.length() == 0) {
             LOGGER.info("Failed to get bold from infocmp, using default");
             return "\u001B[0;1m";
@@ -235,7 +243,7 @@ public class InfocmpManager {
     }
 
     public static String enableUnderline() {
-        String underline = InfocmpHandler.getInstance().get("smul");
+        String underline = getCurrentTranslatedCapability("smul");
         if(underline.length() == 0) {
             LOGGER.info("Failed to get underline from infocmp, using default");
             return "\u001B[0;4m";
@@ -245,7 +253,7 @@ public class InfocmpManager {
     }
 
     public static String disableUnderline() {
-        String underline = InfocmpHandler.getInstance().get("rmul");
+        String underline = getCurrentTranslatedCapability("rmul");
         if(underline.length() == 0) {
             LOGGER.info("Failed to exit underline from infocmp, using default");
             return "\u001B[0;24m";
@@ -255,7 +263,7 @@ public class InfocmpManager {
     }
 
     public static String enableBlink() {
-        String blink = InfocmpHandler.getInstance().get("blink");
+        String blink = getCurrentTranslatedCapability("blink");
         if(blink.length() == 0) {
             LOGGER.info("Failed to enable blink from infocmp, using default");
             return "\u001B[0;5m";
@@ -265,7 +273,7 @@ public class InfocmpManager {
     }
 
     public static String originalColors() {
-        String reset = InfocmpHandler.getInstance().get("op");
+        String reset = getCurrentTranslatedCapability("op");
         if(reset.length() == 0) {
             LOGGER.info("Failed to reset from infocmp, using default");
             return "\u001B[0;0m";
@@ -274,6 +282,40 @@ public class InfocmpManager {
             return reset;
     }
 
+    private static boolean initialized = false;
+    private static Set<Capability> bools = new HashSet<>();
+    private static Map<Capability, Integer> ints = new HashMap<>();
+    private static Map<Capability, String> strings = new HashMap<>();
 
+    private static int[] getCurrentTranslatedCapabilityAsInts(String cap) {
+        String s = getCurrentTranslatedCapability(cap);
+        return s.codePoints().toArray();
+    }
+
+    private static String getCurrentTranslatedCapability(String cap) {
+        try {
+            if (!initialized) {
+                String term = System.getenv("TERM");
+                if (term == null) {
+                    term = "xterm-256color";
+                }
+                String infocmp = InfoCmp.getInfoCmp(term);
+                InfoCmp.parseInfoCmp(infocmp, bools, ints, strings);
+                initialized = true;
+            }
+            Capability capability = Capability.byName(cap);
+            if (capability != null) {
+                String capStr = strings.get(capability);
+                if (capStr != null) {
+                    StringWriter sw = new StringWriter();
+                    Curses.tputs(sw, capStr);
+                    return sw.toString();
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return "";
+    }
 
 }

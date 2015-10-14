@@ -20,6 +20,7 @@
 package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.terminal.api.Console;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -70,4 +71,6 @@ public interface Terminal extends Closeable {
      * @param output stream
      */
     void changeOutputStream(PrintStream output);
+
+    Console getConsole();
 }
