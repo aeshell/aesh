@@ -30,9 +30,8 @@ import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.ViEditMode;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.terminal.POSIXTerminal;
+import org.jboss.aesh.terminal.ShellWrapper;
 import org.jboss.aesh.terminal.Terminal;
-import org.jboss.aesh.terminal.WindowsTerminal;
 
 import java.io.File;
 import java.io.InputStream;
@@ -372,10 +371,7 @@ public class SettingsImpl implements Settings {
     @Override
     public Terminal getTerminal() {
         if(terminal == null) {
-            if(Config.isOSPOSIXCompatible())
-                terminal = new POSIXTerminal();
-            else
-                terminal = new WindowsTerminal();
+            terminal = new ShellWrapper(this);
         }
 
         return terminal;

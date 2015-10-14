@@ -6,15 +6,15 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package org.jboss.aesh.console.terminal;
+package org.jboss.aesh.console.terminal.utils;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.aesh.terminal.InfoCmp;
-import org.jboss.aesh.terminal.InfoCmp.Capability;
+import org.jboss.aesh.terminal.utils.InfoCmp;
+import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

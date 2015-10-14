@@ -6,7 +6,7 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package org.jboss.aesh.terminal;
+package org.jboss.aesh.terminal.utils;
 
 import java.io.IOException;
 import java.util.HashMap;

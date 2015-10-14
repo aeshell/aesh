@@ -6,11 +6,11 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package org.jboss.aesh.console.terminal;
+package org.jboss.aesh.console.terminal.utils;
 
 import java.io.StringWriter;
 
-import org.jboss.aesh.terminal.Curses;
+import org.jboss.aesh.terminal.utils.Curses;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

@@ -6,7 +6,7 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package org.jboss.aesh.terminal;
+package org.jboss.aesh.terminal.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -15,14 +15,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Provides access to terminal line settings via <tt>stty</tt>.
+ * Helper methods for capturing an external process output.
  *
- * @author <a href="mailto:mwp1@cornell.edu">Marc Prud'hommeaux</a>
- * @author <a href="mailto:dwkemp@gmail.com">Dale Kemp</a>
- * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
- * @author <a href="mailto:jbonofre@apache.org">Jean-Baptiste Onofré</a>
  * @author <a href="mailto:gnodet@gmail.com">Guillaume Nodet</a>
- * @since 2.0
  */
 public final class ExecHelper
 {

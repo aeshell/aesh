@@ -19,7 +19,9 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.jboss.aesh.terminal.InfoCmp.Capability;
+import org.jboss.aesh.terminal.utils.Curses;
+import org.jboss.aesh.terminal.utils.InfoCmp;
+import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.StringWriter;
