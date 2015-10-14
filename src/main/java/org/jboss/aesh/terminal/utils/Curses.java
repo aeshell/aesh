@@ -162,7 +162,7 @@ public final class Curses {
                             break;
                         case '{':
                             int start = index;
-                            while (str.charAt(index++) != '}') ;
+                            while (str.charAt(index++) != '}');
                             if (exec) {
                                 int v = Integer.valueOf(str.substring(start, index - 1));
                                 stack.push(v);

@@ -20,8 +20,7 @@ import org.jboss.aesh.util.LoggerUtil;
  *
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
-public final class ShutdownHooks
-{
+public final class ShutdownHooks {
     private static final Logger LOGGER = LoggerUtil.getLogger(ShutdownHooks.class.getName());
 
     private static final List<Task> tasks = new ArrayList<Task>();
@@ -114,8 +113,7 @@ public final class ShutdownHooks
     /**
      * Essentially a {@link Runnable} which allows running to throw an exception.
      */
-    public interface Task
-    {
+    public interface Task {
         void run() throws Exception;
     }
 }

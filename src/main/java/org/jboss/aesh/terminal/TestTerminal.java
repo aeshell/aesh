@@ -29,7 +29,6 @@ import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.terminal.api.Console;
-import org.jboss.aesh.terminal.api.ConsoleBuilder;
 import org.jboss.aesh.terminal.impl.LineDisciplineConsole;
 
 /**

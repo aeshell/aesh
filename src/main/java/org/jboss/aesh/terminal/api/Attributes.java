@@ -34,13 +34,13 @@ public class Attributes {
         VMIN(16),
         VTIME(17),
         VSTATUS(18);
-        
+
         final int value;
 
         ControlChar(int value) {
             this.value = value;
         }
-        
+
     }
 
     /**
@@ -61,7 +61,7 @@ public class Attributes {
         IXANY  (0x00000800),      /* any char will restart after stop */
         IMAXBEL(0x00002000),      /* ring bell on input queue full */
         IUTF8  (0x00004000);      /* maintain state for UTF-8 VERASE */
-        
+
         final int value;
 
         InputFlag(int value) {
@@ -102,10 +102,10 @@ public class Attributes {
     public enum ControlFlag {
         CIGNORE    (0x00000001),      /* ignore control flags */
         CSIZE      (0x00000300),      /* character size mask */
-            CS5    (0x00000000),      /* 5 bits    (pseudo) */
-            CS6    (0x00000100),      /* 6 bits */
-            CS7    (0x00000200),      /* 7 bits */
-            CS8    (0x00000300),      /* 8 bits */
+        CS5    (0x00000000),      /* 5 bits    (pseudo) */
+        CS6    (0x00000100),      /* 6 bits */
+        CS7    (0x00000200),      /* 7 bits */
+        CS8    (0x00000300),      /* 8 bits */
         CSTOPB     (0x00000400),      /* send 2 stop bits */
         CREAD      (0x00000800),      /* enable receiver */
         PARENB     (0x00001000),      /* parity enable */
@@ -175,7 +175,7 @@ public class Attributes {
     //
     // Input flags
     //
-    
+
     public EnumSet<InputFlag> getInputFlags() {
         EnumSet<InputFlag> flags = EnumSet.noneOf(InputFlag.class);
         for (InputFlag flag : InputFlag.values()) {
@@ -209,7 +209,7 @@ public class Attributes {
             c_iflag &= ~v;
         }
     }
-    
+
     public void setInputFlag(InputFlag flag, boolean value) {
         if (value) {
             c_iflag |= flag.value;
@@ -221,7 +221,7 @@ public class Attributes {
     //
     // Output flags
     //
-    
+
     public EnumSet<OutputFlag> getOutputFlags() {
         EnumSet<OutputFlag> flags = EnumSet.noneOf(OutputFlag.class);
         for (OutputFlag flag : OutputFlag.values()) {
@@ -267,7 +267,7 @@ public class Attributes {
     //
     // Control flags
     //
-    
+
     public EnumSet<ControlFlag> getControlFlags() {
         EnumSet<ControlFlag> flags = EnumSet.noneOf(ControlFlag.class);
         for (ControlFlag flag : ControlFlag.values()) {
@@ -319,7 +319,7 @@ public class Attributes {
             c_cflag &= ~flag.value;
         }
     }
-    
+
     //
     // Local flags
     //

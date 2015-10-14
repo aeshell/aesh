@@ -21,7 +21,7 @@ import java.util.function.IntConsumer;
  */
 public class BindingReader implements IntConsumer {
 
-    public static final long DEFAULT_AMBIGUOUS_TIMEOUT = 1000l;
+    public static final long DEFAULT_AMBIGUOUS_TIMEOUT = 1000L;
 
     protected final Consumer<Object> bindingConsumer;
     protected ScheduledExecutorService timer;

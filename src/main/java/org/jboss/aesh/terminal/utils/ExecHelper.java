@@ -19,8 +19,7 @@ import java.io.OutputStream;
  *
  * @author <a href="mailto:gnodet@gmail.com">Guillaume Nodet</a>
  */
-public final class ExecHelper
-{
+public final class ExecHelper {
 
     private ExecHelper() {
     }

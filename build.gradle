@@ -83,6 +83,13 @@ task docs(type: Javadoc) {
     source = sourceSets.main.allJava
 }
 
+checkstyle {
+  showViolations true
+  configProperties = [
+     'checkstyle.cache.file': rootProject.file('build/checkstyle.cache'),
+  ]
+}
+
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.4'
+    gradleVersion = '2.7'
 }
