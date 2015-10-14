@@ -43,6 +43,9 @@ public class KeyMap {
 
     private Object[] mapping = new Object[KEYMAP_LENGTH];
     private Object anotherKey = null;
+    private Object unicode;
+    private Object nomatch;
+    private long ambigousTimeout;
 
     public static String display(String key) {
         StringBuilder sb = new StringBuilder();
@@ -260,10 +263,6 @@ public class KeyMap {
         return null;
     }
 
-    public Object getAnotherKey() {
-        return anotherKey;
-    }
-
     public static final Comparator<String> KEYSEQ_COMPARATOR = (s1, s2) -> {
         int len1 = s1.length();
         int len2 = s2.length();
@@ -280,6 +279,39 @@ public class KeyMap {
         }
         return len1 - len2;
     };
+
+    //
+    // Methods
+    //
+
+
+    public Object getUnicode() {
+        return unicode;
+    }
+
+    public void setUnicode(Object unicode) {
+        this.unicode = unicode;
+    }
+
+    public Object getNomatch() {
+        return nomatch;
+    }
+
+    public void setNomatch(Object nomatch) {
+        this.nomatch = nomatch;
+    }
+
+    public long getAmbigousTimeout() {
+        return ambigousTimeout;
+    }
+
+    public void setAmbigousTimeout(long ambigousTimeout) {
+        this.ambigousTimeout = ambigousTimeout;
+    }
+
+    public Object getAnotherKey() {
+        return anotherKey;
+    }
 
     public Map<String, Object> getBoundKeys() {
         Map<String, Object> bound = new TreeMap<>(KEYSEQ_COMPARATOR);

@@ -32,13 +32,8 @@ import java.util.function.IntConsumer;
  */
 public class BindingReader implements IntConsumer {
 
-    public static final long DEFAULT_AMBIGUOUS_TIMEOUT = 1000L;
-
     protected final Consumer<Object> bindingConsumer;
     protected ScheduledExecutorService timer;
-    protected final Object unicode;
-    protected final Object nomatch;
-    protected final long ambiguousTimeout;
     protected final StringBuilder opBuffer = new StringBuilder();
     protected String lastBinding;
     protected KeyMap keys;
@@ -52,19 +47,10 @@ public class BindingReader implements IntConsumer {
      *
      * @param bindingConsumer the consumer of key bindings
      * @param timer a scheduler to use when
-     * @param unicode
-     * @param nomatch
      */
-    public BindingReader(Consumer<Object> bindingConsumer, ScheduledExecutorService timer, Object unicode, Object nomatch) {
-        this(bindingConsumer, timer, unicode, nomatch, DEFAULT_AMBIGUOUS_TIMEOUT);
-    }
-
-    public BindingReader(Consumer<Object> bindingConsumer, ScheduledExecutorService timer, Object unicode, Object nomatch, long ambiguousTimeout) {
+    public BindingReader(Consumer<Object> bindingConsumer, ScheduledExecutorService timer) {
         this.bindingConsumer = bindingConsumer;
         this.timer = timer;
-        this.unicode = unicode;
-        this.nomatch = nomatch;
-        this.ambiguousTimeout = ambiguousTimeout;
     }
 
     public void setKeyMaps(KeyMap keys) {
@@ -122,10 +108,10 @@ public class BindingReader implements IntConsumer {
                     String rem = opBuffer.substring(Character.charCount(cp));
                     lastBinding = opBuffer.substring(0, Character.charCount(cp));
                     // Unicode character
-                    if (cp >= KeyMap.KEYMAP_LENGTH && unicode != null) {
-                        o = unicode;
+                    if (cp >= KeyMap.KEYMAP_LENGTH && keys.getUnicode() != null) {
+                        o = keys.getUnicode();
                     } else {
-                        o = nomatch;
+                        o = keys.getNomatch();
                     }
                     opBuffer.setLength(0);
                     opBuffer.append(rem);
@@ -150,8 +136,8 @@ public class BindingReader implements IntConsumer {
     }
 
     private void startTimer() {
-        if (timer != null) {
-            future.set(timer.schedule(this::onTimeout, ambiguousTimeout, TimeUnit.MILLISECONDS));
+        if (timer != null && keys.getAmbigousTimeout() > 0) {
+            future.set(timer.schedule(this::onTimeout, keys.getAmbigousTimeout(), TimeUnit.MILLISECONDS));
         }
     }
 
