@@ -72,6 +72,11 @@ public class ShellWrapper implements Terminal, Shell {
     }
 
     @Override
+    public Console getConsole() {
+        return console;
+    }
+
+    @Override
     public PrintStream out() {
         return out;
     }

@@ -20,6 +20,7 @@
 package org.jboss.aesh.terminal;
 
 import java.io.BufferedInputStream;
+import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -27,6 +28,9 @@ import java.io.PrintStream;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.terminal.api.Console;
+import org.jboss.aesh.terminal.api.ConsoleBuilder;
+import org.jboss.aesh.terminal.impl.LineDisciplineConsole;
 
 /**
  * A dummy terminal used for tests
@@ -35,6 +39,7 @@ import org.jboss.aesh.console.settings.Settings;
  */
 public class TestTerminal implements Terminal, Shell {
 
+    private Console console;
     private PrintStream outWriter;
     private PrintStream errWriter;
     private TerminalSize size;
@@ -43,6 +48,11 @@ public class TestTerminal implements Terminal, Shell {
 
     @Override
     public void init(Settings settings) {
+        try {
+            console = new LineDisciplineConsole(null, "ansi", settings.getStdOut(), "UTF-8");
+        } catch (IOException e) {
+            throw new IOError(e);
+        }
         input =  new ConsoleInputSession(settings.getInputStream());
         in = settings.getInputStream();
         outWriter = new PrintStream(settings.getStdOut(), true);
@@ -54,6 +64,11 @@ public class TestTerminal implements Terminal, Shell {
     @Override
     public int[] read() throws IOException {
             return input.readAll();
+    }
+
+    @Override
+    public Console getConsole() {
+        return console;
     }
 
     @Override
