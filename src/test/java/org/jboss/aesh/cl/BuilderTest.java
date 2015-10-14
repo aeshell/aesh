@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.cl;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
@@ -30,16 +29,18 @@ import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
 import org.jboss.aesh.cl.result.NullResultHandler;
 import org.jboss.aesh.cl.validator.NullCommandValidator;
 import org.jboss.aesh.console.command.Command;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class BuilderTest extends TestCase {
+public class BuilderTest {
 
-    public BuilderTest(String name) {
-        super(name);
-    }
-
+    @Test
     public void testBuilder() throws CommandLineParserException {
         ProcessedCommandBuilder pb = new ProcessedCommandBuilder();
         pb.name("foo").description("foo is bar");
@@ -55,6 +56,7 @@ public class BuilderTest extends TestCase {
         assertEquals("test1.txt", cl.getOptionValue('f'));
     }
 
+    @Test
     public void testBuilder2() throws CommandLineParserException {
 
         ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("less").description("less is more");
@@ -94,6 +96,7 @@ public class BuilderTest extends TestCase {
         assertEquals("test1.txt", cl.getArgument().getValues().get(0));
     }
 
+    @Test
     public void testBuilder3() throws CommandLineParserException {
         ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("less").description("less is more");
         pb.addOption(
@@ -127,6 +130,7 @@ public class BuilderTest extends TestCase {
         assertTrue(cl.hasOption('e'));
     }
 
+    @Test
     public void testParameterInt() throws CommandLineParserException {
         ProcessedCommand<Command> processedCommand =
                 new ProcessedCommandBuilder()

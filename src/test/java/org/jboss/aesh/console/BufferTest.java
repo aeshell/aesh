@@ -19,18 +19,16 @@
  */
 package org.jboss.aesh.console;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class BufferTest extends TestCase {
+public class BufferTest {
 
-
-    public BufferTest(String name) {
-        super(name);
-    }
-
+    @Test
     public void testMove() {
         String input = "foo-bar";
         Buffer buffer = new Buffer(true, null);
@@ -113,6 +111,7 @@ public class BufferTest extends TestCase {
         assertEquals(2, buffer.getCursorWithPrompt());
     }
 
+    @Test
     public void testPrintAnsi() {
         char[] expected = new char[] {(char) 27, '[', 'J'};
         assertEquals(new String(expected), new String(Buffer.printAnsi("J")));

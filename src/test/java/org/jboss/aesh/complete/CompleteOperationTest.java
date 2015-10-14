@@ -19,18 +19,20 @@
  */
 package org.jboss.aesh.complete;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
+import org.junit.Test;
 
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CompleteOperationTest extends TestCase {
+public class CompleteOperationTest {
 
     private final AeshContext aeshContext = new AeshContext() {
         @Override
@@ -42,10 +44,7 @@ public class CompleteOperationTest extends TestCase {
         }
     };
 
-    public CompleteOperationTest(String name) {
-        super(name);
-    }
-
+    @Test
     public void testGetFormattedCompletionCandidates() {
         CompleteOperation co = new CompleteOperation(aeshContext, "ls foob", 6);
         co.addCompletionCandidate("foobar");
@@ -58,6 +57,7 @@ public class CompleteOperationTest extends TestCase {
         assertEquals("bars", formattedCandidates.get(1));
     }
 
+    @Test
     public void testRemoveEscapedSpacesFromCompletionCandidates() {
         CompleteOperation co = new CompleteOperation(aeshContext, "ls foob", 6);
         co.addCompletionCandidate("foo\\ bar");

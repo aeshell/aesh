@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.TestCase;
-
 import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
@@ -39,20 +37,19 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.terminal.TestTerminal;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public abstract class AeshTestCase extends TestCase {
+public abstract class AeshTestCase {
 
-    public AeshTestCase(String test) {
-        super(test);
+    public void assertEqualsBuffer(String expected, TestBuffer buffer) throws IOException {
+        assertEqualsBuffer(expected, buffer, false);
     }
 
-    public void assertEquals(String expected, TestBuffer buffer) throws IOException {
-        assertEquals(expected, buffer, false);
-    }
-
-    public void assertEquals(final String expected, TestBuffer buffer, final boolean lastOnly) throws IOException {
+    public void assertEqualsBuffer(final String expected, TestBuffer buffer, final boolean lastOnly) throws IOException {
 
         SettingsBuilder builder = new SettingsBuilder();
         builder.readInputrc(false);
@@ -67,7 +64,6 @@ public abstract class AeshTestCase extends TestCase {
 
         Console console = new Console(builder.create());
         final StringBuilder in = new StringBuilder();
-        String tmpString = null;
         console.setConsoleCallback(new AeshConsoleCallback() {
             @Override
             public int execute(ConsoleOperation output) throws InterruptedException {

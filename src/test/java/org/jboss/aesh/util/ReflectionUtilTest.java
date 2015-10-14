@@ -23,7 +23,7 @@ import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.console.command.converter.ConverterInvocation;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

@@ -19,20 +19,19 @@
  */
 package org.jboss.aesh.console.operator;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.console.ConsoleOperation;
+import org.junit.Test;
 
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ControlOperatorParserTest extends TestCase {
+public class ControlOperatorParserTest {
 
-    public ControlOperatorParserTest(String name) {
-        super(name);
-    }
-
+    @Test
     public void testRedirectionOperation() {
         assertEquals(new ConsoleOperation(ControlOperator.NONE, "ls foo.txt"),
                 ControlOperatorParser.findAllControlOperators("ls foo.txt").get(0));
@@ -134,6 +133,7 @@ public class ControlOperatorParserTest extends TestCase {
         assertEquals(new ConsoleOperation(ControlOperator.NONE, " \'bar | foo4\'"), ops.get(1));
     }
 
+    @Test
     public void testFindLastRedirectionBeforeCursor() {
         assertEquals(0, ControlOperatorParser.findLastRedirectionPositionBeforeCursor(" foo", 5));
         assertEquals(2, ControlOperatorParser.findLastRedirectionPositionBeforeCursor(" > foo", 5));

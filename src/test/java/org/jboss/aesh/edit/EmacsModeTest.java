@@ -37,20 +37,20 @@ import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.TestTerminal;
+import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class EmacsModeTest extends AeshTestCase {
 
-    public EmacsModeTest(String test) {
-        super(test);
-    }
-
+    @Test
     public void testSimpleMovementAndEdit() throws Exception {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
@@ -100,6 +100,7 @@ public class EmacsModeTest extends AeshTestCase {
 
     }
 
+    @Test
     public void testWordMovementAndEdit() throws Exception {
 
         if(Config.isOSPOSIXCompatible()) {
@@ -158,6 +159,7 @@ public class EmacsModeTest extends AeshTestCase {
         }
     }
 
+    @Test
     public void testArrowMovement() throws Exception {
 
         KeyOperation deletePrevChar =  new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR);
@@ -173,7 +175,7 @@ public class EmacsModeTest extends AeshTestCase {
                 .append(movePrevChar.getKeyValues())
                 .append(deletePrevChar.getKeyValues())
                 .append(TestBuffer.getNewLine());
-        assertEquals("foo   bar...  Foo-ar.", b);
+        assertEqualsBuffer("foo   bar...  Foo-ar.", b);
 
         b = new TestBuffer("foo   bar...  Foo-Bar.");
         b.append(moveBeginning.getKeyValues())
@@ -181,7 +183,7 @@ public class EmacsModeTest extends AeshTestCase {
                 .append(moveNextChar.getKeyValues())
                 .append(deletePrevChar.getKeyValues())
                 .append(TestBuffer.getNewLine());
-        assertEquals("fo   bar...  Foo-Bar.", b);
+        assertEqualsBuffer("fo   bar...  Foo-Bar.", b);
     }
 
 

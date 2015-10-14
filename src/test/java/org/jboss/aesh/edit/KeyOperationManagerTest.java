@@ -19,22 +19,22 @@
  */
 package org.jboss.aesh.edit;
 
-import junit.framework.TestCase;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class KeyOperationManagerTest extends TestCase {
+public class KeyOperationManagerTest {
 
-    public KeyOperationManagerTest(String test) {
-        super(test);
-    }
-
+    @Test
     public void testOperations() {
         KeyOperationManager kom = new KeyOperationManager();
         kom.addOperation(new KeyOperation(Key.DOWN, Operation.HISTORY_NEXT));
@@ -53,6 +53,7 @@ public class KeyOperationManagerTest extends TestCase {
 
     }
 
+    @Test
     public void testFindOperation() {
         KeyOperationManager kom = new KeyOperationManager();
         kom.addOperation(new KeyOperation(Key.j, Operation.HISTORY_NEXT));
@@ -63,6 +64,7 @@ public class KeyOperationManagerTest extends TestCase {
                kom.findOperation(new int[]{108}));
     }
 
+    @Test
     public void testFindEmacsOperations() {
         KeyOperationManager kom = new KeyOperationManager();
         kom.addOperations(KeyOperationFactory.generateEmacsMode());
@@ -74,6 +76,7 @@ public class KeyOperationManagerTest extends TestCase {
         }
     }
 
+    @Test
     public void testFindViOperations() {
         KeyOperationManager kom = new KeyOperationManager();
         kom.addOperations(KeyOperationFactory.generateViMode());

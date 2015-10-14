@@ -15,15 +15,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.jboss.aesh.terminal.api.Console;
 import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.jboss.aesh.console.keymap.KeyMap.alt;
@@ -128,7 +123,7 @@ public class KeyMapTest {
         assertEquals("\"^A^B^C^?\\^\\\\\"",
                 display("\u0001\u0002\u0003\u007f^\\"));
     }
-    
+
     @Test
     public void testRange() {
         Collection<String> range = range("a^A-a^D");
