@@ -84,7 +84,7 @@ public class Buffer {
     /**
      * Reset the buffer, keep the existing prompt
      */
-    protected void reset() {
+    public void reset() {
         if(prompt == null)
             this.prompt = new Prompt("");
         cursor = 0;
@@ -113,7 +113,7 @@ public class Buffer {
             return line.length();
     }
 
-    protected int totalLength() {
+    public int totalLength() {
         if(prompt.isMasking()) {
             if(prompt.getMask() == 0)
                 return disablePrompt ? 1 : getPrompt().getLength()+1;
@@ -143,15 +143,15 @@ public class Buffer {
         this.cursor = cursor ;
     }
 
-    protected boolean isMultiLine() {
+    public boolean isMultiLine() {
         return multiLine;
     }
 
-    protected void setMultiLine(boolean m) {
+    public void setMultiLine(boolean m) {
         multiLine = m;
     }
 
-    protected void updateMultiLineBuffer() {
+    public void updateMultiLineBuffer() {
         if(multiLineBuffer == null)
             multiLineBuffer = new StringBuilder();
 
@@ -164,7 +164,7 @@ public class Buffer {
         cursor = 0;
     }
 
-    protected String getMultiLineBuffer() {
+    public String getMultiLineBuffer() {
         return multiLineBuffer.toString();
     }
 

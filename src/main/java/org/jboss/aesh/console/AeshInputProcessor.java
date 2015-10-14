@@ -61,6 +61,8 @@ public class AeshInputProcessor implements InputProcessor {
 
     private static final String ENDS_WITH_BACKSLASH = " \\";
 
+    private String returnValue;
+
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputProcessor.class.getName());
 
     AeshInputProcessor(ConsoleBuffer consoleBuffer,
@@ -88,6 +90,16 @@ public class AeshInputProcessor implements InputProcessor {
     public void resetBuffer() {
         consoleBuffer.getBuffer().reset();
         search = null;
+    }
+
+    @Override
+    public ConsoleBuffer getBuffer() {
+        return consoleBuffer;
+    }
+
+    @Override
+    public void setReturnValue(String value) {
+        returnValue = value;
     }
 
     @Override

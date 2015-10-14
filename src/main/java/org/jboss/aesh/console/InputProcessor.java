@@ -39,4 +39,8 @@ public interface InputProcessor {
 
     void resetBuffer();
 
+    ConsoleBuffer getBuffer();
+
+    void setReturnValue(String value);
+
 }
