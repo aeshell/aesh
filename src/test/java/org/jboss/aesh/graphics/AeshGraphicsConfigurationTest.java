@@ -19,6 +19,7 @@
  */
 package org.jboss.aesh.graphics;
 
+import org.jboss.aesh.console.TestShell;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Shell;
@@ -44,72 +45,6 @@ public class AeshGraphicsConfigurationTest {
         Assert.assertEquals("TerminalSize{height=80, width=20}", agc.getBounds().toString());
         Assert.assertEquals(shell.getSize().getWidth() / 2, shell.getSize().getCenterWidth());
         Assert.assertEquals(shell.getSize().getHeight() / 2, shell.getSize().getCenterHeight());
-    }
-
-    private static class TestShell implements Shell {
-
-        private final PrintStream out;
-        private final PrintStream err;
-
-        TestShell(PrintStream out, PrintStream err) {
-            this.out = out;
-            this.err = err;
-        }
-
-        @Override
-        public void clear() throws IOException {
-
-        }
-
-        @Override
-        public PrintStream out() {
-            return out;
-        }
-
-        @Override
-        public PrintStream err() {
-            return err;
-        }
-
-        @Override
-        public AeshStandardStream in() {
-            return null;
-        }
-
-        @Override
-        public TerminalSize getSize() {
-            return new TerminalSize(80, 20);
-        }
-
-        @Override
-        public CursorPosition getCursor() {
-            return new CursorPosition(1, 1);
-        }
-
-        @Override
-        public void setCursor(CursorPosition position) {
-
-        }
-
-        @Override
-        public void moveCursor(int rows, int columns) {
-
-        }
-
-        @Override
-        public boolean isMainBuffer() {
-            return false;
-        }
-
-        @Override
-        public void enableAlternateBuffer() {
-
-        }
-
-        @Override
-        public void enableMainBuffer() {
-
-        }
     }
 
 }
