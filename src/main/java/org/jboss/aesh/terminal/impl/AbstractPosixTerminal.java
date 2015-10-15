@@ -25,12 +25,12 @@ import java.io.IOException;
 import org.jboss.aesh.terminal.api.Attributes;
 import org.jboss.aesh.terminal.api.Size;
 
-public abstract class AbstractPosixConsole extends AbstractConsole {
+public abstract class AbstractPosixTerminal extends AbstractTerminal {
 
     protected final Pty pty;
     protected final Attributes originalAttributes;
 
-    public AbstractPosixConsole(String name, String type, Pty pty) throws IOException {
+    public AbstractPosixTerminal(String name, String type, Pty pty) throws IOException {
         super(name, type);
         assert pty != null;
         this.pty = pty;

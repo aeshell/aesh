@@ -30,7 +30,7 @@ import org.jboss.aesh.terminal.impl.NativeSignalHandler;
 import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 
 
-public interface Console extends Closeable, Flushable {
+public interface Terminal extends Closeable, Flushable {
 
     String getName();
 

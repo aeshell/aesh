@@ -20,8 +20,8 @@
 package org.jboss.aesh.terminal.impl;
 
 
-import org.jboss.aesh.terminal.api.Console.Signal;
-import org.jboss.aesh.terminal.api.Console.SignalHandler;
+import org.jboss.aesh.terminal.api.Terminal.Signal;
+import org.jboss.aesh.terminal.api.Terminal.SignalHandler;
 
 public final class NativeSignalHandler implements SignalHandler {
 

@@ -19,8 +19,6 @@
  */
 package org.jboss.aesh.console.edit;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -51,6 +49,8 @@ import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Assume;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

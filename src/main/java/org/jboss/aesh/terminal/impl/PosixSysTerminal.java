@@ -33,7 +33,7 @@ import org.jboss.aesh.terminal.utils.ShutdownHooks;
 import org.jboss.aesh.terminal.utils.ShutdownHooks.Task;
 import org.jboss.aesh.terminal.utils.Signals;
 
-public class PosixSysConsole extends AbstractPosixConsole {
+public class PosixSysTerminal extends AbstractPosixTerminal {
 
     protected final InputStream input;
     protected final OutputStream output;
@@ -42,7 +42,7 @@ public class PosixSysConsole extends AbstractPosixConsole {
     protected final Map<Signal, Object> nativeHandlers = new HashMap<>();
     protected final Task closer;
 
-    public PosixSysConsole(String name, String type, Pty pty, String encoding, boolean nativeSignals) throws IOException {
+    public PosixSysTerminal(String name, String type, Pty pty, String encoding, boolean nativeSignals) throws IOException {
         super(name, type, pty);
         assert encoding != null;
         this.input = pty.getSlaveInput();
@@ -55,7 +55,7 @@ public class PosixSysConsole extends AbstractPosixConsole {
                 nativeHandlers.put(signal, Signals.register(signal.name(), () -> raise(signal)));
             }
         }
-        closer = PosixSysConsole.this::close;
+        closer = PosixSysTerminal.this::close;
         ShutdownHooks.add(closer);
     }
 

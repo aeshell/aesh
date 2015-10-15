@@ -64,8 +64,9 @@ import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.api.Attributes;
-import org.jboss.aesh.terminal.api.Console.Signal;
-import org.jboss.aesh.terminal.api.ConsoleBuilder;
+import org.jboss.aesh.terminal.api.Terminal;
+import org.jboss.aesh.terminal.api.Terminal.Signal;
+import org.jboss.aesh.terminal.api.TerminalBuilder;
 import org.jboss.aesh.terminal.api.Size;
 import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 import org.jboss.aesh.terminal.utils.NonBlockingReader;
@@ -116,7 +117,7 @@ public class Console {
 
     private AeshStandardStream standardStream;
 
-    private org.jboss.aesh.terminal.api.Console terminal;
+    private Terminal terminal;
     private Attributes attributes;
     private PrintStream out;
 
@@ -186,7 +187,7 @@ public class Console {
         settings = Config.readRuntimeProperties(settings);
 
         //init terminal
-        terminal = ConsoleBuilder.builder()
+        terminal = TerminalBuilder.builder()
                 .streams(settings.getInputStream(), settings.getStdOut())
                 .name("Aesh console")
                 .build();
@@ -560,7 +561,7 @@ public class Console {
         return shell;
     }
 
-    public org.jboss.aesh.terminal.api.Console getTerminal() {
+    public Terminal getTerminal() {
         return terminal;
     }
 
