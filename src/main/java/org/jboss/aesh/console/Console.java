@@ -425,9 +425,11 @@ public class Console {
     }
 
     public void stop() {
-       initiateStop = true;
        try {
-           doStop();
+           if (running) {
+               initiateStop = true;
+               doStop();
+           }
        }
        catch(IOException e) {
            LOGGER.log(Level.WARNING, "Got exception during stop: ", e);
@@ -536,7 +538,7 @@ public class Console {
             do {
                 result = inputProcessor.parseOperation(getInput());
             }
-            while(result == null);
+            while(result == null && running && !initiateStop);
 
             return result;
         }
