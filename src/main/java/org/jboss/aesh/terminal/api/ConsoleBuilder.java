@@ -84,6 +84,10 @@ public final class ConsoleBuilder {
         if (name == null) {
             name = "JLine console";
         }
+        String encoding = this.encoding;
+        if (encoding == null) {
+            encoding = Charset.defaultCharset().name();
+        }
         if ((system != null && system)
                 || (system == null
                     && (in == null || in == System.in)
@@ -96,10 +100,6 @@ public final class ConsoleBuilder {
                 if (type == null) {
                     type = System.getenv("TERM");
                 }
-                String encoding = this.encoding;
-                if (encoding == null) {
-                    encoding = Charset.defaultCharset().name();
-                }
                 Pty pty = CygwinPty.current();
                 return new PosixSysConsole(name, type, pty, encoding, nativeSignals);
             }
@@ -109,10 +109,6 @@ public final class ConsoleBuilder {
                 String type = this.type;
                 if (type == null) {
                     type = System.getenv("TERM");
-                }
-                String encoding = this.encoding;
-                if (encoding == null) {
-                    encoding = Charset.defaultCharset().name();
                 }
                 Pty pty = ExecPty.current();
                 return new PosixSysConsole(name, type, pty, encoding, nativeSignals);
