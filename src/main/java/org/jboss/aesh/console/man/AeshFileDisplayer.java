@@ -140,10 +140,10 @@ public abstract class AeshFileDisplayer implements Command {
         }
     }
 
-    public void processOperation(CommandOperation operation) throws IOException {
-        if(operation.getInputKey() == Key.q) {
+    public void processOperation(Key operation) throws IOException {
+        if(operation == Key.q) {
             if(search == Search.SEARCHING) {
-                searchBuilder.append((char) operation.getInput()[0]);
+                searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
             }
             else {
@@ -152,22 +152,22 @@ public abstract class AeshFileDisplayer implements Command {
                 stop = true;
             }
         }
-        else if(operation.getInputKey() == Key.j ||
-                operation.getInputKey() == Key.DOWN ||
-                operation.getInputKey() == Key.DOWN_2 ||
-                operation.getInputKey() == Key.ENTER ) {
+        else if(operation == Key.j ||
+                operation == Key.DOWN ||
+                operation == Key.DOWN_2 ||
+                operation == Key.ENTER ) {
             if(search == Search.SEARCHING) {
-                if(operation.getInputKey() == Key.j) {
-                    searchBuilder.append((char) operation.getInput()[0]);
+                if(operation == Key.j) {
+                    searchBuilder.append((char) operation.getFirstValue());
                     displayBottom();
                 }
-                else if(operation.getInputKey() == Key.ENTER) {
+                else if(operation == Key.ENTER) {
                     search = Search.RESULT;
                     findSearchWord(true);
                 }
             }
             else if(search == Search.NOT_FOUND) {
-               if(operation.getInputKey() == Key.ENTER) {
+               if(operation == Key.ENTER) {
                    search = Search.NO_SEARCH;
                    clearBottomLine();
                    displayBottom();
@@ -186,12 +186,12 @@ public abstract class AeshFileDisplayer implements Command {
                 clearNumber();
             }
         }
-        else if(operation.getInputKey() == Key.k ||
-                operation.getInputKey() == Key.UP ||
-                operation.getInputKey() == Key.UP_2) {
+        else if(operation == Key.k ||
+                operation == Key.UP ||
+                operation == Key.UP_2) {
             if(search == Search.SEARCHING) {
-                if(operation.getInputKey() == Key.k)
-                searchBuilder.append((char) operation.getInput()[0]);
+                if(operation == Key.k)
+                searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
             }
             else {
@@ -202,9 +202,9 @@ public abstract class AeshFileDisplayer implements Command {
                 clearNumber();
             }
         }
-        else if(operation.getInputKey() == Key.CTRL_F ||
-                operation.getInputKey() == Key.PGDOWN ||
-                operation.getInputKey() == Key.SPACE) { // ctrl-f || pgdown || space
+        else if(operation == Key.CTRL_F ||
+                operation == Key.PGDOWN ||
+                operation == Key.SPACE) { // ctrl-f || pgdown || space
             if(search == Search.SEARCHING) {
 
             }
@@ -221,8 +221,8 @@ public abstract class AeshFileDisplayer implements Command {
                 clearNumber();
             }
         }
-        else if(operation.getInputKey() == Key.CTRL_B ||
-                operation.getInputKey() == Key.PGUP) { // ctrl-b || pgup
+        else if(operation == Key.CTRL_B ||
+                operation == Key.PGUP) { // ctrl-b || pgup
             if(search != Search.SEARCHING) {
                 topVisibleRow = topVisibleRow - ((rows - 1) * getNumber());
                 if(topVisibleRow < 0)
@@ -232,21 +232,21 @@ public abstract class AeshFileDisplayer implements Command {
             }
         }
         //search
-        else if(operation.getInputKey() == Key.SLASH) {
+        else if(operation == Key.SLASH) {
             if(search == Search.NO_SEARCH || search == Search.RESULT) {
                 search = Search.SEARCHING;
                 searchBuilder = new StringBuilder();
                 displayBottom();
             }
             else if(search == Search.SEARCHING) {
-                searchBuilder.append((char) operation.getInput()[0]);
+                searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
             }
 
         }
-        else if(operation.getInputKey() == Key.n) {
+        else if(operation == Key.n) {
             if(search == Search.SEARCHING) {
-                searchBuilder.append((char) operation.getInput()[0]);
+                searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
             }
             else if(search == Search.RESULT) {
@@ -266,9 +266,9 @@ public abstract class AeshFileDisplayer implements Command {
                 }
             }
         }
-        else if(operation.getInputKey() == Key.N) {
+        else if(operation == Key.N) {
             if(search == Search.SEARCHING) {
-                searchBuilder.append((char) operation.getInput()[0]);
+                searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
             }
             else if(search == Search.RESULT) {
@@ -287,9 +287,9 @@ public abstract class AeshFileDisplayer implements Command {
                 }
             }
         }
-        else if(operation.getInputKey() == Key.G) {
+        else if(operation == Key.G) {
             if(search == Search.SEARCHING) {
-                searchBuilder.append((char) operation.getInput()[0]);
+                searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
             }
             else {
@@ -310,20 +310,20 @@ public abstract class AeshFileDisplayer implements Command {
                 clearNumber();
             }
         }
-        else if(operation.getInputKey().isNumber()) {
+        else if(operation.isNumber()) {
             if(search == Search.SEARCHING) {
-                searchBuilder.append((char) operation.getInput()[0]);
+                searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
             }
             else {
-                number.append(Character.getNumericValue(operation.getInput()[0]));
+                number.append(Character.getNumericValue(operation.getFirstValue()));
                 display();
             }
         }
         else {
             if(search == Search.SEARCHING &&
-                    (Character.isAlphabetic(operation.getInput()[0]))) {
-                searchBuilder.append((char) operation.getInput()[0]);
+                    (Character.isAlphabetic(operation.getFirstValue()))) {
+                searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
             }
         }

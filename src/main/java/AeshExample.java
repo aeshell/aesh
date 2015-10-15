@@ -355,7 +355,7 @@ public class AeshExample {
             this.shell = commandInvocation.getShell();
             if(bar) {
                 shell.out().print("are you sure you want bar? (y/n) ");
-                CommandOperation operation = null;
+                Key operation = null;
                 try {
                     operation = commandInvocation.getInput();
                 }
@@ -367,8 +367,8 @@ public class AeshExample {
             return CommandResult.SUCCESS;
         }
 
-        public void processOperation(CommandOperation operation) throws IOException {
-            if(operation.getInputKey() == Key.y) {
+        public void processOperation(Key operation) throws IOException {
+            if(operation == Key.y) {
                 shell.out().println(Config.getLineSeparator()+"you wanted bar!");
             }
             else

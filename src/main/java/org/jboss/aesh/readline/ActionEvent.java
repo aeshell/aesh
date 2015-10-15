@@ -6,6 +6,8 @@
  */
 package org.jboss.aesh.readline;
 
+import java.util.Arrays;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -37,5 +39,24 @@ class ActionEvent implements KeyEvent {
   @Override
   public int length() {
     return seq.length;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if(this == o) return true;
+    if(!(o instanceof ActionEvent)) return false;
+
+    ActionEvent that = (ActionEvent) o;
+
+    if(!name.equals(that.name)) return false;
+    return Arrays.equals(seq, that.seq);
+
+  }
+
+  @Override
+  public int hashCode() {
+    int result = name.hashCode();
+    result = 31 * result + Arrays.hashCode(seq);
+    return result;
   }
 }

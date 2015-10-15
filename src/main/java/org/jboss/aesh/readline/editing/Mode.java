@@ -8,12 +8,13 @@ package org.jboss.aesh.readline.editing;
 
 import org.jboss.aesh.readline.Action;
 import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.terminal.Key;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface Mode {
 
-    Action parse(KeyEvent event);
+    Action parse(Key event);
 
 }

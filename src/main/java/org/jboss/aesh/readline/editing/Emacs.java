@@ -7,7 +7,8 @@
 package org.jboss.aesh.readline.editing;
 
 import org.jboss.aesh.readline.Action;
-import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.logging.Logger;
 
@@ -20,19 +21,18 @@ public class Emacs implements Mode {
 
     private ActionMapper actionMapper = ActionMapper.getEmacs();
 
-    private static final Logger LOGGER = Logger.getLogger(Emacs.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(Emacs.class.getName());
 
     public Emacs() {
     }
 
     @Override
-    public Action parse(KeyEvent event) {
+    public Action parse(Key event) {
         if(actionMapper.getMapping().containsKey(event)) {
             return actionMapper.getMapping().get(event);
 
         }
         else {
-            LOGGER.info("have not mapped: "+event);
             return null;
         }
     }

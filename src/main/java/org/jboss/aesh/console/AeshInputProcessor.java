@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.helper.Search;
 import org.jboss.aesh.edit.EmacsEditMode;
 import org.jboss.aesh.edit.KeyOperationFactory;
@@ -27,12 +26,13 @@ import org.jboss.aesh.edit.KeyOperationManager;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.ViEditMode;
 import org.jboss.aesh.edit.actions.Action;
-import org.jboss.aesh.edit.actions.EditActionManager;
 import org.jboss.aesh.edit.actions.Movement;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.SearchDirection;
-import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.readline.editing.ActionMapper;
+import org.jboss.aesh.readline.editing.Emacs;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.util.ANSI;
@@ -62,6 +62,8 @@ public class AeshInputProcessor implements InputProcessor {
     private static final String ENDS_WITH_BACKSLASH = " \\";
 
     private String returnValue;
+
+    private org.jboss.aesh.readline.editing.Mode emacs = new Emacs();
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputProcessor.class.getName());
 
@@ -103,8 +105,20 @@ public class AeshInputProcessor implements InputProcessor {
     }
 
     @Override
-    public synchronized String parseOperation(CommandOperation commandOperation) throws IOException {
+    public synchronized String parseOperation(Key event) throws IOException {
 
+        returnValue = null;
+
+        org.jboss.aesh.readline.Action action = emacs.parse(event);
+        if(action != null) {
+            action.apply(this);
+        }
+        else {
+            consoleBuffer.writeChars(event.getKeyValues());
+        }
+
+        return returnValue;
+        /*
         Operation operation = consoleBuffer.getEditMode().parseInput(commandOperation.getInputKey(),
                 consoleBuffer.getBuffer().getLine());
         int[] input;
@@ -275,6 +289,7 @@ public class AeshInputProcessor implements InputProcessor {
 
         return null;
 
+*/
     }
 
     @Override

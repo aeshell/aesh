@@ -20,14 +20,19 @@
 package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.console.keymap.KeyMap;
+import org.jboss.aesh.readline.KeyEvent;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ANSCII enum key chart
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public enum Key {
+public enum Key implements KeyEvent {
 
     UNKNOWN(new int[]{0}),
     CTRL_A(new int[]{1}),
@@ -426,5 +431,15 @@ public enum Key {
             }
         }
         return keyMap;
+    }
+
+    @Override
+    public int getCodePointAt(int index) {
+        return keyValues[index];
+    }
+
+    @Override
+    public int length() {
+        return keyValues.length;
     }
 }

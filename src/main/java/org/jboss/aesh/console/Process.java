@@ -23,6 +23,7 @@ import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.keymap.KeyMap;
+import org.jboss.aesh.terminal.Key;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -31,7 +32,7 @@ public interface Process {
 
     void setManager(ProcessManager manager);
 
-    CommandOperation getInput() throws InterruptedException;
+    Key getInput() throws InterruptedException;
 
     <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException;
 

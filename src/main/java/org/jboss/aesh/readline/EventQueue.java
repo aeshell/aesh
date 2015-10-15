@@ -16,6 +16,8 @@
 
 package org.jboss.aesh.readline;
 
+import org.jboss.aesh.terminal.Key;
+
 import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -29,6 +31,10 @@ public class EventQueue implements Iterator<KeyEvent> {
   private KeyEvent[] bindings;
   private final LinkedList<KeyEvent> events = new LinkedList<>();
   private int[] pending = new int[0];
+
+  public EventQueue() {
+    this.bindings = Key.values();
+  }
 
   public EventQueue(KeyMapper keymap) {
     this.bindings = keymap.getEvents().toArray(new KeyEvent[keymap.getEvents().size()]);

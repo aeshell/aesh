@@ -59,6 +59,8 @@ import org.jboss.aesh.history.History;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.readline.EventQueue;
+import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
@@ -356,7 +358,7 @@ public class Console {
         // bridge to the current way of supporting signals
         terminal.handle(Signal.INT, s -> {
             try {
-                inputProcessor.parseOperation(new CommandOperation(Key.CTRL_C));
+                inputProcessor.parseOperation(Key.CTRL_C);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -475,10 +477,10 @@ public class Console {
         inputProcessor.clearBufferAndDisplayPrompt();
     }
 
-    protected CommandOperation getInput() throws InterruptedException {
+    protected Key getInput() throws InterruptedException {
         Key key = bindingReader.readBinding(Key.getKeyMap());
         if (key != null) {
-            return new CommandOperation(key, bindingReader.getLastBinding().codePoints().toArray());
+            return key;
         }
         return null;
     }

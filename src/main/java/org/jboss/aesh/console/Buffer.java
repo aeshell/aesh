@@ -132,7 +132,7 @@ public class Buffer {
             return getCursor() + getPrompt().getLength()+1;
     }
 
-    protected Prompt getPrompt() {
+    public Prompt getPrompt() {
         if(!isMultiLine())
             return prompt;
         else
@@ -378,7 +378,7 @@ public class Buffer {
         }
     }
 
-    protected void delete(int start, int end) {
+    public void delete(int start, int end) {
         delta = start - end;
         line.delete(start, end);
     }

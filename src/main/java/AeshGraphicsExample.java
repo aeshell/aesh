@@ -88,7 +88,7 @@ public class AeshGraphicsExample {
 
         public void waitForInput() {
             try {
-                while(!invocation.getInput().getInputKey().equals(Key.q)) {
+                while(!invocation.getInput().equals(Key.q)) {
 
                 }
             }

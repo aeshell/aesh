@@ -82,11 +82,11 @@ public class ProcessManager {
         return processes.get(pid);
     }
 
-    public CommandOperation getInput(int pid) throws InterruptedException {
+    public Key getInput(int pid) throws InterruptedException {
         if(foregroundProcess == pid)
             return console.getInput();
         else
-            return new CommandOperation(Key.UNKNOWN, new int[]{});
+            return Key.UNKNOWN;
     }
 
     public <T> CmdOperation<T> getInput(int pid, KeyMap<T> keyMap) throws InterruptedException {

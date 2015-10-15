@@ -252,6 +252,7 @@ public class NonBlockingReader
         LOGGER.log(Level.FINE, "NonBlockingReader start");
         boolean needToRead;
 
+
         try {
             while (true) {
 
