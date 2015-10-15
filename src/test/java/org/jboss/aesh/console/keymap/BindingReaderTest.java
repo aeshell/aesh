@@ -40,7 +40,7 @@ public class BindingReaderTest {
         keyMap.bind(Operation.GA, "ga");
         keyMap.bind(Operation.GAB, "gab");
         keyMap.unbind("d");
-        
+
         PipedReader in = new PipedReader();
         PipedWriter out = new PipedWriter(in);
         BindingReader reader = new BindingReader(new NonBlockingReader("test", in));

@@ -19,45 +19,13 @@
  */
 package org.jboss.aesh.console.aesh;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
-import java.util.List;
 
-import org.jboss.aesh.cl.Arguments;
-import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.cl.OptionList;
-import org.jboss.aesh.cl.internal.ProcessedCommand;
-import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
-import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
-import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
-import org.jboss.aesh.cl.parser.CommandLineParserException;
-import org.jboss.aesh.cl.validator.OptionValidator;
-import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
-import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
-import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
-import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.command.validator.ValidatorInvocation;
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.KeyOperation;
-import org.jboss.aesh.edit.actions.Operation;
-import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Assume;
 import org.junit.Test;
 
