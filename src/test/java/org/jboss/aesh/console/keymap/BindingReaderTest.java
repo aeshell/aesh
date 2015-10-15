@@ -30,6 +30,8 @@ public class BindingReaderTest {
     @Test
     public void testConsumption() throws Exception {
         KeyMap keyMap = new KeyMap();
+        keyMap.setUnicode(UNICODE);
+        keyMap.setNomatch(NOMATCH);
         keyMap.bind(SELF_INSERT, KeyMap.range("^@-^?"));
         keyMap.bind(GA, "ga");
         keyMap.bind(GAB, "gab");
@@ -51,6 +53,9 @@ public class BindingReaderTest {
     @Test
     public void testTimer() throws Exception {
         KeyMap keyMap = new KeyMap();
+        keyMap.setUnicode(UNICODE);
+        keyMap.setNomatch(NOMATCH);
+        keyMap.setAmbigousTimeout(100);
         keyMap.bind(SELF_INSERT, KeyMap.range("^@-^?"));
         keyMap.bind(GA, "ga");
         keyMap.bind(GAB, "gab");
@@ -75,8 +80,7 @@ public class BindingReaderTest {
         BindingReader reader;
 
         public Tester() {
-            reader = new BindingReader(this, Executors.newSingleThreadScheduledExecutor(),
-                    UNICODE, NOMATCH, 100);
+            reader = new BindingReader(this, Executors.newSingleThreadScheduledExecutor());
         }
 
         @Override

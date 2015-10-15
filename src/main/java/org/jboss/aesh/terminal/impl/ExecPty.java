@@ -1,10 +1,21 @@
 /*
- * Copyright (c) 2002-2015, the original author or authors.
+ * JBoss, Home of Professional Open Source
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @authors tag. All rights reserved.
+ * See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
  *
- * This software is distributable under the BSD license. See the terms of the
- * BSD license in the documentation provided with this software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.opensource.org/licenses/bsd-license.php
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.jboss.aesh.terminal.impl;
 
@@ -145,7 +156,7 @@ public class ExecPty implements Pty {
         }
         if (!commands.isEmpty()) {
             commands.add(0, OSUtils.STTY_COMMAND);
-            commands.add(1, "-F");
+            commands.add(1, OSUtils.STTY_F_OPTION);
             commands.add(2, getName());
             exec(commands.toArray(new String[commands.size()]));
         }
@@ -158,7 +169,7 @@ public class ExecPty implements Pty {
     }
 
     protected String doGetConfig() throws IOException {
-        return exec(OSUtils.STTY_COMMAND, "-F", getName(), "-a");
+        return exec(OSUtils.STTY_COMMAND, OSUtils.STTY_F_OPTION, getName(), "-a");
         //return exec(OSUtils.STTY_COMMAND, "-a");
     }
 
@@ -267,7 +278,7 @@ public class ExecPty implements Pty {
     @Override
     public void setSize(Size size) throws IOException {
         exec(OSUtils.STTY_COMMAND,
-             "-F", getName(),
+             OSUtils.STTY_F_OPTION, getName(),
              "rows", Integer.toString(size.getHeight()),
              "columns", Integer.toString(size.getWidth()));
     }

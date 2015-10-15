@@ -1,10 +1,21 @@
 /*
- * Copyright (c) 2002-2015, the original author or authors.
+ * JBoss, Home of Professional Open Source
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @authors tag. All rights reserved.
+ * See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
  *
- * This software is distributable under the BSD license. See the terms of the
- * BSD license in the documentation provided with this software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.opensource.org/licenses/bsd-license.php
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.jboss.aesh.terminal.utils;
 
@@ -18,13 +29,17 @@ public class OSUtils {
             && System.getenv("PWD") != null
             && System.getenv("PWD").startsWith("/");
 
+    public static final boolean IS_OSX = System.getProperty("os.name").toLowerCase().contains("mac");
+
     public static String TTY_COMMAND;
     public static String STTY_COMMAND;
+    public static String STTY_F_OPTION;
     public static String INFOCMP_COMMAND;
 
     static {
         String tty;
         String stty;
+        String sttyfopt;
         String infocmp;
         if (OSUtils.IS_CYGWIN) {
             tty = "tty.exe";
@@ -49,6 +64,11 @@ public class OSUtils {
             tty = "tty";
             stty = "stty";
             infocmp = "infocmp";
+            if (IS_OSX) {
+                sttyfopt = "-F";
+            } else {
+                sttyfopt = "-f";
+            }
         }
         TTY_COMMAND = tty;
         STTY_COMMAND = stty;

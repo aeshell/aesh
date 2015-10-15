@@ -1,10 +1,21 @@
 /*
- * Copyright (c) 2002-2015, the original author or authors.
+ * JBoss, Home of Professional Open Source
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @authors tag. All rights reserved.
+ * See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
  *
- * This software is distributable under the BSD license. See the terms of the
- * BSD license in the documentation provided with this software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.opensource.org/licenses/bsd-license.php
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.jboss.aesh.console.keymap;
 
@@ -26,12 +37,15 @@ import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
  * @author <a href="mailto:gnodet@gmail.com">Guillaume Nodet</a>
  * @since 2.6
  */
-public class KeyMap {
+public class KeyMap<T> {
 
     public static final int KEYMAP_LENGTH = 128;
 
     private Object[] mapping = new Object[KEYMAP_LENGTH];
-    private Object anotherKey = null;
+    private T anotherKey = null;
+    private T unicode;
+    private T nomatch;
+    private long ambigousTimeout;
 
     public static String display(String key) {
         StringBuilder sb = new StringBuilder();
@@ -249,10 +263,6 @@ public class KeyMap {
         return null;
     }
 
-    public Object getAnotherKey() {
-        return anotherKey;
-    }
-
     public static final Comparator<String> KEYSEQ_COMPARATOR = (s1, s2) -> {
         int len1 = s1.length();
         int len2 = s2.length();
@@ -270,28 +280,63 @@ public class KeyMap {
         return len1 - len2;
     };
 
-    public Map<String, Object> getBoundKeys() {
-        Map<String, Object> bound = new TreeMap<>(KEYSEQ_COMPARATOR);
+    //
+    // Methods
+    //
+
+
+    public T getUnicode() {
+        return unicode;
+    }
+
+    public void setUnicode(T unicode) {
+        this.unicode = unicode;
+    }
+
+    public T getNomatch() {
+        return nomatch;
+    }
+
+    public void setNomatch(T nomatch) {
+        this.nomatch = nomatch;
+    }
+
+    public long getAmbigousTimeout() {
+        return ambigousTimeout;
+    }
+
+    public void setAmbigousTimeout(long ambigousTimeout) {
+        this.ambigousTimeout = ambigousTimeout;
+    }
+
+    public T getAnotherKey() {
+        return anotherKey;
+    }
+
+    public Map<String, T> getBoundKeys() {
+        Map<String, T> bound = new TreeMap<>(KEYSEQ_COMPARATOR);
         doGetBoundKeys(this, "", bound);
         return bound;
     }
 
-    private static void doGetBoundKeys(KeyMap keyMap, String prefix, Map<String, Object> bound) {
+    @SuppressWarnings("unchecked")
+    private static <T> void doGetBoundKeys(KeyMap<T> keyMap, String prefix, Map<String, T> bound) {
         if (keyMap.anotherKey != null) {
             bound.put(prefix, keyMap.anotherKey);
         }
         for (int c = 0; c < keyMap.mapping.length; c++) {
             if (keyMap.mapping[c] instanceof KeyMap) {
-                doGetBoundKeys((KeyMap) keyMap.mapping[c],
+                doGetBoundKeys((KeyMap<T>) keyMap.mapping[c],
                         prefix + (char) (c),
                         bound);
             } else if (keyMap.mapping[c] != null) {
-                bound.put(prefix + (char) (c), keyMap.mapping[c]);
+                bound.put(prefix + (char) (c), (T) keyMap.mapping[c]);
             }
         }
     }
 
-    public Object getBound(CharSequence keySeq, int[] remaining) {
+    @SuppressWarnings("unchecked")
+    public T getBound(CharSequence keySeq, int[] remaining) {
         remaining[0] = -1;
         if (keySeq != null && keySeq.length() > 0) {
             char c = keySeq.charAt(0);
@@ -301,10 +346,10 @@ public class KeyMap {
             } else {
                 if (mapping[c] instanceof KeyMap) {
                     CharSequence sub = keySeq.subSequence(1, keySeq.length());
-                    return ((KeyMap) mapping[c]).getBound(sub, remaining);
+                    return ((KeyMap<T>) mapping[c]).getBound(sub, remaining);
                 } else if (mapping[c] != null) {
                     remaining[0] = keySeq.length() - 1;
-                    return mapping[c];
+                    return (T) mapping[c];
                 } else {
                     remaining[0] = keySeq.length();
                     return anotherKey;
@@ -321,25 +366,25 @@ public class KeyMap {
         return remaining[0] <= 0 ? res : null;
     }
 
-    public void bindIfNotBound(Object function, CharSequence keySeq) {
+    public void bindIfNotBound(T function, CharSequence keySeq) {
         if (function != null && keySeq != null) {
             bind(this, keySeq, function, true);
         }
     }
 
-    public void bind(Object function, CharSequence... keySeqs) {
+    public void bind(T function, CharSequence... keySeqs) {
         for (CharSequence keySeq : keySeqs) {
             bind(function, keySeq);
         }
     }
 
-    public void bind(Object function, Iterable<? extends CharSequence> keySeqs) {
+    public void bind(T function, Iterable<? extends CharSequence> keySeqs) {
         for (CharSequence keySeq : keySeqs) {
             bind(function, keySeq);
         }
     }
 
-    public void bind(Object function, CharSequence keySeq) {
+    public void bind(T function, CharSequence keySeq) {
         if (keySeq != null) {
             if (function == null) {
                 unbind(keySeq);
@@ -361,8 +406,9 @@ public class KeyMap {
         }
     }
 
-    private static Object unbind(KeyMap map, CharSequence keySeq) {
-        KeyMap prev = null;
+    @SuppressWarnings("unchecked")
+    private static <T> T unbind(KeyMap<T> map, CharSequence keySeq) {
+        KeyMap<T> prev = null;
         if (keySeq != null && keySeq.length() > 0) {
             for (int i = 0; i < keySeq.length() - 1; i++) {
                 char c = keySeq.charAt(i);
@@ -373,17 +419,17 @@ public class KeyMap {
                     return null;
                 }
                 prev = map;
-                map = (KeyMap) map.mapping[c];
+                map = (KeyMap<T>) map.mapping[c];
             }
             char c = keySeq.charAt(keySeq.length() - 1);
             if (c > map.mapping.length) {
                 return null;
             }
             if (map.mapping[c] instanceof KeyMap) {
-                KeyMap sub = (KeyMap) map.mapping[c];
+                KeyMap<?> sub = (KeyMap) map.mapping[c];
                 Object res = sub.anotherKey;
                 sub.anotherKey = null;
-                return res;
+                return (T) res;
             } else {
                 Object res = map.mapping[c];
                 map.mapping[c] = null;
@@ -396,13 +442,14 @@ public class KeyMap {
                 if (nb == 0 && prev != null) {
                     prev.mapping[keySeq.charAt(keySeq.length() - 2)] = map.anotherKey;
                 }
-                return res;
+                return (T) res;
             }
         }
         return null;
     }
 
-    private static void bind(KeyMap map, CharSequence keySeq, Object function, boolean onlyIfNotBound) {
+    @SuppressWarnings("unchecked")
+    private static <T> void bind(KeyMap<T> map, CharSequence keySeq, T function, boolean onlyIfNotBound) {
         if (keySeq != null && keySeq.length() > 0) {
             for (int i = 0; i < keySeq.length(); i++) {
                 char c = keySeq.charAt(i);

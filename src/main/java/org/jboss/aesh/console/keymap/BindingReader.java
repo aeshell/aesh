@@ -1,10 +1,21 @@
 /*
- * Copyright (c) 2002-2015, the original author or authors.
+ * JBoss, Home of Professional Open Source
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @authors tag. All rights reserved.
+ * See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
  *
- * This software is distributable under the BSD license. See the terms of the
- * BSD license in the documentation provided with this software.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.opensource.org/licenses/bsd-license.php
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.jboss.aesh.console.keymap;
 
@@ -21,13 +32,8 @@ import java.util.function.IntConsumer;
  */
 public class BindingReader implements IntConsumer {
 
-    public static final long DEFAULT_AMBIGUOUS_TIMEOUT = 1000L;
-
     protected final Consumer<Object> bindingConsumer;
     protected ScheduledExecutorService timer;
-    protected final Object unicode;
-    protected final Object nomatch;
-    protected final long ambiguousTimeout;
     protected final StringBuilder opBuffer = new StringBuilder();
     protected String lastBinding;
     protected KeyMap keys;
@@ -41,19 +47,10 @@ public class BindingReader implements IntConsumer {
      *
      * @param bindingConsumer the consumer of key bindings
      * @param timer a scheduler to use when
-     * @param unicode
-     * @param nomatch
      */
-    public BindingReader(Consumer<Object> bindingConsumer, ScheduledExecutorService timer, Object unicode, Object nomatch) {
-        this(bindingConsumer, timer, unicode, nomatch, DEFAULT_AMBIGUOUS_TIMEOUT);
-    }
-
-    public BindingReader(Consumer<Object> bindingConsumer, ScheduledExecutorService timer, Object unicode, Object nomatch, long ambiguousTimeout) {
+    public BindingReader(Consumer<Object> bindingConsumer, ScheduledExecutorService timer) {
         this.bindingConsumer = bindingConsumer;
         this.timer = timer;
-        this.unicode = unicode;
-        this.nomatch = nomatch;
-        this.ambiguousTimeout = ambiguousTimeout;
     }
 
     public void setKeyMaps(KeyMap keys) {
@@ -111,10 +108,10 @@ public class BindingReader implements IntConsumer {
                     String rem = opBuffer.substring(Character.charCount(cp));
                     lastBinding = opBuffer.substring(0, Character.charCount(cp));
                     // Unicode character
-                    if (cp >= KeyMap.KEYMAP_LENGTH && unicode != null) {
-                        o = unicode;
+                    if (cp >= KeyMap.KEYMAP_LENGTH && keys.getUnicode() != null) {
+                        o = keys.getUnicode();
                     } else {
-                        o = nomatch;
+                        o = keys.getNomatch();
                     }
                     opBuffer.setLength(0);
                     opBuffer.append(rem);
@@ -139,8 +136,8 @@ public class BindingReader implements IntConsumer {
     }
 
     private void startTimer() {
-        if (timer != null) {
-            future.set(timer.schedule(this::onTimeout, ambiguousTimeout, TimeUnit.MILLISECONDS));
+        if (timer != null && keys.getAmbigousTimeout() > 0) {
+            future.set(timer.schedule(this::onTimeout, keys.getAmbigousTimeout(), TimeUnit.MILLISECONDS));
         }
     }
 
