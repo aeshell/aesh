@@ -23,3 +23,6 @@ out
 # ignore compile/test files
 classes
 /bin/
+
+#ignore checkstile files
+.checkstyle
