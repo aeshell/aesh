@@ -62,9 +62,12 @@ import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.api.Attributes;
 import org.jboss.aesh.terminal.api.Console.Signal;
+import org.jboss.aesh.terminal.api.ConsoleBuilder;
+import org.jboss.aesh.terminal.api.Size;
+import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 import org.jboss.aesh.terminal.utils.NonBlockingReader;
 import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.FileUtils;
@@ -93,7 +96,7 @@ public class Console {
     private ConsoleOperation currentOperation;
     private AliasManager aliasManager;
     private ExportManager exportManager;
-    private Shell shell;
+    private ConsoleShell shell;
 
     private NonBlockingReader reader;
     private BindingReader bindingReader;
@@ -113,6 +116,10 @@ public class Console {
 
     private AeshStandardStream standardStream;
 
+    private org.jboss.aesh.terminal.api.Console terminal;
+    private Attributes attributes;
+    private PrintStream out;
+
     private static final Logger LOGGER = LoggerUtil.getLogger(Console.class.getName());
 
     public Console(final Settings settings) {
@@ -131,8 +138,9 @@ public class Console {
         super.finalize();
         try {
             if(settings != null) {
-                if(settings.getTerminal() != null)
-                    settings.getTerminal().reset();
+                if (attributes != null && terminal != null) {
+                    terminal.setAttributes(attributes);
+                }
                 if(settings.getQuitHandler() != null)
                     settings.getQuitHandler().quit();
             }
@@ -178,7 +186,13 @@ public class Console {
         settings = Config.readRuntimeProperties(settings);
 
         //init terminal
-        settings.getTerminal().init(settings);
+        terminal = ConsoleBuilder.builder()
+                .streams(settings.getInputStream(), settings.getStdOut())
+                .name("Aesh console")
+                .build();
+        attributes = terminal.enterRawMode();
+        terminal.puts(Capability.keypad_xmit);
+        out = new PrintStream(terminal.output());
 
         EditMode editMode = settings.getEditMode();
         editMode.init(this);
@@ -196,7 +210,7 @@ public class Console {
         redirectPipeErrBuffer = new ByteArrayOutputStream();
         //setPrompt(new Prompt(""));
 
-        shell = new ConsoleShell(getInternalShell(), this);
+        shell = new ConsoleShell();
 
         consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
@@ -260,8 +274,8 @@ public class Console {
                 .interruptHook(interruptHook)
                 .create();
 
-        reader = new NonBlockingReader(getTerminal().getConsole().getName(),
-                                       getTerminal().getConsole().reader());
+        reader = new NonBlockingReader(terminal.getName(),
+                                       terminal.reader());
         bindingReader = new BindingReader(reader);
     }
 
@@ -270,7 +284,8 @@ public class Console {
      * @return get the terminal size
      */
     public TerminalSize getTerminalSize() {
-        return getInternalShell().getSize();
+        Size size = terminal.getSize();
+        return new TerminalSize(size.getHeight(), size.getWidth());
     }
 
     /**
@@ -310,7 +325,7 @@ public class Console {
     public void changeOutputStream(PrintStream output) {
       if(output != null) {
           consoleBuffer.changeOutputBuffer(output);
-          getTerminal().changeOutputStream(output);
+          out = output;
       }
     }
 
@@ -320,7 +335,7 @@ public class Console {
      * @return
      */
     public boolean isWaiting(){
-        return (!processing && !processManager.hasForegroundProcess() && !getTerminal().hasInput() && readingInput == -1 && !hasInput());
+        return (!processing && !processManager.hasForegroundProcess() && !hasInput() && readingInput == -1);
     }
 
     /**
@@ -329,7 +344,7 @@ public class Console {
      * @return
      */
     public boolean isWaitingWithoutBackgroundProcess(){
-        return (!processing && !processManager.hasProcesses() && !getTerminal().hasInput() && readingInput == -1 && !hasInput());
+        return (!processing && !processManager.hasProcesses() && !hasInput() && readingInput == -1);
     }
 
     public synchronized void start() {
@@ -338,7 +353,7 @@ public class Console {
         if(consoleCallback == null)
             throw new IllegalStateException("Not possible to start the Console without setting ConsoleCallback");
         // bridge to the current way of supporting signals
-        getTerminal().getConsole().handle(Signal.INT, s -> {
+        terminal.handle(Signal.INT, s -> {
             try {
                 inputProcessor.parseOperation(new CommandOperation(Key.CTRL_C));
             } catch (IOException e) {
@@ -361,7 +376,7 @@ public class Console {
             return new PrintStream(redirectPipeOutBuffer, true);
         }
         else {
-            return getInternalShell().out();
+            return out;
         }
     }
 
@@ -371,7 +386,7 @@ public class Console {
             return new PrintStream(redirectPipeErrBuffer, true);
         }
         else {
-            return getInternalShell().err();
+            return settings.getStdErr();
         }
     }
 
@@ -437,13 +452,12 @@ public class Console {
                 exportManager.persistVariables();
             processManager.stop();
             executorService.shutdownNow();
-            reader.shutdown();
+            terminal.close();
+            reader.close();
             if(settings.isLogging())
                 LOGGER.info("Done stopping services. Terminal is reset");
         }
 
-        getTerminal().close();
-        getTerminal().reset();
     }
 
     /**
@@ -493,7 +507,7 @@ public class Console {
     }
 
     public void pushToInputStream(String input) {
-        getTerminal().writeToInputStream(input);
+        bindingReader.runMacro(input);
     }
 
     public boolean hasInput() {
@@ -542,15 +556,12 @@ public class Console {
     /**
      * @return get the current shell
      */
-    private Shell getInternalShell() {
-        return settings.getTerminal().getShell();
-    }
-
-    /**
-     * @return get the current shell
-     */
     public Shell getShell() {
         return shell;
+    }
+
+    public org.jboss.aesh.terminal.api.Console getTerminal() {
+        return terminal;
     }
 
     public void currentProcessFinished(Process process) {
@@ -575,10 +586,6 @@ public class Console {
                 displayPrompt();
             }
         }
-    }
-
-    private Terminal getTerminal() {
-        return settings.getTerminal();
     }
 
     /**
@@ -942,7 +949,7 @@ public class Console {
         catch (IOException e) {
             if(settings.isLogging())
                 LOGGER.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
-            getInternalShell().err().println(e.getMessage());
+            err().println(e.getMessage());
             err().flush();
         }
         redirectPipeOutBuffer = new ByteArrayOutputStream();
@@ -968,52 +975,47 @@ public class Console {
         }
     }
 
-    private static class ConsoleShell implements Shell {
-        private final Console console;
-        private final Shell shell;
+    private class ConsoleShell implements Shell {
 
-        ConsoleShell(Shell shell, Console console) {
-            this.shell = shell;
-            this.console = console;
-        }
+        private boolean mainBuffer = true;
 
         @Override
-        public void clear() throws IOException {
-            shell.clear();
+        public void clear() {
+            terminal.puts(Capability.clear_screen);
         }
 
         @Override
         public PrintStream out() {
-            return console.out();
+            return Console.this.out();
         }
 
         @Override
         public PrintStream err() {
-            return console.err();
+            return Console.this.err();
         }
 
         @Override
         public AeshStandardStream in() {
-            return console.in();
+            return Console.this.in();
         }
 
         @Override
         public TerminalSize getSize() {
-            return console.getTerminalSize();
+            return Console.this.getTerminalSize();
         }
 
         @Override
         public CursorPosition getCursor() {
-            if(console.settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
+            if(settings.isAnsiConsole() && Config.isOSPOSIXCompatible()) {
                 try {
                     out().print(ANSI.CURSOR_ROW);
                     out().flush();
-                    console.readingCursor = true;
+                    readingCursor = true;
 
-                    return getActualCursor(console.cursorQueue.take());
+                    return getActualCursor(cursorQueue.take());
                 }
                 catch (Exception e) {
-                    if(console.settings.isLogging())
+                    if(settings.isLogging())
                         LOGGER.log(Level.SEVERE, "Failed to find current row with ansi code: ",e);
                     return new CursorPosition(-1,-1);
                 }
@@ -1062,27 +1064,43 @@ public class Console {
 
         @Override
         public void setCursor(CursorPosition position) {
-            shell.setCursor(position);
+            if (getSize().isPositionWithinSize(position)
+                    && terminal.puts(Capability.cursor_address,
+                    position.getRow(),
+                    position.getColumn())) {
+                terminal.flush();
+            }
         }
 
         @Override
         public void moveCursor(int rows, int columns) {
-            shell.moveCursor(rows, columns);
+            CursorPosition cp = getCursor();
+            cp.move(rows, columns);
+            if (getSize().isPositionWithinSize(cp)) {
+                setCursor(cp);
+            }
         }
 
         @Override
         public boolean isMainBuffer() {
-            return shell.isMainBuffer();
+            return mainBuffer;
         }
 
         @Override
         public void enableAlternateBuffer() {
-            shell.enableAlternateBuffer();
+            if (mainBuffer && terminal.puts(Capability.enter_ca_mode)) {
+                terminal.flush();
+                mainBuffer = false;
+            }
         }
 
         @Override
         public void enableMainBuffer() {
-            shell.enableMainBuffer();
+            if (!mainBuffer && terminal.puts(Capability.exit_ca_mode)) {
+                terminal.flush();
+                mainBuffer = true;
+            }
         }
+
     }
 }

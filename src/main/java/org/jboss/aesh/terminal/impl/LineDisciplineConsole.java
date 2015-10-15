@@ -236,10 +236,10 @@ public class LineDisciplineConsole extends AbstractConsole {
 
     public void close() throws IOException {
         try {
-            slaveReader.close();
+            slaveInputPipe.close();
         } finally {
             try {
-                slaveInputPipe.close();
+                slaveReader.close();
             } finally {
                 try {
                 } finally {

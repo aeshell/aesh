@@ -72,8 +72,9 @@ public class ExternalConsole extends LineDisciplineConsole {
             } catch (Throwable t) {
                 e.addSuppressed(t);
             }
-            // TODO: log
-            e.printStackTrace();
+            if (!closed.get()) {
+                e.printStackTrace();
+            }
         }
     }
 

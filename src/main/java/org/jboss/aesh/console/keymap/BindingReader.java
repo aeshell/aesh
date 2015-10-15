@@ -21,7 +21,8 @@ package org.jboss.aesh.console.keymap;
 
 import java.io.IOError;
 import java.io.IOException;
-import java.util.Stack;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 import org.jboss.aesh.terminal.utils.NonBlockingReader;
 
@@ -36,7 +37,7 @@ public class BindingReader {
 
     protected final NonBlockingReader reader;
     protected final StringBuilder opBuffer = new StringBuilder();
-    protected final Stack<Integer> pushBackChar = new Stack<>();
+    protected final Deque<Integer> pushBackChar = new ArrayDeque<>();
     protected String lastBinding;
 
     public BindingReader(NonBlockingReader reader) {
@@ -152,10 +153,7 @@ public class BindingReader {
     }
 
     public void runMacro(String macro) {
-        int[] cps = macro.codePoints().toArray();
-        for (int i = cps.length - 1; i >= 0; i--) {
-            pushBackChar.push(cps[i]);
-        }
+        macro.codePoints().forEachOrdered(pushBackChar::addLast);
     }
 
     public String getCurrentBuffer() {

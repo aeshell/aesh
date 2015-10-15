@@ -25,7 +25,6 @@ import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.mapper.KeyMapper;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.BufferedReader;
@@ -240,11 +239,7 @@ public class Config {
 
     protected static Settings readRuntimeProperties(Settings settings) {
        SettingsBuilder builder = new SettingsBuilder(settings);
-        try {
-            String term = System.getProperty("aesh.terminal");
-            if(term != null && term.length() > 0) {
-                builder.terminal((Terminal) settings.getClass().getClassLoader().loadClass(term).newInstance());
-            }
+
             String editMode = System.getProperty("aesh.editmode");
             if(editMode != null && editMode.length() > 0) {
                 if(editMode.equalsIgnoreCase("VI"))
@@ -315,17 +310,6 @@ public class Config {
                 if(resourceFile.isLeaf())
                     builder.setExecuteFileAtStart(resourceFile);
             }
-          }
-        catch (ClassNotFoundException e) {
-            if(settings.isLogging())
-                LOGGER.log(Level.SEVERE, "Fail while finding class: ", e);
-        } catch (InstantiationException e) {
-            if(settings.isLogging())
-                LOGGER.log(Level.SEVERE, "Fail while instantiating class: ", e);
-        } catch (IllegalAccessException e) {
-            if(settings.isLogging())
-                LOGGER.log(Level.SEVERE, "Fail while accessing class: ", e);
-        }
 
         return builder.create();
     }
