@@ -20,6 +20,7 @@
 package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.reader.AeshStandardStream;
+import org.jboss.aesh.terminal.api.Terminal;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -33,9 +34,14 @@ import java.io.PrintStream;
 public interface Shell {
 
     /**
+     * Returns the terminal
+     */
+    Terminal getTerminal();
+
+    /**
      * clears the screen
      */
-    void clear() throws IOException;
+    void clear();
 
     /**
      * Returns the {@link PrintStream} associated with the std out

@@ -25,6 +25,7 @@ import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.api.Terminal;
 
 public class TestShell implements Shell {
 
@@ -34,6 +35,11 @@ public class TestShell implements Shell {
     public TestShell(PrintStream out, PrintStream err) {
         this.out = out;
         this.err = err;
+    }
+
+    @Override
+    public Terminal getTerminal() {
+        return null;
     }
 
     @Override

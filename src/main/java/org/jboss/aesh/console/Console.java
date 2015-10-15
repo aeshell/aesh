@@ -981,6 +981,11 @@ public class Console {
         private boolean mainBuffer = true;
 
         @Override
+        public Terminal getTerminal() {
+            return terminal;
+        }
+
+        @Override
         public void clear() {
             terminal.puts(Capability.clear_screen);
         }

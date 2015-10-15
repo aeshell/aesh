@@ -24,6 +24,9 @@ import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.api.Size;
+import org.jboss.aesh.terminal.api.Terminal;
+import org.jboss.aesh.terminal.impl.LineDisciplineTerminal;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -37,14 +40,15 @@ import java.io.PrintStream;
 public class AeshGraphicsConfigurationTest {
 
     @Test
-    public void testAeshGraphicsConfiguration() {
+    public void testAeshGraphicsConfiguration() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Shell shell = new TestShell(new PrintStream(baos), System.err);
-        AeshGraphicsConfiguration agc = new AeshGraphicsConfiguration(shell);
+        LineDisciplineTerminal terminal = new LineDisciplineTerminal("test", "ansi", baos, "UTF-8");
+        terminal.setSize(new Size(80, 20));
+        AeshGraphicsConfiguration agc = new AeshGraphicsConfiguration(terminal);
 
         Assert.assertEquals("TerminalSize{height=80, width=20}", agc.getBounds().toString());
-        Assert.assertEquals(shell.getSize().getWidth() / 2, shell.getSize().getCenterWidth());
-        Assert.assertEquals(shell.getSize().getHeight() / 2, shell.getSize().getCenterHeight());
+        Assert.assertEquals(terminal.getWidth() / 2, agc.getBounds().getCenterWidth());
+        Assert.assertEquals(terminal.getHeight() / 2, agc.getBounds().getCenterHeight());
     }
 
 }

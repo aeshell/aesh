@@ -19,38 +19,37 @@
  */
 package org.jboss.aesh.graphics;
 
-import org.jboss.aesh.terminal.Color;
-import org.jboss.aesh.terminal.CursorPosition;
-import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.TerminalTextStyle;
+import org.jboss.aesh.terminal.api.Terminal;
+import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 import org.jboss.aesh.util.ANSI;
-
-import java.io.IOException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href="mailto:gnodet@gmail.com">Guillaume Nodet</a>
  */
 public class AeshGraphics implements Graphics {
 
     private static final String CURSOR_DOWN = ANSI.START+"1B"+ANSI.START+"1D";
 
-    private final Shell shell;
+    private final Terminal terminal;
     private final GraphicsConfiguration graphicsConfiguration;
     private TerminalColor currentColor;
     private TerminalTextStyle currentStyle;
 
-    AeshGraphics(Shell shell, GraphicsConfiguration graphicsConfiguration) {
-        this.shell = shell;
+
+    AeshGraphics(Terminal terminal, GraphicsConfiguration graphicsConfiguration) {
+        this.terminal = terminal;
         this.graphicsConfiguration = graphicsConfiguration;
         currentColor = new TerminalColor();
-        shell.out().print(ANSI.CURSOR_HIDE);
+        terminal.puts(Capability.cursor_invisible);
     }
 
     @Override
     public void flush() {
-        shell.out().flush();
+        terminal.flush();
     }
 
     /**
@@ -58,11 +57,8 @@ public class AeshGraphics implements Graphics {
      */
     @Override
     public void clear() {
-        try {
-            shell.out().println(new TerminalColor(Color.DEFAULT, Color.DEFAULT).fullString());
-            shell.clear();
-        }
-        catch (IOException ignored) { }
+        printColor(new TerminalColor());
+        terminal.puts(Capability.clear_screen);
     }
 
     /**
@@ -71,8 +67,7 @@ public class AeshGraphics implements Graphics {
     @Override
     public void clearAndShowCursor() {
         clear();
-        shell.out().print(ANSI.CURSOR_SHOW);
-        shell.out().flush();
+        terminal.puts(Capability.cursor_normal);
     }
 
     @Override
@@ -97,8 +92,7 @@ public class AeshGraphics implements Graphics {
 
     @Override
     public void drawRect(int x, int y, int width, int height) {
-        if(currentColor != null)
-            shell.out().print(currentColor.fullString());
+        printColor(currentColor);
         drawHorizontalLine(x, y, width);
         drawHorizontalLine(x,y+height,width);
         drawVerticalLine(x, y+1, height-1);
@@ -107,42 +101,36 @@ public class AeshGraphics implements Graphics {
 
     @Override
     public void drawLine(int x1, int y1, int x2, int y2) {
-        if(currentColor != null)
-            shell.out().print(currentColor.fullString());
+        printColor(currentColor);
         int dx = x2 - x1;
         int dy = y2 -y1;
-        int y = 0;
         for(int i=x1; i < x2; i++) {
-            y = y1 + (dy) * (i - x1)/(dx);
-            shell.setCursor(new CursorPosition(y,i));
-            shell.out().print('x');
+            int y = y1 + (dy) * (i - x1)/(dx);
+            terminal.puts(Capability.cursor_address, y, i);
+            terminal.writer().write('x');
         }
     }
 
     @Override
     public void drawString(String str, int x, int y) {
-        if(currentColor != null)
-            shell.out().print(currentColor.fullString());
-        shell.setCursor(new CursorPosition(y,x));
-        shell.out().print(str);
+        printColor(currentColor);
+        terminal.puts(Capability.cursor_address, y, x);
+        terminal.writer().write(str);
     }
 
     @Override
     public void fillRect(int x, int y, int width, int height) {
-        if(currentColor != null)
-            shell.out().print(currentColor.fullString());
-
+        printColor(currentColor);
         for(int j=0; j < height; j++) {
-            shell.setCursor(new CursorPosition(y+j,x));
+            terminal.puts(Capability.cursor_address, y + j, x);
             for(int i=0; i < width; i++)
-                shell.out().print(' ');
+                terminal.writer().write(' ');
         }
     }
 
     @Override
     public void drawCircle(int x0, int y0, int radius) {
-        if(currentColor != null)
-            shell.out().print(currentColor.fullString());
+        printColor(currentColor);
         int x = radius, y = 0;
         int radiusError = 1-x;
 
@@ -166,26 +154,27 @@ public class AeshGraphics implements Graphics {
         }
     }
 
-    private void drawPixel(int x, int y) {
-        shell.setCursor(new CursorPosition(y,x));
-        shell.out().print('x');
+    private void printColor(TerminalColor color) {
+        if(color != null)
+            terminal.writer().write(color.fullString());
     }
 
+    private void drawPixel(int x, int y) {
+        terminal.puts(Capability.cursor_address, y, x);
+        terminal.writer().write('x');
+    }
 
     private void drawHorizontalLine(int x, int y, int width) {
         TerminalSize terminalSize = graphicsConfiguration.getBounds();
         if(terminalSize.getHeight() > y && terminalSize.getWidth() > y) {
             if(terminalSize.getWidth() < x + width)
                 width = terminalSize.getWidth() - x-1;
-            shell.setCursor(new CursorPosition(y,x));
+            terminal.puts(Capability.cursor_address, y, x);
             char[] line = new char[width];
             for(int i=0; i < line.length; i++) {
-                if(i == 0 || i == line.length-1)
-                    line[i] = 'x';
-                else
-                    line[i] = '-';
+                line[i] = (i == 0 || i == line.length - 1) ? 'x' : '-';
             }
-            shell.out().print(line);
+            terminal.writer().write(line);
         }
     }
 
@@ -194,11 +183,12 @@ public class AeshGraphics implements Graphics {
         if(terminalSize.getHeight() > y && terminalSize.getWidth() > y) {
             if(terminalSize.getHeight() < y + length)
                 length = terminalSize.getHeight() - y-1;
-            shell.setCursor(new CursorPosition(y,x));
+            terminal.puts(Capability.cursor_address, y, x);
             for(int i=0; i < length; i++) {
-                shell.out().print('|');
-                shell.out().print(CURSOR_DOWN);
+                terminal.writer().write('|');
+                terminal.writer().write(CURSOR_DOWN);
             }
         }
     }
+
 }

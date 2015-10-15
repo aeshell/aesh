@@ -21,25 +21,32 @@ package org.jboss.aesh.graphics;
 
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.api.Size;
+import org.jboss.aesh.terminal.api.Terminal;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshGraphicsConfiguration implements GraphicsConfiguration {
 
-    private final Shell shell;
+    private final Terminal terminal;
 
     public AeshGraphicsConfiguration(Shell shell) {
-        this.shell = shell;
+        this(shell.getTerminal());
+    }
+
+    public AeshGraphicsConfiguration(Terminal terminal) {
+        this.terminal = terminal;
     }
 
     @Override
     public TerminalSize getBounds() {
-        return shell.getSize();
+        Size size = terminal.getSize();
+        return new TerminalSize(size.getHeight(), size.getWidth());
     }
 
     @Override
     public Graphics getGraphics() {
-        return new AeshGraphics(shell, this);
+        return new AeshGraphics(terminal, this);
     }
 }
