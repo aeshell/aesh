@@ -95,15 +95,16 @@ public class AeshInputProcessor implements InputProcessor {
 
         Operation operation = consoleBuffer.getEditMode().parseInput(commandOperation.getInputKey(),
                 consoleBuffer.getBuffer().getLine());
+        int[] input;
         if(commandOperation.getInputKey() != Key.UNKNOWN)
-            operation.setInput(commandOperation.getInputKey().getKeyValues());
+            input = commandOperation.getInputKey().getKeyValues();
         else
-            operation.setInput(new int[]{ commandOperation.getInput()[commandOperation.getPosition()]});
+            input = new int[]{ commandOperation.getInput()[commandOperation.getPosition()]};
 
         Action action = operation.getAction();
 
         if (action == Action.EDIT) {
-            consoleBuffer.writeChars(operation.getInput());
+            consoleBuffer.writeChars(input);
         }
         //make sure that every action except delete and interrupt (ctrl-c) is ignored when masking is enabled
         else if(consoleBuffer.getBuffer().isMasking()) {
@@ -125,10 +126,10 @@ public class AeshInputProcessor implements InputProcessor {
         else if(action == Action.SEARCH && !searchDisabled) {
 
             if(search == null)
-                search = new Search(operation, operation.getInput()[0]);
+                search = new Search(operation, input[0]);
             else {
                 search.setOperation(operation);
-                search.setInput(operation.getInput()[0]);
+                search.setInput(input[0]);
             }
             doSearch(search);
             if(search.isFinished())
@@ -205,7 +206,7 @@ public class AeshInputProcessor implements InputProcessor {
             consoleBuffer.clear(true);
         }
         else if(action == Action.REPLACE) {
-            consoleBuffer.replace(operation.getInput()[0]);
+            consoleBuffer.replace(input[0]);
         }
         else if(action == Action.NO_ACTION) {
             //atm do nothing
