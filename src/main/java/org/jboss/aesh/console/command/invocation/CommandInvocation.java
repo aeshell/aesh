@@ -21,8 +21,10 @@ package org.jboss.aesh.console.command.invocation;
 
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
+import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.terminal.Shell;
 
@@ -81,6 +83,14 @@ public interface CommandInvocation {
      * @throws InterruptedException
      */
     CommandOperation getInput() throws InterruptedException;
+
+    /**
+     * A blocking call that will return user input from the terminal
+     *
+     * @return user input
+     * @throws InterruptedException
+     */
+    <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException;
 
     /**
      * A blocking call that will return user input from the terminal

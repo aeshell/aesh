@@ -38,7 +38,7 @@ import org.jboss.aesh.terminal.impl.LineDisciplineConsole;
  */
 public class TestTerminal implements Terminal, Shell {
 
-    private Console console;
+    private LineDisciplineConsole console;
     private PrintStream outWriter;
     private PrintStream errWriter;
     private TerminalSize size;
@@ -58,10 +58,27 @@ public class TestTerminal implements Terminal, Shell {
         errWriter = new PrintStream(settings.getStdErr(), true);
 
         size = new TerminalSize(24,80);
+        new Thread(this::readLoop).start();
+    }
+
+    private void readLoop() {
+        while (true) {
+            int[] input = read();
+            if (input == null || input.length == 0 || input[0] < 0) {
+                return;
+            }
+            for (int i : input) {
+                try {
+                    console.processInputByte(i);
+                } catch (IOException e) {
+                    throw new IOError(e);
+                }
+            }
+        }
     }
 
     @Override
-    public int[] read() throws IOException {
+    public int[] read() {
             return input.readAll();
     }
 

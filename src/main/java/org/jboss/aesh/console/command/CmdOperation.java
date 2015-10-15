@@ -17,37 +17,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.console;
-
-import org.jboss.aesh.console.command.CmdOperation;
-import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.keymap.KeyMap;
+package org.jboss.aesh.console.command;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href="mailto:gnodet@gmail.com">Guillaume Nodet</a>
  */
-public interface Process {
+public class CmdOperation<T> {
 
-    void setManager(ProcessManager manager);
+    private final T operation;
+    private final String input;
 
-    CommandOperation getInput() throws InterruptedException;
+    public CmdOperation(T operation, String input) {
+        this.operation = operation;
+        this.input = input;
+    }
 
-    <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException;
+    public T getOperation() {
+        return operation;
+    }
 
-    String getInputLine() throws InterruptedException;
-
-    int getPID();
-
-    CommandResult getExitResult();
-
-    void interrupt() throws InterruptedException;
-
-    Status getStatus();
-
-    void updateStatus(Status status);
-
-    enum Status {
-        FOREGROUND,BACKGROUND
+    public String getInput() {
+        return input;
     }
 }

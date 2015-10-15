@@ -38,7 +38,7 @@ public class KeyMapTest {
     @Test
     public void testBound() throws Exception {
         Console console = new DumbConsole(new ByteArrayInputStream(new byte[0]), new ByteArrayOutputStream());
-        KeyMap map = emacs(console);
+        KeyMap<String> map = emacs(console);
 
         Assert.assertEquals(COMPLETE_WORD, map.getBound("\u001B\u001B"));
         assertEquals(BACKWARD_WORD, map.getBound(alt("b")));
@@ -63,7 +63,7 @@ public class KeyMapTest {
 
     @Test
     public void testRemaining() throws Exception {
-        KeyMap map = new KeyMap();
+        KeyMap<String> map = new KeyMap<>();
 
         int[] remaining = new int[1];
         assertNull(map.getBound("ab", remaining));
@@ -186,8 +186,8 @@ public class KeyMapTest {
     private static final String YANK = "yank";
     private static final String YANK_POP = "yank-pop";
 
-    public static KeyMap emacs(Console console) {
-        KeyMap emacs = new KeyMap();
+    public static KeyMap<String> emacs(Console console) {
+        KeyMap<String> emacs = new KeyMap<>();
         emacs.bind(SET_MARK_COMMAND, ctrl('@'));
         emacs.bind(BEGINNING_OF_LINE, ctrl('A'));
         emacs.bind(BACKWARD_CHAR, ctrl('B'));

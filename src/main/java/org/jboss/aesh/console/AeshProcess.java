@@ -19,8 +19,10 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.keymap.KeyMap;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -69,6 +71,11 @@ public class AeshProcess implements Runnable, Process {
     @Override
     public CommandOperation getInput() throws InterruptedException {
         return manager.getInput(getPID());
+    }
+
+    @Override
+    public <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {
+        return manager.getInput(getPID(), keyMap);
     }
 
     @Override

@@ -8,80 +8,101 @@
  */
 package org.jboss.aesh.console.keymap;
 
+import java.io.PipedReader;
+import java.io.PipedWriter;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 
+import org.jboss.aesh.terminal.utils.NonBlockingReader;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BindingReaderTest {
 
-    static final Object UNICODE = "unicode";
-    static final Object NOMATCH = "nomatch";
-    static final Object SELF_INSERT = "self-insert";
-    static final Object GA = "ga";
-    static final Object GAB = "gab";
+    enum Operation {
+        UNICODE,
+        NOMATCH,
+        INSERT,
+        GA,
+        GAB
+    }
 
     @Test
     public void testConsumption() throws Exception {
-        KeyMap keyMap = new KeyMap();
-        keyMap.bind(SELF_INSERT, KeyMap.range("^@-^?"));
-        keyMap.bind(GA, "ga");
-        keyMap.bind(GAB, "gab");
+        KeyMap<Operation> keyMap = new KeyMap<>();
+        keyMap.setUnicode(Operation.UNICODE);
+        keyMap.setNomatch(Operation.NOMATCH);
+        keyMap.bind(Operation.INSERT, KeyMap.range("^@-^?"));
+        keyMap.bind(Operation.GA, "ga");
+        keyMap.bind(Operation.GAB, "gab");
         keyMap.unbind("d");
-        Tester tester = new Tester();
-        tester.reader.setKeyMaps(keyMap);
-        "adgau\uD834\uDD21gabf".chars().forEachOrdered(tester.reader::accept);
 
-        assertEquals(7, tester.bindings.size());
-        assertEquals(new SimpleImmutableEntry<>(SELF_INSERT, "a"), tester.bindings.get(0));
-        assertEquals(new SimpleImmutableEntry<>(NOMATCH, "d"), tester.bindings.get(1));
-        assertEquals(new SimpleImmutableEntry<>(GA, "ga"), tester.bindings.get(2));
-        assertEquals(new SimpleImmutableEntry<>(SELF_INSERT, "u"), tester.bindings.get(3));
-        assertEquals(new SimpleImmutableEntry<>(UNICODE, "\uD834\uDD21"), tester.bindings.get(4));
-        assertEquals(new SimpleImmutableEntry<>(GAB, "gab"), tester.bindings.get(5));
-        assertEquals(new SimpleImmutableEntry<>(SELF_INSERT, "f"), tester.bindings.get(6));
+        PipedReader in = new PipedReader();
+        PipedWriter out = new PipedWriter(in);
+        BindingReader reader = new BindingReader(new NonBlockingReader("test", in));
+        List<Map.Entry<Operation, String>> bindings = new ArrayList<>();
+
+        out.write("adgau\uD834\uDD21gabf");
+        for (int i = 0; i < 7; i++) {
+            Operation b = reader.readBinding(keyMap);
+            bindings.add(new SimpleImmutableEntry<>(b, reader.getLastBinding()));
+        }
+
+        assertEquals(7, bindings.size());
+        assertEquals(new SimpleImmutableEntry<>(Operation.INSERT, "a"), bindings.get(0));
+        assertEquals(new SimpleImmutableEntry<>(Operation.NOMATCH, "d"), bindings.get(1));
+        assertEquals(new SimpleImmutableEntry<>(Operation.GA, "ga"), bindings.get(2));
+        assertEquals(new SimpleImmutableEntry<>(Operation.INSERT, "u"), bindings.get(3));
+        assertEquals(new SimpleImmutableEntry<>(Operation.UNICODE, "\uD834\uDD21"), bindings.get(4));
+        assertEquals(new SimpleImmutableEntry<>(Operation.GAB, "gab"), bindings.get(5));
+        assertEquals(new SimpleImmutableEntry<>(Operation.INSERT, "f"), bindings.get(6));
     }
 
     @Test
     public void testTimer() throws Exception {
-        KeyMap keyMap = new KeyMap();
-        keyMap.bind(SELF_INSERT, KeyMap.range("^@-^?"));
-        keyMap.bind(GA, "ga");
-        keyMap.bind(GAB, "gab");
+        KeyMap<Operation> keyMap = new KeyMap<>();
+        keyMap.setUnicode(Operation.UNICODE);
+        keyMap.setNomatch(Operation.NOMATCH);
+        keyMap.setAmbigousTimeout(100);
+        keyMap.bind(Operation.INSERT, KeyMap.range("^@-^?"));
+        keyMap.bind(Operation.GA, "ga");
+        keyMap.bind(Operation.GAB, "gab");
         keyMap.unbind("d");
-        Tester tester = new Tester();
-        tester.reader.setKeyMaps(keyMap);
 
-        "adga".chars().forEachOrdered(tester.reader::accept);
-        Thread.sleep(200);
-        "bf".chars().forEachOrdered(tester.reader::accept);
-
-        assertEquals(5, tester.bindings.size());
-        assertEquals(new SimpleImmutableEntry<>(SELF_INSERT, "a"), tester.bindings.get(0));
-        assertEquals(new SimpleImmutableEntry<>(NOMATCH, "d"), tester.bindings.get(1));
-        assertEquals(new SimpleImmutableEntry<>(GA, "ga"), tester.bindings.get(2));
-        assertEquals(new SimpleImmutableEntry<>(SELF_INSERT, "b"), tester.bindings.get(3));
-        assertEquals(new SimpleImmutableEntry<>(SELF_INSERT, "f"), tester.bindings.get(4));
-    }
-
-    static class Tester implements Consumer<Object> {
+        PipedReader in = new PipedReader();
+        PipedWriter out = new PipedWriter(in);
+        BindingReader reader = new BindingReader(new NonBlockingReader("test", in));
         List<Map.Entry<Object, String>> bindings = new ArrayList<>();
-        BindingReader reader;
 
-        public Tester() {
-            reader = new BindingReader(this, Executors.newSingleThreadScheduledExecutor(),
-                    UNICODE, NOMATCH, 100);
+        out.write("adga");
+        for (int i = 0; i < 2; i++) {
+            Operation b = reader.readBinding(keyMap);
+            bindings.add(new SimpleImmutableEntry<>(b, reader.getLastBinding()));
+        }
+        long t0 = System.currentTimeMillis();
+        {
+            Operation b = reader.readBinding(keyMap);
+            bindings.add(new SimpleImmutableEntry<>(b, reader.getLastBinding()));
+        }
+        long t1 = System.currentTimeMillis();
+        assertTrue(t1 - t0 >= 100);
+
+        out.write("bf");
+        for (int i = 0; i < 2; i++) {
+            Operation b = reader.readBinding(keyMap);
+            bindings.add(new SimpleImmutableEntry<>(b, reader.getLastBinding()));
         }
 
-        @Override
-        public void accept(Object o) {
-            bindings.add(new SimpleImmutableEntry<>(o, reader.getLastBinding()));
-        }
+        assertEquals(5, bindings.size());
+        assertEquals(new SimpleImmutableEntry<>(Operation.INSERT, "a"), bindings.get(0));
+        assertEquals(new SimpleImmutableEntry<>(Operation.NOMATCH, "d"), bindings.get(1));
+        assertEquals(new SimpleImmutableEntry<>(Operation.GA, "ga"), bindings.get(2));
+        assertEquals(new SimpleImmutableEntry<>(Operation.INSERT, "b"), bindings.get(3));
+        assertEquals(new SimpleImmutableEntry<>(Operation.INSERT, "f"), bindings.get(4));
     }
+
 }

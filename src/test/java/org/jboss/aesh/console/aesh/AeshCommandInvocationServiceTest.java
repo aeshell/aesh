@@ -26,6 +26,7 @@ import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
@@ -34,6 +35,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -158,6 +160,11 @@ class FooCommandInvocation implements CommandInvocation {
     @Override
     public CommandOperation getInput() throws InterruptedException {
         return commandInvocation.getInput();
+    }
+
+    @Override
+    public <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {
+        return commandInvocation.getInput(keyMap);
     }
 
     @Override

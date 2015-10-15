@@ -23,8 +23,10 @@ import org.jboss.aesh.console.AeshConsoleImpl;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
+import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.terminal.Shell;
 
@@ -88,6 +90,11 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public CommandOperation getInput() throws InterruptedException {
         return callback.getInput();
+    }
+
+    @Override
+    public <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {
+        return callback.getInput(keyMap);
     }
 
     @Override
