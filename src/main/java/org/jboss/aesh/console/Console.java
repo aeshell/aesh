@@ -600,7 +600,7 @@ public class Console {
     private void executeLoop() {
         try {
             while(!executorService.isShutdown()) {
-                if (!processManager.hasForegroundProcess()) {
+                if (!processManager.hasForegroundProcess() && hasInput()) {
                     execute();
                 }
                 Thread.sleep(10);
@@ -621,14 +621,20 @@ public class Console {
         try {
             String line = getInputLine();
             if (line != null) {
+                processing = true;
                 processOperationResult(line);
-            } else {
+            }
+            else {
+                //not sure if we need this
                 stop(); // is that correct ?
             }
         }
         catch (InterruptedException e) {
             if(!initiateStop && settings.isLogging())
                 LOGGER.warning("Execution exception: "+e.getMessage());
+        }
+        finally {
+            processing = false;
         }
     }
 
