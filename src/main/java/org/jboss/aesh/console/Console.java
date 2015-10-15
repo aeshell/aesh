@@ -638,12 +638,6 @@ public class Console {
         }
     }
 
-    private void processInternalOperation(CommandOperation commandOperation) throws IOException {
-        String result = inputProcessor.parseOperation(commandOperation);
-        if(result != null)
-            processOperationResult(result);
-    }
-
     private void processOperationResult(String result) {
         try {
             //if the input length is 0 we should exit quickly
