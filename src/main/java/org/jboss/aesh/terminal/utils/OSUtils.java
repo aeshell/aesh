@@ -26,15 +26,15 @@ public class OSUtils {
     public static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
 
     public static final boolean IS_CYGWIN = IS_WINDOWS
-            && System.getenv("PWD") != null
-            && System.getenv("PWD").startsWith("/");
+        && System.getenv("PWD") != null
+        && System.getenv("PWD").startsWith("/");
 
     public static final boolean IS_OSX = System.getProperty("os.name").toLowerCase().contains("mac");
 
-    public static String TTY_COMMAND;
-    public static String STTY_COMMAND;
-    public static String STTY_F_OPTION;
-    public static String INFOCMP_COMMAND;
+    public static final String TTY_COMMAND;
+    public static final String STTY_COMMAND;
+    public static final String STTY_F_OPTION;
+    public static final String INFOCMP_COMMAND;
 
     static {
         String tty;
@@ -61,13 +61,15 @@ public class OSUtils {
                     }
                 }
             }
-        } else {
+        }
+        else {
             tty = "tty";
             stty = "stty";
             infocmp = "infocmp";
             if (IS_OSX) {
                 sttyfopt = "-f";
-            } else {
+            }
+            else {
                 sttyfopt = "-F";
             }
         }
