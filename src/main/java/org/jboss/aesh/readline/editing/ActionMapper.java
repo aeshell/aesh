@@ -40,8 +40,8 @@ class ActionMapper {
         mapping.put(Keys.CTRL_A, new StartOfLine());
         mapping.put(Keys.CTRL_E, new EndOfLine());
         mapping.put(Keys.CTRL_J, new Enter());
-        mapping.put(mapper.getByName("up"), new PrevHistory());
-        mapping.put(mapper.getByName("down"), new NextHistory());
+        mapping.put(mapper.getActionEventByName("up"), new PrevHistory());
+        mapping.put(mapper.getActionEventByName("down"), new NextHistory());
 
         return mapping;
     }

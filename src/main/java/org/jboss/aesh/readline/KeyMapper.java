@@ -17,12 +17,13 @@ import java.util.List;
  */
 public class KeyMapper {
 
-    private List<ActionEvent> events;
+    private List<KeyEvent> events;
 
     public KeyMapper() {
         events = new ArrayList<>();
 
         readFromInputcmp();
+        events.addAll( Arrays.asList(Keys.values()));
     }
 
     private void readFromInputcmp() {
@@ -34,11 +35,11 @@ public class KeyMapper {
         events.add(new ActionEvent("right", InfocmpManager.getRight()));
     }
 
-    public ActionEvent getByName(String name) {
-        return events.stream().filter( x -> x.name().equals(name)).findFirst().get();
+    public ActionEvent getActionEventByName(String name) {
+        return events.stream().filter(ActionEvent.class::isInstance).map(ActionEvent.class::cast).filter(x -> x.name().equals(name)).findFirst().get();
     }
 
-    public List<ActionEvent> getEvents() {
+    public List<KeyEvent> getEvents() {
         return events;
     }
 
