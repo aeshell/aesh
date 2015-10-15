@@ -19,156 +19,150 @@
  */
 package org.jboss.aesh.console.keymap;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.function.IntConsumer;
+import java.io.IOError;
+import java.io.IOException;
+import java.util.Stack;
+
+import org.jboss.aesh.terminal.utils.NonBlockingReader;
+
 
 /**
  * The BindingReader will transform incoming chars into
  * key bindings
+ *
+ * @author <a href="mailto:gnodet@gmail.com">Guillaume Nodet</a>
  */
-public class BindingReader implements IntConsumer {
+public class BindingReader {
 
-    public static final long DEFAULT_AMBIGUOUS_TIMEOUT = 1000L;
-
-    protected final Consumer<Object> bindingConsumer;
-    protected ScheduledExecutorService timer;
-    protected final Object unicode;
-    protected final Object nomatch;
-    protected final long ambiguousTimeout;
+    protected final NonBlockingReader reader;
     protected final StringBuilder opBuffer = new StringBuilder();
+    protected final Stack<Integer> pushBackChar = new Stack<>();
     protected String lastBinding;
-    protected KeyMap keys;
-    protected KeyMap local;
-    protected int highChar = -1;
 
-    protected AtomicReference<ScheduledFuture<?>> future = new AtomicReference<>();
+    public BindingReader(NonBlockingReader reader) {
+        this.reader = reader;
+    }
 
     /**
-     * Build a new BindingReader.
+     * Read from the input stream and decode an operation from the key map.
      *
-     * @param bindingConsumer the consumer of key bindings
-     * @param timer a scheduler to use when
-     * @param unicode
-     * @param nomatch
+     * The input stream will be read character by character until a matching
+     * binding can be found.  Characters that can't possibly be matched to
+     * any binding will be send with the {@link KeyMap#getNomatch()} binding.
+     * Unicode (&gt;= 128) characters will be matched to {@link KeyMap#getUnicode()}.
+     * If the current key sequence is ambigous, i.e. the sequence is bound but
+     * it's also a prefix to other sequences, then the {@link KeyMap#getAmbigousTimeout()}
+     * timeout will be used to wait for another incoming character.
+     * If a character comes, the disambiguation will be done.  If the timeout elapses
+     * and no character came in, or if the timeout is &lt;= 0, the current bound operation
+     * will be returned.
+     *
+     * @param keys the KeyMap to use for decoding the input stream
+     * @return the decoded binding or <code>null</code> if the end of
+     *         stream has been reached
      */
-    public BindingReader(Consumer<Object> bindingConsumer, ScheduledExecutorService timer, Object unicode, Object nomatch) {
-        this(bindingConsumer, timer, unicode, nomatch, DEFAULT_AMBIGUOUS_TIMEOUT);
+    public <T> T readBinding(KeyMap<T> keys) {
+        return readBinding(keys, null);
     }
 
-    public BindingReader(Consumer<Object> bindingConsumer, ScheduledExecutorService timer, Object unicode, Object nomatch, long ambiguousTimeout) {
-        this.bindingConsumer = bindingConsumer;
-        this.timer = timer;
-        this.unicode = unicode;
-        this.nomatch = nomatch;
-        this.ambiguousTimeout = ambiguousTimeout;
-    }
-
-    public void setKeyMaps(KeyMap keys) {
-        setKeyMaps(keys, null);
-    }
-
-    public synchronized void setKeyMaps(KeyMap keys, KeyMap local) {
-        this.keys = keys;
-        this.local = local;
-    }
-
-    @Override
-    public void accept(int value) {
-        if (highChar == -1) {
-            if (Character.isHighSurrogate((char) value)) {
-                highChar = value;
-            } else {
-                opBuffer.appendCodePoint(value);
-                decode(false);
+    public <T> T readBinding(KeyMap<T> keys, KeyMap<T> local) {
+        lastBinding = null;
+        T o = null;
+        int[] remaining = new int[1];
+        while (true) {
+            int c = readCharacter();
+            if (c == -1) {
+                return null;
             }
-        } else {
-            opBuffer.appendCodePoint(Character.toCodePoint((char) highChar, (char) value));
-            highChar = -1;
-            decode(false);
-        }
-    }
+            opBuffer.appendCodePoint(c);
 
-    protected synchronized void decode(boolean timeout) {
-        // Cancel timeout
-        ScheduledFuture<?> f = future.getAndSet(null);
-        if (f != null) {
-            f.cancel(false);
-        }
-        // Decode
-        while (opBuffer.length() > 0) {
-            Object o = null;
-            int[] remaining = new int[1];
             if (local != null) {
                 o = local.getBound(opBuffer, remaining);
             }
             if (o == null && (local == null || remaining[0] >= 0)) {
                 o = keys.getBound(opBuffer, remaining);
             }
-            if (remaining[0] > 0) {
-                // We have a binding and additional chars
-                if (o != null) {
-                    String rem = opBuffer.substring(opBuffer.length() - remaining[0]);
-                    lastBinding = opBuffer.substring(0, opBuffer.length() - remaining[0]);
-                    opBuffer.setLength(0);
-                    opBuffer.append(rem);
-                }
-                // We don't match anything
-                else {
-                    int cp = opBuffer.codePointAt(0);
-                    String rem = opBuffer.substring(Character.charCount(cp));
-                    lastBinding = opBuffer.substring(0, Character.charCount(cp));
-                    // Unicode character
-                    if (cp >= KeyMap.KEYMAP_LENGTH && unicode != null) {
-                        o = unicode;
-                    } else {
-                        o = nomatch;
-                    }
-                    opBuffer.setLength(0);
-                    opBuffer.append(rem);
-                }
-            } else if (remaining[0] < 0 && o != null) {
-                if (!timeout) {
-                    startTimer();
-                    break;
-                }
-                lastBinding = opBuffer.toString();
-                opBuffer.setLength(0);
-            } else if (remaining[0] == 0 && o != null) {
-                lastBinding = opBuffer.toString();
-                opBuffer.setLength(0);
-            }
+            // We have a binding and additional chars
             if (o != null) {
-                bindingConsumer.accept(o);
-            } else {
-                break;
+                if (remaining[0] >= 0) {
+                    runMacro(opBuffer.substring(opBuffer.length() - remaining[0]));
+                    opBuffer.setLength(opBuffer.length() - remaining[0]);
+                }
+                else {
+                    long ambiguousTimeout = keys.getAmbigousTimeout();
+                    if (ambiguousTimeout > 0 && peekCharacter(ambiguousTimeout) != NonBlockingReader.READ_EXPIRED) {
+                        o = null;
+                    }
+                }
+                if (o != null) {
+                    lastBinding = opBuffer.toString();
+                    opBuffer.setLength(0);
+                    return o;
+                }
+            // We don't match anything
+            } else if (remaining[0] > 0) {
+                int cp = opBuffer.codePointAt(0);
+                String rem = opBuffer.substring(Character.charCount(cp));
+                lastBinding = opBuffer.substring(0, Character.charCount(cp));
+                // Unicode character
+                o = (cp >= KeyMap.KEYMAP_LENGTH) ? keys.getUnicode() : keys.getNomatch();
+                opBuffer.setLength(0);
+                opBuffer.append(rem);
+                if (o != null) {
+                    return o;
+                }
             }
         }
     }
 
-    private void startTimer() {
-        if (timer != null) {
-            future.set(timer.schedule(this::onTimeout, ambiguousTimeout, TimeUnit.MILLISECONDS));
+    /**
+     * Read a codepoint from the console.
+     *
+     * @return the character, or -1 if an EOF is received.
+     */
+    public int readCharacter() {
+        if (!pushBackChar.isEmpty()) {
+            return pushBackChar.pop();
+        }
+        try {
+            int c = NonBlockingReader.READ_EXPIRED;
+            int s = 0;
+            while (c == NonBlockingReader.READ_EXPIRED) {
+                c = reader.read(100L);
+                if (c >= 0 && Character.isHighSurrogate((char) c)) {
+                    s = c;
+                    c = NonBlockingReader.READ_EXPIRED;
+                }
+            }
+            return s != 0 ? Character.toCodePoint((char) s, (char) c) : c;
+        } catch (IOException e) {
+            throw new IOError(e);
         }
     }
 
-    private void onTimeout() {
-        decode(true);
+    public int peekCharacter(long timeout) {
+        if (!pushBackChar.isEmpty()) {
+            return pushBackChar.peek();
+        }
+        try {
+            return reader.peek(timeout);
+        } catch (IOException e) {
+            throw new IOError(e);
+        }
     }
 
-
-    public synchronized void runMacro(String macro) {
-        opBuffer.append(macro);
+    public void runMacro(String macro) {
+        int[] cps = macro.codePoints().toArray();
+        for (int i = cps.length - 1; i >= 0; i--) {
+            pushBackChar.push(cps[i]);
+        }
     }
 
-    public synchronized String getCurrentBuffer() {
+    public String getCurrentBuffer() {
         return opBuffer.toString();
     }
 
-    public synchronized String getLastBinding() {
+    public String getLastBinding() {
         return lastBinding;
     }
 

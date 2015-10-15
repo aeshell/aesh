@@ -26,11 +26,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jboss.aesh.console.reader.AeshStandardStream;
-import org.jboss.aesh.console.reader.ConsoleInputSession;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.terminal.api.Attributes;
 import org.jboss.aesh.terminal.api.Console;
-import org.jboss.aesh.terminal.api.Console.Signal;
 import org.jboss.aesh.terminal.api.ConsoleBuilder;
 import org.jboss.aesh.terminal.api.Size;
 import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
@@ -44,7 +42,6 @@ public class ShellWrapper implements Terminal, Shell {
     private Console console;
     private PrintStream out;
     private PrintStream err;
-    private ConsoleInputSession input;
     private Attributes attributes;
 
     private boolean mainBuffer = true;
@@ -61,11 +58,9 @@ public class ShellWrapper implements Terminal, Shell {
                     .name("Aesh console")
                     .build();
             attributes = console.enterRawMode();
+            console.puts(Capability.keypad_xmit);
             out = new PrintStream(console.output());
             err = settings.getStdErr();
-            input = new ConsoleInputSession(console.input());
-            // bridge to the current way of supporting signals
-            console.handle(Signal.INT, s -> input.writeToInput("\u0003"));
         } catch (IOException e) {
             throw new IOError(e);
         }
@@ -94,12 +89,16 @@ public class ShellWrapper implements Terminal, Shell {
 
     @Override
     public int[] read() throws IOException {
-        return input.readAll();
+        return new int[] { console.reader().read() };
     }
 
     @Override
     public boolean hasInput() {
-        return input.hasInput();
+        try {
+            return console.reader().ready();
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     @Override
@@ -114,7 +113,7 @@ public class ShellWrapper implements Terminal, Shell {
 
     @Override
     public void writeToInputStream(String data) {
-        input.writeToInput(data);
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -151,8 +150,15 @@ public class ShellWrapper implements Terminal, Shell {
                 StringBuilder row = new StringBuilder(4);
                 boolean gotSep = false;
                 //read the position
-                int[] input = read();
-
+                StringBuilder sb = new StringBuilder();
+                int c;
+                while ((c = console.reader().read()) > 0) {
+                    sb.append((char) c);
+                    if (c == 'R') {
+                        break;
+                    }
+                }
+                int[] input = sb.codePoints().toArray();
                 for(int i=2; i < input.length-1; i++) {
                     if(input[i] == 59) // we got a ';' which is the separator
                         gotSep = true;

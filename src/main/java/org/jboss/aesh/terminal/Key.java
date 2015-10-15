@@ -20,6 +20,7 @@
 package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.keymap.KeyMap;
 
 /**
  * ANSCII enum key chart
@@ -279,6 +280,10 @@ public enum Key {
         return keyValues;
     }
 
+    public String getKeyValuesAsString() {
+        return new String(keyValues, 0, keyValues.length);
+    }
+
     public int getFirstValue() {
         return keyValues[0];
     }
@@ -400,5 +405,26 @@ public enum Key {
     }
 
 
+    private static KeyMap<Key> keyMap = null;
 
+    public static KeyMap<Key> getKeyMap() {
+        if (keyMap == null) {
+            keyMap = new KeyMap<>();
+            keyMap.setUnicode(Key.UNKNOWN);
+            keyMap.setNomatch(Key.UNKNOWN);
+            for (int i = 1; i < 128; i++) {
+                Key key = Key.getKey(new int[] { i });
+                keyMap.bind(key, key.getKeyValuesAsString());
+            }
+            // Force <enter> to be bound
+            keyMap.bind(Key.ENTER, "\r", "\n");
+            // Map sequences
+            for (Key key : Key.values()) {
+                if (key.getKeyValues().length > 1) {
+                    keyMap.bindIfNotBound(key, key.getKeyValuesAsString());
+                }
+            }
+        }
+        return keyMap;
+    }
 }
