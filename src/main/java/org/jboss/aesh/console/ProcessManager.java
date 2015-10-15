@@ -19,7 +19,9 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.CommandOperation;
+import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -85,6 +87,13 @@ public class ProcessManager {
             return console.getInput();
         else
             return new CommandOperation(Key.UNKNOWN, new int[]{});
+    }
+
+    public <T> CmdOperation<T> getInput(int pid, KeyMap<T> keyMap) throws InterruptedException {
+        if(foregroundProcess == pid)
+            return console.getInput(keyMap);
+        else
+            return new CmdOperation<>(null, null);
     }
 
     public String getInputLine(int pid) throws InterruptedException {

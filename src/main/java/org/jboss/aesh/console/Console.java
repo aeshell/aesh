@@ -41,11 +41,13 @@ import org.jboss.aesh.complete.CompletionRegistration;
 import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasCompletion;
 import org.jboss.aesh.console.alias.AliasManager;
+import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.InternalCommands;
 import org.jboss.aesh.console.export.ExportCompletion;
 import org.jboss.aesh.console.export.ExportManager;
 import org.jboss.aesh.console.keymap.BindingReader;
+import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
@@ -460,6 +462,14 @@ public class Console {
         Key key = bindingReader.readBinding(Key.getKeyMap());
         if (key != null) {
             return new CommandOperation(key, bindingReader.getLastBinding().codePoints().toArray());
+        }
+        return null;
+    }
+
+    protected <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {
+        T op = bindingReader.readBinding(keyMap);
+        if (op != null) {
+            return new CmdOperation<>(op, bindingReader.getLastBinding());
         }
         return null;
     }

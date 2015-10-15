@@ -19,7 +19,9 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.CommandOperation;
+import org.jboss.aesh.console.keymap.KeyMap;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -38,6 +40,16 @@ public abstract class AeshConsoleCallback implements ConsoleCallback {
         }
         else {
             return new CommandOperation(null, null, 0);
+        }
+    }
+
+    @Override
+    public <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {
+        if( process != null ) {
+            return process.getInput(keyMap);
+        }
+        else {
+            return new CmdOperation<>(null, null);
         }
     }
 
