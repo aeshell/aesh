@@ -13,8 +13,18 @@ import org.jboss.aesh.terminal.Key;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface Mode {
+public interface EditMode {
 
     Action parse(Key event);
 
+    enum Status {
+        DELETE,
+        MOVE,
+        YANK,
+        CHANGE,
+        EDIT,
+        COMMAND,
+        SEARCH,
+        IGNORE_EOF;
+    }
 }

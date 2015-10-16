@@ -15,11 +15,11 @@ import java.util.logging.Logger;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class Emacs implements Mode {
+public class Emacs implements EditMode {
 
-    private EditStatus status = EditStatus.EDIT;
+    private Status status = Status.EDIT;
 
-    private ActionMapper actionMapper = ActionMapper.getEmacs();
+    private EditModeMapper editModeMapper = EditModeMapper.getEmacs();
 
     private static final Logger LOGGER = LoggerUtil.getLogger(Emacs.class.getName());
 
@@ -28,8 +28,8 @@ public class Emacs implements Mode {
 
     @Override
     public Action parse(Key event) {
-        if(actionMapper.getMapping().containsKey(event)) {
-            return actionMapper.getMapping().get(event);
+        if(editModeMapper.getMapping().containsKey(event)) {
+            return editModeMapper.getMapping().get(event);
 
         }
         else {

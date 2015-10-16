@@ -30,8 +30,7 @@ import org.jboss.aesh.edit.actions.Movement;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.SearchDirection;
-import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.readline.editing.ActionMapper;
+import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.readline.editing.Emacs;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.undo.UndoAction;
@@ -63,7 +62,7 @@ public class AeshInputProcessor implements InputProcessor {
 
     private String returnValue;
 
-    private org.jboss.aesh.readline.editing.Mode emacs = new Emacs();
+    private EditMode emacs = new Emacs();
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputProcessor.class.getName());
 

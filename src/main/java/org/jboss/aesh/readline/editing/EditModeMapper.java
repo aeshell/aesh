@@ -7,9 +7,6 @@
 package org.jboss.aesh.readline.editing;
 
 import org.jboss.aesh.readline.Action;
-import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.readline.KeyMapper;
-import org.jboss.aesh.readline.Keys;
 import org.jboss.aesh.readline.actions.BackwardChar;
 import org.jboss.aesh.readline.actions.DeleteChar;
 import org.jboss.aesh.readline.actions.DeletePrevChar;
@@ -22,18 +19,17 @@ import org.jboss.aesh.readline.actions.StartOfLine;
 import org.jboss.aesh.terminal.Key;
 
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ActionMapper {
+public class EditModeMapper {
 
     private Map<Key,Action> mapping;
 
-    public static ActionMapper getEmacs() {
-        ActionMapper mapper = new ActionMapper();
+    public static EditModeMapper getEmacs() {
+        EditModeMapper mapper = new EditModeMapper();
         mapper.createEmacsMapping();
         return mapper;
     }
@@ -66,7 +62,7 @@ public class ActionMapper {
 
     @Override
     public String toString() {
-        return "ActionMapper{" +
+        return "EditModeMapper{" +
                 "mapping=" + mapping +
                 '}';
     }
