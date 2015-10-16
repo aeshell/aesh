@@ -648,6 +648,29 @@ public class Console {
         }
     }
 
+    public void execute(String command) throws InterruptedException {
+        try {
+            int start = 0;
+            int end = command.length();
+            while (start < end && Character.isWhitespace(command.charAt(start))) {
+                start++;
+            }
+            while (end > start && Character.isWhitespace(command.charAt(end - 1))) {
+                end--;
+            }
+            command = command.substring(start, end);
+            ConsoleOperation output = createConsoleOperation(command);
+            output = processInternalCommands(output);
+            if (output.getBuffer() != null) {
+                consoleCallback.execute(output);
+            }
+        }
+        catch (IOException ioe) {
+            if (settings.isLogging())
+                LOGGER.severe("Stream failure: " + ioe);
+        }
+    }
+
     private void processOperationResult(String result) {
         try {
             //if the input length is 0 we should exit quickly
@@ -656,18 +679,7 @@ public class Console {
                 inputProcessor.clearBufferAndDisplayPrompt();
                 return;
             }
-            if(result.startsWith(Parser.SPACE))
-                result = Parser.trimInFront(result);
-
-            if(settings.isOperatorParserEnabled())
-                operations = ControlOperatorParser.findAllControlOperators(result);
-            else {
-                //if we do not parse operators just add ControlOperator.NONE
-                operations = new ArrayList<>(1);
-                operations.add(new ConsoleOperation(ControlOperator.NONE, result));
-            }
-
-            ConsoleOperation output = parseOperations();
+            ConsoleOperation output = createConsoleOperation(result);
             output = processInternalCommands(output);
             if(output.getBuffer() != null) {
                 processManager.startNewProcess(consoleCallback, output);
@@ -683,6 +695,21 @@ public class Console {
             if(settings.isLogging())
                 LOGGER.severe("Stream failure: "+ioe);
         }
+    }
+
+    private ConsoleOperation createConsoleOperation(String result) throws IOException {
+        if(result.startsWith(Parser.SPACE))
+            result = Parser.trimInFront(result);
+
+        if(settings.isOperatorParserEnabled())
+            operations = ControlOperatorParser.findAllControlOperators(result);
+        else {
+            //if we do not parse operators just add ControlOperator.NONE
+            operations = new ArrayList<>(1);
+            operations.add(new ConsoleOperation(ControlOperator.NONE, result));
+        }
+
+        return parseOperations();
     }
 
     private void displayPrompt() {

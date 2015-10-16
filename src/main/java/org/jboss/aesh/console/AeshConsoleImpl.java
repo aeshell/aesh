@@ -192,7 +192,11 @@ public class AeshConsoleImpl implements AeshConsole {
         console.putProcessInForeground(pid);
     }
 
-    public void execute(String input) {
+    public void execute(String input) throws InterruptedException {
+        console.execute(input);
+    }
+
+    public void push(String input) {
         console.pushToInputStream(input);
     }
 
