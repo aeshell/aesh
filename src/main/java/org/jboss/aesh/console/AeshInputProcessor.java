@@ -121,7 +121,9 @@ public class AeshInputProcessor implements InputProcessor {
             action.apply(this);
         }
         else {
-            consoleBuffer.writeChars(event.buffer().array());
+            //TODO: probably dont need this if check when we have all keys mapped
+            if(Key.isPrintable(event.buffer().array()))
+                consoleBuffer.writeChars(event.buffer().array());
         }
 
         return returnValue;

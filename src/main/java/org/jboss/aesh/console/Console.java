@@ -251,18 +251,9 @@ public class Console {
                 if(action.name().equals("ignore-eof")) {
                     displayPrompt();
                 }
+                //action is interrupt atm so just stop
                 else {
                     stop();
-                    if(processManager.hasForegroundProcess())
-                        stop();
-                    else {
-                        try {
-                            doStop();
-                        }
-                        catch (IOException e) {
-                            LOGGER.warning("Failed to stop aesh! " + e.getMessage());
-                        }
-                    }
                 }
             }
         };
