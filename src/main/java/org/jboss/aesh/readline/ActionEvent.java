@@ -24,7 +24,8 @@ class ActionEvent implements KeyEvent {
   /**
    * @return the name of the action to apply.
    */
-  String name() {
+  @Override
+  public String name() {
     return name;
   }
 

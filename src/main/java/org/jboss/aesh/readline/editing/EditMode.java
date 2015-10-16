@@ -16,7 +16,7 @@ import org.jboss.aesh.terminal.Key;
  */
 public interface EditMode {
 
-    Action parse(Key event);
+    Action parse(KeyEvent event);
 
     void updateIgnoreEOF(int eof);
 

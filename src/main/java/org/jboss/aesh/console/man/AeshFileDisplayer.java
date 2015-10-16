@@ -25,6 +25,7 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.operator.ControlOperator;
+import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.ANSI;
@@ -130,7 +131,9 @@ public abstract class AeshFileDisplayer implements Command {
     public void processInput() throws IOException, InterruptedException {
         try {
             while(!stop) {
-                processOperation(getCommandInvocation().getInput());
+                KeyEvent event = getCommandInvocation().getInput();
+                if(event instanceof Key)
+                    processOperation( (Key) event);
             }
         }
         catch (InterruptedException e) {

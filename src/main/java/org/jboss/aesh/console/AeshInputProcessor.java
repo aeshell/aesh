@@ -30,6 +30,7 @@ import org.jboss.aesh.edit.actions.Movement;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.history.SearchDirection;
+import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.readline.editing.Emacs;
 import org.jboss.aesh.terminal.Key;
@@ -104,18 +105,18 @@ public class AeshInputProcessor implements InputProcessor {
     }
 
     @Override
-    public synchronized String parseOperation(Key event) throws IOException {
+    public synchronized String parseOperation(KeyEvent event) throws IOException {
 
         returnValue = null;
 
-        LOGGER.info("input key: "+event);
+        LOGGER.info("input key: "+event.name());
 
         org.jboss.aesh.readline.Action action = emacs.parse(event);
         if(action != null) {
             action.apply(this);
         }
         else {
-            consoleBuffer.writeChars(event.getKeyValues());
+            consoleBuffer.writeChars(event.buffer().array());
         }
 
         return returnValue;

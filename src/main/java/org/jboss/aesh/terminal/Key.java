@@ -20,12 +20,8 @@
 package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.readline.KeyEvent;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * ANSCII enum key chart
@@ -410,9 +406,9 @@ public enum Key implements KeyEvent {
     }
 
 
-    private static KeyMap<Key> keyMap = null;
+    private static KeyMap<KeyEvent> keyMap = null;
 
-    public static KeyMap<Key> getKeyMap() {
+    public static KeyMap<KeyEvent> getKeyMap() {
         if (keyMap == null) {
             keyMap = new KeyMap<>();
             keyMap.setUnicode(Key.UNKNOWN);

@@ -7,6 +7,7 @@
 package org.jboss.aesh.readline.editing;
 
 import org.jboss.aesh.readline.Action;
+import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -27,7 +28,7 @@ public class Emacs extends BaseEditMode {
     }
 
     @Override
-    public Action parse(Key event) {
+    public Action parse(KeyEvent event) {
         if(editModeMapper.getMapping().containsKey(event)) {
             return editModeMapper.getMapping().get(event);
         }

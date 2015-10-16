@@ -53,6 +53,7 @@ import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.io.Resource;
+import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Key;
@@ -355,14 +356,15 @@ public class AeshExample {
             this.shell = commandInvocation.getShell();
             if(bar) {
                 shell.out().print("are you sure you want bar? (y/n) ");
-                Key operation = null;
+                KeyEvent operation = null;
                 try {
                     operation = commandInvocation.getInput();
                 }
                 catch (InterruptedException e) {
                     return CommandResult.FAILURE;
                 }
-                processOperation(operation);
+                if(operation instanceof Key)
+                    processOperation((Key) operation);
             }
             return CommandResult.SUCCESS;
         }

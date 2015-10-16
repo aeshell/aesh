@@ -38,4 +38,6 @@ public interface KeyEvent {
   int getCodePointAt(int index) throws IndexOutOfBoundsException;
 
   int length();
+
+  String name();
 }

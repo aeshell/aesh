@@ -20,9 +20,8 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CmdOperation;
-import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.keymap.KeyMap;
-import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.readline.KeyEvent;
 
 /**
  * Implementation of this interface will be called when a user press the
@@ -49,7 +48,7 @@ public interface ConsoleCallback {
      * @return user input
      * @throws InterruptedException
      */
-     Key getInput() throws InterruptedException;
+     KeyEvent getInput() throws InterruptedException;
 
     /**
      * A blocking call that will return user input from the terminal

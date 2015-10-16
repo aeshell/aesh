@@ -477,12 +477,30 @@ public class Console {
         inputProcessor.clearBufferAndDisplayPrompt();
     }
 
-    protected Key getInput() throws InterruptedException {
-        Key key = bindingReader.readBinding(Key.getKeyMap());
-        if (key != null) {
+    protected KeyEvent getInput() throws InterruptedException {
+        KeyEvent key = bindingReader.readBinding(Key.getKeyMap());
+        if (key != null && key != Key.UNKNOWN) {
             return key;
         }
-        return null;
+        else {
+            return new KeyEvent() {
+                private String input = bindingReader.getLastBinding();
+                @Override
+                public int getCodePointAt(int index) throws IndexOutOfBoundsException {
+                    return input.charAt(index);
+                }
+
+                @Override
+                public int length() {
+                    return input.length();
+                }
+
+                @Override
+                public String name() {
+                    return input;
+                }
+            };
+        }
     }
 
     protected <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {

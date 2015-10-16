@@ -130,6 +130,12 @@ public class EventQueue implements Iterator<KeyEvent> {
             public int length() {
               return 1;
             }
+
+            @Override
+            public String name() {
+              return String.valueOf(c);
+            }
+
             @Override
             public String toString() {
               return "key:" + c;

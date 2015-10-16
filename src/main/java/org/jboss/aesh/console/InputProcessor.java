@@ -30,7 +30,7 @@ import java.io.IOException;
  */
 public interface InputProcessor {
 
-    String parseOperation(Key event) throws IOException;
+    String parseOperation(KeyEvent event) throws IOException;
 
     History getHistory();
 

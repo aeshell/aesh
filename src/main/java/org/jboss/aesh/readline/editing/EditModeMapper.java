@@ -7,6 +7,7 @@
 package org.jboss.aesh.readline.editing;
 
 import org.jboss.aesh.readline.Action;
+import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.readline.actions.BackwardChar;
 import org.jboss.aesh.readline.actions.Complete;
 import org.jboss.aesh.readline.actions.DeleteChar;
@@ -19,7 +20,7 @@ import org.jboss.aesh.readline.actions.PrevHistory;
 import org.jboss.aesh.readline.actions.StartOfLine;
 import org.jboss.aesh.terminal.Key;
 
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -27,7 +28,7 @@ import java.util.Map;
  */
 public class EditModeMapper {
 
-    private Map<Key,Action> mapping;
+    private Map<KeyEvent,Action> mapping;
 
     public static EditModeMapper getEmacs() {
         EditModeMapper mapper = new EditModeMapper();
@@ -35,8 +36,8 @@ public class EditModeMapper {
         return mapper;
     }
 
-    private Map<Key, Action> createEmacsMapping() {
-        mapping = new EnumMap<>(Key.class);
+    private Map<KeyEvent, Action> createEmacsMapping() {
+        mapping = new HashMap<>();
 
         mapping.put(Key.CTRL_A, new StartOfLine());
         mapping.put(Key.CTRL_E, new EndOfLine());
@@ -57,10 +58,9 @@ public class EditModeMapper {
         return mapping;
     }
 
-    public Map<Key, Action> getMapping() {
+    public Map<KeyEvent, Action> getMapping() {
         return mapping;
     }
-
 
     @Override
     public String toString() {
