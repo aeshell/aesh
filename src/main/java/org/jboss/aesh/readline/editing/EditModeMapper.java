@@ -8,6 +8,7 @@ package org.jboss.aesh.readline.editing;
 
 import org.jboss.aesh.readline.Action;
 import org.jboss.aesh.readline.actions.BackwardChar;
+import org.jboss.aesh.readline.actions.Complete;
 import org.jboss.aesh.readline.actions.DeleteChar;
 import org.jboss.aesh.readline.actions.DeletePrevChar;
 import org.jboss.aesh.readline.actions.EndOfLine;
@@ -51,6 +52,7 @@ public class EditModeMapper {
         mapping.put(Key.RIGHT_2, new ForwardChar());
         mapping.put(Key.BACKSPACE, new DeletePrevChar());
         mapping.put(Key.DELETE, new DeleteChar());
+        mapping.put(Key.CTRL_I, new Complete());
 
         return mapping;
     }

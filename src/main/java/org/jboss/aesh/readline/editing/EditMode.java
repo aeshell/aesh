@@ -11,11 +11,14 @@ import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.Key;
 
 /**
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface EditMode {
 
     Action parse(Key event);
+
+    void updateIgnoreEOF(int eof);
 
     enum Status {
         DELETE,

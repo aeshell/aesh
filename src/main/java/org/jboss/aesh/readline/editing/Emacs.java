@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class Emacs implements EditMode {
+public class Emacs extends BaseEditMode {
 
     private Status status = Status.EDIT;
 

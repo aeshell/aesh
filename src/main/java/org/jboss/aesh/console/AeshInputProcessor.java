@@ -108,6 +108,8 @@ public class AeshInputProcessor implements InputProcessor {
 
         returnValue = null;
 
+        LOGGER.info("input key: "+event);
+
         org.jboss.aesh.readline.Action action = emacs.parse(event);
         if(action != null) {
             action.apply(this);
