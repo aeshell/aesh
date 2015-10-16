@@ -19,20 +19,13 @@
  */
 package org.jboss.aesh.graphics;
 
-import org.jboss.aesh.console.TestShell;
-import org.jboss.aesh.console.reader.AeshStandardStream;
-import org.jboss.aesh.terminal.CursorPosition;
-import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.api.Size;
-import org.jboss.aesh.terminal.api.Terminal;
 import org.jboss.aesh.terminal.impl.LineDisciplineTerminal;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 
 /**
  * @author <a href="mailto:00hf11@gmail.com">Helio Frota</a>
