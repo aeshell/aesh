@@ -33,13 +33,13 @@ import org.jboss.aesh.terminal.api.Attributes;
 import org.jboss.aesh.terminal.api.Attributes.ControlChar;
 import org.jboss.aesh.terminal.api.Attributes.InputFlag;
 import org.jboss.aesh.terminal.api.Attributes.LocalFlag;
-import org.jboss.aesh.terminal.api.Console;
+import org.jboss.aesh.terminal.api.Terminal;
 import org.jboss.aesh.terminal.utils.Curses;
 import org.jboss.aesh.terminal.utils.InfoCmp;
 import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 import org.jboss.aesh.util.LoggerUtil;
 
-public abstract class AbstractConsole implements Console {
+public abstract class AbstractTerminal implements Terminal {
 
     protected final Logger LOGGER = LoggerUtil.getLogger(getClass().getName());
 
@@ -50,7 +50,7 @@ public abstract class AbstractConsole implements Console {
     protected final Map<Capability, Integer> ints = new HashMap<>();
     protected final Map<Capability, String> strings = new HashMap<>();
 
-    public AbstractConsole(String name, String type) throws IOException {
+    public AbstractTerminal(String name, String type) throws IOException {
         this.name = name;
         this.type = type;
         for (Signal signal : Signal.values()) {

@@ -30,8 +30,6 @@ import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.ViEditMode;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.terminal.ShellWrapper;
-import org.jboss.aesh.terminal.Terminal;
 
 import java.io.File;
 import java.io.InputStream;
@@ -56,7 +54,6 @@ public class SettingsImpl implements Settings {
     private InputStream inputStream;
     private PrintStream stdOut;
     private PrintStream stdErr;
-    private Terminal terminal;
     private boolean readInputrc = true;
     private File inputrc;
     private boolean isLogging = false;
@@ -93,7 +90,6 @@ public class SettingsImpl implements Settings {
         setInputStream(baseSettings.getInputStream());
         setStdOut(baseSettings.getStdOut());
         setStdErr(baseSettings.getStdErr());
-        setTerminal(baseSettings.getTerminal());
         setInputrc(baseSettings.getInputrc());
         setLogging(baseSettings.isLogging());
         setDisableCompletion(baseSettings.isCompletionDisabled());
@@ -130,7 +126,6 @@ public class SettingsImpl implements Settings {
         inputStream = null;
         setStdOut(null);
         setStdErr(null);
-        terminal = null;
         readInputrc = true;
         isLogging = false;
         logFile = null;
@@ -360,29 +355,6 @@ public class SettingsImpl implements Settings {
      */
     public void setStdErr(PrintStream stdErr) {
         this.stdErr = stdErr;
-    }
-
-
-    /**
-     * Use the specified terminal implementation
-     * If not set, aesh will try to use the best suited one
-     * @return terminal
-     */
-    @Override
-    public Terminal getTerminal() {
-        if(terminal == null) {
-            terminal = new ShellWrapper(this);
-        }
-
-        return terminal;
-    }
-
-    /**
-     * Specify which terminal impl to use
-     * @param terminal term
-     */
-    public void setTerminal(Terminal terminal) {
-        this.terminal = terminal;
     }
 
     /**

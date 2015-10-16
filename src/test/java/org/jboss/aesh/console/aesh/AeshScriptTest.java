@@ -49,6 +49,9 @@ import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -68,7 +71,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class AeshScriptTest {
 
-    private static int counter = 0;
+    private static CountDownLatch counter = new CountDownLatch(3);
 
     @Test
     public void scriptPoc() throws IOException, CommandLineParserException, InterruptedException {
@@ -112,9 +115,10 @@ public class AeshScriptTest {
         outputStream.write("run".getBytes());
         outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
-        Thread.sleep(200);
 
-        assertEquals(3, counter);
+        counter.await(1, TimeUnit.SECONDS);
+
+        assertEquals(0, counter.getCount());
     }
 
     private List<String> readScriptFile() throws IOException {
@@ -142,7 +146,7 @@ public class AeshScriptTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
 
-            commandInvocation.putProcessInBackground();
+//            commandInvocation.putProcessInBackground();
 
             List<String> script = readScriptFile();
 
@@ -170,9 +174,9 @@ public class AeshScriptTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
-            if(counter < 2) {
+            if(counter.getCount() > 1) {
                 commandInvocation.getShell().out().println("computing...." + Config.getLineSeparator() + "finished computing, returning...");
-                counter++;
+                counter.countDown();
                 return CommandResult.SUCCESS;
             }
             else {
@@ -187,9 +191,9 @@ public class AeshScriptTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
-            if(counter < 3) {
+            if(counter.getCount() == 1) {
                 commandInvocation.getShell().out().println("baring...." + Config.getLineSeparator() + "finished baring, returning...");
-                counter++;
+                counter.countDown();
                 return CommandResult.SUCCESS;
             }
             else {

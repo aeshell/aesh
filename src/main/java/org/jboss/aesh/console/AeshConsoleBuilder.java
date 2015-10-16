@@ -154,7 +154,7 @@ public class AeshConsoleBuilder {
         if(prompt != null)
             aeshConsole.setPrompt(prompt);
         if(execute != null)
-            aeshConsole.execute(execute);
+            aeshConsole.push(execute);
 
         return aeshConsole;
     }

@@ -19,17 +19,16 @@
  */
 package org.jboss.aesh.console.settings;
 
+import java.io.File;
+import java.io.InputStream;
+import java.io.PrintStream;
+
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.KeyOperationManager;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.terminal.Terminal;
-
-import java.io.File;
-import java.io.InputStream;
-import java.io.PrintStream;
 
 /**
  * Object thats define all tunable settings used by Console
@@ -107,11 +106,6 @@ public interface Settings extends Cloneable {
      * Get standard error stream
      */
     PrintStream getStdErr();
-
-    /**
-     * Get current terminal
-     */
-    Terminal getTerminal();
 
     /**
      * Get inputrc file location

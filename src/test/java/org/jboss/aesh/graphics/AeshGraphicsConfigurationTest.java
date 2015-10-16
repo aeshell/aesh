@@ -19,10 +19,14 @@
  */
 package org.jboss.aesh.graphics;
 
+import org.jboss.aesh.console.TestShell;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.api.Size;
+import org.jboss.aesh.terminal.api.Terminal;
+import org.jboss.aesh.terminal.impl.LineDisciplineTerminal;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,80 +40,15 @@ import java.io.PrintStream;
 public class AeshGraphicsConfigurationTest {
 
     @Test
-    public void testAeshGraphicsConfiguration() {
+    public void testAeshGraphicsConfiguration() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Shell shell = new TestShell(new PrintStream(baos), System.err);
-        AeshGraphicsConfiguration agc = new AeshGraphicsConfiguration(shell);
+        LineDisciplineTerminal terminal = new LineDisciplineTerminal("test", "ansi", baos, "UTF-8");
+        terminal.setSize(new Size(80, 20));
+        AeshGraphicsConfiguration agc = new AeshGraphicsConfiguration(terminal);
 
         Assert.assertEquals("TerminalSize{height=80, width=20}", agc.getBounds().toString());
-        Assert.assertEquals(shell.getSize().getWidth() / 2, shell.getSize().getCenterWidth());
-        Assert.assertEquals(shell.getSize().getHeight() / 2, shell.getSize().getCenterHeight());
-    }
-
-    private static class TestShell implements Shell {
-
-        private final PrintStream out;
-        private final PrintStream err;
-
-        TestShell(PrintStream out, PrintStream err) {
-            this.out = out;
-            this.err = err;
-        }
-
-        @Override
-        public void clear() throws IOException {
-
-        }
-
-        @Override
-        public PrintStream out() {
-            return out;
-        }
-
-        @Override
-        public PrintStream err() {
-            return err;
-        }
-
-        @Override
-        public AeshStandardStream in() {
-            return null;
-        }
-
-        @Override
-        public TerminalSize getSize() {
-            return new TerminalSize(80, 20);
-        }
-
-        @Override
-        public CursorPosition getCursor() {
-            return new CursorPosition(1, 1);
-        }
-
-        @Override
-        public void setCursor(CursorPosition position) {
-
-        }
-
-        @Override
-        public void moveCursor(int rows, int columns) {
-
-        }
-
-        @Override
-        public boolean isMainBuffer() {
-            return false;
-        }
-
-        @Override
-        public void enableAlternateBuffer() {
-
-        }
-
-        @Override
-        public void enableMainBuffer() {
-
-        }
+        Assert.assertEquals(terminal.getWidth() / 2, agc.getBounds().getCenterWidth());
+        Assert.assertEquals(terminal.getHeight() / 2, agc.getBounds().getCenterHeight());
     }
 
 }

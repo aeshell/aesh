@@ -16,7 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.jboss.aesh.terminal.api.Console;
+import org.jboss.aesh.terminal.api.Terminal;
 import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 import org.junit.Assert;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class KeyMapTest {
 
     @Test
     public void testBound() throws Exception {
-        Console console = new DumbConsole(new ByteArrayInputStream(new byte[0]), new ByteArrayOutputStream());
+        Terminal console = new DumbTerminal(new ByteArrayInputStream(new byte[0]), new ByteArrayOutputStream());
         KeyMap<String> map = emacs(console);
 
         Assert.assertEquals(COMPLETE_WORD, map.getBound("\u001B\u001B"));
@@ -186,7 +186,7 @@ public class KeyMapTest {
     private static final String YANK = "yank";
     private static final String YANK_POP = "yank-pop";
 
-    public static KeyMap<String> emacs(Console console) {
+    public static KeyMap<String> emacs(Terminal console) {
         KeyMap<String> emacs = new KeyMap<>();
         emacs.bind(SET_MARK_COMMAND, ctrl('@'));
         emacs.bind(BEGINNING_OF_LINE, ctrl('A'));

@@ -49,7 +49,7 @@ import org.jboss.aesh.terminal.utils.ShutdownHooks;
 import org.jboss.aesh.terminal.utils.ShutdownHooks.Task;
 import org.jboss.aesh.terminal.utils.Signals;
 
-public class WinSysConsole extends AbstractConsole {
+public class WinSysTerminal extends AbstractTerminal {
 
     protected final InputStream input;
     protected final OutputStream output;
@@ -67,7 +67,7 @@ public class WinSysConsole extends AbstractConsole {
     private static final int ENABLE_QUICK_EDIT_MODE = 0x0040;
 
 
-    public WinSysConsole(String name, boolean nativeSignals) throws IOException {
+    public WinSysTerminal(String name, boolean nativeSignals) throws IOException {
         super(name, "windows");
         input = new DirectInputStream();
         output = new WindowsAnsiOutputStream(new FileOutputStream(FileDescriptor.out));

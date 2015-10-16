@@ -92,8 +92,6 @@ public class ConfigTest {
         SettingsBuilder builder = new SettingsBuilder();
         Settings settings = Config.readRuntimeProperties(builder.create());
 
-        assertEquals(settings.getTerminal().getClass().getName(), "org.jboss.aesh.terminal.TestTerminal");
-
         assertEquals(settings.getMode(), Mode.VI);
 
         assertEquals(settings.isHistoryPersistent(), false);

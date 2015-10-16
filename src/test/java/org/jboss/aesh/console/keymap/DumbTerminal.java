@@ -20,9 +20,9 @@ import java.io.Reader;
 import org.jboss.aesh.terminal.api.Attributes;
 import org.jboss.aesh.terminal.api.Attributes.ControlChar;
 import org.jboss.aesh.terminal.api.Size;
-import org.jboss.aesh.terminal.impl.AbstractConsole;
+import org.jboss.aesh.terminal.impl.AbstractTerminal;
 
-public class DumbConsole extends AbstractConsole {
+public class DumbTerminal extends AbstractTerminal {
     private final InputStream input;
     private final OutputStream output;
     private final Reader reader;
@@ -30,7 +30,7 @@ public class DumbConsole extends AbstractConsole {
     private final Attributes attributes;
     private final Size size;
 
-    public DumbConsole(InputStream in, OutputStream out) throws IOException {
+    public DumbTerminal(InputStream in, OutputStream out) throws IOException {
         super("dumb", "ansi");
         this.input = in;
         this.output = out;

@@ -87,7 +87,7 @@ public class NonBlockingReader
      */
     public synchronized void shutdown() {
         if (thread != null) {
-            notify();
+            notifyAll();
         }
     }
 
@@ -298,7 +298,7 @@ public class NonBlockingReader
                     exception = failure;
                     ch = charRead;
                     threadIsReading = false;
-                    notify();
+                    notifyAll();
                 }
             }
         } finally {

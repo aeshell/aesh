@@ -27,7 +27,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.jboss.aesh.terminal.api.Console;
+import org.jboss.aesh.terminal.api.Terminal;
 import org.jboss.aesh.terminal.utils.Curses;
 import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 
@@ -249,7 +249,7 @@ public class KeyMap<T> {
         return key == '?' ? del() : Character.toString((char) (Character.toUpperCase(key) & 0x1f));
     }
 
-    public static String key(Console console, Capability capability) {
+    public static String key(Terminal console, Capability capability) {
         try {
             String str = console.getStringCapability(capability);
             if (str != null) {

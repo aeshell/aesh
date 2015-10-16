@@ -118,7 +118,7 @@ public final class AeshCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public void executeCommand(String input) {
+    public void executeCommand(String input) throws InterruptedException {
         aeshConsole.execute(input);
     }
 

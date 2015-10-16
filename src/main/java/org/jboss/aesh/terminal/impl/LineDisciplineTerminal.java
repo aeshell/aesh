@@ -38,13 +38,13 @@ import org.jboss.aesh.terminal.api.Attributes.ControlChar;
 import org.jboss.aesh.terminal.api.Attributes.InputFlag;
 import org.jboss.aesh.terminal.api.Attributes.LocalFlag;
 import org.jboss.aesh.terminal.api.Attributes.OutputFlag;
-import org.jboss.aesh.terminal.api.Console;
+import org.jboss.aesh.terminal.api.Terminal;
 import org.jboss.aesh.terminal.api.Size;
 import org.jboss.aesh.terminal.utils.InputStreamReader;
 
 /**
  * Abstract console with support for line discipline.
- * The {@link Console} interface represents the slave
+ * The {@link Terminal} interface represents the slave
  * side of a PTY, but implementations derived from this class
  * will handle both the slave and master side of things.
  *
@@ -58,7 +58,7 @@ import org.jboss.aesh.terminal.utils.InputStreamReader;
  * only when the application running in the terminal processes
  * the input.
  */
-public class LineDisciplineConsole extends AbstractConsole {
+public class LineDisciplineTerminal extends AbstractTerminal {
 
     private static final int PIPE_SIZE = 1024;
 
@@ -95,10 +95,10 @@ public class LineDisciplineConsole extends AbstractConsole {
     protected ByteBuffer bytes;
     protected CharBuffer chars;
 
-    public LineDisciplineConsole(String name,
-                                 String type,
-                                 OutputStream masterOutput,
-                                 String encoding) throws IOException {
+    public LineDisciplineTerminal(String name,
+                                  String type,
+                                  OutputStream masterOutput,
+                                  String encoding) throws IOException {
         super(name, type);
         PipedInputStream input = new PipedInputStream(PIPE_SIZE);
         this.slaveInputPipe = new PipedOutputStream(input);
@@ -236,10 +236,10 @@ public class LineDisciplineConsole extends AbstractConsole {
 
     public void close() throws IOException {
         try {
-            slaveReader.close();
+            slaveInputPipe.close();
         } finally {
             try {
-                slaveInputPipe.close();
+                slaveReader.close();
             } finally {
                 try {
                 } finally {

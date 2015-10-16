@@ -127,7 +127,7 @@ public interface CommandInvocation {
      *
      * @param input command input
      */
-    void executeCommand(String input);
+    void executeCommand(String input) throws InterruptedException;
 
    /**
     * Print a message on console
