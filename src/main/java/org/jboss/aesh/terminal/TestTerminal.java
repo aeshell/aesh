@@ -24,6 +24,7 @@ package org.jboss.aesh.terminal;
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
+@Deprecated
 public class TestTerminal {
 
 }

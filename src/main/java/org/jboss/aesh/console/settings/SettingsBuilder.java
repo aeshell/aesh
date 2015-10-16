@@ -95,6 +95,7 @@ public class SettingsBuilder {
         return this;
     }
 
+    @Deprecated
     public SettingsBuilder terminal(TestTerminal terminal) {
         return this;
     }
