@@ -30,7 +30,6 @@ public class Emacs implements EditMode {
     public Action parse(Key event) {
         if(editModeMapper.getMapping().containsKey(event)) {
             return editModeMapper.getMapping().get(event);
-
         }
         else {
             return null;
