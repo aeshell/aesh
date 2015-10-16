@@ -15,6 +15,7 @@ import org.jboss.aesh.readline.actions.DeletePrevChar;
 import org.jboss.aesh.readline.actions.EndOfLine;
 import org.jboss.aesh.readline.actions.Enter;
 import org.jboss.aesh.readline.actions.ForwardChar;
+import org.jboss.aesh.readline.actions.Interrupt;
 import org.jboss.aesh.readline.actions.NextHistory;
 import org.jboss.aesh.readline.actions.PrevHistory;
 import org.jboss.aesh.readline.actions.StartOfLine;
@@ -54,6 +55,7 @@ public class EditModeMapper {
         mapping.put(Key.BACKSPACE, new DeletePrevChar());
         mapping.put(Key.DELETE, new DeleteChar());
         mapping.put(Key.CTRL_I, new Complete());
+        mapping.put(Key.CTRL_C, new Interrupt());
 
         return mapping;
     }

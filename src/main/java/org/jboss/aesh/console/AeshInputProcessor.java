@@ -105,6 +105,11 @@ public class AeshInputProcessor implements InputProcessor {
     }
 
     @Override
+    public InputProcessorInterruptHook getInterruptHook() {
+        return interruptHook;
+    }
+
+    @Override
     public synchronized String parseOperation(KeyEvent event) throws IOException {
 
         returnValue = null;

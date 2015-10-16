@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.edit.actions.Action;
+import org.jboss.aesh.readline.Action;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

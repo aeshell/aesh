@@ -44,4 +44,5 @@ public interface InputProcessor {
 
     void setReturnValue(String value);
 
+    InputProcessorInterruptHook getInterruptHook();
 }
