@@ -36,9 +36,11 @@ public class EventQueue implements Iterator<KeyEvent> {
     this.bindings = Key.values();
   }
 
+  /*
   public EventQueue(KeyMapper keymap) {
     this.bindings = keymap.getEvents().toArray(new KeyEvent[keymap.getEvents().size()]);
   }
+  */
 
   public EventQueue append(int... codePoints) {
     pending = Arrays.copyOf(pending, pending.length + codePoints.length);
