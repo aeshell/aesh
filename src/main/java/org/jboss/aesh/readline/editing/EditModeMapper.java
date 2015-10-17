@@ -16,6 +16,7 @@ import org.jboss.aesh.readline.actions.DeletePrevChar;
 import org.jboss.aesh.readline.actions.EndOfLine;
 import org.jboss.aesh.readline.actions.Enter;
 import org.jboss.aesh.readline.actions.ForwardChar;
+import org.jboss.aesh.readline.actions.ForwardWord;
 import org.jboss.aesh.readline.actions.Interrupt;
 import org.jboss.aesh.readline.actions.NextHistory;
 import org.jboss.aesh.readline.actions.PrevHistory;
@@ -58,6 +59,7 @@ public class EditModeMapper {
         mapping.put(Key.CTRL_I, new Complete());
         mapping.put(Key.CTRL_C, new Interrupt());
         mapping.put(Key.META_b, new BackwardWord());
+        mapping.put(Key.META_f, new ForwardWord(false, EditMode.Status.MOVE));
 
         return mapping;
     }

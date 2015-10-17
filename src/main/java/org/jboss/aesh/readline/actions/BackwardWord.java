@@ -7,12 +7,11 @@
 package org.jboss.aesh.readline.actions;
 
 import org.jboss.aesh.console.InputProcessor;
-import org.jboss.aesh.readline.Action;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class BackwardWord implements Action {
+public class BackwardWord extends MovementAction {
 
     private boolean viMode;
 
@@ -59,14 +58,6 @@ public class BackwardWord implements Action {
         }
 
         inputProcessor.getBuffer().moveCursor(cursor-inputProcessor.getBuffer().getBuffer().getMultiCursor());
-    }
-
-    private boolean isSpace(char c) {
-        return Character.isWhitespace(c);
-    }
-
-    private boolean isDelimiter(char c) {
-        return !Character.isLetterOrDigit(c);
     }
 
 }
