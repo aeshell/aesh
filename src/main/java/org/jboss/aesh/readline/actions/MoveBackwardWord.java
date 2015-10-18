@@ -19,19 +19,17 @@
  */
 package org.jboss.aesh.readline.actions;
 
-import org.jboss.aesh.readline.Action;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-abstract class MovementAction implements Action{
+public class MoveBackwardWord extends BackwardWord {
 
-    protected boolean isSpace(char c) {
-        return Character.isWhitespace(c);
+    public MoveBackwardWord() {
+        super();
     }
 
-    protected boolean isDelimiter(char c) {
-        return !Character.isLetterOrDigit(c);
+    @Override
+    public String name() {
+        return "move-backward-word";
     }
-
 }

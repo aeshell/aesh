@@ -20,26 +20,31 @@
 package org.jboss.aesh.readline.actions;
 
 import org.jboss.aesh.console.InputProcessor;
+import org.jboss.aesh.readline.editing.EditMode;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class BackwardWord extends MovementAction {
+abstract class BackwardWord extends ChangeAction {
 
     private boolean viMode;
 
     public BackwardWord() {
+        super(EditMode.Status.MOVE);
         this.viMode = false;
     }
 
-    public BackwardWord(boolean viMode) {
+    public BackwardWord(boolean viMode, EditMode.Status status) {
+        super(status);
         this.viMode = viMode;
     }
 
+    /*
     @Override
     public String name() {
         return "backward-word";
     }
+    */
 
     @Override
     public void apply(InputProcessor inputProcessor) {
@@ -70,7 +75,7 @@ public class BackwardWord extends MovementAction {
                 cursor--;
         }
 
-        inputProcessor.getBuffer().moveCursor(cursor-inputProcessor.getBuffer().getBuffer().getMultiCursor());
+        apply(cursor, inputProcessor);
     }
 
 }

@@ -19,19 +19,23 @@
  */
 package org.jboss.aesh.readline.actions;
 
-import org.jboss.aesh.readline.Action;
+import org.jboss.aesh.readline.editing.EditMode;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-abstract class MovementAction implements Action{
+public class DeleteBackwardWord extends BackwardWord {
 
-    protected boolean isSpace(char c) {
-        return Character.isWhitespace(c);
+    public DeleteBackwardWord() {
+        super(false, EditMode.Status.DELETE);
     }
 
-    protected boolean isDelimiter(char c) {
-        return !Character.isLetterOrDigit(c);
+    public DeleteBackwardWord(boolean viMode) {
+        super(viMode, EditMode.Status.DELETE);
     }
 
+    @Override
+    public String name() {
+        return "change-backward-word";
+    }
 }

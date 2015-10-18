@@ -26,19 +26,19 @@ import org.jboss.aesh.readline.editing.EditMode;
  * TODO: change boolean params in constructors to objects/enum
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ForwardWord extends MovementAction {
+public class ForwardWord extends ChangeAction {
 
     private boolean viMode;
     private boolean removeTrailingSpaces;
-    private EditMode.Status status;
 
     public ForwardWord() {
+        super(EditMode.Status.MOVE);
         viMode = false;
     }
 
     public ForwardWord(boolean viMode, EditMode.Status status) {
+        super(status);
         this.viMode = viMode;
-        this.status = status;
         if(status == EditMode.Status.CHANGE)
             this.removeTrailingSpaces = false;
     }
@@ -81,15 +81,6 @@ public class ForwardWord extends MovementAction {
                 while(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
                     cursor++;
 
-        if(status == EditMode.Status.DELETE) {
-
-        }
-        else if(status == EditMode.Status.CHANGE) {
-
-        }
-        else if(status == EditMode.Status.MOVE) {
-            inputProcessor.getBuffer().moveCursor(cursor-inputProcessor.getBuffer().getBuffer().getMultiCursor());
-
-        }
+        apply(cursor, inputProcessor);
     }
 }
