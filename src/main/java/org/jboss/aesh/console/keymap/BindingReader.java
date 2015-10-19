@@ -62,14 +62,18 @@ public class BindingReader {
      *         stream has been reached
      */
     public <T> T readBinding(KeyMap<T> keys) {
-        return readBinding(keys, null);
+        return readBinding(keys, null, true);
     }
 
     public <T> T readBinding(KeyMap<T> keys, KeyMap<T> local) {
+        return readBinding(keys, local, true);
+    }
+
+    public <T> T readBinding(KeyMap<T> keys, KeyMap<T> local, boolean block) {
         lastBinding = null;
         T o = null;
         int[] remaining = new int[1];
-        while (true) {
+        do {
             int c = readCharacter();
             if (c == -1) {
                 return null;
@@ -112,7 +116,8 @@ public class BindingReader {
                     return o;
                 }
             }
-        }
+        } while (block);
+        return null;
     }
 
     /**
