@@ -121,6 +121,7 @@
                  <failsOnError>true</failsOnError>
                  <linkXRef>false</linkXRef>
                  <useFile/>
+                 <includeTestSourceDirectory>true</includeTestSourceDirectory>
                </configuration>
                <goals>
                  <goal>check</goal>
