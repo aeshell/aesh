@@ -21,11 +21,26 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
+apply plugin: 'signing'
 apply plugin: 'application'
 apply plugin: 'checkstyle'
 
 group = 'org.jboss.aesh'
+archivesBaseName = 'aesh'
 version = '0.67-SNAPSHOT'
+
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+ext {
+  if(!project.hasProperty('ossrhUsername'))
+    ossrhUsername = ''
+
+  if(!project.hasProperty('ossrhPassword')) {
+    ossrhPassword = ''
+  }
+}
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
@@ -56,39 +71,88 @@ dependencies {
 
 mainClassName = "Example"
 
-idea {
-    project {
-        ipr {
-            withXml { provider ->
-                provider.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
-                def maxHeapSizeConfig =  provider.node.component.find { it.@name == 'JavacSettings' }
-                if( maxHeapSizeConfig == null ){
-                    def javacSettingsNode =  provider.node.appendNode('component',[name: 'JavacSettings'])
-                    javacSettingsNode.appendNode('option', [name:"MAXIMUM_HEAP_SIZE", value:"512"])
-                }
-            }
-            beforeMerged { project ->
-                project.modulePaths.clear()
-            }
-        }
-    }
-    module {
-        name = "æsh"
+install.dependsOn 'check'
+
+if (JavaVersion.current().isJava8Compatible()) {
+    tasks.withType(Javadoc) {
+        // disable the crazy super-strict doclint tool in Java 8
+        //noinspection SpellCheckingInspection
+        options.addStringOption('Xdoclint:none', '-quiet')
     }
 }
 
-install.dependsOn 'check'
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
 
-task docs(type: Javadoc) {
-    source = sourceSets.main.allJava
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
 }
 
 checkstyle {
+  configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+  toolVersion = "6.8.2"
   showViolations true
   configProperties = [
      'checkstyle.cache.file': rootProject.file('build/checkstyle.cache'),
   ]
 }
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    required {isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+def projectPom = {
+    name = 'aesh'
+    packaging = 'jar'
+    // optionally artifactId can be defined here
+    description = 'Aesh - Another Extendable SHell. Simple to use terminal API in Java'
+    url = 'http://aeshell.github.io/'
+
+    scm {
+        connection = 'scm:git:github.com/aeshell/aesh.git'
+        developerConnection = 'scm:git:github.com/aeshell/aesh.git'
+        url = 'github.com/aeshell/aesh.git'
+    }
+
+    licenses {
+        license {
+            name = 'The Apache License, Version 2.0'
+            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+        }
+    }
+}
+
+install {
+  repositories.mavenInstaller.pom.project(projectPom)
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            
+            repository(url: "http://repository.jboss.org/nexus/content/groups/public/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "http://repository.jboss.org/nexus/content/groups/public/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project(projectPom)
+        }
+    }
+}
+
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.7'
