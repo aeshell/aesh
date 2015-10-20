@@ -73,11 +73,8 @@ abstract class ChangeAction extends MovementAction {
                         inputProcessor.getBuffer().getBuffer().getLine().substring(
                                 inputProcessor.getBuffer().getBuffer().getMultiCursor(), cursor)));
                 //delete buffer
-                LOGGER.info("buffer before delete: "+inputProcessor.getBuffer().getBuffer().getLine());
                 inputProcessor.getBuffer().getBuffer().delete(
                         inputProcessor.getBuffer().getBuffer().getMultiCursor(), cursor);
-                //inputProcessor.getBuffer().moveCursor(cursor - inputProcessor.getBuffer().getBuffer().getMultiCursor());
-                LOGGER.info("buffer after delete: "+inputProcessor.getBuffer().getBuffer().getLine());
             }
 
             //TODO: must check if we're in edit mode
