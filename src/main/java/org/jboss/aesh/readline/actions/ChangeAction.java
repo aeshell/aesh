@@ -22,6 +22,9 @@ package org.jboss.aesh.readline.actions;
 import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.undo.UndoAction;
+import org.jboss.aesh.util.LoggerUtil;
+
+import java.util.logging.Logger;
 
 /**
  * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -29,9 +32,18 @@ import org.jboss.aesh.undo.UndoAction;
 abstract class ChangeAction extends MovementAction {
 
     private EditMode.Status status;
+    protected boolean viMode;
+
+    private static final Logger LOGGER = LoggerUtil.getLogger(ChangeAction.class.getName());
 
     ChangeAction(EditMode.Status  status) {
         this.status = status;
+        viMode = false;
+    }
+
+    ChangeAction(boolean viMode, EditMode.Status status) {
+        this.status = status;
+        this.viMode = viMode;
     }
 
     protected EditMode.Status getStatus() {
@@ -39,6 +51,7 @@ abstract class ChangeAction extends MovementAction {
     }
 
     protected void apply(int cursor, InputProcessor inputProcessor) {
+        LOGGER.info("applying "+status+" delta: "+cursor+", current pos: "+inputProcessor.getBuffer().getBuffer().getMultiCursor());
         if(status == EditMode.Status.DELETE || status == EditMode.Status.CHANGE) {
             addActionToUndoStack(inputProcessor);
             if(cursor < inputProcessor.getBuffer().getBuffer().getMultiCursor()) {
@@ -48,8 +61,11 @@ abstract class ChangeAction extends MovementAction {
                                 cursor,
                                 inputProcessor.getBuffer().getBuffer().getMultiCursor())));
                 //delete buffer
+                LOGGER.info("buffer before delete: "+inputProcessor.getBuffer().getBuffer().getLine());
                 inputProcessor.getBuffer().getBuffer().delete(cursor,
                         inputProcessor.getBuffer().getBuffer().getMultiCursor());
+                LOGGER.info("buffer after delete: "+inputProcessor.getBuffer().getBuffer().getLine());
+                inputProcessor.getBuffer().moveCursor(inputProcessor.getBuffer().getBuffer().getMultiCursor()-cursor);
             }
             else {
                 //add to pastemanager
@@ -57,10 +73,18 @@ abstract class ChangeAction extends MovementAction {
                         inputProcessor.getBuffer().getBuffer().getLine().substring(
                                 inputProcessor.getBuffer().getBuffer().getMultiCursor(), cursor)));
                 //delete buffer
+                LOGGER.info("buffer before delete: "+inputProcessor.getBuffer().getBuffer().getLine());
                 inputProcessor.getBuffer().getBuffer().delete(
                         inputProcessor.getBuffer().getBuffer().getMultiCursor(), cursor);
+                //inputProcessor.getBuffer().moveCursor(cursor - inputProcessor.getBuffer().getBuffer().getMultiCursor());
+                LOGGER.info("buffer after delete: "+inputProcessor.getBuffer().getBuffer().getLine());
             }
-            inputProcessor.getBuffer().moveCursor(cursor - inputProcessor.getBuffer().getBuffer().getMultiCursor());
+
+            //TODO: must check if we're in edit mode
+            //if(viMode && inputProcessor.getBuffer().getBuffer().getMultiCursor() == inputProcessor.getBuffer().getBuffer().getLine().length())
+            //    inputProcessor.getBuffer().moveCursor(-1);
+
+            inputProcessor.getBuffer().drawLine();
         }
         else if(status == EditMode.Status.MOVE) {
             inputProcessor.getBuffer().moveCursor(cursor - inputProcessor.getBuffer().getBuffer().getMultiCursor());

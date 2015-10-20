@@ -23,59 +23,34 @@ import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.readline.editing.EditMode;
 
 /**
- * TODO: change boolean params in constructors to objects/enum
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-abstract class ForwardWord extends ChangeAction {
+abstract class ForwardBigWord extends ChangeAction {
 
-    private boolean viMode;
-    private boolean removeTrailingSpaces;
-
-    ForwardWord() {
-        super(EditMode.Status.MOVE);
-        viMode = false;
-    }
-
-    ForwardWord(boolean viMode, EditMode.Status status) {
+    ForwardBigWord(EditMode.Status status) {
         super(status);
-        this.viMode = viMode;
-        if(status == EditMode.Status.CHANGE)
-            this.removeTrailingSpaces = false;
     }
 
     @Override
     public void apply(InputProcessor inputProcessor) {
         int cursor = inputProcessor.getBuffer().getBuffer().getMultiCursor();
         String buffer = inputProcessor.getBuffer().getBuffer().getLine();
-
-        if(viMode) {
-            if(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
-                while(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
-                    cursor++;
-                //if we stand on a non-delimiter
-            else {
-                while(cursor < buffer.length() && !isDelimiter(buffer.charAt(cursor)))
-                    cursor++;
-                //if we end up on a space we move past that too
-                if(removeTrailingSpaces)
-                    if(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
-                        while(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
-                            cursor++;
-            }
-        }
+               //if cursor stand on a delimiter, move till its no more delimiters
+        if(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
+            while(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
+                cursor++;
+            //if we stand on a non-delimiter
         else {
-            while (cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
+            while(cursor < buffer.length() && !isSpace(buffer.charAt(cursor)))
                 cursor++;
-            while (cursor < buffer.length() && !isDelimiter(buffer.charAt(cursor)))
-                cursor++;
-        }
 
-        //if we end up on a space we move past that too
-        if(removeTrailingSpaces)
+            //if we end up on a space we move past that too
             if(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
                 while(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
                     cursor++;
 
-        apply(cursor, inputProcessor);
+            apply(cursor, inputProcessor);
+        }
     }
+
 }
