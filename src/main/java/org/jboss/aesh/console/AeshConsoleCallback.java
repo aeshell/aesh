@@ -20,7 +20,6 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CmdOperation;
-import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.Key;

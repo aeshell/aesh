@@ -23,7 +23,6 @@ import org.jboss.aesh.console.Buffer;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
-import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.Key;

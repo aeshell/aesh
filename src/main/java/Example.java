@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.Config;
@@ -27,9 +26,7 @@ import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.readline.Action;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalCharacter;

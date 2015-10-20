@@ -72,36 +72,36 @@ public class ViModeTest {
         consoleBuffer.writeString("abcd");
 
         CommandOperation co = new CommandOperation(Key.ESC);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.ESC);
         co = new CommandOperation(Key.x);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.x);
 
         assertEquals("abc", consoleBuffer.getBuffer().getLineNoMask());
 
         co = new CommandOperation(Key.h);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.h);
         co = new CommandOperation(Key.s);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.s);
         co = new CommandOperation(Key.T);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.T);
 
         assertEquals("aTc", consoleBuffer.getBuffer().getLineNoMask());
 
         co = new CommandOperation(Key.ESC);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.ESC);
         co = new CommandOperation(Key.ZERO);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.ZERO);
         co = new CommandOperation(Key.x);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.x);
 
         assertEquals("Tc", consoleBuffer.getBuffer().getLineNoMask());
 
         co = new CommandOperation(Key.l);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.l);
         co = new CommandOperation(Key.a);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.a);
         co = new CommandOperation(Key.o);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.o);
 
         assertEquals("Tco", consoleBuffer.getBuffer().getLineNoMask());
 
@@ -134,26 +134,26 @@ public class ViModeTest {
         consoleBuffer.writeString("foo  bar...  Foo-Bar.");
 
         CommandOperation co = new CommandOperation(Key.ESC);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.ESC);
         co = new CommandOperation(Key.B);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.B);
         co = new CommandOperation(Key.d);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.d);
         co = new CommandOperation(Key.b);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.b);
 
         assertEquals("foo  barFoo-Bar.", consoleBuffer.getBuffer().getLineNoMask());
 
         co = new CommandOperation(Key.ESC);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.ESC);
         co = new CommandOperation(Key.ZERO);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.ZERO);
         co = new CommandOperation(Key.W);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.W);
         co = new CommandOperation(Key.d);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.d);
         co = new CommandOperation(Key.w);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.w);
 
         assertEquals("foo  -Bar.", consoleBuffer.getBuffer().getLineNoMask());
 
@@ -186,50 +186,51 @@ public class ViModeTest {
         consoleBuffer.writeString("/cd /home/foo/ ls/ cd Desktop/ ls ../");
 
         CommandOperation co = new CommandOperation(Key.ESC);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.ESC);
         co = new CommandOperation(Key.ZERO);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.ZERO);
         co = new CommandOperation(Key.w);
-        inputProcessor.parseOperation(co);
-        inputProcessor.parseOperation(co);
-        inputProcessor.parseOperation(co);
-        inputProcessor.parseOperation(co);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.w);
+        inputProcessor.parseOperation(Key.w);
+        inputProcessor.parseOperation(Key.w);
+        inputProcessor.parseOperation(Key.w);
+        inputProcessor.parseOperation(Key.w);
         co = new CommandOperation(Key.c);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.c);
         co = new CommandOperation(Key.w);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.w);
         co = new CommandOperation(Key.b);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.b);
         co = new CommandOperation(Key.a);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.a);
         co = new CommandOperation(Key.r);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.r);
         co = new CommandOperation(Key.ESC);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.ESC);
         co = new CommandOperation(Key.W);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.W);
         co = new CommandOperation(Key.d);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.d);
         co = new CommandOperation(Key.w);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.w);
         co = new CommandOperation(Key.PERIOD);
-        inputProcessor.parseOperation(co);
+        inputProcessor.parseOperation(Key.PERIOD);
         co = new CommandOperation(Key.ENTER);
 
-        assertEquals("/cd /home/bar/ cd Desktop/ ls ../", inputProcessor.parseOperation(co));
+        assertEquals("/cd /home/bar/ cd Desktop/ ls ../",
+                inputProcessor.parseOperation(Key.ENTER));
 
         consoleBuffer.writeString("/cd /home/foo/ ls/ cd Desktop/ ls ../");
-        inputProcessor.parseOperation(new CommandOperation(Key.ESC));
-        inputProcessor.parseOperation(new CommandOperation(Key.B));
-        inputProcessor.parseOperation(new CommandOperation(Key.D));
-        inputProcessor.parseOperation(new CommandOperation(Key.B));
-        inputProcessor.parseOperation(new CommandOperation(Key.PERIOD));
-        inputProcessor.parseOperation(new CommandOperation(Key.B));
-        inputProcessor.parseOperation(new CommandOperation(Key.PERIOD));
+        inputProcessor.parseOperation(Key.ESC);
+        inputProcessor.parseOperation(Key.B);
+        inputProcessor.parseOperation(Key.D);
+        inputProcessor.parseOperation(Key.B);
+        inputProcessor.parseOperation(Key.PERIOD);
+        inputProcessor.parseOperation(Key.B);
+        inputProcessor.parseOperation(Key.PERIOD);
 
         assertEquals("/cd /home/foo/ ls/ cd ",
-                inputProcessor.parseOperation(new CommandOperation(Key.ENTER)));
+                inputProcessor.parseOperation(Key.ENTER));
     }
 
     @Test
@@ -257,28 +258,28 @@ public class ViModeTest {
                 .create();
 
         consoleBuffer.writeString("apt-get install vIM");
-        inputProcessor.parseOperation(new CommandOperation(Key.ESC));
-        inputProcessor.parseOperation(new CommandOperation(Key.b));
-        inputProcessor.parseOperation(new CommandOperation(Key.TILDE));
-        inputProcessor.parseOperation(new CommandOperation(Key.TILDE));
-        inputProcessor.parseOperation(new CommandOperation(Key.TILDE));
-        inputProcessor.parseOperation(new CommandOperation(Key.ZERO));
-        inputProcessor.parseOperation(new CommandOperation(Key.w));
-        inputProcessor.parseOperation(new CommandOperation(Key.w));
-        inputProcessor.parseOperation(new CommandOperation(Key.c));
-        inputProcessor.parseOperation(new CommandOperation(Key.w));
+        inputProcessor.parseOperation(Key.ESC);
+        inputProcessor.parseOperation(Key.b);
+        inputProcessor.parseOperation(Key.TILDE);
+        inputProcessor.parseOperation(Key.TILDE);
+        inputProcessor.parseOperation(Key.TILDE);
+        inputProcessor.parseOperation(Key.ZERO);
+        inputProcessor.parseOperation(Key.w);
+        inputProcessor.parseOperation(Key.w);
+        inputProcessor.parseOperation(Key.c);
+        inputProcessor.parseOperation(Key.w);
 
         consoleBuffer.writeString("cache");
 
-        inputProcessor.parseOperation(new CommandOperation(Key.ESC));
-        inputProcessor.parseOperation(new CommandOperation(Key.w));
-        inputProcessor.parseOperation(new CommandOperation(Key.c));
-        inputProcessor.parseOperation(new CommandOperation(Key.w));
+        inputProcessor.parseOperation(Key.ESC);
+        inputProcessor.parseOperation(Key.w);
+        inputProcessor.parseOperation(Key.c);
+        inputProcessor.parseOperation(Key.w);
 
         consoleBuffer.writeString("search");
 
         assertEquals("apt-cache search Vim",
-                inputProcessor.parseOperation(new CommandOperation(Key.ENTER)));
+                inputProcessor.parseOperation(Key.ENTER));
 
     }
 
@@ -308,20 +309,20 @@ public class ViModeTest {
 
         consoleBuffer.writeString("apt-get install vIM");
 
-        inputProcessor.parseOperation(new CommandOperation(Key.ESC));
-        inputProcessor.parseOperation(new CommandOperation(Key.ZERO));
-        inputProcessor.parseOperation(new CommandOperation(Key.d));
-        inputProcessor.parseOperation(new CommandOperation(Key.W));
-        inputProcessor.parseOperation(new CommandOperation(Key.w));
-        inputProcessor.parseOperation(new CommandOperation(Key.P));
-        inputProcessor.parseOperation(new CommandOperation(Key.W));
-        inputProcessor.parseOperation(new CommandOperation(Key.y));
-        inputProcessor.parseOperation(new CommandOperation(Key.w));
-        inputProcessor.parseOperation(new CommandOperation(Key.DOLLAR));
-        inputProcessor.parseOperation(new CommandOperation(Key.p));
+        inputProcessor.parseOperation(Key.ESC);
+        inputProcessor.parseOperation(Key.ZERO);
+        inputProcessor.parseOperation(Key.d);
+        inputProcessor.parseOperation(Key.W);
+        inputProcessor.parseOperation(Key.w);
+        inputProcessor.parseOperation(Key.P);
+        inputProcessor.parseOperation(Key.W);
+        inputProcessor.parseOperation(Key.y);
+        inputProcessor.parseOperation(Key.w);
+        inputProcessor.parseOperation(Key.DOLLAR);
+        inputProcessor.parseOperation(Key.p);
 
         assertEquals("install apt-get vIMvIM",
-                inputProcessor.parseOperation(new CommandOperation(Key.ENTER)));
+                inputProcessor.parseOperation(Key.ENTER));
     }
 
     @Test
@@ -350,16 +351,16 @@ public class ViModeTest {
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
         consoleBuffer.writeString("footing");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
-        inputProcessor.parseOperation(new CommandOperation(Key.a));
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.a);
 
         assertEquals("asdf jkl",
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER)));
+        inputProcessor.parseOperation(Key.ENTER));
 
     }
 
@@ -390,14 +391,14 @@ public class ViModeTest {
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
         consoleBuffer.writeString("footing");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
-        inputProcessor.parseOperation(new CommandOperation(Key.a));
-        inputProcessor.parseOperation(new CommandOperation(Key.RIGHT));
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.RIGHT);
 
         assertEquals("asdf jkl", consoleBuffer.getBuffer().getLine());
     }
@@ -429,14 +430,14 @@ public class ViModeTest {
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
         consoleBuffer.writeString("footing");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
-        inputProcessor.parseOperation(new CommandOperation(Key.a));
-        inputProcessor.parseOperation(new CommandOperation(Key.LEFT));
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.LEFT);
 
         assertEquals("asdf jkl", consoleBuffer.getBuffer().getLine());
 
@@ -469,14 +470,14 @@ public class ViModeTest {
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
         consoleBuffer.writeString("footing");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
-        inputProcessor.parseOperation(new CommandOperation(Key.a));
-        inputProcessor.parseOperation(new CommandOperation(Key.UP));
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.UP);
 
         assertEquals("footing", consoleBuffer.getBuffer().getLine());
 
@@ -509,14 +510,14 @@ public class ViModeTest {
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
         consoleBuffer.writeString("footing");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
-        inputProcessor.parseOperation(new CommandOperation(Key.a));
-        inputProcessor.parseOperation(new CommandOperation(Key.DOWN));
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.DOWN);
         assertEquals("asdf jkl", consoleBuffer.getBuffer().getLine());
     }
 

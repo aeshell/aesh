@@ -81,7 +81,8 @@ abstract class ChangeAction extends MovementAction {
             }
 
             //TODO: must check if we're in edit mode
-            //if(viMode && inputProcessor.getBuffer().getBuffer().getMultiCursor() == inputProcessor.getBuffer().getBuffer().getLine().length())
+            //if(viMode && inputProcessor.getBuffer().getBuffer().getMultiCursor() ==
+            // inputProcessor.getBuffer().getBuffer().getLine().length())
             //    inputProcessor.getBuffer().moveCursor(-1);
 
             inputProcessor.getBuffer().drawLine();
@@ -91,7 +92,7 @@ abstract class ChangeAction extends MovementAction {
         }
     }
 
-    private void addActionToUndoStack(InputProcessor inputProcessor) {;
+    private void addActionToUndoStack(InputProcessor inputProcessor) {
         inputProcessor.getBuffer().getUndoManager().addUndo(new UndoAction(
                 inputProcessor.getBuffer().getBuffer().getMultiCursor(),
                 inputProcessor.getBuffer().getBuffer().getLine()));

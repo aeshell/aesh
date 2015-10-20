@@ -31,7 +31,6 @@ import org.jboss.aesh.console.ConsoleBuffer;
 import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.TestShell;
-import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.actions.Operation;
@@ -76,22 +75,22 @@ public class EmacsModeTest extends AeshTestCase {
         consoleBuffer.writeString("1234");
 
         //remove the last char
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_D));
+        inputProcessor.parseOperation(Key.CTRL_D);
         assertEquals("1234", consoleBuffer.getBuffer().getLineNoMask());
 
         //move on char to the left
-        inputProcessor.parseOperation(new CommandOperation(Key.LEFT));
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_D));
-        inputProcessor.parseOperation(new CommandOperation(Key.FIVE));
+        inputProcessor.parseOperation(Key.LEFT);
+        inputProcessor.parseOperation(Key.CTRL_D);
+        inputProcessor.parseOperation(Key.FIVE);
 
         assertEquals("1235", consoleBuffer.getBuffer().getLineNoMask());
 
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_A));
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_D));
+        inputProcessor.parseOperation(Key.CTRL_A);
+        inputProcessor.parseOperation(Key.CTRL_D);
         assertEquals("235", consoleBuffer.getBuffer().getLineNoMask());
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_F));
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_F));
-        inputProcessor.parseOperation(new CommandOperation(Key.SIX));
+        inputProcessor.parseOperation(Key.CTRL_F);
+        inputProcessor.parseOperation(Key.CTRL_F);
+        inputProcessor.parseOperation(Key.SIX);
 
         assertEquals("2365", consoleBuffer.getBuffer().getLineNoMask());
 
@@ -127,30 +126,30 @@ public class EmacsModeTest extends AeshTestCase {
 
             consoleBuffer.writeString("foo  bar...  Foo-Bar.");
 
-            inputProcessor.parseOperation(new CommandOperation(Key.META_b));
-            inputProcessor.parseOperation(new CommandOperation(Key.META_d));
+            inputProcessor.parseOperation(Key.META_b);
+            inputProcessor.parseOperation(Key.META_d);
 
-            String output = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+            String output = inputProcessor.parseOperation(Key.ENTER);
 
             assertEquals("foo  bar...  Foo-.", output);
 
             consoleBuffer.writeString("foo  bar...  Foo-Bar.");
-            inputProcessor.parseOperation(new CommandOperation(Key.CTRL_A));
-            inputProcessor.parseOperation(new CommandOperation(Key.META_f));
-            inputProcessor.parseOperation(new CommandOperation(Key.META_f));
-            inputProcessor.parseOperation(new CommandOperation(Key.META_d));
+            inputProcessor.parseOperation(Key.CTRL_A);
+            inputProcessor.parseOperation(Key.META_f);
+            inputProcessor.parseOperation(Key.META_f);
+            inputProcessor.parseOperation(Key.META_d);
 
-            output = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+            output = inputProcessor.parseOperation(Key.ENTER);
 
             assertEquals("foo  bar-Bar.", output);
 
             consoleBuffer.writeString("foo  bar...  Foo-Bar.");
-            inputProcessor.parseOperation(new CommandOperation(Key.CTRL_A));
-            inputProcessor.parseOperation(new CommandOperation(Key.META_f));
-            inputProcessor.parseOperation(new CommandOperation(Key.META_f));
-            inputProcessor.parseOperation(new CommandOperation(Key.CTRL_U));
+            inputProcessor.parseOperation(Key.CTRL_A);
+            inputProcessor.parseOperation(Key.META_f);
+            inputProcessor.parseOperation(Key.META_f);
+            inputProcessor.parseOperation(Key.CTRL_U);
 
-            output = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+            output = inputProcessor.parseOperation(Key.ENTER);
 
             assertEquals("...  Foo-Bar.", output);
         }

@@ -21,7 +21,6 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.terminal.Key;
 
 import java.io.IOException;
 
