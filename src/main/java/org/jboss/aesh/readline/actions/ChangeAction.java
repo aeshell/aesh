@@ -21,6 +21,7 @@ package org.jboss.aesh.readline.actions;
 
 import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.readline.editing.EditMode;
+import org.jboss.aesh.undo.UndoAction;
 
 /**
  * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -39,6 +40,7 @@ abstract class ChangeAction extends MovementAction {
 
     protected void apply(int cursor, InputProcessor inputProcessor) {
         if(status == EditMode.Status.DELETE || status == EditMode.Status.CHANGE) {
+            addActionToUndoStack(inputProcessor);
             if(cursor < inputProcessor.getBuffer().getBuffer().getMultiCursor()) {
                 //add to pastemanager
                 inputProcessor.getBuffer().getPasteManager().addText(new StringBuilder(
@@ -63,6 +65,12 @@ abstract class ChangeAction extends MovementAction {
         else if(status == EditMode.Status.MOVE) {
             inputProcessor.getBuffer().moveCursor(cursor - inputProcessor.getBuffer().getBuffer().getMultiCursor());
         }
+    }
+
+    private void addActionToUndoStack(InputProcessor inputProcessor) {;
+        inputProcessor.getBuffer().getUndoManager().addUndo(new UndoAction(
+                inputProcessor.getBuffer().getBuffer().getMultiCursor(),
+                inputProcessor.getBuffer().getBuffer().getLine()));
     }
 
 }

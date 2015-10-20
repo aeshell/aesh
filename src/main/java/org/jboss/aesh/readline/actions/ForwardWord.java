@@ -26,7 +26,7 @@ import org.jboss.aesh.readline.editing.EditMode;
  * TODO: change boolean params in constructors to objects/enum
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ForwardWord extends ChangeAction {
+abstract class ForwardWord extends ChangeAction {
 
     private boolean viMode;
     private boolean removeTrailingSpaces;
@@ -41,11 +41,6 @@ public class ForwardWord extends ChangeAction {
         this.viMode = viMode;
         if(status == EditMode.Status.CHANGE)
             this.removeTrailingSpaces = false;
-    }
-
-    @Override
-    public String name() {
-        return "forward-word";
     }
 
     @Override
