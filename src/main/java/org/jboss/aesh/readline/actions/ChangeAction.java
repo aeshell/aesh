@@ -38,16 +38,26 @@ abstract class ChangeAction extends MovementAction {
     }
 
     protected void apply(int cursor, InputProcessor inputProcessor) {
-             if(status == EditMode.Status.DELETE || status == EditMode.Status.CHANGE) {
-            inputProcessor.getBuffer().moveCursor(cursor - inputProcessor.getBuffer().getBuffer().getMultiCursor());
-            //add to pastemanager
-            inputProcessor.getBuffer().getPasteManager().addText( new StringBuilder(
-                    inputProcessor.getBuffer().getBuffer().getLine().substring(
-                            cursor,
-                            inputProcessor.getBuffer().getBuffer().getMultiCursor())));
-            //delete buffer
-            inputProcessor.getBuffer().getBuffer().delete(cursor,
-                    inputProcessor.getBuffer().getBuffer().getMultiCursor());
+        if(status == EditMode.Status.DELETE || status == EditMode.Status.CHANGE) {
+            if(cursor < inputProcessor.getBuffer().getBuffer().getMultiCursor()) {
+                //add to pastemanager
+                inputProcessor.getBuffer().getPasteManager().addText(new StringBuilder(
+                        inputProcessor.getBuffer().getBuffer().getLine().substring(
+                                cursor,
+                                inputProcessor.getBuffer().getBuffer().getMultiCursor())));
+                //delete buffer
+                inputProcessor.getBuffer().getBuffer().delete(cursor,
+                        inputProcessor.getBuffer().getBuffer().getMultiCursor());
+            }
+            else {
+                //add to pastemanager
+                inputProcessor.getBuffer().getPasteManager().addText(new StringBuilder(
+                        inputProcessor.getBuffer().getBuffer().getLine().substring(
+                                inputProcessor.getBuffer().getBuffer().getMultiCursor(), cursor)));
+                //delete buffer
+                inputProcessor.getBuffer().getBuffer().delete(
+                        inputProcessor.getBuffer().getBuffer().getMultiCursor(), cursor);
+            }
             inputProcessor.getBuffer().moveCursor(cursor - inputProcessor.getBuffer().getBuffer().getMultiCursor());
         }
         else if(status == EditMode.Status.MOVE) {

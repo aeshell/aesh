@@ -450,7 +450,6 @@ public class Console {
             if(settings.isLogging())
                 LOGGER.info("Done stopping services. Terminal is reset");
         }
-
     }
 
     /**

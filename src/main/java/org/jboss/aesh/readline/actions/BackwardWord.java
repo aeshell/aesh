@@ -39,13 +39,6 @@ abstract class BackwardWord extends ChangeAction {
         this.viMode = viMode;
     }
 
-    /*
-    @Override
-    public String name() {
-        return "backward-word";
-    }
-    */
-
     @Override
     public void apply(InputProcessor inputProcessor) {
         int cursor = inputProcessor.getBuffer().getBuffer().getMultiCursor();
