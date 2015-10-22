@@ -29,11 +29,13 @@ import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.Mode;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
+@Ignore
 public class ViEditingTest extends BaseConsoleTest {
 
     @Test
