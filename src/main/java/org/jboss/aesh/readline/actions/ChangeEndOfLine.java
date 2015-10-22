@@ -25,20 +25,19 @@ import org.jboss.aesh.readline.editing.EditMode;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class DeleteEndOfLine extends ChangeAction {
+public class ChangeEndOfLine extends ChangeAction {
 
-    DeleteEndOfLine() {
-        super(EditMode.Status.DELETE);
+    public ChangeEndOfLine() {
+        super(EditMode.Status.CHANGE);
     }
 
     @Override
     public String name() {
-        return "delete-end-of-line";
+        return "change-end-of-line";
     }
 
     @Override
     public void apply(InputProcessor inputProcessor) {
-        int cursor = inputProcessor.getBuffer().getBuffer().totalLength();
-        apply(cursor, inputProcessor);
+
     }
 }
