@@ -22,6 +22,7 @@ package org.jboss.aesh.readline.editing;
 import org.jboss.aesh.readline.Action;
 import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.readline.actions.BackwardChar;
+import org.jboss.aesh.readline.actions.CapitalizeWord;
 import org.jboss.aesh.readline.actions.Complete;
 import org.jboss.aesh.readline.actions.DeleteBackwardBigWord;
 import org.jboss.aesh.readline.actions.DeleteChar;
@@ -63,8 +64,10 @@ public class EditModeMapper {
         mapping.put(Key.ENTER, new Enter());
         mapping.put(Key.UP, new PrevHistory());
         mapping.put(Key.UP_2, new PrevHistory());
+        mapping.put(Key.CTRL_P, new PrevHistory());
         mapping.put(Key.DOWN, new NextHistory());
         mapping.put(Key.DOWN_2, new NextHistory());
+        mapping.put(Key.CTRL_N, new NextHistory());
         mapping.put(Key.LEFT, new BackwardChar());
         mapping.put(Key.LEFT_2, new BackwardChar());
         mapping.put(Key.RIGHT, new ForwardChar());
@@ -74,6 +77,7 @@ public class EditModeMapper {
         mapping.put(Key.CTRL_I, new Complete());
         mapping.put(Key.CTRL_C, new Interrupt());
         mapping.put(Key.META_b, new MoveBackwardWord());
+        mapping.put(Key.META_c, new CapitalizeWord());
         mapping.put(Key.META_f, new MoveForwardWord());
         mapping.put(Key.META_d, new DeleteForwardWord());
         mapping.put(Key.CTRL_W, new DeleteBackwardBigWord());
