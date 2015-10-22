@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.jboss.aesh.TestBuffer;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
@@ -39,6 +38,8 @@ import org.junit.Test;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class HistoryTest extends BaseConsoleTest {
+
+    public static final short EMACS_HISTORY_PREV = 16;
 
     @Test
     public void testHistory() throws Exception {
@@ -52,13 +53,13 @@ public class HistoryTest extends BaseConsoleTest {
                 out.write(("567"+Config.getLineSeparator()).getBytes());
                 out.flush();
 
-                out.write(TestBuffer.EMACS_HISTORY_PREV);
-                out.write(TestBuffer.EMACS_HISTORY_PREV);
+                out.write(EMACS_HISTORY_PREV);
+                out.write(EMACS_HISTORY_PREV);
                 out.write(Config.getLineSeparator().getBytes());
                 out.flush();
 
-                out.write(TestBuffer.EMACS_HISTORY_PREV);
-                out.write(TestBuffer.EMACS_HISTORY_PREV);
+                out.write(EMACS_HISTORY_PREV);
+                out.write(EMACS_HISTORY_PREV);
                 out.write(Config.getLineSeparator().getBytes());
             }
         }, new Verify() {

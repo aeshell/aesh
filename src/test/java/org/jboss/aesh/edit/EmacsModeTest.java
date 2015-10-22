@@ -22,8 +22,6 @@ package org.jboss.aesh.edit;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import org.jboss.aesh.AeshTestCase;
-import org.jboss.aesh.TestBuffer;
 import org.jboss.aesh.console.AeshConsoleBufferBuilder;
 import org.jboss.aesh.console.AeshInputProcessorBuilder;
 import org.jboss.aesh.console.Config;
@@ -33,7 +31,6 @@ import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.TestShell;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TestTerminal;
@@ -44,7 +41,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class EmacsModeTest extends AeshTestCase {
+public class EmacsModeTest {
 
     @Test
     public void testSimpleMovementAndEdit() throws Exception {
@@ -154,33 +151,4 @@ public class EmacsModeTest extends AeshTestCase {
             assertEquals("...  Foo-Bar.", output);
         }
     }
-
-    @Test
-    public void testArrowMovement() throws Exception {
-
-        KeyOperation deletePrevChar =  new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR);
-        KeyOperation moveBeginning = new KeyOperation(Key.CTRL_A, Operation.MOVE_BEGINNING);
-        KeyOperation movePrevChar;
-        KeyOperation moveNextChar;
-        moveNextChar = new KeyOperation(Key.RIGHT, Operation.MOVE_NEXT_CHAR);
-        movePrevChar = new KeyOperation(Key.LEFT, Operation.MOVE_PREV_CHAR);
-
-        TestBuffer b = new TestBuffer("foo   bar...  Foo-Bar.");
-        b.append(movePrevChar.getKeyValues())
-                .append(movePrevChar.getKeyValues())
-                .append(movePrevChar.getKeyValues())
-                .append(deletePrevChar.getKeyValues())
-                .append(TestBuffer.getNewLine());
-        assertEqualsBuffer("foo   bar...  Foo-ar.", b);
-
-        b = new TestBuffer("foo   bar...  Foo-Bar.");
-        b.append(moveBeginning.getKeyValues())
-                .append(moveNextChar.getKeyValues())
-                .append(moveNextChar.getKeyValues())
-                .append(deletePrevChar.getKeyValues())
-                .append(TestBuffer.getNewLine());
-        assertEqualsBuffer("fo   bar...  Foo-Bar.", b);
-    }
-
-
 }
