@@ -50,6 +50,7 @@ public class DeletePrevChar implements Action {
             if(cursor > lineSize)
                 cursor = lineSize;
 
+            consoleBuffer.addActionToUndoStack();
             consoleBuffer.getPasteManager().addText(new StringBuilder(
                     consoleBuffer.getBuffer().getLine().substring(cursor - 1, cursor)));
             consoleBuffer.getBuffer().delete(cursor - 1, cursor);

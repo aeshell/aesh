@@ -38,6 +38,7 @@ import org.jboss.aesh.readline.actions.MoveForwardWord;
 import org.jboss.aesh.readline.actions.NextHistory;
 import org.jboss.aesh.readline.actions.PrevHistory;
 import org.jboss.aesh.readline.actions.StartOfLine;
+import org.jboss.aesh.readline.actions.Undo;
 import org.jboss.aesh.terminal.Key;
 
 import java.util.HashMap;
@@ -86,6 +87,7 @@ public class EditModeMapper {
         mapping.put(Key.META_d, new DeleteForwardWord());
         mapping.put(Key.CTRL_W, new DeleteBackwardBigWord());
         mapping.put(Key.CTRL_U, new DeleteStartOfLine());
+        mapping.put(Key.CTRL_X_CTRL_U, new Undo());
 
 
         return mapping;
