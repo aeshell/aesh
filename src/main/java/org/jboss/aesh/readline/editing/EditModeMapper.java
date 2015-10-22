@@ -28,6 +28,7 @@ import org.jboss.aesh.readline.actions.DeleteBackwardBigWord;
 import org.jboss.aesh.readline.actions.DeleteChar;
 import org.jboss.aesh.readline.actions.DeleteForwardWord;
 import org.jboss.aesh.readline.actions.DeletePrevChar;
+import org.jboss.aesh.readline.actions.DeleteStartOfLine;
 import org.jboss.aesh.readline.actions.EndOfLine;
 import org.jboss.aesh.readline.actions.Enter;
 import org.jboss.aesh.readline.actions.ForwardChar;
@@ -59,7 +60,10 @@ public class EditModeMapper {
         mapping = new HashMap<>();
 
         mapping.put(Key.CTRL_A, new StartOfLine());
+        mapping.put(Key.CTRL_B, new BackwardChar());
+        mapping.put(Key.CTRL_D, new DeleteChar());
         mapping.put(Key.CTRL_E, new EndOfLine());
+        mapping.put(Key.CTRL_F, new ForwardChar());
         mapping.put(Key.CTRL_J, new Enter());
         mapping.put(Key.ENTER, new Enter());
         mapping.put(Key.UP, new PrevHistory());
@@ -81,6 +85,7 @@ public class EditModeMapper {
         mapping.put(Key.META_f, new MoveForwardWord());
         mapping.put(Key.META_d, new DeleteForwardWord());
         mapping.put(Key.CTRL_W, new DeleteBackwardBigWord());
+        mapping.put(Key.CTRL_U, new DeleteStartOfLine());
 
 
         return mapping;
