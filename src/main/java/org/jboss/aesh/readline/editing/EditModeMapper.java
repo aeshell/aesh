@@ -88,6 +88,7 @@ public class EditModeMapper {
         mapping.put(Key.CTRL_W, new DeleteBackwardBigWord());
         mapping.put(Key.CTRL_U, new DeleteStartOfLine());
         mapping.put(Key.CTRL_X_CTRL_U, new Undo());
+        mapping.put(Key.UNIT_SEPARATOR, new Undo());
 
 
         return mapping;
