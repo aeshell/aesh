@@ -53,7 +53,7 @@ public class ActionMapper {
         else if(function.equals("call-last-kbd-macro"))
             return new NullAction(); //TODO: need to add a proper Operation
         else if(function.equals("capitalize-word"))
-            return new NullAction(); //TODO: need to add a proper Operation
+            return new CapitalizeForwardWord();
         else if(function.equals("character-search"))
             return new NullAction(); //TODO: need to add a proper Operation
         else if(function.equals("character-search-backward"))
@@ -77,7 +77,7 @@ public class ActionMapper {
         else if(function.equals("do-uppercase-version"))
             return new NullAction(); //TODO: need to add a proper Operation
         else if(function.equals("downcase-word"))
-            return new DownCaseForwardWord(); //TODO: need to add a proper Operation
+            return new DownCaseForwardWord();
         else if(function.equals("dump-functions"))
             return new NullAction(); //TODO: need to add a proper Operation
         else if(function.equals("dump-macros"))
@@ -175,7 +175,7 @@ public class ActionMapper {
         else if(function.equals("unix-word-rubout"))
             return new DeleteBackwardBigWord();
         else if(function.equals("upcase-word"))
-            return new NullAction(); // TODO: need to add a proper Operation
+            return new UpCaseForwardWord();
         else if(function.equals("vi-editing-mode"))
             return new ViEditingMode();
         else if(function.equals("yank"))

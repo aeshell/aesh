@@ -350,15 +350,11 @@ public class AeshInputProcessorTest {
         //line should be the same
         assertEquals("Foo BAr ", consoleBuffer.getBuffer().getLineNoMask());
 
-        inputProcessor.parseOperation(Key.LEFT);
+        inputProcessor.parseOperation(Key.META_b);
         inputProcessor.parseOperation(Key.META_l);
         assertEquals("Foo bar ", consoleBuffer.getBuffer().getLineNoMask());
-        inputProcessor.parseOperation(Key.LEFT);
-        inputProcessor.parseOperation(Key.LEFT);
-        inputProcessor.parseOperation(Key.LEFT);
-        inputProcessor.parseOperation(Key.LEFT);
-        inputProcessor.parseOperation(Key.LEFT);
-
+        inputProcessor.parseOperation(Key.META_b);
+        inputProcessor.parseOperation(Key.META_b);
         inputProcessor.parseOperation(Key.META_l);
         assertEquals("foo bar ", consoleBuffer.getBuffer().getLineNoMask());
     }
@@ -393,11 +389,11 @@ public class AeshInputProcessorTest {
         //line should be the same
         assertEquals("foo bar ", consoleBuffer.getBuffer().getLineNoMask());
 
-        inputProcessor.parseOperation(Key.LEFT);
+        inputProcessor.parseOperation(Key.META_b);
         inputProcessor.parseOperation(Key.META_u);
         assertEquals("foo BAR ", consoleBuffer.getBuffer().getLineNoMask());
-        inputProcessor.parseOperation(Key.CTRL_A);
-
+        inputProcessor.parseOperation(Key.META_b);
+        inputProcessor.parseOperation(Key.META_b);
         inputProcessor.parseOperation(Key.META_u);
         assertEquals("FOO BAR ", consoleBuffer.getBuffer().getLineNoMask());
     }
