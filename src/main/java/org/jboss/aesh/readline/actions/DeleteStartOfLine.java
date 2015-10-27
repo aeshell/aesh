@@ -33,7 +33,7 @@ public class DeleteStartOfLine extends ChangeAction {
 
     @Override
     public String name() {
-        return "delete-start-of-line";
+        return "backward-kill-line";
     }
 
     @Override

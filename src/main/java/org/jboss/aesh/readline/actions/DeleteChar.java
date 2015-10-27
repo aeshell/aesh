@@ -31,7 +31,7 @@ public class DeleteChar implements Action {
 
     @Override
     public String name() {
-        return null;
+        return "delete-char";
     }
 
     @Override

@@ -20,6 +20,7 @@
 package org.jboss.aesh.readline.actions;
 
 import org.jboss.aesh.console.InputProcessor;
+import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.util.LoggerUtil;
@@ -50,46 +51,113 @@ abstract class ChangeAction extends MovementAction {
         return status;
     }
 
-    protected void apply(int cursor, InputProcessor inputProcessor) {
-        LOGGER.info("applying "+status+" delta: "+cursor+", current pos: "+inputProcessor.getBuffer().getBuffer().getMultiCursor());
+    protected final void apply(int cursor, InputProcessor inputProcessor) {
+        apply(cursor, inputProcessor.getBuffer().getBuffer().getMultiCursor(), inputProcessor);
+    }
+
+    protected final void apply(int cursor, int oldCursor, InputProcessor inputProcessor) {
+        LOGGER.info("applying "+status+" delta: "+cursor+", current pos: "+oldCursor);
         if(status == EditMode.Status.DELETE || status == EditMode.Status.CHANGE) {
             addActionToUndoStack(inputProcessor);
-            if(cursor < inputProcessor.getBuffer().getBuffer().getMultiCursor()) {
+            if(cursor < oldCursor) {
                 //add to pastemanager
                 inputProcessor.getBuffer().getPasteManager().addText(new StringBuilder(
                         inputProcessor.getBuffer().getBuffer().getLine().substring(
                                 cursor,
-                                inputProcessor.getBuffer().getBuffer().getMultiCursor())));
+                                oldCursor)));
                 //delete buffer
                 LOGGER.info("buffer before delete: "+inputProcessor.getBuffer().getBuffer().getLine());
                 inputProcessor.getBuffer().getBuffer().delete(cursor,
-                        inputProcessor.getBuffer().getBuffer().getMultiCursor());
+                        oldCursor);
                 LOGGER.info("buffer after delete: "+inputProcessor.getBuffer().getBuffer().getLine());
-                inputProcessor.getBuffer().moveCursor(cursor-inputProcessor.getBuffer().getBuffer().getMultiCursor());
+                inputProcessor.getBuffer().moveCursor(cursor-oldCursor);
             }
             else {
                 //add to pastemanager
                 inputProcessor.getBuffer().getPasteManager().addText(new StringBuilder(
                         inputProcessor.getBuffer().getBuffer().getLine().substring(
-                                inputProcessor.getBuffer().getBuffer().getMultiCursor(), cursor)));
+                                oldCursor, cursor)));
                 //delete buffer
                 inputProcessor.getBuffer().getBuffer().delete(
-                        inputProcessor.getBuffer().getBuffer().getMultiCursor(), cursor);
+                        oldCursor, cursor);
             }
 
             //TODO: must check if we're in edit mode
-            //if(viMode && inputProcessor.getBuffer().getBuffer().getMultiCursor() ==
+            //if(viMode && oldCursor ==
             // inputProcessor.getBuffer().getBuffer().getLine().length())
             //    inputProcessor.getBuffer().moveCursor(-1);
 
             inputProcessor.getBuffer().drawLine();
         }
         else if(status == EditMode.Status.MOVE) {
-            inputProcessor.getBuffer().moveCursor(cursor - inputProcessor.getBuffer().getBuffer().getMultiCursor());
+            inputProcessor.getBuffer().moveCursor(cursor - oldCursor);
+        }
+        else if(status == EditMode.Status.YANK) {
+            if(cursor < oldCursor)
+                inputProcessor.getBuffer().getPasteManager().addText(
+                        new StringBuilder(inputProcessor.getBuffer().getBuffer().getLine().substring(cursor,
+                                oldCursor)));
+            else if(cursor > oldCursor)
+                inputProcessor.getBuffer().getPasteManager().addText(
+                        new StringBuilder(inputProcessor.getBuffer().getBuffer().getLine().substring(
+                                oldCursor, cursor)));
+        }
+
+        else if(status == EditMode.Status.UP_CASE) {
+            if(cursor < oldCursor) {
+                addActionToUndoStack(inputProcessor);
+                for( int i = cursor; i < oldCursor; i++) {
+                    inputProcessor.getBuffer().getBuffer().replaceChar(Character.toUpperCase(
+                            inputProcessor.getBuffer().getBuffer().getLineNoMask().charAt(i)), i);
+                }
+            }
+            else {
+                addActionToUndoStack(inputProcessor);
+                for( int i = oldCursor; i < cursor; i++) {
+                    inputProcessor.getBuffer().getBuffer().replaceChar(Character.toUpperCase(
+                            inputProcessor.getBuffer().getBuffer().getLineNoMask().charAt(i)), i);
+                }
+            }
+            inputProcessor.getBuffer().moveCursor(cursor - oldCursor);
+            inputProcessor.getBuffer().drawLine();
+        }
+        else if(status == EditMode.Status.DOWN_CASE) {
+            if(cursor < oldCursor) {
+                addActionToUndoStack(inputProcessor);
+                for( int i = cursor; i < oldCursor; i++) {
+                    inputProcessor.getBuffer().getBuffer().replaceChar(Character.toLowerCase(
+                            inputProcessor.getBuffer().getBuffer().getLineNoMask().charAt(i)), i);
+                }
+            }
+            else {
+                addActionToUndoStack(inputProcessor);
+                for( int i = oldCursor; i < cursor; i++) {
+                    inputProcessor.getBuffer().getBuffer().replaceChar(Character.toLowerCase(
+                            inputProcessor.getBuffer().getBuffer().getLineNoMask().charAt(i)), i);
+                }
+            }
+            inputProcessor.getBuffer().moveCursor(cursor - oldCursor);
+            inputProcessor.getBuffer().drawLine();
+        }
+        else if(status == EditMode.Status.CAPITALIZE) {
+            String word = Parser.findWordClosestToCursor(inputProcessor.getBuffer().getBuffer().getLineNoMask(),
+                    oldCursor);
+            if(word.length() > 0) {
+                addActionToUndoStack(inputProcessor);
+                int pos = inputProcessor.getBuffer().getBuffer().getLineNoMask().indexOf(word,
+                        oldCursor-word.length());
+                if(pos < 0)
+                    pos = 0;
+                inputProcessor.getBuffer().getBuffer().replaceChar(
+                        Character.toUpperCase(inputProcessor.getBuffer().getBuffer().getLineNoMask().charAt(pos)), pos);
+
+                inputProcessor.getBuffer().moveCursor(cursor - oldCursor);
+                inputProcessor.getBuffer().drawLine();
+            }
         }
     }
 
-    private void addActionToUndoStack(InputProcessor inputProcessor) {
+    protected final void addActionToUndoStack(InputProcessor inputProcessor) {
         inputProcessor.getBuffer().getUndoManager().addUndo(new UndoAction(
                 inputProcessor.getBuffer().getBuffer().getMultiCursor(),
                 inputProcessor.getBuffer().getBuffer().getLine()));

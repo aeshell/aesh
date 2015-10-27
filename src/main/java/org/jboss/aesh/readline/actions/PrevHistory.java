@@ -28,7 +28,7 @@ import org.jboss.aesh.readline.Action;
 public class PrevHistory implements Action {
     @Override
     public String name() {
-        return "prev-history";
+        return "previous-history";
     }
 
     @Override

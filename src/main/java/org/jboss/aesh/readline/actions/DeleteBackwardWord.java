@@ -36,6 +36,6 @@ public class DeleteBackwardWord extends BackwardWord {
 
     @Override
     public String name() {
-        return "change-backward-word";
+        return "backward-kill-word";
     }
 }

@@ -36,6 +36,6 @@ public class DeleteForwardWord extends ForwardWord {
 
     @Override
     public String name() {
-        return "delete-forward-word";
+        return "kill-word";
     }
 }

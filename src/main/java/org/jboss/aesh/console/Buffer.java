@@ -457,7 +457,7 @@ public class Buffer {
         line.setCharAt(getCursor(), rChar);
     }
 
-    protected void replaceChar(char rChar, int pos) {
+    public void replaceChar(char rChar, int pos) {
         if(pos > -1 && pos < line.length())
             line.setCharAt(pos, rChar);
     }

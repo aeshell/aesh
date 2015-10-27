@@ -40,6 +40,9 @@ public interface EditMode {
         EDIT,
         COMMAND,
         SEARCH,
+        UP_CASE,
+        DOWN_CASE,
+        CAPITALIZE,
         IGNORE_EOF
     }
 }

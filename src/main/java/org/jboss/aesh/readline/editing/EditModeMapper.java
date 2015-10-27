@@ -37,7 +37,7 @@ import org.jboss.aesh.readline.actions.MoveBackwardWord;
 import org.jboss.aesh.readline.actions.MoveForwardWord;
 import org.jboss.aesh.readline.actions.NextHistory;
 import org.jboss.aesh.readline.actions.PrevHistory;
-import org.jboss.aesh.readline.actions.StartOfLine;
+import org.jboss.aesh.readline.actions.BeginningOfLine;
 import org.jboss.aesh.readline.actions.Undo;
 import org.jboss.aesh.terminal.Key;
 
@@ -60,7 +60,7 @@ public class EditModeMapper {
     private Map<KeyEvent, Action> createEmacsMapping() {
         mapping = new HashMap<>();
 
-        mapping.put(Key.CTRL_A, new StartOfLine());
+        mapping.put(Key.CTRL_A, new BeginningOfLine());
         mapping.put(Key.CTRL_B, new BackwardChar());
         mapping.put(Key.CTRL_D, new DeleteChar());
         mapping.put(Key.CTRL_E, new EndOfLine());

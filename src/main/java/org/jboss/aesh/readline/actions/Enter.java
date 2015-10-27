@@ -34,7 +34,7 @@ public class Enter implements Action {
 
     @Override
     public String name() {
-        return "enter";
+        return "accept-line";
     }
 
     @Override

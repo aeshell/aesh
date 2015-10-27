@@ -25,10 +25,10 @@ import org.jboss.aesh.readline.Action;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class StartOfLine implements Action {
+public class BeginningOfLine implements Action {
     @Override
     public String name() {
-        return "start-of-line";
+        return "beginning-of-line";
     }
 
     @Override

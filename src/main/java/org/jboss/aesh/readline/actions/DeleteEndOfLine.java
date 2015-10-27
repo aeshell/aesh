@@ -33,7 +33,7 @@ public class DeleteEndOfLine extends ChangeAction {
 
     @Override
     public String name() {
-        return "delete-end-of-line";
+        return "kill-line";
     }
 
     @Override

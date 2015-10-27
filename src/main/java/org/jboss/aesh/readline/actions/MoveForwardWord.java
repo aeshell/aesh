@@ -37,6 +37,6 @@ public class MoveForwardWord extends ForwardWord {
 
     @Override
     public String name() {
-        return "move-forward-word";
+        return "forward-word";
     }
 }

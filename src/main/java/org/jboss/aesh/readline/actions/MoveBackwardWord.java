@@ -30,6 +30,6 @@ public class MoveBackwardWord extends BackwardWord {
 
     @Override
     public String name() {
-        return "move-backward-word";
+        return "backward-word";
     }
 }

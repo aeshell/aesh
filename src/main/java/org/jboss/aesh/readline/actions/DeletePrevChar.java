@@ -29,7 +29,7 @@ import org.jboss.aesh.readline.Action;
 public class DeletePrevChar implements Action {
     @Override
     public String name() {
-        return "delete-prev-char";
+        return "backward-delete-char";
     }
 
     @Override
