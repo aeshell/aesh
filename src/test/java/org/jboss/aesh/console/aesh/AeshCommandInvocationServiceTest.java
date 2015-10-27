@@ -26,6 +26,7 @@ import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
@@ -39,8 +40,6 @@ import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -64,7 +63,6 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .inputStream(pipedInputStream)
                 .outputStream(new PrintStream(byteArrayOutputStream))
                 .logging(true)

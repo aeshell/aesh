@@ -28,13 +28,12 @@ import org.jboss.aesh.console.AeshInputProcessorBuilder;
 import org.jboss.aesh.console.ConsoleBuffer;
 import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.TestShell;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -52,7 +51,6 @@ public class ViModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -114,7 +112,6 @@ public class ViModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -166,7 +163,6 @@ public class ViModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -240,7 +236,6 @@ public class ViModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -290,7 +285,6 @@ public class ViModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -332,7 +326,6 @@ public class ViModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -371,7 +364,6 @@ public class ViModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -410,7 +402,6 @@ public class ViModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -450,7 +441,6 @@ public class ViModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -490,7 +480,6 @@ public class ViModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)

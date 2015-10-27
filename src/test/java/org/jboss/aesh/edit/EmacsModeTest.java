@@ -28,12 +28,11 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.ConsoleBuffer;
 import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.TestShell;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -48,7 +47,6 @@ public class EmacsModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .persistHistory(false)
@@ -100,7 +98,6 @@ public class EmacsModeTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)

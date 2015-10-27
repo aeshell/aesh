@@ -28,6 +28,7 @@ import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -36,8 +37,6 @@ import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -80,7 +79,6 @@ public class AeshScriptTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
           Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .inputStream(pipedInputStream)
                 .outputStream(new PrintStream(byteArrayOutputStream))
                 .logging(true)

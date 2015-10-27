@@ -30,7 +30,6 @@ import org.jboss.aesh.edit.actions.NextWordAction;
 import org.jboss.aesh.edit.actions.PrevSpaceWordAction;
 import org.jboss.aesh.edit.actions.PrevWordAction;
 import org.jboss.aesh.edit.actions.SimpleAction;
-import org.jboss.aesh.terminal.Shell;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

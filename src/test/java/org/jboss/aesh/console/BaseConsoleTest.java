@@ -40,7 +40,6 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.TestTerminal;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -54,7 +53,6 @@ public abstract class BaseConsoleTest {
             builder.persistHistory(false);
         }
         builder.readInputrc(false);
-        builder.terminal(new TestTerminal());
         builder.inputStream(is);
         builder.persistAlias(false);
         builder.outputStream(new PrintStream(new ByteArrayOutputStream()));

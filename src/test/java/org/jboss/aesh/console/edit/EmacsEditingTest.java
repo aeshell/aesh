@@ -33,6 +33,7 @@ import org.jboss.aesh.console.ConsoleBuffer;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.TestShell;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -42,8 +43,6 @@ import org.jboss.aesh.edit.KeyOperationManager;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Assume;
 import org.junit.Test;
 
@@ -94,7 +93,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -133,7 +131,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -172,7 +169,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -211,7 +207,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -251,7 +246,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
