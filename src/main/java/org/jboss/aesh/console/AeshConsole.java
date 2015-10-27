@@ -23,7 +23,6 @@ import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.export.ExportManager;
 import org.jboss.aesh.console.helper.ManProvider;
-import org.jboss.aesh.terminal.Shell;
 
 /**
  * A Console that manages Commands and properly execute them.

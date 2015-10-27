@@ -26,6 +26,7 @@ import java.io.IOException;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
+@FunctionalInterface
 public interface Command<T extends CommandInvocation> {
 
     /**

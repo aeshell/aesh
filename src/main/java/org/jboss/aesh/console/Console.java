@@ -60,7 +60,6 @@ import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.api.Attributes;
 import org.jboss.aesh.terminal.api.Terminal;
@@ -1009,7 +1008,7 @@ public class Console {
         }
     }
 
-    private class ConsoleShell implements Shell {
+    private class ConsoleShell implements org.jboss.aesh.console.Shell {
 
         private boolean mainBuffer = true;
 

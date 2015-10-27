@@ -23,7 +23,6 @@ import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.File;
@@ -92,11 +91,6 @@ public class SettingsBuilder {
 
     public SettingsBuilder outputStreamError(PrintStream error) {
         settings.setStdErr(error);
-        return this;
-    }
-
-    @Deprecated
-    public SettingsBuilder terminal(TestTerminal terminal) {
         return this;
     }
 

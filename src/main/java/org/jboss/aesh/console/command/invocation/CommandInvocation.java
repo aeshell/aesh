@@ -26,7 +26,7 @@ import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.terminal.Shell;
+import org.jboss.aesh.console.Shell;
 
 /**
  * A CommandInvocation is the value object passed to a Command when it is executed.

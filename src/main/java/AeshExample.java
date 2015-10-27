@@ -52,12 +52,12 @@ import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.terminal.TerminalTextStyle;
@@ -140,6 +140,11 @@ public class AeshExample {
                 .command(PromptCommand.class)
                 .command(RunCommand.class)
                 .command(GroupCommand.class)
+                //example on how to create a command with a simple lambda
+                .command(new CommandBuilder().name("quit").command(commandInvocation -> {
+                    commandInvocation.stop();
+                    return CommandResult.SUCCESS;
+                }).create())
                 .create();
 
         AeshConsole aeshConsole = new AeshConsoleBuilder()

@@ -29,7 +29,6 @@ import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.edit.actions.PrevWordAction;
 import org.jboss.aesh.parser.Parser;
-import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.LoggerUtil;
 

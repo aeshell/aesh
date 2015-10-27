@@ -53,7 +53,6 @@ import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
-import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.util.LoggerUtil;
 
 /**

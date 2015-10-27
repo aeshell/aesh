@@ -27,8 +27,8 @@ import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.console.operator.ControlOperator;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.terminal.Shell;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
