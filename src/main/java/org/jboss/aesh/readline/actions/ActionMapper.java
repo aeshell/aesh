@@ -20,7 +20,6 @@
 package org.jboss.aesh.readline.actions;
 
 import org.jboss.aesh.console.InputProcessor;
-import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.readline.Action;
 
 /**
@@ -86,7 +85,7 @@ public class ActionMapper {
         else if(function.equals("dump-variables"))
             return new NullAction(); //TODO: need to add a proper Operation
         else if(function.equals("emacs-editing-mode"))
-            return Operation.EMACS_EDIT_MODE;
+            return new EmacsEditingMode();
         else if(function.equals("end-kbd-macro"))
             return new NullAction(); // TODO: need to add a proper Operation
         else if(function.equals("end-of-history"))
@@ -100,7 +99,7 @@ public class ActionMapper {
         else if(function.equals("forward-char"))
             return new ForwardChar();
         else if(function.equals("forward-search-history"))
-            return Operation.SEARCH_NEXT;
+            return new ForwardSearchHistory();
         else if(function.equals("forward-word"))
             return new MoveForwardWord();
         else if(function.equals("history-search-backward"))
@@ -144,7 +143,7 @@ public class ActionMapper {
         else if(function.equals("redraw-current-line"))
             return new NullAction(); // TODO: need to add a proper Operation
         else if(function.equals("reverse-search-history"))
-            return Operation.SEARCH_PREV;
+            return new ReverseSearchHistory();
         else if(function.equals("revert-line"))
             return new NullAction(); // TODO: need to add a proper Operation
         else if(function.equals("self-insert"))
@@ -178,7 +177,7 @@ public class ActionMapper {
         else if(function.equals("upcase-word"))
             return new NullAction(); // TODO: need to add a proper Operation
         else if(function.equals("vi-editing-mode"))
-            return Operation.VI_EDIT_MODE;
+            return new ViEditingMode();
         else if(function.equals("yank"))
             return new Yank();
         else if(function.equals("yank-last-arg"))

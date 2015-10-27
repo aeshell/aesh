@@ -21,6 +21,7 @@ package org.jboss.aesh.readline.editing;
 
 import org.jboss.aesh.readline.Action;
 import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.readline.SearchAction;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.logging.Logger;
@@ -31,6 +32,7 @@ import java.util.logging.Logger;
 public class Emacs extends BaseEditMode {
 
     private Status status = Status.EDIT;
+    private SearchAction currentSearch;
 
     private EditModeMapper editModeMapper = EditModeMapper.getEmacs();
 
@@ -41,11 +43,32 @@ public class Emacs extends BaseEditMode {
 
     @Override
     public Action parse(KeyEvent event) {
+
+        if(status == Status.SEARCH) {
+            if(currentSearch != null) {
+                currentSearch.input(event);
+                if(!currentSearch.isSearching()) {
+                    status = Status.EDIT;
+                }
+                return currentSearch;
+            }
+            else {
+                status = Status.EDIT;
+            }
+        }
+
         if(editModeMapper.getMapping().containsKey(event)) {
-            return editModeMapper.getMapping().get(event);
+            Action action =  editModeMapper.getMapping().get(event);
+            if(action instanceof SearchAction) {
+                status = Status.SEARCH;
+                currentSearch = (SearchAction) action;
+            }
+
+            return action;
         }
         else {
             return null;
         }
     }
+
 }
