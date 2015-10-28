@@ -49,6 +49,7 @@ public class EditModeMapper {
         mapping.put(Key.CTRL_D, ActionMapper.mapToAction("delete-char"));
         mapping.put(Key.CTRL_E, ActionMapper.mapToAction("end-of-line"));
         mapping.put(Key.CTRL_F, ActionMapper.mapToAction("forward-char"));
+        mapping.put(Key.CTRL_H, ActionMapper.mapToAction("backward-delete-char"));
         mapping.put(Key.CTRL_K, ActionMapper.mapToAction("kill-line"));
         mapping.put(Key.CTRL_U, ActionMapper.mapToAction("unix-line-discard"));
         mapping.put(Key.CTRL_J, ActionMapper.mapToAction("accept-line"));

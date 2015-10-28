@@ -73,6 +73,10 @@ public class ReverseSearchHistory implements SearchAction {
          else if(action instanceof DeletePrevChar) {
              status = Status.SEARCH_DELETE;
          }
+         else if(action instanceof PrevHistory)
+             status = Status.SEARCH_MOVE_PREV;
+         else if(action instanceof NextHistory)
+             status = Status.SEARCH_MOVE_NEXT;
          else {
              if(key == Key.ESC) {
                  LOGGER.info("got ESC");
@@ -91,7 +95,8 @@ public class ReverseSearchHistory implements SearchAction {
     @Override
     public boolean isSearching() {
         if(status == Status.SEARCH_INTERRUPT || status == Status.SEARCH_END ||
-                status == Status.SEARCH_EXIT || status == Status.SEARCH_NOT_STARTED)
+                status == Status.SEARCH_EXIT || status == Status.SEARCH_NOT_STARTED ||
+                status == Status.SEARCH_MOVE_NEXT || status == Status.SEARCH_MOVE_PREV)
             return false;
         else
             return true;
@@ -170,6 +175,18 @@ public class ReverseSearchHistory implements SearchAction {
                        inputProcessor.getBuffer().moveCursor(-inputProcessor.getBuffer().getBuffer().getMultiCursor());
                        inputProcessor.getBuffer().setBufferLine("");
                    }
+                   break;
+               case SEARCH_MOVE_NEXT:
+                   inputProcessor.getHistory().setSearchDirection(SearchDirection.FORWARD);
+                   searchResult = inputProcessor.getHistory().getNextFetch();
+                   inputProcessor.getBuffer().moveCursor(-inputProcessor.getBuffer().getBuffer().getMultiCursor());
+                   inputProcessor.getBuffer().setBufferLine(searchResult);
+                   break;
+               case SEARCH_MOVE_PREV:
+                   inputProcessor.getHistory().setSearchDirection(SearchDirection.REVERSE);
+                   searchResult = inputProcessor.getHistory().getPreviousFetch();
+                   inputProcessor.getBuffer().moveCursor(-inputProcessor.getBuffer().getBuffer().getMultiCursor());
+                   inputProcessor.getBuffer().setBufferLine(searchResult);
                    break;
            }
 
