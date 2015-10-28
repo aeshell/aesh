@@ -24,7 +24,22 @@ package org.jboss.aesh.readline;
  */
 public interface SearchAction extends Action {
 
-    void input(KeyEvent key);
+    void input(Action action, KeyEvent key);
 
     boolean isSearching();
+
+    enum Status {
+        SEARCH_NOT_STARTED,
+        SEARCH_EXIT,
+        SEARCH_INPUT,
+        SEARCH_INTERRUPT,
+        SEARCH_END,
+        SEARCH_PREV,
+        SEARCH_NEXT,
+        SEARCH_DELETE,
+        SEARCH_MOVE_PREV,
+        SEARCH_MOVE_NEXT,
+        SEARCH_HISTORY_PREV,
+        SEARCH_HISTORY_NEXT
+    }
 }

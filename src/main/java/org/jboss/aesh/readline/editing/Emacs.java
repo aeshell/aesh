@@ -43,27 +43,27 @@ public class Emacs extends BaseEditMode {
 
     @Override
     public Action parse(KeyEvent event) {
-
+        //are we already searching, it need to be processed by search action
         if(status == Status.SEARCH) {
-            if(currentSearch != null) {
-                currentSearch.input(event);
-                if(!currentSearch.isSearching()) {
-                    status = Status.EDIT;
-                }
-                return currentSearch;
-            }
-            else {
+            currentSearch.input(getAction(event), event);
+            if(!currentSearch.isSearching()) {
                 status = Status.EDIT;
             }
+            return currentSearch;
         }
+        //all other actions
+        else
+            return getAction(event);
+    }
 
+    private Action getAction(KeyEvent event) {
         if(editModeMapper.getMapping().containsKey(event)) {
             Action action =  editModeMapper.getMapping().get(event);
             if(action instanceof SearchAction) {
                 status = Status.SEARCH;
                 currentSearch = (SearchAction) action;
+                currentSearch.input(action, event);
             }
-
             return action;
         }
         else {

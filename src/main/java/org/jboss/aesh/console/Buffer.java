@@ -177,7 +177,7 @@ public class Buffer {
      *
      * @param disable prompt or not
      */
-    protected void disablePrompt(boolean disable) {
+    public void disablePrompt(boolean disable) {
         disablePrompt = disable;
     }
 

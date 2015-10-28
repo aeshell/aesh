@@ -20,6 +20,7 @@
 package org.jboss.aesh.readline.actions;
 
 import org.jboss.aesh.console.InputProcessor;
+import org.jboss.aesh.readline.Action;
 import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.readline.SearchAction;
 
@@ -34,7 +35,7 @@ public class ForwardSearchHistory implements SearchAction {
     }
 
     @Override
-    public void input(KeyEvent key) {
+    public void input(Action action, KeyEvent key) {
 
     }
 

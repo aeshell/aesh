@@ -63,7 +63,7 @@ public class DeletePrevChar implements Action {
         if(consoleBuffer.getBuffer().getLineNoMask().length() > 0) {
             consoleBuffer.getBuffer().delete(consoleBuffer.getBuffer().getLineNoMask().length() - 1,
                     consoleBuffer.getBuffer().getLineNoMask().length());
-            consoleBuffer.moveCursor(-1);
+            consoleBuffer.moveCursor(consoleBuffer.getBuffer().getLineNoMask().length());
             consoleBuffer.drawLine();
         }
     }
