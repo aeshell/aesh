@@ -27,9 +27,6 @@ import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.readline.SearchAction;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.ANSI;
-import org.jboss.aesh.util.LoggerUtil;
-
-import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -45,22 +42,15 @@ abstract class SearchHistory implements SearchAction {
         this.defaultAction = defaultAction;
     }
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(SearchHistory.class.getName());
-
      @Override
     public void input(Action action, KeyEvent key) {
-         LOGGER.info("got search, key: "+key);
-
          if(action == null && Key.isPrintable(key.buffer().array())) {
              if(searchArgument == null)
                  searchArgument = new StringBuilder();
              status = defaultAction;
-             LOGGER.info("appending to searchArgument");
              searchArgument.append((char) key.buffer().array()[0]);
-             LOGGER.info("searchArgument: "+searchArgument);
          }
          else if(action instanceof Interrupt) {
-             LOGGER.info("interrupting");
              status = Status.SEARCH_INTERRUPT;
          }
          else if(action instanceof Enter) {
@@ -85,16 +75,13 @@ abstract class SearchHistory implements SearchAction {
              status = Status.SEARCH_EXIT;
          else {
              if(key == Key.ESC) {
-                 LOGGER.info("got ESC");
                  status = Status.SEARCH_EXIT;
              }
              if(Key.isPrintable(key.buffer().array())) {
                  if(searchArgument == null)
                      searchArgument = new StringBuilder();
                  status = defaultAction;
-                 LOGGER.info("appending to searchArgument");
                  searchArgument.append((char) key.buffer().array()[0]);
-                 LOGGER.info("searchArgument: "+searchArgument);
              }
          }
     }
@@ -107,7 +94,6 @@ abstract class SearchHistory implements SearchAction {
 
    @Override
     public void apply(InputProcessor inputProcessor) {
-       LOGGER.info("processing search");
 
        if(status == Status.SEARCH_INTERRUPT) {
            inputProcessor.getBuffer().moveCursor(-inputProcessor.getBuffer().getBuffer().getMultiCursor());
@@ -123,33 +109,26 @@ abstract class SearchHistory implements SearchAction {
                case SEARCH_PREV:
                    if(inputProcessor.getHistory().getSearchDirection() != SearchDirection.REVERSE)
                        inputProcessor.getHistory().setSearchDirection(SearchDirection.REVERSE);
-                   LOGGER.info("doing a search with: "+searchArgument);
                    if(searchArgument != null && searchArgument.length() > 0) {
                        String tmpResult = inputProcessor.getHistory().search(searchArgument.toString());
-                       LOGGER.info("tmpResult: "+tmpResult);
                        if(tmpResult == null)
                            searchArgument.deleteCharAt(searchArgument.length()-1);
                        else
                            searchResult = tmpResult;
                    }
-                   LOGGER.info("result was: "+searchResult);
                    break;
                case SEARCH_NEXT:
                    if(inputProcessor.getHistory().getSearchDirection() != SearchDirection.FORWARD)
                        inputProcessor.getHistory().setSearchDirection(SearchDirection.FORWARD);
-                   LOGGER.info("doing a search with: "+searchArgument);
                    if(searchArgument != null && searchArgument.length() > 0) {
                        String tmpResult = inputProcessor.getHistory().search(searchArgument.toString());
-                       LOGGER.info("tmpResult: "+tmpResult);
                        if(tmpResult == null)
                            searchArgument.deleteCharAt(searchArgument.length()-1);
                        else
                            searchResult = tmpResult;
                    }
-                   LOGGER.info("result was: "+searchResult);
                    break;
                case SEARCH_NOT_STARTED:
-                   LOGGER.info("setting status to search_prev");
                    status = Status.SEARCH_PREV;
                    inputProcessor.getHistory().setSearchDirection(SearchDirection.REVERSE);
                    if(inputProcessor.getBuffer().getBuffer().getLine().length() > 0) {
@@ -160,7 +139,6 @@ abstract class SearchHistory implements SearchAction {
                case SEARCH_DELETE:
                    if(searchArgument != null && searchArgument.length() > 0) {
                        searchArgument.deleteCharAt(searchArgument.length() - 1);
-                       LOGGER.info("search argument: "+searchArgument);
                        searchResult = inputProcessor.getHistory().search(searchArgument.toString());
                    }
                    break;
@@ -194,16 +172,12 @@ abstract class SearchHistory implements SearchAction {
                    }
                    break;
                case SEARCH_MOVE_NEXT:
-                   LOGGER.info("searchResult before nextFetch: "+searchResult);
                    searchResult = inputProcessor.getHistory().getNextFetch();
-                   LOGGER.info("fetch next gave: "+searchResult);
                    inputProcessor.getBuffer().moveCursor(-inputProcessor.getBuffer().getBuffer().getMultiCursor());
                    inputProcessor.getBuffer().setBufferLine(searchResult);
                    break;
                case SEARCH_MOVE_PREV:
-                   LOGGER.info("searchResult before prevFetch: "+searchResult);
                    searchResult = inputProcessor.getHistory().getPreviousFetch();
-                   LOGGER.info("fetch prev gave: "+searchResult);
                    inputProcessor.getBuffer().moveCursor(-inputProcessor.getBuffer().getBuffer().getMultiCursor());
                    inputProcessor.getBuffer().setBufferLine(searchResult);
                    break;
@@ -222,7 +196,6 @@ abstract class SearchHistory implements SearchAction {
                inputProcessor.getBuffer().out().flush();
            }
            else {
-               LOGGER.info("print the search:");
                if(searchArgument == null || searchArgument.length() == 0) {
                    if(searchResult != null)
                        printSearch("", searchResult, inputProcessor);
