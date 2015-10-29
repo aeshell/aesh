@@ -36,9 +36,7 @@ import java.util.logging.Logger;
  */
 public class ReverseSearchHistory implements SearchAction {
 
-    private boolean searching = false;
     private SearchAction.Status status = Status.SEARCH_NOT_STARTED;
-    private KeyEvent inKey;
     private StringBuilder searchArgument;
     private String searchResult;
 
@@ -77,6 +75,10 @@ public class ReverseSearchHistory implements SearchAction {
              status = Status.SEARCH_MOVE_PREV;
          else if(action instanceof NextHistory)
              status = Status.SEARCH_MOVE_NEXT;
+         else if(action instanceof ForwardChar)
+             status = Status.SEARCH_MOVE_RIGHT;
+         else if(action instanceof BackwardChar)
+             status = Status.SEARCH_EXIT;
          else {
              if(key == Key.ESC) {
                  LOGGER.info("got ESC");
@@ -96,7 +98,8 @@ public class ReverseSearchHistory implements SearchAction {
     public boolean isSearching() {
         if(status == Status.SEARCH_INTERRUPT || status == Status.SEARCH_END ||
                 status == Status.SEARCH_EXIT || status == Status.SEARCH_NOT_STARTED ||
-                status == Status.SEARCH_MOVE_NEXT || status == Status.SEARCH_MOVE_PREV)
+                status == Status.SEARCH_MOVE_NEXT || status == Status.SEARCH_MOVE_PREV ||
+                status == Status.SEARCH_MOVE_LEFT || status == Status.SEARCH_MOVE_RIGHT)
             return false;
         else
             return true;
@@ -177,17 +180,22 @@ public class ReverseSearchHistory implements SearchAction {
                    }
                    break;
                case SEARCH_MOVE_NEXT:
-                   inputProcessor.getHistory().setSearchDirection(SearchDirection.FORWARD);
+                   LOGGER.info("searchResult before nextFetch: "+searchResult);
                    searchResult = inputProcessor.getHistory().getNextFetch();
+                   LOGGER.info("fetch next gave: "+searchResult);
                    inputProcessor.getBuffer().moveCursor(-inputProcessor.getBuffer().getBuffer().getMultiCursor());
                    inputProcessor.getBuffer().setBufferLine(searchResult);
                    break;
                case SEARCH_MOVE_PREV:
-                   inputProcessor.getHistory().setSearchDirection(SearchDirection.REVERSE);
+                   LOGGER.info("searchResult before prevFetch: "+searchResult);
                    searchResult = inputProcessor.getHistory().getPreviousFetch();
+                   LOGGER.info("fetch prev gave: "+searchResult);
                    inputProcessor.getBuffer().moveCursor(-inputProcessor.getBuffer().getBuffer().getMultiCursor());
                    inputProcessor.getBuffer().setBufferLine(searchResult);
                    break;
+               case SEARCH_MOVE_RIGHT:
+                   inputProcessor.getBuffer().moveCursor(-inputProcessor.getBuffer().getBuffer().getMultiCursor());
+                   inputProcessor.getBuffer().setBufferLine(searchResult);
            }
 
            if(!isSearching()) {
@@ -195,6 +203,8 @@ public class ReverseSearchHistory implements SearchAction {
                searchResult = null;
                inputProcessor.getBuffer().drawLine();
                inputProcessor.getBuffer().out().print(Buffer.printAnsi((inputProcessor.getBuffer().getBuffer().getPrompt().getLength() + 1) + "G"));
+               if(status == Status.SEARCH_MOVE_RIGHT)
+                   inputProcessor.getBuffer().moveCursor(inputProcessor.getBuffer().getBuffer().getLine().length());
                inputProcessor.getBuffer().out().flush();
            }
            else {
@@ -231,7 +241,7 @@ public class ReverseSearchHistory implements SearchAction {
         inputProcessor.getBuffer().out().print(ANSI.START + "2K");
         inputProcessor.getBuffer().setBufferLine(builder.toString());
         inputProcessor.getBuffer().moveCursor(cursor);
-        inputProcessor.getBuffer().drawLine();
+        inputProcessor.getBuffer().drawLine(true, false);
         inputProcessor.getBuffer().getBuffer().disablePrompt(false);
         inputProcessor.getBuffer().out().flush();
     }

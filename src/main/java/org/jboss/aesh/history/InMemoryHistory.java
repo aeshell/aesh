@@ -31,8 +31,7 @@ import java.util.List;
 public class InMemoryHistory extends History {
 
     private final List<String> historyList;
-    private int lastFetchedId = -1;
-    private int lastSearchedId = 0;
+    private int lastId = -1;
     private String current;
     private SearchDirection searchDirection = SearchDirection.REVERSE;
     private final int maxSize;
@@ -64,8 +63,7 @@ public class InMemoryHistory extends History {
             }
 
             historyList.add(entry.trim());
-            lastFetchedId = size();
-            lastSearchedId = 0;
+            lastId = size();
         }
     }
 
@@ -93,7 +91,7 @@ public class InMemoryHistory extends History {
     @Override
     public void setSearchDirection(SearchDirection direction) {
         searchDirection = direction;
-        lastSearchedId = -1;
+        lastId = -1;
     }
 
     @Override
@@ -106,10 +104,10 @@ public class InMemoryHistory extends History {
         if(size() < 1)
             return null;
 
-        if(lastFetchedId > 0)
-            return get(--lastFetchedId);
+        if(lastId > 0)
+            return get(--lastId);
         else {
-            return get(lastFetchedId);
+            return get(lastId);
         }
     }
 
@@ -118,10 +116,10 @@ public class InMemoryHistory extends History {
         if(size() < 1)
             return null;
 
-        if(lastFetchedId < size()-1)
-            return get(++lastFetchedId);
-        else if(lastFetchedId == size()-1) {
-            lastFetchedId++;
+        if(lastId < size()-1)
+            return get(++lastId);
+        else if(lastId == size()-1) {
+            lastId++;
             return getCurrent();
         }
         else
@@ -137,30 +135,30 @@ public class InMemoryHistory extends History {
     }
 
     private String searchReverse(String search) {
-        if(lastSearchedId <= 0)
-            lastSearchedId = size()-1;
-        else if(lastSearchArgument.equals(search))
-            lastSearchedId--;
+        if(lastId <= 0 || lastId > size()-1)
+            lastId = size()-1;
+        else if(lastSearchArgument != null && lastSearchArgument.equals(search))
+            lastId--;
 
-        for(; lastSearchedId >= 0; lastSearchedId--)
-            if(historyList.get(lastSearchedId).contains(search)) {
+        for(; lastId >= 0; lastId--)
+            if(historyList.get(lastId).contains(search)) {
                 lastSearchArgument = search;
-                return get(lastSearchedId);
+                return get(lastId);
             }
 
         return null;
     }
 
     private String searchForward(String search) {
-        if(lastSearchedId >= size())
-            lastSearchedId = 0;
+        if(lastId >= size())
+            lastId = 0;
         else if(lastSearchArgument.equals(search))
-          lastSearchedId++;
+          lastId++;
 
-        for(; lastSearchedId < size(); lastSearchedId++ ) {
-            if(historyList.get(lastSearchedId).contains(search)) {
+        for(; lastId < size(); lastId++ ) {
+            if(historyList.get(lastId).contains(search)) {
                 lastSearchArgument = search;
-                return get(lastSearchedId);
+                return get(lastId);
             }
         }
         return null;
@@ -183,8 +181,7 @@ public class InMemoryHistory extends History {
 
     @Override
     public void clear() {
-        lastFetchedId = -1;
-        lastSearchedId = 0;
+        lastId = 0;
         historyList.clear();
         current = "";
     }

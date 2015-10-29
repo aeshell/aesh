@@ -57,6 +57,8 @@ public interface ConsoleBuffer {
 
     void drawLine(boolean keepCursorPosition);
 
+    void drawLine(boolean keepCursorPosition, boolean optimize);
+
     void updateCurrentAction(Action action);
 
     void syncCursor();

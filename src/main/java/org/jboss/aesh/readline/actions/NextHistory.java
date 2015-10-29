@@ -21,12 +21,17 @@ package org.jboss.aesh.readline.actions;
 
 import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.readline.Action;
+import org.jboss.aesh.util.LoggerUtil;
+
+import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class NextHistory implements Action {
-    @Override
+
+    private static final Logger LOGGER = LoggerUtil.getLogger(NextHistory.class.getName());
+
     public String name() {
         return "next-history";
     }
@@ -36,7 +41,8 @@ public class NextHistory implements Action {
         String history = inputProcessor.getHistory().getNextFetch();
         if(history != null) {
             inputProcessor.getBuffer().setBufferLine(history);
-            inputProcessor.getBuffer().drawLine(false);
+            LOGGER.info("setting line to: "+history);
+            inputProcessor.getBuffer().drawLine(false, false);
         }
     }
 }

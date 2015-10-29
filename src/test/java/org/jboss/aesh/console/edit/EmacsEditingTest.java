@@ -227,17 +227,17 @@ public class EmacsEditingTest extends BaseConsoleTest {
                 .enableSearch(true)
                 .create();
 
-        consoleBuffer.writeString("asdf jkl");
+        consoleBuffer.writeString("asdf");
         inputProcessor.parseOperation(Key.ENTER);
 
         consoleBuffer.writeString("footing");
         inputProcessor.parseOperation(Key.ENTER);
 
         inputProcessor.parseOperation(Key.CTRL_R);
-        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.f);
         inputProcessor.parseOperation(Key.UP);
 
-        assertEquals("footing", consoleBuffer.getBuffer().getLine());
+        assertEquals("asdf", consoleBuffer.getBuffer().getLine());
 
     }
 
@@ -276,7 +276,7 @@ public class EmacsEditingTest extends BaseConsoleTest {
         inputProcessor.parseOperation(Key.a);
         inputProcessor.parseOperation(Key.DOWN);
 
-        assertEquals("asdf jkl", consoleBuffer.getBuffer().getLine());
+        assertEquals("footing", consoleBuffer.getBuffer().getLine());
     }
 
 }

@@ -137,6 +137,11 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     @Override
     public void drawLine(boolean keepCursorPosition) {
+        drawLine(keepCursorPosition, true);
+    }
+
+    @Override
+    public void drawLine(boolean keepCursorPosition, boolean optimize) {
         if(isLogging)
             LOGGER.info("drawing: "+buffer.getPrompt().getPromptAsString() + buffer.getLine());
         //need to clear more than one line
@@ -161,8 +166,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             //most deletions are backspace from the end of the line so we've
             //optimize that like this.
             //NOTE: this doesnt work with history, need to find a better solution
-            if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length()
-                    && currentAction != Action.HISTORY) {
+            if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length() && optimize) {
                 out.print(Parser.SPACE_CHAR + ANSI.START + "1D"); //move cursor to left
             }
             else {
