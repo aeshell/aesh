@@ -31,7 +31,7 @@ import java.util.List;
 public class InMemoryHistory extends History {
 
     private final List<String> historyList;
-    private int lastId = -1;
+    private int lastId = 0;
     private String current;
     private SearchDirection searchDirection = SearchDirection.REVERSE;
     private final int maxSize;
@@ -90,8 +90,11 @@ public class InMemoryHistory extends History {
 
     @Override
     public void setSearchDirection(SearchDirection direction) {
-        searchDirection = direction;
-        lastId = -1;
+        if(searchDirection != direction) {
+            searchDirection = direction;
+            lastSearchArgument = null;
+            lastId = 0;
+        }
     }
 
     @Override
@@ -152,7 +155,7 @@ public class InMemoryHistory extends History {
     private String searchForward(String search) {
         if(lastId >= size())
             lastId = 0;
-        else if(lastSearchArgument.equals(search))
+        else if(lastSearchArgument != null && lastSearchArgument.equals(search))
           lastId++;
 
         for(; lastId < size(); lastId++ ) {

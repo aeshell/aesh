@@ -80,6 +80,7 @@ public class EditModeMapper {
         mapping.put(Key.CTRL_X_CTRL_U, ActionMapper.mapToAction("undo"));
         mapping.put(Key.UNIT_SEPARATOR, ActionMapper.mapToAction("undo"));
         mapping.put(Key.CTRL_R, ActionMapper.mapToAction("reverse-search-history"));
+        mapping.put(Key.CTRL_S, ActionMapper.mapToAction("forward-search-history"));
 
         return mapping;
     }

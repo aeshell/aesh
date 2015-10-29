@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;

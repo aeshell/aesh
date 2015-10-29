@@ -39,7 +39,7 @@ public interface SearchAction extends Action {
         SEARCH_DELETE,
         SEARCH_MOVE_PREV,
         SEARCH_MOVE_NEXT,
-        SEARCH_HISTORY_PREV,
-        SEARCH_MOVE_RIGHT, SEARCH_MOVE_LEFT, SEARCH_HISTORY_NEXT
+        SEARCH_MOVE_RIGHT,
+        SEARCH_MOVE_LEFT
     }
 }

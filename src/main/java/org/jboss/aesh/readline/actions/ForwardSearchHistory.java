@@ -19,33 +19,18 @@
  */
 package org.jboss.aesh.readline.actions;
 
-import org.jboss.aesh.console.InputProcessor;
-import org.jboss.aesh.readline.Action;
-import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.readline.SearchAction;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ForwardSearchHistory implements SearchAction {
+public class ForwardSearchHistory extends SearchHistory {
+
+    ForwardSearchHistory() {
+        super(Status.SEARCH_NEXT);
+    }
 
     @Override
     public String name() {
         return "forward-search-history";
     }
 
-    @Override
-    public void input(Action action, KeyEvent key) {
-
-    }
-
-    @Override
-    public boolean isSearching() {
-        return false;
-    }
-
-    @Override
-    public void apply(InputProcessor inputProcessor) {
-
-    }
 }
