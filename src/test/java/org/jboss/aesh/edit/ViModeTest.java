@@ -381,7 +381,6 @@ public class ViModeTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
@@ -419,7 +418,6 @@ public class ViModeTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
@@ -458,7 +456,6 @@ public class ViModeTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
@@ -497,7 +494,6 @@ public class ViModeTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
         consoleBuffer.writeString("asdf jkl");

@@ -148,7 +148,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
@@ -186,7 +185,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
@@ -224,7 +222,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
         consoleBuffer.writeString("asdf");
@@ -263,7 +260,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
         consoleBuffer.writeString("asdf jkl");

@@ -208,10 +208,8 @@ public class AeshInputProcessorTest {
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
-                .enableHistory(true)
                 .persistHistory(false)
                 .historySize(10)
-                .enableSearch(true)
                 .create();
 
         inputProcessor.parseOperation(Key.f);
