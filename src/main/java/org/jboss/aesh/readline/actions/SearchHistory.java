@@ -87,7 +87,7 @@ abstract class SearchHistory implements SearchAction {
     }
 
     @Override
-    public boolean isSearching() {
+    public boolean keepFocus() {
         return (status == Status.SEARCH_INPUT || status == Status.SEARCH_PREV ||
                 status == Status.SEARCH_NEXT || status == Status.SEARCH_DELETE );
     }
@@ -186,7 +186,7 @@ abstract class SearchHistory implements SearchAction {
                    inputProcessor.getBuffer().setBufferLine(searchResult);
            }
 
-           if(!isSearching()) {
+           if(!keepFocus()) {
                searchArgument = null;
                searchResult = null;
                inputProcessor.getBuffer().drawLine();

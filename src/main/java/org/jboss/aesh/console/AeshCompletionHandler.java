@@ -25,10 +25,8 @@ import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasManager;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
-import org.jboss.aesh.edit.Mode;
-import org.jboss.aesh.edit.actions.Action;
-import org.jboss.aesh.edit.actions.PrevWordAction;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.readline.actions.ActionMapper;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -51,17 +49,15 @@ public class AeshCompletionHandler implements CompletionHandler {
     private int displayCompletionSize = 100;
     private final List<Completion> completionList;
     private AliasManager aliasManager;
-    private final ConsoleBuffer consoleBuffer;
     private final Shell shell;
     private final boolean doLogging;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshCompletionHandler.class.getName());
 
-    public AeshCompletionHandler(AeshContext aeshContext, ConsoleBuffer consoleBuffer,
+    public AeshCompletionHandler(AeshContext aeshContext,
                                  Shell shell, boolean doLogging) {
         completionList = new ArrayList<>();
         this.aeshContext = aeshContext;
-        this.consoleBuffer = consoleBuffer;
         this.shell = shell;
         this.doLogging = doLogging;
     }
@@ -116,7 +112,9 @@ public class AeshCompletionHandler implements CompletionHandler {
      * @throws IOException stream
      */
     @Override
-    public void complete(PrintStream out, Buffer buffer) throws IOException {
+    public void complete(InputProcessor inputProcessor) throws IOException {
+        Buffer buffer = inputProcessor.getBuffer().getBuffer();
+        PrintStream out = inputProcessor.getBuffer().out();
         if(!enabled)
             return;
 
@@ -166,7 +164,7 @@ public class AeshCompletionHandler implements CompletionHandler {
                     possibleCompletions.get(0).getFormattedCompletionCandidatesTerminalString().get(0),
                     buffer, out,
                     possibleCompletions.get(0).hasAppendSeparator(),
-                    possibleCompletions.get(0).getSeparator());
+                    possibleCompletions.get(0).getSeparator(), inputProcessor);
         }
         // more than one hit...
         else {
@@ -180,10 +178,10 @@ public class AeshCompletionHandler implements CompletionHandler {
                 if(startsWith.contains(" ") && !possibleCompletions.get(0).doIgnoreNonEscapedSpace())
                     displayCompletion(new TerminalString(Parser.switchSpacesToEscapedSpacesInWord(startsWith), true),
                             buffer, out,
-                            false, possibleCompletions.get(0).getSeparator());
+                            false, possibleCompletions.get(0).getSeparator(), inputProcessor);
                 else
                     displayCompletion(new TerminalString(startsWith, true), buffer, out,
-                            false, possibleCompletions.get(0).getSeparator());
+                            false, possibleCompletions.get(0).getSeparator(), inputProcessor);
             }
                 // display all
                 // check size
@@ -195,7 +193,7 @@ public class AeshCompletionHandler implements CompletionHandler {
                 if(completions.size() > 100) {
                     //if(displayCompletion) {
                      if(askDisplayCompletion) {
-                        displayCompletions(completions, buffer, out);
+                        displayCompletions(completions, buffer, out, inputProcessor);
                         //displayCompletion = false;
                          askDisplayCompletion = false;
                     }
@@ -206,7 +204,7 @@ public class AeshCompletionHandler implements CompletionHandler {
                 }
                 // display all
                 else {
-                    displayCompletions(completions, buffer, out);
+                    displayCompletions(completions, buffer, out, inputProcessor);
                 }
             }
         }
@@ -221,9 +219,10 @@ public class AeshCompletionHandler implements CompletionHandler {
      * @throws java.io.IOException stream
      */
     private void displayCompletion(TerminalString completion, Buffer buffer, PrintStream out,
-                                   boolean appendSpace, char separator) throws IOException {
+                                   boolean appendSpace, char separator, InputProcessor inputProcessor) throws IOException {
         if(completion.getCharacters().startsWith(buffer.getMultiLine())) {
-            consoleBuffer.performAction(new PrevWordAction(buffer.getMultiCursor(), Action.DELETE, Mode.EMACS));
+            ActionMapper.mapToAction("backward-kill-word").apply(inputProcessor);
+            //inputProcessor.getBuffer().performAction(new PrevWordAction(buffer.getMultiCursor(), Action.DELETE, Mode.EMACS));
             buffer.write(completion.getCharacters());
             out.print(completion);
 
@@ -238,7 +237,7 @@ public class AeshCompletionHandler implements CompletionHandler {
             out.print(separator);
         }
 
-        consoleBuffer.drawLine();
+        inputProcessor.getBuffer().drawLine();
     }
 
     /**
@@ -248,7 +247,7 @@ public class AeshCompletionHandler implements CompletionHandler {
      * @throws IOException stream
      */
     private void displayCompletions(List<TerminalString> completions, Buffer buffer,
-                                    PrintStream out) throws IOException {
+                                    PrintStream out, InputProcessor inputProcessor) throws IOException {
         Collections.sort(completions);
         //printNewline reset cursor pos, so we need to store it
         int oldCursorPos = buffer.getCursor();
@@ -256,12 +255,12 @@ public class AeshCompletionHandler implements CompletionHandler {
         buffer.setCursor(oldCursorPos);
         out.print(Parser.formatDisplayListTerminalString(completions,
                 shell.getSize().getHeight(), shell.getSize().getWidth()));
-        consoleBuffer.displayPrompt();
+        inputProcessor.getBuffer().displayPrompt();
         out.print(buffer.getLine());
         //if we do a complete and the cursor is not at the end of the
         //buffer we need to move it to the correct place
         out.flush();
-        consoleBuffer.syncCursor();
+        inputProcessor.getBuffer().syncCursor();
     }
 
     private CompleteOperation findAliases(String buffer, int cursor) {

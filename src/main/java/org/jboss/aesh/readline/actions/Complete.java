@@ -38,8 +38,7 @@ public class Complete implements Action {
     public void apply(InputProcessor inputProcessor) {
         if(inputProcessor.getCompleter() != null) {
             try {
-                inputProcessor.getCompleter().complete(inputProcessor.getBuffer().out(),
-                        inputProcessor.getBuffer().getBuffer());
+                inputProcessor.getCompleter().complete( inputProcessor);
                 if(inputProcessor.getCompleter().doAskDisplayCompletion()) {
                     //TOOO: need to handle this
                 }

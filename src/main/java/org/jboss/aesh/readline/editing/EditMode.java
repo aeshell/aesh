@@ -43,6 +43,7 @@ public interface EditMode {
         UP_CASE,
         DOWN_CASE,
         CAPITALIZE,
-        IGNORE_EOF
+        IGNORE_EOF,
+        COMPLETE
     }
 }

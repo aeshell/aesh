@@ -23,7 +23,6 @@ import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.alias.AliasManager;
 
 import java.io.IOException;
-import java.io.PrintStream;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -44,7 +43,7 @@ public interface CompletionHandler {
 
     int getAskCompletionSize();
 
-    void complete(PrintStream out, Buffer buffer) throws IOException;
+    void complete(InputProcessor inputProcessor) throws IOException;
 
     void setAliasManager(AliasManager aliasManager);
 }

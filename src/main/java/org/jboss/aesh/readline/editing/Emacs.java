@@ -20,8 +20,8 @@
 package org.jboss.aesh.readline.editing;
 
 import org.jboss.aesh.readline.Action;
+import org.jboss.aesh.readline.ActionEvent;
 import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.readline.SearchAction;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.logging.Logger;
@@ -31,8 +31,7 @@ import java.util.logging.Logger;
  */
 public class Emacs extends BaseEditMode {
 
-    private Status status = Status.EDIT;
-    private SearchAction currentSearch;
+    private ActionEvent currentAction;
 
     private EditModeMapper editModeMapper = EditModeMapper.getEmacs();
 
@@ -44,25 +43,38 @@ public class Emacs extends BaseEditMode {
     @Override
     public Action parse(KeyEvent event) {
         //are we already searching, it need to be processed by search action
+
+        if(currentAction != null) {
+            if(currentAction.keepFocus()) {
+                currentAction.input(getAction(event), event);
+                return currentAction;
+            }
+            else
+                currentAction = null;
+
+        }
+
+        return getAction(event);
+        /*
         if(status == Status.SEARCH) {
-            currentSearch.input(getAction(event), event);
-            if(!currentSearch.isSearching()) {
+            currentAction.input(getAction(event), event);
+            if(!currentAction.keepFocus()) {
                 status = Status.EDIT;
             }
-            return currentSearch;
+            return currentAction;
         }
         //all other actions
         else
             return getAction(event);
+            */
     }
 
     private Action getAction(KeyEvent event) {
         if(editModeMapper.getMapping().containsKey(event)) {
             Action action =  editModeMapper.getMapping().get(event);
-            if(action instanceof SearchAction) {
-                status = Status.SEARCH;
-                currentSearch = (SearchAction) action;
-                currentSearch.input(action, event);
+            if(action instanceof ActionEvent) {
+                currentAction = (ActionEvent) action;
+                currentAction.input(action, event);
             }
             return action;
         }

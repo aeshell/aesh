@@ -22,16 +22,13 @@ package org.jboss.aesh.console;
 import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.PasteManager;
-import org.jboss.aesh.edit.ViEditMode;
 import org.jboss.aesh.edit.actions.Action;
-import org.jboss.aesh.edit.actions.EditAction;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.undo.UndoManager;
 import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.LoggerUtil;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.logging.Logger;
 
@@ -51,8 +48,6 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     private final PasteManager pasteManager;
 
     private final boolean ansiMode;
-
-    private Action currentAction = Action.EDIT;
 
     private final boolean isLogging = false;
 
@@ -96,11 +91,6 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     }
 
     @Override
-    public void setEditMode(EditMode editMode) {
-        this.editMode = editMode;
-    }
-
-    @Override
     public UndoManager getUndoManager() {
         return undoManager;
     }
@@ -108,11 +98,6 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     @Override
     public PasteManager getPasteManager() {
         return pasteManager;
-    }
-
-    @Override
-    public EditMode getEditMode() {
-        return editMode;
     }
 
     @Override
@@ -185,11 +170,6 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             }
         }
         out.flush();
-    }
-
-    @Override
-    public void updateCurrentAction(Action action) {
-        this.currentAction = action;
     }
 
     private void redrawMultipleLines(boolean keepCursorPosition) {
@@ -290,54 +270,6 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         addActionToUndoStack();
         buffer.replaceChar((char) rChar);
         drawLine();
-    }
-
-    @Override
-    public void changeCase() {
-        if(buffer.changeCase()) {
-            moveCursor(1);
-            drawLine();
-        }
-    }
-
-    @Override
-    public void capitalizeWord() {
-        String word = Parser.findWordClosestToCursor(buffer.getLineNoMask(), buffer.getCursor());
-        if(word.length() > 0) {
-            int pos = buffer.getLineNoMask().indexOf(word, buffer.getCursor()-word.length());
-            if(pos < 0)
-                pos = 0;
-            buffer.replaceChar(Character.toUpperCase(buffer.getLineNoMask().charAt(pos)), pos);
-            drawLine();
-        }
-    }
-
-    @Override
-    public void lowerCaseWord() {
-        String word = Parser.findWordClosestToCursor(buffer.getLineNoMask(), buffer.getCursor());
-        if(word.length() > 0) {
-            int pos = buffer.getLineNoMask().indexOf(word, buffer.getCursor()-word.length());
-            if(pos < 0)
-                pos = 0;
-            for(int i = 0; i < word.length(); i++) {
-                buffer.replaceChar(Character.toLowerCase(buffer.getLineNoMask().charAt(pos+i)), pos+i);
-            }
-            drawLine();
-        }
-    }
-
-    @Override
-    public void upperCaseWord() {
-        String word = Parser.findWordClosestToCursor(buffer.getLineNoMask(), buffer.getCursor());
-        if(word.length() > 0) {
-            int pos = buffer.getLineNoMask().indexOf(word, buffer.getCursor()-word.length());
-            if(pos < 0)
-                pos = 0;
-            for(int i = 0; i < word.length(); i++) {
-                buffer.replaceChar(Character.toUpperCase(buffer.getLineNoMask().charAt(pos+i)), pos+i);
-            }
-            drawLine();
-        }
     }
 
     @Override
@@ -496,51 +428,6 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         }
         out.flush();
     }
-
-    @Override
-    public boolean performAction(EditAction action) throws IOException {
-        currentAction = action.getAction();
-        action.doAction(buffer.getLine());
-        if(action.getAction() == Action.MOVE) {
-            moveCursor((action.getEnd() - action.getStart()));
-            return true;
-        }
-        else if(action.getAction() == Action.DELETE || action.getAction() == Action.CHANGE) {
-            //first trigger undo action
-            addActionToUndoStack();
-
-            if(action.getEnd() > action.getStart()) {
-                // only if start != cursor we need to move it
-                if(action.getStart() != buffer.getCursor()) {
-                    moveCursor(action.getStart() - buffer.getCursor());
-                }
-                addToPaste(buffer.getLine().substring(action.getStart(), action.getEnd()));
-                buffer.delete(action.getStart(), action.getEnd());
-            }
-            else {
-                addToPaste(buffer.getLine().substring(action.getEnd(), action.getStart()));
-                buffer.delete(action.getEnd(), action.getStart());
-                moveCursor((action.getEnd() - action.getStart()));
-            }
-
-            if(editMode.getMode() == Mode.VI && buffer.getCursor() == buffer.length()) {
-                if(!((ViEditMode) editMode).isInEditMode())
-                    moveCursor(-1);
-            }
-            drawLine();
-        }
-        else if(action.getAction() == Action.YANK) {
-            if(action.getEnd() > action.getStart()) {
-                addToPaste(buffer.getLine().substring(action.getStart(), action.getEnd()));
-            }
-            else {
-                addToPaste(buffer.getLine().substring(action.getEnd(), action.getStart()));
-            }
-        }
-
-        return true;
-    }
-
 
     /**
      * Paste previous yanked word/char either before or on the cursor position

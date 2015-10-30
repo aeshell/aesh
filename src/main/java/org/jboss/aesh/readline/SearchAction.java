@@ -22,11 +22,7 @@ package org.jboss.aesh.readline;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface SearchAction extends Action {
-
-    void input(Action action, KeyEvent key);
-
-    boolean isSearching();
+public interface SearchAction extends ActionEvent {
 
     enum Status {
         SEARCH_NOT_STARTED,

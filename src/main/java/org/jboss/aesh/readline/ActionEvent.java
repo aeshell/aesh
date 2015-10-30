@@ -19,58 +19,14 @@
  */
 package org.jboss.aesh.readline;
 
-import java.util.Arrays;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-class ActionEvent implements KeyEvent {
+public interface ActionEvent extends Action {
 
-  private final String name;
-  private final int[] seq;
+    void input(Action action, KeyEvent key);
 
-  public ActionEvent(String name, int[] seq) {
-    this.name = name;
-    this.seq = seq;
-  }
+    boolean keepFocus();
 
-  /**
-   * @return the name of the action to apply.
-   */
-  @Override
-  public String name() {
-    return name;
-  }
-
-  @Override
-  public int getCodePointAt(int index) throws IndexOutOfBoundsException {
-    if (index < 0 || index > seq.length) {
-      throw new IndexOutOfBoundsException("Wrong index: " + index);
-    }
-    return seq[index];
-  }
-
-  @Override
-  public int length() {
-    return seq.length;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if(this == o) return true;
-    if(!(o instanceof ActionEvent)) return false;
-
-    ActionEvent that = (ActionEvent) o;
-
-    if(!name.equals(that.name)) return false;
-    return Arrays.equals(seq, that.seq);
-
-  }
-
-  @Override
-  public int hashCode() {
-    int result = name.hashCode();
-    result = 31 * result + Arrays.hashCode(seq);
-    return result;
-  }
 }

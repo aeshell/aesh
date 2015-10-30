@@ -19,13 +19,9 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.PasteManager;
-import org.jboss.aesh.edit.actions.Action;
-import org.jboss.aesh.edit.actions.EditAction;
 import org.jboss.aesh.undo.UndoManager;
 
-import java.io.IOException;
 import java.io.PrintStream;
 
 /**
@@ -41,15 +37,11 @@ public interface ConsoleBuffer {
 
     Buffer getBuffer();
 
-    void setEditMode(EditMode editMode);
-
     UndoManager getUndoManager();
 
     void addActionToUndoStack();
 
     PasteManager getPasteManager();
-
-    EditMode getEditMode();
 
     void moveCursor(final int where);
 
@@ -59,26 +51,11 @@ public interface ConsoleBuffer {
 
     void drawLine(boolean keepCursorPosition, boolean optimize);
 
-    void updateCurrentAction(Action action);
-
     void syncCursor();
 
     void replace(int rChar);
 
-    /**
-     * Switch case if the character is a letter
-     *
-     * @throws java.io.IOException stream
-     */
-    void changeCase();
-
-    void capitalizeWord();
-
     void writeChar(char input);
-
-    void lowerCaseWord();
-
-    void upperCaseWord();
 
     void writeChars(int[] input);
 
@@ -102,14 +79,5 @@ public interface ConsoleBuffer {
      * @param includeBuffer if true include the current buffer line
      */
     void clear(boolean includeBuffer);
-
-    /**
-     * Perform the designated action created by an event
-     *
-     * @param action console action
-     * @return true if nothing goes wrong
-     * @throws IOException stream
-     */
-    boolean performAction(EditAction action) throws IOException;
 
 }
