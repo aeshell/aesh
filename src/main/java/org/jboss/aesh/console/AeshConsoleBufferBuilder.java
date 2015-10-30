@@ -23,7 +23,6 @@ import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.edit.EmacsEditMode;
 import org.jboss.aesh.edit.KeyOperationFactory;
 import org.jboss.aesh.edit.KeyOperationManager;
-import org.jboss.aesh.terminal.Shell;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

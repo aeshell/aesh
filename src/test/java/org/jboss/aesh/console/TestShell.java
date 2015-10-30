@@ -23,7 +23,6 @@ import java.io.PrintStream;
 
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.CursorPosition;
-import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.api.Terminal;
 

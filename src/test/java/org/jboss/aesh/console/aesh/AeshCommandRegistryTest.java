@@ -41,7 +41,6 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
 /**
@@ -59,7 +58,7 @@ public class AeshCommandRegistryTest {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        Settings settings = new SettingsBuilder().terminal(new TestTerminal()).inputStream(pipedInputStream)
+        Settings settings = new SettingsBuilder().inputStream(pipedInputStream)
             .outputStream(new PrintStream(byteArrayOutputStream)).logging(true).create();
 
         CommandRegistry registry = new CommandRegistry() {
@@ -109,7 +108,6 @@ public class AeshCommandRegistryTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .inputStream(pipedInputStream)
                 .outputStream(new PrintStream(byteArrayOutputStream))
                 .setPersistExport(false)
@@ -164,7 +162,7 @@ public class AeshCommandRegistryTest {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        Settings settings = new SettingsBuilder().terminal(new TestTerminal()).inputStream(pipedInputStream)
+        Settings settings = new SettingsBuilder().inputStream(pipedInputStream)
             .outputStream(new PrintStream(byteArrayOutputStream)).logging(true).create();
 
         CommandRegistry registry = new CommandRegistry() {

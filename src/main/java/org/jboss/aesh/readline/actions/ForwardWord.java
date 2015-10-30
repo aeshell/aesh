@@ -17,38 +17,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.edit.actions;
+package org.jboss.aesh.readline.actions;
 
-import org.jboss.aesh.edit.Mode;
+import org.jboss.aesh.console.InputProcessor;
+import org.jboss.aesh.readline.editing.EditMode;
 
 /**
- * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
+ * TODO: change boolean params in constructors to objects/enum
+ * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class NextWordAction extends EditAction {
+abstract class ForwardWord extends ChangeAction {
 
-    private final Mode mode;
-    private boolean removeTrailingSpaces = true;
+    private boolean viMode;
+    private boolean removeTrailingSpaces;
 
-    public NextWordAction(int start, Action action, Mode mode) {
-        super(start, action);
-        this.mode = mode;
-        if(getAction() == Action.CHANGE)
-            removeTrailingSpaces = false;
+    ForwardWord() {
+        super(EditMode.Status.MOVE);
+        viMode = false;
+    }
+
+    ForwardWord(boolean viMode, EditMode.Status status) {
+        super(status);
+        this.viMode = viMode;
+        if(status == EditMode.Status.CHANGE)
+            this.removeTrailingSpaces = false;
     }
 
     @Override
-    public void doAction(String buffer) {
-        int cursor = getStart();
+    public void apply(InputProcessor inputProcessor) {
+        int cursor = inputProcessor.getBuffer().getBuffer().getMultiCursor();
+        String buffer = inputProcessor.getBuffer().getBuffer().getLine();
 
-        //if cursor stand on a delimiter, move till its no more delimiters
-        if(mode == Mode.EMACS) {
-            while (cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
-                cursor++;
-            while (cursor < buffer.length() && !isDelimiter(buffer.charAt(cursor)))
-                cursor++;
-        }
-        //vi mode
-        else {
+        if(viMode) {
             if(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
                 while(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
                     cursor++;
@@ -62,7 +62,12 @@ public class NextWordAction extends EditAction {
                         while(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
                             cursor++;
             }
-
+        }
+        else {
+            while (cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
+                cursor++;
+            while (cursor < buffer.length() && !isDelimiter(buffer.charAt(cursor)))
+                cursor++;
         }
 
         //if we end up on a space we move past that too
@@ -71,6 +76,6 @@ public class NextWordAction extends EditAction {
                 while(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
                     cursor++;
 
-        setEnd(cursor);
+        apply(cursor, inputProcessor);
     }
 }

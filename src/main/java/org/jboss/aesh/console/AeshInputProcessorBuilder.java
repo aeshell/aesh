@@ -40,8 +40,6 @@ public class AeshInputProcessorBuilder {
     private History history;
     private CompletionHandler completion;
     private InputProcessorInterruptHook interruptHook;
-    private boolean enableSearch = true;
-    private boolean enableHistory = true;
     private boolean persistHistory = true;
     private File historyFile;
     private int historySize = 100;
@@ -69,11 +67,6 @@ public class AeshInputProcessorBuilder {
         return this;
     }
 
-    public AeshInputProcessorBuilder enableHistory(boolean enableHistory) {
-        this.enableHistory = enableHistory;
-        return this;
-    }
-
     public AeshInputProcessorBuilder persistHistory(boolean persistHistory) {
         this.persistHistory = persistHistory;
         return this;
@@ -86,11 +79,6 @@ public class AeshInputProcessorBuilder {
 
     public AeshInputProcessorBuilder historySize(int historySize) {
         this.historySize = historySize;
-        return this;
-    }
-
-    public AeshInputProcessorBuilder enableSearch(boolean enableSearch) {
-        this.enableSearch = enableSearch;
         return this;
     }
 
@@ -115,7 +103,7 @@ public class AeshInputProcessorBuilder {
                     history = new InMemoryHistory(historySize);
             }
 
-            return new AeshInputProcessor(consoleBuffer, history, completion, interruptHook, enableHistory, enableSearch);
+            return new AeshInputProcessor(consoleBuffer, history, completion, interruptHook );
         }
         catch (IOException e) {
             throw new IllegalArgumentException("Failed to create InputProcessor: "+e.getMessage());

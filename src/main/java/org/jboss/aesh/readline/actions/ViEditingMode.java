@@ -17,32 +17,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.edit.actions;
+package org.jboss.aesh.readline.actions;
+
+import org.jboss.aesh.console.InputProcessor;
+import org.jboss.aesh.readline.Action;
 
 /**
- * A placeholder class for simple actions that require little logic.
- * Typical movement one char back/forth, to the end/beginning of buffer.
- *
- * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
+ * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class SimpleAction extends EditAction {
+public class ViEditingMode implements Action {
 
-       public SimpleAction(int start, Action action) {
-        super(start, action);
-    }
-
-    public SimpleAction(int start, Action action, int end) {
-        super(start, action);
-        setEnd(end);
+    ViEditingMode() {
     }
 
     @Override
-    public void doAction(String buffer) {
-        if(buffer.length() < getEnd())
-            setEnd(buffer.length());
-
-        if(getEnd() < 0)
-            setEnd(0);
+    public String name() {
+        return "vi-editing-mode";
     }
 
+    @Override
+    public void apply(InputProcessor inputProcessor) {
+        //TODO: implementation
+    }
 }

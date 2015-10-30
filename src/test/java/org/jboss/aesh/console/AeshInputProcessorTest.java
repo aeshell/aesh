@@ -27,8 +27,6 @@ import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -44,7 +42,6 @@ public class AeshInputProcessorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -62,24 +59,19 @@ public class AeshInputProcessorTest {
                 .settings(settings)
                 .create();
 
-        CommandOperation operation = new CommandOperation(Key.a);
 
-        String result = inputProcessor.parseOperation(operation);
+        String result = inputProcessor.parseOperation(Key.a);
 
         assertNull(result);
         assertEquals("a", consoleBuffer.getBuffer().getLine());
 
-        operation = new CommandOperation(Key.e);
-        inputProcessor.parseOperation(operation);
-        operation = new CommandOperation(Key.s);
-        inputProcessor.parseOperation(operation);
-        operation = new CommandOperation(Key.h);
-        inputProcessor.parseOperation(operation);
+        inputProcessor.parseOperation(Key.e);
+        inputProcessor.parseOperation(Key.s);
+        inputProcessor.parseOperation(Key.h);
 
         assertEquals("aesh", consoleBuffer.getBuffer().getLine());
 
-        operation = new CommandOperation(Key.ENTER);
-        result = inputProcessor.parseOperation(operation);
+        result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("aesh", result);
     }
 
@@ -88,7 +80,6 @@ public class AeshInputProcessorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -102,40 +93,24 @@ public class AeshInputProcessorTest {
                 .settings(settings)
                 .create();
 
-        CommandOperation edit = new CommandOperation(Key.e);
+        inputProcessor.parseOperation(Key.e);
+        inputProcessor.parseOperation(Key.h);
+        inputProcessor.parseOperation(Key.LEFT);
+        inputProcessor.parseOperation(Key.s);
+        inputProcessor.parseOperation(Key.RIGHT);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.r);
+        inputProcessor.parseOperation(Key.u);
+        inputProcessor.parseOperation(Key.l);
+        inputProcessor.parseOperation(Key.e);
 
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.h);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.LEFT);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.s);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.RIGHT);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.SPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.r);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.u);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.l);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.e);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.CTRL_A);
+        inputProcessor.parseOperation(Key.a);
 
-        edit = new CommandOperation(Key.CTRL_A);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.a);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.CTRL_E);
 
-        edit = new CommandOperation(Key.CTRL_E);
-        inputProcessor.parseOperation(edit);
-
-        edit = new CommandOperation(Key.s);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.ENTER);
-        String result = inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.s);
+        String result = inputProcessor.parseOperation(Key.ENTER);
 
         assertEquals("aesh rules", result);
     }
@@ -145,7 +120,6 @@ public class AeshInputProcessorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .disableHistory(false)
                 .persistHistory(false)
                 .readInputrc(false)
@@ -161,41 +135,28 @@ public class AeshInputProcessorTest {
                 .settings(settings)
                 .create();
 
-        CommandOperation edit = new CommandOperation(Key.f);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.o);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.SPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.b);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.a);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.r);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.f);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.b);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.r);
 
-        edit = new CommandOperation(Key.ENTER);
-        String result = inputProcessor.parseOperation(edit);
+        String result = inputProcessor.parseOperation(Key.ENTER);
 
         assertEquals("foo bar", result);
 
         assertEquals("", consoleBuffer.getBuffer().getLine());
 
-        edit = new CommandOperation(Key.UP);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.BACKSPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.ENTER);
-        result = inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.UP);
+        inputProcessor.parseOperation(Key.BACKSPACE);
+        result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("foo ba", result);
 
-        edit = new CommandOperation(Key.UP);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.DOWN);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.ENTER);
-        result = inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.UP);
+        inputProcessor.parseOperation(Key.DOWN);
+        result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("", result);
 
     }
@@ -205,7 +166,6 @@ public class AeshInputProcessorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -219,31 +179,22 @@ public class AeshInputProcessorTest {
                 .settings(settings)
                 .create();
 
-        CommandOperation edit = new CommandOperation(Key.f);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.o);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.SPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.b);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.a);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.r);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.f);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.b);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.r);
 
-        edit = new CommandOperation(Key.BACKSPACE);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.BACKSPACE);
+        inputProcessor.parseOperation(Key.BACKSPACE);
+        inputProcessor.parseOperation(Key.BACKSPACE);
 
-        edit = new CommandOperation(Key.CTRL_X_CTRL_U);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.CTRL_X_CTRL_U);
+        inputProcessor.parseOperation(Key.CTRL_X_CTRL_U);
 
-        edit = new CommandOperation(Key.ENTER);
-        String result = inputProcessor.parseOperation(edit);
+        String result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("foo ba", result);
     }
 
@@ -257,71 +208,47 @@ public class AeshInputProcessorTest {
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
-                .enableHistory(true)
                 .persistHistory(false)
                 .historySize(10)
-                .enableSearch(true)
                 .create();
 
-        CommandOperation edit = new CommandOperation(Key.f);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.o);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.SPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.b);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.a);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.r);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.ONE);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.f);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.b);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.r);
+        inputProcessor.parseOperation(Key.ONE);
 
-        edit = new CommandOperation(Key.ENTER);
-        String result = inputProcessor.parseOperation(edit);
+        String result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("foo bar1", result);
 
-        result = inputProcessor.parseOperation(edit);
+        result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("", result);
 
-        edit = new CommandOperation(Key.CTRL_R);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.f);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.ENTER);
-        result = inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.f);
+        result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("foo bar1", result);
 
-        edit = new CommandOperation(Key.f);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.o);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.SPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.b);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.a);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.r);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.TWO);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.f);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.b);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.r);
+        inputProcessor.parseOperation(Key.TWO);
 
-        edit = new CommandOperation(Key.ENTER);
-        result = inputProcessor.parseOperation(edit);
+        result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("foo bar2", result);
 
-        edit = new CommandOperation(Key.CTRL_R);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.f);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.f);
         assertEquals("(reverse-i-search) `f': foo bar2", consoleBuffer.getBuffer().getLine());
 
-        edit = new CommandOperation(Key.CTRL_R);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.CTRL_R);
         assertEquals("(reverse-i-search) `f': foo bar1", consoleBuffer.getBuffer().getLine());
     }
 
@@ -330,7 +257,6 @@ public class AeshInputProcessorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -354,7 +280,6 @@ public class AeshInputProcessorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -368,40 +293,28 @@ public class AeshInputProcessorTest {
                 .settings(settings)
                 .create();
 
-        CommandOperation edit = new CommandOperation(Key.f);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.o);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.SPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.b);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.a);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.r);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.SPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.META_c);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.f);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.b);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.r);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.META_c);
         //line should be the same
         assertEquals("foo bar ", consoleBuffer.getBuffer().getLineNoMask());
 
-        edit = new CommandOperation(Key.LEFT);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.META_c);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.LEFT);
+        inputProcessor.parseOperation(Key.META_c);
         assertEquals("foo Bar ", consoleBuffer.getBuffer().getLineNoMask());
-        edit = new CommandOperation(Key.LEFT);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.LEFT);
+        inputProcessor.parseOperation(Key.LEFT);
+        inputProcessor.parseOperation(Key.LEFT);
+        inputProcessor.parseOperation(Key.LEFT);
+        inputProcessor.parseOperation(Key.LEFT);
 
-        edit = new CommandOperation(Key.META_c);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.META_c);
         assertEquals("Foo Bar ", consoleBuffer.getBuffer().getLineNoMask());
     }
 
@@ -410,7 +323,6 @@ public class AeshInputProcessorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -424,40 +336,24 @@ public class AeshInputProcessorTest {
                 .settings(settings)
                 .create();
 
-        CommandOperation edit = new CommandOperation(Key.F);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.o);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.SPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.B);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.A);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.r);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.SPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.META_l);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.F);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.B);
+        inputProcessor.parseOperation(Key.A);
+        inputProcessor.parseOperation(Key.r);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.META_l);
         //line should be the same
         assertEquals("Foo BAr ", consoleBuffer.getBuffer().getLineNoMask());
 
-        edit = new CommandOperation(Key.LEFT);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.META_l);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.META_b);
+        inputProcessor.parseOperation(Key.META_l);
         assertEquals("Foo bar ", consoleBuffer.getBuffer().getLineNoMask());
-        edit = new CommandOperation(Key.LEFT);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-
-        edit = new CommandOperation(Key.META_l);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.META_b);
+        inputProcessor.parseOperation(Key.META_b);
+        inputProcessor.parseOperation(Key.META_l);
         assertEquals("foo bar ", consoleBuffer.getBuffer().getLineNoMask());
     }
 
@@ -466,7 +362,6 @@ public class AeshInputProcessorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -480,36 +375,24 @@ public class AeshInputProcessorTest {
                 .settings(settings)
                 .create();
 
-        CommandOperation edit = new CommandOperation(Key.f);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.o);
-        inputProcessor.parseOperation(edit);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.SPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.b);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.a);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.r);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.SPACE);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.META_u);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.f);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.b);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.r);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.META_u);
         //line should be the same
         assertEquals("foo bar ", consoleBuffer.getBuffer().getLineNoMask());
 
-        edit = new CommandOperation(Key.LEFT);
-        inputProcessor.parseOperation(edit);
-        edit = new CommandOperation(Key.META_u);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.META_b);
+        inputProcessor.parseOperation(Key.META_u);
         assertEquals("foo BAR ", consoleBuffer.getBuffer().getLineNoMask());
-        edit = new CommandOperation(Key.CTRL_A);
-        inputProcessor.parseOperation(edit);
-
-        edit = new CommandOperation(Key.META_u);
-        inputProcessor.parseOperation(edit);
+        inputProcessor.parseOperation(Key.META_b);
+        inputProcessor.parseOperation(Key.META_b);
+        inputProcessor.parseOperation(Key.META_u);
         assertEquals("FOO BAR ", consoleBuffer.getBuffer().getLineNoMask());
     }
 
@@ -518,7 +401,6 @@ public class AeshInputProcessorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -532,20 +414,20 @@ public class AeshInputProcessorTest {
                 .settings(settings)
                 .create();
 
-        inputProcessor.parseOperation(new CommandOperation(Key.f));
-        inputProcessor.parseOperation(new CommandOperation(Key.o));
-        inputProcessor.parseOperation(new CommandOperation(Key.SPACE));
-        inputProcessor.parseOperation(new CommandOperation(Key.QUOTE));
-        String result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.f);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.SPACE);
+        inputProcessor.parseOperation(Key.QUOTE);
+        String result = inputProcessor.parseOperation(Key.ENTER);
 
         assertEquals(null, result);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.o));
-        result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.o);
+        result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals(null, result);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.QUOTE));
-        result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.QUOTE);
+        result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("fo \"o\"", result);
 
     }
@@ -555,7 +437,6 @@ public class AeshInputProcessorTest {
          ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
@@ -569,44 +450,44 @@ public class AeshInputProcessorTest {
                 .settings(settings)
                 .create();
 
-        inputProcessor.parseOperation(new CommandOperation(Key.f));
-        inputProcessor.parseOperation(new CommandOperation(Key.o));
-        inputProcessor.parseOperation(new CommandOperation(Key.o));
+        inputProcessor.parseOperation(Key.f);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.o);
 
         assertEquals("***", consoleBuffer.getBuffer().getLine());
 
-        String result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        String result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("foo", result);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.f));
-        inputProcessor.parseOperation(new CommandOperation(Key.o));
-        inputProcessor.parseOperation(new CommandOperation(Key.o));
-        inputProcessor.parseOperation(new CommandOperation(Key.BACKSPACE));
-        inputProcessor.parseOperation(new CommandOperation(Key.BACKSPACE));
-        inputProcessor.parseOperation(new CommandOperation(Key.ONE));
-        inputProcessor.parseOperation(new CommandOperation(Key.TWO));
+        inputProcessor.parseOperation(Key.f);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.BACKSPACE);
+        inputProcessor.parseOperation(Key.BACKSPACE);
+        inputProcessor.parseOperation(Key.ONE);
+        inputProcessor.parseOperation(Key.TWO);
 
         assertEquals("***", consoleBuffer.getBuffer().getLine());
-        result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("f12", result);
 
         //test with masking set to a null char
         consoleBuffer.setPrompt(new Prompt("aesh", '\u0000'));
 
-        inputProcessor.parseOperation(new CommandOperation(Key.f));
-        inputProcessor.parseOperation(new CommandOperation(Key.o));
-        inputProcessor.parseOperation(new CommandOperation(Key.o));
+        inputProcessor.parseOperation(Key.f);
+        inputProcessor.parseOperation(Key.o);
+        inputProcessor.parseOperation(Key.o);
 
         assertEquals("", consoleBuffer.getBuffer().getLine());
         assertEquals("foo", consoleBuffer.getBuffer().getLineNoMask());
 
-        inputProcessor.parseOperation(new CommandOperation(Key.BACKSPACE));
-        inputProcessor.parseOperation(new CommandOperation(Key.BACKSPACE));
-        inputProcessor.parseOperation(new CommandOperation(Key.ONE));
-        inputProcessor.parseOperation(new CommandOperation(Key.TWO));
+        inputProcessor.parseOperation(Key.BACKSPACE);
+        inputProcessor.parseOperation(Key.BACKSPACE);
+        inputProcessor.parseOperation(Key.ONE);
+        inputProcessor.parseOperation(Key.TWO);
         assertEquals("", consoleBuffer.getBuffer().getLine());
 
-        result = inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        result = inputProcessor.parseOperation(Key.ENTER);
         assertEquals("f12", result);
     }
 

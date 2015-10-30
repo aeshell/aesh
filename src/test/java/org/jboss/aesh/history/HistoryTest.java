@@ -25,9 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 
-import org.jboss.aesh.TestBuffer;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
@@ -40,27 +38,26 @@ import org.junit.Test;
  */
 public class HistoryTest extends BaseConsoleTest {
 
+    public static final short EMACS_HISTORY_PREV = 16;
+
     @Test
     public void testHistory() throws Exception {
 
-        invokeTestConsole(4, new Setup() {
-            @Override
-            public void call(Console console, OutputStream out) throws IOException {
-                out.write(("1234"+ Config.getLineSeparator()).getBytes());
-                out.flush();
+        invokeTestConsole(4, (console, out) -> {
+            out.write(("1234"+ Config.getLineSeparator()).getBytes());
+            out.flush();
 
-                out.write(("567"+Config.getLineSeparator()).getBytes());
-                out.flush();
+            out.write(("567"+Config.getLineSeparator()).getBytes());
+            out.flush();
 
-                out.write(TestBuffer.EMACS_HISTORY_PREV);
-                out.write(TestBuffer.EMACS_HISTORY_PREV);
-                out.write(Config.getLineSeparator().getBytes());
-                out.flush();
+            out.write(EMACS_HISTORY_PREV);
+            out.write(EMACS_HISTORY_PREV);
+            out.write(Config.getLineSeparator().getBytes());
+            out.flush();
 
-                out.write(TestBuffer.EMACS_HISTORY_PREV);
-                out.write(TestBuffer.EMACS_HISTORY_PREV);
-                out.write(Config.getLineSeparator().getBytes());
-            }
+            out.write(EMACS_HISTORY_PREV);
+            out.write(EMACS_HISTORY_PREV);
+            out.write(Config.getLineSeparator().getBytes());
         }, new Verify() {
            private int count = 0;
            @Override
@@ -111,6 +108,18 @@ public class HistoryTest extends BaseConsoleTest {
     }
 
     @Test
+    public void testSearchAndFetch() {
+        History history = new InMemoryHistory(20);
+        history.push("foo1");
+        history.push("foo2");
+        history.push("foo3");
+
+        history.setSearchDirection(SearchDirection.REVERSE);
+        assertEquals("foo3",history.search("foo") );
+        assertEquals("foo2", history.getPreviousFetch());
+    }
+
+    @Test
     public void testHistorySize() {
         History history = new InMemoryHistory(20);
 
@@ -142,6 +151,8 @@ public class HistoryTest extends BaseConsoleTest {
         history.push("1");
         history.push("1");
         assertEquals("1", history.getPreviousFetch());
+        assertEquals("3", history.getPreviousFetch());
+        assertEquals("1", history.getNextFetch());
         assertEquals("3", history.getPreviousFetch());
         assertEquals("2", history.getPreviousFetch());
         assertEquals("1", history.getPreviousFetch());

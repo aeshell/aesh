@@ -21,13 +21,14 @@ package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.keymap.KeyMap;
+import org.jboss.aesh.readline.KeyEvent;
 
 /**
  * ANSCII enum key chart
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public enum Key {
+public enum Key implements KeyEvent {
 
     UNKNOWN(new int[]{0}),
     CTRL_A(new int[]{1}),
@@ -405,9 +406,9 @@ public enum Key {
     }
 
 
-    private static KeyMap<Key> keyMap = null;
+    private static KeyMap<KeyEvent> keyMap = null;
 
-    public static KeyMap<Key> getKeyMap() {
+    public static KeyMap<KeyEvent> getKeyMap() {
         if (keyMap == null) {
             keyMap = new KeyMap<>();
             keyMap.setUnicode(Key.UNKNOWN);
@@ -426,5 +427,15 @@ public enum Key {
             }
         }
         return keyMap;
+    }
+
+    @Override
+    public int getCodePointAt(int index) {
+        return keyValues[index];
+    }
+
+    @Override
+    public int length() {
+        return keyValues.length;
     }
 }

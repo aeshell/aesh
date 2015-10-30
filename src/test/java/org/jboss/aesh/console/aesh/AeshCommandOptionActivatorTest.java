@@ -38,7 +38,6 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -65,7 +64,6 @@ public class AeshCommandOptionActivatorTest {
         TestOptionValidatorProvider validatorProvider = new TestOptionValidatorProvider(new FooContext("bar"));
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .inputStream(pipedInputStream)
                 .outputStream(new PrintStream(byteArrayOutputStream))
                 .logging(true)

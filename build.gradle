@@ -93,7 +93,7 @@ task sourcesJar(type: Jar) {
 
 checkstyle {
   configFile = rootProject.file('config/checkstyle/checkstyle.xml')
-  toolVersion = "6.8.2"
+  //toolVersion = "6.8.2"
   showViolations true
   configProperties = [
      'checkstyle.cache.file': rootProject.file('build/checkstyle.cache'),

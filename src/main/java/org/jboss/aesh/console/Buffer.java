@@ -84,7 +84,7 @@ public class Buffer {
     /**
      * Reset the buffer, keep the existing prompt
      */
-    protected void reset() {
+    public void reset() {
         if(prompt == null)
             this.prompt = new Prompt("");
         cursor = 0;
@@ -113,7 +113,7 @@ public class Buffer {
             return line.length();
     }
 
-    protected int totalLength() {
+    public int totalLength() {
         if(prompt.isMasking()) {
             if(prompt.getMask() == 0)
                 return disablePrompt ? 1 : getPrompt().getLength()+1;
@@ -132,7 +132,7 @@ public class Buffer {
             return getCursor() + getPrompt().getLength()+1;
     }
 
-    protected Prompt getPrompt() {
+    public Prompt getPrompt() {
         if(!isMultiLine())
             return prompt;
         else
@@ -143,15 +143,15 @@ public class Buffer {
         this.cursor = cursor ;
     }
 
-    protected boolean isMultiLine() {
+    public boolean isMultiLine() {
         return multiLine;
     }
 
-    protected void setMultiLine(boolean m) {
+    public void setMultiLine(boolean m) {
         multiLine = m;
     }
 
-    protected void updateMultiLineBuffer() {
+    public void updateMultiLineBuffer() {
         if(multiLineBuffer == null)
             multiLineBuffer = new StringBuilder();
 
@@ -164,7 +164,7 @@ public class Buffer {
         cursor = 0;
     }
 
-    protected String getMultiLineBuffer() {
+    public String getMultiLineBuffer() {
         return multiLineBuffer.toString();
     }
 
@@ -177,7 +177,7 @@ public class Buffer {
      *
      * @param disable prompt or not
      */
-    protected void disablePrompt(boolean disable) {
+    public void disablePrompt(boolean disable) {
         disablePrompt = disable;
     }
 
@@ -378,7 +378,7 @@ public class Buffer {
         }
     }
 
-    protected void delete(int start, int end) {
+    public void delete(int start, int end) {
         delta = start - end;
         line.delete(start, end);
     }
@@ -457,7 +457,7 @@ public class Buffer {
         line.setCharAt(getCursor(), rChar);
     }
 
-    protected void replaceChar(char rChar, int pos) {
+    public void replaceChar(char rChar, int pos) {
         if(pos > -1 && pos < line.length())
             line.setCharAt(pos, rChar);
     }

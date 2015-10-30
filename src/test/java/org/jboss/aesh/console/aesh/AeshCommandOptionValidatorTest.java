@@ -38,7 +38,6 @@ import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -62,7 +61,6 @@ public class AeshCommandOptionValidatorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .inputStream(pipedInputStream)
                 .outputStream(new PrintStream(byteArrayOutputStream))
                 .logging(true)
@@ -100,7 +98,6 @@ public class AeshCommandOptionValidatorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .inputStream(pipedInputStream)
                 .outputStream(new PrintStream(byteArrayOutputStream))
                 .logging(true)
@@ -145,7 +142,6 @@ public class AeshCommandOptionValidatorTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .inputStream(pipedInputStream)
                 .outputStream(new PrintStream(byteArrayOutputStream))
                 .logging(true)

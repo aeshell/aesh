@@ -33,8 +33,8 @@ import org.jboss.aesh.console.ConsoleBuffer;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.TestShell;
-import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.EmacsEditMode;
@@ -43,8 +43,6 @@ import org.jboss.aesh.edit.KeyOperationManager;
 import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.Shell;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Assume;
 import org.junit.Test;
 
@@ -95,7 +93,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -116,16 +113,16 @@ public class EmacsEditingTest extends BaseConsoleTest {
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
         consoleBuffer.writeString("footing");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
-        inputProcessor.parseOperation(new CommandOperation(Key.a));
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.a);
 
         assertEquals("asdf jkl",
-                inputProcessor.parseOperation(new CommandOperation(Key.ENTER)));
+                inputProcessor.parseOperation(Key.ENTER));
 
     }
 
@@ -134,7 +131,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -152,18 +148,17 @@ public class EmacsEditingTest extends BaseConsoleTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
         consoleBuffer.writeString("footing");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
-        inputProcessor.parseOperation(new CommandOperation(Key.a));
-        inputProcessor.parseOperation(new CommandOperation(Key.RIGHT));
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.RIGHT);
 
         assertEquals("asdf jkl", consoleBuffer.getBuffer().getLine());
     }
@@ -173,7 +168,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -191,18 +185,17 @@ public class EmacsEditingTest extends BaseConsoleTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
         consoleBuffer.writeString("footing");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
-        inputProcessor.parseOperation(new CommandOperation(Key.a));
-        inputProcessor.parseOperation(new CommandOperation(Key.LEFT));
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.LEFT);
 
         assertEquals("asdf jkl", consoleBuffer.getBuffer().getLine());
     }
@@ -212,7 +205,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -230,20 +222,19 @@ public class EmacsEditingTest extends BaseConsoleTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
-        consoleBuffer.writeString("asdf jkl");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        consoleBuffer.writeString("asdf");
+        inputProcessor.parseOperation(Key.ENTER);
 
         consoleBuffer.writeString("footing");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
-        inputProcessor.parseOperation(new CommandOperation(Key.a));
-        inputProcessor.parseOperation(new CommandOperation(Key.UP));
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.f);
+        inputProcessor.parseOperation(Key.UP);
 
-        assertEquals("footing", consoleBuffer.getBuffer().getLine());
+        assertEquals("asdf", consoleBuffer.getBuffer().getLine());
 
     }
 
@@ -252,7 +243,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .persistHistory(false)
                 .readInputrc(false)
                 .ansi(true)
@@ -270,20 +260,19 @@ public class EmacsEditingTest extends BaseConsoleTest {
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
                 .consoleBuffer(consoleBuffer)
                 .settings(settings)
-                .enableSearch(true)
                 .create();
 
         consoleBuffer.writeString("asdf jkl");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
         consoleBuffer.writeString("footing");
-        inputProcessor.parseOperation(new CommandOperation(Key.ENTER));
+        inputProcessor.parseOperation(Key.ENTER);
 
-        inputProcessor.parseOperation(new CommandOperation(Key.CTRL_R));
-        inputProcessor.parseOperation(new CommandOperation(Key.a));
-        inputProcessor.parseOperation(new CommandOperation(Key.DOWN));
+        inputProcessor.parseOperation(Key.CTRL_R);
+        inputProcessor.parseOperation(Key.a);
+        inputProcessor.parseOperation(Key.DOWN);
 
-        assertEquals("asdf jkl", consoleBuffer.getBuffer().getLine());
+        assertEquals("footing", consoleBuffer.getBuffer().getLine());
     }
 
 }

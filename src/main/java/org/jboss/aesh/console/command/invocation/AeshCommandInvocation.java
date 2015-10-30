@@ -24,11 +24,11 @@ import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.CmdOperation;
-import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.console.operator.ControlOperator;
-import org.jboss.aesh.terminal.Shell;
+import org.jboss.aesh.console.Shell;
+import org.jboss.aesh.readline.KeyEvent;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -88,7 +88,7 @@ public final class AeshCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public CommandOperation getInput() throws InterruptedException {
+    public KeyEvent getInput() throws InterruptedException {
         return callback.getInput();
     }
 

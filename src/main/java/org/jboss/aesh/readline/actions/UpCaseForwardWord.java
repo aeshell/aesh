@@ -17,37 +17,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.edit.actions;
+package org.jboss.aesh.readline.actions;
+
+import org.jboss.aesh.readline.editing.EditMode;
 
 /**
- * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
+ * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class DeleteAction extends EditAction {
+public class UpCaseForwardWord extends ForwardWord {
 
-    private boolean backspace = false;
-
-    public DeleteAction(int start, Action action) {
-        super(start, action);
+    public UpCaseForwardWord() {
+        super(false, EditMode.Status.UP_CASE);
     }
 
-    public DeleteAction(int start, Action action, boolean backspace) {
-        super(start, action);
-        this.backspace = backspace;
+    public UpCaseForwardWord(boolean viMode) {
+        super(viMode, EditMode.Status.UP_CASE);
     }
 
     @Override
-    public void doAction(String buffer) {
-        if(backspace) {
-            if(getStart() == 0)
-                setEnd(0);
-            else
-                setEnd(getStart()-1);
-        }
-        else {
-            if(buffer.length() <= getStart())
-                setEnd(getStart());
-            else
-                setEnd(getStart()+1);
-        }
+    public String name() {
+        return "upcase-word";
     }
 }

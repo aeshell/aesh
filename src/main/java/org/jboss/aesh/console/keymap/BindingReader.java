@@ -26,7 +26,6 @@ import java.util.Deque;
 
 import org.jboss.aesh.terminal.utils.NonBlockingReader;
 
-
 /**
  * The BindingReader will transform incoming chars into
  * key bindings

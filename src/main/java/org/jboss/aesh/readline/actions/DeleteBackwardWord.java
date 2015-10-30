@@ -17,14 +17,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.terminal;
+package org.jboss.aesh.readline.actions;
+
+import org.jboss.aesh.readline.editing.EditMode;
 
 /**
- * A dummy terminal used for tests
- *
- * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
+ * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@Deprecated
-public class TestTerminal {
+public class DeleteBackwardWord extends BackwardWord {
 
+    public DeleteBackwardWord() {
+        super(false, EditMode.Status.DELETE);
+    }
+
+    public DeleteBackwardWord(boolean viMode) {
+        super(viMode, EditMode.Status.DELETE);
+    }
+
+    @Override
+    public String name() {
+        return "backward-kill-word";
+    }
 }

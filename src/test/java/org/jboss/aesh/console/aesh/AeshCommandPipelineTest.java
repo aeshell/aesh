@@ -31,7 +31,6 @@ import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -55,7 +54,6 @@ public class AeshCommandPipelineTest {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .inputStream(pipedInputStream)
                 .outputStream(new PrintStream(byteArrayOutputStream))
                 .logging(true)

@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.graphics;
 
-import org.jboss.aesh.terminal.Shell;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.api.Size;
 import org.jboss.aesh.terminal.api.Terminal;

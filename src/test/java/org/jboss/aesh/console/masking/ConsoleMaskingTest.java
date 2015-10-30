@@ -21,13 +21,8 @@ package org.jboss.aesh.console.masking;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
@@ -41,23 +36,17 @@ public class ConsoleMaskingTest extends BaseConsoleTest {
 
     @Test
     public void masking() throws Exception {
-        invokeTestConsole(new Setup() {
-            @Override
-            public void call(Console console, OutputStream out) throws IOException {
-                KeyOperation deletePrevChar =  new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR);
-                console.setPrompt(new Prompt("", '\u0000'));
+        invokeTestConsole((console, out) -> {
+            KeyOperation deletePrevChar =  new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR);
+            console.setPrompt(new Prompt("", '\u0000'));
 
-                out.write(("mypassword").getBytes());
-                out.write(deletePrevChar.getFirstValue());
-                out.write((Config.getLineSeparator()).getBytes());
-                out.flush();
-            }
-        }, new Verify() {
-           @Override
-           public int call(Console console, ConsoleOperation op) {
-               assertEquals("mypasswor", op.getBuffer());
-               return 0;
-           }
+            out.write(("mypassword").getBytes());
+            out.write(deletePrevChar.getFirstValue());
+            out.write((Config.getLineSeparator()).getBytes());
+            out.flush();
+        }, (console, op) -> {
+            assertEquals("mypasswor", op.getBuffer());
+            return 0;
         });
     }
 }

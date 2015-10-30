@@ -24,7 +24,6 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +49,6 @@ public class FileUtilsTest {
         PipedOutputStream pos = new PipedOutputStream();
         PipedInputStream pis = new PipedInputStream(pos);
         Settings settings = new SettingsBuilder()
-                .terminal(new TestTerminal())
                 .inputStream(pis)
                 .outputStream(new PrintStream(new ByteArrayOutputStream()))
                 .logging(true)

@@ -17,15 +17,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.terminal;
+package org.jboss.aesh.readline.actions;
+
+import org.jboss.aesh.readline.editing.EditMode;
 
 /**
- * A Shell is an abstraction of the Terminal that provides easy to use methods
- * to manipulate text/cursor/buffers.
- *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@Deprecated
-public interface Shell extends org.jboss.aesh.console.Shell {
+public class ChangeForwardWord extends ForwardWord {
 
+    public ChangeForwardWord() {
+        super(false, EditMode.Status.CHANGE);
+    }
+
+    public ChangeForwardWord(boolean viMode, EditMode.Status status) {
+        super(viMode, status);
+    }
+
+    @Override
+    public String name() {
+        return "change-forward-word";
+    }
 }

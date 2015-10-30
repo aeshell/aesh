@@ -17,21 +17,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.edit.actions;
+package org.jboss.aesh.readline.actions;
+
+import org.jboss.aesh.console.InputProcessor;
+import org.jboss.aesh.readline.editing.EditMode;
 
 /**
- * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
+ * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class NextSpaceWordAction extends EditAction {
+abstract class ForwardBigWord extends ChangeAction {
 
-    public NextSpaceWordAction(int start, Action action) {
-        super(start, action);
+    ForwardBigWord(EditMode.Status status) {
+        super(status);
     }
 
     @Override
-    public void doAction(String buffer) {
-        int cursor = getStart();
-        //if cursor stand on a delimiter, move till its no more delimiters
+    public void apply(InputProcessor inputProcessor) {
+        int cursor = inputProcessor.getBuffer().getBuffer().getMultiCursor();
+        String buffer = inputProcessor.getBuffer().getBuffer().getLine();
+               //if cursor stand on a delimiter, move till its no more delimiters
         if(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
             while(cursor < buffer.length() && (isDelimiter(buffer.charAt(cursor))))
                 cursor++;
@@ -44,8 +48,9 @@ public class NextSpaceWordAction extends EditAction {
             if(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
                 while(cursor < buffer.length() && isSpace(buffer.charAt(cursor)))
                     cursor++;
-        }
 
-        setEnd(cursor);
+            apply(cursor, inputProcessor);
+        }
     }
+
 }

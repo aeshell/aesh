@@ -42,7 +42,6 @@ import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasCompletion;
 import org.jboss.aesh.console.alias.AliasManager;
 import org.jboss.aesh.console.command.CmdOperation;
-import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.InternalCommands;
 import org.jboss.aesh.console.export.ExportCompletion;
 import org.jboss.aesh.console.export.ExportManager;
@@ -54,14 +53,13 @@ import org.jboss.aesh.console.operator.RedirectionCompletion;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.edit.EditMode;
-import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.api.Attributes;
 import org.jboss.aesh.terminal.api.Terminal;
@@ -219,7 +217,7 @@ public class Console {
                 .ansi(settings.isAnsiConsole())
                 .create();
 
-        completionHandler = new AeshCompletionHandler(context, consoleBuffer, shell, true);
+        completionHandler = new AeshCompletionHandler(context, shell, true);
         //enable completion for redirection
         completionHandler.addCompletion( new RedirectionCompletion());
 
@@ -241,29 +239,17 @@ public class Console {
         }
 
         //InterruptHandler for InputProcessor
-        InputProcessorInterruptHook interruptHook = new InputProcessorInterruptHook() {
-            @Override
-            public void handleInterrupt(Action action) {
-                if(settings.hasInterruptHook()) {
-                    settings.getInterruptHook().handleInterrupt(Console.this, action);
+        InputProcessorInterruptHook interruptHook = action -> {
+            if(settings.hasInterruptHook()) {
+                settings.getInterruptHook().handleInterrupt(Console.this, action);
+            }
+            else {
+                if(action.name().equals("ignore-eof")) {
+                    displayPrompt();
                 }
+                //action is interrupt atm so just stop
                 else {
-                    if(action == Action.IGNOREEOF) {
-                        displayPrompt();
-                    }
-                    else {
-                        stop();
-                        if(processManager.hasForegroundProcess())
-                            stop();
-                        else {
-                            try {
-                                doStop();
-                            }
-                            catch (IOException e) {
-                                LOGGER.warning("Failed to stop aesh! " + e.getMessage());
-                            }
-                        }
-                    }
+                    stop();
                 }
             }
         };
@@ -356,7 +342,7 @@ public class Console {
         // bridge to the current way of supporting signals
         terminal.handle(Signal.INT, s -> {
             try {
-                inputProcessor.parseOperation(new CommandOperation(Key.CTRL_C));
+                inputProcessor.parseOperation(Key.CTRL_C);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -460,7 +446,6 @@ public class Console {
             if(settings.isLogging())
                 LOGGER.info("Done stopping services. Terminal is reset");
         }
-
     }
 
     /**
@@ -475,12 +460,30 @@ public class Console {
         inputProcessor.clearBufferAndDisplayPrompt();
     }
 
-    protected CommandOperation getInput() throws InterruptedException {
-        Key key = bindingReader.readBinding(Key.getKeyMap());
-        if (key != null) {
-            return new CommandOperation(key, bindingReader.getLastBinding().codePoints().toArray());
+    protected KeyEvent getInput() throws InterruptedException {
+        KeyEvent key = bindingReader.readBinding(Key.getKeyMap());
+        if (key != null && key != Key.UNKNOWN) {
+            return key;
         }
-        return null;
+        else {
+            return new KeyEvent() {
+                private String input = bindingReader.getLastBinding();
+                @Override
+                public int getCodePointAt(int index) throws IndexOutOfBoundsException {
+                    return input.charAt(index);
+                }
+
+                @Override
+                public int length() {
+                    return input.length();
+                }
+
+                @Override
+                public String name() {
+                    return input;
+                }
+            };
+        }
     }
 
     protected <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {
@@ -1005,7 +1008,7 @@ public class Console {
         }
     }
 
-    private class ConsoleShell implements Shell {
+    private class ConsoleShell implements org.jboss.aesh.console.Shell {
 
         private boolean mainBuffer = true;
 

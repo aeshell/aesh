@@ -16,7 +16,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */import org.jboss.aesh.cl.Arguments;
+ */
+import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.GroupCommandDefinition;
 import org.jboss.aesh.cl.Option;
@@ -43,7 +44,6 @@ import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
-import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.Prompt;
@@ -52,11 +52,12 @@ import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.io.Resource;
+import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.Shell;
 import org.jboss.aesh.terminal.TerminalColor;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.terminal.TerminalTextStyle;
@@ -139,6 +140,11 @@ public class AeshExample {
                 .command(PromptCommand.class)
                 .command(RunCommand.class)
                 .command(GroupCommand.class)
+                //example on how to create a command with a simple lambda
+                .command(new CommandBuilder().name("quit").command(commandInvocation -> {
+                    commandInvocation.stop();
+                    return CommandResult.SUCCESS;
+                }).create())
                 .create();
 
         AeshConsole aeshConsole = new AeshConsoleBuilder()
@@ -355,20 +361,21 @@ public class AeshExample {
             this.shell = commandInvocation.getShell();
             if(bar) {
                 shell.out().print("are you sure you want bar? (y/n) ");
-                CommandOperation operation = null;
+                KeyEvent operation = null;
                 try {
                     operation = commandInvocation.getInput();
                 }
                 catch (InterruptedException e) {
                     return CommandResult.FAILURE;
                 }
-                processOperation(operation);
+                if(operation instanceof Key)
+                    processOperation((Key) operation);
             }
             return CommandResult.SUCCESS;
         }
 
-        public void processOperation(CommandOperation operation) throws IOException {
-            if(operation.getInputKey() == Key.y) {
+        public void processOperation(Key operation) throws IOException {
+            if(operation == Key.y) {
                 shell.out().println(Config.getLineSeparator()+"you wanted bar!");
             }
             else

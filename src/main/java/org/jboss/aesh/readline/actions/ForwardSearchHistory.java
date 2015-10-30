@@ -17,32 +17,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.edit.actions;
+package org.jboss.aesh.readline.actions;
 
 /**
- * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
+ * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class PrevSpaceWordAction extends EditAction {
+public class ForwardSearchHistory extends SearchHistory {
 
-    public PrevSpaceWordAction(int start, Action action) {
-        super(start, action);
+    ForwardSearchHistory() {
+        super(Status.SEARCH_NEXT);
     }
 
     @Override
-    public void doAction(String buffer) {
-        int cursor = getStart();
-
-        //the cursor position in jline might be > the buffer
-        if(cursor > buffer.length())
-            cursor = buffer.length()-1;
-
-        //move back every potential space first
-        while(cursor > 0 && isSpace(buffer.charAt(cursor-1)))
-            cursor--;
-
-        while(cursor > 0 && !isSpace(buffer.charAt(cursor-1)))
-            cursor--;
-
-        setEnd(cursor);
+    public String name() {
+        return "forward-search-history";
     }
+
 }

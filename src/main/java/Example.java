@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.Config;
@@ -27,9 +26,7 @@ import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.TerminalCharacter;
@@ -85,101 +82,95 @@ public class Example {
         //String prompt = ANSI.redText()+"[test@foo]"+ANSI.reset()+"$ ";
 
         //a simple interruptHook
-        builder.interruptHook(new InterruptHook() {
-            @Override
-            public void handleInterrupt(Console console, Action action) {
-                if(action == Action.INTERRUPT) {
-                    console.getShell().out().println("^C");
-                    console.clearBufferAndDisplayPrompt();
-                }
-                else if(action == Action.IGNOREEOF) {
-                    console.getShell().out().println("Use \"exit\" to leave the shell.");
-                    console.clearBufferAndDisplayPrompt();
-                }
-                else {
-                    console.getShell().out().println();
-                    console.stop();
-                }
+        builder.interruptHook((console, action) -> {
+            if(action.name().equals("interrupt")) {
+                console.getShell().out().println("^C");
+                console.clearBufferAndDisplayPrompt();
+            }
+            else if(action.name().equals("ignore-eof")) {
+                console.getShell().out().println("Use \"exit\" to leave the shell.");
+                console.clearBufferAndDisplayPrompt();
+            }
+            else {
+                console.getShell().out().println();
+                console.stop();
             }
         });
 
         final Console exampleConsole = new Console(builder.create());
 
-        Completion completer = new Completion() {
-            @Override
-            public void complete(CompleteOperation co) {
-                // very simple completor
-                List<String> commands = new ArrayList<String>();
-                if(co.getBuffer().equals("fo") || co.getBuffer().equals("foo")) {
-                    commands.add("foo");
-                    commands.add("foobaa");
-                    commands.add("foobar");
-                    commands.add("foobaxxxxxx");
-                    commands.add("foobbx");
-                    commands.add("foobcx");
-                    commands.add("foobdx");
-                }
-                if(co.getBuffer().equals("p")) {
-                    commands.add("profile=foo");
-                    co.setOffset(0);
-                }
-                /*
-                if(co.getBuffer().equals("p")) {
-                    commands.add("profile=bar");
-                    co.setOffset(0);
-                }
-                */
-                if(co.getBuffer().equals("profile="))
-                    commands.add("profile=foo");
-                if(co.getBuffer().equals("profile="))
-                    commands.add("profile=bar");
-                if(co.getBuffer().equals("--")) {
-                    commands.add("--help-");
-                }
-                if("--help-me".startsWith(co.getBuffer())) {
-                    commands.add("--help-me");
-                }
-                if(co.getBuffer().equals("fooba")) {
-                    commands.add("foobaa");
-                    commands.add("foobar");
-                    commands.add("foobaxxxxxx");
-                }
-                if(co.getBuffer().equals("foobar")) {
-                    commands.add("foobar");
-                }
-                if(co.getBuffer().equals("bar")) {
-                    commands.add("bar/");
-                }
-                if(co.getBuffer().equals("h")) {
-                    commands.add("help.history");
-                    commands.add("help");
-                    co.setOffset(0);
-                }
-                if(co.getBuffer().equals("help")) {
-                    commands.add("help.history");
-                    commands.add("help");
-                }
-                if(co.getBuffer().equals("help.")) {
-                    commands.add("help.history");
-                }
-                if(co.getBuffer().equals("deploy")) {
-                    commands.add("deploy /home/blabla/foo/bar/alkdfe/en/to/tre");
-                }
-                if(co.getBuffer().equals("testing")) {
-                    commands.add("testing YAY");
-                }
-                if(co.getBuffer().equals("val") ||
-                        co.getBuffer().equals("value ")) {
-                    commands.add("value 1");
-                    commands.add("value 2");
-                    commands.add("value 10");
-                    commands.add("value 20");
-                }
-                if(co.getBuffer().equals("valu"))
-                    commands.add("value 10");
-
-                co.setCompletionCandidates(commands);
+        Completion completer = co -> {
+            // very simple completor
+            List<String> commands = new ArrayList<String>();
+            if(co.getBuffer().equals("fo") || co.getBuffer().equals("foo")) {
+                commands.add("foo");
+                commands.add("foobaa");
+                commands.add("foobar");
+                commands.add("foobaxxxxxx");
+                commands.add("foobbx");
+                commands.add("foobcx");
+                commands.add("foobdx");
             }
+            if(co.getBuffer().equals("p")) {
+                commands.add("profile=foo");
+                co.setOffset(0);
+            }
+            /*
+            if(co.getBuffer().equals("p")) {
+                commands.add("profile=bar");
+                co.setOffset(0);
+            }
+            */
+            if(co.getBuffer().equals("profile="))
+                commands.add("profile=foo");
+            if(co.getBuffer().equals("profile="))
+                commands.add("profile=bar");
+            if(co.getBuffer().equals("--")) {
+                commands.add("--help-");
+            }
+            if("--help-me".startsWith(co.getBuffer())) {
+                commands.add("--help-me");
+            }
+            if(co.getBuffer().equals("fooba")) {
+                commands.add("foobaa");
+                commands.add("foobar");
+                commands.add("foobaxxxxxx");
+            }
+            if(co.getBuffer().equals("foobar")) {
+                commands.add("foobar");
+            }
+            if(co.getBuffer().equals("bar")) {
+                commands.add("bar/");
+            }
+            if(co.getBuffer().equals("h")) {
+                commands.add("help.history");
+                commands.add("help");
+                co.setOffset(0);
+            }
+            if(co.getBuffer().equals("help")) {
+                commands.add("help.history");
+                commands.add("help");
+            }
+            if(co.getBuffer().equals("help.")) {
+                commands.add("help.history");
+            }
+            if(co.getBuffer().equals("deploy")) {
+                commands.add("deploy /home/blabla/foo/bar/alkdfe/en/to/tre");
+            }
+            if(co.getBuffer().equals("testing")) {
+                commands.add("testing YAY");
+            }
+            if(co.getBuffer().equals("val") ||
+                    co.getBuffer().equals("value ")) {
+                commands.add("value 1");
+                commands.add("value 2");
+                commands.add("value 10");
+                commands.add("value 20");
+            }
+            if(co.getBuffer().equals("valu"))
+                commands.add("value 10");
+
+            co.setCompletionCandidates(commands);
         };
 
         exampleConsole.addCompletion(completer);
