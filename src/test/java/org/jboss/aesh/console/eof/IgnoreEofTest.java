@@ -22,8 +22,6 @@ package org.jboss.aesh.console.eof;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.aesh.AeshCommandCompletionTest;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
@@ -36,7 +34,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
