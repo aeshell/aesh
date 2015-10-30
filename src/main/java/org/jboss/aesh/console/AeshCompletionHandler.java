@@ -30,7 +30,6 @@ import org.jboss.aesh.readline.actions.ActionMapper;
 import org.jboss.aesh.terminal.TerminalString;
 import org.jboss.aesh.util.LoggerUtil;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -108,11 +107,9 @@ public class AeshCompletionHandler implements CompletionHandler {
      * 2. If we find only one, display it.
      * 3. If we find more than one, display them,
      *    but not more than 100 at once
-     *
-     * @throws IOException stream
      */
     @Override
-    public void complete(InputProcessor inputProcessor) throws IOException {
+    public void complete(InputProcessor inputProcessor) {
         Buffer buffer = inputProcessor.getBuffer().getBuffer();
         PrintStream out = inputProcessor.getBuffer().out();
         if(!enabled)
@@ -216,10 +213,9 @@ public class AeshCompletionHandler implements CompletionHandler {
      *
      * @param completion partial completion
      * @param appendSpace if its an actual complete
-     * @throws java.io.IOException stream
      */
     private void displayCompletion(TerminalString completion, Buffer buffer, PrintStream out,
-                                   boolean appendSpace, char separator, InputProcessor inputProcessor) throws IOException {
+                                   boolean appendSpace, char separator, InputProcessor inputProcessor) {
         if(completion.getCharacters().startsWith(buffer.getMultiLine())) {
             ActionMapper.mapToAction("backward-kill-word").apply(inputProcessor);
             //inputProcessor.getBuffer().performAction(new PrevWordAction(buffer.getMultiCursor(), Action.DELETE, Mode.EMACS));
@@ -244,10 +240,9 @@ public class AeshCompletionHandler implements CompletionHandler {
      * Display all possible completions
      *
      * @param completions all completion items
-     * @throws IOException stream
      */
     private void displayCompletions(List<TerminalString> completions, Buffer buffer,
-                                    PrintStream out, InputProcessor inputProcessor) throws IOException {
+                                    PrintStream out, InputProcessor inputProcessor) {
         Collections.sort(completions);
         //printNewline reset cursor pos, so we need to store it
         int oldCursorPos = buffer.getCursor();

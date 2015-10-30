@@ -19,15 +19,20 @@
  */
 package org.jboss.aesh.readline.actions;
 
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.readline.Action;
-
-import java.io.IOException;
+import org.jboss.aesh.readline.ActionEvent;
+import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.terminal.Key;
 
 /**
  * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class Complete implements Action {
+public class Complete implements ActionEvent {
+
+    private boolean askForCompletion = false;
+    private KeyEvent key;
 
     @Override
     public String name() {
@@ -36,16 +41,40 @@ public class Complete implements Action {
 
     @Override
     public void apply(InputProcessor inputProcessor) {
-        if(inputProcessor.getCompleter() != null) {
-            try {
-                inputProcessor.getCompleter().complete( inputProcessor);
-                if(inputProcessor.getCompleter().doAskDisplayCompletion()) {
-                    //TOOO: need to handle this
-                }
+        if(askForCompletion) {
+            askForCompletion = false;
+            if(key == Key.y) {
+                //inputProcessor.getCompleter().setAskDisplayCompletion(false);
+                inputProcessor.getCompleter().complete(inputProcessor);
             }
-            catch (IOException e) {
-                e.printStackTrace();
+            else {
+                inputProcessor.getCompleter().setAskDisplayCompletion(false);
+                inputProcessor.getBuffer().getUndoManager().clear();
+                inputProcessor.getBuffer().out().print(Config.getLineSeparator());
+                inputProcessor.clearBufferAndDisplayPrompt();
+                inputProcessor.getBuffer().drawLine();
+                inputProcessor.getBuffer().moveCursor(inputProcessor.getBuffer().getBuffer().getMultiCursor());
             }
         }
+        else {
+            if(inputProcessor.getCompleter() != null) {
+                inputProcessor.getCompleter().complete( inputProcessor);
+                if(inputProcessor.getCompleter().doAskDisplayCompletion()) {
+                    askForCompletion = true;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void input(Action action, KeyEvent key) {
+        if(askForCompletion) {
+            this.key = key;
+        }
+    }
+
+    @Override
+    public boolean keepFocus() {
+        return askForCompletion;
     }
 }

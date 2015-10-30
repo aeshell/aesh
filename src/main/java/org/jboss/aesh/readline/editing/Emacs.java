@@ -51,22 +51,9 @@ public class Emacs extends BaseEditMode {
             }
             else
                 currentAction = null;
-
         }
 
         return getAction(event);
-        /*
-        if(status == Status.SEARCH) {
-            currentAction.input(getAction(event), event);
-            if(!currentAction.keepFocus()) {
-                status = Status.EDIT;
-            }
-            return currentAction;
-        }
-        //all other actions
-        else
-            return getAction(event);
-            */
     }
 
     private Action getAction(KeyEvent event) {
