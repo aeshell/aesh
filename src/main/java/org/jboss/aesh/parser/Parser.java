@@ -782,4 +782,8 @@ public class Parser {
     public static String stripAwayAnsiCodes(String text) {
         return ansiPattern.matcher(text).replaceAll("");
     }
+
+    public static int[] toCodePoints(String s) {
+        return s.codePoints().toArray();
+    }
 }

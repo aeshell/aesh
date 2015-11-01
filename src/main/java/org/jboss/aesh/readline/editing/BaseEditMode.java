@@ -19,10 +19,50 @@
  */
 package org.jboss.aesh.readline.editing;
 
+import org.jboss.aesh.readline.Action;
+import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.readline.Variable;
+import org.jboss.aesh.readline.actions.ActionMapper;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public abstract class BaseEditMode implements EditMode {
+abstract class BaseEditMode implements EditMode {
+
+    protected Map<KeyEvent, Action> actions;
+
+    protected Map<Variable,String> variables;
+
+    BaseEditMode() {
+        actions = new HashMap<>();
+        variables = new HashMap<>();
+    }
+
+    BaseEditMode(Map<KeyEvent, Action> actions) {
+        this.actions = actions;
+        variables = new HashMap<>();
+    }
+
+    BaseEditMode(Map<int[],String> actions, Map<Variable,String> variables) {
+        this.actions = new HashMap<>(actions.size());
+        for(int[] key : actions.keySet()) {
+            addAction(key, actions.get(key));
+        }
+        this.variables = variables;
+    }
+
+    @Override
+    public void addAction(int[] input, String action) {
+        actions.replace(createKeyEvent(input), ActionMapper.mapToAction(action));
+    }
+
+    @Override
+    public void addVariable(Variable variable, String value) {
+        variables.replace(variable, value);
+    }
 
     //counting how many times eof been pressed
     protected int eofCounter;

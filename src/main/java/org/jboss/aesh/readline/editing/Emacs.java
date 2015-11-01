@@ -33,17 +33,15 @@ public class Emacs extends BaseEditMode {
 
     private ActionEvent currentAction;
 
-    private EditModeMapper editModeMapper = EditModeMapper.getEmacs();
-
     private static final Logger LOGGER = LoggerUtil.getLogger(Emacs.class.getName());
 
     public Emacs() {
+        super(EditModeMapper.getEmacs().getMapping());
     }
 
     @Override
     public Action parse(KeyEvent event) {
         //are we already searching, it need to be processed by search action
-
         if(currentAction != null) {
             if(currentAction.keepFocus()) {
                 currentAction.input(getAction(event), event);
@@ -57,8 +55,8 @@ public class Emacs extends BaseEditMode {
     }
 
     private Action getAction(KeyEvent event) {
-        if(editModeMapper.getMapping().containsKey(event)) {
-            Action action =  editModeMapper.getMapping().get(event);
+        if(actions.containsKey(event)) {
+            Action action =  actions.get(event);
             if(action instanceof ActionEvent) {
                 currentAction = (ActionEvent) action;
                 currentAction.input(action, event);

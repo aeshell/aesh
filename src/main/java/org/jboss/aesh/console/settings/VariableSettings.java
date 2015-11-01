@@ -68,7 +68,7 @@ public enum VariableSettings {
     private String variable;
     private List<String> values;
 
-    private VariableSettings(String variable, List<String> values) {
+    VariableSettings(String variable, List<String> values) {
         this.variable = variable;
         this.values = values;
     }

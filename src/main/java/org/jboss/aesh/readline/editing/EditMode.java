@@ -21,6 +21,10 @@ package org.jboss.aesh.readline.editing;
 
 import org.jboss.aesh.readline.Action;
 import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.readline.Variable;
+import org.jboss.aesh.terminal.Key;
+
+import java.util.Arrays;
 
 /**
  *
@@ -31,6 +35,36 @@ public interface EditMode {
     Action parse(KeyEvent event);
 
     void updateIgnoreEOF(int eof);
+
+    void addVariable(Variable variable, String value);
+
+    void addAction(int[] input, String action);
+
+    default KeyEvent createKeyEvent(int[] input) {
+        Key key = Key.getKey(input);
+        if(key != null)
+            return key;
+        else {
+            return new KeyEvent() {
+                private int[] key = input;
+
+                @Override
+                public int getCodePointAt(int index) throws IndexOutOfBoundsException {
+                    return key[index];
+                }
+
+                @Override
+                public int length() {
+                    return key.length;
+                }
+
+                @Override
+                public String name() {
+                    return Arrays.toString(key);
+                }
+            };
+        }
+    }
 
     enum Status {
         DELETE,
@@ -45,5 +79,9 @@ public interface EditMode {
         CAPITALIZE,
         IGNORE_EOF,
         COMPLETE
+    }
+
+    enum Mode {
+        EMACS, VI
     }
 }

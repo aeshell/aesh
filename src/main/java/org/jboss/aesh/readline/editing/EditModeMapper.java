@@ -53,6 +53,7 @@ public class EditModeMapper {
         mapping.put(Key.CTRL_K, ActionMapper.mapToAction("kill-line"));
         mapping.put(Key.CTRL_U, ActionMapper.mapToAction("unix-line-discard"));
         mapping.put(Key.CTRL_J, ActionMapper.mapToAction("accept-line"));
+        mapping.put(Key.CTRL_M, ActionMapper.mapToAction("accept-line"));
         mapping.put(Key.ENTER, ActionMapper.mapToAction("accept-line"));
         mapping.put(Key.UP, ActionMapper.mapToAction("previous-history"));
         mapping.put(Key.UP_2, ActionMapper.mapToAction("previous-history"));
