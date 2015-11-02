@@ -405,6 +405,16 @@ public enum Key implements KeyEvent {
         return false;
     }
 
+    public boolean equalTo(KeyEvent key) {
+        if(keyValues.length == key.length()) {
+            for(int i = 0; i < keyValues.length;i++)
+                if(keyValues[i] != key.getCodePointAt(i))
+                    return false;
+            return true;
+        }
+        return false;
+    }
+
 
     private static KeyMap<KeyEvent> keyMap = null;
 

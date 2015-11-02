@@ -73,12 +73,27 @@ public interface EditMode {
         CHANGE,
         EDIT,
         COMMAND,
+        HISTORY,
         SEARCH,
+        // MISC
+        NEWLINE,
+        PASTE,
+        PASTE_FROM_CLIPBOARD,
+        COMPLETE,
+        UNDO,
+        CASE,
+        EXIT,
+        CLEAR,
+        ABORT,
+        CHANGE_EDITMODE,
+        NO_ACTION,
+        REPLACE,
+        INTERRUPT,
+        IGNORE_EOF,
+        EOF,
         UP_CASE,
         DOWN_CASE,
         CAPITALIZE,
-        IGNORE_EOF,
-        COMPLETE
     }
 
     enum Mode {
