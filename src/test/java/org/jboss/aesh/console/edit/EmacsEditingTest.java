@@ -21,16 +21,13 @@ package org.jboss.aesh.console.edit;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintStream;
 
 import org.jboss.aesh.console.AeshConsoleBufferBuilder;
 import org.jboss.aesh.console.AeshInputProcessorBuilder;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleBuffer;
-import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.Shell;
@@ -40,8 +37,8 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.EmacsEditMode;
 import org.jboss.aesh.edit.KeyOperationFactory;
 import org.jboss.aesh.edit.KeyOperationManager;
-import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Assume;
 import org.junit.Test;
@@ -57,20 +54,14 @@ public class EmacsEditingTest extends BaseConsoleTest {
     public void testEmacs() throws Exception {
         Assume.assumeTrue(Config.isOSPOSIXCompatible());
 
-        invokeTestConsole(new Setup() {
-            @Override
-            public void call(Console console, OutputStream out) throws IOException {
-                out.write("34".getBytes());
-                //home
-                out.write(new byte[]{1});
-                out.write(("12"+Config.getLineSeparator()).getBytes());
-            }
-        }, new Verify() {
-           @Override
-           public int call(Console console, ConsoleOperation op) {
-               assertEquals("1234", op.getBuffer());
-               return 0;
-           }
+        invokeTestConsole((console, out) -> {
+            out.write("34".getBytes());
+            //home
+            out.write(new byte[]{1});
+            out.write(("12"+Config.getLineSeparator()).getBytes());
+        }, (console, op) -> {
+            assertEquals("1234", op.getBuffer());
+            return 0;
         });
     }
 
@@ -97,7 +88,7 @@ public class EmacsEditingTest extends BaseConsoleTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.EMACS)
+                .mode(EditMode.Mode.EMACS)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -135,7 +126,7 @@ public class EmacsEditingTest extends BaseConsoleTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.EMACS)
+                .mode(EditMode.Mode.EMACS)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -172,7 +163,7 @@ public class EmacsEditingTest extends BaseConsoleTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.EMACS)
+                .mode(EditMode.Mode.EMACS)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -209,7 +200,7 @@ public class EmacsEditingTest extends BaseConsoleTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.EMACS)
+                .mode(EditMode.Mode.EMACS)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -247,7 +238,7 @@ public class EmacsEditingTest extends BaseConsoleTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.EMACS)
+                .mode(EditMode.Mode.EMACS)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);

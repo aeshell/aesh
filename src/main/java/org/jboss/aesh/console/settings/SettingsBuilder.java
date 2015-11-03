@@ -21,8 +21,8 @@ package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.helper.InterruptHook;
-import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.io.Resource;
+import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.File;
@@ -49,7 +49,7 @@ public class SettingsBuilder {
         return this;
     }
 
-    public SettingsBuilder mode(Mode mode) {
+    public SettingsBuilder mode(EditMode.Mode mode) {
         settings.setMode(mode);
         return this;
     }

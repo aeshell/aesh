@@ -30,6 +30,7 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
 import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Test;
 
@@ -61,6 +62,8 @@ public class ExportCommandTest {
                 .inputStream(pipedInputStream)
                 .outputStream(new PrintStream(byteArrayOutputStream))
                 .setPersistExport(false)
+                .mode(EditMode.Mode.EMACS)
+                .readInputrc(false)
                 .logging(true)
                 .create();
 

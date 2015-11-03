@@ -28,7 +28,7 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.Mode;
+import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -54,7 +54,7 @@ public class IgnoreEofTest extends BaseConsoleTest {
         builder.enableAlias(true);
         builder.persistAlias(false);
         builder.persistHistory(false);
-        builder.mode(Mode.VI);
+        builder.mode(EditMode.Mode.VI);
 
         invokeTestConsole(1, (console, out) -> {
             console.getExportManager().addVariable("export ignoreeof = 2");
@@ -97,7 +97,7 @@ public class IgnoreEofTest extends BaseConsoleTest {
         builder.enableAlias(true);
         builder.persistAlias(false);
         builder.persistHistory(false);
-        builder.mode(Mode.EMACS);
+        builder.mode(EditMode.Mode.EMACS);
 
         invokeTestConsole(1, (console, out) -> {
             console.getExportManager().addVariable("export ignoreeof = 1");
@@ -148,7 +148,7 @@ public class IgnoreEofTest extends BaseConsoleTest {
                 .logging(true)
                 .enableExport(true)
                 .persistHistory(false)
-                .mode(Mode.VI)
+                .mode(EditMode.Mode.VI)
                 .create();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()

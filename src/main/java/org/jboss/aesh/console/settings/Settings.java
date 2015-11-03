@@ -25,10 +25,8 @@ import java.io.PrintStream;
 
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.helper.InterruptHook;
-import org.jboss.aesh.edit.EditMode;
-import org.jboss.aesh.edit.KeyOperationManager;
-import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.io.Resource;
+import org.jboss.aesh.readline.editing.EditMode;
 
 /**
  * Object thats define all tunable settings used by Console
@@ -47,22 +45,12 @@ public interface Settings extends Cloneable {
      * Default mode is Emacs
      *
      */
-    Mode getMode();
+    EditMode.Mode getMode();
 
     /**
      * Get current edit mode
      */
     EditMode getEditMode();
-
-    /**
-     * Reset edit mode
-     */
-    void resetEditMode();
-
-    /**
-     * Get KeyOperationManager
-     */
-    KeyOperationManager getOperationManager();
 
     /**
      * Get file where history is stored

@@ -38,8 +38,6 @@ public class ActionMapper {
             return new BackwardChar();
         else if(function.equals("backward-delete-char"))
             return new DeletePrevChar();
-        else if(function.equals("delete-backward-char"))
-            return new DeletePrevChar();
         else if(function.equals("backward-kill-line"))
             return new DeleteStartOfLine();
         else if(function.equals("backward-kill-word"))
@@ -63,9 +61,11 @@ public class ActionMapper {
         else if(function.equals("complete"))
             return new Complete();
         else if(function.equals("copy-backward-word"))
-            return new YankBackwardWord();
+            return new CopyBackwardWord();
         else if(function.equals("copy-forward-word"))
-            return new YankForwardWord();
+            return new CopyForwardWord();
+        else if(function.equals("copy-line"))
+            return new CopyLine();
         else if(function.equals("delete-char"))
             return new DeleteChar();
         else if(function.equals("delete-char-or-list"))
@@ -108,7 +108,7 @@ public class ActionMapper {
             return new NullAction(); // TODO: need to add a proper Operation
         else if(function.equals("insert-comment"))
             return new NullAction(); // TODO: need to add a proper Operation
-        else if(function.equals("insert-comletions"))
+        else if(function.equals("insert-completions"))
             return new NullAction(); // TODO: need to add a proper Operation
         else if(function.equals("kill-line"))
             return new DeleteEndOfLine();
@@ -154,10 +154,6 @@ public class ActionMapper {
             return new NullAction(); // TODO: need to add a proper Operation
         else if(function.equals("start-kbd-macro"))
             return new NullAction(); // TODO: need to add a proper Operation
-        else if(function.equals("tab-insert"))
-            return new NullAction(); // TODO: need to add a proper Operation
-        else if(function.equals("tilde-expand"))
-            return new NullAction(); // TODO: need to add a proper Operation
         else if(function.equals("tilde-expand"))
             return new NullAction(); // TODO: need to add a proper Operation
         else if(function.equals("transpose-chars"))
@@ -176,6 +172,8 @@ public class ActionMapper {
             return new DeleteBackwardBigWord();
         else if(function.equals("upcase-word"))
             return new UpCaseForwardWord();
+        else if(function.equals("upcase-char"))
+            return new UpCaseChar();
         else if(function.equals("vi-editing-mode"))
             return new ViEditingMode();
         else if(function.equals("yank"))
@@ -186,6 +184,8 @@ public class ActionMapper {
             return new NullAction(); // TODO: need to add a proper Operation
         else if(function.equals("yank-pop"))
             return new NullAction(); // TODO: need to add a proper Operation
+        else if(function.equals("yank-after"))
+            return new YankAfter(); // TODO: need to add a proper Operation
 
         return new NullAction();
     }

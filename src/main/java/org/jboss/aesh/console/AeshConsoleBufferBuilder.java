@@ -19,10 +19,9 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.edit.EditMode;
-import org.jboss.aesh.edit.EmacsEditMode;
-import org.jboss.aesh.edit.KeyOperationFactory;
-import org.jboss.aesh.edit.KeyOperationManager;
+
+import org.jboss.aesh.readline.editing.EditMode;
+import org.jboss.aesh.readline.editing.EditModeBuilder;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -61,7 +60,7 @@ public class AeshConsoleBufferBuilder {
         if(shell == null)
             throw new IllegalArgumentException("Shell must be provided to create ConsoleBuffer");
         if(editMode == null)
-            editMode = new EmacsEditMode(new KeyOperationManager(KeyOperationFactory.generateEmacsMode()));
+            editMode = new EditModeBuilder().create();
         if(prompt == null)
             prompt = new Prompt("");
 

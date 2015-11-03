@@ -22,21 +22,93 @@ package org.jboss.aesh.readline.editing;
 import org.jboss.aesh.readline.Action;
 import org.jboss.aesh.readline.ActionEvent;
 import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.readline.Variable;
+import org.jboss.aesh.readline.actions.ActionMapper;
+import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.LoggerUtil;
 
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class Emacs extends BaseEditMode {
+public class Emacs implements EditMode {
 
     private ActionEvent currentAction;
 
+    private Map<Key,Action> actions;
+    private Map<Variable,String> variables;
+    private Map<KeyEvent,Action> keyEventActions;
+
+    //counting how many times eof been pressed
+    protected int eofCounter;
+    //default value
+    private int ignoreEof = 0;
+
     private static final Logger LOGGER = LoggerUtil.getLogger(Emacs.class.getName());
 
-    public Emacs() {
-        super(EditModeMapper.getEmacs().getMapping());
+    Emacs() {
+        actions = new EnumMap<>(Key.class);
+        variables = new EnumMap<>(Variable.class);
+        keyEventActions = new HashMap<>();
+    }
+
+    @Override
+    public void addAction(int[] input, String action) {
+        Key key = Key.getKey(input);
+        if(key != null)
+            actions.put(key, ActionMapper.mapToAction(action));
+        else
+            keyEventActions.put(createKeyEvent(input), ActionMapper.mapToAction(action));
+    }
+
+    public void addAction(Key input, String action) {
+        actions.put(input, ActionMapper.mapToAction(action));
+    }
+
+    public void addAction(Key input, Action action) {
+        actions.put(input, action);
+    }
+
+    private Action parseKeyEventActions(KeyEvent event) {
+        for(KeyEvent key : keyEventActions.keySet()) {
+            boolean isEquals = true;
+            if(key.length() == event.length()) {
+                for(int i=0; i<key.length() && isEquals; i++)
+                    if(key.getCodePointAt(i) != event.getCodePointAt(i))
+                        isEquals = false;
+
+                if(isEquals)
+                    return keyEventActions.get(key);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void addVariable(Variable variable, String value) {
+        variables.put(variable, value);
+    }
+
+    @Override
+    public void updateIgnoreEOF(int eof) {
+        ignoreEof = eof;
+    }
+
+    protected void resetEOF()  {
+        eofCounter = 0;
+    }
+
+    protected int getEofCounter() {
+        return eofCounter;
+    }
+
+    @Override
+    public Mode getMode() {
+        return Mode.EMACS;
     }
 
     @Override
@@ -54,18 +126,24 @@ public class Emacs extends BaseEditMode {
         return getAction(event);
     }
 
+    @Override
+    public String getVariableValue(Variable variable) {
+        return variables.get(variable);
+    }
+
     private Action getAction(KeyEvent event) {
-        if(actions.containsKey(event)) {
-            Action action =  actions.get(event);
-            if(action instanceof ActionEvent) {
-                currentAction = (ActionEvent) action;
-                currentAction.input(action, event);
-            }
-            return action;
+        Action action;
+        if(event instanceof Key && actions.containsKey(event)) {
+            action = actions.get(event);
         }
         else {
-            return null;
+            action  = parseKeyEventActions(event);
         }
+        if(action != null && action instanceof ActionEvent) {
+            currentAction = (ActionEvent) action;
+            currentAction.input(action, event);
+        }
+        return action;
     }
 
 }

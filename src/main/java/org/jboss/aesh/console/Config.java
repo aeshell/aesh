@@ -21,27 +21,16 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.Mode;
-import org.jboss.aesh.edit.mapper.KeyMapper;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
+import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.util.LoggerUtil;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static org.jboss.aesh.console.settings.VariableSettings.BELL_STYLE;
-import static org.jboss.aesh.console.settings.VariableSettings.DISABLE_COMPLETION;
-import static org.jboss.aesh.console.settings.VariableSettings.EDITING_MODE;
-import static org.jboss.aesh.console.settings.VariableSettings.HISTORY_SIZE;
 
 /**
  *
@@ -114,138 +103,15 @@ public class Config {
             return !System.getProperty("os.name").startsWith("OS/2");
     }
 
-    /**
-     * TODO: clean this shit up!
-     *
-     * Must be able to parse:
-     * set variablename value
-     * keyname: function-name or macro
-     * "keyseq": function-name or macro
-     *
-     * Lines starting with # are comments
-     * Lines starting with $ are conditional init constructs
-     *
-     */
-    protected static Settings parseInputrc(Settings settings) throws IOException {
-        if(!settings.getInputrc().isFile()) {
-            if(settings.isLogging())
-                LOGGER.info("Error while parsing: "+settings.getInputrc().getAbsolutePath()+" couldn't find file.");
-            return settings;
-        }
-        SettingsBuilder builder = new SettingsBuilder(settings);
-
-        Pattern variablePattern = Pattern.compile("^set\\s+(\\S+)\\s+(\\S+)$");
-        Pattern commentPattern = Pattern.compile("^#.*");
-        Pattern keyQuoteNamePattern = Pattern.compile("(^\"\\\\\\S+)(\":\\s+)(\\S+)");
-        Pattern keyNamePattern = Pattern.compile("(^\\S+)(:\\s+)(\\S+)");
-        Pattern startConstructs = Pattern.compile("^\\$if");
-        Pattern endConstructs = Pattern.compile("^\\$endif");
-
-        try {
-            BufferedReader reader = new BufferedReader( new FileReader(settings.getInputrc()));
-
-            String line;
-            boolean constructMode = false;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().length() < 1)
-                    continue;
-                //first check if its a comment
-                if (commentPattern.matcher(line).matches())
-                    continue;
-
-                if (startConstructs.matcher(line).matches()) {
-                    constructMode = true;
-                    continue;
-                } else if (endConstructs.matcher(line).matches()) {
-                    constructMode = false;
-                    continue;
-                }
-
-                if (!constructMode) {
-                    Matcher variableMatcher = variablePattern.matcher(line);
-                    if (variableMatcher.matches()) {
-                        parseVariables(variableMatcher.group(1), variableMatcher.group(2), builder);
-                    }
-                    //TODO: currently the inputrc parser is posix only
-                    if (Config.isOSPOSIXCompatible()) {
-                        Matcher keyQuoteMatcher = keyQuoteNamePattern.matcher(line);
-                        if (keyQuoteMatcher.matches()) {
-                            builder.create().getOperationManager().addOperationIgnoreWorkingMode(
-                                    KeyMapper.mapQuoteKeys(keyQuoteMatcher.group(1),
-                                            keyQuoteMatcher.group(3)));
-                        } else {
-                            Matcher keyMatcher = keyNamePattern.matcher(line);
-                            if (keyMatcher.matches()) {
-                                builder.create().getOperationManager().addOperationIgnoreWorkingMode(KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        catch(IOException e) {
-           LOGGER.log(Level.WARNING, "Failed to read .inputrc: ", e);
-        }
-        //KeyMapper throws IllegalArgumentException if it fails parsing the file
-        catch(IllegalArgumentException iae) {
-            LOGGER.log(Level.WARNING, "Exception during reading of inputrc: ", iae);
-        }
-        return builder.create();
-    }
-
-    private static void parseVariables(String variable, String value, SettingsBuilder builder) {
-        if (variable.equals(EDITING_MODE.getVariable())) {
-            if(EDITING_MODE.getValues().contains(value)) {
-                if(value.equals("vi"))
-                    builder.mode(Mode.VI);
-                else
-                    builder.mode(Mode.EMACS);
-            }
-            // should log some error
-            else if(builder.create().isLogging())
-                LOGGER.warning("Value "+value+" not accepted for: "+variable+
-                        ", only: "+EDITING_MODE.getValues());
-
-        }
-        else if(variable.equals(BELL_STYLE.getVariable())) {
-            if(BELL_STYLE.getValues().contains(value))
-                builder.bellStyle(value);
-            else if(builder.create().isLogging())
-                LOGGER.warning("Value "+value+" not accepted for: "+variable+
-                        ", only: "+BELL_STYLE.getValues());
-        }
-        else if(variable.equals(HISTORY_SIZE.getVariable())) {
-            try {
-                builder.historySize(Integer.parseInt(value));
-            }
-            catch (NumberFormatException nfe) {
-                if(builder.create().isLogging())
-                    LOGGER.warning("Value "+value+" not accepted for: "
-                            +variable+", it must be an integer.");
-            }
-        }
-        else if(variable.equals(DISABLE_COMPLETION.getVariable())) {
-            if(DISABLE_COMPLETION.getValues().contains(value)) {
-                if(value.equals("on"))
-                    builder.disableCompletion(true);
-                else
-                    builder.disableCompletion(false);
-            }
-            else if(builder.create().isLogging())
-                LOGGER.warning("Value "+value+" not accepted for: "+variable+
-                        ", only: "+DISABLE_COMPLETION.getValues());
-        }
-    }
-
     protected static Settings readRuntimeProperties(Settings settings) {
        SettingsBuilder builder = new SettingsBuilder(settings);
 
             String editMode = System.getProperty("aesh.editmode");
             if(editMode != null && editMode.length() > 0) {
                 if(editMode.equalsIgnoreCase("VI"))
-                    builder.mode(Mode.VI);
+                    builder.mode(EditMode.Mode.VI);
                 else if(editMode.equalsIgnoreCase("EMACS"))
-                    builder.mode(Mode.EMACS);
+                    builder.mode(EditMode.Mode.EMACS);
             }
             String readInputrc = System.getProperty("aesh.readinputrc");
             if(readInputrc != null && readInputrc.length() > 0)

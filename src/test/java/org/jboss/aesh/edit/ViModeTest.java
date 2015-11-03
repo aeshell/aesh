@@ -33,6 +33,7 @@ import org.jboss.aesh.console.TestShell;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -54,7 +55,7 @@ public class ViModeTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.VI)
+                .mode(EditMode.Mode.VI)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -115,7 +116,7 @@ public class ViModeTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.VI)
+                .mode(EditMode.Mode.VI)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -166,7 +167,7 @@ public class ViModeTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.VI)
+                .mode(EditMode.Mode.VI)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -239,7 +240,7 @@ public class ViModeTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.VI)
+                .mode(EditMode.Mode.VI)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -288,7 +289,7 @@ public class ViModeTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.VI)
+                .mode(EditMode.Mode.VI)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -330,7 +331,7 @@ public class ViModeTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.VI)
+                .mode(EditMode.Mode.VI)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -368,7 +369,7 @@ public class ViModeTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.VI)
+                .mode(EditMode.Mode.VI)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -405,7 +406,7 @@ public class ViModeTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.VI)
+                .mode(EditMode.Mode.VI)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -443,7 +444,7 @@ public class ViModeTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.VI)
+                .mode(EditMode.Mode.VI)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -481,7 +482,7 @@ public class ViModeTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.VI)
+                .mode(EditMode.Mode.VI)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);

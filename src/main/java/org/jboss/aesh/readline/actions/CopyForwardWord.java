@@ -24,13 +24,13 @@ import org.jboss.aesh.readline.editing.EditMode;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class YankForwardWord extends ForwardWord {
+public class CopyForwardWord extends ForwardWord {
 
-    public YankForwardWord() {
+    public CopyForwardWord() {
         super(false, EditMode.Status.YANK);
     }
 
-    public YankForwardWord(boolean viMode) {
+    public CopyForwardWord(boolean viMode) {
         super(viMode, EditMode.Status.YANK);
     }
 

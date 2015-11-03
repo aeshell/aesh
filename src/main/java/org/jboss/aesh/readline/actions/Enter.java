@@ -63,7 +63,8 @@ public class Enter implements Action {
             }
         }
 
-        consoleBuffer.moveCursor(consoleBuffer.getBuffer().totalLength());
+        if(isCurrentLineEnding)
+            consoleBuffer.moveCursor(consoleBuffer.getBuffer().totalLength());
         consoleBuffer.out().print(Config.getLineSeparator());
 
         String result;

@@ -22,16 +22,14 @@ package org.jboss.aesh.console.settings;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.helper.InterruptHook;
-import org.jboss.aesh.edit.EditMode;
-import org.jboss.aesh.edit.EmacsEditMode;
-import org.jboss.aesh.edit.KeyOperationFactory;
-import org.jboss.aesh.edit.KeyOperationManager;
-import org.jboss.aesh.edit.Mode;
-import org.jboss.aesh.edit.ViEditMode;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
+import org.jboss.aesh.readline.editing.EditMode;
+import org.jboss.aesh.readline.editing.EditModeBuilder;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
@@ -43,7 +41,7 @@ import java.io.PrintStream;
 public class SettingsImpl implements Settings {
 
     private String name;
-    private Mode editMode = Mode.EMACS;
+    private EditMode.Mode editMode = EditMode.Mode.EMACS;
     private File historyFile;
     private FileAccessPermission historyFilePermission;
     private int historySize = 500;
@@ -60,7 +58,6 @@ public class SettingsImpl implements Settings {
     private String logFile;
     private boolean disableCompletion = false;
     private QuitHandler quitHandler;
-    private KeyOperationManager operationManager = new KeyOperationManager();
     private File aliasFile;
     private boolean aliasEnabled = true;
     private boolean persistAlias = true;
@@ -115,7 +112,7 @@ public class SettingsImpl implements Settings {
 
     public void resetToDefaults() {
         setName("aesh");
-        editMode = Mode.EMACS;
+        editMode = EditMode.Mode.EMACS;
         historyFile = null;
         historyFilePermission = null;
         historySize = 500;
@@ -131,7 +128,6 @@ public class SettingsImpl implements Settings {
         logFile = null;
         disableCompletion = false;
         setQuitHandler(null);
-        operationManager.clear();
         setAliasEnabled(true);
     }
 
@@ -163,11 +159,11 @@ public class SettingsImpl implements Settings {
      * @return editing mode
      */
     @Override
-    public Mode getMode() {
+    public EditMode.Mode getMode() {
         return editMode;
     }
 
-    public void setMode(Mode editMode) {
+    public void setMode(EditMode.Mode editMode) {
         this.editMode = editMode;
     }
 
@@ -178,34 +174,16 @@ public class SettingsImpl implements Settings {
      */
     @Override
     public EditMode getEditMode() {
-        if(Config.isOSPOSIXCompatible()) {
-            if(getMode() == Mode.EMACS)
-                return new EmacsEditMode(getOperationManager());
-            else
-                return new ViEditMode(getOperationManager());
+        if(readInputrc) {
+            try {
+                return new EditModeBuilder().parseInputrc(new FileInputStream(getInputrc())).create();
+            }
+            catch(FileNotFoundException e) {
+                return new EditModeBuilder(getMode()).create();
+            }
         }
-        else {
-            if(getMode() == Mode.EMACS)
-                return new EmacsEditMode(getOperationManager());
-            else
-                return new ViEditMode(getOperationManager());
-        }
-    }
-
-    @Override
-    public void resetEditMode() {
-        operationManager.clear();
-    }
-
-    @Override
-    public KeyOperationManager getOperationManager() {
-        if(operationManager.getOperations().size() < 1) {
-            if(getMode() == Mode.EMACS)
-                operationManager.addOperations(KeyOperationFactory.generateEmacsMode());
-            else
-                operationManager.addOperations(KeyOperationFactory.generateViMode());
-        }
-        return operationManager;
+        else
+            return new EditModeBuilder(getMode()).create();
     }
 
     /**
@@ -564,10 +542,10 @@ public class SettingsImpl implements Settings {
 
     @Override
     public void switchMode() {
-       if(editMode == Mode.VI)
-           editMode = Mode.EMACS;
+       if(editMode == EditMode.Mode.VI)
+           editMode = EditMode.Mode.EMACS;
         else
-           editMode = Mode.VI;
+           editMode = EditMode.Mode.VI;
     }
 
     @Override

@@ -17,15 +17,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.readline;
+package org.jboss.aesh.readline.editing;
 
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.readline.editing.EditMode;
-import org.jboss.aesh.readline.editing.EditModeBuilder;
-import org.jboss.aesh.readline.editing.Emacs;
+import org.jboss.aesh.readline.Variable;
+import org.jboss.aesh.readline.VariableValues;
 import org.jboss.aesh.util.LoggerUtil;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
 import java.util.logging.Logger;
@@ -43,8 +41,6 @@ public class InputrcParser {
     private static final Logger LOGGER = LoggerUtil.getLogger(InputrcParser.class.getName());
 
     /**
-     * TODO: clean this shit up!
-     *
      * Must be able to parse:
      * set variablename value
      * keyname: function-name or macro
@@ -54,9 +50,13 @@ public class InputrcParser {
      * Lines starting with $ are conditional init constructs
      *
      */
-    protected static EditMode parseInputrc(InputStream inputStream) throws IOException {
+    protected static EditMode parseInputrc(InputStream inputStream) {
+        return parseInputrc(inputStream, new EditModeBuilder());
+    }
+
+    protected static EditMode parseInputrc(InputStream inputStream, EditModeBuilder editMode) {
         if(inputStream == null) {
-                LOGGER.warning("input stream is null, defaulting to emacs mode");
+            LOGGER.warning("input stream is null, defaulting to emacs mode");
             //TODO: create default emacs edit mode
             return new Emacs();
         }
@@ -68,69 +68,71 @@ public class InputrcParser {
         Pattern startConstructs = Pattern.compile("^\\$if");
         Pattern endConstructs = Pattern.compile("^\\$endif");
 
-            Scanner scanner = new Scanner(inputStream).useDelimiter("\n");
+        Scanner scanner = new Scanner(inputStream).useDelimiter("\n");
 
-            EditModeBuilder editMode = new EditModeBuilder();
+        String line;
+        boolean constructMode = false;
+        while (scanner.hasNext()) {
+            line = scanner.next();
+            if (line.trim().length() < 1)
+                continue;
+            //first check if its a comment
+            if (commentPattern.matcher(line).matches())
+                continue;
+            else if (startConstructs.matcher(line).matches()) {
+                constructMode = true;
+                continue;
+            }
+            else if (endConstructs.matcher(line).matches()) {
+                constructMode = false;
+                continue;
+            }
 
-            String line;
-            boolean constructMode = false;
-            while (scanner.hasNext()) {
-                line = scanner.next();
-                if (line.trim().length() < 1)
-                    continue;
-                //first check if its a comment
-                if (commentPattern.matcher(line).matches())
-                    continue;
-                else if (startConstructs.matcher(line).matches()) {
-                    constructMode = true;
-                    continue;
+            if (!constructMode) {
+                Matcher variableMatcher = variablePattern.matcher(line);
+                if (variableMatcher.matches()) {
+                    Variable variable = Variable.findVariable(variableMatcher.group(1));
+                    if(variable != null)
+                        parseVariables(variable, variableMatcher.group(2), editMode);
                 }
-                else if (endConstructs.matcher(line).matches()) {
-                    constructMode = false;
-                    continue;
-                }
-
-                if (!constructMode) {
-                    Matcher variableMatcher = variablePattern.matcher(line);
-                    if (variableMatcher.matches()) {
-                        Variable variable = Variable.findVariable(variableMatcher.group(1));
-                        if(variable != null)
-                            parseVariables(variable, variableMatcher.group(2), editMode);
-                    }
-                    //TODO: currently the inputrc parser is posix only
-                    if (Config.isOSPOSIXCompatible()) {
-                        Matcher keyQuoteMatcher = keyQuoteNamePattern.matcher(line);
-                        if (keyQuoteMatcher.matches()) {
-                            editMode.addAction(mapQuoteKeys(keyQuoteMatcher.group(1)), keyQuoteMatcher.group(3));
+                //TODO: currently the inputrc parser is posix only
+                else if (Config.isOSPOSIXCompatible()) {
+                    Matcher keyQuoteMatcher = keyQuoteNamePattern.matcher(line);
+                    if (keyQuoteMatcher.matches()) {
+                        editMode.addAction(mapQuoteKeys(keyQuoteMatcher.group(1)), keyQuoteMatcher.group(3));
                             /*
                             builder.create().getOperationManager().addOperationIgnoreWorkingMode(
                                     KeyMapper.mapQuoteKeys(keyQuoteMatcher.group(1),
                                             keyQuoteMatcher.group(3)));
                                             */
-                        }
-                        else {
-                            Matcher keyMatcher = keyNamePattern.matcher(line);
-                            if (keyMatcher.matches()) {
-                                editMode.addAction(mapKeys(keyMatcher.group(1)), keyMatcher.group(3));
+                    }
+                    else {
+                        Matcher keyMatcher = keyNamePattern.matcher(line);
+                        if (keyMatcher.matches()) {
+                            editMode.addAction(mapKeys(keyMatcher.group(1)), keyMatcher.group(3));
                                 /*
                                 builder.create().getOperationManager().addOperationIgnoreWorkingMode(
                                         KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
                                         */
-                            }
                         }
                     }
                 }
             }
+        }
 
         return editMode.create();
     }
 
     private static void parseVariables(Variable variable, String value, EditModeBuilder editMode) {
 
-        if(VariableValues.getValuesByVariable(variable).contains(value))
-            editMode.addVariable(variable, value);
+        if(VariableValues.getValuesByVariable(variable).size() > 0) {
+            if(VariableValues.getValuesByVariable(variable).contains(value))
+                editMode.addVariable(variable, value);
+            else
+                LOGGER.warning("Variable: "+variable+" do not allow value: "+value);
+        }
         else
-            LOGGER.warning("Variable: "+variable+" do not allow value: "+value);
+            editMode.addVariable(variable, value);
 
         /*
         if (variable.equals(EDITING_MODE)) {

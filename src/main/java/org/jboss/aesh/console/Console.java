@@ -52,12 +52,12 @@ import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.edit.EditMode;
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.TerminalSize;
@@ -179,8 +179,7 @@ public class Console {
         });
         context = settings.getAeshContext();
 
-        if(settings.doReadInputrc())
-            settings = Config.parseInputrc(settings);
+        EditMode editMode = settings.getEditMode();
 
         settings = Config.readRuntimeProperties(settings);
 
@@ -193,8 +192,6 @@ public class Console {
         terminal.puts(Capability.keypad_xmit);
         out = new PrintStream(terminal.output());
 
-        EditMode editMode = settings.getEditMode();
-        editMode.init(this);
 
         cursorQueue = new ArrayBlockingQueue<>(1);
 

@@ -32,11 +32,15 @@ import java.util.Arrays;
  */
 public interface EditMode {
 
+    Mode getMode();
+
     Action parse(KeyEvent event);
 
     void updateIgnoreEOF(int eof);
 
     void addVariable(Variable variable, String value);
+
+    String getVariableValue(Variable variable);
 
     void addAction(int[] input, String action);
 
@@ -75,6 +79,7 @@ public interface EditMode {
         COMMAND,
         HISTORY,
         SEARCH,
+        REPEAT,
         // MISC
         NEWLINE,
         PASTE,

@@ -78,4 +78,8 @@ public enum VariableValues {
         }
         return new ArrayList<>();
     }
+
+    public boolean hasValue() {
+        return values.size() > 0;
+    }
 }

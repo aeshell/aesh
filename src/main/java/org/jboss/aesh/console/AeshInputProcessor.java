@@ -21,8 +21,6 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.history.History;
 import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.readline.editing.EditMode;
-import org.jboss.aesh.readline.editing.Emacs;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -43,8 +41,6 @@ public class AeshInputProcessor implements InputProcessor {
     private final CompletionHandler completionHandler;
 
     private String returnValue;
-
-    private EditMode emacs = new Emacs();
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshInputProcessor.class.getName());
 
@@ -86,9 +82,9 @@ public class AeshInputProcessor implements InputProcessor {
 
         returnValue = null;
 
-        LOGGER.info("input key: "+event.name());
+        LOGGER.info("input key: " + event.name());
 
-        org.jboss.aesh.readline.Action action = emacs.parse(event);
+        org.jboss.aesh.readline.Action action = consoleBuffer.parse(event);
         if(action != null) {
             action.apply(this);
         }

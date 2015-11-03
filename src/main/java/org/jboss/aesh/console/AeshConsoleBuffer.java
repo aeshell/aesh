@@ -19,11 +19,11 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.edit.EditMode;
-import org.jboss.aesh.edit.Mode;
 import org.jboss.aesh.edit.PasteManager;
-import org.jboss.aesh.edit.actions.Action;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.readline.Action;
+import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.undo.UndoAction;
 import org.jboss.aesh.undo.UndoManager;
 import org.jboss.aesh.util.ANSI;
@@ -103,14 +103,19 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     @Override
     public void moveCursor(int where) {
         if(ansiMode) {
-            if(editMode.getMode() == Mode.VI &&
+            /*
+            if(editMode.getMode() == EditMode.Mode.VI &&
                     (editMode.getCurrentAction() == Action.MOVE ||
                             editMode.getCurrentAction() == Action.DELETE)) {
-                out.print(buffer.move(where, shell.getSize().getWidth(), true));
+                            */
+                //out.print(buffer.move(where, shell.getSize().getWidth(), true));
+            out.print(buffer.move(where, shell.getSize().getWidth()));
+            /*
             }
             else {
                 out.print(buffer.move(where, shell.getSize().getWidth()));
             }
+            */
             out.flush();
         }
     }
@@ -493,6 +498,11 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             }
             out().flush();
         }
+    }
+
+    @Override
+    public Action parse(KeyEvent event) {
+        return editMode.parse(event);
     }
 
 }

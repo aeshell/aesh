@@ -32,6 +32,7 @@ import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.TestShell;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Test;
 
@@ -51,7 +52,7 @@ public class EmacsModeTest {
                 .ansi(true)
                 .persistHistory(false)
                 .enableAlias(false)
-                .mode(Mode.EMACS)
+                .mode(EditMode.Mode.EMACS)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
@@ -102,7 +103,7 @@ public class EmacsModeTest {
                 .readInputrc(false)
                 .ansi(true)
                 .enableAlias(false)
-                .mode(Mode.EMACS)
+                .mode(EditMode.Mode.EMACS)
                 .create();
 
         Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);

@@ -37,9 +37,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.KeyOperation;
-import org.jboss.aesh.edit.actions.Operation;
-import org.jboss.aesh.terminal.Key;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -59,8 +56,6 @@ public abstract class BaseConsoleTest {
 
         if(!Config.isOSPOSIXCompatible())
             builder.ansi(false);
-
-        builder.create().getOperationManager().addOperation(new KeyOperation(Key.ENTER, Operation.NEW_LINE));
 
         return builder.create();
     }

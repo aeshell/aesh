@@ -20,6 +20,8 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.edit.PasteManager;
+import org.jboss.aesh.readline.Action;
+import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.undo.UndoManager;
 
 import java.io.PrintStream;
@@ -80,4 +82,5 @@ public interface ConsoleBuffer {
      */
     void clear(boolean includeBuffer);
 
+    Action parse(KeyEvent event);
 }
