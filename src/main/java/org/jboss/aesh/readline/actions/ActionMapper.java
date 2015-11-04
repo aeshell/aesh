@@ -62,8 +62,12 @@ public class ActionMapper {
             return new Complete();
         else if(function.equals("copy-backward-word"))
             return new CopyBackwardWord();
+        else if(function.equals("copy-backward-big-word"))
+            return new CopyBackwardBigWord();
         else if(function.equals("copy-forward-word"))
             return new CopyForwardWord();
+        else if(function.equals("copy-forward-big-word"))
+            return new CopyForwardBigWord();
         else if(function.equals("copy-line"))
             return new CopyLine();
         else if(function.equals("delete-char"))
