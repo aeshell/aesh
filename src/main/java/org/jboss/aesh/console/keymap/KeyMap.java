@@ -249,9 +249,9 @@ public class KeyMap<T> {
         return key == '?' ? del() : Character.toString((char) (Character.toUpperCase(key) & 0x1f));
     }
 
-    public static String key(Terminal console, Capability capability) {
+    public static String key(Terminal terminal, Capability capability) {
         try {
-            String str = console.getStringCapability(capability);
+            String str = terminal.getStringCapability(capability);
             if (str != null) {
                 StringWriter sw = new StringWriter();
                 Curses.tputs(sw, str);

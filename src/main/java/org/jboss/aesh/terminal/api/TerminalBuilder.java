@@ -110,8 +110,17 @@ public final class TerminalBuilder {
                 if (type == null) {
                     type = System.getenv("TERM");
                 }
-                Pty pty = ExecPty.current();
-                return new PosixSysTerminal(name, type, pty, encoding, nativeSignals);
+                Pty pty = null;
+                try {
+                    pty = ExecPty.current();
+                } catch (IOException e) {
+                    // Ignore
+                }
+                if (pty != null) {
+                    return new PosixSysTerminal(name, type, pty, encoding, nativeSignals);
+                } else {
+                    return new ExternalTerminal(name, type, System.in, System.out, encoding);
+                }
             }
         } else {
             return new ExternalTerminal(name, type, in, out, encoding);
