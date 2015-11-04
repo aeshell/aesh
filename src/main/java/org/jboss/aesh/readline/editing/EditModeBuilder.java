@@ -23,10 +23,16 @@ package org.jboss.aesh.readline.editing;
 import org.jboss.aesh.readline.Variable;
 import org.jboss.aesh.readline.actions.BackwardChar;
 import org.jboss.aesh.readline.actions.BeginningOfLine;
+import org.jboss.aesh.readline.actions.ChangeCaseChar;
+import org.jboss.aesh.readline.actions.CopyBackwardBigWord;
+import org.jboss.aesh.readline.actions.CopyBackwardWord;
+import org.jboss.aesh.readline.actions.CopyForwardBigWord;
+import org.jboss.aesh.readline.actions.CopyForwardWord;
 import org.jboss.aesh.readline.actions.CopyLine;
 import org.jboss.aesh.readline.actions.DeleteBackwardBigWord;
 import org.jboss.aesh.readline.actions.DeleteBackwardWord;
 import org.jboss.aesh.readline.actions.DeleteChar;
+import org.jboss.aesh.readline.actions.DeleteEndOfLine;
 import org.jboss.aesh.readline.actions.DeleteForwardBigWord;
 import org.jboss.aesh.readline.actions.DeleteForwardWord;
 import org.jboss.aesh.readline.actions.DeletePrevChar;
@@ -155,13 +161,27 @@ public class EditModeBuilder {
         Vi vi = new Vi();
 
         if(Key.ENTER.equals(Key.ENTER_2))
-            vi.addAction(Key.ENTER, "accept-line");
+        vi.addActionGroup(Key.ENTER, new Vi.ActionStatusGroup(new Vi.ActionStatus[]{
+                new Vi.ActionStatus("accept-line", EditMode.Status.EDIT, EditMode.Status.EDIT),
+                new Vi.ActionStatus("accept-line", EditMode.Status.COMMAND, EditMode.Status.EDIT),
+                new Vi.ActionStatus("accept-line", EditMode.Status.CHANGE, EditMode.Status.EDIT)}));
         else {
-            vi.addAction(Key.ENTER, "accept-line")
-                    .addAction(Key.ENTER_2, "accept-line");
+            vi.addActionGroup(Key.ENTER, new Vi.ActionStatusGroup(new Vi.ActionStatus[]{
+                    new Vi.ActionStatus("accept-line", EditMode.Status.EDIT, EditMode.Status.EDIT),
+                    new Vi.ActionStatus("accept-line", EditMode.Status.COMMAND, EditMode.Status.EDIT),
+                    new Vi.ActionStatus("accept-line", EditMode.Status.CHANGE, EditMode.Status.EDIT)}));
+            vi.addActionGroup(Key.ENTER_2, new Vi.ActionStatusGroup(new Vi.ActionStatus[]{
+                    new Vi.ActionStatus("accept-line", EditMode.Status.EDIT, EditMode.Status.EDIT),
+                    new Vi.ActionStatus("accept-line", EditMode.Status.COMMAND, EditMode.Status.EDIT),
+                    new Vi.ActionStatus("accept-line", EditMode.Status.CHANGE, EditMode.Status.EDIT)}));
         }
 
-        vi.addAction(Key.CTRL_C, new Interrupt());
+        vi.addActionGroup(Key.CTRL_C, new Vi.ActionStatusGroup(new Vi.ActionStatus[]{
+                new Vi.ActionStatus(new Interrupt(), EditMode.Status.EDIT, EditMode.Status.EDIT),
+                new Vi.ActionStatus(new Interrupt(), EditMode.Status.COMMAND, EditMode.Status.EDIT),
+                new Vi.ActionStatus(new Interrupt(), EditMode.Status.CHANGE, EditMode.Status.EDIT),
+                new Vi.ActionStatus(new Interrupt(), EditMode.Status.CHANGE, EditMode.Status.EDIT),
+        }));
         //TODO: EOF
         //vi.addAction(Key.CTRL_D, EOF);
         //TODO: change to emacs mode:
@@ -169,6 +189,8 @@ public class EditModeBuilder {
         vi.addAction(Key.CTRL_I, "complete"); //tab
         vi.addAction(Key.CTRL_L, "clear-screen"); //ctrl-l
         vi.addAction(Key.CTRL_Z, new NoAction());
+        vi.addAction(Key.CTRL_J, "accept-line");
+        vi.addAction(Key.CTRL_M, "accept-line");
 
         //search
         vi.addAction(Key.CTRL_R, "reverse-search-history");
@@ -176,8 +198,9 @@ public class EditModeBuilder {
 
         //edit
         vi.addActionGroup(Key.ESC, new Vi.ActionStatusGroup(new Vi.ActionStatus[]{
+                new Vi.ActionStatus(new BackwardChar(), EditMode.Status.EDIT, EditMode.Status.COMMAND),
                 new Vi.ActionStatus(new NoAction(), EditMode.Status.COMMAND, EditMode.Status.COMMAND),
-                new Vi.ActionStatus(new NoAction(), EditMode.Status.CHANGE, EditMode.Status.COMMAND),
+                new Vi.ActionStatus(new BackwardChar(), EditMode.Status.CHANGE, EditMode.Status.COMMAND),
                 new Vi.ActionStatus(new NoAction(), EditMode.Status.DELETE, EditMode.Status.COMMAND),
                 new Vi.ActionStatus(new NoAction(), EditMode.Status.REPLACE, EditMode.Status.COMMAND),
                 new Vi.ActionStatus(new NoAction(), EditMode.Status.YANK, EditMode.Status.COMMAND),
@@ -197,17 +220,22 @@ public class EditModeBuilder {
 
         vi.addAction(Key.s, "delete-char", EditMode.Status.COMMAND, EditMode.Status.EDIT);
         vi.addAction(Key.S, "kill-whole-line", EditMode.Status.COMMAND, EditMode.Status.EDIT); //S
-        vi.addAction(Key.D, "kill-line", EditMode.Status.COMMAND, EditMode.Status.COMMAND); //D
-        vi.addAction(Key.C, "kill-line", EditMode.Status.COMMAND, EditMode.Status.EDIT ); //C
+        vi.addAction(Key.D, new DeleteEndOfLine(true), EditMode.Status.COMMAND,
+                EditMode.Status.COMMAND, EditMode.Status.DELETE); //D
+        vi.addAction(Key.C, new DeleteEndOfLine(), EditMode.Status.COMMAND,
+                EditMode.Status.EDIT, EditMode.Status.CHANGE); //C
         vi.addAction(Key.a, "forward-char", EditMode.Status.COMMAND, EditMode.Status.EDIT);
         vi.addAction(Key.A, "end-of-line", EditMode.Status.COMMAND, EditMode.Status.EDIT); //A
-        vi.addAction(Key.x, "delete-char", EditMode.Status.COMMAND, EditMode.Status.COMMAND); //x
-        vi.addAction(Key.X, "backward-delete-char", EditMode.Status.COMMAND, EditMode.Status.COMMAND); //X
-        vi.addAction(Key.p, "yank", EditMode.Status.COMMAND, EditMode.Status.COMMAND); //p
-        vi.addAction(Key.P, "yank-after", EditMode.Status.COMMAND, EditMode.Status.COMMAND); //p
+        vi.addAction(Key.x, new DeleteChar(true), EditMode.Status.COMMAND,
+                EditMode.Status.COMMAND, EditMode.Status.DELETE); //x
+        vi.addAction(Key.X, new DeletePrevChar(), EditMode.Status.COMMAND,
+                EditMode.Status.COMMAND, EditMode.Status.DELETE); //X
+        vi.addAction(Key.P, "yank", EditMode.Status.COMMAND, EditMode.Status.COMMAND); //p
+        vi.addAction(Key.p, "yank-after", EditMode.Status.COMMAND, EditMode.Status.COMMAND); //p
         vi.addAction(Key.i, new NoAction(), EditMode.Status.COMMAND, EditMode.Status.EDIT); //i
         vi.addAction(Key.I, "beginning-of-line", EditMode.Status.COMMAND, EditMode.Status.EDIT); //I
-        vi.addAction(Key.TILDE, "upcase-char", EditMode.Status.COMMAND, EditMode.Status.COMMAND); //~
+        vi.addAction(Key.TILDE, new ChangeCaseChar(), EditMode.Status.COMMAND,
+                EditMode.Status.COMMAND, EditMode.Status.CHANGE); //~
 
         //replace
         vi.addAction(Key.r, new NoAction(), EditMode.Status.COMMAND, EditMode.Status.REPLACE); //r
@@ -224,23 +252,28 @@ public class EditModeBuilder {
                 new Vi.ActionStatus(new DeleteChar(), EditMode.Status.CHANGE, EditMode.Status.EDIT),
         }));
         vi.addActionGroup(Key.b, new Vi.ActionStatusGroup(new Vi.ActionStatus[]{
-                new Vi.ActionStatus(new MoveBackwardWord(), EditMode.Status.COMMAND, EditMode.Status.COMMAND),
-                new Vi.ActionStatus(new DeleteBackwardWord(), EditMode.Status.DELETE, EditMode.Status.COMMAND),
-                new Vi.ActionStatus(new DeleteBackwardWord(), EditMode.Status.CHANGE, EditMode.Status.EDIT),
+                new Vi.ActionStatus(new MoveBackwardWord(true), EditMode.Status.COMMAND, EditMode.Status.COMMAND),
+                new Vi.ActionStatus(new DeleteBackwardWord(true), EditMode.Status.DELETE, EditMode.Status.COMMAND),
+                new Vi.ActionStatus(new CopyBackwardWord(true), EditMode.Status.YANK, EditMode.Status.COMMAND),
+                new Vi.ActionStatus(new DeleteBackwardWord(true), EditMode.Status.CHANGE, EditMode.Status.EDIT),
         }));
         vi.addActionGroup(Key.w, new Vi.ActionStatusGroup(new Vi.ActionStatus[]{
-                new Vi.ActionStatus(new MoveForwardWord(), EditMode.Status.COMMAND, EditMode.Status.COMMAND),
-                new Vi.ActionStatus(new DeleteForwardWord(), EditMode.Status.DELETE, EditMode.Status.COMMAND),
-                new Vi.ActionStatus(new DeleteForwardWord(), EditMode.Status.CHANGE, EditMode.Status.EDIT),
+                new Vi.ActionStatus(new MoveForwardWord(true), EditMode.Status.COMMAND, EditMode.Status.COMMAND),
+                new Vi.ActionStatus(new DeleteForwardWord(true), EditMode.Status.DELETE, EditMode.Status.COMMAND),
+                new Vi.ActionStatus(new CopyForwardWord(true), EditMode.Status.YANK, EditMode.Status.COMMAND),
+                new Vi.ActionStatus(new DeleteForwardWord(true, EditMode.Status.CHANGE),
+                        EditMode.Status.CHANGE, EditMode.Status.EDIT),
         }));
         vi.addActionGroup(Key.B, new Vi.ActionStatusGroup(new Vi.ActionStatus[]{
                 new Vi.ActionStatus(new MoveBackwardBigWord(), EditMode.Status.COMMAND, EditMode.Status.COMMAND),
                 new Vi.ActionStatus(new DeleteBackwardBigWord(), EditMode.Status.DELETE, EditMode.Status.COMMAND),
+                new Vi.ActionStatus(new CopyBackwardBigWord(true), EditMode.Status.YANK, EditMode.Status.COMMAND),
                 new Vi.ActionStatus(new DeleteBackwardBigWord(), EditMode.Status.CHANGE, EditMode.Status.EDIT),
         }));
         vi.addActionGroup(Key.W, new Vi.ActionStatusGroup(new Vi.ActionStatus[]{
                 new Vi.ActionStatus(new MoveForwardBigWord(), EditMode.Status.COMMAND, EditMode.Status.COMMAND),
                 new Vi.ActionStatus(new DeleteForwardBigWord(), EditMode.Status.DELETE, EditMode.Status.COMMAND),
+                new Vi.ActionStatus(new CopyForwardBigWord(true), EditMode.Status.YANK, EditMode.Status.COMMAND),
                 new Vi.ActionStatus(new DeleteForwardBigWord(), EditMode.Status.CHANGE, EditMode.Status.EDIT),
         }));
         vi.addActionGroup(Key.ZERO, new Vi.ActionStatusGroup(new Vi.ActionStatus[]{

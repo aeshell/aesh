@@ -131,7 +131,9 @@ public class AeshExample {
                     }
                 });
                 */
-        Settings settings = builder.create();
+        Settings settings = builder
+                //.mode(EditMode.Mode.VI)
+                .create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
                 .command(fooCommand.create())

@@ -103,19 +103,14 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     @Override
     public void moveCursor(int where) {
         if(ansiMode) {
-            /*
             if(editMode.getMode() == EditMode.Mode.VI &&
-                    (editMode.getCurrentAction() == Action.MOVE ||
-                            editMode.getCurrentAction() == Action.DELETE)) {
-                            */
-                //out.print(buffer.move(where, shell.getSize().getWidth(), true));
-            out.print(buffer.move(where, shell.getSize().getWidth()));
-            /*
+                    (editMode.getCurrentStatus() == EditMode.Status.COMMAND ||
+                            editMode.getCurrentStatus() == EditMode.Status.DELETE)) {
+                out.print(buffer.move(where, shell.getSize().getWidth(), true));
             }
             else {
                 out.print(buffer.move(where, shell.getSize().getWidth()));
             }
-            */
             out.flush();
         }
     }

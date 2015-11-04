@@ -30,6 +30,10 @@ public class DeleteForwardWord extends ForwardWord {
         super(false, EditMode.Status.DELETE);
     }
 
+    public DeleteForwardWord(boolean viMode) {
+        super(viMode, EditMode.Status.DELETE);
+    }
+
     public DeleteForwardWord(boolean viMode, EditMode.Status status) {
         super(viMode, status);
     }

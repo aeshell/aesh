@@ -83,9 +83,9 @@ abstract class ChangeAction extends MovementAction {
             }
 
             //TODO: must check if we're in edit mode
-            //if(viMode && oldCursor ==
-            // inputProcessor.getBuffer().getBuffer().getLine().length())
-            //    inputProcessor.getBuffer().moveCursor(-1);
+            if(viMode && status == EditMode.Status.DELETE &&
+                    oldCursor == inputProcessor.getBuffer().getBuffer().getLine().length())
+                inputProcessor.getBuffer().moveCursor(-1);
 
             inputProcessor.getBuffer().drawLine();
         }

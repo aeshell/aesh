@@ -40,7 +40,9 @@ abstract class ForwardWord extends ChangeAction {
         super(status);
         this.viMode = viMode;
         if(status == EditMode.Status.CHANGE)
-            this.removeTrailingSpaces = false;
+            removeTrailingSpaces = false;
+        else
+            removeTrailingSpaces = true;
     }
 
     @Override

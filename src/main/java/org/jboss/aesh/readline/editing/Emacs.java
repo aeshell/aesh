@@ -112,6 +112,11 @@ public class Emacs implements EditMode {
     }
 
     @Override
+    public Status getCurrentStatus() {
+        return Status.EDIT;
+    }
+
+    @Override
     public Action parse(KeyEvent event) {
         //are we already searching, it need to be processed by search action
         if(currentAction != null) {

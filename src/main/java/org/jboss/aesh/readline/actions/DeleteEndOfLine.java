@@ -27,8 +27,12 @@ import org.jboss.aesh.readline.editing.EditMode;
  */
 public class DeleteEndOfLine extends ChangeAction {
 
-    DeleteEndOfLine() {
+    public DeleteEndOfLine() {
         super(EditMode.Status.DELETE);
+    }
+
+    public DeleteEndOfLine(boolean viMode) {
+        super(viMode, EditMode.Status.DELETE);
     }
 
     @Override
@@ -38,7 +42,7 @@ public class DeleteEndOfLine extends ChangeAction {
 
     @Override
     public void apply(InputProcessor inputProcessor) {
-        int cursor = inputProcessor.getBuffer().getBuffer().totalLength();
+        int cursor = inputProcessor.getBuffer().getBuffer().getLine().length();
         apply(cursor, inputProcessor);
     }
 }

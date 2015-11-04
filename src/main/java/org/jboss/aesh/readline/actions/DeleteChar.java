@@ -29,6 +29,15 @@ import org.jboss.aesh.readline.Action;
 
 public class DeleteChar implements Action {
 
+    private boolean viMode = false;
+
+    public DeleteChar() {
+    }
+
+    public DeleteChar(boolean viMode) {
+        this.viMode = viMode;
+    }
+
     @Override
     public String name() {
         return "delete-char";
@@ -48,6 +57,8 @@ public class DeleteChar implements Action {
                     consoleBuffer.getBuffer().getLine().substring(cursor, cursor+1)));
             consoleBuffer.getBuffer().delete(cursor, cursor+1);
             consoleBuffer.drawLine();
+            if(cursor == lineSize-1 && cursor > 0 && viMode)
+                consoleBuffer.moveCursor(-1);
         }
     }
 }

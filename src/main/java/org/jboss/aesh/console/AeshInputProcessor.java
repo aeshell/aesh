@@ -86,6 +86,7 @@ public class AeshInputProcessor implements InputProcessor {
 
         org.jboss.aesh.readline.Action action = consoleBuffer.parse(event);
         if(action != null) {
+            LOGGER.info("action: " + action.name());
             action.apply(this);
         }
         else {

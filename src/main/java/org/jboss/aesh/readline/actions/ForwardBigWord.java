@@ -31,6 +31,10 @@ abstract class ForwardBigWord extends ChangeAction {
         super(status);
     }
 
+    ForwardBigWord(boolean viMode, EditMode.Status status) {
+        super(viMode, status);
+    }
+
     @Override
     public void apply(InputProcessor inputProcessor) {
         int cursor = inputProcessor.getBuffer().getBuffer().getMultiCursor();

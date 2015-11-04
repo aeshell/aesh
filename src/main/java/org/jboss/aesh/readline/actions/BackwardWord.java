@@ -51,7 +51,7 @@ abstract class BackwardWord extends ChangeAction {
             while(cursor > 0 && isSpace(buffer.charAt(cursor - 1)))
                 cursor--;
             if(cursor > 0 && isDelimiter(buffer.charAt(cursor - 1))) {
-                while(cursor > 0 && isDelimiter(buffer.charAt(cursor - 1)))
+                while(cursor > 0 && isDelimiter(buffer.charAt(cursor - 1)) && !isSpace(buffer.charAt(cursor-1)))
                     cursor--;
             }
             else {

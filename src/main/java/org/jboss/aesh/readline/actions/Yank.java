@@ -42,7 +42,7 @@ public class Yank extends ChangeAction {
         if(pasteBuffer != null) {
 
             addActionToUndoStack(inputProcessor);
-            if(inputProcessor.getBuffer().getBuffer().getMultiCursor() >=
+            if(inputProcessor.getBuffer().getBuffer().getMultiCursor() <=
                     inputProcessor.getBuffer().getBuffer().getLine().length()) {
                 inputProcessor.getBuffer().insertBufferLine(pasteBuffer.toString(),
                         inputProcessor.getBuffer().getBuffer().getMultiCursor());

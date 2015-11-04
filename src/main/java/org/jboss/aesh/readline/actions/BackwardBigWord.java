@@ -31,6 +31,9 @@ abstract class BackwardBigWord extends ChangeAction {
         super(status);
     }
 
+    BackwardBigWord(boolean viMode, EditMode.Status status) {
+        super(viMode, status);
+    }
     @Override
     public void apply(InputProcessor inputProcessor) {
         int cursor = inputProcessor.getBuffer().getBuffer().getMultiCursor();

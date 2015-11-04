@@ -25,20 +25,21 @@ import org.jboss.aesh.readline.ActionEvent;
 import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.readline.Variable;
 import org.jboss.aesh.readline.actions.ActionMapper;
-import org.jboss.aesh.readline.actions.NoAction;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class Vi implements EditMode {
 
-    private static final Action NO_ACTION = new NoAction();
-    private Status status;
+    private Status status = Status.EDIT;
+    private Action previousAction;
 
     private ActionEvent currentAction;
 
@@ -46,6 +47,8 @@ public class Vi implements EditMode {
     private Map<KeyEvent,ActionStatus> keyEventActions;
     private Map<Key, ActionStatusGroup> actionGroups;
     private Map<Variable,String> variables;
+
+    private static final Logger LOGGER = LoggerUtil.getLogger(Vi.class.getName());
 
     Vi() {
         actions = new EnumMap<>(Key.class);
@@ -102,6 +105,11 @@ public class Vi implements EditMode {
         return this;
     }
 
+    public Vi addAction(Key key, Action action, Status status, Status after, Status actionStatus) {
+        actions.put(key, new ActionStatus(action, status, after, actionStatus));
+        return this;
+    }
+
     public Vi addActionGroup(Key key, ActionStatusGroup group) {
         actionGroups.put(key, group);
         return this;
@@ -115,6 +123,11 @@ public class Vi implements EditMode {
     @Override
     public Mode getMode() {
         return Mode.VI;
+    }
+
+    @Override
+    public Status getCurrentStatus() {
+        return status;
     }
 
     @Override
@@ -133,22 +146,36 @@ public class Vi implements EditMode {
     }
 
     private Action getAction(KeyEvent event) {
+        LOGGER.info("got event:"+event);
         ActionStatus newStatus = getActionStatus(event);
+        LOGGER.info("ActionStatus: "+newStatus);
         if(newStatus == null)
-            return NO_ACTION;
+            return null;
         else {
+            LOGGER.info("current status: "+status);
             if(newStatus.getCurrentStatus() == status) {
                 if(newStatus.getAction() instanceof ActionEvent) {
                     currentAction = (ActionEvent) newStatus.getAction();
                     currentAction.input(newStatus.getAction(), event);
                 }
                 else {
-                    status = newStatus.nextStatus;
+                    if(newStatus.nextStatus == Status.REPEAT) {
+                        return previousAction;
+                    }
+                    else {
+                        if(status == Status.DELETE ||
+                                newStatus.actionStatus == Status.DELETE ||
+                                newStatus.actionStatus == Status.CHANGE)
+                            previousAction = newStatus.getAction();
+                        status = newStatus.nextStatus;
+                    }
+                    LOGGER.info("new status is: "+status);
                 }
+                LOGGER.info("returning action: "+newStatus.getAction());
                 return newStatus.getAction();
             }
             else
-                return NO_ACTION;
+                return null;
          }
 
         /*
@@ -261,17 +288,27 @@ public class Vi implements EditMode {
         private final Action action;
         private final Status currentStatus;
         private final Status nextStatus;
+        private final Status actionStatus;
 
         ActionStatus(String action, Status status, Status nextStatus) {
             this.action = ActionMapper.mapToAction(action);
             this.currentStatus = status;
             this.nextStatus = nextStatus;
+            this.actionStatus = Status.COMMAND;
         }
 
         ActionStatus(Action action, Status status, Status nextStatus) {
             this.action = action;
             this.currentStatus = status;
             this.nextStatus = nextStatus;
+            this.actionStatus = Status.COMMAND;
+        }
+
+        ActionStatus(Action action, Status status, Status nextStatus, Status actionStatus) {
+            this.action = action;
+            this.currentStatus = status;
+            this.nextStatus = nextStatus;
+            this.actionStatus = actionStatus;
         }
 
         public Action getAction() {
@@ -284,6 +321,19 @@ public class Vi implements EditMode {
 
         public Status getNextStatus() {
             return nextStatus;
+        }
+
+        public Status getActionStatus() {
+            return actionStatus;
+        }
+
+        @Override
+        public String toString() {
+            return "ActionStatus{" +
+                    "action=" + action +
+                    ", currentStatus=" + currentStatus +
+                    ", nextStatus=" + nextStatus +
+                    '}';
         }
     }
 }

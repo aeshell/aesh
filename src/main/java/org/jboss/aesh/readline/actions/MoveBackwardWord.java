@@ -19,6 +19,8 @@
  */
 package org.jboss.aesh.readline.actions;
 
+import org.jboss.aesh.readline.editing.EditMode;
+
 /**
  * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -26,6 +28,10 @@ public class MoveBackwardWord extends BackwardWord {
 
     public MoveBackwardWord() {
         super();
+    }
+
+    public MoveBackwardWord(boolean viMode) {
+        super(viMode, EditMode.Status.MOVE);
     }
 
     @Override

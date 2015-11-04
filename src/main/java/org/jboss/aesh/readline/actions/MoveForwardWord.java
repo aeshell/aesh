@@ -31,8 +31,8 @@ public class MoveForwardWord extends ForwardWord {
         super();
     }
 
-    public MoveForwardWord(boolean viMode, EditMode.Status status) {
-        super(viMode, status);
+    public MoveForwardWord(boolean viMode) {
+        super(viMode, EditMode.Status.MOVE);
     }
 
     @Override

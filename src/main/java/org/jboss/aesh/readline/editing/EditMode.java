@@ -34,6 +34,8 @@ public interface EditMode {
 
     Mode getMode();
 
+    Status getCurrentStatus();
+
     Action parse(KeyEvent event);
 
     void updateIgnoreEOF(int eof);

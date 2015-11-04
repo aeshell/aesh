@@ -30,12 +30,10 @@ import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.TestShell;
-import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.Key;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -44,7 +42,6 @@ import static org.junit.Assert.assertEquals;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@Ignore
 public class ViModeTest {
 
     @Test
@@ -72,40 +69,28 @@ public class ViModeTest {
 
         consoleBuffer.writeString("abcd");
 
-        CommandOperation co = new CommandOperation(Key.ESC);
         inputProcessor.parseOperation(Key.ESC);
-        co = new CommandOperation(Key.x);
         inputProcessor.parseOperation(Key.x);
 
         assertEquals("abc", consoleBuffer.getBuffer().getLineNoMask());
 
-        co = new CommandOperation(Key.h);
         inputProcessor.parseOperation(Key.h);
-        co = new CommandOperation(Key.s);
         inputProcessor.parseOperation(Key.s);
-        co = new CommandOperation(Key.T);
         inputProcessor.parseOperation(Key.T);
 
         assertEquals("aTc", consoleBuffer.getBuffer().getLineNoMask());
 
-        co = new CommandOperation(Key.ESC);
         inputProcessor.parseOperation(Key.ESC);
-        co = new CommandOperation(Key.ZERO);
         inputProcessor.parseOperation(Key.ZERO);
-        co = new CommandOperation(Key.x);
         inputProcessor.parseOperation(Key.x);
 
         assertEquals("Tc", consoleBuffer.getBuffer().getLineNoMask());
 
-        co = new CommandOperation(Key.l);
         inputProcessor.parseOperation(Key.l);
-        co = new CommandOperation(Key.a);
         inputProcessor.parseOperation(Key.a);
-        co = new CommandOperation(Key.o);
         inputProcessor.parseOperation(Key.o);
 
         assertEquals("Tco", consoleBuffer.getBuffer().getLineNoMask());
-
     }
 
     @Test
@@ -131,32 +116,64 @@ public class ViModeTest {
                 .settings(settings)
                 .create();
 
+        consoleBuffer.writeString("  ..");
+
+        inputProcessor.parseOperation(Key.ESC);
+        inputProcessor.parseOperation(Key.b);
+        inputProcessor.parseOperation(Key.x);
+
+        assertEquals("  .", consoleBuffer.getBuffer().getLineNoMask());
+
+        inputProcessor.parseOperation(Key.ENTER);
+
+        consoleBuffer.writeString("foo bar");
+        inputProcessor.parseOperation(Key.ESC);
+        inputProcessor.parseOperation(Key.ZERO);
+        inputProcessor.parseOperation(Key.w);
+        inputProcessor.parseOperation(Key.x);
+
+        assertEquals("foo ar", consoleBuffer.getBuffer().getLineNoMask());
+    }
+
+    @Test
+    public void testWordMovementAndEdit2() throws Exception {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .readInputrc(false)
+                .ansi(true)
+                .enableAlias(false)
+                .mode(EditMode.Mode.VI)
+                .create();
+
+        Shell shell = new TestShell(new PrintStream(byteArrayOutputStream), System.err);
+        ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
+                .shell(shell)
+                .prompt(new Prompt("aesh"))
+                .editMode(settings.getEditMode())
+                .create();
+
+        InputProcessor inputProcessor = new AeshInputProcessorBuilder()
+                .consoleBuffer(consoleBuffer)
+                .settings(settings)
+                .create();
+
         consoleBuffer.writeString("foo  bar...  Foo-Bar.");
 
-        CommandOperation co = new CommandOperation(Key.ESC);
         inputProcessor.parseOperation(Key.ESC);
-        co = new CommandOperation(Key.B);
         inputProcessor.parseOperation(Key.B);
-        co = new CommandOperation(Key.d);
         inputProcessor.parseOperation(Key.d);
-        co = new CommandOperation(Key.b);
         inputProcessor.parseOperation(Key.b);
 
         assertEquals("foo  barFoo-Bar.", consoleBuffer.getBuffer().getLineNoMask());
 
-        co = new CommandOperation(Key.ESC);
         inputProcessor.parseOperation(Key.ESC);
-        co = new CommandOperation(Key.ZERO);
         inputProcessor.parseOperation(Key.ZERO);
-        co = new CommandOperation(Key.W);
         inputProcessor.parseOperation(Key.W);
-        co = new CommandOperation(Key.d);
         inputProcessor.parseOperation(Key.d);
-        co = new CommandOperation(Key.w);
         inputProcessor.parseOperation(Key.w);
 
         assertEquals("foo  -Bar.", consoleBuffer.getBuffer().getLineNoMask());
-
     }
 
     @Test
@@ -184,37 +201,23 @@ public class ViModeTest {
 
         consoleBuffer.writeString("/cd /home/foo/ ls/ cd Desktop/ ls ../");
 
-        CommandOperation co = new CommandOperation(Key.ESC);
         inputProcessor.parseOperation(Key.ESC);
-        co = new CommandOperation(Key.ZERO);
         inputProcessor.parseOperation(Key.ZERO);
-        co = new CommandOperation(Key.w);
         inputProcessor.parseOperation(Key.w);
         inputProcessor.parseOperation(Key.w);
         inputProcessor.parseOperation(Key.w);
         inputProcessor.parseOperation(Key.w);
         inputProcessor.parseOperation(Key.w);
-        co = new CommandOperation(Key.c);
         inputProcessor.parseOperation(Key.c);
-        co = new CommandOperation(Key.w);
         inputProcessor.parseOperation(Key.w);
-        co = new CommandOperation(Key.b);
         inputProcessor.parseOperation(Key.b);
-        co = new CommandOperation(Key.a);
         inputProcessor.parseOperation(Key.a);
-        co = new CommandOperation(Key.r);
         inputProcessor.parseOperation(Key.r);
-        co = new CommandOperation(Key.ESC);
         inputProcessor.parseOperation(Key.ESC);
-        co = new CommandOperation(Key.W);
         inputProcessor.parseOperation(Key.W);
-        co = new CommandOperation(Key.d);
         inputProcessor.parseOperation(Key.d);
-        co = new CommandOperation(Key.w);
         inputProcessor.parseOperation(Key.w);
-        co = new CommandOperation(Key.PERIOD);
         inputProcessor.parseOperation(Key.PERIOD);
-        co = new CommandOperation(Key.ENTER);
 
         assertEquals("/cd /home/bar/ cd Desktop/ ls ../",
                 inputProcessor.parseOperation(Key.ENTER));
@@ -261,6 +264,9 @@ public class ViModeTest {
         inputProcessor.parseOperation(Key.TILDE);
         inputProcessor.parseOperation(Key.TILDE);
         inputProcessor.parseOperation(Key.TILDE);
+
+        assertEquals("apt-get install Vim", consoleBuffer.getBuffer().getLine());
+
         inputProcessor.parseOperation(Key.ZERO);
         inputProcessor.parseOperation(Key.w);
         inputProcessor.parseOperation(Key.w);
@@ -459,10 +465,10 @@ public class ViModeTest {
                 .settings(settings)
                 .create();
 
-        consoleBuffer.writeString("asdf jkl");
+        consoleBuffer.writeString("footing");
         inputProcessor.parseOperation(Key.ENTER);
 
-        consoleBuffer.writeString("footing");
+        consoleBuffer.writeString("asdf jkl");
         inputProcessor.parseOperation(Key.ENTER);
 
         inputProcessor.parseOperation(Key.CTRL_R);
@@ -506,7 +512,7 @@ public class ViModeTest {
         inputProcessor.parseOperation(Key.CTRL_R);
         inputProcessor.parseOperation(Key.a);
         inputProcessor.parseOperation(Key.DOWN);
-        assertEquals("asdf jkl", consoleBuffer.getBuffer().getLine());
+        assertEquals("footing", consoleBuffer.getBuffer().getLine());
     }
 
 }
