@@ -20,8 +20,8 @@
 package org.jboss.aesh.graphics;
 
 import org.jboss.aesh.terminal.TerminalColor;
-import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.TerminalTextStyle;
+import org.jboss.aesh.terminal.api.Size;
 import org.jboss.aesh.terminal.api.Terminal;
 import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
 import org.jboss.aesh.util.ANSI;
@@ -165,7 +165,7 @@ public class AeshGraphics implements Graphics {
     }
 
     private void drawHorizontalLine(int x, int y, int width) {
-        TerminalSize terminalSize = graphicsConfiguration.getBounds();
+        Size terminalSize = graphicsConfiguration.getBounds();
         if(terminalSize.getHeight() > y && terminalSize.getWidth() > y) {
             if(terminalSize.getWidth() < x + width)
                 width = terminalSize.getWidth() - x-1;
@@ -179,7 +179,7 @@ public class AeshGraphics implements Graphics {
     }
 
     private void drawVerticalLine(int x, int y, int length) {
-        TerminalSize terminalSize = graphicsConfiguration.getBounds();
+        Size terminalSize = graphicsConfiguration.getBounds();
         if(terminalSize.getHeight() > y && terminalSize.getWidth() > y) {
             if(terminalSize.getHeight() < y + length)
                 length = terminalSize.getHeight() - y-1;

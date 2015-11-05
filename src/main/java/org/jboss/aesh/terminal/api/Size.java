@@ -19,13 +19,12 @@
  */
 package org.jboss.aesh.terminal.api;
 
+import org.jboss.aesh.terminal.CursorPosition;
+
 public class Size {
 
-    private int height;
-    private int width;
-
-    public Size() {
-    }
+    private final int height;
+    private final int width;
 
     public Size(int height, int width) {
         this.height = height;
@@ -36,21 +35,13 @@ public class Size {
         return width;
     }
 
-    public void setWidth(int width) {
-        this.width = (short) width;
-    }
-
     public int getHeight() {
         return height;
     }
 
-    public void setHeight(int height) {
-        this.height = (short) height;
-    }
-
-    public void copy(Size size) {
-        setWidth(size.getWidth());
-        setHeight(size.getHeight());
+    public boolean isPositionWithinSize(CursorPosition pos) {
+        return (pos.getRow() > -1 && pos.getColumn() > -1 &&
+                pos.getRow() < height && pos.getColumn() < width);
     }
 
     @Override

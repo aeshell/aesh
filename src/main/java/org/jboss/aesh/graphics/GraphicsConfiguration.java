@@ -19,14 +19,14 @@
  */
 package org.jboss.aesh.graphics;
 
-import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.api.Size;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface GraphicsConfiguration {
 
-    TerminalSize getBounds();
+    Size getBounds();
 
     Graphics getGraphics();
 

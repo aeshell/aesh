@@ -28,7 +28,7 @@ public class DumbTerminal extends AbstractTerminal {
     private final Reader reader;
     private final PrintWriter writer;
     private final Attributes attributes;
-    private final Size size;
+    private Size size;
 
     public DumbTerminal(InputStream in, OutputStream out) throws IOException {
         super("dumb", "ansi");
@@ -78,13 +78,11 @@ public class DumbTerminal extends AbstractTerminal {
     }
 
     public Size getSize() {
-        Size sz = new Size();
-        sz.copy(size);
-        return sz;
+        return size;
     }
 
     public void setSize(Size sz) {
-        size.copy(sz);
+        size = new Size(sz.getHeight(),sz.getWidth());
     }
 
     public void close() throws IOException {

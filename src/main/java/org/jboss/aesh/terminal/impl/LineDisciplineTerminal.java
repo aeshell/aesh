@@ -85,7 +85,7 @@ public class LineDisciplineTerminal extends AbstractTerminal {
      */
     protected final String encoding;
     protected final Attributes attributes;
-    protected final Size size;
+    protected Size size;
 
     /**
      * Application
@@ -150,8 +150,7 @@ public class LineDisciplineTerminal extends AbstractTerminal {
     }
 
     public void setSize(Size sz) {
-        size.setHeight(sz.getHeight());
-        size.setWidth(sz.getWidth());
+        size = new Size(sz.getHeight(), sz.getWidth());
     }
 
    @Override

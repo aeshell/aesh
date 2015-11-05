@@ -24,7 +24,7 @@ import java.io.PrintStream;
 
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.CursorPosition;
-import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.api.Size;
 import org.jboss.aesh.terminal.api.Terminal;
 
 /**
@@ -63,7 +63,7 @@ public interface Shell {
     /**
      * @return terminal size
      */
-    TerminalSize getSize();
+    Size getSize();
 
     /**
      * @return get the cursor position

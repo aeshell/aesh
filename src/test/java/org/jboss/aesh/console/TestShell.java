@@ -23,7 +23,7 @@ import java.io.PrintStream;
 
 import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.CursorPosition;
-import org.jboss.aesh.terminal.TerminalSize;
+import org.jboss.aesh.terminal.api.Size;
 import org.jboss.aesh.terminal.api.Terminal;
 
 public class TestShell implements Shell {
@@ -61,8 +61,8 @@ public class TestShell implements Shell {
     }
 
     @Override
-    public TerminalSize getSize() {
-        return new TerminalSize(80, 20);
+    public Size getSize() {
+        return new Size(80, 20);
     }
 
     @Override

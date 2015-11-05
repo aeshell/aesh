@@ -60,7 +60,6 @@ import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.TerminalSize;
 import org.jboss.aesh.terminal.api.Attributes;
 import org.jboss.aesh.terminal.api.Terminal;
 import org.jboss.aesh.terminal.api.Terminal.Signal;
@@ -267,9 +266,8 @@ public class Console {
      *
      * @return get the terminal size
      */
-    public TerminalSize getTerminalSize() {
-        Size size = terminal.getSize();
-        return new TerminalSize(size.getHeight(), size.getWidth());
+    public Size getTerminalSize() {
+        return terminal.getSize();
     }
 
     /**
@@ -1035,7 +1033,7 @@ public class Console {
         }
 
         @Override
-        public TerminalSize getSize() {
+        public Size getSize() {
             return Console.this.getTerminalSize();
         }
 
