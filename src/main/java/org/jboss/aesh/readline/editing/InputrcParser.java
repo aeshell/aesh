@@ -29,7 +29,16 @@ import java.util.Scanner;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 /**
+ * Map key bindings to specified operation.
+ * Used when reading inputrc files.
+ * Created to map bindings like:
+ * "\M-[D":        backward-char
+ * Meta-Control-h: backward-kill-word
+ * C-q: quoted-insert
+ * ... etc
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class InputrcParser {
@@ -39,6 +48,9 @@ public class InputrcParser {
     private static final Pattern controlPattern = Pattern.compile("^(\\\\C|C|Control)-"); // "M-
 
     private static final Logger LOGGER = LoggerUtil.getLogger(InputrcParser.class.getName());
+    private static final Pattern variablePattern = Pattern.compile("^set\\s+(\\S+)\\s+(\\S+)$");
+    private static final Pattern keyQuoteNamePattern = Pattern.compile("(^\"\\\\\\S+)(\":\\s+)(\\S+)");
+    private static final Pattern keyNamePattern = Pattern.compile("(^\\S+)(:\\s+)(\\S+)");
 
     /**
      * Must be able to parse:
@@ -61,10 +73,7 @@ public class InputrcParser {
             return new Emacs();
         }
 
-        Pattern variablePattern = Pattern.compile("^set\\s+(\\S+)\\s+(\\S+)$");
         Pattern commentPattern = Pattern.compile("^#.*");
-        Pattern keyQuoteNamePattern = Pattern.compile("(^\"\\\\\\S+)(\":\\s+)(\\S+)");
-        Pattern keyNamePattern = Pattern.compile("(^\\S+)(:\\s+)(\\S+)");
         Pattern startConstructs = Pattern.compile("^\\$if");
         Pattern endConstructs = Pattern.compile("^\\$endif");
 
@@ -100,20 +109,11 @@ public class InputrcParser {
                     Matcher keyQuoteMatcher = keyQuoteNamePattern.matcher(line);
                     if (keyQuoteMatcher.matches()) {
                         editMode.addAction(mapQuoteKeys(keyQuoteMatcher.group(1)), keyQuoteMatcher.group(3));
-                            /*
-                            builder.create().getOperationManager().addOperationIgnoreWorkingMode(
-                                    KeyMapper.mapQuoteKeys(keyQuoteMatcher.group(1),
-                                            keyQuoteMatcher.group(3)));
-                                            */
                     }
                     else {
                         Matcher keyMatcher = keyNamePattern.matcher(line);
                         if (keyMatcher.matches()) {
                             editMode.addAction(mapKeys(keyMatcher.group(1)), keyMatcher.group(3));
-                                /*
-                                builder.create().getOperationManager().addOperationIgnoreWorkingMode(
-                                        KeyMapper.mapKeys(keyMatcher.group(1), keyMatcher.group(3)));
-                                        */
                         }
                     }
                 }
@@ -121,6 +121,28 @@ public class InputrcParser {
         }
 
         return editMode.create();
+    }
+
+    protected static void parseLine(String line, EditModeBuilder editMode) {
+        Matcher variableMatcher = variablePattern.matcher(line);
+        if (variableMatcher.matches()) {
+            Variable variable = Variable.findVariable(variableMatcher.group(1));
+            if(variable != null)
+                parseVariables(variable, variableMatcher.group(2), editMode);
+        }
+        //TODO: currently the inputrc parser is posix only
+        else if (Config.isOSPOSIXCompatible()) {
+            Matcher keyQuoteMatcher = keyQuoteNamePattern.matcher(line);
+            if(keyQuoteMatcher.matches()) {
+                editMode.addAction(mapQuoteKeys(keyQuoteMatcher.group(1)), keyQuoteMatcher.group(3));
+            }
+            else {
+                Matcher keyMatcher = keyNamePattern.matcher(line);
+                if(keyMatcher.matches()) {
+                    editMode.addAction(mapKeys(keyMatcher.group(1)), keyMatcher.group(3));
+                }
+            }
+        }
     }
 
     private static void parseVariables(Variable variable, String value, EditModeBuilder editMode) {
@@ -133,52 +155,9 @@ public class InputrcParser {
         }
         else
             editMode.addVariable(variable, value);
-
-        /*
-        if (variable.equals(EDITING_MODE)) {
-            if(EDITING_MODE.getValues().contains(value)) {
-                if(value.equals("vi"))
-                    builder.mode(Mode.VI);
-                else
-                    builder.mode(Mode.EMACS);
-            }
-            // should log some error
-            else if(builder.create().isLogging())
-                LOGGER.warning("Value "+value+" not accepted for: "+variable+
-                        ", only: "+EDITING_MODE.getValues());
-
-        }
-        else if(variable.equals(BELL_STYLE.getVariable())) {
-            if(BELL_STYLE.getValues().contains(value))
-                builder.bellStyle(value);
-            else if(builder.create().isLogging())
-                LOGGER.warning("Value "+value+" not accepted for: "+variable+
-                        ", only: "+BELL_STYLE.getValues());
-        }
-        else if(variable.equals(HISTORY_SIZE.getVariable())) {
-            try {
-                builder.historySize(Integer.parseInt(value));
-            }
-            catch (NumberFormatException nfe) {
-                if(builder.create().isLogging())
-                    LOGGER.warning("Value "+value+" not accepted for: "
-                            +variable+", it must be an integer.");
-            }
-        }
-        else if(variable.equals(DISABLE_COMPLETION.getVariable())) {
-            if(DISABLE_COMPLETION.getValues().contains(value)) {
-                if(value.equals("on"))
-                    builder.disableCompletion(true);
-                else
-                    builder.disableCompletion(false);
-            }
-            else if(builder.create().isLogging())
-                LOGGER.warning("Value "+value+" not accepted for: "+variable+
-                        ", only: "+DISABLE_COMPLETION.getValues());
-        }
-        */
     }
-    private static int[] mapKeys(String keys) {
+
+    public static int[] mapKeys(String keys) {
         boolean meta = false;
         boolean control = false;
         String randomKeys = null;

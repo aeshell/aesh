@@ -24,8 +24,6 @@ import static org.junit.Assert.assertEquals;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.edit.KeyOperation;
-import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Test;
 
@@ -37,7 +35,7 @@ public class ConsoleMaskingTest extends BaseConsoleTest {
     @Test
     public void masking() throws Exception {
         invokeTestConsole((console, out) -> {
-            KeyOperation deletePrevChar =  new KeyOperation(Key.CTRL_H, Operation.DELETE_PREV_CHAR);
+            Key deletePrevChar =  Key.CTRL_H;
             console.setPrompt(new Prompt("", '\u0000'));
 
             out.write(("mypassword").getBytes());

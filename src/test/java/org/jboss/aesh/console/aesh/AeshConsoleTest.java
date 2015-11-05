@@ -43,9 +43,6 @@ import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.KeyOperation;
-import org.jboss.aesh.edit.actions.Operation;
-import org.jboss.aesh.terminal.Key;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -63,7 +60,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class AeshConsoleTest extends BaseConsoleTest {
 
-    private KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
 
     @Test
     public void testAeshConsole() throws IOException, InterruptedException, CommandLineParserException {

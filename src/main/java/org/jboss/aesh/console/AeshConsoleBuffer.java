@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.edit.PasteManager;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.readline.Action;
 import org.jboss.aesh.readline.KeyEvent;

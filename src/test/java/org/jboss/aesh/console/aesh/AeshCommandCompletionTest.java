@@ -40,8 +40,6 @@ import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.KeyOperation;
-import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Test;
 
@@ -60,8 +58,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class AeshCommandCompletionTest {
 
-    private final KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
-    private final KeyOperation enter =  new KeyOperation(Key.ENTER, Operation.NEW_LINE);
+    private final Key completeChar =  Key.CTRL_I;
+    private final Key enter =  Key.ENTER;
 
     @Test
     public void testCompletion() throws Exception {

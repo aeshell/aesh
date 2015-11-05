@@ -28,8 +28,6 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.KeyOperation;
-import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Test;
@@ -48,8 +46,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class ExportCommandTest {
 
-    private final KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
-    private final KeyOperation backSpace =  new KeyOperation(Key.BACKSPACE, Operation.DELETE_PREV_CHAR);
+    private final Key completeChar =  Key.CTRL_I;
+    private final Key backSpace =  Key.BACKSPACE;
 
     @Test
     public void testExportCompletionAndCommand() throws IOException, InterruptedException {

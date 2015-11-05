@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.edit;
+package org.jboss.aesh.console;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +33,7 @@ public class PasteManager {
     private final List<StringBuilder> pasteStack;
 
     public PasteManager() {
-        pasteStack = new ArrayList<StringBuilder>(PASTE_SIZE);
+        pasteStack = new ArrayList<>(PASTE_SIZE);
     }
 
     public void addText(StringBuilder buffer) {

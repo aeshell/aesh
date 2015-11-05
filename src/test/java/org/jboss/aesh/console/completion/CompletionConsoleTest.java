@@ -46,8 +46,6 @@ import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.KeyOperation;
-import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Test;
 
@@ -56,7 +54,7 @@ import org.junit.Test;
  */
 public class CompletionConsoleTest extends BaseConsoleTest {
 
-    private final KeyOperation completeChar =  new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
+    private final Key completeChar =  Key.CTRL_I;
 
     private static final byte[] LINE_SEPARATOR = Config.getLineSeparator().getBytes();
 

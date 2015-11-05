@@ -38,8 +38,6 @@ import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.KeyOperation;
-import org.jboss.aesh.edit.actions.Operation;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Test;
 
@@ -49,7 +47,7 @@ import org.junit.Test;
 public class AeshCommandRegistryTest {
 
     private static final String WRITTEN = "hgjfiehk";
-    private final KeyOperation completeChar = new KeyOperation(Key.CTRL_I, Operation.COMPLETE);
+    private final Key completeChar =  Key.CTRL_I;
 
     @Test
     public void testExceptionThrownFromCommandRegistryShouldNotCrashAesh() throws Exception {

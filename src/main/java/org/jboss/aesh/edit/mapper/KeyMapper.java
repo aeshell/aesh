@@ -29,7 +29,8 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
- * Map key bindings to specified operation. Used when reading inputrc files.
+ * Map key bindings to specified operation.
+ * Used when reading inputrc files.
  * Created to map bindings like:
  * "\M-[D":        backward-char
  * Meta-Control-h: backward-kill-word
