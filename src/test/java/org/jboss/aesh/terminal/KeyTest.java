@@ -20,15 +20,15 @@
 package org.jboss.aesh.terminal;
 
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.edit.KeyOperation;
-import org.jboss.aesh.edit.KeyOperationFactory;
-import org.jboss.aesh.edit.KeyOperationManager;
-import org.jboss.aesh.edit.actions.Operation;
+import org.jboss.aesh.readline.Action;
+import org.jboss.aesh.readline.EventQueue;
+import org.jboss.aesh.readline.actions.ActionMapper;
+import org.jboss.aesh.readline.editing.EditMode;
+import org.jboss.aesh.readline.editing.EditModeBuilder;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -45,14 +45,13 @@ public class KeyTest {
     @Test
     public void testOtherOperations() {
 
-        KeyOperationManager manager = new KeyOperationManager();
-        manager.addOperations(KeyOperationFactory.generateEmacsMode());
+        EditMode editMode = new EditModeBuilder(EditMode.Mode.EMACS).create();
 
         Key up = Key.UP;
 
-        KeyOperation ko = manager.findOperation(up.getKeyValues());
-        assertEquals(up, ko.getKey());
-        assertEquals(ko.getOperation(), Operation.HISTORY_PREV);
+        Action action = editMode.parse(up);
+
+        assertEquals(action.name(), ActionMapper.mapToAction("previous-history").name());
 
         if (Config.isOSPOSIXCompatible()) {
             int[] doubleUpKey = new int[6];
@@ -63,34 +62,12 @@ public class KeyTest {
                     doubleUpKey[i] = up.getKeyValues()[i];
             }
 
-            ko = manager.findOperation(doubleUpKey);
-            assertEquals(up, ko.getKey());
-            assertEquals(ko.getOperation(), Operation.HISTORY_PREV);
+            EventQueue eventQueue = new EventQueue(editMode);
 
-            doubleUpKey[2] = 3212;
-            ko = manager.findOperation(doubleUpKey);
-            assertEquals(Key.ESC, ko.getKey());
-            assertEquals(ko.getOperation(), Operation.NO_ACTION);
+            eventQueue.append(doubleUpKey);
 
-            doubleUpKey = new int[7];
-            for (int i = 0; i < 6; i++) {
-                if (i > 2)
-                    doubleUpKey[i] = up.getKeyValues()[i - 3];
-                else
-                    doubleUpKey[i] = up.getKeyValues()[i];
-            }
-            doubleUpKey[6] = 42;
-
-            ko = manager.findOperation(doubleUpKey);
-            assertEquals(Key.ESC, ko.getKey());
-            assertEquals(ko.getOperation(), Operation.NO_ACTION);
-
-            doubleUpKey = new int[4];
-            for (int i = 0; i < 4; i++)
-                doubleUpKey[i] = 1000 + i;
-
-            ko = manager.findOperation(doubleUpKey);
-            assertNull(ko);
+            action = editMode.parse(eventQueue.next());
+            assertEquals(action.name(), ActionMapper.mapToAction("previous-history").name());
         }
 
     }

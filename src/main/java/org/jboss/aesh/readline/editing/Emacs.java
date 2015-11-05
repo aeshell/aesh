@@ -27,8 +27,10 @@ import org.jboss.aesh.readline.actions.ActionMapper;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.LoggerUtil;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -109,6 +111,14 @@ public class Emacs implements EditMode {
     @Override
     public Mode getMode() {
         return Mode.EMACS;
+    }
+
+    @Override
+    public KeyEvent[] keys() {
+        List<KeyEvent> keys = new ArrayList<>(actions.size()+keyEventActions.size());
+        actions.keySet().forEach( keys::add);
+        keyEventActions.keySet().forEach(keys::add);
+        return keys.toArray(new KeyEvent[keys.size()]);
     }
 
     @Override

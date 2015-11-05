@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.edit;
+package org.jboss.aesh.readline.editing;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -32,7 +32,6 @@ import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.TestShell;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Test;
 

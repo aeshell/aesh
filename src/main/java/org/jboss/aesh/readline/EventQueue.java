@@ -16,6 +16,7 @@
 
 package org.jboss.aesh.readline;
 
+import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.Key;
 
 import java.nio.IntBuffer;
@@ -36,11 +37,9 @@ public class EventQueue implements Iterator<KeyEvent> {
     this.bindings = Key.values();
   }
 
-  /*
-  public EventQueue(KeyMapper keymap) {
-    this.bindings = keymap.getEvents().toArray(new KeyEvent[keymap.getEvents().size()]);
+  public EventQueue(EditMode editMode) {
+    this.bindings = editMode.keys();
   }
-  */
 
   public EventQueue append(int... codePoints) {
     pending = Arrays.copyOf(pending, pending.length + codePoints.length);

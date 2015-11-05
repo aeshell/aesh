@@ -34,6 +34,8 @@ public interface EditMode {
 
     Mode getMode();
 
+    KeyEvent[] keys();
+
     Status getCurrentStatus();
 
     Action parse(KeyEvent event);

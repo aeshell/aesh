@@ -24,7 +24,6 @@ import static org.junit.Assert.assertEquals;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.readline.editing.EditMode;
 import org.junit.Ignore;
 import org.junit.Test;
 

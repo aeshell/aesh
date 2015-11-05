@@ -34,11 +34,6 @@ import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.TestShell;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.edit.EmacsEditMode;
-import org.jboss.aesh.edit.KeyOperationFactory;
-import org.jboss.aesh.edit.KeyOperationManager;
-import org.jboss.aesh.edit.actions.Operation;
-import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.Key;
 import org.junit.Assume;
 import org.junit.Test;
@@ -63,20 +58,6 @@ public class EmacsEditingTest extends BaseConsoleTest {
             assertEquals("1234", op.getBuffer());
             return 0;
         });
-    }
-
-    @Test
-    public void testOperationParser() {
-        Assume.assumeTrue(Config.isOSPOSIXCompatible());
-
-        KeyOperationManager keyOperationManager = new KeyOperationManager();
-        keyOperationManager.addOperations(KeyOperationFactory.generateEmacsMode());
-
-        EmacsEditMode editMode = new EmacsEditMode(keyOperationManager);
-
-        Operation operation = editMode.parseInput(Key.ESC, "12345");
-
-        assertEquals(Operation.NO_ACTION, operation);
     }
 
     @Test

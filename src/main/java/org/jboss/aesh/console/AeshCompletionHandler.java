@@ -218,7 +218,6 @@ public class AeshCompletionHandler implements CompletionHandler {
                                    boolean appendSpace, char separator, InputProcessor inputProcessor) {
         if(completion.getCharacters().startsWith(buffer.getMultiLine())) {
             ActionMapper.mapToAction("backward-kill-word").apply(inputProcessor);
-            //inputProcessor.getBuffer().performAction(new PrevWordAction(buffer.getMultiCursor(), Action.DELETE, Mode.EMACS));
             buffer.write(completion.getCharacters());
             out.print(completion);
 
