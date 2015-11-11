@@ -118,6 +118,8 @@ public class Console {
     private Attributes attributes;
     private PrintStream out;
 
+    private boolean controlledMode = false;
+
     private static final Logger LOGGER = LoggerUtil.getLogger(Console.class.getName());
 
     public Console(final Settings settings) {
@@ -327,6 +329,14 @@ public class Console {
      */
     public boolean isWaitingWithoutBackgroundProcess(){
         return (!processing && !processManager.hasProcesses() && !hasInput() && readingInput == -1);
+    }
+
+    public void controlled(){
+        controlledMode = true;
+    }
+
+    public void continuous(){
+        controlledMode = false;
     }
 
     public synchronized void start() {
@@ -608,7 +618,7 @@ public class Console {
     private void executeLoop() {
         try {
             while(!executorService.isShutdown()) {
-                if (!processManager.hasForegroundProcess() && hasInput()) {
+                if (!processManager.hasForegroundProcess() && hasInput() && !controlledMode) {
                     execute();
                 }
                 Thread.sleep(10);
