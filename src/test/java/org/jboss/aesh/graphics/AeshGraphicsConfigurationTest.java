@@ -40,8 +40,8 @@ public class AeshGraphicsConfigurationTest {
         AeshGraphicsConfiguration agc = new AeshGraphicsConfiguration(terminal);
 
         Assert.assertEquals("TerminalSize{height=80, width=20}", agc.getBounds().toString());
-        Assert.assertEquals(terminal.getWidth() / 2, agc.getBounds().getCenterWidth());
-        Assert.assertEquals(terminal.getHeight() / 2, agc.getBounds().getCenterHeight());
+        Assert.assertEquals(terminal.getWidth() / 2, agc.getBounds().getWidth()/2);
+        Assert.assertEquals(terminal.getHeight() / 2, agc.getBounds().getHeight()/2);
     }
 
 }
