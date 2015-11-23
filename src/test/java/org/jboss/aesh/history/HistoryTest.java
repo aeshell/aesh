@@ -199,4 +199,17 @@ public class HistoryTest extends BaseConsoleTest {
         assertFalse(historyFile.canExecute());
         assertFalse(historyFile.canWrite());
     }
+
+    @Test
+    public void testPrevHistory() {
+        History history = new InMemoryHistory(20);
+        history.push("foo1");
+        history.push("foo2");
+        history.push("foo3");
+
+        assertEquals("foo3", history.getPreviousFetch());
+        history.push("foo3");
+        assertEquals("foo3", history.getPreviousFetch());
+
+    }
 }
