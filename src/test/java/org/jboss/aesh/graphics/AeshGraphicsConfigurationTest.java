@@ -39,7 +39,7 @@ public class AeshGraphicsConfigurationTest {
         terminal.setSize(new Size(80, 20));
         AeshGraphicsConfiguration agc = new AeshGraphicsConfiguration(terminal);
 
-        Assert.assertEquals("TerminalSize{height=80, width=20}", agc.getBounds().toString());
+        Assert.assertEquals("Size[cols=20, rows=80]", agc.getBounds().toString());
         Assert.assertEquals(terminal.getWidth() / 2, agc.getBounds().getWidth()/2);
         Assert.assertEquals(terminal.getHeight() / 2, agc.getBounds().getHeight()/2);
     }
