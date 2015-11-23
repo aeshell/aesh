@@ -108,6 +108,8 @@ public class Console {
 
     private AeshStandardStream standardStream;
 
+    private boolean controlledMode = false;
+
     private static final Logger LOGGER = LoggerUtil.getLogger(Console.class.getName());
 
     public Console(final Settings settings) {
@@ -333,6 +335,14 @@ public class Console {
     public boolean isWaitingWithoutBackgroundProcess(){
         return (!processing && !processManager.hasProcesses() && !getTerminal().hasInput() && readingInput == null && !hasInput());
     }
+
+    public void controlled() {
+        controlledMode = true;
+    }
+
+     public void continuous() {
+         controlledMode = false;
+     }
 
     public synchronized void start() {
         if(running)
@@ -699,7 +709,7 @@ public class Console {
     }
 
     private void execute() {
-        while(!processManager.hasForegroundProcess() && hasInput()) {
+        while(!processManager.hasForegroundProcess() && hasInput() && !controlledMode) {
             processing = true;
             try {
                 processInternalOperation(getInput());
