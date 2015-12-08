@@ -52,7 +52,7 @@ public class TerminalString implements Comparable<TerminalString> {
     }
 
     public TerminalString(String chars) {
-        this(chars, new TerminalColor(), new TerminalTextStyle());
+        this(chars, true);
     }
 
     public TerminalString(String chars, boolean ignoreRendering) {

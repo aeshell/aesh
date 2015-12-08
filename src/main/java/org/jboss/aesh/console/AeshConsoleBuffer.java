@@ -170,6 +170,8 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
                 //save cursor, move the cursor to the beginning, reset line
                 if(keepCursorPosition)
                     out.print(resetLineAndSetCursorToStart);
+                //clear line
+                out.print(ANSI.START + "0G" + ANSI.START + "2K");
                 if(!buffer.isPromptDisabled())
                     displayPrompt();
                 //write line and restore cursor
@@ -482,14 +484,10 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     private void displayPrompt(Prompt prompt) {
         if(prompt.hasANSI() && ansiMode) {
-            out.print(ANSI.START + "0G" + ANSI.START + "2K");
             out.print(prompt.getANSI());
         }
         else {
-            if(ansiMode)
-                out.print(ANSI.START + "0G" + ANSI.START + "2K" + prompt.getPromptAsString());
-            else
-                out.print(prompt.getPromptAsString());
+            out.print(prompt.getPromptAsString());
         }
         out.flush();
     }

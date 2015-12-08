@@ -146,6 +146,7 @@ public class AeshExample {
                 .manProvider(new ManProviderExample())
                 .settings(settings)
                 .validatorInvocationProvider(new ExampleValidatorInvocationProvider())
+                //.prompt(new Prompt("[aesh@rules]$ "))
                 .prompt(new Prompt(new TerminalString("[aesh@rules]$ ",
                         new TerminalColor(Color.GREEN, Color.DEFAULT, Color.Intensity.BRIGHT))))
                 .create();

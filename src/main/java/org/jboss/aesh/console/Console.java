@@ -350,7 +350,6 @@ public class Console {
         if(consoleCallback == null)
             throw new IllegalStateException("Not possible to start the Console without setting ConsoleCallback");
         running = true;
-        displayPrompt();
         startReader();
         startExecutor();
         if(settings.getExecuteAtStart() != null)
