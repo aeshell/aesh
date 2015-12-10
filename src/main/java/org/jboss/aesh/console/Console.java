@@ -461,6 +461,9 @@ public class Console {
             executorService.shutdown();
             if(settings.isLogging())
                 LOGGER.info("Done stopping services. Terminal is reset");
+
+            settings.getStdErr().close();
+            settings.getStdOut().close();
         }
 
         getTerminal().close();
