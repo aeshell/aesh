@@ -711,7 +711,7 @@ public class Console {
     }
 
     private void execute() {
-        while(!processManager.hasForegroundProcess() && hasInput() && !controlledMode) {
+        while(!processManager.hasForegroundProcess() && hasInput()) {
             processing = true;
             try {
                 processInternalOperation(getInput());

@@ -43,8 +43,6 @@ public class ProcessManager {
     private int pidCounter = 1;
     private int foregroundProcess = -1;
 
-    private Stack<Process> backgroundStack = new Stack<Process>();
-
     private static final Logger LOGGER = LoggerUtil.getLogger(ProcessManager.class.getName());
 
     public ProcessManager(Console console, boolean log) {
@@ -120,14 +118,9 @@ public class ProcessManager {
             }
         }
         else {
-            Process p = getProcessByPid(pid);
-            if(p != null) {
-                backgroundStack.push(getProcessByPid(pid));
-            }
             if (doLogging)
                 LOGGER.info("We already have a process in the foreground: " +
-                        foregroundProcess + ", pushing: " + pid + " to background stack. " +
-                        "Will be pulled when current process ends.");
+                        foregroundProcess + ", cant add another");
         }
     }
 
@@ -151,11 +144,7 @@ public class ProcessManager {
             LOGGER.info("process has finished: " + process);
         processes.remove(process.getPID());
         if(process.getStatus() == Process.Status.FOREGROUND) {
-            if(backgroundStack.isEmpty()) {
-                foregroundProcess = -1;
-            }else{
-                foregroundProcess = backgroundStack.pop().getPID();
-            }
+            foregroundProcess = -1;
         }
         console.currentProcessFinished(process);
     }
