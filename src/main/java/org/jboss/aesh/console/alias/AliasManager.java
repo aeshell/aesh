@@ -92,7 +92,7 @@ public class AliasManager {
                     keepGoing = aliasFile.delete();
 
                 if(keepGoing) {
-                    aliasFile.mkdirs();
+                    aliasFile.getParentFile().mkdirs();
                     keepGoing = aliasFile.createNewFile();
                 }
 
