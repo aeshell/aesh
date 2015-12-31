@@ -20,6 +20,7 @@
 package org.jboss.aesh.console.alias;
 
 import org.jboss.aesh.console.Config;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +30,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -36,14 +38,21 @@ import static org.junit.Assert.assertNull;
 public class AliasManagerTest {
 
     private AliasManager manager;
+    private File fooFile;
 
     @Before
     public void setTup() {
         try {
-            manager = new AliasManager(new File("foo"), false, "aesh");
+            fooFile = new File("foo");
+            manager = new AliasManager(fooFile, true, "aesh");
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @After
+    public void cleanup() {
+        fooFile.delete();
     }
 
     @Test
@@ -98,4 +107,9 @@ public class AliasManagerTest {
         Assert.assertEquals(alias + Config.getLineSeparator(), manager.printAllAliases());
     }
 
+    @Test
+    public void testPersist() throws Exception {
+        manager.persist();
+        assertTrue("The persistent file should be a file", fooFile.isFile());
+    }
 }
