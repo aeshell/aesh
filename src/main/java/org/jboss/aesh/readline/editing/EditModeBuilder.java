@@ -126,6 +126,7 @@ public class EditModeBuilder {
         emacs.addAction(Key.CTRL_J, "accept-line");
         emacs.addAction(Key.CTRL_M, "accept-line");
         emacs.addAction(Key.ENTER, "accept-line");
+        emacs.addAction(Key.ENTER_2, "accept-line");
         emacs.addAction(Key.UP, "previous-history");
         emacs.addAction(Key.UP_2, "previous-history");
         emacs.addAction(Key.CTRL_P, "previous-history");
