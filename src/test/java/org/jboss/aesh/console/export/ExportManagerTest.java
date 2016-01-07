@@ -95,6 +95,8 @@ public class ExportManagerTest {
                 new ExportManager(new File(Config.getTmpDir()+Config.getPathSeparator()+"aesh_variable_test"), true);
 
         String result = exportManager.getValue("PATH");
-        assertTrue(result.contains("/usr"));
+        if (Config.isOSPOSIXCompatible()) {
+            assertTrue(result.contains("/usr"));
+        }
     }
 }
