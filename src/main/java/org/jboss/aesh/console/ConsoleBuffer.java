@@ -86,6 +86,10 @@ public interface ConsoleBuffer {
 
     void setPrompt(Prompt prompt);
 
+    boolean isPrompted();
+
+    void setPrompted(boolean prompted);
+
     void setBufferLine(String line);
 
     void insertBufferLine(String insert, int position);

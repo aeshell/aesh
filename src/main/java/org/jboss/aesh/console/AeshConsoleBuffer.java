@@ -56,6 +56,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     private Action currentAction = Action.EDIT;
 
     private final boolean isLogging = false;
+    private boolean prompted = false;
 
     //used to optimize text deletion
     private static final char[] resetLineAndSetCursorToStart =
@@ -422,6 +423,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
                     buffer.setCursor(buffer.getLine().length());
                     out().flush();
                 }
+                prompted = true;
             }
         }
     }
@@ -603,4 +605,13 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         }
     }
 
+    @Override
+    public boolean isPrompted() {
+        return prompted;
+    }
+
+    @Override
+    public void setPrompted(boolean prompted) {
+        this.prompted = prompted;
+    }
 }

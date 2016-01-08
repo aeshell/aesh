@@ -573,9 +573,12 @@ public class Console {
         else {
             if(running || !inputQueue.isEmpty()) {
                 inputProcessor.resetBuffer();
-                displayPrompt();
+                if (!consoleBuffer.isPrompted()) {
+                    displayPrompt();
+                }
             }
         }
+        consoleBuffer.setPrompted(false);
     }
 
     private Terminal getTerminal() {
@@ -1180,4 +1183,5 @@ public class Console {
             shell.enableMainBuffer();
         }
     }
+
 }
