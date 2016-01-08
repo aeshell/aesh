@@ -77,7 +77,7 @@ public class InputrcParser {
         Pattern startConstructs = Pattern.compile("^\\$if");
         Pattern endConstructs = Pattern.compile("^\\$endif");
 
-        Scanner scanner = new Scanner(inputStream).useDelimiter("\n");
+        Scanner scanner = new Scanner(inputStream).useDelimiter(Config.getLineSeparator());
 
         String line;
         boolean constructMode = false;
