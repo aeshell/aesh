@@ -352,6 +352,7 @@ public class Console {
         running = true;
         startReader();
         startExecutor();
+        consoleBuffer.setPrompted(false);
         if(settings.getExecuteAtStart() != null)
             pushToInputStream(settings.getExecuteAtStart());
         if(settings.getExecuteFileAtStart() != null) {
@@ -573,9 +574,12 @@ public class Console {
         else {
             if(running || !inputQueue.isEmpty()) {
                 inputProcessor.resetBuffer();
-                displayPrompt();
+                if (!consoleBuffer.isPrompted()) {
+                    displayPrompt();
+                }
             }
         }
+        consoleBuffer.setPrompted(false);
     }
 
     private Terminal getTerminal() {
@@ -1180,4 +1184,5 @@ public class Console {
             shell.enableMainBuffer();
         }
     }
+
 }
