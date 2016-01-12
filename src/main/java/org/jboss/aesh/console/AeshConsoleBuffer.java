@@ -413,16 +413,6 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     public void setPrompt(Prompt prompt) {
         if(!buffer.getPrompt().equals(prompt)) {
             buffer.updatePrompt(prompt);
-            //only update the prompt if Console is running
-            //set cursor position line.length
-            if(ansiMode) {
-                displayPrompt(prompt);
-                if(buffer.getLine().length() > 0) {
-                    out().print(buffer.getLine());
-                    buffer.setCursor(buffer.getLine().length());
-                    out().flush();
-                }
-            }
         }
     }
 
