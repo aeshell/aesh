@@ -357,7 +357,6 @@ public class Console {
         if(settings.getExecuteFileAtStart() != null) {
             readExecuteFile();
         }
-        displayPrompt();
     }
 
     private PrintStream out() {
@@ -769,10 +768,6 @@ public class Console {
             if(settings.isLogging())
                 LOGGER.severe("Stream failure: "+ioe);
         }
-    }
-
-    public void refreshLine() {
-        consoleBuffer.drawLine(false);
     }
 
     private void displayPrompt() {

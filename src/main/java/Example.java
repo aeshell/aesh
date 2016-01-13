@@ -230,8 +230,8 @@ public class Example {
         };
 
         exampleConsole.setConsoleCallback(consoleCallback);
-        exampleConsole.setPrompt(prompt);
         exampleConsole.start();
+        exampleConsole.setPrompt(prompt);
 
         passwordCallback = new AeshConsoleCallback() {
             private boolean hasUsername = false;
@@ -259,7 +259,6 @@ public class Example {
             Thread.sleep(4000);
             exampleConsole.setPrompt(new Prompt(
                     new TerminalString("[FOO]» ", new TerminalColor( Color.RED, Color.DEFAULT), new TerminalTextStyle(CharacterType.BOLD))));
-            exampleConsole.refreshLine();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
