@@ -574,9 +574,6 @@ public class Console {
         else {
             if(running || !inputQueue.isEmpty()) {
                 inputProcessor.resetBuffer();
-                //current process failed, print out new line
-                if(process.getExitResult().getResultValue() == -1)
-                    consoleBuffer.out().print(Config.getLineSeparator());
                 displayPrompt();
             }
         }
@@ -778,7 +775,7 @@ public class Console {
         consoleBuffer.drawLine(false);
     }
 
-    public void displayPrompt() {
+    private void displayPrompt() {
         consoleBuffer.displayPrompt();
     }
 
