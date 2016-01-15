@@ -352,6 +352,7 @@ public class Console {
         running = true;
         startReader();
         startExecutor();
+        consoleBuffer.setPrompted(false);
         if(settings.getExecuteAtStart() != null)
             pushToInputStream(settings.getExecuteAtStart());
         if(settings.getExecuteFileAtStart() != null) {
