@@ -82,7 +82,10 @@ public class POSIXTerminal extends AbstractTerminal {
                 //intr undef ctrl-c will no longer send the interrupt signal
                 //icrnl, translate carriage return to newline (needed when aesh is started in the background)
                 //susb undef, ctrl-z will no longer send the stop signal
-                stty("-ixon -icanon min 1 intr undef icrnl susp undef");
+                if(Config.getOS().equalsIgnoreCase("hp-ux"))
+                    stty("-ixon -icanon min 1");
+                else
+                    stty("-ixon -icanon min 1 intr undef icrnl susp undef");
 
                 // disable character echoing
                 stty("-echo");

@@ -86,6 +86,10 @@ public class Config {
         return System.getProperty("user.dir");
     }
 
+    public static String getOS() {
+        return System.getProperty("os.name");
+    }
+
     private static boolean checkPosixCompability() {
         if(System.getProperty("os.name").startsWith("Windows")) {
             //need to check if we're running under cygwin
