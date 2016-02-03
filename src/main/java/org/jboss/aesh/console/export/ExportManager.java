@@ -234,7 +234,10 @@ public class ExportManager {
                 keepGoing = exportFile.delete();
 
             if(keepGoing) {
-                exportFile.mkdirs();
+                File parentFile = exportFile.getParentFile();
+                if (parentFile != null) {
+                    parentFile.mkdirs();
+                }
                 keepGoing = exportFile.createNewFile();
             }
 
