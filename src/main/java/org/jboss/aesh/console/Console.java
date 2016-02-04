@@ -353,13 +353,14 @@ public class Console {
             }
         });
         running = true;
-        displayPrompt();
-        startExecutor();
         if(settings.getExecuteAtStart() != null)
             pushToInputStream(settings.getExecuteAtStart());
         if(settings.getExecuteFileAtStart() != null) {
             readExecuteFile();
         }
+
+        displayPrompt();
+        startExecutor();
     }
 
     private PrintStream out() {
@@ -995,20 +996,23 @@ public class Console {
     }
 
     private void readExecuteFile() {
-        if(settings.getExecuteFileAtStart() != null && settings.getExecuteFileAtStart().isLeaf()) {
-            LOGGER.info("reading file");
+        if(settings.getExecuteFileAtStart() != null &&
+                settings.getExecuteFileAtStart().isLeaf()) {
             try {
                 BufferedReader reader = new BufferedReader( new InputStreamReader(settings.getExecuteFileAtStart().read()));
                 String line;
                 while( ( line = reader.readLine() ) != null ) {
                     if(line.length() > 0) {
-                        LOGGER.info("pushing: "+line);
-                        pushToInputStream(line + Config.getLineSeparator());
+                        LOGGER.info("executing: "+line);
+                        execute(line);
                     }
                 }
             }
             catch(IOException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "failed to read resource", e);
+            }
+            catch (InterruptedException e) {
+                LOGGER.log(Level.WARNING, "execution got interrupted", e);
             }
         }
     }

@@ -53,6 +53,7 @@ import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.console.Shell;
+import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.terminal.CharacterType;
@@ -119,8 +120,13 @@ public class AeshExample {
                 .create();
                 */
 
-        SettingsBuilder builder = new SettingsBuilder().logging(true);
-        builder.enableMan(true)
+        SettingsBuilder builder = new SettingsBuilder()
+                .logging(true)
+                .enableMan(true)
+                .enableAlias(true)
+                .enableExport(true)
+                .setExecuteFileAtStart(new FileResource(
+                        Config.getHomeDir()+Config.getPathSeparator()+".aeshrc"))
                 .readInputrc(false);
                 /*
                 .interruptHook(new InterruptHook() {
