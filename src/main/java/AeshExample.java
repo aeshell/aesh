@@ -52,6 +52,7 @@ import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.terminal.CharacterType;
 import org.jboss.aesh.terminal.Color;
@@ -118,8 +119,11 @@ public class AeshExample {
                 .create();
                 */
 
-        SettingsBuilder builder = new SettingsBuilder().logging(true);
-        builder.enableMan(true)
+        SettingsBuilder builder = new SettingsBuilder()
+                .logging(true)
+                .enableMan(true)
+                .setExecuteFileAtStart(new
+                        FileResource(Config.getHomeDir()+Config.getPathSeparator()+".aeshrc"))
                 .readInputrc(false);
                 /*
                 .interruptHook(new InterruptHook() {

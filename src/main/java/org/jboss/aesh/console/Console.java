@@ -731,6 +731,29 @@ public class Console {
         }
     }
 
+    private void execute(String command) throws InterruptedException {
+        try {
+            int start = 0;
+            int end = command.length();
+            while (start < end && Character.isWhitespace(command.charAt(start))) {
+                start++;
+            }
+            while (end > start && Character.isWhitespace(command.charAt(end - 1))) {
+                end--;
+            }
+            command = command.substring(start, end);
+            ConsoleOperation output = new ConsoleOperation(ControlOperator.NONE, command);
+            output = processInternalCommands(output);
+            if (output.getBuffer() != null) {
+                consoleCallback.execute(output);
+            }
+        }
+        catch (IOException ioe) {
+            if (settings.isLogging())
+                LOGGER.severe("Stream failure: " + ioe);
+        }
+    }
+
     private void processInternalOperation(CommandOperation commandOperation) throws IOException {
         String result = inputProcessor.parseOperation(commandOperation);
         if(result != null)
@@ -1057,11 +1080,13 @@ public class Console {
                 while( ( line = reader.readLine() ) != null ) {
                     if(line.length() > 0) {
                         LOGGER.info("pushing: "+line);
-                        pushToInputStream(line + Config.getLineSeparator());
+                        execute(line);
                     }
                 }
             }
             catch(IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
