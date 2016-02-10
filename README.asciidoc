@@ -39,7 +39,7 @@ To get going:
 import java.io.IOException;
 
 import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
+import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -51,7 +51,7 @@ public class Example {
         final Console console = new Console(new SettingsBuilder().create());
         console.setPrompt(new Prompt("[aesh]$ "));
 
-        console.setConsoleCallback(new ConsoleCallback() {
+        console.setConsoleCallback(new AeshConsoleCallback() {
             @Override
             public int execute(ConsoleOperation output) {
                 console.getShell().out().println("======>\"" + output.getBuffer());
@@ -116,7 +116,7 @@ In command mode: About every vi command is supported, here's a few:
 * Previous line : k
 * Next line : n
 * Clear the screen, reprinting the current line at the top : C-l
-* Delete next word to the right of cursor : dw 
+* Delete next word to the right of cursor : dw
 * Kill the text from the current cursor position to the end of the line : D and d$
 * Kill from the cursor to the end of the current word, or, if between words, to the end of the next word : db
 * Kill from the cursor to the previous whitespace : dB
