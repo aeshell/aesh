@@ -295,6 +295,14 @@ public class Console {
         consoleBuffer.setPrompt(prompt);
     }
 
+    /**
+     * Update the current prompt. This will cause the prompt to be refreshed
+     * @param prompt
+     */
+    public void updatePrompt(Prompt prompt) {
+        consoleBuffer.updatePrompt(prompt);
+    }
+
     public Prompt getPrompt() {
         return consoleBuffer.getBuffer().getPrompt();
     }
@@ -350,6 +358,7 @@ public class Console {
         if(consoleCallback == null)
             throw new IllegalStateException("Not possible to start the Console without setting ConsoleCallback");
         running = true;
+        displayPrompt();
         startReader();
         startExecutor();
         consoleBuffer.setPrompted(false);

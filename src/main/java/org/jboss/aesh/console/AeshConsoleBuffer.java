@@ -412,6 +412,11 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     @Override
     public void setPrompt(Prompt prompt) {
+        buffer.updatePrompt(prompt);
+    }
+
+    @Override
+    public void updatePrompt(Prompt prompt) {
         if(!buffer.getPrompt().equals(prompt)) {
             buffer.updatePrompt(prompt);
             //only update the prompt if Console is running

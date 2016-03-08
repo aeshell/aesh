@@ -86,6 +86,8 @@ public interface ConsoleBuffer {
 
     void setPrompt(Prompt prompt);
 
+    void updatePrompt(Prompt prompt);
+
     boolean isPrompted();
 
     void setPrompted(boolean prompted);

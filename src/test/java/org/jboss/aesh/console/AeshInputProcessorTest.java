@@ -594,7 +594,7 @@ public class AeshInputProcessorTest {
         assertEquals("f12", result);
 
         //test with masking set to a null char
-        consoleBuffer.setPrompt(new Prompt("aesh", '\u0000'));
+        consoleBuffer.updatePrompt(new Prompt("aesh", '\u0000'));
 
         inputProcessor.parseOperation(new CommandOperation(Key.f));
         inputProcessor.parseOperation(new CommandOperation(Key.o));

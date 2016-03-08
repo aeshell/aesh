@@ -191,7 +191,7 @@ public class Example {
                 //To change body of implemented methods use File | Settings | File Templates.
                 exampleConsole.getShell().out().println("======>\"" + output.getBuffer());
                 if(masking) {
-                    exampleConsole.getShell().out().print("got password: " + output.getBuffer() + ", stopping masking");
+                    exampleConsole.getShell().out().println("got password: " + output.getBuffer() + ", stopping masking");
                     masking = false;
                     exampleConsole.setPrompt(prompt);
                 }
@@ -230,8 +230,8 @@ public class Example {
         };
 
         exampleConsole.setConsoleCallback(consoleCallback);
-        exampleConsole.start();
         exampleConsole.setPrompt(prompt);
+        exampleConsole.start();
 
         passwordCallback = new AeshConsoleCallback() {
             private boolean hasUsername = false;
