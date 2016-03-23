@@ -253,6 +253,11 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                             commandLine.addOption(active);
                             active = null;
                         }
+                        else if(active.getDefaultValues() != null && active.getDefaultValues().size() > 0) {
+                            active.addValue(active.getDefaultValues().get(0));
+                            commandLine.addOption(active);
+                            active = null;
+                        }
                         else {
                             commandLine.setParserException(new OptionParserException("Option: " + active.getDisplayName() + " must be given a value"));
                             break;
@@ -305,6 +310,11 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                     if (active != null) {
                         if (active.getOptionType() == OptionType.LIST ||
                             active.getOptionType() == OptionType.GROUP) {
+                            commandLine.addOption(active);
+                            active = null;
+                        }
+                        else if(active.getDefaultValues() != null && active.getDefaultValues().size() > 0) {
+                            active.addValue(active.getDefaultValues().get(0));
                             commandLine.addOption(active);
                             active = null;
                         }
