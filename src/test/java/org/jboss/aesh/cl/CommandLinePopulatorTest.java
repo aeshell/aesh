@@ -429,13 +429,6 @@ public class CommandLinePopulatorTest {
             throw commandLine.getParserException();
         }
 
-        System.out.println("cmdline ==> " + argLine);
-        System.out.println("hasOption(abc)=" + commandLine.hasOption("abc"));
-        System.out.println("abc=" + commandLine.getOptionValue("abc", "<not set>"));
-        System.out.println("hasOption(myoption)=" + commandLine.hasOption("myoption"));
-        System.out.println("myoption=" + commandLine.getOptionValue("myoption", "<not set>"));
-        System.out.println();
-
         return commandLine;
     }
 
