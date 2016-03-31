@@ -19,12 +19,15 @@
  */
 package org.jboss.aesh.cl;
 
+import org.jboss.aesh.cl.internal.OptionType;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
-import org.jboss.aesh.cl.parser.CommandLineParserException;
-import org.jboss.aesh.cl.parser.OptionParserException;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
+import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
+import org.jboss.aesh.cl.parser.CommandLineParserException;
+import org.jboss.aesh.cl.parser.OptionParserException;
 import org.jboss.aesh.cl.parser.ParserGenerator;
 import org.jboss.aesh.cl.populator.AeshCommandPopulator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
@@ -371,4 +374,90 @@ public class CommandLinePopulatorTest {
         assertEquals("enable", test1.equal);
         assertFalse("enable", test1.doHelp());
     }
- }
+
+    @Test
+    public void testMyOptionWithValue() throws Exception {
+        CommandLine<?> cl = parseArgLine("mycmd --myoption value --abc 123");
+        assert cl.hasOption("abc") : "Should have abc";
+        assert "123".equals(cl.getOptionValue("abc")) : "bad abc value";
+        assert cl.hasOption("myoption") : "Should have myoption";
+        assert "value".equals(cl.getOptionValue("myoption")) : "bad myoption value";
+    }
+
+    @Test
+    public void testMyOptionWithoutValue() throws Exception {
+        CommandLine<?> cl = parseArgLine("mycmd --myoption --abc 123");
+        assert cl.hasOption("abc") : "Should have abc";
+        assert "123".equals(cl.getOptionValue("abc")) : "bad abc value";
+        assert cl.hasOption("myoption") : "Should have myoption";
+        assert "".equals(cl.getOptionValue("myoption")) : "bad myoption value";
+    }
+
+    @Test
+    public void testNoMyOption() throws Exception {
+        CommandLine<?> cl = parseArgLine("mycmd --abc 123");
+        assert cl.hasOption("abc") : "Should have abc";
+        assert "123".equals(cl.getOptionValue("abc")) : "bad abc value";
+        assert !cl.hasOption("myoption") : "Should not have myoption";
+    }
+
+    // specify --myoption at the end of the cmdline
+    @Test
+    public void testMyOptionAtEndWithValue() throws Exception {
+        CommandLine<?> cl = parseArgLine("mycmd --abc 123 --myoption value");
+        assert cl.hasOption("abc") : "Should have abc";
+        assert "123".equals(cl.getOptionValue("abc")) : "bad abc value";
+        assert cl.hasOption("myoption") : "Should have myoption";
+        assert "value".equals(cl.getOptionValue("myoption")) : "bad myoption value";
+    }
+
+    // specify --myoption at the end of the cmdline
+    @Test
+    public void testMyOptionAtEndWithoutValue() throws Exception {
+        CommandLine<?> cl = parseArgLine("mycmd --abc 123 --myoption");
+        assert cl.hasOption("abc") : "Should have abc";
+        assert "123".equals(cl.getOptionValue("abc")) : "bad abc value";
+        assert cl.hasOption("myoption") : "Should have myoption";
+        assert "".equals(cl.getOptionValue("myoption")) : "bad myoption value";
+    }
+
+    public CommandLine<?> parseArgLine(String argLine) throws Exception {
+        ProcessedCommand<?> options = options = buildCommandLineOptions();
+        CommandLineParser<?> parser = new CommandLineParserBuilder().processedCommand(options).create();
+        CommandLine<?> commandLine = parser.parse(argLine);
+        if (commandLine.getParserException() != null) {
+            throw commandLine.getParserException();
+        }
+
+        System.out.println("cmdline ==> " + argLine);
+        System.out.println("hasOption(abc)=" + commandLine.hasOption("abc"));
+        System.out.println("abc=" + commandLine.getOptionValue("abc", "<not set>"));
+        System.out.println("hasOption(myoption)=" + commandLine.hasOption("myoption"));
+        System.out.println("myoption=" + commandLine.getOptionValue("myoption", "<not set>"));
+        System.out.println();
+
+        return commandLine;
+    }
+
+
+    private ProcessedCommand<?> buildCommandLineOptions() throws Exception {
+        ProcessedCommandBuilder cmd = new ProcessedCommandBuilder();
+
+        cmd.name("mycmd");
+
+        cmd.addOption(new ProcessedOptionBuilder()
+                .name("abc")
+                .optionType(OptionType.NORMAL)
+                .type(String.class)
+                .create());
+        cmd.addOption(new ProcessedOptionBuilder()
+                .name("myoption")
+                .optionType(OptionType.NORMAL)
+                .type(String.class)
+                .addDefaultValue("")
+                .create());
+
+        return cmd.create();
+    }
+
+}

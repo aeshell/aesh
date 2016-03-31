@@ -438,6 +438,11 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                 (active.getOptionType() == OptionType.LIST || active.getOptionType() == OptionType.GROUP))) {
             commandLine.addOption(active);
         }
+        else if(active != null && active.getOptionType() == OptionType.NORMAL &&
+                active.hasDefaultValue() && active.hasValue()) {
+            active.addValue(active.getDefaultValues().get(0));
+            commandLine.addOption(active);
+        }
 
         //this will throw and CommandLineParserException if needed
         if(!ignoreRequirements) {
