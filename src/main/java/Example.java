@@ -257,7 +257,7 @@ public class Example {
         //show how we can change the prompt async
         try {
             Thread.sleep(4000);
-            exampleConsole.setPrompt(new Prompt(
+            exampleConsole.updatePrompt(new Prompt(
                     new TerminalString("[FOO]» ", new TerminalColor( Color.RED, Color.DEFAULT), new TerminalTextStyle(CharacterType.BOLD))));
         } catch (InterruptedException e) {
             e.printStackTrace();
