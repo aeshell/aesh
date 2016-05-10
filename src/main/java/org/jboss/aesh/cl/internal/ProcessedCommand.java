@@ -37,7 +37,7 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public final class ProcessedCommand<C extends Command> {
+public class ProcessedCommand<C extends Command> {
 
     private String name;
     private String description;
@@ -162,7 +162,7 @@ public final class ProcessedCommand<C extends Command> {
     }
 
     public ProcessedOption findOption(String name) {
-        for(ProcessedOption option : options)
+        for (ProcessedOption option : getOptions())
             if(option.getShortName() != null &&
                     option.getShortName().equals(name) &&
                     option.getActivator().isActivated(this))
@@ -172,7 +172,7 @@ public final class ProcessedCommand<C extends Command> {
     }
 
     public ProcessedOption findOptionNoActivatorCheck(String name) {
-        for(ProcessedOption option : options)
+        for (ProcessedOption option : getOptions())
             if(option.getShortName() != null &&
                     option.getShortName().equals(name))
                 return option;
@@ -181,7 +181,7 @@ public final class ProcessedCommand<C extends Command> {
     }
 
     public ProcessedOption findLongOption(String name) {
-        for(ProcessedOption option : options)
+        for (ProcessedOption option : getOptions())
             if(option.getName() != null &&
                     option.getName().equals(name) &&
                     option.getActivator().isActivated(this))
@@ -191,7 +191,7 @@ public final class ProcessedCommand<C extends Command> {
     }
 
     public ProcessedOption findLongOptionNoActivatorCheck(String name) {
-        for(ProcessedOption option : options)
+        for (ProcessedOption option : getOptions())
             if(option.getName() != null && option.getName().equals(name))
                 return option;
 
@@ -199,7 +199,7 @@ public final class ProcessedCommand<C extends Command> {
     }
 
     public ProcessedOption startWithOption(String name) {
-        for(ProcessedOption option : options)
+        for (ProcessedOption option : getOptions())
             if(option.getShortName() != null && name.startsWith(option.getShortName()) &&
                     option.getActivator().isActivated(this))
                 return option;
@@ -208,7 +208,7 @@ public final class ProcessedCommand<C extends Command> {
     }
 
     public ProcessedOption startWithLongOption(String name) {
-        for(ProcessedOption option : options)
+        for (ProcessedOption option : getOptions())
             if(name.startsWith(option.getName()) &&
                     option.getActivator().isActivated(this))
                 return option;
@@ -217,7 +217,7 @@ public final class ProcessedCommand<C extends Command> {
     }
 
    public void clear() {
-       for(ProcessedOption processedOption : options)
+       for (ProcessedOption processedOption : getOptions())
            processedOption.clear();
        if(argument != null)
            argument.clear();
@@ -228,8 +228,9 @@ public final class ProcessedCommand<C extends Command> {
      * and is enabled
      */
     public List<TerminalString> getOptionLongNamesWithDash() {
-        List<TerminalString> names = new ArrayList<>(options.size());
-        for(ProcessedOption o : options) {
+        List<ProcessedOption> opts = getOptions();
+        List<TerminalString> names = new ArrayList<>(opts.size());
+        for (ProcessedOption o : opts) {
             if(o.getValues().size() == 0 &&
                     o.getActivator().isActivated(this))
                 names.add(o.getRenderedNameWithDashes());
@@ -239,8 +240,9 @@ public final class ProcessedCommand<C extends Command> {
     }
 
     public List<TerminalString> findPossibleLongNamesWitdDash(String name) {
-        List<TerminalString> names = new ArrayList<>(options.size());
-        for(ProcessedOption o : options) {
+        List<ProcessedOption> opts = getOptions();
+        List<TerminalString> names = new ArrayList<>(opts.size());
+        for (ProcessedOption o : opts) {
            if(((o.getShortName() != null && o.getShortName().equals(name) &&
                    !o.isLongNameUsed() && o.getValues().size() == 0) ||
                    (o.getName().startsWith(name) && o.getValues().size() == 0)) &&
@@ -258,14 +260,15 @@ public final class ProcessedCommand<C extends Command> {
     public String printHelp() {
         int maxLength = 0;
         int width = 80;
-        for(ProcessedOption o : getOptions())
+        List<ProcessedOption> opts = getOptions();
+        for (ProcessedOption o : opts)
             if(o.getFormattedLength() > maxLength)
                 maxLength = o.getFormattedLength();
 
         StringBuilder sb = new StringBuilder();
-        if(getOptions().size() > 0)
+        if (opts.size() > 0)
            sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
-        for(ProcessedOption o : getOptions())
+        for (ProcessedOption o : opts)
             sb.append(o.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
         if(argument != null) {
             sb.append(Config.getLineSeparator()).append("Arguments:").append(Config.getLineSeparator());
@@ -279,8 +282,8 @@ public final class ProcessedCommand<C extends Command> {
         return "ProcessedCommand{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", options=" + options +
-                '}';
+ ", options=" + getOptions()
+                +                '}';
     }
 
     @Override
@@ -312,7 +315,8 @@ public final class ProcessedCommand<C extends Command> {
     }
 
     public boolean hasOptions() {
-        return getOptions() != null && getOptions().size() > 0;
+        List<ProcessedOption> opts = getOptions();
+        return opts != null && opts.size() > 0;
     }
 
     //will only return true if the optionName equals an option and it does
@@ -329,12 +333,12 @@ public final class ProcessedCommand<C extends Command> {
     }
 
     public void updateInvocationProviders(InvocationProviders invocationProviders) {
-        for(ProcessedOption option : options)
+        for (ProcessedOption option : getOptions())
             option.updateInvocationProviders(invocationProviders);
     }
 
     public void updateSettings(Settings settings) {
-        for(ProcessedOption option : options)
+        for (ProcessedOption option : getOptions())
             option.updateAnsiMode(settings.isAnsiConsole());
     }
 
