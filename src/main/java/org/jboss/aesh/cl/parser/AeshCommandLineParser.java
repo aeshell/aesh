@@ -61,6 +61,10 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         childParsers.add(commandLineParser);
     }
 
+    public List<CommandLineParser<? extends Command>> getChildParsers() {
+        return childParsers;
+    }
+
     @Override
     public void setChild(boolean child) {
         isChild = child;
@@ -68,9 +72,10 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
     @Override
     public List<String> getAllNames() {
-        if(isGroupCommand()) {
-            List<String> names = new ArrayList<>(childParsers.size());
-            for(CommandLineParser child : childParsers) {
+        if (isGroupCommand()) {
+            List<CommandLineParser<? extends Command>> parsers = getChildParsers();
+            List<String> names = new ArrayList<>(parsers.size());
+            for (CommandLineParser child : parsers) {
                 names.add(processedCommand.getName()+" "+child.getProcessedCommand().getName());
             }
             return names;
@@ -90,7 +95,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     public CommandLineParser<? extends Command> getChildParser(String name) {
         if(!isGroupCommand())
             return null;
-        for(CommandLineParser clp : childParsers) {
+        for (CommandLineParser clp : getChildParsers()) {
             if(clp.getProcessedCommand().getName().equals(name))
                 return clp;
         }
@@ -100,7 +105,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     @Override
     public List<CommandLineParser<? extends Command>> getAllChildParsers() {
         if(isGroupCommand())
-            return childParsers;
+            return getChildParsers();
         else
            return new ArrayList<>();
     }
@@ -131,14 +136,15 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      */
     @Override
     public String printHelp() {
-        if(childParsers != null && childParsers.size() > 0) {
+        List<CommandLineParser<? extends Command>> parsers = getChildParsers();
+        if (parsers != null && parsers.size() > 0) {
             StringBuilder sb = new StringBuilder();
             sb.append(processedCommand.printHelp())
                     .append(Config.getLineSeparator())
                     .append(processedCommand.getName())
                     .append(" commands:")
                     .append(Config.getLineSeparator());
-            for(CommandLineParser child : childParsers)
+            for (CommandLineParser child : parsers)
                 sb.append("    ").append(child.getProcessedCommand().getName()).append(Config.getLineSeparator());
 
             return sb.toString();
@@ -541,14 +547,15 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     public void clear() {
         processedCommand.clear();
         if(isGroupCommand()) {
-            for(CommandLineParser child : childParsers)
+            for (CommandLineParser child : getChildParsers())
                 child.getProcessedCommand().clear();
         }
     }
 
     @Override
     public boolean isGroupCommand() {
-        return childParsers != null && childParsers.size() > 0;
+        List<CommandLineParser<? extends Command>> parsers = getChildParsers();
+        return parsers != null && parsers.size() > 0;
     }
 
     @Override
