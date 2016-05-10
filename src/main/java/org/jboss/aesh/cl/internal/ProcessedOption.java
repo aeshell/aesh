@@ -299,8 +299,8 @@ public final class ProcessedOption {
     }
 
     @SuppressWarnings("unchecked")
-    private Object doConvert(String inputValue, InvocationProviders invocationProviders, Object command,
-                             AeshContext aeshContext, boolean doValidation) throws OptionValidatorException {
+    public Object doConvert(String inputValue, InvocationProviders invocationProviders,
+            Object command, AeshContext aeshContext, boolean doValidation) throws OptionValidatorException {
         Object result = converter.convert(
         invocationProviders.getConverterProvider().enhanceConverterInvocation(
                 new AeshConverterInvocation(inputValue, aeshContext)));
