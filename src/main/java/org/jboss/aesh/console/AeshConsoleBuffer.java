@@ -432,7 +432,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
                     buffer.setCursor(buffer.getLine().length());
                     out().flush();
                 }
-                //prompted = true;
+                prompted = true;
             }
         }
     }
