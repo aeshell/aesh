@@ -260,6 +260,11 @@ public class AeshConsoleImpl implements AeshConsole {
         }
     }
 
+    @Override
+    public ConsoleCallback getConsoleCallback() {
+        return console.getConsoleCallback();
+    }
+
     class AeshCompletion implements Completion {
 
         @Override

@@ -287,6 +287,7 @@ public class ParserGenerator {
                     .converter(a.converter())
                     .completer(a.completer())
                     .validator(a.validator())
+                    .activator(a.activator())
                     .create());
         }
     }

@@ -31,6 +31,8 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.jboss.aesh.cl.activation.NullActivator;
+import org.jboss.aesh.cl.activation.OptionActivator;
 
 /**
  * The possible arguments of a command line command
@@ -81,4 +83,9 @@ public @interface Arguments {
      * Define a validator for this option.
      */
     Class<? extends OptionValidator> validator() default NullValidator.class;
+
+    /**
+     * Define an activator for this option.
+     */
+    Class<? extends OptionActivator> activator() default NullActivator.class;
 }

@@ -31,6 +31,8 @@ import org.jboss.aesh.console.helper.ManProvider;
  */
 public interface AeshConsole {
 
+    ConsoleCallback getConsoleCallback();
+
     /**
      * Start the Console. Open stream and set the proper terminal settings.
      */
