@@ -77,18 +77,24 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 if (cl.getParser().getProcessedCommand().getArgument() == null) {
                     //basically an empty string except command name
                     return new ParsedCompleteObject(true, "", 0, cl.getParser().getCompletionParser());
+                } else if (cl.getParser().getProcessedCommand().getArgument().getActivator().isActivated(cl.getParser().getProcessedCommand())) {
+                    return new ParsedCompleteObject(null, "", cl.getParser().getProcessedCommand().getArgument().getType(),
+                            false, getCorrectCompletionParser(line));
                 }
-                return new ParsedCompleteObject(null, "", cl.getParser().getProcessedCommand().getArgument().getType(),
-                        false, getCorrectCompletionParser(line));
+                //basically an empty string except command name
+                return new ParsedCompleteObject(true, "", 0, cl.getParser().getCompletionParser());
             }
         }
         else if(line.trim().equals(cl.getParser().getProcessedCommand().getName())) {
             if(cl.getParser().getProcessedCommand().getArgument() == null) {
                 //basically an empty string except command name
                 return new ParsedCompleteObject(true, "", 0, cl.getParser().getCompletionParser());
+            } else if (cl.getParser().getProcessedCommand().getArgument().getActivator().isActivated(cl.getParser().getProcessedCommand())) {
+                return new ParsedCompleteObject(null, "", cl.getParser().getProcessedCommand().getArgument().getType(),
+                        false, getCorrectCompletionParser(line));
             }
-            return new ParsedCompleteObject(null, "", cl.getParser().getProcessedCommand().getArgument().getType(),
-                    false, getCorrectCompletionParser(line));
+            //basically an empty string except command name
+            return new ParsedCompleteObject(true, "", 0, cl.getParser().getCompletionParser());
         }
         //else we try to complete an option,an option value or arguments
         String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line.trim());
