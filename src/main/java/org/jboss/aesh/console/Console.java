@@ -25,6 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,6 +82,7 @@ public class Console {
     private volatile boolean reading = false;
     private volatile int[] readingInput = null;
     private volatile boolean processing = false;
+    private volatile boolean interactive = true;
 
     private ByteArrayOutputStream redirectPipeOutBuffer;
     private ByteArrayOutputStream redirectPipeErrBuffer;
@@ -375,7 +377,7 @@ public class Console {
             return new PrintStream(redirectPipeOutBuffer, true);
         }
         else {
-            return getInternalShell().out();
+            return getShell().out();
         }
     }
 
@@ -396,6 +398,11 @@ public class Console {
 
     public AeshContext getAeshContext() {
         return context;
+    }
+
+    public void setInteractive(boolean interactive) {
+        this.interactive = interactive;
+        consoleBuffer.setInteractive(interactive);
     }
 
     /**
@@ -1101,13 +1108,25 @@ public class Console {
         }
     }
 
+    public boolean isInteractive() {
+        return interactive;
+    }
+
     private static class ConsoleShell implements Shell {
         private final Console console;
         private final Shell shell;
+        private final PrintStream dummyOut;
 
         ConsoleShell(Shell shell, Console console) {
             this.shell = shell;
             this.console = console;
+            this.dummyOut =
+                    new PrintStream(new OutputStream() {
+                        @Override
+                        public void write(int b) throws IOException {
+                            //no-op
+                        }
+                    });
         }
 
         @Override
@@ -1117,7 +1136,13 @@ public class Console {
 
         @Override
         public PrintStream out() {
-            return console.out();
+            if(console.interactive) {
+                LOGGER.info("we're interactive");
+                return console.getInternalShell().out();
+
+            }
+            else
+                return dummyOut;
         }
 
         @Override

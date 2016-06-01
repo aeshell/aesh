@@ -195,6 +195,16 @@ class FooCommandInvocation implements CommandInvocation {
         commandInvocation.println(msg);
     }
 
+    @Override
+    public boolean isInteractive() {
+        return commandInvocation.isInteractive();
+    }
+
+    @Override
+    public void setInteractive(boolean interactive) {
+        commandInvocation.setInteractive(interactive);
+    }
+
     public String getFoo() {
         return "FOO";
     }

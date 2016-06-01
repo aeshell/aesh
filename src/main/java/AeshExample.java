@@ -155,7 +155,9 @@ public class AeshExample {
                         new TerminalColor(Color.GREEN, Color.DEFAULT, Color.Intensity.BRIGHT))))
                 .create();
 
+        //aeshConsole.setInteractive(false);
         aeshConsole.start();
+        //aeshConsole.execute("ls --cd /home");
     }
 
     @CommandDefinition(name="exit", description = "exit the program")
@@ -317,6 +319,9 @@ public class AeshExample {
                 activator = BarActivator.class)
         List<File> files;
 
+        @Option
+        private Resource cd;
+
         @Option(hasValue = false, description = "display this help and exit")
         private boolean help;
 
@@ -337,6 +342,14 @@ public class AeshExample {
                     commandInvocation.getShell().out().println("you set less to: " + less);
                 if(files != null)
                     commandInvocation.getShell().out().println("you set file to: " + files);
+
+                if(cd != null) {
+                    commandInvocation.getShell().out().println("you set cd to: " + cd);
+                    if(!commandInvocation.isInteractive()) {
+                        commandInvocation.setInteractive(true);
+                        commandInvocation.getShell().out().println("you set cd to: " + cd);
+                    }
+                }
 
                 if(arguments != null) {
                     for(Resource f : arguments)

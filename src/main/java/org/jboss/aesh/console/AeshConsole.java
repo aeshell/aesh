@@ -104,4 +104,15 @@ public interface AeshConsole {
     boolean isRunning();
 
     ExportManager getExportManager();
+
+    /**
+     * The input data will be pushed to the input stream and parsed similar to user input.
+     * If the input do not end with new-line, new-line will be added.
+     * @param input data
+     */
+    void execute(String input);
+
+    boolean isInteractive();
+
+    void setInteractive(boolean interactive);
 }

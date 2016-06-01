@@ -131,4 +131,16 @@ public interface CommandInvocation {
      */
     void println(String msg);
 
+
+    /**
+     *
+     * @return true if Console.interactive is true
+     */
+    boolean isInteractive();
+
+    /**
+     * Set the Console to be interactive or not
+     * @param interactive state
+     */
+    void setInteractive(boolean interactive);
 }

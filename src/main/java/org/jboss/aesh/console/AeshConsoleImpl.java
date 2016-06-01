@@ -24,6 +24,7 @@ import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
@@ -172,6 +173,16 @@ public class AeshConsoleImpl implements AeshConsole {
     }
 
     @Override
+    public boolean isInteractive() {
+        return console.isInteractive();
+    }
+
+    @Override
+    public void setInteractive(boolean interactive) {
+        console.setInteractive(interactive);
+    }
+
+    @Override
     public ExportManager getExportManager() {
         return console.getExportManager();
     }
@@ -192,8 +203,12 @@ public class AeshConsoleImpl implements AeshConsole {
         console.putProcessInForeground(pid);
     }
 
+    @Override
     public void execute(String input) {
-        console.pushToInputStream(input);
+        if(input.endsWith(Config.getLineSeparator()))
+            console.pushToInputStream(input);
+        else
+            console.pushToInputStream(input+Config.getLineSeparator());
     }
 
     public void changeOutputStream(PrintStream output) {

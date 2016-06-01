@@ -63,6 +63,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             (ANSI.CURSOR_SAVE+ANSI.START+"0G"+ANSI.START+"2K").toCharArray();
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshConsoleBuffer.class.getName());
+    private boolean interactive;
 
     AeshConsoleBuffer(Prompt prompt, Shell shell, EditMode editMode, boolean ansi) {
         this.out = shell.out();
@@ -139,6 +140,8 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
 
     @Override
     public void drawLine(boolean keepCursorPosition) {
+        if(!interactive)
+            return;
         if(isLogging)
             LOGGER.info("drawing: "+buffer.getPrompt().getPromptAsString() + buffer.getLine());
         //need to clear more than one line
@@ -356,6 +359,11 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     public void writeChar(char c) {
 
         buffer.write(c);
+
+        //quick exit if we're not in interactive mode
+        if(!interactive)
+            return;
+
         //if mask is set and not set to 0 (nullvalue) we write out
         //the masked char. if masked is set to 0 we write nothing
         if(buffer.getPrompt().isMasking()) {
@@ -421,7 +429,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             buffer.updatePrompt(prompt);
             //only update the prompt if Console is running
             //set cursor position line.length
-            if(ansiMode) {
+            if(ansiMode && interactive) {
                 out.print(ANSI.START + "0G" + ANSI.START + "2K");
                 displayPrompt(prompt);
                 if(buffer.getLine().length() > 0) {
@@ -491,6 +499,8 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
     }
 
     private void displayPrompt(Prompt prompt) {
+        if(!interactive)
+            return;
         if(prompt.hasANSI() && ansiMode) {
             out.print(prompt.getANSI());
         }
@@ -542,6 +552,16 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
         }
 
         return true;
+    }
+
+    @Override
+    public void setInteractive(boolean interactive) {
+        this.interactive = interactive;
+    }
+
+    @Override
+    public boolean isInteractive() {
+        return interactive;
     }
 
 
