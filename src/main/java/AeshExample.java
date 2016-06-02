@@ -155,9 +155,15 @@ public class AeshExample {
                         new TerminalColor(Color.GREEN, Color.DEFAULT, Color.Intensity.BRIGHT))))
                 .create();
 
-        //aeshConsole.setInteractive(false);
-        aeshConsole.start();
-        //aeshConsole.execute("ls --cd /home");
+        //demonstrate how to start with a specific command
+        if(args != null && args.length == 1 && args[0].equals("-c")) {
+            aeshConsole.setInteractive(false);
+            aeshConsole.start();
+            aeshConsole.execute("ls --cd /home");
+        }
+        else
+            aeshConsole.start();
+
     }
 
     @CommandDefinition(name="exit", description = "exit the program")
@@ -347,7 +353,17 @@ public class AeshExample {
                     commandInvocation.getShell().out().println("you set cd to: " + cd);
                     if(!commandInvocation.isInteractive()) {
                         commandInvocation.setInteractive(true);
-                        commandInvocation.getShell().out().println("you set cd to: " + cd);
+                        commandInvocation.println("seems like you called me in non-interactive mode, is that correct? ");
+                        try {
+                            CommandOperation operation = commandInvocation.getInput();
+                            if(operation.getInputKey() == Key.y)
+                                commandInvocation.println("go ahead then, have fun!");
+                            else
+                                commandInvocation.println("do you not know what you are doing!?!?!?");
+                        }
+                        catch (InterruptedException e) {
+                            return CommandResult.FAILURE;
+                        }
                     }
                 }
 
