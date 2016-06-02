@@ -24,7 +24,6 @@ import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
@@ -173,13 +172,13 @@ public class AeshConsoleImpl implements AeshConsole {
     }
 
     @Override
-    public boolean isInteractive() {
-        return console.isInteractive();
+    public boolean isEchoing() {
+        return console.isEchoing();
     }
 
     @Override
-    public void setInteractive(boolean interactive) {
-        console.setInteractive(interactive);
+    public void setEcho(boolean echo) {
+        console.setEcho(echo);
     }
 
     @Override

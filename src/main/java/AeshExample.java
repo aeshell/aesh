@@ -156,8 +156,8 @@ public class AeshExample {
                 .create();
 
         //demonstrate how to start with a specific command
-        if(args != null && args.length == 1 && args[0].equals("-c")) {
-            aeshConsole.setInteractive(false);
+        if(args != null && args.length == 1 && args[0].equals("-e")) {
+            aeshConsole.setEcho(false);
             aeshConsole.start();
             aeshConsole.execute("ls --cd /home");
         }
@@ -351,8 +351,8 @@ public class AeshExample {
 
                 if(cd != null) {
                     commandInvocation.getShell().out().println("you set cd to: " + cd);
-                    if(!commandInvocation.isInteractive()) {
-                        commandInvocation.setInteractive(true);
+                    if(!commandInvocation.isEchoing()) {
+                        commandInvocation.setEcho(true);
                         commandInvocation.println("seems like you called me in non-interactive mode, is that correct? ");
                         try {
                             CommandOperation operation = commandInvocation.getInput();

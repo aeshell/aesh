@@ -126,13 +126,13 @@ public final class AeshCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public boolean isInteractive() {
-        return aeshConsole.isInteractive();
+    public boolean isEchoing() {
+        return aeshConsole.isEchoing();
     }
 
     @Override
-    public void setInteractive(boolean interactive) {
-        aeshConsole.setInteractive(interactive);
+    public void setEcho(boolean echo) {
+        aeshConsole.setEcho(echo);
     }
 
 }

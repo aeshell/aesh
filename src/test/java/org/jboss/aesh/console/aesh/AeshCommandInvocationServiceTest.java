@@ -196,13 +196,13 @@ class FooCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public boolean isInteractive() {
-        return commandInvocation.isInteractive();
+    public boolean isEchoing() {
+        return commandInvocation.isEchoing();
     }
 
     @Override
-    public void setInteractive(boolean interactive) {
-        commandInvocation.setInteractive(interactive);
+    public void setEcho(boolean interactive) {
+        commandInvocation.setEcho(interactive);
     }
 
     public String getFoo() {

@@ -112,7 +112,7 @@ public interface AeshConsole {
      */
     void execute(String input);
 
-    boolean isInteractive();
+    boolean isEchoing();
 
-    void setInteractive(boolean interactive);
+    void setEcho(boolean echo);
 }

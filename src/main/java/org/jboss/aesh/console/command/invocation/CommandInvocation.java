@@ -134,13 +134,13 @@ public interface CommandInvocation {
 
     /**
      *
-     * @return true if Console.interactive is true
+     * @return true if Console.echo is true
      */
-    boolean isInteractive();
+    boolean isEchoing();
 
     /**
-     * Set the Console to be interactive or not
-     * @param interactive state
+     * Set the Console to be echoing or not
+     * @param echo state
      */
-    void setInteractive(boolean interactive);
+    void setEcho(boolean echo);
 }

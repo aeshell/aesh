@@ -37,6 +37,7 @@ public class Buffer {
     private boolean multiLine = false;
     private StringBuilder multiLineBuffer;
     private static boolean ansi = true;
+    private boolean echo = true;
 
     private static final int TAB = 4;
 
@@ -107,14 +108,14 @@ public class Buffer {
      * @return length of the line without prompt
      */
     protected int length() {
-        if(prompt.isMasking() && prompt.getMask() == 0)
+        if(prompt.isMasking() && prompt.getMask() == 0 || !echo)
             return 1;
         else
             return line.length();
     }
 
     protected int totalLength() {
-        if(prompt.isMasking()) {
+        if(prompt.isMasking() || !echo) {
             if(prompt.getMask() == 0)
                 return disablePrompt ? 1 : getPrompt().getLength()+1;
         }
@@ -122,7 +123,7 @@ public class Buffer {
     }
 
     protected int getCursor() {
-        return (prompt.isMasking() && prompt.getMask() == 0) ? 0 : cursor;
+        return (prompt.isMasking() && prompt.getMask() == 0 || !echo) ? 0 : cursor;
     }
 
     protected int getCursorWithPrompt() {
@@ -185,6 +186,14 @@ public class Buffer {
         return disablePrompt;
     }
 
+    protected boolean isEchoing() {
+        return echo;
+    }
+
+    protected void setEcho(boolean echo) {
+        this.echo = echo;
+    }
+
     /**
      * Move the cursor left if the param is negative,
      * and right if its positive.
@@ -217,7 +226,7 @@ public class Buffer {
         // Cursor movement still has to occur, via moveCursor and setCursor above,
         // to put new characters in the correct location in the invisible line,
         // but this method should always return an empty character so the UI cursor does not move.
-        if(prompt.isMasking() && prompt.getMask() == 0){
+        if(prompt.isMasking() && prompt.getMask() == 0 || !echo){
             return new char[0];
         }
 
@@ -343,10 +352,10 @@ public class Buffer {
     }
 
     public String getLine() {
-        if(!prompt.isMasking())
+        if(!prompt.isMasking() && echo)
             return line.toString();
         else {
-            if(line.length() > 0 && prompt.getMask() != '\u0000')
+            if(line.length() > 0 && prompt.getMask() != '\u0000' && echo)
                 return String.format("%"+line.length()+"s", "").replace(' ', prompt.getMask());
             else
                 return "";
