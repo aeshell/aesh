@@ -63,7 +63,7 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             (ANSI.CURSOR_SAVE+ANSI.START+"0G"+ANSI.START+"2K").toCharArray();
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshConsoleBuffer.class.getName());
-    private boolean interactive;
+    private boolean interactive = true;
 
     AeshConsoleBuffer(Prompt prompt, Shell shell, EditMode editMode, boolean ansi) {
         this.out = shell.out();
