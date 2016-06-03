@@ -252,8 +252,10 @@ public class AeshInputProcessor implements InputProcessor {
             if(!consoleBuffer.isInteractive())
                 return result;
             else {
-                consoleBuffer.moveCursor(consoleBuffer.getBuffer().totalLength());
-                consoleBuffer.out().print(Config.getLineSeparator());
+                if(consoleBuffer.getBuffer().isEchoing()) {
+                    consoleBuffer.moveCursor(consoleBuffer.getBuffer().totalLength());
+                    consoleBuffer.out().print(Config.getLineSeparator());
+                }
                 search = null;
                 if (isCurrentLineEnding) {
                     consoleBuffer.getBuffer().setMultiLine(false);
