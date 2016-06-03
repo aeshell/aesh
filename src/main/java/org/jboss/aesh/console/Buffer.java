@@ -115,10 +115,9 @@ public class Buffer {
     }
 
     protected int totalLength() {
-        if(prompt.isMasking() || !echo) {
-            if(prompt.getMask() == 0)
+        if((prompt.isMasking() && prompt.getMask() == 0) || !echo)
                 return disablePrompt ? 1 : getPrompt().getLength()+1;
-        }
+
         return disablePrompt ? line.length()+1 : line.length() + getPrompt().getLength()+1;
     }
 
@@ -355,7 +354,7 @@ public class Buffer {
         if(!prompt.isMasking() && echo)
             return line.toString();
         else {
-            if(line.length() > 0 && prompt.getMask() != '\u0000' && echo)
+            if(echo && line.length() > 0 && prompt.getMask() != '\u0000')
                 return String.format("%"+line.length()+"s", "").replace(' ', prompt.getMask());
             else
                 return "";
