@@ -159,7 +159,7 @@ public class AeshExample {
         if(args != null && args.length == 1 && args[0].equals("-e")) {
             aeshConsole.setEcho(false);
             aeshConsole.start();
-            aeshConsole.execute("ls --cd /home");
+            //aeshConsole.execute("ls --cd /home");
         }
         else
             aeshConsole.start();
@@ -276,7 +276,7 @@ public class AeshExample {
         public void processOperation(CommandInvocation invocation) throws IOException, InterruptedException {
             //first ask for username, then password
             String username = promptForUsername(invocation);
-            String password = promptForInput("password: ", '*', invocation);
+            String password = promptForInput("password: ", '\u0000', invocation);
 
             shell.out().println("we got username: " + username + ", password: " + password);
         }

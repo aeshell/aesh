@@ -116,10 +116,4 @@ public interface ConsoleBuffer {
      */
     boolean performAction(EditAction action) throws IOException;
 
-    /**
-     * Specify if interactive should be disabled or not
-     */
-    void setInteractive(boolean interactive);
-
-    boolean isInteractive();
 }
