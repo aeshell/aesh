@@ -21,8 +21,6 @@ package org.jboss.aesh.console.command;
 
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 
-import java.io.IOException;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -34,8 +32,9 @@ public interface Command<T extends CommandInvocation> {
      *
      * @param commandInvocation invocation
      * @return success or failure depending on how the execution went.
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws CommandException In case an exception occurs during execution
+     * @throws InterruptedException In case the current thread is being
+     * interrupted.
      */
-    CommandResult execute(T commandInvocation) throws IOException, InterruptedException;
+    CommandResult execute(T commandInvocation) throws CommandException, InterruptedException;
 }

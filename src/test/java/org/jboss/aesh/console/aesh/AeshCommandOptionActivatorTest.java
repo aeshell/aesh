@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -113,7 +114,7 @@ public class AeshCommandOptionActivatorTest {
         private String bar;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return null;
         }
     }

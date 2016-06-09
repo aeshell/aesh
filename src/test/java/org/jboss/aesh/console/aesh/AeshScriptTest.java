@@ -30,6 +30,7 @@ import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
@@ -141,17 +142,21 @@ public class AeshScriptTest {
         }
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
 
-//            commandInvocation.putProcessInBackground();
+            try {
+                //            commandInvocation.putProcessInBackground();
 
-            List<String> script = readScriptFile();
+                List<String> script = readScriptFile();
 
-            for(String line : script) {
-                commandInvocation.executeCommand(line + Config.getLineSeparator());
+                for (String line : script) {
+                    commandInvocation.executeCommand(line + Config.getLineSeparator());
+                }
+
+                return CommandResult.SUCCESS;
+            } catch (IOException ex) {
+                throw new CommandException(ex);
             }
-
-            return CommandResult.SUCCESS;
         }
     }
 
@@ -159,7 +164,7 @@ public class AeshScriptTest {
     private static class ExitCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.getShell().out().println("EXITING");
             commandInvocation.stop();
             return CommandResult.SUCCESS;
@@ -170,7 +175,7 @@ public class AeshScriptTest {
     private static class FooCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(counter.getCount() > 1) {
                 commandInvocation.getShell().out().println("computing...." + Config.getLineSeparator() + "finished computing, returning...");
                 counter.countDown();
@@ -187,7 +192,7 @@ public class AeshScriptTest {
     private static class BarCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(counter.getCount() == 1) {
                 commandInvocation.getShell().out().println("baring...." + Config.getLineSeparator() + "finished baring, returning...");
                 counter.countDown();
@@ -237,6 +242,12 @@ public class AeshScriptTest {
         public void handleCommandNotFound(String line, Shell shell) {
             failed = true;
             failedString = line;
+        }
+
+        @Override
+        public void onExecutionFailure(CommandResult result, CommandException exception) {
+            failed = true;
+            failedString = exception.toString();
         }
     }
 

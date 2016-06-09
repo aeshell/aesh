@@ -24,11 +24,11 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParserGenerator;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -83,7 +83,7 @@ public class ParserGeneratorTest {
         private Boolean bar;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -98,7 +98,7 @@ public class ParserGeneratorTest {
         private String version;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -113,7 +113,7 @@ public class ParserGeneratorTest {
         private String test;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }

@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertTrue;
 
@@ -100,7 +101,7 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
 class BarCommand implements Command<FooCommandInvocation> {
 
     @Override
-    public CommandResult execute(FooCommandInvocation commandInvocation) throws IOException, InterruptedException {
+    public CommandResult execute(FooCommandInvocation commandInvocation) throws CommandException, InterruptedException {
         commandInvocation.getShell().out().println(commandInvocation.getFoo());
         return CommandResult.SUCCESS;
     }

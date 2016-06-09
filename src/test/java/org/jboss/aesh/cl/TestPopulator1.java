@@ -23,8 +23,8 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 
-import java.io.IOException;
 import java.util.List;
+import org.jboss.aesh.console.command.CommandException;
 
 @CommandDefinition(name = "test", description = "a simple test")
 public class TestPopulator1 implements Command {
@@ -71,7 +71,7 @@ public class TestPopulator1 implements Command {
     }
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
         return CommandResult.SUCCESS;
     }
 }

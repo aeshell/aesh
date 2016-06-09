@@ -23,9 +23,9 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
+import org.jboss.aesh.console.command.CommandException;
 
 @CommandDefinition(name = "test", description = "a simple test")
 public class TestPopulator3 implements Command {
@@ -48,7 +48,7 @@ public class TestPopulator3 implements Command {
     }
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
         return CommandResult.SUCCESS;
     }
 }

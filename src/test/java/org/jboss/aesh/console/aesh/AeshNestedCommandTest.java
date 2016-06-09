@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertTrue;
 
@@ -76,7 +77,7 @@ public class AeshNestedCommandTest {
     class CustomCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             try {
                 commandInvocation.putProcessInBackground();
 
@@ -105,7 +106,7 @@ public class AeshNestedCommandTest {
     class CustomCommandInternal implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             try {
                 assertTrue(fooInBackground);
 

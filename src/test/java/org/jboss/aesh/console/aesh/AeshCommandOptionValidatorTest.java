@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -192,7 +193,7 @@ public class AeshCommandOptionValidatorTest {
         private String foo;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.getShell().out().println("VAL");
             return CommandResult.SUCCESS;
         }
@@ -204,7 +205,7 @@ public class AeshCommandOptionValidatorTest {
         private Integer num;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.getShell().out().println("NUM");
             return CommandResult.SUCCESS;
         }
@@ -234,7 +235,7 @@ public class AeshCommandOptionValidatorTest {
         private String foo;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.getShell().out().println("VAL2");
             return CommandResult.SUCCESS;
         }

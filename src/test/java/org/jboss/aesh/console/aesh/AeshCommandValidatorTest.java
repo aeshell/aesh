@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -131,7 +132,7 @@ public class AeshCommandValidatorTest {
         private int high;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.getShell().out().println("you got foooed");
             return CommandResult.SUCCESS;
         }
@@ -153,7 +154,7 @@ public class AeshCommandValidatorTest {
         private boolean help;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -168,7 +169,7 @@ public class AeshCommandValidatorTest {
         private String message;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -191,7 +192,7 @@ public class AeshCommandValidatorTest {
         private String test;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             assertTrue(force);
             return CommandResult.SUCCESS;
         }

@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -87,7 +88,7 @@ public class AeshCommandEndOperatorTest {
     private static class FooCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             counter++;
             return CommandResult.SUCCESS;
         }
@@ -100,7 +101,7 @@ public class AeshCommandEndOperatorTest {
         private String info;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             assertEquals("yup", info);
             counter++;
             return CommandResult.SUCCESS;

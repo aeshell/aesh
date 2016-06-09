@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import org.jboss.aesh.console.command.CommandException;
 
 /**
  * A Man implementation for Aesh. ref: http://en.wikipedia.org/wiki/Man_page
@@ -86,7 +87,7 @@ public class Man extends AeshFileDisplayer {
     }
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
         if(manPages == null || manPages.size() == 0) {
             commandInvocation.getShell().out().println("What manual page do you want?");
             return CommandResult.SUCCESS;
@@ -100,8 +101,12 @@ public class Man extends AeshFileDisplayer {
         InputStream inputStream = manProvider.getManualDocument(manPages.get(0));
         if(inputStream != null) {
             setCommandInvocation(commandInvocation);
-            fileParser.setInput(inputStream);
-            afterAttach();
+            try {
+                fileParser.setInput(inputStream);
+                afterAttach();
+            } catch (IOException ex) {
+                throw new CommandException(ex);
+            }
         }
 
         return CommandResult.SUCCESS;
