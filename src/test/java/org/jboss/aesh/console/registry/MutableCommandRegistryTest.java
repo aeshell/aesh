@@ -30,7 +30,7 @@ import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
 import org.jboss.aesh.terminal.TerminalString;
 import org.junit.Test;
 
-import java.io.IOException;
+import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -90,7 +90,7 @@ public class MutableCommandRegistryTest {
     @CommandDefinition(name = "foo", description = "")
     public class Command1 implements Command {
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -98,7 +98,7 @@ public class MutableCommandRegistryTest {
     @CommandDefinition(name = "bar", description = "")
     public class Command2 implements Command {
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -106,7 +106,7 @@ public class MutableCommandRegistryTest {
     @CommandDefinition(name = "help", description = "")
     public class Command3 implements Command {
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -118,7 +118,7 @@ public class MutableCommandRegistryTest {
         private boolean help;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }

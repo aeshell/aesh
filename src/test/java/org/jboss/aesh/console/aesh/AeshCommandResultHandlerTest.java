@@ -43,6 +43,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.util.List;
+import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -88,6 +89,10 @@ public class AeshCommandResultHandlerTest {
         outputStream.flush();
         Thread.sleep(80);
 
+        outputStream.write(("foo --foo 1 --exception" + Config.getLineSeparator()).getBytes());
+        outputStream.flush();
+        Thread.sleep(80);
+
     }
 
 
@@ -100,14 +105,21 @@ public class AeshCommandResultHandlerTest {
         @Option
         private String name;
 
+        @Option(hasValue = false)
+        private boolean exception;
+
         @Arguments
         private List<String> arguments;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
-            if(name == null)
-                return CommandResult.FAILURE;
-            else
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            if (name == null) {
+                if (exception) {
+                    throw new CommandException("Exception occured, please fix options");
+                } else {
+                    return CommandResult.FAILURE;
+                }
+            } else
                 return CommandResult.SUCCESS;
         }
 
@@ -135,6 +147,12 @@ public class AeshCommandResultHandlerTest {
         @Override
         public void onValidationFailure(CommandResult result, Exception exception) {
             assertEquals(2, resultCounter);
+            resultCounter++;
+        }
+
+        @Override
+        public void onExecutionFailure(CommandResult result, CommandException exception) {
+            assertEquals(3, resultCounter);
         }
     }
 

@@ -72,6 +72,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import org.jboss.aesh.console.command.CommandException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -170,7 +171,7 @@ public class AeshExample {
     public static class ExitCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.stop();
             return CommandResult.SUCCESS;
         }
@@ -183,15 +184,19 @@ public class AeshExample {
         private List<Resource> arguments;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
 
             commandInvocation.putProcessInBackground();
 
-            if(arguments != null && arguments.size() > 0 && arguments.get(0).isLeaf()) {
-                List<String> script = readScriptFile(arguments.get(0));
+            if (arguments != null && arguments.size() > 0 && arguments.get(0).isLeaf()) {
+                try {
+                    List<String> script = readScriptFile(arguments.get(0));
 
-                for (String line : script) {
-                    commandInvocation.executeCommand(line + Config.getLineSeparator());
+                    for (String line : script) {
+                        commandInvocation.executeCommand(line + Config.getLineSeparator());
+                    }
+                } catch (IOException ex) {
+                    throw new CommandException(ex);
                 }
             }
 
@@ -221,7 +226,7 @@ public class AeshExample {
         private String foo;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
            if(bar == null)
                commandInvocation.getShell().out().println("NO BAR!");
             else {
@@ -251,14 +256,18 @@ public class AeshExample {
         private Shell shell;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             this.shell = commandInvocation.getShell();
             if(help) {
                 shell.out().println(commandInvocation.getHelpInfo("test"));
             }
             else {
-                //display();
-                processOperation(commandInvocation);
+                try {
+                    //display();
+                    processOperation(commandInvocation);
+                } catch (IOException ex) {
+                    throw new CommandException(ex);
+                }
             }
 
             return CommandResult.SUCCESS;
@@ -335,7 +344,7 @@ public class AeshExample {
         private List<Resource> arguments;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help) {
                 commandInvocation.getShell().out().println(commandInvocation.getHelpInfo("ls"));
             }
@@ -385,7 +394,7 @@ public class AeshExample {
         private Shell shell;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             this.shell = commandInvocation.getShell();
             if(bar) {
                 shell.out().print("are you sure you want bar? (y/n) ");
@@ -401,7 +410,7 @@ public class AeshExample {
             return CommandResult.SUCCESS;
         }
 
-        public void processOperation(CommandOperation operation) throws IOException {
+        public void processOperation(CommandOperation operation) {
             if(operation.getInputKey() == Key.y) {
                 shell.out().println(Config.getLineSeparator()+"you wanted bar!");
             }
@@ -524,7 +533,7 @@ public class AeshExample {
         private boolean help;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help)
                 commandInvocation.getShell().out().println(commandInvocation.getHelpInfo("group"));
             else
@@ -542,7 +551,7 @@ public class AeshExample {
         private boolean help;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help)
                 commandInvocation.getShell().out().println(commandInvocation.getHelpInfo("group child1"));
             else
@@ -557,7 +566,7 @@ public class AeshExample {
         private boolean bar;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.getShell().out().println("bar is set to: "+bar);
             return CommandResult.SUCCESS;
         }
