@@ -45,6 +45,7 @@ public class MapProcessedCommandBuilder {
     private static class MapProcessedCommand extends ProcessedCommand<MapCommand> {
         private final ProcessedOptionProvider provider;
         public MapProcessedCommand(String name,
+                List<String> aliases,
                 MapCommand command,
                 String description,
                 CommandValidator validator,
@@ -53,7 +54,7 @@ public class MapProcessedCommandBuilder {
                 List<ProcessedOption> options,
                 CommandPopulator populator,
                 ProcessedOptionProvider provider) throws OptionParserException {
-            super(name, command, description, validator, resultHandler, argument,
+            super(name, aliases, command, description, validator, resultHandler, argument,
                     options, populator);
             this.provider = provider == null ? EMPTY_PROVIDER : provider;
         }
@@ -83,6 +84,7 @@ public class MapProcessedCommandBuilder {
     private final List<ProcessedOption> options;
     private CommandPopulator populator;
     private MapCommand command;
+    private List<String> aliases;
 
     public MapProcessedCommandBuilder() {
         options = new ArrayList<>();
@@ -90,6 +92,12 @@ public class MapProcessedCommandBuilder {
 
     public MapProcessedCommandBuilder name(String name) {
         this.name = name;
+        return this;
+    }
+
+    public MapProcessedCommandBuilder aliases(List<String> aliases) {
+        this.aliases = aliases == null ? Collections.<String>emptyList()
+                : Collections.unmodifiableList(aliases);
         return this;
     }
 
@@ -195,6 +203,7 @@ public class MapProcessedCommandBuilder {
         }
 
         return new MapProcessedCommand(name,
+                aliases,
                 command,
                 description,
                 validator,

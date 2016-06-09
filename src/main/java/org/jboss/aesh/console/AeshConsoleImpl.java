@@ -136,11 +136,11 @@ public class AeshConsoleImpl implements AeshConsole {
 
     @Override
     public String getHelpInfo(String commandName) {
-        try (CommandContainer commandContainer = registry.getCommand(commandName, "")) {
-            if (commandContainer != null)
+        try (CommandContainer commandContainer = getCommand(commandName, "")) {
+            if (commandContainer != null) {
                 return commandContainer.printHelp(commandName);
-        }
-        catch (Exception e) { // ignored
+            }
+        } catch (Exception e) { // ignored
         }
         return "";
     }
@@ -258,17 +258,36 @@ public class AeshConsoleImpl implements AeshConsole {
      * @throws CommandNotFoundException
      */
     private CommandContainer getCommand(AeshLine aeshLine, String line) throws CommandNotFoundException {
+        return getCommand(aeshLine.getWords().get(0), line);
+    }
+
+    /**
+     * try to return the command in the given registry if the given registry do
+     * not find the command, check if we have a internal registry and if its
+     * there.
+     *
+     * @param commandName command name
+     * @param line command line
+     * @return command
+     * @throws CommandNotFoundException
+     */
+    private CommandContainer getCommand(String commandName, String line) throws CommandNotFoundException {
         try {
-            return registry.getCommand(aeshLine.getWords().get(0), line);
+            return registry.getCommand(commandName, line);
             //return commandContainer;
-        }
-        catch (CommandNotFoundException e) {
-            if (internalRegistry != null) {
-                CommandContainer cc = internalRegistry.getCommand(aeshLine.getWords().get(0));
-                if (cc != null)
-                    return cc;
+        } catch (CommandNotFoundException e) {
+            // Lookup in aliases
+            try {
+                return registry.getCommandByAlias(commandName);
+            } catch (CommandNotFoundException e2) {
+                if (internalRegistry != null) {
+                    CommandContainer cc = internalRegistry.getCommand(commandName);
+                    if (cc != null) {
+                        return cc;
+                    }
+                }
+                throw e;
             }
-            throw e;
         }
     }
 

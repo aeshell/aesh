@@ -167,7 +167,7 @@ public class AeshExample {
 
     }
 
-    @CommandDefinition(name="exit", description = "exit the program")
+    @CommandDefinition(name = "exit", description = "exit the program", aliases = {"quit"})
     public static class ExitCommand implements Command {
 
         @Override

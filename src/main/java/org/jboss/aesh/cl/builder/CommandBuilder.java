@@ -35,6 +35,7 @@ import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.util.ReflectionUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -55,12 +56,19 @@ public class CommandBuilder {
     private List<CommandBuilder> children;
     private CommandLineParserException parserException;
     private CommandPopulator<?, ? extends Command> populator;
+    private List<String> aliases;
 
     public CommandBuilder() {
     }
 
     public CommandBuilder name(String name) {
         this.name = name;
+        return this;
+    }
+
+    public CommandBuilder aliases(List<String> aliases) {
+        this.aliases = aliases == null ? Collections.<String>emptyList()
+                : Collections.unmodifiableList(aliases);
         return this;
     }
 
@@ -177,6 +185,7 @@ public class CommandBuilder {
     private ProcessedCommand createProcessedCommand() throws CommandLineParserException {
         return new ProcessedCommandBuilder()
                 .name(name)
+                .aliases(aliases)
                 .command(command)
                 .description(description)
                 .addOptions(options)
