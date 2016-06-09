@@ -39,11 +39,11 @@ import org.jboss.aesh.terminal.TestTerminal;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
+import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -114,7 +114,7 @@ public class AeshCommandDynamicTest {
     public class GroupCommand implements Command<CommandInvocation> {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -124,7 +124,7 @@ public class AeshCommandDynamicTest {
         private String foo;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             assertEquals("BAR", foo);
             return CommandResult.SUCCESS;
         }
@@ -143,7 +143,7 @@ public class AeshCommandDynamicTest {
         }
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
 
             StringBuilder builder = new StringBuilder();
             commandInvocation.getShell().out().println("creating data packet we're sending over the wire:");

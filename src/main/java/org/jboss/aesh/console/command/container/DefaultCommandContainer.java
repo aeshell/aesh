@@ -32,6 +32,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.parser.AeshLine;
 
 import java.io.IOException;
+import org.jboss.aesh.console.command.CommandException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -42,7 +43,7 @@ public abstract class DefaultCommandContainer<C extends Command> implements Comm
     public CommandContainerResult executeCommand(AeshLine line, InvocationProviders invocationProviders,
                                                  AeshContext aeshContext,
                                                  CommandInvocation commandInvocation)
-            throws CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException, InterruptedException {
+            throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException {
 
         CommandLine commandLine = getParser().parse(line, false);
         commandLine.getParser().getCommandPopulator().populateObject(commandLine, invocationProviders, aeshContext, true);

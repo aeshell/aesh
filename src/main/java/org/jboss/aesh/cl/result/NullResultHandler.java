@@ -19,6 +19,7 @@
  */
 package org.jboss.aesh.cl.result;
 
+import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandResult;
 
 /**
@@ -36,5 +37,9 @@ public class NullResultHandler implements ResultHandler {
 
     @Override
     public void onValidationFailure(CommandResult result, Exception exception) {
+    }
+
+    @Override
+    public void onExecutionFailure(CommandResult result, CommandException exception) {
     }
 }

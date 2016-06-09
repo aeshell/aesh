@@ -36,7 +36,7 @@ import org.jboss.aesh.terminal.Color;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.TerminalColor;
 
-import java.io.IOException;
+import org.jboss.aesh.console.command.CommandException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -65,7 +65,7 @@ public class AeshGraphicsExample {
     public static class ExitCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.stop();
             return CommandResult.SUCCESS;
         }
@@ -78,7 +78,7 @@ public class AeshGraphicsExample {
         private Graphics g;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             invocation = commandInvocation;
             invocation.getShell().enableAlternateBuffer();
             doGfx();
