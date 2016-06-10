@@ -29,7 +29,7 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.parser.AeshLine;
 
-import java.io.IOException;
+import org.jboss.aesh.console.command.CommandException;
 
 /**
  * A CommandContainer hold reference to the Command and
@@ -65,5 +65,7 @@ public interface CommandContainer<T extends Command> extends AutoCloseable {
 
     CommandContainerResult executeCommand(AeshLine line, InvocationProviders invocationProviders,
                                           AeshContext aeshContext,
-                                          CommandInvocation commandInvocation) throws CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException, InterruptedException;
+            CommandInvocation commandInvocation)
+            throws CommandLineParserException, OptionValidatorException,
+            CommandValidatorException, CommandException, InterruptedException;
 }

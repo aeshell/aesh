@@ -32,6 +32,7 @@ import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.complete.Completion;
+import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
@@ -341,8 +342,13 @@ public class AeshConsoleImpl implements AeshConsole {
                     result = CommandResult.FAILURE;
                     if(commandNotFoundHandler != null)
                         commandNotFoundHandler.handleCommandNotFound(output.getBuffer(), getShell());
-                }
-                catch (Exception e) {
+                } catch (CommandException cmd) {
+                    getShell().out().println(cmd.getMessage());
+                    result = CommandResult.FAILURE;
+                    if (resultHandler != null) {
+                        resultHandler.onExecutionFailure(result, cmd);
+                    }
+                } catch (Exception e) {
                     if(e instanceof InterruptedException)
                         throw (InterruptedException) e;
                     else {

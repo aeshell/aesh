@@ -19,6 +19,7 @@
  */
 package org.jboss.aesh.cl.result;
 
+import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandResult;
 
 /**
@@ -31,4 +32,6 @@ public interface ResultHandler {
     void onFailure(CommandResult result);
 
     void onValidationFailure(CommandResult result, Exception exception);
+
+    void onExecutionFailure(CommandResult result, CommandException exception);
 }

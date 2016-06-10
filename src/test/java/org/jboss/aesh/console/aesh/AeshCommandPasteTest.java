@@ -34,6 +34,7 @@ import org.jboss.aesh.console.AeshConsoleImpl;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
@@ -119,7 +120,7 @@ public class AeshCommandPasteTest {
     private static class FooCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             try {
                 Thread.sleep(100);
             }

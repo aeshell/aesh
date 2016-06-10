@@ -49,6 +49,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.util.List;
+import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -258,7 +259,7 @@ public class AeshCommandCompletionTest {
         private List<String> arguments;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
 
@@ -274,7 +275,7 @@ public class AeshCommandCompletionTest {
         private String bar;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -313,7 +314,7 @@ public class AeshCommandCompletionTest {
         private String containerOption;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return null;
         }
     }
@@ -344,7 +345,7 @@ public class AeshCommandCompletionTest {
         private boolean help;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -356,7 +357,7 @@ public class AeshCommandCompletionTest {
         private boolean all;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
@@ -371,7 +372,7 @@ public class AeshCommandCompletionTest {
         private String test;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws IOException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             assertTrue(force);
             return CommandResult.SUCCESS;
         }
