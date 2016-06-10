@@ -41,6 +41,13 @@ public interface CommandRegistry {
     CommandContainer getCommand(String name, String line) throws CommandNotFoundException;
 
     /**
+     * @param alias command alias
+     * @return the matching CommandContainer's alias
+     * @throws org.jboss.aesh.console.command.CommandNotFoundException
+     */
+    CommandContainer getCommandByAlias(String alias) throws CommandNotFoundException;
+
+    /**
      * Based on input, find all commands that match or partly match
      *
      *

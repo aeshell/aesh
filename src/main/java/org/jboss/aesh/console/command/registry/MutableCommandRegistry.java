@@ -35,13 +35,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class MutableCommandRegistry implements CommandRegistry {
 
-    private final Map<String,CommandContainer<Command>> registry = new HashMap<>();
+    private final Map<String, CommandContainer<Command>> registry = new HashMap<>();
+    private final Map<String, CommandContainer<Command>> aliases = new HashMap<>();
 
     private CommandContainerBuilder containerBuilder;
 
@@ -131,21 +133,56 @@ public class MutableCommandRegistry implements CommandRegistry {
     }
 
     private void putIntoRegistry(CommandContainer commandContainer) {
-        if(!commandContainer.haveBuildError() &&
-                !registry.containsKey(commandContainer.getParser().getProcessedCommand().getName()))
-            registry.put(commandContainer.getParser().getProcessedCommand().getName(), commandContainer);
+        if (!commandContainer.haveBuildError()
+                && !contains(commandContainer.getParser().getProcessedCommand())) {
+            registry.put(commandContainer.getParser().getProcessedCommand().getName(),
+                    commandContainer);
+            ProcessedCommand<?> command = commandContainer.getParser().
+                    getProcessedCommand();
+            for (String alias : command.getAliases()) {
+                aliases.put(alias, commandContainer);
+            }
+        }
+    }
+
+    private boolean contains(ProcessedCommand<?> command) {
+        if (registry.containsKey(command.getName())) {
+            return true;
+        }
+        for (String alias : command.getAliases()) {
+            if (aliases.containsKey(alias)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public void removeCommand(String name) {
-        if(registry.containsKey(name))
-            registry.remove(name);
+        if (registry.containsKey(name)) {
+            CommandContainer container = registry.remove(name);
+            ProcessedCommand<?> command = container.getParser().
+                    getProcessedCommand();
+            for (String alias : command.getAliases()) {
+                aliases.remove(alias);
+            }
+        }
     }
 
     private CommandContainerBuilder getBuilder() {
         if(containerBuilder == null)
             containerBuilder = new AeshCommandContainerBuilder();
         return containerBuilder;
+    }
+
+    @Override
+    public CommandContainer getCommandByAlias(String alias) throws CommandNotFoundException {
+        if (aliases.containsKey(alias)) {
+            return aliases.get(alias);
+        } else {
+            throw new CommandNotFoundException("Command: with " + alias
+                    + " alias was not found.");
+        }
     }
 
 }

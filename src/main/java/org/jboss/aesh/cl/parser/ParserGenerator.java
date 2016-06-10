@@ -42,6 +42,7 @@ import org.jboss.aesh.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -67,6 +68,7 @@ public class ParserGenerator {
         if(command != null) {
             ProcessedCommand processedCommand = new ProcessedCommandBuilder()
                     .name(command.name())
+                    .aliases(Arrays.asList(command.aliases()))
                     .description(command.description())
                     .validator(command.validator())
                     .command(commandObject)
@@ -85,6 +87,7 @@ public class ParserGenerator {
         if(groupCommand != null) {
             ProcessedCommand processedGroupCommand = new ProcessedCommandBuilder()
                     .name(groupCommand.name())
+                    .aliases(Arrays.asList(groupCommand.aliases()))
                     .description(groupCommand.description())
                     .validator(groupCommand.validator())
                     .command((Command) commandObject)

@@ -32,6 +32,7 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -48,11 +49,12 @@ public class ProcessedCommand<C extends Command> {
     private List<ProcessedOption> options;
     private ProcessedOption argument;
     private C command;
+    private final List<String> aliases;
 
-    public ProcessedCommand(String name, C command, String description, CommandValidator validator, ResultHandler resultHandler,
-                            ProcessedOption argument, List<ProcessedOption> options, CommandPopulator populator ) throws OptionParserException {
+    public ProcessedCommand(String name, List<String> aliases, C command, String description, CommandValidator validator, ResultHandler resultHandler, ProcessedOption argument, List<ProcessedOption> options, CommandPopulator populator) throws OptionParserException {
         setName(name);
         setDescription(description);
+        this.aliases = aliases == null ? Collections.<String>emptyList() : aliases;
         this.validator = validator;
         this.resultHandler = resultHandler;
         this.argument = argument;
@@ -67,6 +69,10 @@ public class ProcessedCommand<C extends Command> {
 
     public List<ProcessedOption> getOptions() {
         return options;
+    }
+
+    public List<String> getAliases() {
+        return aliases;
     }
 
     public void addOption(ProcessedOption opt) throws OptionParserException {
