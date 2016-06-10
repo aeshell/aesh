@@ -29,6 +29,7 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.util.ReflectionUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -47,6 +48,7 @@ public class ProcessedCommandBuilder {
     private final List<ProcessedOption> options;
     private CommandPopulator populator;
     private Command command;
+    private List<String> aliases;
 
     public ProcessedCommandBuilder() {
         options = new ArrayList<>();
@@ -54,6 +56,12 @@ public class ProcessedCommandBuilder {
 
     public ProcessedCommandBuilder name(String name) {
         this.name = name;
+        return this;
+    }
+
+    public ProcessedCommandBuilder aliases(List<String> aliases) {
+        this.aliases = aliases == null ? Collections.<String>emptyList()
+                : Collections.unmodifiableList(aliases);
         return this;
     }
 
@@ -137,6 +145,6 @@ public class ProcessedCommandBuilder {
         if(resultHandler == null)
             resultHandler = new NullResultHandler();
 
-        return new ProcessedCommand(name, command, description, validator, resultHandler, argument, options, populator);
+        return new ProcessedCommand(name, aliases, command, description, validator, resultHandler, argument, options, populator);
     }
 }

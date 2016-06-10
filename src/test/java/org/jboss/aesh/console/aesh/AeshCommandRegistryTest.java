@@ -70,6 +70,11 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
+            public CommandContainer getCommandByAlias(String alias) throws CommandNotFoundException {
+                throw new IllegalStateException("Should not crash Aesh");
+            }
+
+            @Override
             public void completeCommandName(CompleteOperation completeOperation) {
             }
 
@@ -124,6 +129,11 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
+            public CommandContainer getCommandByAlias(String alias) throws CommandNotFoundException {
+                return null;
+            }
+
+            @Override
             public void completeCommandName(CompleteOperation completeOperation) {
             }
 
@@ -171,6 +181,11 @@ public class AeshCommandRegistryTest {
 
             @Override
             public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
+                return null;
+            }
+
+            @Override
+            public CommandContainer getCommandByAlias(String alias) throws CommandNotFoundException {
                 return null;
             }
 

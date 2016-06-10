@@ -70,6 +70,10 @@ public class CommandLineParserTest {
         assertEquals("e", cl.getOptions().get(0).getShortName());
         assertEquals("bar", cl.getOptions().get(0).getValue());
 
+        cl = (CommandLine<Parser1Test>) parser.parse("toto -e=bar -DXms=128m -DXmx=512m /tmp/file.txt");
+        assertEquals("e", cl.getOptions().get(0).getShortName());
+        assertEquals("bar", cl.getOptions().get(0).getValue());
+
         cl = (CommandLine<Parser1Test>) parser.parse("test --equal=bar -DXms=128m -DXmx=512m /tmp/file.txt");
         assertEquals("e", cl.getOptions().get(0).getShortName());
         assertEquals("equal", cl.getOptions().get(0).getName());
@@ -261,7 +265,7 @@ public class CommandLineParserTest {
         assertEquals("bar", cl.getOptionValue("foo"));
     }
 
-    @CommandDefinition(name = "test", description = "a simple test")
+    @CommandDefinition(name = "test", description = "a simple test", aliases = {"toto"})
     public class Parser1Test extends TestingCommand {
 
         @Option(shortName = 'X', name = "X", description = "enable X", hasValue = false)
