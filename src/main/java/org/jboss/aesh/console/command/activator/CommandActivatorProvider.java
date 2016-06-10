@@ -17,26 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.console;
+package org.jboss.aesh.console.command.activator;
 
-import org.jboss.aesh.console.command.activator.CommandActivatorProvider;
-import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
-import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
-import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
-import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
+import org.jboss.aesh.cl.activation.CommandActivator;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author jdenise@redhat.com
  */
-public interface InvocationProviders {
+public interface CommandActivatorProvider<T extends CommandActivator> {
 
-    ConverterInvocationProvider getConverterProvider();
-
-    CompleterInvocationProvider getCompleterProvider();
-
-    ValidatorInvocationProvider getValidatorProvider();
-
-    OptionActivatorProvider getOptionActivatorProvider();
-    
-    CommandActivatorProvider getCommandActivatorProvider();
+    T enhanceCommandActivator(CommandActivator commandActivator);
 }

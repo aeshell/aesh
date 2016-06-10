@@ -31,6 +31,8 @@ import org.jboss.aesh.util.ReflectionUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.jboss.aesh.cl.activation.CommandActivator;
+import org.jboss.aesh.cl.activation.NullCommandActivator;
 
 /**
  * Build a {@link org.jboss.aesh.cl.internal.ProcessedCommand} object using the Builder pattern.
@@ -49,7 +51,8 @@ public class ProcessedCommandBuilder {
     private CommandPopulator populator;
     private Command command;
     private List<String> aliases;
-
+    private CommandActivator activator;
+    
     public ProcessedCommandBuilder() {
         options = new ArrayList<>();
     }
@@ -113,6 +116,23 @@ public class ProcessedCommandBuilder {
         this.populator = populator;
         return this;
     }
+    
+    public ProcessedCommandBuilder activator(CommandActivator activator) {
+        this.activator = activator;
+        return this;
+    }
+    
+    public ProcessedCommandBuilder activator(Class<? extends CommandActivator> activator) {
+        this.activator = initActivator(activator);
+        return this;
+    }
+
+    private CommandActivator initActivator(Class<? extends CommandActivator> activator) {
+        if(activator != null && activator != NullCommandActivator.class)
+            return ReflectionUtil.newInstance(activator);
+        else
+            return new NullCommandActivator();
+    }
 
     public ProcessedCommandBuilder command(Command command) {
         this.command = command;
@@ -145,6 +165,7 @@ public class ProcessedCommandBuilder {
         if(resultHandler == null)
             resultHandler = new NullResultHandler();
 
-        return new ProcessedCommand(name, aliases, command, description, validator, resultHandler, argument, options, populator);
+        return new ProcessedCommand(name, aliases, command, description, validator, 
+                resultHandler, argument, options, populator, activator);
     }
 }

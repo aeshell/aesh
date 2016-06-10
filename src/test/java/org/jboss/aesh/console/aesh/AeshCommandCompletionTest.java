@@ -52,6 +52,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.util.List;
+import org.jboss.aesh.cl.activation.CommandActivator;
 import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
@@ -91,7 +92,14 @@ public class AeshCommandCompletionTest {
         AeshConsole aeshConsole = consoleBuilder.create();
         aeshConsole.start();
 
-        outputStream.write(("foo --name aslak --bar ").getBytes());
+        outputStream.write(("fo").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        assertEquals("foo ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        
+        outputStream.write(("--name aslak --bar ").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
 
@@ -146,6 +154,55 @@ public class AeshCommandCompletionTest {
         aeshConsole.stop();
     }
 
+    @Test
+    public void testCommandActivator() throws Exception {
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .terminal(new TestTerminal())
+                .inputStream(pipedInputStream)
+                .outputStream(new PrintStream(byteArrayOutputStream))
+                .logging(true)
+                .create();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(TotoCommand.class)
+                .create();
+
+        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
+                .settings(settings)
+                .commandRegistry(registry)
+                .prompt(new Prompt(""));
+
+        AeshConsole aeshConsole = consoleBuilder.create();
+        aeshConsole.start();
+
+        TestCommandActivator.activated = true;
+        outputStream.write(("hi").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        assertEquals("hidden ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        
+        outputStream.write(enter.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        
+        TestCommandActivator.activated = false;
+        outputStream.write(("hi").getBytes());
+        outputStream.write(completeChar.getFirstValue());
+        outputStream.flush();
+
+        Thread.sleep(80);
+        assertEquals("hi", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        
+        aeshConsole.stop();
+    }
+    
     @Test
     public void testCompletionNoArguments() {
 
@@ -271,6 +328,24 @@ public class AeshCommandCompletionTest {
 
         public String getName() {
             return name;
+        }
+    }
+    
+    private static class TestCommandActivator implements CommandActivator {
+
+        static boolean activated;
+        @Override
+        public boolean isActivated() {
+            return activated;
+        }
+    }
+    
+    @CommandDefinition(name = "hidden", description = "", activator = TestCommandActivator.class)
+    public static class TotoCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
         }
     }
 
