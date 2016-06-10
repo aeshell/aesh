@@ -40,6 +40,8 @@ public @interface GroupCommandDefinition {
 
     String name();
 
+    String[] aliases() default {};
+
     String description();
 
     Class<? extends CommandValidator> validator() default NullCommandValidator.class;

@@ -174,7 +174,8 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     @Override
     public CommandLine<? extends Command> parse(AeshLine line, boolean ignoreRequirements) {
         if(line.getWords().size() > 0) {
-            if(processedCommand.getName().equals(line.getWords().get(0))) {
+            if (processedCommand.getName().equals(line.getWords().get(0))
+                    || processedCommand.getAliases().contains(line.getWords().get(0))) {
                 if(isGroupCommand() && line.getWords().size() > 1) {
                    CommandLineParser<? extends Command> clp = getChildParser(line.getWords().get(1));
                     if(clp == null)
