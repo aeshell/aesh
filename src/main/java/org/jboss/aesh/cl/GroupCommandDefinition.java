@@ -30,6 +30,8 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.jboss.aesh.cl.activation.CommandActivator;
+import org.jboss.aesh.cl.activation.NullCommandActivator;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -50,4 +52,5 @@ public @interface GroupCommandDefinition {
 
     Class<? extends Command>[] groupCommands() default {};
 
+    Class<? extends CommandActivator> activator() default NullCommandActivator.class;
 }
