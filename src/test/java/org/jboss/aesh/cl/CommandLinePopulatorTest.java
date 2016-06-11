@@ -45,6 +45,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.util.Currency;
+import org.jboss.aesh.console.command.activator.AeshCommandActivatorProvider;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -62,7 +63,8 @@ public class CommandLinePopulatorTest {
                     new AeshConverterInvocationProvider(),
                     new AeshCompleterInvocationProvider(),
                     new AeshValidatorInvocationProvider(),
-                    new AeshOptionActivatorProvider());
+                    new AeshOptionActivatorProvider(),
+                    new AeshCommandActivatorProvider());
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();

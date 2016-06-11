@@ -17,37 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.cl;
+package org.jboss.aesh.console.command.activator;
 
-import org.jboss.aesh.cl.result.NullResultHandler;
-import org.jboss.aesh.cl.result.ResultHandler;
-import org.jboss.aesh.cl.validator.CommandValidator;
-import org.jboss.aesh.cl.validator.NullCommandValidator;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import org.jboss.aesh.cl.activation.CommandActivator;
-import org.jboss.aesh.cl.activation.NullCommandActivator;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@Retention(RUNTIME)
-@Target(TYPE)
-public @interface CommandDefinition {
-
-    String name();
-
-    String[] aliases() default {};
-
-    String description();
-
-    Class<? extends CommandValidator> validator() default NullCommandValidator.class;
-
-    Class<? extends ResultHandler> resultHandler() default NullResultHandler.class;
-    
-    Class<? extends CommandActivator> activator() default NullCommandActivator.class;
+public class AeshCommandActivatorProvider implements CommandActivatorProvider<CommandActivator> {
+    @Override
+    public CommandActivator enhanceCommandActivator(CommandActivator commandActivator) {
+        return commandActivator;
+    }
 }

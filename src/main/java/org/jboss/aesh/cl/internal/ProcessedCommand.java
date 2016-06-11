@@ -34,6 +34,8 @@ import org.jboss.aesh.terminal.TerminalString;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.jboss.aesh.cl.activation.CommandActivator;
+import org.jboss.aesh.cl.activation.NullCommandActivator;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -45,13 +47,18 @@ public class ProcessedCommand<C extends Command> {
     private CommandValidator validator;
     private ResultHandler resultHandler = new NullResultHandler();
     private CommandPopulator populator;
-
+    private CommandActivator activator;
+    
     private List<ProcessedOption> options;
     private ProcessedOption argument;
     private C command;
     private final List<String> aliases;
 
-    public ProcessedCommand(String name, List<String> aliases, C command, String description, CommandValidator validator, ResultHandler resultHandler, ProcessedOption argument, List<ProcessedOption> options, CommandPopulator populator) throws OptionParserException {
+    public ProcessedCommand(String name, List<String> aliases, C command, 
+            String description, CommandValidator validator, 
+            ResultHandler resultHandler, 
+            ProcessedOption argument, List<ProcessedOption> options, 
+            CommandPopulator populator, CommandActivator activator) throws OptionParserException {
         setName(name);
         setDescription(description);
         this.aliases = aliases == null ? Collections.<String>emptyList() : aliases;
@@ -60,6 +67,7 @@ public class ProcessedCommand<C extends Command> {
         this.argument = argument;
         this.options = new ArrayList<>();
         this.command = command;
+        this.activator = activator == null ? new NullCommandActivator() : activator;
         if(populator == null)
             this.populator = new AeshCommandPopulator(this.command);
         else
@@ -71,6 +79,10 @@ public class ProcessedCommand<C extends Command> {
         return options;
     }
 
+    public CommandActivator getActivator() {
+        return activator;
+    }
+    
     public List<String> getAliases() {
         return aliases;
     }
@@ -341,6 +353,7 @@ public class ProcessedCommand<C extends Command> {
     public void updateInvocationProviders(InvocationProviders invocationProviders) {
         for (ProcessedOption option : getOptions())
             option.updateInvocationProviders(invocationProviders);
+        activator = invocationProviders.getCommandActivatorProvider().enhanceCommandActivator(activator);
     }
 
     public void updateSettings(Settings settings) {

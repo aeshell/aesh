@@ -38,6 +38,8 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jboss.aesh.console.command.activator.AeshCommandActivatorProvider;
+import org.jboss.aesh.console.command.activator.CommandActivatorProvider;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -54,6 +56,7 @@ public class AeshConsoleBuilder {
     private ConverterInvocationProvider converterInvocationProvider;
     private ValidatorInvocationProvider validatorInvocationProvider;
     private OptionActivatorProvider optionActivatorProvider;
+    private CommandActivatorProvider commandActivatorProvider;
     private List<Command> commands;
     private String execute;
 
@@ -105,6 +108,11 @@ public class AeshConsoleBuilder {
         this.optionActivatorProvider = optionActivatorProvider;
         return this;
     }
+    
+    public AeshConsoleBuilder commandActivatorProvider(CommandActivatorProvider commandActivatorProvider) {
+        this.commandActivatorProvider = commandActivatorProvider;
+        return this;
+    }
 
     public AeshConsoleBuilder manProvider(ManProvider manProvider) {
         this.manProvider = manProvider;
@@ -145,11 +153,14 @@ public class AeshConsoleBuilder {
 
         if(optionActivatorProvider == null)
             optionActivatorProvider = new AeshOptionActivatorProvider();
+        
+        if(commandActivatorProvider == null)
+            commandActivatorProvider = new AeshCommandActivatorProvider();
 
         AeshConsoleImpl aeshConsole =
                 new AeshConsoleImpl(settings, registry, commandInvocationServices,
                         commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
-                        validatorInvocationProvider, optionActivatorProvider, manProvider);
+                        validatorInvocationProvider, optionActivatorProvider, manProvider, commandActivatorProvider);
 
         if(prompt != null)
             aeshConsole.setPrompt(prompt);

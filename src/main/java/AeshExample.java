@@ -21,6 +21,7 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.GroupCommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
+ import org.jboss.aesh.cl.activation.CommandActivator;
 import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
@@ -139,6 +140,7 @@ public class AeshExample {
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
                 .command(fooCommand.create())
+                .command(HiddenCommand.class)
                 .command(LsCommand.class)
                 .command(TestConsoleCommand.class)
                 .command(PromptCommand.class)
@@ -173,6 +175,22 @@ public class AeshExample {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.stop();
+            return CommandResult.SUCCESS;
+        }
+    }
+    
+    private static class HideActivator implements CommandActivator {
+        public boolean isActivated() {
+            return false;
+        }
+    }
+    
+    @CommandDefinition(name = "hidden", description = "hidden command", activator = HideActivator.class)
+    public static class HiddenCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            commandInvocation.print("Command exists but is not shown");
             return CommandResult.SUCCESS;
         }
     }
