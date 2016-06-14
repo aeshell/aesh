@@ -45,6 +45,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import org.jboss.aesh.console.command.activator.AeshCommandActivatorProvider;
 
 /**
  * Generates a {@link AeshCommandLineParser} based on annotations defined in
@@ -68,6 +69,7 @@ public class ParserGenerator {
         if(command != null) {
             ProcessedCommand processedCommand = new ProcessedCommandBuilder()
                     .name(command.name())
+                    .activator(command.activator())
                     .aliases(Arrays.asList(command.aliases()))
                     .description(command.description())
                     .validator(command.validator())
@@ -87,6 +89,7 @@ public class ParserGenerator {
         if(groupCommand != null) {
             ProcessedCommand processedGroupCommand = new ProcessedCommandBuilder()
                     .name(groupCommand.name())
+                    .activator(groupCommand.activator())
                     .aliases(Arrays.asList(groupCommand.aliases()))
                     .description(groupCommand.description())
                     .validator(groupCommand.validator())
@@ -310,7 +313,8 @@ public class ParserGenerator {
                 new AeshConverterInvocationProvider(),
                 new AeshCompleterInvocationProvider(),
                 new AeshValidatorInvocationProvider(),
-                new AeshOptionActivatorProvider());
+                new AeshOptionActivatorProvider(),
+                new AeshCommandActivatorProvider());
         cl.getCommandPopulator().populateObject( cl.parse(input), invocationProviders, null, true);
     }
 

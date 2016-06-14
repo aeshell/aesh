@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import java.util.List;
+import org.jboss.aesh.cl.activation.CommandActivator;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.parser.OptionParserException;
@@ -53,9 +54,10 @@ public class MapProcessedCommandBuilder {
                 ProcessedOption argument,
                 List<ProcessedOption> options,
                 CommandPopulator populator,
-                ProcessedOptionProvider provider) throws OptionParserException {
+                ProcessedOptionProvider provider,
+                CommandActivator activator) throws OptionParserException {
             super(name, aliases, command, description, validator, resultHandler, argument,
-                    options, populator);
+                    options, populator, activator);
             this.provider = provider == null ? EMPTY_PROVIDER : provider;
         }
 
@@ -85,6 +87,7 @@ public class MapProcessedCommandBuilder {
     private CommandPopulator populator;
     private MapCommand command;
     private List<String> aliases;
+    private CommandActivator activator;
 
     public MapProcessedCommandBuilder() {
         options = new ArrayList<>();
@@ -185,6 +188,11 @@ public class MapProcessedCommandBuilder {
         return this;
     }
 
+    public MapProcessedCommandBuilder activator(CommandActivator activator) {
+        this.activator = activator;
+        return this;
+    }
+
     public ProcessedCommand create() throws CommandLineParserException {
         if (name == null || name.length() < 1) {
             throw new CommandLineParserException("The parameter name must be defined");
@@ -211,6 +219,7 @@ public class MapProcessedCommandBuilder {
                 argument,
                 options,
                 populator,
-                provider);
+                provider,
+                activator);
     }
 }

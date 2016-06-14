@@ -72,28 +72,32 @@ public class MutableCommandRegistry implements CommandRegistry {
     public void completeCommandName(CompleteOperation co) {
         List<String> names = new ArrayList<>();
         for(CommandContainer<Command> command : registry.values()) {
-            if(command.getParser().getProcessedCommand().getName().startsWith(co.getBuffer())) {
+            ProcessedCommand com = command.getParser().getProcessedCommand();
+            if(com.getName().startsWith(co.getBuffer()) &&
+                    com.getActivator().isActivated()) {
                 if(command.getParser().isGroupCommand()) {
                     LOGGER.info("command is a group command");
                     //if we dont have any arguments we'll add the child commands as well
-                    if(!command.getParser().getProcessedCommand().hasOptions() &&
-                            !command.getParser().getProcessedCommand().hasArgument()) {
+                    if(!com.hasOptions() &&
+                            !com.hasArgument()) {
                         LOGGER.info("adding add: "+command.getParser().getAllNames());
                         names.addAll(command.getParser().getAllNames());
                         co.setIgnoreNonEscapedSpace(true);
                     }
                     else
-                        names.add(command.getParser().getProcessedCommand().getName());
+                        names.add(com.getName());
                 }
                 else
-                    names.add(command.getParser().getProcessedCommand().getName());
+                    names.add(com.getName());
             }
             else if(command.getParser().isGroupCommand() &&
-                    co.getBuffer().startsWith(command.getParser().getProcessedCommand().getName())) {
-                String groupLine = Parser.trimInFront( co.getBuffer().substring(command.getParser().getProcessedCommand().getName().length()));
+                    co.getBuffer().startsWith(com.getName()) &&
+                    com.getActivator().isActivated()) {
+                String groupLine = Parser.trimInFront( co.getBuffer().substring(com.getName().length()));
                 int diff = co.getBuffer().length() - groupLine.length();
                 for(CommandLineParser child : command.getParser().getAllChildParsers()) {
-                    if(child.getProcessedCommand().getName().startsWith(groupLine))
+                    if(child.getProcessedCommand().getName().startsWith(groupLine) &&
+                            child.getProcessedCommand().getActivator().isActivated())
                         names.add(co.getBuffer().substring(0, diff) + child.getProcessedCommand().getName());
                 }
             }
