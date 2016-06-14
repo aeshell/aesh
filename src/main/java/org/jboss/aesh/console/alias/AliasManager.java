@@ -185,7 +185,9 @@ public class AliasManager {
         if (aliasHelpPattern.matcher(buffer).matches())
             return aliasUsage();
         Matcher aliasMatcher = aliasPattern.matcher(buffer);
+        boolean aliasMatched = false;
         if(aliasMatcher.matches()) {
+            aliasMatched = true;
             String name = aliasMatcher.group(2);
             String value = aliasMatcher.group(3);
             if(value.startsWith("'")) {
@@ -221,6 +223,11 @@ public class AliasManager {
                                 .append(" : not found").append(Config.getLineSeparator());
                 }
             }
+            return sb.toString();
+        }
+        if (!aliasMatched) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(buffer).append(" is not valid command, make sure alias name is among of [a-zA-Z0-9_]").append(Config.getLineSeparator());
             return sb.toString();
         }
         return null;
