@@ -21,11 +21,14 @@ package org.jboss.aesh.console;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
 
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
+import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
@@ -223,13 +226,21 @@ public class AeshConsoleImpl implements AeshConsole {
             internalRegistry.addCommand(new Man(manProvider));
         }
         try {
-            for(String commandName : registry.getAllCommandNames()) {
+            for (String commandName : registry.getAllCommandNames()) {
+                ProcessedCommand cmd = registry.getCommand(commandName, "").getParser().getProcessedCommand();
+                List<CommandLineParser<?>> childParsers = registry.getChildCommandParsers(commandName);
                 if(!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
                     //we have a custom OptionActivatorProvider, and need to process all options
-                    registry.getCommand(commandName, "").getParser().getProcessedCommand().updateInvocationProviders(invocationProviders);
+                    cmd.updateInvocationProviders(invocationProviders);
+                    for (CommandLineParser<?> child : childParsers) {
+                        child.getProcessedCommand().updateInvocationProviders(invocationProviders);
+                    }
                 }
                 if(!settings.isAnsiConsole()) {
-                    registry.getCommand(commandName, "").getParser().getProcessedCommand().updateSettings(settings);
+                    cmd.updateSettings(settings);
+                    for (CommandLineParser<?> child : childParsers) {
+                        child.getProcessedCommand().updateSettings(settings);
+                    }
                 }
             }
         }
@@ -381,6 +392,7 @@ public class AeshConsoleImpl implements AeshConsole {
                         resultHandler.onExecutionFailure(result, cmd);
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     if(e instanceof InterruptedException)
                         throw (InterruptedException) e;
                     else {
