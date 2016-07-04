@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.util.List;
 
 import org.jboss.aesh.comparators.PosixFileNameComparator;
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.io.FileResource;

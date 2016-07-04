@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.alias.AliasManager;
 
 /**
