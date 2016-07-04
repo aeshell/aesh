@@ -25,8 +25,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import org.jboss.aesh.cl.parser.CommandLineParser;
 
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.AeshConsole;
@@ -82,6 +85,11 @@ public class AeshCommandRegistryTest {
 
             @Override public void removeCommand(String name) {
 
+            }
+
+            @Override
+            public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
+                return Collections.emptyList();
             }
         };
 
@@ -141,6 +149,11 @@ public class AeshCommandRegistryTest {
             @Override public void removeCommand(String name) {
 
             }
+
+            @Override
+            public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
+                return Collections.emptyList();
+            }
         };
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
@@ -196,6 +209,11 @@ public class AeshCommandRegistryTest {
 
             @Override public void removeCommand(String name) {
 
+            }
+
+            @Override
+            public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
+                return Collections.emptyList();
             }
         };
 
