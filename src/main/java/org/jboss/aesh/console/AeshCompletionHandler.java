@@ -19,8 +19,6 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.complete.CompleteOperation;
-import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasManager;
 import org.jboss.aesh.console.operator.ControlOperatorParser;

@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.AeshConsoleCallback;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;

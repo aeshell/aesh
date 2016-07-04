@@ -28,7 +28,6 @@ import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshConsoleImpl;

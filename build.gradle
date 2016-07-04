@@ -62,10 +62,12 @@ test {
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
     compile group: 'org.fusesource.jansi', name: 'jansi', version: '1.11'
+    compile group: 'org.jboss.aesh', name: 'aesh-readline', version: '1.0-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '4.+'
 }
 

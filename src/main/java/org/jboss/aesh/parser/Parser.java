@@ -24,9 +24,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.readline.completion.CompleteOperation;
+import org.jboss.aesh.terminal.formatting.TerminalString;
 
 /**
  * String/Parser util methods
