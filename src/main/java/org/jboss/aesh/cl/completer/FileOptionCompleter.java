@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.cl.completer;
 
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.io.filter.AllResourceFilter;
 import org.jboss.aesh.io.filter.ResourceFilter;

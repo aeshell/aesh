@@ -22,7 +22,6 @@ package org.jboss.aesh.console.registry;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.GroupCommandDefinition;
 import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;

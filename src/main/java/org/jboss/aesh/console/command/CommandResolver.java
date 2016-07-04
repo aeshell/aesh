@@ -17,26 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.readline.actions;
-
-import org.jboss.aesh.console.InputProcessor;
-import org.jboss.aesh.readline.Action;
+package org.jboss.aesh.console.command;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ViEditingMode implements Action {
+public interface CommandResolver {
 
-    ViEditingMode() {
-    }
-
-    @Override
-    public String name() {
-        return "vi-editing-mode";
-    }
-
-    @Override
-    public void apply(InputProcessor inputProcessor) {
-        //TODO: implementation
-    }
+    Command resolveCommand(String buffer);
 }

@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.cl.parser;
 
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.InvocationProviders;
 
 /**

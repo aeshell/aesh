@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Set;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshConsoleImpl;

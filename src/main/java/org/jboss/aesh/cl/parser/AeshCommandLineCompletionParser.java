@@ -25,7 +25,6 @@ import org.jboss.aesh.cl.completer.DefaultValueOptionCompleter;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;

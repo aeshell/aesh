@@ -19,57 +19,6 @@
  */
 package org.jboss.aesh.console;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOError;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.jboss.aesh.complete.Completion;
-import org.jboss.aesh.complete.CompletionRegistration;
-import org.jboss.aesh.console.alias.Alias;
-import org.jboss.aesh.console.alias.AliasCompletion;
-import org.jboss.aesh.console.alias.AliasManager;
-import org.jboss.aesh.console.command.CmdOperation;
-import org.jboss.aesh.console.command.InternalCommands;
-import org.jboss.aesh.console.export.ExportCompletion;
-import org.jboss.aesh.console.export.ExportManager;
-import org.jboss.aesh.console.keymap.BindingReader;
-import org.jboss.aesh.console.keymap.KeyMap;
-import org.jboss.aesh.console.operator.ControlOperator;
-import org.jboss.aesh.console.operator.ControlOperatorParser;
-import org.jboss.aesh.console.operator.RedirectionCompletion;
-import org.jboss.aesh.console.reader.AeshStandardStream;
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.history.History;
-import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.parser.AeshLine;
-import org.jboss.aesh.parser.Parser;
-import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.readline.editing.EditMode;
-import org.jboss.aesh.terminal.CursorPosition;
-import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.api.Attributes;
-import org.jboss.aesh.terminal.api.Terminal;
-import org.jboss.aesh.terminal.api.Terminal.Signal;
-import org.jboss.aesh.terminal.api.TerminalBuilder;
-import org.jboss.aesh.terminal.api.Size;
-import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
-import org.jboss.aesh.terminal.utils.NonBlockingReader;
-import org.jboss.aesh.util.ANSI;
-import org.jboss.aesh.util.FileUtils;
-import org.jboss.aesh.util.LoggerUtil;
 
 /**
  * A console reader. Supports ansi terminals
@@ -78,6 +27,7 @@ import org.jboss.aesh.util.LoggerUtil;
  */
 public class Console {
 
+    /*
     private Settings settings;
 
     private ConsoleCallback consoleCallback;
@@ -154,12 +104,6 @@ public class Console {
         return settings;
     }
 
-    /**
-     * Reset the Console with Settings
-     * Can only be called after stop()
-     *
-     * @throws IOException stream
-     */
     private void init() throws IOException {
         if(running)
             throw new RuntimeException("Cant reset an already running Console, must stop if first!");
@@ -264,28 +208,14 @@ public class Console {
         bindingReader = new BindingReader(reader);
     }
 
-    /**
-     *
-     * @return get the terminal size
-     */
     public Size getTerminalSize() {
         return terminal.getSize();
     }
 
-    /**
-     * Get the History object
-     *
-     * @return history
-     */
     public History getHistory() {
         return inputProcessor.getHistory();
     }
 
-    /**
-     * Set the current prompt.
-     *
-     * @param prompt prompt
-     */
     public void setPrompt(Prompt prompt) {
         consoleBuffer.setPrompt(prompt);
     }
@@ -313,20 +243,10 @@ public class Console {
       }
     }
 
-    /**
-     * Returns true if the console is waiting for input and no foreground process is executing.
-     *
-     * @return
-     */
     public boolean isWaiting(){
         return (!processing && !processManager.hasForegroundProcess() && !hasInput() && readingInput == -1);
     }
 
-    /**
-     * Returns true if the console is waiting for input and no process, foreground or background, is executing.
-     *
-     * @return
-     */
     public boolean isWaitingWithoutBackgroundProcess(){
         return (!processing && !processManager.hasProcesses() && !hasInput() && readingInput == -1);
     }
@@ -392,11 +312,6 @@ public class Console {
         return context;
     }
 
-    /**
-     * Add a Completion to the completion list
-     *
-     * @param completion comp
-     */
     public CompletionRegistration addCompletion(final Completion completion) {
         completionHandler.addCompletion(completion);
         return new CompletionRegistration() {
@@ -407,11 +322,6 @@ public class Console {
         };
     }
 
-    /**
-     * Runtime enable/disable of completion capabilities
-     *
-     * @param completionEnabled
-     */
     public void setCompletionEnabled(boolean completionEnabled){
         completionHandler.setEnabled(completionEnabled);
     }
@@ -428,12 +338,6 @@ public class Console {
        }
     }
 
-    /**
-     * Stop the Console, close streams, and reset terminals.
-     * WARNING: After this is called the Console object must be reset
-     * before its used.
-     * @throws IOException stream
-     */
     private synchronized void doStop() throws IOException {
         if(running) {
             running = false;
@@ -454,10 +358,6 @@ public class Console {
         }
     }
 
-    /**
-     *
-     * @return true if Console is set up and streams are open
-     */
     public boolean isRunning() {
         return running;
     }
@@ -504,16 +404,10 @@ public class Console {
         return inputProcessor;
     }
 
-    /**
-     * Put the current process in the background
-     */
     public void putProcessInBackground(int pid) {
         processManager.putProcessInBackground(pid);
     }
 
-    /**
-     * Put the current process in the foreground
-     */
     public void putProcessInForeground(int pid) {
         processManager.putProcessInForeground(pid);
     }
@@ -534,13 +428,7 @@ public class Console {
         return processManager.hasForegroundProcess();
     }
 
-    /**
-     * Read from the input stream and return when user have pressed enter.
-     * This method will block until enter is pressed or because of interruption.
-     *
-     * @return input
-     * @throws InterruptedException
-     */
+
     public String getInputLine() throws InterruptedException {
         String result;
         try {
@@ -565,9 +453,6 @@ public class Console {
         }
     }
 
-    /**
-     * @return get the current shell
-     */
     public Shell getShell() {
         return shell;
     }
@@ -600,11 +485,13 @@ public class Console {
         }
     }
 
+    */
     /**
      * Get the current console buffer line (no masking)
      *
      * @return current buffer
      */
+    /*
     public String getBuffer() {
         if(consoleBuffer.getBuffer() == null)
             return "";
@@ -725,11 +612,13 @@ public class Console {
         consoleBuffer.displayPrompt();
     }
 
+    */
     /**
      * Clear a ansi terminal
      *
      * @throws IOException stream
      */
+    /*
     public void clear() throws IOException {
         consoleBuffer.clear(false);
     }
@@ -784,12 +673,14 @@ public class Console {
             return null;
         }
     }
+    */
 
     /**
      * Find the next ConsoleOutput based on operations
      *
      * @return next ConsoleOutput
      */
+    /*
     private ConsoleOperation parseOperations() throws IOException {
 
         ConsoleOperation output = null;
@@ -1150,4 +1041,5 @@ public class Console {
         }
 
     }
+    */
 }
