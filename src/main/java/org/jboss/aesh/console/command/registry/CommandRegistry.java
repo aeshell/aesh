@@ -19,11 +19,13 @@
  */
 package org.jboss.aesh.console.command.registry;
 
+import java.util.List;
 import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.container.CommandContainer;
 
 import java.util.Set;
+import org.jboss.aesh.cl.parser.CommandLineParser;
 
 /**
  * A simple registry where all the Commands are stored
@@ -39,6 +41,14 @@ public interface CommandRegistry {
      * @throws org.jboss.aesh.console.command.CommandNotFoundException
      */
     CommandContainer getCommand(String name, String line) throws CommandNotFoundException;
+
+    /**
+     *
+     * @param parent The name of the parent command
+     * @return The list of child parsers
+     * @throws CommandNotFoundException
+     */
+    List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException;
 
     /**
      * @param alias command alias

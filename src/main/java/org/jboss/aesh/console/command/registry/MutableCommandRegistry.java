@@ -30,6 +30,7 @@ import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +67,15 @@ public class MutableCommandRegistry implements CommandRegistry {
         }
         else
             throw new CommandNotFoundException("Command: "+name+" was not found.");
+    }
+
+    @Override
+    public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
+        CommandContainer c = getCommand(parent, "");
+        if (c == null) {
+            throw new CommandNotFoundException("Command: " + parent + " was not found.");
+        }
+        return Collections.unmodifiableList(c.getParser().getAllChildParsers());
     }
 
     @Override
