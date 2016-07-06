@@ -304,8 +304,6 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                         active.addValue("true");
                         commandLine.addOption(active);
                         active = null;
-                        if (addedArgument)
-                            commandLine.setParserException(new ArgumentParserException("An argument was given to an option that does not support it."));
                     }
                     else if (active == null)
                         commandLine.setParserException(new OptionParserException("Option: " + parseLine + " is not a valid option for this command"));
