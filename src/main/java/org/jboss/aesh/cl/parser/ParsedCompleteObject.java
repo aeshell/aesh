@@ -53,6 +53,17 @@ public class ParsedCompleteObject {
         this.completionParser = completionParser;
     }
 
+    // Constructor called when we expect the completer to propose options after the end of an Argument value.
+    public ParsedCompleteObject(CommandLineCompletionParser completionParser) {
+        this.displayOptions = true;
+        this.offset = 0;
+        this.argument = true;
+        this.value = "";
+        this.type = null;
+        this.option = false;
+        this.completionParser = completionParser;
+    }
+
     public ParsedCompleteObject(boolean displayOptions, String name, int offset, boolean completeOptionName,
                                 CommandLineCompletionParser completionParser) {
         this(displayOptions, name, offset, completionParser);

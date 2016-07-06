@@ -163,11 +163,17 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
         CommandLine<? extends Command> cl = parser.parse(line, true);
 
         //the last word is an argument
-        if(cl.getArgument() != null && !cl.getArgument().getValues().isEmpty()) {
-            return new ParsedCompleteObject("", endsWithSpace ? "" :
-                    cl.getArgument().getValues().get(cl.getArgument().getValues().size() - 1),
+        if (cl.getArgument() != null && !cl.getArgument().getValues().isEmpty()) {
+            // We have a space after the argument value BUT the value separator
+            // is NOT  ' ' so we expect the completer to propose the following options.
+            if (endsWithSpace && cl.getArgument().getValueSeparator() != ' ') {
+                return new ParsedCompleteObject(cl.getParser().getCompletionParser());
+            }
+
+            return new ParsedCompleteObject("", endsWithSpace ? ""
+                    : cl.getArgument().getValues().get(cl.getArgument().getValues().size() - 1),
                     cl.getArgument().getType(), false, cl.getParser().getCompletionParser());
-        }
+            }
         //get the last option
         else if (cl.getOptions() != null && cl.getOptions().size() > 0) {
             ProcessedOption po = cl.getOptions().get(cl.getOptions().size()-1);
