@@ -21,8 +21,6 @@ package org.jboss.aesh.console.command;
 
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 
-import java.io.IOException;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */

@@ -108,7 +108,7 @@ public class AeshConsoleBuilder {
         this.optionActivatorProvider = optionActivatorProvider;
         return this;
     }
-    
+
     public AeshConsoleBuilder commandActivatorProvider(CommandActivatorProvider commandActivatorProvider) {
         this.commandActivatorProvider = commandActivatorProvider;
         return this;
@@ -153,7 +153,7 @@ public class AeshConsoleBuilder {
 
         if(optionActivatorProvider == null)
             optionActivatorProvider = new AeshOptionActivatorProvider();
-        
+
         if(commandActivatorProvider == null)
             commandActivatorProvider = new AeshCommandActivatorProvider();
 

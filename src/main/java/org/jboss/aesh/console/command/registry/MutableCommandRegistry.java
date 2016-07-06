@@ -57,7 +57,7 @@ public class MutableCommandRegistry implements CommandRegistry {
     public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
         if(registry.containsKey(name))
             return registry.get(name);
-        //group command
+            //group command
         else if(name.contains(" ")) {
             String[] names = name.split(" ");
             if(registry.containsKey(names[0])) {
@@ -83,7 +83,7 @@ public class MutableCommandRegistry implements CommandRegistry {
         List<String> names = new ArrayList<>();
         for(CommandContainer<Command> command : registry.values()) {
             ProcessedCommand com = command.getParser().getProcessedCommand();
-            if(com.getName().startsWith(co.getBuffer()) && 
+            if(com.getName().startsWith(co.getBuffer()) &&
                     com.getActivator().isActivated()) {
                 if(command.getParser().isGroupCommand()) {
                     LOGGER.info("command is a group command");
@@ -101,12 +101,12 @@ public class MutableCommandRegistry implements CommandRegistry {
                     names.add(com.getName());
             }
             else if(command.getParser().isGroupCommand() &&
-                    co.getBuffer().startsWith(com.getName()) && 
+                    co.getBuffer().startsWith(com.getName()) &&
                     com.getActivator().isActivated()) {
                 String groupLine = Parser.trimInFront( co.getBuffer().substring(com.getName().length()));
                 int diff = co.getBuffer().length() - groupLine.length();
                 for(CommandLineParser child : command.getParser().getAllChildParsers()) {
-                    if(child.getProcessedCommand().getName().startsWith(groupLine) && 
+                    if(child.getProcessedCommand().getName().startsWith(groupLine) &&
                             child.getProcessedCommand().getActivator().isActivated())
                         names.add(co.getBuffer().substring(0, diff) + child.getProcessedCommand().getName());
                 }

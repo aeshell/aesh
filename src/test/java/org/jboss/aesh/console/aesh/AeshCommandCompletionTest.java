@@ -98,7 +98,7 @@ public class AeshCommandCompletionTest {
 
         Thread.sleep(80);
         assertEquals("foo ", ((AeshConsoleImpl) aeshConsole).getBuffer());
-        
+
         outputStream.write(("--name aslak --bar ").getBytes());
         outputStream.write(completeChar.getFirstValue());
         outputStream.flush();
@@ -186,12 +186,12 @@ public class AeshCommandCompletionTest {
 
         Thread.sleep(80);
         assertEquals("hidden ", ((AeshConsoleImpl) aeshConsole).getBuffer());
-        
+
         outputStream.write(enter.getFirstValue());
         outputStream.flush();
 
         Thread.sleep(80);
-        
+
         TestCommandActivator.activated = false;
         outputStream.write(("hi").getBytes());
         outputStream.write(completeChar.getFirstValue());
@@ -199,10 +199,10 @@ public class AeshCommandCompletionTest {
 
         Thread.sleep(80);
         assertEquals("hi", ((AeshConsoleImpl) aeshConsole).getBuffer());
-        
+
         aeshConsole.stop();
     }
-    
+
     @Test
     public void testCompletionNoArguments() {
 
@@ -307,7 +307,7 @@ public class AeshCommandCompletionTest {
         assertEquals("git rebase --force --test barFOO ", ((AeshConsoleImpl) aeshConsole).getBuffer());
 
         aeshConsole.stop();
-     }
+    }
 
     @CommandDefinition(name = "foo", description = "")
     public static class FooCommand implements Command {
@@ -330,7 +330,7 @@ public class AeshCommandCompletionTest {
             return name;
         }
     }
-    
+
     private static class TestCommandActivator implements CommandActivator {
 
         static boolean activated;
@@ -339,7 +339,7 @@ public class AeshCommandCompletionTest {
             return activated;
         }
     }
-    
+
     @CommandDefinition(name = "hidden", description = "", activator = TestCommandActivator.class)
     public static class TotoCommand implements Command {
 
@@ -415,7 +415,7 @@ public class AeshCommandCompletionTest {
         public void complete(CompleterInvocation completerInvocation) {
             if(completerInvocation.getGivenCompleteValue() == null ||
                     completerInvocation.getGivenCompleteValue() == "")
-            completerInvocation.addCompleterValue("managed");
+                completerInvocation.addCompleterValue("managed");
         }
     }
 

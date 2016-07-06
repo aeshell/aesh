@@ -52,7 +52,7 @@ public class AeshInvocationProviders implements InvocationProviders {
     public ConverterInvocationProvider getConverterProvider() {
         return converterInvocationProvider;
     }
-    
+
     @Override
     public CommandActivatorProvider getCommandActivatorProvider() {
         return commandActivatorProvider;

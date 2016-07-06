@@ -48,6 +48,6 @@ public @interface CommandDefinition {
     Class<? extends CommandValidator> validator() default NullCommandValidator.class;
 
     Class<? extends ResultHandler> resultHandler() default NullResultHandler.class;
-    
+
     Class<? extends CommandActivator> activator() default NullCommandActivator.class;
 }

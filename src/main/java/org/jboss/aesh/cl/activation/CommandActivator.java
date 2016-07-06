@@ -19,8 +19,6 @@
  */
 package org.jboss.aesh.cl.activation;
 
-import org.jboss.aesh.cl.internal.ProcessedCommand;
-
 /**
  * @author jdenise@redhat.com
  */

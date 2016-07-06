@@ -178,13 +178,13 @@ public class AeshExample {
             return CommandResult.SUCCESS;
         }
     }
-    
+
     private static class HideActivator implements CommandActivator {
         public boolean isActivated() {
             return false;
         }
     }
-    
+
     @CommandDefinition(name = "hidden", description = "hidden command", activator = HideActivator.class)
     public static class HiddenCommand implements Command {
 
@@ -245,13 +245,13 @@ public class AeshExample {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-           if(bar == null)
-               commandInvocation.getShell().out().println("NO BAR!");
+            if(bar == null)
+                commandInvocation.getShell().out().println("NO BAR!");
             else {
-               commandInvocation.getShell().out().println("you set bar to: " + bar);
-               commandInvocation.getShell().out().println("lets work a bit...... ");
-               Thread.sleep(2000);
-           }
+                commandInvocation.getShell().out().println("you set bar to: " + bar);
+                commandInvocation.getShell().out().println("lets work a bit...... ");
+                Thread.sleep(2000);
+            }
             return CommandResult.SUCCESS;
         }
     }
@@ -325,12 +325,12 @@ public class AeshExample {
                     .create();
 
             consoleBuffer.displayPrompt();
-                String result;
-                do {
-                    result = inputProcessor.parseOperation(invocation.getInput());
-                }
-                while(result == null );
-                return result;
+            String result;
+            do {
+                result = inputProcessor.parseOperation(invocation.getInput());
+            }
+            while(result == null );
+            return result;
         }
 
     }

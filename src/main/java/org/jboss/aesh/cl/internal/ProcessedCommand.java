@@ -48,17 +48,17 @@ public class ProcessedCommand<C extends Command> {
     private ResultHandler resultHandler = new NullResultHandler();
     private CommandPopulator populator;
     private CommandActivator activator;
-    
+
     private List<ProcessedOption> options;
     private ProcessedOption argument;
     private C command;
     private final List<String> aliases;
 
-    public ProcessedCommand(String name, List<String> aliases, C command, 
-            String description, CommandValidator validator, 
-            ResultHandler resultHandler, 
-            ProcessedOption argument, List<ProcessedOption> options, 
-            CommandPopulator populator, CommandActivator activator) throws OptionParserException {
+    public ProcessedCommand(String name, List<String> aliases, C command,
+                            String description, CommandValidator validator,
+                            ResultHandler resultHandler,
+                            ProcessedOption argument, List<ProcessedOption> options,
+                            CommandPopulator populator, CommandActivator activator) throws OptionParserException {
         setName(name);
         setDescription(description);
         this.aliases = aliases == null ? Collections.<String>emptyList() : aliases;
@@ -82,7 +82,7 @@ public class ProcessedCommand<C extends Command> {
     public CommandActivator getActivator() {
         return activator;
     }
-    
+
     public List<String> getAliases() {
         return aliases;
     }
@@ -125,7 +125,7 @@ public class ProcessedCommand<C extends Command> {
     }
 
     public ResultHandler getResultHandler() {
-      return resultHandler;
+        return resultHandler;
     }
 
     public boolean hasArgument() {
@@ -234,11 +234,11 @@ public class ProcessedCommand<C extends Command> {
         return null;
     }
 
-   public void clear() {
-       for (ProcessedOption processedOption : getOptions())
-           processedOption.clear();
-       if(argument != null)
-           argument.clear();
+    public void clear() {
+        for (ProcessedOption processedOption : getOptions())
+            processedOption.clear();
+        if(argument != null)
+            argument.clear();
     }
 
     /**
@@ -261,11 +261,11 @@ public class ProcessedCommand<C extends Command> {
         List<ProcessedOption> opts = getOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-           if(((o.getShortName() != null && o.getShortName().equals(name) &&
-                   !o.isLongNameUsed() && o.getValues().size() == 0) ||
-                   (o.getName().startsWith(name) && o.getValues().size() == 0)) &&
-                   o.getActivator().isActivated(this))
-               names.add(o.getRenderedNameWithDashes());
+            if(((o.getShortName() != null && o.getShortName().equals(name) &&
+                    !o.isLongNameUsed() && o.getValues().size() == 0) ||
+                    (o.getName().startsWith(name) && o.getValues().size() == 0)) &&
+                    o.getActivator().isActivated(this))
+                names.add(o.getRenderedNameWithDashes());
         }
         return names;
     }
@@ -285,7 +285,7 @@ public class ProcessedCommand<C extends Command> {
 
         StringBuilder sb = new StringBuilder();
         if (opts.size() > 0)
-           sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
+            sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
         for (ProcessedOption o : opts)
             sb.append(o.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
         if(argument != null) {
@@ -300,7 +300,7 @@ public class ProcessedCommand<C extends Command> {
         return "ProcessedCommand{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
- ", options=" + getOptions()
+                ", options=" + getOptions()
                 +                '}';
     }
 

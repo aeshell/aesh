@@ -51,6 +51,6 @@ public @interface GroupCommandDefinition {
     Class<? extends ResultHandler> resultHandler() default NullResultHandler.class;
 
     Class<? extends Command>[] groupCommands() default {};
-    
+
     Class<? extends CommandActivator> activator() default NullCommandActivator.class;
 }

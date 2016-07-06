@@ -46,16 +46,16 @@ public class MapProcessedCommandBuilder {
     private static class MapProcessedCommand extends ProcessedCommand<MapCommand> {
         private final ProcessedOptionProvider provider;
         public MapProcessedCommand(String name,
-                List<String> aliases,
-                MapCommand command,
-                String description,
-                CommandValidator validator,
-                ResultHandler resultHandler,
-                ProcessedOption argument,
-                List<ProcessedOption> options,
-                CommandPopulator populator,
-                ProcessedOptionProvider provider,
-                CommandActivator activator) throws OptionParserException {
+                                   List<String> aliases,
+                                   MapCommand command,
+                                   String description,
+                                   CommandValidator validator,
+                                   ResultHandler resultHandler,
+                                   ProcessedOption argument,
+                                   List<ProcessedOption> options,
+                                   CommandPopulator populator,
+                                   ProcessedOptionProvider provider,
+                                   CommandActivator activator) throws OptionParserException {
             super(name, aliases, command, description, validator, resultHandler, argument,
                     options, populator, activator);
             this.provider = provider == null ? EMPTY_PROVIDER : provider;
@@ -88,7 +88,7 @@ public class MapProcessedCommandBuilder {
     private MapCommand command;
     private List<String> aliases;
     private CommandActivator activator;
-    
+
     public MapProcessedCommandBuilder() {
         options = new ArrayList<>();
     }
@@ -192,7 +192,7 @@ public class MapProcessedCommandBuilder {
         this.activator = activator;
         return this;
     }
-    
+
     public ProcessedCommand create() throws CommandLineParserException {
         if (name == null || name.length() < 1) {
             throw new CommandLineParserException("The parameter name must be defined");

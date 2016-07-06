@@ -52,7 +52,7 @@ public class ProcessedCommandBuilder {
     private Command command;
     private List<String> aliases;
     private CommandActivator activator;
-    
+
     public ProcessedCommandBuilder() {
         options = new ArrayList<>();
     }
@@ -116,12 +116,12 @@ public class ProcessedCommandBuilder {
         this.populator = populator;
         return this;
     }
-    
+
     public ProcessedCommandBuilder activator(CommandActivator activator) {
         this.activator = activator;
         return this;
     }
-    
+
     public ProcessedCommandBuilder activator(Class<? extends CommandActivator> activator) {
         this.activator = initActivator(activator);
         return this;
@@ -165,7 +165,7 @@ public class ProcessedCommandBuilder {
         if(resultHandler == null)
             resultHandler = new NullResultHandler();
 
-        return new ProcessedCommand(name, aliases, command, description, validator, 
+        return new ProcessedCommand(name, aliases, command, description, validator,
                 resultHandler, argument, options, populator, activator);
     }
 }

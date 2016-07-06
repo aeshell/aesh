@@ -23,7 +23,6 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 
-import java.io.IOException;
 import java.util.List;
 import org.jboss.aesh.console.command.CommandException;
 

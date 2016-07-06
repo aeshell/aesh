@@ -37,6 +37,6 @@ public interface InvocationProviders {
     ValidatorInvocationProvider getValidatorProvider();
 
     OptionActivatorProvider getOptionActivatorProvider();
-    
+
     CommandActivatorProvider getCommandActivatorProvider();
 }
