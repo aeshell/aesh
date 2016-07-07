@@ -41,6 +41,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.validator.ValidatorInvocation;
+import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.edit.KeyOperation;
@@ -99,6 +100,7 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
                 .settings(settings)
+                .validatorInvocationProvider(new DirectoryValidatorInvocationProvider())
                 .commandRegistry(registry);
 
         AeshConsole aeshConsole = consoleBuilder.create();
@@ -165,12 +167,16 @@ public class AeshConsoleTest extends BaseConsoleTest {
         }
     }
 
-    public class DirectoryValidatorInvocation implements ValidatorInvocation<File, Command> {
+    public static class DirectoryValidatorInvocation implements ValidatorInvocation<File, Command> {
 
         private final File value;
+        private final Command command;
+        private final AeshContext context;
 
-        public DirectoryValidatorInvocation(File value) {
+        public DirectoryValidatorInvocation(File value, Command command, AeshContext context) {
             this.value = value;
+            this.command = command;
+            this.context = context;
         }
 
         @Override
@@ -180,12 +186,25 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
         @Override
         public Command getCommand() {
-            return null;
+            return command;
         }
 
         @Override
         public AeshContext getAeshContext() {
-            return null;
+            return context;
         }
     }
+
+    public static class DirectoryValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>> {
+
+        @Override
+        public ValidatorInvocation<File, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
+            if(validatorInvocation.getValue() instanceof File)
+                return new DirectoryValidatorInvocation( (File) validatorInvocation.getValue(),
+                        (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
+            else
+                return validatorInvocation;
+        }
+    }
+
 }
