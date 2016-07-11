@@ -22,7 +22,7 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.GroupCommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
- import org.jboss.aesh.cl.activation.CommandActivator;
+import org.jboss.aesh.cl.activation.CommandActivator;
 import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
@@ -155,7 +155,8 @@ public class AeshExample {
                 .command(new CommandBuilder().name("quit").command(commandInvocation -> {
                     commandInvocation.stop();
                     return CommandResult.SUCCESS;
-                }).create())
+                })
+                .command(FailCommand.class)
                 .create();
 
         AeshConsole aeshConsole = new AeshConsoleBuilder()
@@ -569,5 +570,43 @@ public class AeshExample {
             commandInvocation.getShell().out().println("bar is set to: "+bar);
             return CommandResult.SUCCESS;
         }
+    }
+
+    @CommandDefinition(name = "fail", description = "fail")
+    public static class FailCommand implements Command {
+
+        @Option(hasValue = false, shortName = 'l')
+        private boolean list;
+        @Option(completer = HeaderCompleter.class)
+        private String headers;
+        @Arguments(valueSeparator = ',', completer = PathCompleter.class)
+        private List<String> path;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class HeaderCompleter implements OptionCompleter {
+
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            List<String> candidates = new ArrayList<>();
+            candidates.add("anheader");
+            completerInvocation.addAllCompleterValues(candidates);
+        }
+
+    }
+
+    public static class PathCompleter implements OptionCompleter {
+
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            List<String> candidates = new ArrayList<>();
+            candidates.add("anodepath");
+            completerInvocation.addAllCompleterValues(candidates);
+        }
+
     }
 }

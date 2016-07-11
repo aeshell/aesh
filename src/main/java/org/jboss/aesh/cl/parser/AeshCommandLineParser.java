@@ -224,6 +224,17 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      */
     @Override
     public CommandLine<? extends Command> parse(List<String> lines, boolean ignoreRequirements) {
+        AeshCommandLineParserHelper helper = new AeshCommandLineParserHelper(processedCommand);
+        lines.remove(0);
+        if(isChild)
+            lines.remove(0);
+
+        clear();
+        CommandLine<? extends Command> commandLine = new CommandLine<>(this);
+        helper.parse(commandLine, lines, ignoreRequirements);
+        return commandLine;
+
+        /*
         clear();
         CommandLine<? extends Command> commandLine = new CommandLine<>(this);
         if(processedCommand.hasArgument())
@@ -434,7 +445,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                 }
                 else {
                     commandLine.addArgumentValue(parseLine);
-                    addedArgument = true;
+                    //addedArgument = true;
                 }
             }
         }
@@ -457,6 +468,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         }
 
         return commandLine;
+        */
     }
 
     private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand<C> command,
