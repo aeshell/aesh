@@ -88,6 +88,8 @@ public class CommandLine<T extends Command> {
     }
 
     public void addArgumentValue(String arg) {
+        if(argument == null)
+            argument = parser.getProcessedCommand().getArgument();
         argument.addValue(arg);
     }
 
