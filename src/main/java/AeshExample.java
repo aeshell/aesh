@@ -155,7 +155,7 @@ public class AeshExample {
                 .command(new CommandBuilder().name("quit").command(commandInvocation -> {
                     commandInvocation.stop();
                     return CommandResult.SUCCESS;
-                })
+                }).create())
                 .command(FailCommand.class)
                 .create();
 
