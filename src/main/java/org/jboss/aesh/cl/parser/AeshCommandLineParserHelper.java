@@ -57,80 +57,56 @@ public class AeshCommandLineParserHelper {
             List<String> lines, boolean ignoreRequirements) {
 
         status = Status.NULL;
-        ProcessedOption currOption = null;
         this.commandLine = commandLine;
         this.active = null;
 
         for(int i=0; i < lines.size(); i++) {
             String word = lines.get(i);
 
-            currOption = findOption(word);
-            //if currOption != null we need to check if we have an option active, if so we end that
-            if(active != null && currOption != null) {
-                commandLine.addOption(active);
-                active = null;
-                status = Status.NULL;
-            }
-            else if(status == Status.OPTION_FOUND) {
-                commandLine.addOption(currOption);
-                status = Status.NULL;
-                currOption = null;
-            }
-
-            //we're looking for an option, arg value or adding value to an option list (active)
-            if(status == Status.NULL && currOption != null) {
-                if(currOption.isLongNameUsed())
-                    processOption(currOption, word.substring(2), currOption.getName());
-                else
-                    processOption(currOption, word.substring(1), currOption.getShortName());
-
-                if(currOption != null) {
-                    if(!currOption.hasValue()) {
-                        commandLine.addOption(currOption);
-                    }
-                    else {
-                        status = Status.OPTION;
-                        if (active != null) {
-                            commandLine.addOption(active);
-                            active = null;
-                        }
-                    }
+            ProcessedOption currOption = findOption(word);
+            if(status == Status.ACTIVE) {
+                if(currOption == null) {
+                    //add value to active
+                    addValueToOption(active, word);
+                    //if addValueToOption have added the option to commandline
+                    //we need to set active = null
+                    if(status == Status.NULL)
+                        active = null;
                 }
-                //we have a value which must be an argument
-                else if(status == Status.VALUE) {
-                    //do we have an active option list?
-                    if(active != null)
-                        active.addValue(word);
-                    else if (processedCommand.getArgument() == null)
-                        commandLine.setParserException(new OptionParserException("An argument was given to a command that does not support it."));
-                    else
-                        commandLine.addArgumentValue(word);
+                else {
+                    //first add the current active option to commandLine
+                    //the process the option
+                    commandLine.addOption(active);
+                    active = null;
                     status = Status.NULL;
-                }
-                else if(status == Status.OPTION_FOUND) {
-                    status = Status.NULL;
-                    if(active != null)
-                        commandLine.addOption(active);
+
+                    preProcessOption(currOption, word);
                 }
             }
-            else if(status == Status.OPTION){
-                addValueToOption(currOption, word);
+            else if(status == Status.NULL) {
+                if(currOption == null) {
+                    //add the current word as argument
+
+                    commandLine.addArgumentValue(word);
+                }
+                else {
+                    preProcessOption(currOption, word);
+                }
             }
         }
 
+        //remember to add the last option at the end of the parse
         if(active != null)
             commandLine.addOption(active);
-
         //verify that options have values and/or add default values
-        checkForDefaultValues(commandLine);
-
+        if(!ignoreRequirements)
+            checkForDefaultValues(commandLine);
         //this will throw and CommandLineParserException if needed
         if(!ignoreRequirements) {
             RequiredOptionException re = checkForMissingRequiredOptions(processedCommand, commandLine);
             if(re != null)
                 commandLine.setParserException(re);
         }
-        //return this.commandLine;
     }
 
     private void addValueToOption(ProcessedOption currOption, String word) {
@@ -166,10 +142,6 @@ public class AeshCommandLineParserHelper {
             else if(option.getOptionType().equals(OptionType.BOOLEAN))
                 option.addValue("true");
         }
-    }
-
-    private void checkForPossibleNewOptions() {
-
     }
 
     private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand<Command> command,
@@ -211,7 +183,6 @@ public class AeshCommandLineParserHelper {
             return currentOption;
         }
         else {
-            status = Status.VALUE;
             return null;
         }
     }
@@ -220,129 +191,98 @@ public class AeshCommandLineParserHelper {
         ProcessedOption option = command.findOption(line);
         //simplest case
         if(option != null) {
-            status = Status.OPTION_FOUND;
             return option;
         }
 
         return command.startWithOption(line);
-        //if its a property, we'll parse it later
-        /*
-        if(option != null) {
-            status = Status.OPTION_FOUND;
-            if (option.isProperty()) {
-                processProperty(option, line, option.getShortName());
-            }
-            else {
-                String rest = line.substring(option.getShortName().length());
-                if (option.getOptionType().equals(OptionType.LIST)) {
-                    processList(option, rest);
-                    return null;
-                }
-                if (!rest.contains(EQUALS)) {
-                    // we might have two or more options in a group
-                    // if so, we only allow options (boolean) without value
-                    if (rest.length() > 0) {
-                        //first we add the first option
-                        commandLine.addOption(option);
-                        for (char shortName : rest.toCharArray()) {
-                            ProcessedOption currOption = command.findOption(String.valueOf(shortName));
-                            if (currOption != null) {
-                                if (!currOption.hasValue()) {
-                                    currOption.setLongNameUsed(false);
-                                    currOption.addValue("true");
-                                    commandLine.addOption(currOption);
-                                }
-                                else
-                                    commandLine.setParserException(new OptionParserException("Option: -" + shortName +
-                                            " can not be grouped with other options since it need to be given a value"));
-                            }
-                            else
-                                commandLine.setParserException(new OptionParserException("Option: -" + shortName + " was not found."));
-                        }
-                    }
-                    else
-                        commandLine.setParserException(new OptionParserException("Option: - must be followed by a valid operator"));
-
-                }
-                //line contain equals, we need to add a value(s) to the currentOption
-                else {
-                    addValueToOption(option, line.substring(line.indexOf(EQUALS)+1));
-                }
-            }
-        }
-
-        return null;
-        */
     }
 
     private ProcessedOption findLongOption(ProcessedCommand command, String line) {
         ProcessedOption option = command.findLongOptionNoActivatorCheck(line);
         //simplest case
         if (option != null) {
-            status = Status.OPTION_FOUND;
             return option;
         }
 
         return command.startWithLongOption(line);
     }
 
-    private void processOption(ProcessedOption option, String line, String name) {
-        if(option != null) {
-            status = Status.OPTION_FOUND;
-            if (option.isProperty()) {
-                processProperty(option, line, name);
+    private void preProcessOption(ProcessedOption option, String line) {
+        if(option.isLongNameUsed()) {
+            if(line.length()-2 != option.getName().length())
+                processOption(option, line.substring(2), option.getName());
+            else if(option.getOptionType() == OptionType.BOOLEAN) {
+                option.addValue("true");
+                commandLine.addOption(option);
+                status = Status.NULL;
             }
-            else {
-                String rest = line.substring(name.length());
-                if (option.getOptionType().equals(OptionType.LIST)) {
-                    processList(option, rest);
-                }
-                else if (!rest.contains(EQUALS)) {
-                    // we might have two or more options in a group
-                    // if so, we only allow options (boolean) without value
-                    if (rest.length() > 0 && !option.isLongNameUsed()) {
-                        //first we add the first option
-                        commandLine.addOption(option);
-                        for (char shortName : rest.toCharArray()) {
-                            ProcessedOption currOption = processedCommand.findOption(String.valueOf(shortName));
-                            if (currOption != null) {
-                                if (!currOption.hasValue()) {
-                                    currOption.setLongNameUsed(false);
-                                    currOption.addValue("true");
-                                    commandLine.addOption(currOption);
-                                }
-                                else
-                                    commandLine.setParserException(new OptionParserException("Option: -" + shortName +
-                                            " can not be grouped with other options since it need to be given a value"));
-                            }
-                            else
-                                commandLine.setParserException(new OptionParserException("Option: -" + shortName + " was not found."));
-                        }
-                    }
-                    else
-                        commandLine.setParserException(new OptionParserException("Option: - must be followed by a valid operator"));
-                }
-                //line contain equals, we need to add a value(s) to the currentOption
-                else {
-                    addValueToOption(option, line.substring(line.indexOf(EQUALS)+1));
-                }
-            }
+            else
+                status = Status.OPTION_FOUND;
+
         }
-        if(option != null) {
-            status = Status.OPTION_FOUND;
-            if (option.isProperty()) {
-                processProperty(option, line, name);
+        else {
+            if(line.length() > 2)
+                processOption(option, line.substring(1), option.getShortName());
+            else if(option.getOptionType() == OptionType.BOOLEAN) {
+                option.addValue("true");
+                commandLine.addOption(option);
+                status = Status.NULL;
             }
-            else {
-                String rest = line.substring(name.length());
-                if (option.getOptionType().equals(OptionType.LIST))
-                    processList(option, rest);
-                else if(rest.contains(EQUALS)) {
-                    addValueToOption(option, rest.substring(rest.indexOf(EQUALS)+1));
-                }
-            }
+             else
+                status = Status.OPTION_FOUND;
         }
 
+        if(status == Status.OPTION_FOUND) {
+            if(option.hasValue()) {
+                active = option;
+                status = Status.ACTIVE;
+            }
+            else {
+                commandLine.addOption(option);
+                status = Status.NULL;
+            }
+        }
+    }
+
+    private void processOption(ProcessedOption option, String line, String name) {
+        if (option.isProperty()) {
+            processProperty(option, line, name);
+        }
+        else {
+            String rest = line.substring(name.length());
+            if (option.getOptionType().equals(OptionType.LIST)) {
+                processList(option, rest);
+            }
+            else if (!rest.contains(EQUALS)) {
+                // we might have two or more options in a group
+                // if so, we only allow options (boolean) without value
+                if (rest.length() > 0 && !option.isLongNameUsed()) {
+                    //first we add the first option
+                    commandLine.addOption(option);
+                    for (char shortName : rest.toCharArray()) {
+                        ProcessedOption currOption = processedCommand.findOption(String.valueOf(shortName));
+                        if (currOption != null) {
+                            if (!currOption.hasValue()) {
+                                currOption.setLongNameUsed(false);
+                                currOption.addValue("true");
+                                commandLine.addOption(currOption);
+                            }
+                            else
+                                commandLine.setParserException(new OptionParserException("Option: -" + shortName +
+                                        " can not be grouped with other options since it need to be given a value"));
+                        }
+                        else
+                            commandLine.setParserException(new OptionParserException("Option: -" + shortName + " was not found."));
+                    }
+                }
+                else
+                    commandLine.setParserException(new OptionParserException("Option: - must be followed by a valid operator"));
+            }
+            //line contain equals, we need to add a value(s) to the currentOption
+            else {
+                addValueToOption(option, line.substring(line.indexOf(EQUALS)+1));
+            }
+        }
     }
 
     private void processList(ProcessedOption currOption, String rest) {
@@ -378,8 +318,7 @@ public class AeshCommandLineParserHelper {
         status = Status.NULL;
     }
 
-
     enum Status {
-        NULL, OPTION, OPTION_FOUND, VALUE;
+        NULL, OPTION_FOUND, ACTIVE;
     }
 }
