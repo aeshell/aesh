@@ -56,6 +56,14 @@ public class CommandLineParserTest {
         assertEquals("e", cl.getOptions().get(1).getShortName());
         assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
 
+        cl = (CommandLine<Parser1Test>) parser.parse("test -f -Df=g /tmp/file.txt -e=bar foo bar");
+        assertEquals("f", cl.getOptions().get(0).getShortName());
+        assertEquals("D", cl.getOptions().get(1).getShortName());
+        assertEquals("e", cl.getOptions().get(2).getShortName());
+        assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
+        assertEquals("foo", cl.getArgument().getValues().get(1));
+        assertEquals("bar", cl.getArgument().getValues().get(2));
+
         cl = (CommandLine<Parser1Test>) parser.parse("test -e bar -DXms=128m -DXmx=512m --X /tmp/file.txt");
         assertEquals("e", cl.getOptions().get(0).getShortName());
         assertEquals("bar", cl.getOptions().get(0).getValue());
