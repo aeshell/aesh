@@ -53,6 +53,7 @@ public class CommandLine<T extends Command> {
     public CommandLine(CommandLineParser<T> parser) {
         this();
         this.parser = parser;
+        this.argument = parser.getProcessedCommand().getArgument();
     }
 
     public CommandLine(CommandLineParserException parserException) {
@@ -89,8 +90,9 @@ public class CommandLine<T extends Command> {
 
     public void addArgumentValue(String arg) {
         if(argument == null)
-            argument = parser.getProcessedCommand().getArgument();
-        argument.addValue(arg);
+            setParserException(new OptionParserException("An argument was given to a command that does not support it."));
+        else
+            argument.addValue(arg);
     }
 
     public void setArgument(ProcessedOption argument) {
