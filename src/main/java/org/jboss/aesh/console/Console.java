@@ -212,9 +212,11 @@ public class Console {
                 .ansi(settings.isAnsiConsole())
                 .create();
 
-        completionHandler = new AeshCompletionHandler(context, consoleBuffer, shell, true);
+        completionHandler = new AeshCompletionHandler(context, consoleBuffer, shell,
+                settings.isOperatorParserEnabled(),true);
         //enable completion for redirection
-        completionHandler.addCompletion( new RedirectionCompletion());
+        if(!settings.isCompletionDisabled() && settings.isOperatorParserEnabled())
+            completionHandler.addCompletion( new RedirectionCompletion());
 
         //enable aliasing
         if(settings.isAliasEnabled()) {

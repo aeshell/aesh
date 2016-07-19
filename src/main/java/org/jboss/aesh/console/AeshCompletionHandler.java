@@ -45,6 +45,7 @@ import java.util.logging.Logger;
  */
 public class AeshCompletionHandler implements CompletionHandler {
 
+    private final boolean operatorParserEnabled;
     private volatile boolean enabled = true;
 
     private final AeshContext aeshContext;
@@ -59,11 +60,13 @@ public class AeshCompletionHandler implements CompletionHandler {
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshCompletionHandler.class.getName());
 
     public AeshCompletionHandler(AeshContext aeshContext, ConsoleBuffer consoleBuffer,
-                                 Shell shell, boolean doLogging) {
+                                 Shell shell, boolean operatorParserEnabled,
+                                 boolean doLogging) {
         completionList = new ArrayList<>();
         this.aeshContext = aeshContext;
         this.consoleBuffer = consoleBuffer;
         this.shell = shell;
+        this.operatorParserEnabled = operatorParserEnabled;
         this.doLogging = doLogging;
     }
 
@@ -127,10 +130,12 @@ public class AeshCompletionHandler implements CompletionHandler {
         List<CompleteOperation> possibleCompletions = new ArrayList<>();
         int pipeLinePos = 0;
         boolean redirect = false;
-        if(ControlOperatorParser.doStringContainPipelineOrEnd(buffer.getMultiLine())) {
+        if(operatorParserEnabled &&
+                ControlOperatorParser.doStringContainPipelineOrEnd(buffer.getMultiLine())) {
             pipeLinePos =  ControlOperatorParser.findLastPipelineAndEndPositionBeforeCursor(buffer.getMultiLine(), buffer.getMultiCursor());
         }
-        if(ControlOperatorParser.findLastRedirectionPositionBeforeCursor(buffer.getMultiLine(), buffer.getMultiCursor()) > pipeLinePos) {
+        if(operatorParserEnabled &&
+                ControlOperatorParser.findLastRedirectionPositionBeforeCursor(buffer.getMultiLine(), buffer.getMultiCursor()) > pipeLinePos) {
             pipeLinePos = 0;
             redirect = true;
         }
