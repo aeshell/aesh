@@ -19,12 +19,14 @@
  */
 package org.jboss.aesh.cl.activation;
 
+import org.jboss.aesh.cl.internal.ProcessedCommand;
+
 /**
  * @author jdenise@redhat.com
  */
 public class NullCommandActivator implements CommandActivator {
     @Override
-    public boolean isActivated() {
+    public boolean isActivated(ProcessedCommand command) {
         return true;
     }
 }
