@@ -84,7 +84,7 @@ public class MutableCommandRegistry implements CommandRegistry {
         for(CommandContainer<Command> command : registry.values()) {
             ProcessedCommand com = command.getParser().getProcessedCommand();
             if(com.getName().startsWith(co.getBuffer()) &&
-                    com.getActivator().isActivated()) {
+                com.getActivator().isActivated(com)) {
                 if(command.getParser().isGroupCommand()) {
                     LOGGER.info("command is a group command");
                     //if we dont have any arguments we'll add the child commands as well
@@ -102,12 +102,12 @@ public class MutableCommandRegistry implements CommandRegistry {
             }
             else if(command.getParser().isGroupCommand() &&
                     co.getBuffer().startsWith(com.getName()) &&
-                    com.getActivator().isActivated()) {
+                    com.getActivator().isActivated(com)) {
                 String groupLine = Parser.trimInFront( co.getBuffer().substring(com.getName().length()));
                 int diff = co.getBuffer().length() - groupLine.length();
                 for(CommandLineParser child : command.getParser().getAllChildParsers()) {
                     if(child.getProcessedCommand().getName().startsWith(groupLine) &&
-                            child.getProcessedCommand().getActivator().isActivated())
+                        child.getProcessedCommand().getActivator().isActivated(child.getProcessedCommand()))
                         names.add(co.getBuffer().substring(0, diff) + child.getProcessedCommand().getName());
                 }
             }

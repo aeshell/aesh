@@ -335,7 +335,7 @@ public class AeshCommandCompletionTest {
 
         static boolean activated;
         @Override
-        public boolean isActivated() {
+        public boolean isActivated(ProcessedCommand cmd) {
             return activated;
         }
     }

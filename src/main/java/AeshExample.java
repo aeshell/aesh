@@ -181,7 +181,7 @@ public class AeshExample {
     }
 
     private static class HideActivator implements CommandActivator {
-        public boolean isActivated() {
+        public boolean isActivated(ProcessedCommand cmd) {
             return false;
         }
     }
