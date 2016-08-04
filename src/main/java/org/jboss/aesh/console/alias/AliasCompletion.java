@@ -61,7 +61,7 @@ public class AliasCompletion implements Completion {
                 completeOperation.getBuffer().startsWith(UNALIAS_SPACE)) {
             String word = Parser.findCurrentWordFromCursor(completeOperation.getBuffer(), completeOperation.getCursor());
             completeOperation.addCompletionCandidates(manager.findAllMatchingNames(word));
-            if (HELP.startsWith(word)) {
+            if (!word.isEmpty() && HELP.startsWith(word)) {
                 completeOperation.addCompletionCandidate(HELP);
             }
             completeOperation.setOffset(completeOperation.getCursor()-word.length());
