@@ -19,6 +19,8 @@
  */
 package org.jboss.aesh.cl.activation;
 
+import org.jboss.aesh.cl.internal.ProcessedCommand;
+
 /**
  * @author jdenise@redhat.com
  */
@@ -29,5 +31,5 @@ public interface CommandActivator {
      *
      * @return
      */
-    boolean isActivated();
+    boolean isActivated(ProcessedCommand command);
 }

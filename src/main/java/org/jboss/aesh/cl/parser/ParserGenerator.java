@@ -44,7 +44,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import org.jboss.aesh.console.command.GroupCommand;
 import org.jboss.aesh.console.command.activator.AeshCommandActivatorProvider;
 
 /**
@@ -106,10 +108,18 @@ public class ParserGenerator {
                             .processedCommand(processedGroupCommand)
                             .create());
 
-
-            for(Class<? extends Command> groupClazz : groupCommand.groupCommands()) {
-                Command groupInstance = ReflectionUtil.newInstance(groupClazz);
+            if (commandObject instanceof GroupCommand) {
+                List<Command> commands = ((GroupCommand) commandObject).getCommands();
+                if (commands != null) {
+                    for (Command sub : commands) {
+                        groupContainer.addChild(ParserGenerator.doGenerateCommandLineParser(sub));
+                    }
+                }
+            } else {
+                for (Class<? extends Command> groupClazz : groupCommand.groupCommands()) {
+                    Command groupInstance = ReflectionUtil.newInstance(groupClazz);
                     groupContainer.addChild(ParserGenerator.doGenerateCommandLineParser(groupInstance));
+                }
             }
 
             return groupContainer;
