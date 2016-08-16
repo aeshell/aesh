@@ -401,7 +401,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
     }
 
     private void completionSetOffSet(ParsedCompleteObject completeObject, CompleteOperation completeOperation, CompleterInvocation completions) {
-        if(completions.getOffset() > 0)
+        if (completions.getOffset() >= 0)
             completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
         else if(completeObject.getValue() != null)
             completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
