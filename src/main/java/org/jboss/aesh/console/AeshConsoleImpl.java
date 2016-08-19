@@ -56,6 +56,7 @@ import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.man.Man;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.history.History;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.Shell;
@@ -428,5 +429,10 @@ public class AeshConsoleImpl implements AeshConsole {
                 return 1;
             }
         }
+    }
+
+    @Override
+    public History getHistory() {
+        return console.getHistory();
     }
 }
