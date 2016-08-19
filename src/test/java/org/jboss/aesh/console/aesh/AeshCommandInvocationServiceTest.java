@@ -46,7 +46,10 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import org.jboss.aesh.cl.parser.CommandLineParserException;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.command.CommandException;
+import org.jboss.aesh.console.command.CommandNotFoundException;
 
 import static org.junit.Assert.assertTrue;
 
@@ -208,6 +211,12 @@ class FooCommandInvocation implements CommandInvocation {
 
     public String getFoo() {
         return "FOO";
+    }
+
+    @Override
+    public Command getPopulatedCommand(String commandLine) throws CommandNotFoundException,
+            CommandException, CommandLineParserException, OptionValidatorException {
+        return commandInvocation.getPopulatedCommand(commandLine);
     }
 }
 

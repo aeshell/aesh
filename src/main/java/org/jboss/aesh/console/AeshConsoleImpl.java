@@ -309,6 +309,10 @@ public class AeshConsoleImpl implements AeshConsole {
         return console.getConsoleCallback();
     }
 
+    public InvocationProviders getInvocationProviders() {
+        return invocationProviders;
+    }
+
     class AeshCompletion implements Completion {
 
         @Override

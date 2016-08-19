@@ -19,13 +19,22 @@
  */
 package org.jboss.aesh.console.command.invocation;
 
+import org.jboss.aesh.cl.CommandLine;
+import org.jboss.aesh.cl.parser.CommandLineParserException;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsoleImpl;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.ConsoleCallback;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandException;
+import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandOperation;
+import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.operator.ControlOperator;
+import org.jboss.aesh.parser.AeshLine;
+import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.terminal.Shell;
 
 /**
@@ -133,6 +142,32 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public void setEcho(boolean echo) {
         aeshConsole.setEcho(echo);
+    }
+
+    @Override
+    public Command getPopulatedCommand(String commandLine) throws CommandNotFoundException,
+            CommandException, CommandLineParserException, OptionValidatorException {
+        if (commandLine == null || commandLine.isEmpty()) {
+            return null;
+        }
+
+        AeshLine aeshLine = Parser.findAllWords(commandLine);
+        if (aeshLine.getWords().isEmpty()) {
+            return null;
+        }
+        String opName = aeshLine.getWords().get(0);
+        CommandContainer<Command> container = aeshConsole.getCommandRegistry().
+                getCommand(opName, commandLine);
+        if (container == null) {
+            throw new CommandNotFoundException("No command handler for '" + opName + "'.");
+        }
+        CommandLine line = container.getParser().parse(commandLine, false);
+        if (line == null) {
+            throw new CommandException("Invalid Command " + commandLine);
+        }
+        line.getParser().getCommandPopulator().populateObject(line,
+                aeshConsole.getInvocationProviders(), getAeshContext(), true);
+        return line.getParser().getCommand();
     }
 
 }
