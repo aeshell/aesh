@@ -23,6 +23,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.export.ExportManager;
 import org.jboss.aesh.console.helper.ManProvider;
+import org.jboss.aesh.history.History;
 import org.jboss.aesh.terminal.Shell;
 
 /**
@@ -115,4 +116,6 @@ public interface AeshConsole {
     boolean isEchoing();
 
     void setEcho(boolean echo);
+
+    History getHistory();
 }

@@ -19,8 +19,13 @@
  */
 package org.jboss.aesh.console.command.invocation;
 
+import org.jboss.aesh.cl.parser.CommandLineParserException;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandException;
+import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.operator.ControlOperator;
@@ -143,4 +148,21 @@ public interface CommandInvocation {
      * @param echo state
      */
     void setEcho(boolean echo);
+
+    /**
+     * Retrieve the command from a command line. The arguments in the command
+     * line are injected into the Command fields.
+     *
+     * @param commandLine The input command.
+     * @return The command or null if the string was not mapping onto a Command.
+     * @throws org.jboss.aesh.console.command.CommandNotFoundException If the
+     * command is not found in the registry.
+     * @throws org.jboss.aesh.console.command.CommandException If the Command is
+     * not properly structured.
+     * @throws org.jboss.aesh.cl.parser.CommandLineParserException If the line
+     * parsing fails.
+     * @throws org.jboss.aesh.cl.validator.OptionValidatorException
+     */
+    Command getPopulatedCommand(String commandLine) throws CommandNotFoundException,
+            CommandException, CommandLineParserException, OptionValidatorException;
 }
