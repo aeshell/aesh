@@ -167,8 +167,12 @@ public class AeshInputProcessor implements InputProcessor {
                 if(completionHandler != null) {
                     completionHandler.setAskDisplayCompletion(false);
                     consoleBuffer.getUndoManager().clear();
+
+                    // display last buffer again, so user can continue typing
                     consoleBuffer.out().print(Config.getLineSeparator());
-                    clearBufferAndDisplayPrompt();
+                    consoleBuffer.displayPrompt();
+                    consoleBuffer.out().print(consoleBuffer.getBuffer().getLine());
+                    prevAction = Action.NEWLINE;
                 }
             }
         }
