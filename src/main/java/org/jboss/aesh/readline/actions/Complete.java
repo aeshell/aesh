@@ -20,6 +20,7 @@
 package org.jboss.aesh.readline.actions;
 
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.ConsoleBuffer;
 import org.jboss.aesh.console.InputProcessor;
 import org.jboss.aesh.readline.Action;
 import org.jboss.aesh.readline.ActionEvent;
@@ -49,11 +50,12 @@ public class Complete implements ActionEvent {
             }
             else {
                 inputProcessor.getCompleter().setAskDisplayCompletion(false);
-                inputProcessor.getBuffer().getUndoManager().clear();
-                inputProcessor.getBuffer().out().print(Config.getLineSeparator());
-                inputProcessor.clearBufferAndDisplayPrompt();
-                inputProcessor.getBuffer().drawLine();
-                inputProcessor.getBuffer().moveCursor(inputProcessor.getBuffer().getBuffer().getMultiCursor());
+                ConsoleBuffer buffer = inputProcessor.getBuffer();
+                buffer.getUndoManager().clear();
+                buffer.out().print(Config.getLineSeparator());
+                buffer.displayPrompt();
+                buffer.out().print(buffer.getBuffer().getLine());
+                buffer.moveCursor(buffer.getBuffer().getMultiCursor());
             }
         }
         else {

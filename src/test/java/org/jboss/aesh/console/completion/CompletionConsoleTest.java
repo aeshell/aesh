@@ -43,6 +43,7 @@ import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
+import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -343,6 +344,63 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         Thread.sleep(200);
 
         console.stop();
+    }
+
+    @Test
+    public void askDisplayCompletion() throws Exception {
+        Completion completion = new Completion() {
+            @Override
+            public void complete(CompleteOperation co) {
+                if(co.getBuffer().equals("file")) {
+                    for (int i = 0; i < 105; i++) {
+                        co.addCompletionCandidate("file" + i);
+                    }
+                }
+            }
+        };
+
+        PipedOutputStream outputStream = new PipedOutputStream();
+        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        Settings settings = new SettingsBuilder()
+                .inputStream(pipedInputStream)
+                .outputStream(new PrintStream(byteArrayOutputStream))
+                .logging(true)
+                .create();
+
+        Console console = new Console(settings);
+
+        console.addCompletion(completion);
+
+        console.setConsoleCallback(new CompletionConsoleCallback2(console));
+        console.setPrompt(new Prompt("# "));
+        console.start();
+
+        try {
+            outputStream.write("file".getBytes());
+            outputStream.write(completeChar.getFirstValue());
+            outputStream.flush();
+            Thread.sleep(200);
+
+            assertEquals("file", console.getBuffer());
+            assertEquals("Display all 105 possibilities? (y or n)", getLastOutputLine(byteArrayOutputStream));
+
+            outputStream.write("n".getBytes());
+            outputStream.flush();
+
+            Thread.sleep(200);
+
+            assertEquals("file", console.getBuffer());
+        } finally {
+            console.stop();
+        }
+    }
+
+    String getLastOutputLine(ByteArrayOutputStream os) {
+        String output = new String(os.toByteArray());
+        String[] lines = output.split("\n");
+        return lines[lines.length - 1];
     }
 
     class CompletionConsoleCallback extends AeshConsoleCallback {
