@@ -150,7 +150,9 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             //most deletions are backspace from the end of the line so we've
             //optimize that like this.
             //NOTE: this doesnt work with history, need to find a better solution
-            if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length() && optimize) {
+            //NOTE: also not working when cursor is at the end of the line
+            if(buffer.getDelta() == -1 && buffer.getCursor() >= buffer.length() && optimize
+                    && !isEndOfLine()) {
                 out.print(Parser.SPACE_CHAR + ANSI.START + "1D"); //move cursor to left
             }
             else {
@@ -169,6 +171,13 @@ public class AeshConsoleBuffer implements ConsoleBuffer {
             }
         }
         out.flush();
+    }
+
+    /**
+     * @return is cursor at the end of the line?
+     */
+    private boolean isEndOfLine() {
+        return buffer.getCursorWithPrompt() == shell.getSize().getWidth();
     }
 
     private void redrawMultipleLines(boolean keepCursorPosition) {
