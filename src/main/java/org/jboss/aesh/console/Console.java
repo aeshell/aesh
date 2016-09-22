@@ -159,6 +159,8 @@ public class Console {
         if(settings.isLogging())
             LOGGER.info("RESET");
 
+        Parser.setParsingQuotes(settings.isParsingQuotes());
+
         readerService = Executors.newFixedThreadPool(1, new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {

@@ -214,8 +214,7 @@ class FooCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public Command getPopulatedCommand(String commandLine) throws CommandNotFoundException,
-            CommandException, CommandLineParserException, OptionValidatorException {
+    public Command getPopulatedCommand(String commandLine) throws CommandNotFoundException, CommandException, CommandLineParserException, OptionValidatorException {
         return commandInvocation.getPopulatedCommand(commandLine);
     }
 }

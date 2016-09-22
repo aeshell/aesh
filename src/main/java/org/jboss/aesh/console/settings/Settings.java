@@ -250,6 +250,7 @@ public interface Settings extends Cloneable {
      */
     void setExecuteFileAtStart(Resource executeFileAtStart);
 
+    boolean isParsingQuotes();
     /**
      * @return execute file at start
      */

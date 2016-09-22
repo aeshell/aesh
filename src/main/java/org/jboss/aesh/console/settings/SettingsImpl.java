@@ -79,6 +79,7 @@ public class SettingsImpl implements Settings {
     private Resource resource;
     private String execute;
     private Resource executeFileAtStart;
+    private boolean parsingQuotes = true;
 
     protected SettingsImpl() {
     }
@@ -116,6 +117,7 @@ public class SettingsImpl implements Settings {
         setResource(baseSettings.getResource());
         setExportUsesSystemEnvironment(baseSettings.doExportUsesSystemEnvironment());
         setExecuteAtStart(baseSettings.getExecuteAtStart());
+        setParsingQuotes(baseSettings.isParsingQuotes());
     }
 
     public void resetToDefaults() {
@@ -139,6 +141,7 @@ public class SettingsImpl implements Settings {
         setQuitHandler(null);
         operationManager.clear();
         setAliasEnabled(true);
+        parsingQuotes = true;
     }
 
     /**
@@ -684,6 +687,15 @@ public class SettingsImpl implements Settings {
     @Override
     public void setExecuteFileAtStart(Resource executeFileAtStart) {
         this.executeFileAtStart = executeFileAtStart;
+    }
+
+    @Override
+    public boolean isParsingQuotes() {
+        return parsingQuotes;
+    }
+
+    public void setParsingQuotes(boolean parsingQuotes) {
+        this.parsingQuotes = parsingQuotes;
     }
 
     @Override

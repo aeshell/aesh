@@ -46,6 +46,7 @@ public class Parser {
     private static final Pattern spacePattern = Pattern.compile("(?<!\\\\)\\s");
     private static final Pattern ansiPattern = Pattern.compile("\\u001B\\[[\\?]?[0-9;]*[a-zA-Z]?");
     private static final char NULL_CHAR = '\u0000';
+    private static boolean parsingQuotes = true;
 
     /**
      * Format completions so that they look similar to GNU Readline
@@ -519,6 +520,8 @@ public class Parser {
      * @return true if it contains open quotes, else false
      */
     public static boolean doesStringContainOpenQuote(String text) {
+        if(!parsingQuotes)
+            return false;
         boolean doubleQuote = false;
         boolean singleQuote = false;
         for (int i = 0; i < text.length(); i++) {
@@ -573,7 +576,7 @@ public class Parser {
                 else
                     haveEscape = true;
             }
-            else if (c == SINGLE_QUOTE) {
+            else if (c == SINGLE_QUOTE && parsingQuotes) {
                 if (haveEscape || ternaryQuote) {
                     builder.append(c);
                     haveEscape = false;
@@ -588,7 +591,7 @@ public class Parser {
                 else
                     haveSingleQuote = true;
             }
-            else if (c == DOUBLE_QUOTE) {
+            else if (c == DOUBLE_QUOTE && parsingQuotes) {
                 if (haveEscape || (ternaryQuote && prev != DOUBLE_QUOTE)) {
                     builder.append(c);
                     haveEscape = false;
@@ -781,5 +784,9 @@ public class Parser {
 
     public static String stripAwayAnsiCodes(String text) {
         return ansiPattern.matcher(text).replaceAll("");
+    }
+
+    public static void setParsingQuotes(boolean parsingQuotes) {
+        Parser.parsingQuotes = parsingQuotes;
     }
 }

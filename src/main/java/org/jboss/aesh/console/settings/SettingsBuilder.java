@@ -210,6 +210,11 @@ public class SettingsBuilder {
         return this;
     }
 
+    public SettingsBuilder parsingQuotes(boolean parsingQuotes) {
+        settings.setParsingQuotes(parsingQuotes);
+        return this;
+    }
+
     public Settings create() {
         if(settings.isLogging())
             LoggerUtil.doLog();
