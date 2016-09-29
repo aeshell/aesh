@@ -20,7 +20,15 @@
 package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.command.activator.CommandActivatorProvider;
+import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
+import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
+import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
+import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
+import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.InterruptHook;
+import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.util.LoggerUtil;
@@ -42,11 +50,6 @@ public class SettingsBuilder {
 
     public SettingsBuilder(Settings baseSettings) {
        settings = (SettingsImpl) baseSettings.clone();
-    }
-
-    public SettingsBuilder name(String name) {
-        settings.setName(name);
-        return this;
     }
 
     public SettingsBuilder mode(EditMode.Mode mode) {
@@ -74,13 +77,8 @@ public class SettingsBuilder {
         return this;
     }
 
-    public SettingsBuilder ansi(boolean ansi) {
-        settings.setAnsiConsole(ansi);
-        return this;
-    }
-
     public SettingsBuilder inputStream(InputStream inputStream) {
-        settings.setInputStream(inputStream);
+        settings.setStdIn(inputStream);
         return this;
     }
 
@@ -204,8 +202,53 @@ public class SettingsBuilder {
         return this;
     }
 
+     public SettingsBuilder commandActivatorProvider(CommandActivatorProvider commandActivatorProvider) {
+        settings.setCommandActivatorProvider(commandActivatorProvider);
+        return this;
+    }
+
+    public SettingsBuilder optionActivatorProvider(OptionActivatorProvider optionActivatorProvider) {
+        settings.setOptionActivatorProvider(optionActivatorProvider);
+        return this;
+    }
+
+    public SettingsBuilder commandRegistry(CommandRegistry commandRegistry) {
+        settings.setCommandRegistry(commandRegistry);
+        return this;
+    }
+
+    public SettingsBuilder commandInvocationServices(CommandInvocationServices commandInvocationServices) {
+        settings.setCommandInvocationServices(commandInvocationServices);
+        return this;
+    }
+
+    public SettingsBuilder commandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
+        settings.setCommandNotFoundHandler(commandNotFoundHandler);
+        return this;
+    }
+
+    public SettingsBuilder completerInvocationProvider(CompleterInvocationProvider completerInvocationProvider) {
+        settings.setCompleterInvocationProvider(completerInvocationProvider);
+        return this;
+    }
+
+    public SettingsBuilder converterInvocationProvider(ConverterInvocationProvider converterInvocationProvider) {
+        settings.setConverterInvocationProvider(converterInvocationProvider);
+        return this;
+    }
+
+    public SettingsBuilder validatorInvocationProvider(ValidatorInvocationProvider validatorInvocationProvider) {
+        settings.setValidatorInvocationProvider(validatorInvocationProvider);
+        return this;
+    }
+
+    public SettingsBuilder manProvider(ManProvider manProvider) {
+        settings.setManProvider(manProvider);
+        return this;
+    }
+
     public Settings create() {
-        if(settings.isLogging())
+        if(settings.logging())
             LoggerUtil.doLog();
         return settings;
     }
