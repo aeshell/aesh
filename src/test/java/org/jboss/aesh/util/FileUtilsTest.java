@@ -54,7 +54,7 @@ public class FileUtilsTest {
                 .logging(true)
                 .create();
 
-        aeshContext = settings.getAeshContext();
+        aeshContext = settings.aeshContext();
     }
 
     @Test(expected = IOException.class)

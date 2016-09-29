@@ -30,24 +30,17 @@ import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.complete.CompleteOperation;
-import org.jboss.aesh.complete.Completion;
 import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
-import org.jboss.aesh.console.command.activator.CommandActivatorProvider;
-import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
-import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainerResult;
-import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.console.command.invocation.AeshCommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.AeshInternalCommandRegistry;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.export.ExportManager;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.man.Man;
@@ -55,6 +48,9 @@ import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.readline.Prompt;
+import org.jboss.aesh.readline.completion.CompleteOperation;
+import org.jboss.aesh.readline.completion.Completion;
 import org.jboss.aesh.util.LoggerUtil;
 
 /**
@@ -62,7 +58,6 @@ import org.jboss.aesh.util.LoggerUtil;
  */
 public class AeshConsoleImpl implements AeshConsole {
 
-    private final Console console;
     private final CommandRegistry registry;
     private final CommandInvocationServices commandInvocationServices;
     private final InvocationProviders invocationProviders;
@@ -73,37 +68,25 @@ public class AeshConsoleImpl implements AeshConsole {
     private AeshInternalCommandRegistry internalRegistry;
     private String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
 
-    AeshConsoleImpl(Settings settings, CommandRegistry registry,
-        CommandInvocationServices commandInvocationServices,
-        CommandNotFoundHandler commandNotFoundHandler,
-        CompleterInvocationProvider completerInvocationProvider,
-        ConverterInvocationProvider converterInvocationProvider,
-        ValidatorInvocationProvider validatorInvocationProvider,
-        OptionActivatorProvider optionActivatorProvider,
-        ManProvider manProvider,
-        CommandActivatorProvider commandActivatorProvider) {
-        this.registry = registry;
-        this.commandInvocationServices = commandInvocationServices;
-        this.commandNotFoundHandler = commandNotFoundHandler;
-        this.manProvider = manProvider;
-        this.invocationProviders =
-            new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
-                validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider);
+    AeshConsoleImpl(Settings settings ) {
+        this.registry = settings.commandRegistry();
+        this.commandInvocationServices = settings.commandInvocationServices();
+        this.commandNotFoundHandler = settings.commandNotFoundHandler();
+        this.manProvider = settings.manProvider();
+        this.invocationProviders = new AeshInvocationProviders(settings);
 
-        console = new Console(settings);
-        console.setConsoleCallback(new AeshConsoleCallbackImpl(this));
-        console.addCompletion(new AeshCompletion());
-        processAfterInit(console.getSettings());
+
+        processAfterInit(settings);
     }
 
     @Override
     public void start() {
-        console.start();
+        //console.start();
     }
 
     @Override
     public void stop() {
-        console.stop();
+        //console.stop();
     }
 
     @Override
@@ -113,23 +96,18 @@ public class AeshConsoleImpl implements AeshConsole {
 
     @Override
     public void setPrompt(Prompt prompt) {
-        console.setPrompt(prompt);
+
     }
 
     @Override
     public Prompt getPrompt() {
-        return console.getPrompt();
-    }
-
-    @Override
-    public Shell getShell() {
-        return console.getShell();
+        return null;
     }
 
     @Override
     public void clear() {
         try {
-            console.clear();
+            //console.clear();
         }
         catch (IOException ignored) {
         }
@@ -182,10 +160,6 @@ public class AeshConsoleImpl implements AeshConsole {
         return console.getBuffer();
     }
 
-    public InputProcessor getInputProcessor() {
-        return console.getInputProcessor();
-    }
-
     public void putProcessInBackground(int pid) {
         console.putProcessInBackground(pid);
     }
@@ -207,7 +181,7 @@ public class AeshConsoleImpl implements AeshConsole {
     }
 
     private void processAfterInit(Settings settings) {
-        if (settings.isManEnabled()) {
+        if (settings.manEnabled()) {
             internalRegistry = new AeshInternalCommandRegistry();
             internalRegistry.addCommand(new Man(manProvider));
         }
@@ -216,9 +190,6 @@ public class AeshConsoleImpl implements AeshConsole {
                 if(!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
                     //we have a custom OptionActivatorProvider, and need to process all options
                     registry.getCommand(commandName, "").getParser().getProcessedCommand().updateInvocationProviders(invocationProviders);
-                }
-                if(!settings.isAnsiConsole()) {
-                    registry.getCommand(commandName, "").getParser().getProcessedCommand().updateSettings(settings);
                 }
             }
         }
@@ -280,11 +251,6 @@ public class AeshConsoleImpl implements AeshConsole {
                 throw e;
             }
         }
-    }
-
-    @Override
-    public ConsoleCallback getConsoleCallback() {
-        return console.getConsoleCallback();
     }
 
     class AeshCompletion implements Completion {

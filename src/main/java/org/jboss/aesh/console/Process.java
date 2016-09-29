@@ -19,10 +19,8 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.keymap.KeyMap;
-import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.readline.KeyAction;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -31,9 +29,7 @@ public interface Process {
 
     void setManager(ProcessManager manager);
 
-    KeyEvent getInput() throws InterruptedException;
-
-    <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException;
+    KeyAction getInput() throws InterruptedException;
 
     String getInputLine() throws InterruptedException;
 

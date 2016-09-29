@@ -50,7 +50,7 @@ public class NoDotNamesFilterTest {
                 .logging(true)
                 .create();
 
-        AeshContext aeshContext = settings.getAeshContext();
+        AeshContext aeshContext = settings.aeshContext();
         resource = aeshContext.getCurrentWorkingDirectory().newInstance(".");
     }
 

@@ -30,7 +30,7 @@ import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.converter.AeshConverterInvocation;
 import org.jboss.aesh.console.command.validator.AeshValidatorInvocation;
-import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.terminal.formatting.TerminalString;
 import org.jboss.aesh.util.ANSI;
 
 import java.lang.reflect.Constructor;

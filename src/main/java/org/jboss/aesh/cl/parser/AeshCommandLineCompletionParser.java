@@ -29,7 +29,8 @@ import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.parser.Parser;
-import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.readline.completion.CompleteOperation;
+import org.jboss.aesh.terminal.formatting.TerminalString;
 
 import java.util.List;
 

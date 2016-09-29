@@ -19,9 +19,9 @@
  */
 package org.jboss.aesh.console.command.registry;
 
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.container.CommandContainer;
+import org.jboss.aesh.readline.completion.CompleteOperation;
 
 import java.util.Set;
 

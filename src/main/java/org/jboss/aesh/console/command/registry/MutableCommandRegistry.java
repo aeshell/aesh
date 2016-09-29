@@ -20,13 +20,13 @@
 package org.jboss.aesh.console.command.registry;
 
 import org.jboss.aesh.cl.parser.CommandLineParser;
-import org.jboss.aesh.complete.CompleteOperation;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.container.AeshCommandContainerBuilder;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainerBuilder;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.readline.completion.CompleteOperation;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.ArrayList;

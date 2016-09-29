@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.readline.ActionEvent;
+import org.jboss.aesh.readline.KeyAction;
 
 /**
  * Implementation of this interface will be called when a user press the
@@ -46,7 +46,7 @@ public interface ConsoleCallback {
      * @return user input
      * @throws InterruptedException
      */
-     ActionEvent getInput() throws InterruptedException;
+     KeyAction getInput() throws InterruptedException;
 
     /**
      * A blocking call that will return user input from the terminal
