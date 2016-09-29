@@ -21,7 +21,15 @@ package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.command.activator.CommandActivatorProvider;
+import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
+import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
+import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
+import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
+import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.InterruptHook;
+import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.editing.EditMode;
@@ -40,7 +48,6 @@ import java.io.PrintStream;
  */
 public class SettingsImpl implements Settings {
 
-    private String name;
     private EditMode.Mode editMode = EditMode.Mode.EMACS;
     private File historyFile;
     private FileAccessPermission historyFilePermission;
@@ -48,7 +55,6 @@ public class SettingsImpl implements Settings {
     private boolean historyDisabled = false;
     private boolean historyPersistent = true;
     private String bellStyle;
-    private boolean ansiConsole = true;
     private InputStream inputStream;
     private PrintStream stdOut;
     private PrintStream stdErr;
@@ -72,46 +78,61 @@ public class SettingsImpl implements Settings {
     private Resource resource;
     private String execute;
     private Resource executeFileAtStart;
+    private CommandActivatorProvider commandActivatorProvider;
+    private OptionActivatorProvider optionActivatorProvider;
+    private CommandRegistry commandRegistry;
+    private CommandInvocationServices commandInvocationServices;
+    private CommandNotFoundHandler commandNotFoundHandler;
+    private CompleterInvocationProvider completerInvocationProvider;
+    private ConverterInvocationProvider converterInvocationProvider;
+    private ValidatorInvocationProvider validatorInvocationProvider;
+    private ManProvider manProvider;
 
     protected SettingsImpl() {
     }
 
     protected SettingsImpl(Settings baseSettings) {
-        setName(baseSettings.getName());
-        setMode(baseSettings.getMode());
-        setHistoryFile(baseSettings.getHistoryFile());
-        setHistoryFilePermission(baseSettings.getHistoryFilePermission());
-        setHistorySize(baseSettings.getHistorySize());
-        setBellStyle(baseSettings.getBellStyle());
-        setAnsiConsole(baseSettings.isAnsiConsole());
-        setInputStream(baseSettings.getInputStream());
-        setStdOut(baseSettings.getStdOut());
-        setStdErr(baseSettings.getStdErr());
-        setInputrc(baseSettings.getInputrc());
-        setLogging(baseSettings.isLogging());
-        setDisableCompletion(baseSettings.isCompletionDisabled());
-        setLogFile(baseSettings.getLogFile());
-        setReadInputrc(baseSettings.doReadInputrc());
-        setHistoryDisabled(baseSettings.isHistoryDisabled());
-        setHistoryPersistent(baseSettings.isHistoryPersistent());
-        setAliasFile(baseSettings.getAliasFile());
-        setAliasEnabled(baseSettings.isAliasEnabled());
-        setPersistAlias(baseSettings.doPersistAlias());
-        setQuitHandler(baseSettings.getQuitHandler());
-        setInterruptHook(baseSettings.getInterruptHook());
-        enableOperatorParser(baseSettings.isOperatorParserEnabled());
-        setManEnabled(baseSettings.isManEnabled());
-        setAeshContext(baseSettings.getAeshContext());
-        setExportEnabled(baseSettings.isExportEnabled());
-        setExportFile(baseSettings.getExportFile());
-        setPersistExport(baseSettings.doPersistExport());
-        setResource(baseSettings.getResource());
-        setExportUsesSystemEnvironment(baseSettings.doExportUsesSystemEnvironment());
-        setExecuteAtStart(baseSettings.getExecuteAtStart());
+        setMode(baseSettings.mode());
+        setHistoryFile(baseSettings.historyFile());
+        setHistoryFilePermission(baseSettings.historyFilePermission());
+        setHistorySize(baseSettings.historySize());
+        setBellStyle(baseSettings.bellStyle());
+        setStdIn(baseSettings.stdIn());
+        setStdOut(baseSettings.stdOut());
+        setStdErr(baseSettings.stdErr());
+        setInputrc(baseSettings.inputrc());
+        setLogging(baseSettings.logging());
+        setDisableCompletion(baseSettings.completionDisabled());
+        setLogFile(baseSettings.logFile());
+        setReadInputrc(baseSettings.readInputrc());
+        setHistoryDisabled(baseSettings.historyDisabled());
+        setHistoryPersistent(baseSettings.historyPersistent());
+        setAliasFile(baseSettings.aliasFile());
+        setAliasEnabled(baseSettings.aliasEnabled());
+        setPersistAlias(baseSettings.persistAlias());
+        setQuitHandler(baseSettings.quitHandler());
+        setInterruptHook(baseSettings.interruptHook());
+        enableOperatorParser(baseSettings.operatorParserEnabled());
+        setManEnabled(baseSettings.manEnabled());
+        setAeshContext(baseSettings.aeshContext());
+        setExportEnabled(baseSettings.exportEnabled());
+        setExportFile(baseSettings.exportFile());
+        setPersistExport(baseSettings.persistExport());
+        setResource(baseSettings.resource());
+        setExportUsesSystemEnvironment(baseSettings.exportUsesSystemEnvironment());
+        setExecuteAtStart(baseSettings.executeAtStart());
+        setCommandActivatorProvider(baseSettings.commandActivatorProvider());
+        setOptionActivatorProvider(baseSettings.optionActivatorProvider());
+        setCommandRegistry(baseSettings.commandRegistry());
+        setCommandInvocationServices(baseSettings.commandInvocationServices());
+        setCommandNotFoundHandler(baseSettings.commandNotFoundHandler());
+        setCompleterInvocationProvider(baseSettings.completerInvocationProvider());
+        setConverterInvocationProvider(baseSettings.converterInvocationProvider());
+        setValidatorInvocationProvider(baseSettings.validatorInvocationProvider());
+        setManProvider(baseSettings.manProvider());
     }
 
     public void resetToDefaults() {
-        setName("aesh");
         editMode = EditMode.Mode.EMACS;
         historyFile = null;
         historyFilePermission = null;
@@ -119,7 +140,6 @@ public class SettingsImpl implements Settings {
         historyDisabled = false;
         historyPersistent = true;
         bellStyle = null;
-        ansiConsole = true;
         inputStream = null;
         setStdOut(null);
         setStdErr(null);
@@ -132,34 +152,13 @@ public class SettingsImpl implements Settings {
     }
 
     /**
-     * Set the name of the cli
-     *
-     * @param name name
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Get the name of the cli
-     *
-     * @return default is aesh
-     */
-    @Override
-    public String getName() {
-        if(name == null)
-            name = "aesh";
-        return name;
-    }
-
-    /**
      * Either Emacs or Vi mode.
      * Emacs is default if not set
      *
      * @return editing mode
      */
     @Override
-    public EditMode.Mode getMode() {
+    public EditMode.Mode mode() {
         return editMode;
     }
 
@@ -173,23 +172,23 @@ public class SettingsImpl implements Settings {
      * @return edit mode
      */
     @Override
-    public EditMode getEditMode() {
+    public EditMode editMode() {
         if(readInputrc) {
             try {
-                return new EditModeBuilder().parseInputrc(new FileInputStream(getInputrc())).create();
+                return EditModeBuilder.builder().parseInputrc(new FileInputStream(inputrc())).create();
             }
             catch(FileNotFoundException e) {
-                return new EditModeBuilder(getMode()).create();
+                return EditModeBuilder.builder(mode()).create();
             }
         }
         else
-            return new EditModeBuilder(getMode()).create();
+            return EditModeBuilder.builder(mode()).create();
     }
 
     /**
      * @return the historyFilePermission
      */
-    public FileAccessPermission getHistoryFilePermission() {
+    public FileAccessPermission historyFilePermission() {
         return historyFilePermission;
     }
 
@@ -207,7 +206,7 @@ public class SettingsImpl implements Settings {
      * @return history file
      */
     @Override
-    public File getHistoryFile() {
+    public File historyFile() {
         if(historyFile == null) {
             return new File(System.getProperty("user.home")+
                     Config.getPathSeparator()+".aesh_history");
@@ -227,7 +226,7 @@ public class SettingsImpl implements Settings {
      * @return size
      */
     @Override
-    public int getHistorySize() {
+    public int historySize() {
         return historySize;
     }
 
@@ -248,7 +247,7 @@ public class SettingsImpl implements Settings {
      * @return bell style
      */
     @Override
-    public String getBellStyle() {
+    public String bellStyle() {
         return bellStyle;
     }
 
@@ -257,29 +256,12 @@ public class SettingsImpl implements Settings {
     }
 
     /**
-     * @return true if its an ansi console
-     */
-    @Override
-    public boolean isAnsiConsole() {
-        return ansiConsole;
-    }
-
-    /**
-     * Possible to override the type of console
-     *
-     * @param ansiConsole is it an ansi compatible console?
-     */
-    public void setAnsiConsole(boolean ansiConsole) {
-        this.ansiConsole = ansiConsole;
-    }
-
-    /**
      * If not set, System.in will be used
      *
      * @return input
      */
     @Override
-    public InputStream getInputStream() {
+    public InputStream stdIn() {
         if(inputStream == null) {
             inputStream = System.in;
         }
@@ -291,7 +273,7 @@ public class SettingsImpl implements Settings {
      *
      * @param inputStream input
      */
-    public void setInputStream(InputStream inputStream) {
+    public void setStdIn(InputStream inputStream) {
         this.inputStream = inputStream;
     }
 
@@ -300,7 +282,7 @@ public class SettingsImpl implements Settings {
      * @return out
      */
     @Override
-    public PrintStream getStdOut() {
+    public PrintStream stdOut() {
         if(stdOut == null)
             return System.out;
         else
@@ -320,7 +302,7 @@ public class SettingsImpl implements Settings {
      * @return out
      */
     @Override
-    public PrintStream getStdErr() {
+    public PrintStream stdErr() {
         if(stdErr == null)
             return System.err;
         else
@@ -342,7 +324,7 @@ public class SettingsImpl implements Settings {
      * @return inputrc
      */
     @Override
-    public File getInputrc() {
+    public File inputrc() {
         if(inputrc == null) {
             inputrc = new File(System.getProperty("user.home")+Config.getPathSeparator()+".inputrc");
         }
@@ -359,7 +341,7 @@ public class SettingsImpl implements Settings {
      * @return logging
      */
     @Override
-    public boolean isLogging() {
+    public boolean logging() {
         return isLogging;
     }
 
@@ -379,7 +361,7 @@ public class SettingsImpl implements Settings {
      * @return dis completion
      */
     @Override
-    public boolean isCompletionDisabled() {
+    public boolean completionDisabled() {
         return disableCompletion;
     }
 
@@ -399,7 +381,7 @@ public class SettingsImpl implements Settings {
      * @return log file
      */
     @Override
-    public String getLogFile() {
+    public String logFile() {
         if(logFile == null) {
             logFile = Config.getTmpDir()+Config.getPathSeparator()+"aesh.log";
         }
@@ -422,7 +404,7 @@ public class SettingsImpl implements Settings {
      * @return do we?
      */
     @Override
-    public boolean doReadInputrc() {
+    public boolean readInputrc() {
         return readInputrc;
     }
 
@@ -443,7 +425,7 @@ public class SettingsImpl implements Settings {
      * @return historyDisabled
      */
     @Override
-    public boolean isHistoryDisabled() {
+    public boolean historyDisabled() {
         return historyDisabled;
     }
 
@@ -464,7 +446,7 @@ public class SettingsImpl implements Settings {
      * @return is history persistent
      */
     @Override
-    public boolean isHistoryPersistent() {
+    public boolean historyPersistent() {
         return historyPersistent;
     }
 
@@ -483,7 +465,7 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public File getAliasFile() {
+    public File aliasFile() {
         if(aliasFile == null)
             aliasFile = new File(Config.getHomeDir()+Config.getPathSeparator()+".aesh_aliases");
 
@@ -491,7 +473,7 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public boolean isAliasEnabled() {
+    public boolean aliasEnabled() {
         return aliasEnabled;
     }
 
@@ -504,7 +486,7 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public boolean doPersistAlias() {
+    public boolean persistAlias() {
         return persistAlias;
     }
 
@@ -513,7 +495,7 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public QuitHandler getQuitHandler() {
+    public QuitHandler quitHandler() {
         return quitHandler;
     }
 
@@ -522,12 +504,7 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public boolean hasInterruptHook() {
-        return interruptHook != null;
-    }
-
-    @Override
-    public InterruptHook getInterruptHook() {
+    public InterruptHook interruptHook() {
         return interruptHook;
     }
 
@@ -536,20 +513,12 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public boolean isOperatorParserEnabled() {
+    public boolean operatorParserEnabled() {
         return enableOperatorParser;
     }
 
     @Override
-    public void switchMode() {
-       if(editMode == EditMode.Mode.VI)
-           editMode = EditMode.Mode.EMACS;
-        else
-           editMode = EditMode.Mode.VI;
-    }
-
-    @Override
-    public boolean isManEnabled() {
+    public boolean manEnabled() {
         return manEnabled;
     }
 
@@ -558,9 +527,9 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public AeshContext getAeshContext() {
+    public AeshContext aeshContext() {
         if(aeshContext == null)
-            aeshContext = new DefaultAeshContext(getResource().newInstance(Config.getUserDir()));
+            aeshContext = new DefaultAeshContext(resource().newInstance(Config.getUserDir()));
         return aeshContext;
     }
 
@@ -569,7 +538,7 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public File getExportFile() {
+    public File exportFile() {
         if(exportFile == null)
             exportFile = new File(Config.getHomeDir()+Config.getPathSeparator()+".aesh_export");
         return exportFile;
@@ -581,7 +550,7 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public boolean isExportEnabled() {
+    public boolean exportEnabled() {
         return exportEnabled;
     }
 
@@ -595,7 +564,7 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public boolean doPersistExport() {
+    public boolean persistExport() {
         return persistExport;
     }
 
@@ -605,7 +574,7 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public boolean doExportUsesSystemEnvironment() {
+    public boolean exportUsesSystemEnvironment() {
         return this.exportUsesSystemEnvironment;
     }
 
@@ -623,7 +592,7 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public String getExecuteAtStart() {
+    public String executeAtStart() {
         return execute;
     }
 
@@ -633,15 +602,96 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public Resource getExecuteFileAtStart() {
+    public Resource executeFileAtStart() {
         return executeFileAtStart;
     }
 
     @Override
-    public Resource getResource() {
+    public Resource resource() {
         if(resource == null)
             resource = new FileResource("");
         return resource;
+    }
+
+    @Override
+    public CommandRegistry commandRegistry() {
+        return commandRegistry;
+    }
+
+    @Override
+    public CommandInvocationServices commandInvocationServices() {
+        return commandInvocationServices;
+    }
+
+    @Override
+    public CommandNotFoundHandler commandNotFoundHandler() {
+        return commandNotFoundHandler;
+    }
+
+    @Override
+    public CompleterInvocationProvider completerInvocationProvider() {
+        return completerInvocationProvider;
+    }
+
+    @Override
+    public ConverterInvocationProvider converterInvocationProvider() {
+        return converterInvocationProvider;
+    }
+
+    @Override
+    public ValidatorInvocationProvider validatorInvocationProvider() {
+        return validatorInvocationProvider;
+    }
+
+    @Override
+    public OptionActivatorProvider optionActivatorProvider() {
+        return optionActivatorProvider;
+    }
+
+    @Override
+    public ManProvider manProvider() {
+        return manProvider;
+    }
+
+    @Override
+    public CommandActivatorProvider commandActivatorProvider() {
+        return commandActivatorProvider;
+    }
+
+    public void setCommandActivatorProvider(CommandActivatorProvider commandActivatorProvider) {
+        this.commandActivatorProvider = commandActivatorProvider;
+    }
+
+    public void setOptionActivatorProvider(OptionActivatorProvider optionActivatorProvider) {
+        this.optionActivatorProvider = optionActivatorProvider;
+    }
+
+    public void setCommandRegistry(CommandRegistry commandRegistry) {
+        this.commandRegistry = commandRegistry;
+    }
+
+    public void setCommandInvocationServices(CommandInvocationServices commandInvocationServices) {
+        this.commandInvocationServices = commandInvocationServices;
+    }
+
+    public void setCommandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
+        this.commandNotFoundHandler = commandNotFoundHandler;
+    }
+
+    public void setCompleterInvocationProvider(CompleterInvocationProvider completerInvocationProvider) {
+        this.completerInvocationProvider = completerInvocationProvider;
+    }
+
+    public void setConverterInvocationProvider(ConverterInvocationProvider converterInvocationProvider) {
+        this.converterInvocationProvider = converterInvocationProvider;
+    }
+
+    public void setValidatorInvocationProvider(ValidatorInvocationProvider validatorInvocationProvider) {
+        this.validatorInvocationProvider = validatorInvocationProvider;
+    }
+
+    public void setManProvider(ManProvider manProvider) {
+        this.manProvider = manProvider;
     }
 
     public Object clone() {
