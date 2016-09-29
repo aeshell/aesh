@@ -28,14 +28,13 @@ import org.jboss.aesh.cl.validator.CommandValidator;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.terminal.TerminalString;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.jboss.aesh.cl.activation.CommandActivator;
 import org.jboss.aesh.cl.activation.NullCommandActivator;
+import org.jboss.aesh.terminal.formatting.TerminalString;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -354,11 +353,6 @@ public class ProcessedCommand<C extends Command> {
         for (ProcessedOption option : getOptions())
             option.updateInvocationProviders(invocationProviders);
         activator = invocationProviders.getCommandActivatorProvider().enhanceCommandActivator(activator);
-    }
-
-    public void updateSettings(Settings settings) {
-        for (ProcessedOption option : getOptions())
-            option.updateAnsiMode(settings.isAnsiConsole());
     }
 
     public boolean containsArgumentWithDefaultValues() {

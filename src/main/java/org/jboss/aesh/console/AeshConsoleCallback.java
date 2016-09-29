@@ -19,10 +19,7 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.console.command.CmdOperation;
-import org.jboss.aesh.console.keymap.KeyMap;
-import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.readline.KeyAction;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -35,31 +32,13 @@ public abstract class AeshConsoleCallback implements ConsoleCallback {
     }
 
     @Override
-    public KeyEvent getInput() throws InterruptedException {
-        if( process != null ) {
-            return process.getInput();
-        }
-        else {
-            return Key.UNKNOWN;
-        }
-    }
-
-    @Override
-    public <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {
-        if( process != null ) {
-            return process.getInput(keyMap);
-        }
-        else {
-            return new CmdOperation<>(null, null);
-        }
+    public KeyAction getInput() throws InterruptedException {
+        return process.getInput();
     }
 
     @Override
     public String getInputLine()  throws InterruptedException {
-        if(process != null)
-            return process.getInputLine();
-        else
-            return null;
+        return process.getInputLine();
     }
 
     @Override

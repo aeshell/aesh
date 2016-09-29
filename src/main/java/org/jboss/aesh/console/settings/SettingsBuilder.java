@@ -20,12 +20,18 @@
 package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.command.activator.AeshCommandActivatorProvider;
+import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.activator.CommandActivatorProvider;
 import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
+import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
+import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
+import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
+import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
 import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.helper.ManProvider;
@@ -250,6 +256,28 @@ public class SettingsBuilder {
     public Settings create() {
         if(settings.logging())
             LoggerUtil.doLog();
+
+        if(settings.commandRegistry() == null)
+            settings.setCommandRegistry(new MutableCommandRegistry());
+
+        if(settings.commandInvocationServices() == null)
+            settings.setCommandInvocationServices( new CommandInvocationServices());
+
+        if(settings.completerInvocationProvider() == null)
+            settings.setCompleterInvocationProvider(new AeshCompleterInvocationProvider());
+
+        if(settings.converterInvocationProvider() == null)
+            settings.setConverterInvocationProvider(new AeshConverterInvocationProvider());
+
+        if(settings.validatorInvocationProvider() == null)
+            settings.setValidatorInvocationProvider(new AeshValidatorInvocationProvider());
+
+        if(settings.optionActivatorProvider() == null)
+            settings.setOptionActivatorProvider(new AeshOptionActivatorProvider());
+
+        if(settings.commandActivatorProvider() == null)
+            settings.setCommandActivatorProvider(new AeshCommandActivatorProvider());
+
         return settings;
     }
 }

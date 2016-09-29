@@ -91,8 +91,8 @@ public class Console {
                 if (attributes != null && terminal != null) {
                     terminal.setAttributes(attributes);
                 }
-                if(settings.getQuitHandler() != null)
-                    settings.getQuitHandler().quit();
+                if(settings.quitHandler() != null)
+                    settings.quitHandler().quit();
             }
         }
         catch (Exception e) {
@@ -111,7 +111,7 @@ public class Console {
         if(executorService != null && !executorService.isShutdown()) {
             return;
         }
-        if(settings.isLogging())
+        if(settings.logging())
             LOGGER.info("RESET");
 
         executorService = Executors.newFixedThreadPool(1, new ThreadFactory() {
@@ -122,15 +122,15 @@ public class Console {
                 return thread;
             }
         });
-        context = settings.getAeshContext();
+        context = settings.aeshContext();
 
-        EditMode editMode = settings.getEditMode();
+        EditMode editMode = settings.editMode();
 
         settings = Config.readRuntimeProperties(settings);
 
         //init terminal
         terminal = TerminalBuilder.builder()
-                .streams(settings.getInputStream(), settings.getStdOut())
+                .streams(settings.stdIn(), settings.stdOut())
                 .name("Aesh console")
                 .build();
         attributes = terminal.enterRawMode();
@@ -140,7 +140,7 @@ public class Console {
 
         cursorQueue = new ArrayBlockingQueue<>(1);
 
-        processManager = new ProcessManager(this, settings.isLogging());
+        processManager = new ProcessManager(this, settings.logging());
 
         operations = new ArrayList<>();
         currentOperation = null;
@@ -164,26 +164,26 @@ public class Console {
         completionHandler.addCompletion( new RedirectionCompletion());
 
         //enable aliasing
-        if(settings.isAliasEnabled()) {
-            if(settings.isLogging())
-                LOGGER.info("enable aliasmanager with file: "+settings.getAliasFile());
-            aliasManager = new AliasManager(settings.getAliasFile(), settings.doPersistAlias(), settings.getName());
+        if(settings.aliasEnabled()) {
+            if(settings.logging())
+                LOGGER.info("enable aliasmanager with file: "+settings.aliasFile());
+            aliasManager = new AliasManager(settings.aliasFile(), settings.persistAlias(), settings.getName());
             completionHandler.addCompletion(new AliasCompletion(aliasManager));
             completionHandler.setAliasManager(aliasManager);
         }
 
         //enable export
-        if(settings.isExportEnabled()) {
-            if(settings.isLogging())
-                LOGGER.info("enabling exportManager with file: "+settings.getExportFile());
-            exportManager = new ExportManager(settings.getExportFile(), settings.doExportUsesSystemEnvironment());
+        if(settings.exportEnabled()) {
+            if(settings.logging())
+                LOGGER.info("enabling exportManager with file: "+settings.exportFile());
+            exportManager = new ExportManager(settings.exportFile(), settings.exportUsesSystemEnvironment());
             completionHandler.addCompletion(new ExportCompletion(exportManager));
         }
 
         //InterruptHandler for InputProcessor
         InputProcessorInterruptHook interruptHook = action -> {
             if(settings.hasInterruptHook()) {
-                settings.getInterruptHook().handleInterrupt(Console.this, action);
+                settings.interruptHook().handleInterrupt(Console.this, action);
             }
             else {
                 if(action.name().equals("ignore-eof")) {
@@ -273,9 +273,9 @@ public class Console {
             }
         });
         running = true;
-        if(settings.getExecuteAtStart() != null)
-            pushToInputStream(settings.getExecuteAtStart());
-        if(settings.getExecuteFileAtStart() != null) {
+        if(settings.executeAtStart() != null)
+            pushToInputStream(settings.executeAtStart());
+        if(settings.executeFileAtStart() != null) {
             readExecuteFile();
         }
 
@@ -299,7 +299,7 @@ public class Console {
             return new PrintStream(redirectPipeErrBuffer, true);
         }
         else {
-            return settings.getStdErr();
+            return settings.stdErr();
         }
     }
 
@@ -308,7 +308,7 @@ public class Console {
         return standardStream;
     }
 
-    public AeshContext getAeshContext() {
+    public AeshContext aeshContext() {
         return context;
     }
 
@@ -353,7 +353,7 @@ public class Console {
             executorService.shutdownNow();
             terminal.close();
             reader.close();
-            if(settings.isLogging())
+            if(settings.logging())
                 LOGGER.info("Done stopping services. Terminal is reset");
         }
     }
@@ -536,7 +536,7 @@ public class Console {
             }
         }
         catch (InterruptedException e) {
-            if(!initiateStop && settings.isLogging())
+            if(!initiateStop && settings.logging())
                 LOGGER.warning("Execution exception: "+e.getMessage());
         }
         finally {
@@ -562,7 +562,7 @@ public class Console {
             }
         }
         catch (IOException ioe) {
-            if (settings.isLogging())
+            if (settings.logging())
                 LOGGER.severe("Stream failure: " + ioe);
         }
     }
@@ -588,7 +588,7 @@ public class Console {
             }
         }
         catch (IOException ioe) {
-            if(settings.isLogging())
+            if(settings.logging())
                 LOGGER.severe("Stream failure: "+ioe);
         }
     }
@@ -597,7 +597,7 @@ public class Console {
         if(result.startsWith(Parser.SPACE))
             result = Parser.trimInFront(result);
 
-        if(settings.isOperatorParserEnabled())
+        if(settings.operatorParserEnabled())
             operations = ControlOperatorParser.findAllControlOperators(result);
         else {
             //if we do not parse operators just add ControlOperator.NONE
@@ -661,7 +661,7 @@ public class Console {
         }
         //this should never happen (all overwrite_in should be parsed in parseOperations())
         else if(currentOperation.getControlOperator() == ControlOperator.OVERWRITE_IN) {
-            if(settings.isLogging())
+            if(settings.logging())
                 LOGGER.info(settings.getName()+": syntax error while reading token: \'<\'");
             err().print(settings.getName() + ": syntax error while reading token: \'<\'");
             return null;
@@ -722,7 +722,7 @@ public class Console {
                     currentOperation = new ConsoleOperation(nextOperation.getControlOperator(), op.getBuffer());
 
                     Resource fileRelativePath =
-                            getAeshContext().getCurrentWorkingDirectory().newInstance(
+                            aeshContext().getCurrentWorkingDirectory().newInstance(
                                     Parser.switchEscapedSpacesToSpacesInWord(line.getWords().get(0)));
 
                     Resource readFile = fileRelativePath.resolve( context.getCurrentWorkingDirectory()).get(0);
@@ -737,7 +737,7 @@ public class Console {
                     }
                 }
                 else {
-                    if(settings.isLogging())
+                    if(settings.logging())
                         LOGGER.info(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
                     err().print(settings.getName() + ": syntax error near unexpected token '<'" + Config.getLineSeparator());
                     currentOperation = null;
@@ -745,7 +745,7 @@ public class Console {
                 }
             }
             else {
-                if(settings.isLogging())
+                if(settings.logging())
                     LOGGER.info(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
                 err().print(settings.getName() + ": syntax error near unexpected token 'newline'" + Config.getLineSeparator());
                 currentOperation = null;
@@ -781,7 +781,7 @@ public class Console {
 
     private ConsoleOperation processInternalCommands(ConsoleOperation output) throws IOException {
         if(output.getBuffer() != null) {
-            if(settings.isAliasEnabled() &&
+            if(settings.aliasEnabled() &&
                     output.getBuffer().startsWith(InternalCommands.ALIAS.getCommand())) {
                 String out = aliasManager.parseAlias(output.getBuffer().trim());
                 if(out != null) {
@@ -791,7 +791,7 @@ public class Console {
                 //empty output, will result
                 return new ConsoleOperation(ControlOperator.NONE, null);
             }
-            else if(settings.isAliasEnabled() &&
+            else if(settings.aliasEnabled() &&
                     output.getBuffer().startsWith(InternalCommands.UNALIAS.getCommand())) {
                 String out = aliasManager.removeAlias(output.getBuffer().trim());
                 if(out != null) {
@@ -801,7 +801,7 @@ public class Console {
 
                 return new ConsoleOperation(ControlOperator.NONE, null);
             }
-            else if(settings.isExportEnabled() &&
+            else if(settings.exportEnabled() &&
                     output.getBuffer().startsWith(InternalCommands.EXPORT.getCommand())) {
                 if(output.getBuffer().trim().equals(InternalCommands.EXPORT.getCommand()))
                     out().print(exportManager.listAllVariables());
@@ -820,14 +820,14 @@ public class Console {
 
     private ConsoleOperation findAliases(ConsoleOperation operation) {
 
-        if(settings.isExportEnabled()) {
+        if(settings.exportEnabled()) {
             if(Parser.containsNonEscapedDollar(operation.getBuffer())) {
                 operation = new ConsoleOperation(operation.getControlOperator(),
                         exportManager.getValue(operation.getBuffer()));
             }
         }
 
-        if(settings.isAliasEnabled()) {
+        if(settings.aliasEnabled()) {
             String command = Parser.findFirstWord(operation.getBuffer());
             Alias alias = aliasManager.getAlias(command);
 
@@ -842,7 +842,7 @@ public class Console {
     private void persistRedirection(String fileName, ControlOperator redirection) throws IOException {
         AeshLine line = Parser.findAllWords(fileName);
         if(line.getWords().size() > 1) {
-            if(settings.isLogging())
+            if(settings.logging())
                 LOGGER.info(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
             err().print(settings.getName() + ": can't redirect to more than one file." + Config.getLineSeparator());
             return;
@@ -877,7 +877,7 @@ public class Console {
                         redirectPipeErrBuffer.toString(), true);
         }
         catch (IOException e) {
-            if(settings.isLogging())
+            if(settings.logging())
                 LOGGER.log(Level.SEVERE, "Saving file "+fileName+" to disk failed: ", e);
             err().println(e.getMessage());
             err().flush();
@@ -887,10 +887,10 @@ public class Console {
     }
 
     private void readExecuteFile() {
-        if(settings.getExecuteFileAtStart() != null &&
-                settings.getExecuteFileAtStart().isLeaf()) {
+        if(settings.executeFileAtStart() != null &&
+                settings.executeFileAtStart().isLeaf()) {
             try {
-                BufferedReader reader = new BufferedReader( new InputStreamReader(settings.getExecuteFileAtStart().read()));
+                BufferedReader reader = new BufferedReader( new InputStreamReader(settings.executeFileAtStart().read()));
                 String line;
                 while( ( line = reader.readLine() ) != null ) {
                     if(line.length() > 0) {
@@ -953,7 +953,7 @@ public class Console {
                     return getActualCursor(cursorQueue.take());
                 }
                 catch (Exception e) {
-                    if(settings.isLogging())
+                    if(settings.logging())
                         LOGGER.log(Level.SEVERE, "Failed to find current row with ansi code: ",e);
                     return new CursorPosition(-1,-1);
                 }

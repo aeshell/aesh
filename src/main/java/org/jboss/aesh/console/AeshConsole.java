@@ -23,6 +23,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.export.ExportManager;
 import org.jboss.aesh.console.helper.ManProvider;
+import org.jboss.aesh.readline.Prompt;
 
 /**
  * A Console that manages Commands and properly execute them.
@@ -30,8 +31,6 @@ import org.jboss.aesh.console.helper.ManProvider;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface AeshConsole {
-
-    ConsoleCallback getConsoleCallback();
 
     /**
      * Start the Console. Open stream and set the proper terminal settings.
@@ -57,12 +56,6 @@ public interface AeshConsole {
      * Get the current Prompt
      */
     Prompt getPrompt();
-
-    /**
-     *
-     * @return get shell
-     */
-    Shell getShell();
 
     /**
      * Clear the terminal screen

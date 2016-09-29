@@ -20,6 +20,7 @@
 package org.jboss.aesh.cl.parser;
 
 import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.readline.completion.CompleteOperation;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
