@@ -24,7 +24,15 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.command.activator.CommandActivatorProvider;
+import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
+import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
+import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
+import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
+import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.InterruptHook;
+import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.editing.EditMode;
 
@@ -34,162 +42,142 @@ import org.jboss.aesh.readline.editing.EditMode;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface Settings extends Cloneable {
-    /**
-     * Get the name of the cli
-     * Default is "aesh"
-     */
-    String getName();
 
     /**
      * Get the current Mode.
      * Default mode is Emacs
      *
      */
-    EditMode.Mode getMode();
+    EditMode.Mode mode();
 
     /**
      * Get current edit mode
      */
-    EditMode getEditMode();
+    EditMode editMode();
 
     /**
      * Get file where history is stored
      */
-    File getHistoryFile();
+    File historyFile();
 
     /**
      * Get history file access permission, this is used when write to history file.
      *
      * <code>null</code> means default file permission revealed by system.
      */
-    FileAccessPermission getHistoryFilePermission();
+    FileAccessPermission historyFilePermission();
 
     /**
      * Get history size
      */
-    int getHistorySize();
+    int historySize();
 
     /**
      * Get bell style
      * NOTE: Not used yet
      */
-    String getBellStyle();
-
-    /**
-     * If the current console is an ANSI console
-     */
-    boolean isAnsiConsole();
+    String bellStyle();
 
     /**
      * Get input stream
      */
-    InputStream getInputStream();
+    InputStream stdIn();
 
     /**
      * Get standard output stream
      */
-    PrintStream getStdOut();
+    PrintStream stdOut();
 
     /**
      * Get standard error stream
      */
-    PrintStream getStdErr();
+    PrintStream stdErr();
 
     /**
      * Get inputrc file location
      */
-    File getInputrc();
+    File inputrc();
 
     /**
      * Are we logging
      */
-    boolean isLogging();
+    boolean logging();
 
     /**
      * Is completion disabled
      */
-    boolean isCompletionDisabled();
+    boolean completionDisabled();
 
     /**
      * Get location of log file
      */
-    String getLogFile();
+    String logFile();
 
     /**
      * Do aesh read inputrc during init
      */
-    boolean doReadInputrc();
+    boolean readInputrc();
 
     /**
      * Is history disabled
      */
-    boolean isHistoryDisabled();
+    boolean historyDisabled();
 
     /**
      * Is history persisted during shutdown
      */
-    boolean isHistoryPersistent();
+    boolean historyPersistent();
 
     /**
      * Location of alias file
      */
-    File getAliasFile();
+    File aliasFile();
 
     /**
      * Is alias enabled
      */
-    boolean isAliasEnabled();
+    boolean aliasEnabled();
 
     /**
      * Is alias persisted
      */
-    boolean doPersistAlias();
+    boolean persistAlias();
 
     /**
      * Get quit handler
      */
-    QuitHandler getQuitHandler();
-
-    /**
-     * Is an interrupt hook defined
-     */
-    boolean hasInterruptHook();
+    QuitHandler quitHandler();
 
     /**
      * Get interrupt hook
      */
-    InterruptHook getInterruptHook();
+    InterruptHook interruptHook();
 
     /**
      * Is operator parser enabled
      */
-    boolean isOperatorParserEnabled();
-
-    /**
-     * Switch from Emacs to Vi mode (or back)
-     */
-    void switchMode();
+    boolean operatorParserEnabled();
 
     /**
      * Is the man command enabled (currently only for AeshConsole)
      */
-    boolean isManEnabled();
+    boolean manEnabled();
 
     /**
      * Get aesh context
      */
-    AeshContext getAeshContext();
+    AeshContext aeshContext();
 
     /**
      * Get the export file
      * Defaults to ~/.aesh_export
      */
-    File getExportFile();
+    File exportFile();
 
     /**
      * Are export enabled?
      */
-    boolean isExportEnabled();
+    boolean exportEnabled();
 
     /**
      * Should aesh persist export variables at shutdown
@@ -199,7 +187,7 @@ public interface Settings extends Cloneable {
     /**
      * Is aesh persisting variables at shutdown
      */
-    boolean doPersistExport();
+    boolean persistExport();
 
     /**
      * Aesh load environment system.
@@ -209,7 +197,7 @@ public interface Settings extends Cloneable {
     /**
      * Is load environment system?
      */
-    boolean doExportUsesSystemEnvironment();
+    boolean exportUsesSystemEnvironment();
 
     /**
      * Specify
@@ -225,7 +213,7 @@ public interface Settings extends Cloneable {
     /**
      * @return execute at start string
      */
-    String getExecuteAtStart();
+    String executeAtStart();
 
     /**
      * @param executeFileAtStart file that will be read, parsed and executed at start
@@ -235,9 +223,43 @@ public interface Settings extends Cloneable {
     /**
      * @return execute file at start
      */
-    Resource getExecuteFileAtStart();
+    Resource executeFileAtStart();
 
-    Resource getResource();
+    /**
+     * @return get resource
+     */
+    Resource resource();
+
+    /**
+     * @return get command registry
+     */
+    CommandRegistry commandRegistry();
+
+    /**
+     *
+     * @return get CommandInvocationServices
+     */
+    CommandInvocationServices commandInvocationServices();
+
+    /**
+     * @return get CommandNotFoundHandler
+     */
+    CommandNotFoundHandler commandNotFoundHandler();
+
+    /**
+     * @return CompleterInvocationProvider
+     */
+    CompleterInvocationProvider completerInvocationProvider();
+
+    ConverterInvocationProvider converterInvocationProvider();
+
+    ValidatorInvocationProvider validatorInvocationProvider();
+
+    OptionActivatorProvider optionActivatorProvider();
+
+    ManProvider manProvider();
+
+    CommandActivatorProvider commandActivatorProvider();
 
     Object clone();
 
