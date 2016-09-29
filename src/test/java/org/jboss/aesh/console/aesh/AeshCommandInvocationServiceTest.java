@@ -25,8 +25,6 @@ import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
@@ -35,11 +33,10 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.readline.Prompt;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -63,13 +60,6 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
         PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .create();
-
-
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(new BarCommand())
                 .create();
@@ -77,10 +67,17 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
         CommandInvocationServices services = new CommandInvocationServices();
         services.registerProvider("FOO", new FooCommandInvocationProvider());
 
+        Settings settings = new SettingsBuilder()
+                .inputStream(pipedInputStream)
+                .outputStream(new PrintStream(byteArrayOutputStream))
+                .logging(true)
+                .commandRegistry(registry)
+                .commandInvocationServices(services)
+                .create();
+
+
         AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
                 .settings(settings)
-                .commandRegistry(registry)
-                .commandInvocationProvider(services)
                 .prompt(new Prompt(""));
 
         AeshConsole aeshConsole = consoleBuilder.create();

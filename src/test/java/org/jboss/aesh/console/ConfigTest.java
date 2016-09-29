@@ -47,15 +47,15 @@ public class ConfigTest {
         SettingsBuilder builder = new SettingsBuilder();
         Settings settings = Config.readRuntimeProperties(builder.create());
 
-        assertEquals(settings.getMode(), EditMode.Mode.VI);
+        assertEquals(settings.mode(), EditMode.Mode.VI);
 
-        assertEquals(settings.isHistoryPersistent(), false);
-        assertEquals(settings.isHistoryDisabled(), true);
-        assertEquals(settings.getHistorySize(), 42);
-        assertEquals(settings.isLogging(), false);
-        assertEquals(settings.isCompletionDisabled(), true);
+        assertEquals(settings.historyPersistent(), false);
+        assertEquals(settings.historyDisabled(), true);
+        assertEquals(settings.historySize(), 42);
+        assertEquals(settings.logging(), false);
+        assertEquals(settings.completionDisabled(), true);
 
-        assertEquals(settings.getExecuteAtStart(), "foo -f --bar"+Config.getLineSeparator());
+        assertEquals(settings.executeAtStart(), "foo -f --bar"+Config.getLineSeparator());
 
         System.setProperty("aesh.terminal", "");
         System.setProperty("aesh.editmode", "");
@@ -69,6 +69,6 @@ public class ConfigTest {
         builder = new SettingsBuilder();
         settings = Config.readRuntimeProperties(builder.create());
 
-        assertEquals(settings.getExecuteAtStart(), null);
+        assertEquals(settings.executeAtStart(), null);
     }
 }

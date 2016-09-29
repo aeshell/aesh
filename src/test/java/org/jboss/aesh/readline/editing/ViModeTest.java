@@ -58,7 +58,7 @@ public class ViModeTest {
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
                 .prompt(new Prompt("aesh"))
-                .editMode(settings.getEditMode())
+                .editMode(settings.editMode())
                 .create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
@@ -107,7 +107,7 @@ public class ViModeTest {
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
                 .prompt(new Prompt("aesh"))
-                .editMode(settings.getEditMode())
+                .editMode(settings.editMode())
                 .create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
@@ -149,7 +149,7 @@ public class ViModeTest {
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
                 .prompt(new Prompt("aesh"))
-                .editMode(settings.getEditMode())
+                .editMode(settings.editMode())
                 .create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
@@ -190,7 +190,7 @@ public class ViModeTest {
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
                 .prompt(new Prompt("aesh"))
-                .editMode(settings.getEditMode())
+                .editMode(settings.editMode())
                 .create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
@@ -249,7 +249,7 @@ public class ViModeTest {
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
                 .prompt(new Prompt("aesh"))
-                .editMode(settings.getEditMode())
+                .editMode(settings.editMode())
                 .create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
@@ -301,7 +301,7 @@ public class ViModeTest {
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
                 .prompt(new Prompt("aesh"))
-                .editMode(settings.getEditMode())
+                .editMode(settings.editMode())
                 .create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
@@ -343,7 +343,7 @@ public class ViModeTest {
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
                 .prompt(new Prompt("aesh"))
-                .editMode(settings.getEditMode())
+                .editMode(settings.editMode())
                 .create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
@@ -381,7 +381,7 @@ public class ViModeTest {
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
                 .prompt(new Prompt("aesh"))
-                .editMode(settings.getEditMode())
+                .editMode(settings.editMode())
                 .create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
@@ -418,7 +418,7 @@ public class ViModeTest {
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
                 .prompt(new Prompt("aesh"))
-                .editMode(settings.getEditMode())
+                .editMode(settings.editMode())
                 .create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
@@ -456,7 +456,7 @@ public class ViModeTest {
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
                 .prompt(new Prompt("aesh"))
-                .editMode(settings.getEditMode())
+                .editMode(settings.editMode())
                 .create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()
@@ -494,7 +494,7 @@ public class ViModeTest {
         ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                 .shell(shell)
                 .prompt(new Prompt("aesh"))
-                .editMode(settings.getEditMode())
+                .editMode(settings.editMode())
                 .create();
 
         InputProcessor inputProcessor = new AeshInputProcessorBuilder()

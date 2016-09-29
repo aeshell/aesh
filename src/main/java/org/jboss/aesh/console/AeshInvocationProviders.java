@@ -24,6 +24,7 @@ import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
 import org.jboss.aesh.console.command.converter.ConverterInvocationProvider;
 import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
+import org.jboss.aesh.console.settings.Settings;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -36,16 +37,12 @@ public class AeshInvocationProviders implements InvocationProviders {
     private final OptionActivatorProvider optionActivatorProvider;
     private final CommandActivatorProvider commandActivatorProvider;
 
-    public AeshInvocationProviders(ConverterInvocationProvider converterInvocationProvider,
-                                   CompleterInvocationProvider completerInvocationProvider,
-                                   ValidatorInvocationProvider validatorInvocationProvider,
-                                   OptionActivatorProvider optionActivatorProvider,
-                                   CommandActivatorProvider commandActivatorProvider) {
-        this.converterInvocationProvider = converterInvocationProvider;
-        this.completerInvocationProvider = completerInvocationProvider;
-        this.validatorInvocationProvider = validatorInvocationProvider;
-        this.optionActivatorProvider = optionActivatorProvider;
-        this.commandActivatorProvider = commandActivatorProvider;
+    public AeshInvocationProviders(Settings settings) {
+        this.converterInvocationProvider = settings.converterInvocationProvider();
+        this.completerInvocationProvider = settings.completerInvocationProvider();
+        this.validatorInvocationProvider = settings.validatorInvocationProvider();
+        this.optionActivatorProvider = settings.optionActivatorProvider();
+        this.commandActivatorProvider = settings.commandActivatorProvider();
     }
 
     @Override
