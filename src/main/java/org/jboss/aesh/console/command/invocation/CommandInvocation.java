@@ -20,13 +20,12 @@
 package org.jboss.aesh.console.command.invocation;
 
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.keymap.KeyMap;
 import org.jboss.aesh.console.operator.ControlOperator;
-import org.jboss.aesh.readline.KeyEvent;
 import org.jboss.aesh.console.Shell;
+import org.jboss.aesh.readline.KeyAction;
+import org.jboss.aesh.readline.Prompt;
 
 /**
  * A CommandInvocation is the value object passed to a Command when it is executed.
@@ -35,16 +34,6 @@ import org.jboss.aesh.console.Shell;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface CommandInvocation {
-
-    /**
-     * @return the control operator connected with this invocation
-     */
-    ControlOperator getControlOperator();
-
-     /**
-     * @return the CommandRegistry
-     */
-    CommandRegistry getCommandRegistry();
 
     /**
      * @return the shell
@@ -82,15 +71,7 @@ public interface CommandInvocation {
      * @return user input
      * @throws InterruptedException
      */
-    KeyEvent getInput() throws InterruptedException;
-
-    /**
-     * A blocking call that will return user input from the terminal
-     *
-     * @return user input
-     * @throws InterruptedException
-     */
-    <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException;
+    KeyAction getInput() throws InterruptedException;
 
     /**
      * A blocking call that will return user input from the terminal

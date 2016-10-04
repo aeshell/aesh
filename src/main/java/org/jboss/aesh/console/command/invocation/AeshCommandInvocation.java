@@ -19,117 +19,98 @@
  */
 package org.jboss.aesh.console.command.invocation;
 
-import org.jboss.aesh.console.AeshConsoleImpl;
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.command.CmdOperation;
-import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.keymap.KeyMap;
-import org.jboss.aesh.console.operator.ControlOperator;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Shell;
-import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.readline.KeyAction;
+import org.jboss.aesh.readline.Prompt;
+import org.jboss.aesh.readline.ReadlineConsole;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public final class AeshCommandInvocation implements CommandInvocation {
 
-    private final AeshConsoleImpl aeshConsole;
-    private final ControlOperator controlOperator;
-    private final ConsoleCallback callback;
-    private final int pid;
+    private final ReadlineConsole console;
+    private final Shell shell;
 
-    public AeshCommandInvocation(AeshConsoleImpl aeshConsole, ControlOperator controlOperator,
-                                 int pid, ConsoleCallback callback) {
-        this.aeshConsole = aeshConsole;
-        this.controlOperator = controlOperator;
-        this.pid = pid;
-        this.callback = callback;
-    }
-    @Override
-    public ControlOperator getControlOperator() {
-        return controlOperator;
-    }
-
-    @Override
-    public CommandRegistry getCommandRegistry() {
-        return aeshConsole.getCommandRegistry();
+    public AeshCommandInvocation(ReadlineConsole console, Shell shell) {
+        this.console = console;
+        this.shell = shell;
     }
 
     @Override
     public Shell getShell() {
-        return aeshConsole.getShell();
+        return shell;
     }
 
     @Override
     public void setPrompt(Prompt prompt) {
-        aeshConsole.setPrompt(prompt);
+        console.setPrompt(prompt);
     }
 
     @Override
     public Prompt getPrompt() {
-        return aeshConsole.getPrompt();
+        return console.getPrompt();
     }
 
     @Override
     public String getHelpInfo(String commandName) {
-        return aeshConsole.getHelpInfo(commandName);
+        return console.getHelpInfo(commandName);
     }
 
     @Override
     public void stop() {
-        aeshConsole.stop();
+        console.stop();
     }
 
     @Override
     public AeshContext getAeshContext() {
-        return aeshConsole.getAeshContext();
+        return console.getAeshContext();
     }
 
     @Override
-    public KeyEvent getInput() throws InterruptedException {
-        return callback.getInput();
-    }
-
-    @Override
-    public <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {
-        return callback.getInput(keyMap);
+    public KeyAction getInput() throws InterruptedException {
+        return shell.read();
     }
 
     @Override
     public String getInputLine() throws InterruptedException {
-        return callback.getInputLine();
+        return shell.readLine();
     }
 
     @Override
     public int getPid() {
-        return pid;
+        //TODO
+        return 0;
     }
 
     @Override
     public void putProcessInBackground() {
-        aeshConsole.putProcessInBackground(pid);
+        //TODO
+        //console.putProcessInBackground(pid);
     }
 
     @Override
     public void putProcessInForeground() {
-        aeshConsole.putProcessInForeground(pid);
+        //TODO
+        //console.putProcessInForeground(pid);
     }
 
     @Override
     public void executeCommand(String input) throws InterruptedException {
-        aeshConsole.execute(input);
+        //TODO:
+        //console.execute(input);
     }
 
    @Override
    public void print(String msg) {
-      this.aeshConsole.getShell().out().print(msg);
+      shell.write(msg);
    }
 
     @Override
     public void println(String msg) {
-        this.aeshConsole.getShell().out().println(msg);
+        shell.write(msg+Config.getLineSeparator());
     }
 
 }
