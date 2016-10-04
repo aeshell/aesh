@@ -19,11 +19,11 @@
  */
 package org.jboss.aesh.graphics;
 
-import org.jboss.aesh.terminal.TerminalColor;
-import org.jboss.aesh.terminal.TerminalTextStyle;
-import org.jboss.aesh.terminal.api.Size;
-import org.jboss.aesh.terminal.api.Terminal;
+import org.jboss.aesh.terminal.Terminal;
+import org.jboss.aesh.terminal.formatting.TerminalColor;
+import org.jboss.aesh.terminal.formatting.TerminalTextStyle;
 import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
+import org.jboss.aesh.tty.Size;
 import org.jboss.aesh.util.ANSI;
 
 /**
