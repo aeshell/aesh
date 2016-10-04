@@ -54,6 +54,7 @@ public class MutableCommandRegistry implements CommandRegistry {
 
     private static final Logger LOGGER = LoggerUtil.getLogger(MutableCommandRegistry.class.getName());
 
+    @Override
     public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
         if(registry.containsKey(name))
             return registry.get(name);

@@ -18,25 +18,7 @@
  * limitations under the License.
  */
 
-import org.jboss.aesh.console.AeshConsoleCallback;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.ConsoleCallback;
-import org.jboss.aesh.console.command.CommandOperation;
-import org.jboss.aesh.console.ConsoleOperation;
-import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.terminal.CharacterType;
-import org.jboss.aesh.terminal.Color;
-import org.jboss.aesh.terminal.TerminalCharacter;
-import org.jboss.aesh.terminal.TerminalColor;
-import org.jboss.aesh.terminal.TerminalString;
-import org.jboss.aesh.terminal.TerminalTextStyle;
-import org.jboss.aesh.util.ANSI;
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -47,10 +29,10 @@ public class Example {
     private static String password;
     private static String username;
     static boolean hasPassword;
-    static ConsoleCallback passwordCallback;
 
     public static void main(String[] args) throws IOException {
 
+        /*
         //Settings.getInstance().setAnsiConsole(false);
         SettingsBuilder builder = new SettingsBuilder();
         builder.readInputrc(false).logging(true);
@@ -114,13 +96,7 @@ public class Example {
                 commands.add("profile=foo");
                 co.setOffset(0);
             }
-            /*
-            if(co.getBuffer().equals("p")) {
-                commands.add("profile=bar");
-                co.setOffset(0);
-            }
-            */
-            if(co.getBuffer().equals("profile="))
+           if(co.getBuffer().equals("profile="))
                 commands.add("profile=foo");
             if(co.getBuffer().equals("profile="))
                 commands.add("profile=bar");
@@ -321,5 +297,6 @@ public class Example {
             }
         }
 
+*/
     }
 }

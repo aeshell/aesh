@@ -36,6 +36,7 @@ import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshConsoleBufferBuilder;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.AeshConsole;
@@ -51,6 +52,7 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
+import org.jboss.aesh.readline.KeyAction;
 import org.jboss.aesh.readline.Prompt;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.formatting.CharacterType;
@@ -134,10 +136,7 @@ public class AeshExample {
                     }
                 });
                 */
-        Settings settings = builder
-                //.mode(EditMode.Mode.VI)
-                .create();
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
                 .command(fooCommand.create())
                 .command(HiddenCommand.class)
@@ -154,11 +153,14 @@ public class AeshExample {
                 .command(FailCommand.class)
                 .create();
 
-        AeshConsole aeshConsole = new AeshConsoleBuilder()
+        Settings settings = builder
                 .commandRegistry(registry)
                 .manProvider(new ManProviderExample())
-                .settings(settings)
                 .validatorInvocationProvider(new ExampleValidatorInvocationProvider())
+                .create();
+
+        AeshConsole aeshConsole = new AeshConsoleBuilder()
+                .settings(settings)
                 .prompt(new Prompt(new TerminalString("[aesh@rules]$ ",
                         new TerminalColor(Color.GREEN, Color.DEFAULT, Color.Intensity.BRIGHT))))
                 .create();
@@ -243,10 +245,10 @@ public class AeshExample {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
            if(bar == null)
-               commandInvocation.getShell().out().println("NO BAR!");
+               commandInvocation.getShell().write("NO BAR!");
             else {
-               commandInvocation.getShell().out().println("you set bar to: " + bar);
-               commandInvocation.getShell().out().println("lets work a bit...... ");
+               commandInvocation.getShell().write("you set bar to: " + bar);
+               commandInvocation.getShell().write("lets work a bit...... ");
                Thread.sleep(2000);
            }
             return CommandResult.SUCCESS;
@@ -274,7 +276,7 @@ public class AeshExample {
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             this.shell = commandInvocation.getShell();
             if(help) {
-                shell.out().println(commandInvocation.getHelpInfo("test"));
+                shell.write(commandInvocation.getHelpInfo("test"));
             }
             else {
                 try {
@@ -289,12 +291,11 @@ public class AeshExample {
         }
 
         private void display() {
-            shell.out().print(ANSI.ALTERNATE_BUFFER);
-            shell.out().flush();
+            shell.write(ANSI.ALTERNATE_BUFFER);
         }
 
         private void stop() {
-            shell.out().print(ANSI.MAIN_BUFFER);
+            shell.write(ANSI.MAIN_BUFFER);
         }
 
         public void processOperation(CommandInvocation invocation) throws IOException, InterruptedException {
@@ -302,7 +303,7 @@ public class AeshExample {
             String username = promptForUsername(invocation);
             String password = promptForInput("password: ", '*', invocation);
 
-            shell.out().println("we got username: " + username + ", password: " + password);
+            shell.write("we got username: " + username + ", password: " + password);
         }
 
         private String promptForUsername(CommandInvocation invocation) throws InterruptedException {
@@ -313,6 +314,7 @@ public class AeshExample {
         private String promptForInput(String prompt, Character mask,
                                       CommandInvocation invocation) throws IOException, InterruptedException {
 
+            /*
             ConsoleBuffer consoleBuffer = new AeshConsoleBufferBuilder()
                     .shell(invocation.getShell())
                     .prompt(new Prompt(prompt, mask))
@@ -328,6 +330,8 @@ public class AeshExample {
                 }
                 while(result == null );
                 return result;
+                */
+            return null;
         }
 
     }
@@ -358,21 +362,21 @@ public class AeshExample {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help) {
-                commandInvocation.getShell().out().println(commandInvocation.getHelpInfo("ls"));
+                commandInvocation.getShell().write(commandInvocation.getHelpInfo("ls"));
             }
             else {
                 if(foo)
-                    commandInvocation.getShell().out().println("you set foo to: " + foo);
+                    commandInvocation.getShell().write("you set foo to: " + foo);
                 if(bar)
-                    commandInvocation.getShell().out().println("you set bar to: " + bar);
+                    commandInvocation.getShell().write("you set bar to: " + bar);
                 if(less != null)
-                    commandInvocation.getShell().out().println("you set less to: " + less);
+                    commandInvocation.getShell().write("you set less to: " + less);
                 if(files != null)
-                    commandInvocation.getShell().out().println("you set file to: " + files);
+                    commandInvocation.getShell().write("you set file to: " + files);
 
                 if(arguments != null) {
                     for(Resource f : arguments)
-                        commandInvocation.getShell().out().println(f.toString());
+                        commandInvocation.getShell().write(f.toString());
                 }
             }
             return CommandResult.SUCCESS;
@@ -391,8 +395,8 @@ public class AeshExample {
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             this.shell = commandInvocation.getShell();
             if(bar) {
-                shell.out().print("are you sure you want bar? (y/n) ");
-                KeyEvent operation = null;
+                shell.write("are you sure you want bar? (y/n) ");
+                KeyAction operation = null;
                 try {
                     operation = commandInvocation.getInput();
                 }
@@ -407,10 +411,10 @@ public class AeshExample {
 
         public void processOperation(Key operation) {
             if(operation == Key.y) {
-                shell.out().println(Config.getLineSeparator()+"you wanted bar!");
+                shell.write(Config.getLineSeparator()+"you wanted bar!");
             }
             else
-                shell.out().println(Config.getLineSeparator()+"you chickened out!!");
+                shell.write(Config.getLineSeparator()+"you chickened out!!");
         }
 
     }
@@ -530,9 +534,9 @@ public class AeshExample {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help)
-                commandInvocation.getShell().out().println(commandInvocation.getHelpInfo("group"));
+                commandInvocation.getShell().write(commandInvocation.getHelpInfo("group"));
             else
-                commandInvocation.getShell().out().println("only executed group, it doesnt do much...");
+                commandInvocation.getShell().write("only executed group, it doesnt do much...");
             return CommandResult.SUCCESS;
         }
     }
@@ -548,9 +552,9 @@ public class AeshExample {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help)
-                commandInvocation.getShell().out().println(commandInvocation.getHelpInfo("group child1"));
+                commandInvocation.getShell().write(commandInvocation.getHelpInfo("group child1"));
             else
-                commandInvocation.getShell().out().println("foo is set to: "+foo);
+                commandInvocation.getShell().write("foo is set to: "+foo);
             return CommandResult.SUCCESS;
         }
     }
@@ -562,7 +566,7 @@ public class AeshExample {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            commandInvocation.getShell().out().println("bar is set to: "+bar);
+            commandInvocation.getShell().write("bar is set to: "+bar);
             return CommandResult.SUCCESS;
         }
     }

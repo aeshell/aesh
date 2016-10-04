@@ -21,7 +21,6 @@
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.console.AeshConsole;
 import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -32,11 +31,12 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.graphics.AeshGraphicsConfiguration;
 import org.jboss.aesh.graphics.Graphics;
 import org.jboss.aesh.graphics.GraphicsConfiguration;
-import org.jboss.aesh.terminal.Color;
+import org.jboss.aesh.readline.Prompt;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.TerminalColor;
 
 import org.jboss.aesh.console.command.CommandException;
+import org.jboss.aesh.terminal.formatting.Color;
+import org.jboss.aesh.terminal.formatting.TerminalColor;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -47,13 +47,16 @@ public class AeshGraphicsExample {
         SettingsBuilder builder = new SettingsBuilder().logging(true);
         builder.enableMan(true);
 
-        Settings settings = builder.create();
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
                 .command(new GraphicsCommand())
                 .create();
-        AeshConsole aeshConsole = new AeshConsoleBuilder()
+
+        Settings settings = builder
                 .commandRegistry(registry)
+                .create();
+
+        AeshConsole aeshConsole = new AeshConsoleBuilder()
                 .settings(settings)
                 .prompt(new Prompt("[aesh@rules]$ "))
                 .create();

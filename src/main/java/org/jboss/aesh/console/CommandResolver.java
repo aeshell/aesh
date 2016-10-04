@@ -17,17 +17,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.graphics;
 
-import org.jboss.aesh.tty.Size;
+package org.jboss.aesh.console;
+
+import org.jboss.aesh.console.command.CommandNotFoundException;
+import org.jboss.aesh.console.command.container.CommandContainer;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface GraphicsConfiguration {
+public interface CommandResolver {
 
-    Size getBounds();
+    CommandRegistry getRegistry();
 
-    Graphics getGraphics();
+    CommandContainer resolveCommand(String line) throws CommandNotFoundException;
 
 }

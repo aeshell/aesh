@@ -109,11 +109,13 @@ public class AeshConsoleImpl implements AeshConsole {
 
     @Override
     public void clear() {
+        /*
         try {
             //console.clear();
         }
         catch (IOException ignored) {
         }
+        */
     }
 
     @Override
@@ -146,41 +148,36 @@ public class AeshConsoleImpl implements AeshConsole {
 
     @Override
     public AeshContext getAeshContext() {
-        return console.getAeshContext();
+        return null;
     }
 
     @Override
     public boolean isRunning() {
-        return console.isRunning();
+        return false;
     }
 
     @Override
     public ExportManager getExportManager() {
-        return console.getExportManager();
+        return null;
     }
 
     public String getBuffer() {
-        return console.getBuffer();
+        return null;
     }
 
     public void putProcessInBackground(int pid) {
-        console.putProcessInBackground(pid);
     }
 
     public void putProcessInForeground(int pid) {
-        console.putProcessInForeground(pid);
     }
 
     public void execute(String input) throws InterruptedException {
-        console.execute(input);
     }
 
     public void push(String input) {
-        console.pushToInputStream(input);
     }
 
     public void changeOutputStream(PrintStream output) {
-        console.changeOutputStream(output);
     }
 
     private void processAfterInit(Settings settings) {
@@ -208,10 +205,7 @@ public class AeshConsoleImpl implements AeshConsole {
             }
         }
         catch(Exception e) {
-            if(console.getSettings().isLogging())
-                LOGGER.log(Level.WARNING, "Exception while iterating commands.",e);
         }
-
 
     }
 
@@ -312,6 +306,7 @@ public class AeshConsoleImpl implements AeshConsole {
         @Override
         @SuppressWarnings("unchecked")
         public int execute(ConsoleOperation output) throws InterruptedException {
+            /*
             if (output != null && output.getBuffer().trim().length() > 0) {
                 ResultHandler resultHandler = null;
                 AeshLine aeshLine = Parser.findAllWords(output.getBuffer());
@@ -381,6 +376,8 @@ public class AeshConsoleImpl implements AeshConsole {
             } else {
                 return 1;
             }
+        */
+            return 0;
         }
     }
 }
