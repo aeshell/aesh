@@ -19,10 +19,8 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.console.command.CmdOperation;
-import org.jboss.aesh.console.keymap.KeyMap;
-import org.jboss.aesh.readline.KeyEvent;
-import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.readline.KeyAction;
+import org.jboss.aesh.readline.ReadlineConsole;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.HashMap;
@@ -38,7 +36,7 @@ import java.util.logging.Logger;
  */
 public class ProcessManager {
 
-    private Console console;
+    private ReadlineConsole console;
     private volatile Map<Integer, Process> processes;
     private ExecutorService executorService;
     private boolean doLogging;
@@ -49,7 +47,7 @@ public class ProcessManager {
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ProcessManager.class.getName());
 
-    public ProcessManager(Console console, boolean log) {
+    public ProcessManager(ReadlineConsole console, boolean log) {
         this.console = console;
         this.doLogging = log;
         processes = new HashMap<>(20);
@@ -82,24 +80,21 @@ public class ProcessManager {
         return processes.get(pid);
     }
 
-    public KeyEvent getInput(int pid) throws InterruptedException {
+    public KeyAction getInput(int pid) throws InterruptedException {
+        /*
         if(foregroundProcess == pid)
             return console.getInput();
         else
-            return Key.UNKNOWN;
-    }
-
-    public <T> CmdOperation<T> getInput(int pid, KeyMap<T> keyMap) throws InterruptedException {
-        if(foregroundProcess == pid)
-            return console.getInput(keyMap);
-        else
-            return new CmdOperation<>(null, null);
+        */
+            return null;
     }
 
     public String getInputLine(int pid) throws InterruptedException {
+        /*
         if(foregroundProcess == pid)
             return console.getInputLine();
         else
+        */
             return "";
     }
 
@@ -156,6 +151,7 @@ public class ProcessManager {
     }
 
     public void processHaveFinished(Process process) {
+        /*
         if (doLogging)
             LOGGER.info("process has finished: " + process);
         processes.remove(process.getPID());
@@ -167,6 +163,7 @@ public class ProcessManager {
             }
         }
         console.currentProcessFinished(process);
+        */
     }
 
     public void stop() {

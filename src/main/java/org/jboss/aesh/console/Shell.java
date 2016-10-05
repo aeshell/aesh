@@ -21,6 +21,7 @@ package org.jboss.aesh.console;
 
 import org.jboss.aesh.readline.Prompt;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.tty.Size;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -66,4 +67,6 @@ public interface Shell {
     void enableAlternateBuffer();
 
     void enableMainBuffer();
+
+    Size size();
 }
