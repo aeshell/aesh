@@ -50,6 +50,7 @@ import org.jboss.aesh.terminal.formatting.TerminalString;
 import org.jboss.aesh.terminal.utils.InfoCmp;
 import org.jboss.aesh.tty.Connection;
 import org.jboss.aesh.tty.Signal;
+import org.jboss.aesh.tty.Size;
 import org.jboss.aesh.tty.terminal.TerminalConnection;
 import org.jboss.aesh.util.LoggerUtil;
 
@@ -328,6 +329,11 @@ public class ReadlineConsole {
                 connection.getTerminal().flush();
                 mainBuffer = true;
             }
+        }
+
+        @Override
+        public Size size() {
+            return connection.size();
         }
     }
 
