@@ -19,32 +19,27 @@
  */
 package org.jboss.aesh.graphics;
 
-import org.jboss.aesh.console.Shell;
-import org.jboss.aesh.terminal.api.Size;
-import org.jboss.aesh.terminal.api.Terminal;
+import org.jboss.aesh.tty.Size;
+import org.jboss.aesh.tty.terminal.TerminalConnection;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshGraphicsConfiguration implements GraphicsConfiguration {
 
-    private final Terminal terminal;
+    private final TerminalConnection connection;
 
-    public AeshGraphicsConfiguration(Shell shell) {
-        this(shell.getTerminal());
-    }
-
-    public AeshGraphicsConfiguration(Terminal terminal) {
-        this.terminal = terminal;
+    public AeshGraphicsConfiguration(TerminalConnection connection) {
+        this.connection = connection;
     }
 
     @Override
     public Size getBounds() {
-        return terminal.getSize();
+        return connection.size();
     }
 
     @Override
     public Graphics getGraphics() {
-        return new AeshGraphics(terminal, this);
+        return new AeshGraphics(connection.getTerminal(), this);
     }
 }
