@@ -22,6 +22,7 @@ package org.jboss.aesh.console.man;
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.completer.OptionCompleter;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
@@ -89,12 +90,12 @@ public class Man extends AeshFileDisplayer {
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
         if(manPages == null || manPages.size() == 0) {
-            commandInvocation.getShell().out().println("What manual page do you want?");
+            commandInvocation.getShell().write("What manual page do you want?"+ Config.getLineSeparator());
             return CommandResult.SUCCESS;
         }
 
         if(manPages.size() <= 0) {
-            commandInvocation.getShell().out().println("No manual entry for "+manPages.get(0));
+            commandInvocation.getShell().write("No manual entry for "+manPages.get(0)+Config.getLineSeparator());
             return CommandResult.SUCCESS;
         }
 

@@ -69,4 +69,9 @@ public interface Shell {
     void enableMainBuffer();
 
     Size size();
+
+    /**
+     * Clear the terminal
+     */
+    void clear();
 }

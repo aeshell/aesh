@@ -33,14 +33,11 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.renderer.OptionRenderer;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.console.AeshConsoleBufferBuilder;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
@@ -52,13 +49,11 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.readline.KeyAction;
-import org.jboss.aesh.readline.Prompt;
+import org.jboss.aesh.readline.action.KeyAction;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.formatting.CharacterType;
 import org.jboss.aesh.terminal.formatting.Color;
 import org.jboss.aesh.terminal.formatting.TerminalColor;
-import org.jboss.aesh.terminal.formatting.TerminalString;
 import org.jboss.aesh.terminal.formatting.TerminalTextStyle;
 import org.jboss.aesh.util.ANSI;
 
@@ -159,6 +154,7 @@ public class AeshExample {
                 .validatorInvocationProvider(new ExampleValidatorInvocationProvider())
                 .create();
 
+        /*
         AeshConsole aeshConsole = new AeshConsoleBuilder()
                 .settings(settings)
                 .prompt(new Prompt(new TerminalString("[aesh@rules]$ ",
@@ -166,6 +162,7 @@ public class AeshExample {
                 .create();
 
         aeshConsole.start();
+        */
     }
 
     @CommandDefinition(name = "exit", description = "exit the program", aliases = {"quit"})

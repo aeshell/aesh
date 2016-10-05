@@ -335,6 +335,11 @@ public class ReadlineConsole {
         public Size size() {
             return connection.size();
         }
+
+        @Override
+        public void clear() {
+            connection.getTerminal().puts(InfoCmp.Capability.clear_screen);
+        }
     }
 
 }

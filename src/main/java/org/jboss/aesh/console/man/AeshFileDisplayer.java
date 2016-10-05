@@ -19,13 +19,12 @@
  */
 package org.jboss.aesh.console.man;
 
-import org.jboss.aesh.console.Buffer;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.operator.ControlOperator;
-import org.jboss.aesh.readline.KeyEvent;
+import org.jboss.aesh.readline.action.KeyAction;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.ANSI;
 import org.jboss.aesh.util.LoggerUtil;
@@ -63,7 +62,7 @@ public abstract class AeshFileDisplayer implements Command {
 
     protected void setCommandInvocation(CommandInvocation commandInvocation) {
         this.commandInvocation = commandInvocation;
-        setControlOperator(commandInvocation.getControlOperator());
+        //setControlOperator(commandInvocation.getControlOperator());
     }
 
     protected CommandInvocation getCommandInvocation() {
@@ -81,8 +80,8 @@ public abstract class AeshFileDisplayer implements Command {
     protected void afterAttach() throws IOException, InterruptedException {
         number = new StringBuilder();
         searchBuilder = new StringBuilder();
-        rows = getShell().getSize().getHeight();
-        columns = getShell().getSize().getWidth();
+        rows = getShell().size().getHeight();
+        columns = getShell().size().getWidth();
         page = new TerminalPage(getFileParser(), columns);
         topVisibleRow = 0;
         topVisibleRowCache = -1;
@@ -91,23 +90,21 @@ public abstract class AeshFileDisplayer implements Command {
         if(operation.isRedirectionOut()) {
             int count=0;
             for(String line : this.page.getLines()) {
-                getShell().out().print(line);
+                getShell().write(line);
                 count++;
                 if(count < this.page.size())
-                    getShell().out().print(Config.getLineSeparator());
+                    getShell().write(Config.getLineSeparator());
             }
-            getShell().out().flush();
 
             afterDetach();
-            getShell().out().flush();
         }
         else {
             if(!page.hasData()) {
-                getShell().out().println("error: input is null...");
+                getShell().write("error: input is null...");
                 afterDetach();
             }
             else {
-                getShell().out().print(ANSI.ALTERNATE_BUFFER);
+                getShell().write(ANSI.ALTERNATE_BUFFER);
 
                 if(this.page.getFileName() != null)
                     display();
@@ -121,7 +118,7 @@ public abstract class AeshFileDisplayer implements Command {
 
     protected void afterDetach() throws IOException {
         if(!operation.isRedirectionOut())
-            getShell().out().print(ANSI.MAIN_BUFFER);
+            getShell().write(ANSI.MAIN_BUFFER);
 
         page.clear();
         topVisibleRow = 0;
@@ -130,7 +127,7 @@ public abstract class AeshFileDisplayer implements Command {
     public void processInput() throws IOException, InterruptedException {
         try {
             while(!stop) {
-                KeyEvent event = getCommandInvocation().getInput();
+                KeyAction event = getCommandInvocation().getInput();
                 if(event instanceof Key)
                     processOperation( (Key) event);
             }
@@ -342,8 +339,8 @@ public abstract class AeshFileDisplayer implements Command {
                         if(line.contains(searchWord))
                             displaySearchLine(line, searchWord);
                         else
-                            getShell().out().print(line);
-                        getShell().out().print(Config.getLineSeparator());
+                            getShell().write(line);
+                        getShell().write(Config.getLineSeparator());
                     }
                 }
                 topVisibleRowCache = topVisibleRow;
@@ -351,14 +348,13 @@ public abstract class AeshFileDisplayer implements Command {
             else {
                 for(int i=topVisibleRow; i < (topVisibleRow+rows-1); i++) {
                     if(i < page.size()) {
-                        getShell().out().print(page.getLine(i)+ Config.getLineSeparator());
+                        getShell().write(page.getLine(i)+ Config.getLineSeparator());
                     }
                 }
                 topVisibleRowCache = topVisibleRow;
             }
             displayBottom();
         }
-        getShell().out().flush();
     }
 
     /**
@@ -366,12 +362,11 @@ public abstract class AeshFileDisplayer implements Command {
      */
     private void displaySearchLine(String line, String searchWord) throws IOException {
         int start = line.indexOf(searchWord);
-        getShell().out().print(line.substring(0,start));
-        getShell().out().print(ANSI.INVERT_BACKGROUND);
-        getShell().out().print(searchWord);
-        getShell().out().print(ANSI.RESET);
-        getShell().out().print(line.substring(start + searchWord.length(), line.length()));
-        getShell().out().flush();
+        getShell().write(line.substring(0,start));
+        getShell().write(ANSI.INVERT_BACKGROUND);
+        getShell().write(searchWord);
+        getShell().write(ANSI.RESET);
+        getShell().write(line.substring(start + searchWord.length(), line.length()));
     }
 
     public abstract FileParser getFileParser();
@@ -379,14 +374,12 @@ public abstract class AeshFileDisplayer implements Command {
     public abstract void displayBottom() throws IOException;
 
     public void writeToConsole(String word) throws IOException {
-        getShell().out().print(word);
-        getShell().out().flush();
+        getShell().write(word);
     }
 
     public void clearBottomLine() throws IOException {
-        getShell().out().print(Buffer.printAnsi("0G"));
-        getShell().out().print(Buffer.printAnsi("2K"));
-        getShell().out().flush();
+        getShell().write(ANSI.printAnsi("0G"));
+        getShell().write(ANSI.printAnsi("2K"));
     }
 
     public boolean isAtBottom() {
