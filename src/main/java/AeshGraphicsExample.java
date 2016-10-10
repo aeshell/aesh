@@ -19,8 +19,6 @@
  */
 
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -28,10 +26,8 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.graphics.AeshGraphicsConfiguration;
 import org.jboss.aesh.graphics.Graphics;
 import org.jboss.aesh.graphics.GraphicsConfiguration;
-import org.jboss.aesh.readline.Prompt;
 import org.jboss.aesh.terminal.Key;
 
 import org.jboss.aesh.console.command.CommandException;
@@ -56,12 +52,14 @@ public class AeshGraphicsExample {
                 .commandRegistry(registry)
                 .create();
 
+        /*
         AeshConsole aeshConsole = new AeshConsoleBuilder()
                 .settings(settings)
                 .prompt(new Prompt("[aesh@rules]$ "))
                 .create();
 
         aeshConsole.start();
+        */
     }
 
     @CommandDefinition(name="exit", description = "exit the program")
@@ -103,7 +101,7 @@ public class AeshGraphicsExample {
 
         private void doGfx() {
             try {
-                GraphicsConfiguration gc = new AeshGraphicsConfiguration(invocation.getShell());
+                GraphicsConfiguration gc = null; //new AeshGraphicsConfiguration(invocation.getShell());
                 g = gc.getGraphics();
 
                 g.setColor(new TerminalColor(Color.BLUE, Color.DEFAULT));

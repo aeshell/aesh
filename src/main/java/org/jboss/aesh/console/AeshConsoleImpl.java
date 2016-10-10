@@ -261,6 +261,7 @@ public class AeshConsoleImpl implements AeshConsole {
         }
     }
 
+    /*
     class AeshCompletion implements Completion {
 
         @Override
@@ -293,6 +294,7 @@ public class AeshConsoleImpl implements AeshConsole {
         }
 
     }
+        */
 
     class AeshConsoleCallbackImpl extends AeshConsoleCallback {
 

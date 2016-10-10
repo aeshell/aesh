@@ -18,6 +18,10 @@
  * limitations under the License.
  */
 
+import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.Prompt;
+import org.jboss.aesh.readline.ReadlineConsole;
+
 import java.io.IOException;
 
 /**
@@ -31,6 +35,12 @@ public class Example {
     static boolean hasPassword;
 
     public static void main(String[] args) throws IOException {
+
+        ReadlineConsole console = new ReadlineConsole(new SettingsBuilder().create());
+
+        console.setPrompt(new Prompt("[aesh@rules]$ "));
+
+        console.start();
 
         /*
         //Settings.getInstance().setAnsiConsole(false);

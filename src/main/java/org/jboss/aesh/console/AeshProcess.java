@@ -20,7 +20,7 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.readline.KeyAction;
+import org.jboss.aesh.readline.action.KeyAction;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

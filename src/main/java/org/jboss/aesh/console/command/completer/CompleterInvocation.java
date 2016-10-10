@@ -21,7 +21,7 @@ package org.jboss.aesh.console.command.completer;
 
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.terminal.formatting.TerminalString;
 
 import java.util.Collection;
 import java.util.List;

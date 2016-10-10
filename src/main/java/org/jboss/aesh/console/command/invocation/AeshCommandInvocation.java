@@ -22,9 +22,9 @@ package org.jboss.aesh.console.command.invocation;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Shell;
-import org.jboss.aesh.readline.KeyAction;
 import org.jboss.aesh.readline.Prompt;
 import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.readline.action.KeyAction;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

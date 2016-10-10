@@ -19,8 +19,8 @@
  */
 package org.jboss.aesh.cl.parser;
 
+import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.InvocationProviders;
-import org.jboss.aesh.readline.completion.CompleteOperation;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -35,6 +35,6 @@ public interface CommandLineCompletionParser {
     ParsedCompleteObject findCompleteObject(String line, int cursor) throws CommandLineParserException;
 
     void injectValuesAndComplete(ParsedCompleteObject completeObject,
-                                 CompleteOperation completeOperation,
+                                 AeshCompleteOperation completeOperation,
                                  InvocationProviders invocationProviders);
 }

@@ -19,6 +19,9 @@
  */
 package org.jboss.aesh.console.operator;
 
+import org.jboss.aesh.complete.AeshCompleteOperation;
+import org.jboss.aesh.readline.completion.CompleteOperation;
+import org.jboss.aesh.readline.completion.Completion;
 import org.jboss.aesh.util.FileLister;
 import org.jboss.aesh.parser.Parser;
 
@@ -39,8 +42,11 @@ public class RedirectionCompletion implements Completion {
             String word = Parser.findCurrentWordFromCursor(completeOperation.getBuffer().substring(redirectPos, completeOperation.getCursor()), completeOperation.getCursor() - redirectPos);
 
             completeOperation.setOffset(completeOperation.getCursor());
-            FileLister lister = new FileLister(word, completeOperation.getAeshContext().getCurrentWorkingDirectory());
-            lister.findMatchingDirectories(completeOperation);
+            if(completeOperation instanceof AeshCompleteOperation) {
+                FileLister lister = new FileLister(word,
+                        ((AeshCompleteOperation) completeOperation).getContext().getCurrentWorkingDirectory());
+                lister.findMatchingDirectories(completeOperation);
+            }
             //if we only have one complete candidate, leave the escaped space be
             if(completeOperation.getCompletionCandidates().size() > 1)
                 completeOperation.removeEscapedSpacesFromCompletionCandidates();

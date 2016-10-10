@@ -22,7 +22,6 @@ package org.jboss.aesh.readline.editing;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import org.jboss.aesh.console.AeshConsoleBufferBuilder;
 import org.jboss.aesh.console.AeshInputProcessorBuilder;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.ConsoleBuffer;
