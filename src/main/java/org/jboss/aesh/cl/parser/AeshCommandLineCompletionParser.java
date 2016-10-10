@@ -25,6 +25,7 @@ import org.jboss.aesh.cl.completer.DefaultValueOptionCompleter;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
@@ -199,7 +200,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
     @Override
     @SuppressWarnings("unchecked")
     public void injectValuesAndComplete(ParsedCompleteObject completeObject,
-                                        CompleteOperation completeOperation,
+                                        AeshCompleteOperation completeOperation,
                                         InvocationProviders invocationProviders) {
 
         if(completeObject.doDisplayOptions()) {
@@ -214,7 +215,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     List<String> words = Parser.findAllWords(rest).getWords();
                     try {
                         parser.getCommandPopulator().populateObject(parser.parse(words, true), invocationProviders,
-                                completeOperation.getAeshContext(), false);
+                                completeOperation.getContext(), false);
                     }
                     //this should be ignored at some point
                     catch (CommandLineParserException | OptionValidatorException ignored) { }
@@ -239,7 +240,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                         if(words.get(words.size()-1).equals("--") || words.get(words.size()-1).equals("-"))
                             words.remove(words.size()-1);
                         parser.getCommandPopulator().populateObject(parser.parse(words, true),
-                                invocationProviders, completeOperation.getAeshContext(), false);
+                                invocationProviders, completeOperation.getContext(), false);
                     }
                     //this should be ignored at some point
                     catch (CommandLineParserException | OptionValidatorException ignored) { }
@@ -282,7 +283,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             try {
                 List<String> words = Parser.findAllWords(rest).getWords();
                 parser.getCommandPopulator().populateObject(parser.parse(words, true),
-                        invocationProviders, completeOperation.getAeshContext(), false);
+                        invocationProviders, completeOperation.getContext(), false);
             }
             //this should be ignored at some point
             catch (CommandLineParserException | OptionValidatorException ignored) { }
@@ -291,7 +292,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     currentOption.getActivator().isActivated(parser.getProcessedCommand())) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
-                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
+                                new CompleterData(completeOperation.getContext(), completeObject.getValue(), parser.getCommand()));
 
                 currentOption.getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
@@ -316,7 +317,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             else if(currentOption.getDefaultValues().size() > 0) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
-                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
+                                new CompleterData(completeOperation.getContext(), completeObject.getValue(), parser.getCommand()));
                 new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completionSetOffSet(completeObject, completeOperation, completions);
@@ -343,7 +344,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             try {
                 List<String> words = Parser.findAllWords(rest).getWords();
                 parser.getCommandPopulator().populateObject(parser.parse(words, true),
-                        invocationProviders, completeOperation.getAeshContext(), false);
+                        invocationProviders, completeOperation.getContext(), false);
             }
             catch (CommandLineParserException | OptionValidatorException ignored) { }
 
@@ -351,7 +352,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                     parser.getProcessedCommand().getArgument().getCompleter() != null) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
-                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
+                                new CompleterData(completeOperation.getContext(), completeObject.getValue(), parser.getCommand()));
                 parser.getProcessedCommand().getArgument().getCompleter().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completionSetOffSet(completeObject, completeOperation, completions);
@@ -373,7 +374,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             else if(parser.getProcessedCommand().containsArgumentWithDefaultValues()) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
-                                new CompleterData(completeOperation.getAeshContext(), completeObject.getValue(), parser.getCommand()));
+                                new CompleterData(completeOperation.getContext(), completeObject.getValue(), parser.getCommand()));
                 new DefaultValueOptionCompleter( parser.getProcessedCommand().getArgument().getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completionSetOffSet(completeObject, completeOperation, completions);

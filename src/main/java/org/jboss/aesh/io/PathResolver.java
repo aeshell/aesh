@@ -189,12 +189,14 @@ public class PathResolver {
         ArrayList<File> files = new ArrayList<>();
 
         final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**");
+        /*
          DirectoryStream.Filter<Path> filter = new DirectoryStream.Filter<Path>() {
             @Override
             public boolean accept(Path entry)  {
                 return matcher.matches(entry.getFileName());
             }
         };
+        */
 
         if(starPattern.matcher(searchArgument).matches()) {
             try (DirectoryStream<Path> stream = findDirectory ?

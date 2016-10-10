@@ -17,33 +17,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.console;
+package org.jboss.aesh.complete;
 
-import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.readline.action.KeyAction;
+import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.readline.completion.CompleteOperationImpl;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface Process {
+public class AeshCompleteOperation extends CompleteOperationImpl {
 
-    void setManager(ProcessManager manager);
+    private AeshContext context;
 
-    KeyAction getInput() throws InterruptedException;
+    public AeshCompleteOperation(AeshContext context, String buffer, int cursor) {
+        super(buffer, cursor);
 
-    String getInputLine() throws InterruptedException;
-
-    int getPID();
-
-    CommandResult getExitResult();
-
-    void interrupt() throws InterruptedException;
-
-    Status getStatus();
-
-    void updateStatus(Status status);
-
-    enum Status {
-        FOREGROUND,BACKGROUND
+        this.context = context;
     }
+
+    public AeshCompleteOperation(String buffer, int cursor) {
+        super(buffer, cursor);
+    }
+
+    public AeshContext getContext() {
+        return context;
+    }
+
 }

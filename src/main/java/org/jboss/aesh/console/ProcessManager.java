@@ -19,8 +19,8 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.readline.KeyAction;
 import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.readline.action.KeyAction;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.HashMap;

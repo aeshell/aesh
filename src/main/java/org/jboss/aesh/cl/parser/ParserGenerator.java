@@ -307,6 +307,7 @@ public class ParserGenerator {
         parseAndPopulate(instance, builder.toString());
     }
 
+    /*
    public static void parseAndPopulate(Command instance, String input) throws CommandLineParserException, OptionValidatorException {
         CommandLineParser cl = doGenerateCommandLineParser(instance).getParser();
         InvocationProviders invocationProviders = new AeshInvocationProviders(
@@ -317,5 +318,6 @@ public class ParserGenerator {
                 new AeshCommandActivatorProvider());
         cl.getCommandPopulator().populateObject( cl.parse(input), invocationProviders, null, true);
     }
+    */
 
 }

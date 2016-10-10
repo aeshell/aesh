@@ -19,9 +19,11 @@
  */
 package org.jboss.aesh.cl.completer;
 
+import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.io.filter.AllResourceFilter;
 import org.jboss.aesh.io.filter.ResourceFilter;
+import org.jboss.aesh.readline.completion.CompleteOperation;
 import org.jboss.aesh.util.FileLister;
 
 /**
@@ -48,7 +50,7 @@ public class FileOptionCompleter implements OptionCompleter<CompleterInvocation>
     public void complete(CompleterInvocation completerData) {
 
         CompleteOperation completeOperation =
-                new CompleteOperation(completerData.getAeshContext(), completerData.getGivenCompleteValue(), 0);
+                new AeshCompleteOperation(completerData.getAeshContext(), completerData.getGivenCompleteValue(), 0);
         if (completerData.getGivenCompleteValue() == null)
             new FileLister("", completerData.getAeshContext().getCurrentWorkingDirectory(), filter)
                     .findMatchingDirectories(completeOperation);

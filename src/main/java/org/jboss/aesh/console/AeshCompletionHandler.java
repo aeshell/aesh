@@ -19,6 +19,7 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasManager;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
@@ -269,11 +270,11 @@ public class AeshCompletionHandler implements CompletionHandler {
             String command = Parser.findFirstWord(buffer);
             Alias alias = aliasManager.getAlias(command);
             if(alias != null) {
-                return new CompleteOperation(aeshContext, alias.getValue()+buffer.substring(command.length()),
+                return new AeshCompleteOperation(aeshContext, alias.getValue()+buffer.substring(command.length()),
                         cursor+(alias.getValue().length()-command.length()));
             }
         }
 
-        return new CompleteOperation(aeshContext, buffer, cursor);
+        return new AeshCompleteOperation(aeshContext, buffer, cursor);
     }
 }
