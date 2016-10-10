@@ -19,8 +19,9 @@
  */
 package org.jboss.aesh.cl.renderer;
 
-import org.jboss.aesh.terminal.TerminalColor;
-import org.jboss.aesh.terminal.TerminalTextStyle;
+
+import org.jboss.aesh.terminal.formatting.TerminalColor;
+import org.jboss.aesh.terminal.formatting.TerminalTextStyle;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

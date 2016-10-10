@@ -19,12 +19,12 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.readline.Action;
+import org.jboss.aesh.tty.Signal;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface InputProcessorInterruptHook {
 
-    void handleInterrupt(Action action);
+    void handleInterrupt(Signal signal);
 }

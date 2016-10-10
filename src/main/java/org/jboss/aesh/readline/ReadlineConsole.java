@@ -91,17 +91,19 @@ public class ReadlineConsole {
 
     public void start() {
         connection = new TerminalConnection();
-        init(connection);
+        init();
     }
 
     public void stop() {
         running = false;
     }
 
-    public void init(final Connection conn) {
+    private void init() {
         readline = new Readline(EditModeBuilder.builder(EditMode.Mode.VI).create());
         running = true;
-        read(conn, readline);
+        read(connection, readline);
+
+        connection.startBlockingReader();
     }
 
     /**
@@ -126,8 +128,9 @@ public class ReadlineConsole {
 
             LOGGER.info("got: " + line);
 
-            //change this and have an api work similar to:
-            try( CommandContainer container = commandResolver.resolveCommand(line)) {
+            if(line.trim().length() > 0) {
+                //change this and have an api work similar to:
+                try (CommandContainer container = commandResolver.resolveCommand(line)) {
 
                 /*
                 if (cmd.equals("exit")) {
@@ -142,22 +145,26 @@ public class ReadlineConsole {
                 }
                 */
 
-                try {
-                    new Process(conn, readline, container, line).start();
-                    return;
+                    try {
+                        new Process(conn, readline, container, line).start();
+                        return;
+                    }
+                    catch (IllegalArgumentException e) {
+                        conn.write(line + ": command not found\n");
+                    }
                 }
-                catch (IllegalArgumentException e) {
-                    conn.write(line + ": command not found\n");
+                catch (CommandNotFoundException cnfe) {
+                    conn.write(cnfe.getMessage());
+                    read(conn, readline);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    read(conn, readline);
                 }
             }
-            catch(CommandNotFoundException cnfe) {
-                conn.write(cnfe.getMessage());
-                read(conn, readline);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-                read(conn, readline);
-            }
+            //if line is empty
+            else
+               read(conn, readline);
         }, completions);
     }
 

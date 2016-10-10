@@ -20,6 +20,8 @@
 package org.jboss.aesh.console.export;
 
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.readline.completion.CompleteOperation;
+import org.jboss.aesh.readline.completion.Completion;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

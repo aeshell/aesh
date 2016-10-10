@@ -20,7 +20,7 @@
 package org.jboss.aesh.console.helper;
 
 import org.jboss.aesh.console.Console;
-import org.jboss.aesh.readline.Action;
+import org.jboss.aesh.tty.Signal;
 
 /**
  * InterruptHook is the handler thats called when an interrupt has occurred.
@@ -30,5 +30,5 @@ import org.jboss.aesh.readline.Action;
  */
 public interface InterruptHook {
 
-    void handleInterrupt(Console console, Action action);
+    void handleInterrupt(Console console, Signal signal);
 }

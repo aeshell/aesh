@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.readline.KeyAction;
+import org.jboss.aesh.readline.action.KeyAction;
 
 /**
  * Implementation of this interface will be called when a user press the
