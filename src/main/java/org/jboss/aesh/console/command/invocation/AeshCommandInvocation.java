@@ -22,6 +22,7 @@ package org.jboss.aesh.console.command.invocation;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Shell;
+import org.jboss.aesh.readline.Console;
 import org.jboss.aesh.readline.Prompt;
 import org.jboss.aesh.readline.ReadlineConsole;
 import org.jboss.aesh.readline.action.KeyAction;
@@ -31,10 +32,10 @@ import org.jboss.aesh.readline.action.KeyAction;
  */
 public final class AeshCommandInvocation implements CommandInvocation {
 
-    private final ReadlineConsole console;
+    private final Console console;
     private final Shell shell;
 
-    public AeshCommandInvocation(ReadlineConsole console, Shell shell) {
+    public AeshCommandInvocation(Console console, Shell shell) {
         this.console = console;
         this.shell = shell;
     }
@@ -51,12 +52,12 @@ public final class AeshCommandInvocation implements CommandInvocation {
 
     @Override
     public Prompt getPrompt() {
-        return console.getPrompt();
+        return console.prompt();
     }
 
     @Override
     public String getHelpInfo(String commandName) {
-        return console.getHelpInfo(commandName);
+        return console.helpInfo(commandName);
     }
 
     @Override
@@ -66,7 +67,7 @@ public final class AeshCommandInvocation implements CommandInvocation {
 
     @Override
     public AeshContext getAeshContext() {
-        return console.getAeshContext();
+        return console.context();
     }
 
     @Override

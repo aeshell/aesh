@@ -220,8 +220,8 @@ public class Console {
         consoleBuffer.setPrompt(prompt);
     }
 
-    public Prompt getPrompt() {
-        return consoleBuffer.getBuffer().getPrompt();
+    public Prompt prompt() {
+        return consoleBuffer.getBuffer().prompt();
     }
 
     public ExportManager getExportManager() {
