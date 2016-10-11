@@ -18,11 +18,24 @@
  * limitations under the License.
  */
 
+import org.jboss.aesh.cl.Arguments;
+import org.jboss.aesh.cl.CommandDefinition;
+import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.cl.OptionList;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.CommandException;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
+import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
+import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.Prompt;
 import org.jboss.aesh.readline.ReadlineConsole;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -36,7 +49,11 @@ public class Example {
 
     public static void main(String[] args) throws IOException {
 
-        ReadlineConsole console = new ReadlineConsole(new SettingsBuilder().create());
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(ExitCommand.class)
+                .command(LsCommand.class)
+                .create();
+        ReadlineConsole console = new ReadlineConsole(new SettingsBuilder().commandRegistry(registry).create());
 
         console.setPrompt(new Prompt("[aesh@rules]$ "));
 
@@ -309,4 +326,62 @@ public class Example {
 
 */
     }
+
+    @CommandDefinition(name = "exit", description = "exit the program", aliases = {"quit"})
+    public static class ExitCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            commandInvocation.stop();
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name="ls", description = "[OPTION]... [FILE]...")
+    public static class LsCommand implements Command {
+
+        @Option(shortName = 'f', hasValue = false, description = "set foo to true/false")
+        private Boolean foo;
+
+        @Option(hasValue = false, description = "set the bar") //, renderer = BlueBoldRenderer.class)
+        private boolean bar;
+
+        @Option(shortName = 'l', completer = AeshExample.LessCompleter.class, defaultValue = {"MORE"}, argument = "SIZE")
+        private String less;
+
+        @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':') //,
+                //validator = DirectoryValidator.class,
+                //activator = BarActivator.class)
+                List<File> files;
+
+        @Option(hasValue = false, description = "display this help and exit")
+        private boolean help;
+
+        @Arguments(description = "files or directories thats listed")
+        private List<Resource> arguments;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            if(help) {
+                commandInvocation.getShell().write(commandInvocation.getHelpInfo("ls"));
+            }
+            else {
+                if(foo)
+                    commandInvocation.getShell().write("you set foo to: " + foo);
+                if(bar)
+                    commandInvocation.getShell().write("you set bar to: " + bar);
+                if(less != null)
+                    commandInvocation.getShell().write("you set less to: " + less);
+                if(files != null)
+                    commandInvocation.getShell().write("you set file to: " + files);
+
+                if(arguments != null) {
+                    for(Resource f : arguments)
+                        commandInvocation.getShell().write(f.toString());
+                }
+            }
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }
