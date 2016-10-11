@@ -28,25 +28,19 @@ import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.CommandResolver;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.Shell;
-import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainerResult;
 import org.jboss.aesh.console.command.invocation.AeshCommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
-import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.readline.completion.Completion;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.readline.editing.EditModeBuilder;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.formatting.Color;
-import org.jboss.aesh.terminal.formatting.TerminalColor;
-import org.jboss.aesh.terminal.formatting.TerminalString;
 import org.jboss.aesh.terminal.utils.InfoCmp;
 import org.jboss.aesh.tty.Connection;
 import org.jboss.aesh.tty.Signal;
@@ -59,13 +53,12 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ReadlineConsole {
+public class ReadlineConsole implements Console {
 
     private Settings settings;
     private Prompt prompt;
@@ -83,6 +76,7 @@ public class ReadlineConsole {
     private volatile boolean running = false;
 
     public ReadlineConsole(Settings settings) {
+        LoggerUtil.doLog();
         this.settings = settings;
         commandResolver = new AeshCommandResolver((MutableCommandRegistry) settings.commandRegistry());
 
@@ -94,8 +88,14 @@ public class ReadlineConsole {
         init();
     }
 
+    @Override
     public void stop() {
         running = false;
+    }
+
+    @Override
+    public boolean running() {
+        return running;
     }
 
     private void init() {
@@ -114,9 +114,16 @@ public class ReadlineConsole {
      */
     public void read(final Connection conn, final Readline readline) {
         // Just call readline and get a callback when line is startBlockingReader
-        if(!running)
+        if(!running) {
+            LOGGER.info("not running, returning");
+            conn.close();
             return;
+        }
 
+        if(connection.suspended())
+            connection.startReading();
+
+        LOGGER.info("calling readline.readline");
         readline.readline(conn, prompt, line -> {
 
             // Ctrl-D
@@ -132,22 +139,16 @@ public class ReadlineConsole {
                 //change this and have an api work similar to:
                 try (CommandContainer container = commandResolver.resolveCommand(line)) {
 
-                /*
-                if (cmd.equals("exit")) {
+                    /*
+                if (line.equals("exit")) {
                     conn.write("exiting...\n").close();
                     return;
-                }
-
-                // Gather args
-                List<String> args = new ArrayList<>();
-                while (matcher.find()) {
-                    args.add(matcher.group());
                 }
                 */
 
                     try {
-                        new Process(conn, readline, container, line).start();
-                        return;
+                        connection.suspendReading();
+                        new Process(conn, this, readline, container, line).start();
                     }
                     catch (IllegalArgumentException e) {
                         conn.write(line + ": command not found\n");
@@ -166,22 +167,27 @@ public class ReadlineConsole {
             else
                read(conn, readline);
         }, completions);
+        LOGGER.info("end of read()");
     }
 
 
-    public Prompt getPrompt() {
+    @Override
+    public Prompt prompt() {
         return prompt;
     }
 
+    @Override
     public void setPrompt(Prompt prompt) {
         this.prompt = prompt;
     }
 
-    public AeshContext getAeshContext() {
+    @Override
+    public AeshContext context() {
         return context;
     }
 
-    public String getHelpInfo(String commandName) {
+    @Override
+    public String helpInfo(String commandName) {
         try (CommandContainer commandContainer = commandResolver.resolveCommand(commandName)) {
             if (commandContainer != null) {
                 return commandContainer.printHelp(commandName);
@@ -209,10 +215,13 @@ public class ReadlineConsole {
         final Readline readline;
         final CommandContainer container;
         final String line;
+        final Console console;
         volatile boolean running;
 
-        public Process(Connection conn, Readline readline, CommandContainer container, String line) {
+        public Process(Connection conn, Console console, Readline readline,
+                       CommandContainer container, String line) {
             this.conn = conn;
+            this.console = console;
             this.readline = readline;
             this.container = container;
             this.line = line;
@@ -249,19 +258,26 @@ public class ReadlineConsole {
             finally {
                 running = false;
                 conn.setSignalHandler(null);
+                conn.setStdinHandler(null);
 
-                LOGGER.info("trying to read again.");
-                // Readline again
-                read(conn, readline);
+                if(console.running()) {
+                    LOGGER.info("trying to read again.");
+                    // Readline again
+                    read(conn, readline);
+                }
+                else {
+                    conn.close();
+                    LOGGER.info("we're exiting...");
+                }
             }
         }
 
         private void runCommand(CommandContainer container, String aeshLine) throws InterruptedException, OptionValidatorException, CommandException, CommandLineParserException, CommandValidatorException {
             CommandContainerResult ccResult =
-                    container.executeCommand(Parser.findAllWords(aeshLine), invocationProviders, getAeshContext(),
+                    container.executeCommand(Parser.findAllWords(aeshLine), invocationProviders, context(),
                             settings.commandInvocationServices().getCommandInvocationProvider(
                                     commandInvocationProvider).enhanceCommandInvocation(
-                                    new AeshCommandInvocation(null, new ShellImpl(connection, readline)
+                                    new AeshCommandInvocation(console, new ShellImpl(connection, readline)
                                     )));
         }
     }

@@ -315,7 +315,7 @@ public class AeshConsoleImpl implements AeshConsole {
                 try (CommandContainer commandContainer = getCommand( aeshLine, output.getBuffer())) {
                     resultHandler = commandContainer.getParser().getProcessedCommand().getResultHandler();
                     CommandContainerResult ccResult =
-                            commandContainer.executeCommand(aeshLine, invocationProviders, getAeshContext(),
+                            commandContainer.executeCommand(aeshLine, invocationProviders, context(),
                             commandInvocationServices.getCommandInvocationProvider(
                                     commandInvocationProvider).enhanceCommandInvocation(
                                     new AeshCommandInvocation(console,
