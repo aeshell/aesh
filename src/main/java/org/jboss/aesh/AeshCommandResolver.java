@@ -23,7 +23,6 @@ import org.jboss.aesh.console.CommandResolver;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 
@@ -32,9 +31,9 @@ import org.jboss.aesh.parser.Parser;
  */
 public class AeshCommandResolver implements CommandResolver {
 
-    private MutableCommandRegistry registry;
+    private CommandRegistry registry;
 
-    public AeshCommandResolver(MutableCommandRegistry commandRegistry) {
+    public AeshCommandResolver(CommandRegistry commandRegistry) {
         this.registry = commandRegistry;
     }
 
@@ -74,8 +73,8 @@ public class AeshCommandResolver implements CommandResolver {
     private CommandContainer getCommand(String commandName, String line) throws CommandNotFoundException {
         try {
             return registry.getCommand(commandName, line);
-            //return commandContainer;
-        } catch (CommandNotFoundException e) {
+        }
+        catch (CommandNotFoundException e) {
             // Lookup in aliases
             return registry.getCommandByAlias(commandName);
         }

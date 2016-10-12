@@ -26,6 +26,7 @@ import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.CommandResolver;
+import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.CommandException;
@@ -37,6 +38,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.parser.Parser;
+import org.jboss.aesh.readline.action.ActionDecoder;
 import org.jboss.aesh.readline.completion.Completion;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.readline.editing.EditModeBuilder;
@@ -52,6 +54,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -70,7 +73,6 @@ public class ReadlineConsole implements Console {
     private InvocationProviders invocationProviders;
 
     private final String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
-    private static final Pattern splitter = Pattern.compile("\\w+");
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
 
     private volatile boolean running = false;
@@ -78,7 +80,7 @@ public class ReadlineConsole implements Console {
     public ReadlineConsole(Settings settings) {
         LoggerUtil.doLog();
         this.settings = settings;
-        commandResolver = new AeshCommandResolver((MutableCommandRegistry) settings.commandRegistry());
+        commandResolver = new AeshCommandResolver(settings.commandRegistry());
 
         invocationProviders = new AeshInvocationProviders(settings);
     }
@@ -125,51 +127,42 @@ public class ReadlineConsole implements Console {
 
         LOGGER.info("calling readline.readline");
         readline.readline(conn, prompt, line -> {
-
             // Ctrl-D
             if (line == null) {
                 //((TerminalConnection) conn).stop();
                 conn.write("logout\n").close();
                 return;
             }
-
             LOGGER.info("got: " + line);
 
-            if(line.trim().length() > 0) {
-                //change this and have an api work similar to:
-                try (CommandContainer container = commandResolver.resolveCommand(line)) {
-
-                    /*
-                if (line.equals("exit")) {
-                    conn.write("exiting...\n").close();
-                    return;
-                }
-                */
-
-                    try {
-                        connection.suspendReading();
-                        new Process(conn, this, readline, container, line).start();
-                    }
-                    catch (IllegalArgumentException e) {
-                        conn.write(line + ": command not found\n");
-                    }
-                }
-                catch (CommandNotFoundException cnfe) {
-                    conn.write(cnfe.getMessage());
-                    read(conn, readline);
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                    read(conn, readline);
-                }
-            }
-            //if line is empty
+            if(line.trim().length() > 0)
+                processLine(line, conn);
+            //else line is empty
             else
                read(conn, readline);
         }, completions);
         LOGGER.info("end of read()");
     }
 
+    private void processLine(String line, Connection conn) {
+        try (CommandContainer container = commandResolver.resolveCommand(line)) {
+            try {
+                connection.suspendReading();
+                new Process(conn, this, readline, container, line).start();
+            }
+            catch (IllegalArgumentException e) {
+                conn.write(line + ": command not found\n");
+            }
+        }
+        catch (CommandNotFoundException cnfe) {
+            conn.write(cnfe.getMessage()+Config.getLineSeparator());
+            read(conn, readline);
+        }
+        catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Got exception while starting new process", e);
+            read(conn, readline);
+        }
+    }
 
     @Override
     public Prompt prompt() {
@@ -299,6 +292,11 @@ public class ReadlineConsole implements Console {
         }
 
         @Override
+        public void writeln(String out) {
+            connection.write(out+ Config.getLineSeparator());
+        }
+
+         @Override
         public void write(int[] out) {
             connection.stdoutHandler().accept(out);
         }
@@ -315,7 +313,9 @@ public class ReadlineConsole implements Console {
             readline.readline(connection, prompt, event -> {
                 out[0] = event;
                 latch.countDown();
+                connection.suspendReading();
             });
+            connection.startReading();
             try {
                 // Wait until interrupted
                 latch.await();
@@ -327,10 +327,29 @@ public class ReadlineConsole implements Console {
         }
 
         @Override
-        public Key read() {
-            //TODO
-            return null;
-        }
+        public Key read() throws InterruptedException {
+            ActionDecoder decoder = new ActionDecoder(settings.editMode());
+            final Key[] key = {null};
+            CountDownLatch latch = new CountDownLatch(1);
+            connection.setStdinHandler(keys -> {
+                decoder.add(keys);
+                if(decoder.hasNext()) {
+                    key[0] = Key.findStartKey( decoder.next().buffer().array());
+                    latch.countDown();
+                    connection.suspendReading();
+                }
+            });
+            connection.startReading();
+            try {
+                // Wait until interrupted
+                latch.await();
+            }
+            finally {
+                connection.setStdinHandler(null);
+            }
+            return key[0];
+       }
+
 
         @Override
         public Key read(Prompt prompt) throws InterruptedException {

@@ -195,8 +195,7 @@ public class MutableCommandRegistry implements CommandRegistry {
         if (aliases.containsKey(alias)) {
             return aliases.get(alias);
         } else {
-            throw new CommandNotFoundException("Command: with " + alias
-                    + " alias was not found.");
+            throw new CommandNotFoundException("Command: named " + alias + " was not found.");
         }
     }
 

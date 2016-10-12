@@ -34,6 +34,11 @@ public interface Shell {
     void write(String out);
 
     /**
+     * @param out write out to the output stream including a line separator at the end
+     */
+    void writeln(String out);
+
+    /**
      * @param out write out to the output stream
      */
     void write(int[] out);
