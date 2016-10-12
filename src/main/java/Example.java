@@ -32,6 +32,7 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.Prompt;
 import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.terminal.Key;
 
 import java.io.File;
 import java.io.IOException;
@@ -332,7 +333,19 @@ public class Example {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            commandInvocation.stop();
+            commandInvocation.getShell().write("should we stop? ");
+            Key in = commandInvocation.getShell().read();
+            if(in.isPrintable())
+                commandInvocation.getShell().write(in.getKeyValues());
+            commandInvocation.getShell().write("\n");
+            if(in == Key.y) {
+                commandInvocation.getShell().write("we're stopping....\n");
+                commandInvocation.stop();
+            }
+            else {
+                commandInvocation.getShell().write("nope, not stopping...\n");
+            }
+
             return CommandResult.SUCCESS;
         }
     }
