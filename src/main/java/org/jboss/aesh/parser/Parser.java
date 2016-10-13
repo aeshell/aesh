@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.Config;
 import org.jboss.aesh.readline.completion.CompleteOperation;
 import org.jboss.aesh.terminal.formatting.TerminalString;
@@ -315,9 +316,9 @@ public class Parser {
      * @param coList completion list
      * @return common start string
      */
-    public static String findStartsWithOperation(List<CompleteOperation> coList) {
+    public static String findStartsWithOperation(List<AeshCompleteOperation> coList) {
         List<String> tmpList = new ArrayList<>();
-        for (CompleteOperation co : coList) {
+        for (AeshCompleteOperation co : coList) {
             String s = findStartsWith(co.getFormattedCompletionCandidates());
             if (s.length() > 0)
                 tmpList.add(s);

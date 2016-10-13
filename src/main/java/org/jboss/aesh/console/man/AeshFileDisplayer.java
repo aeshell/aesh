@@ -127,7 +127,7 @@ public abstract class AeshFileDisplayer implements Command {
     public void processInput() throws IOException, InterruptedException {
         try {
             while(!stop) {
-                KeyAction event = getCommandInvocation().getInput();
+                KeyAction event = getCommandInvocation().input();
                 if(event instanceof Key)
                     processOperation( (Key) event);
             }

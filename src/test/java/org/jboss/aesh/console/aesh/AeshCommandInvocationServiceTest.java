@@ -154,23 +154,23 @@ class FooCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public KeyEvent getInput() throws InterruptedException {
-        return commandInvocation.getInput();
+    public KeyEvent input() throws InterruptedException {
+        return commandInvocation.input();
     }
 
     @Override
     public <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {
-        return commandInvocation.getInput(keyMap);
+        return commandInvocation.input(keyMap);
     }
 
     @Override
-    public String getInputLine() throws InterruptedException {
-        return commandInvocation.getInputLine();
+    public String inputLine() throws InterruptedException {
+        return commandInvocation.inputLine();
     }
 
     @Override
-    public int getPid() {
-        return commandInvocation.getPid();
+    public int pid() {
+        return commandInvocation.pid();
     }
 
     @Override

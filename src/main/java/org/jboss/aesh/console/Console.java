@@ -366,7 +366,7 @@ public class Console {
         inputProcessor.clearBufferAndDisplayPrompt();
     }
 
-    protected KeyEvent getInput() throws InterruptedException {
+    protected KeyEvent input() throws InterruptedException {
         KeyEvent key = bindingReader.readBinding(Key.getKeyMap());
         if (key != null && key != Key.UNKNOWN) {
             return key;
@@ -392,7 +392,7 @@ public class Console {
         }
     }
 
-    protected <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {
+    protected <T> CmdOperation<T> input(KeyMap<T> keyMap) throws InterruptedException {
         T op = bindingReader.readBinding(keyMap);
         if (op != null) {
             return new CmdOperation<>(op, bindingReader.getLastBinding());
@@ -429,11 +429,11 @@ public class Console {
     }
 
 
-    public String getInputLine() throws InterruptedException {
+    public String inputLine() throws InterruptedException {
         String result;
         try {
             do {
-                result = inputProcessor.parseOperation(getInput());
+                result = inputProcessor.parseOperation(input());
             }
             while(result == null && running && !initiateStop);
 
@@ -525,7 +525,7 @@ public class Console {
 
     private void execute() {
         try {
-            String line = getInputLine();
+            String line = inputLine();
             if (line != null) {
                 processing = true;
                 processOperationResult(line);

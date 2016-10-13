@@ -320,7 +320,7 @@ public class AeshConsoleImpl implements AeshConsole {
                                     commandInvocationProvider).enhanceCommandInvocation(
                                     new AeshCommandInvocation(console,
                                         output.getControlOperator(),
-                                         output.getPid(), this)));
+                                         output.pid(), this)));
 
                     result = ccResult.getCommandResult();
 
