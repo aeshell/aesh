@@ -83,7 +83,7 @@ public class ProcessManager {
     public KeyAction getInput(int pid) throws InterruptedException {
         /*
         if(foregroundProcess == pid)
-            return console.getInput();
+            return console.input();
         else
         */
             return null;
@@ -92,7 +92,7 @@ public class ProcessManager {
     public String getInputLine(int pid) throws InterruptedException {
         /*
         if(foregroundProcess == pid)
-            return console.getInputLine();
+            return console.inputLine();
         else
         */
             return "";
