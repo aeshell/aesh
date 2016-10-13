@@ -30,14 +30,8 @@ import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.console.AeshInvocationProviders;
-import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
-import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.container.AeshCommandContainer;
-import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
-import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
 import org.jboss.aesh.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
@@ -45,7 +39,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import org.jboss.aesh.console.command.activator.AeshCommandActivatorProvider;
 
 /**
  * Generates a {@link AeshCommandLineParser} based on annotations defined in
