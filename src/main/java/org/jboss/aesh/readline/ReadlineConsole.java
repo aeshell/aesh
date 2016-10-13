@@ -30,7 +30,6 @@ import org.jboss.aesh.console.AeshCompletionHandler;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.CommandResolver;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.CommandException;
@@ -54,6 +53,7 @@ import org.jboss.aesh.tty.Connection;
 import org.jboss.aesh.tty.Signal;
 import org.jboss.aesh.tty.Size;
 import org.jboss.aesh.tty.terminal.TerminalConnection;
+import org.jboss.aesh.util.Config;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.ArrayList;
@@ -166,7 +166,7 @@ public class ReadlineConsole implements Console {
             }
         }
         catch (CommandNotFoundException cnfe) {
-            conn.write(cnfe.getMessage()+Config.getLineSeparator());
+            conn.write(cnfe.getMessage()+ Config.getLineSeparator());
             read(conn, readline);
         }
         catch (Exception e) {

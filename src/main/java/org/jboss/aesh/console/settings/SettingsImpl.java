@@ -20,7 +20,6 @@
 package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.command.activator.CommandActivatorProvider;
 import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
@@ -34,6 +33,7 @@ import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.readline.editing.EditModeBuilder;
+import org.jboss.aesh.util.Config;
 
 import java.io.File;
 import java.io.FileInputStream;

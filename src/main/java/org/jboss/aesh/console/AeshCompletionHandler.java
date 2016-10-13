@@ -27,11 +27,12 @@ import org.jboss.aesh.console.operator.RedirectionCompletion;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.readline.Buffer;
 import org.jboss.aesh.readline.InputProcessor;
+import org.jboss.aesh.readline.action.mappings.ActionMapper;
 import org.jboss.aesh.readline.completion.Completion;
 import org.jboss.aesh.readline.completion.CompletionHandler;
 import org.jboss.aesh.terminal.formatting.TerminalString;
 import org.jboss.aesh.tty.Connection;
-import org.jboss.aesh.tty.Size;
+import org.jboss.aesh.util.Config;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.ArrayList;
@@ -163,7 +164,7 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
             //some formatted completions might not be valid and shouldnt be displayed
             displayCompletion(
                     possibleCompletions.get(0).getFormattedCompletionCandidatesTerminalString().get(0),
-                    buffer,
+                    buffer, inputProcessor,
                     possibleCompletions.get(0).hasAppendSeparator(),
                     possibleCompletions.get(0).getSeparator());
         }
@@ -178,10 +179,10 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
             if(startsWith.length() > 0 ) {
                 if(startsWith.contains(" ") && !possibleCompletions.get(0).doIgnoreNonEscapedSpace())
                     displayCompletion(new TerminalString(Parser.switchSpacesToEscapedSpacesInWord(startsWith), true),
-                            buffer,
+                            buffer, inputProcessor,
                             false, possibleCompletions.get(0).getSeparator());
                 else
-                    displayCompletion(new TerminalString(startsWith, true), buffer,
+                    displayCompletion(new TerminalString(startsWith, true), buffer, inputProcessor,
                             false, possibleCompletions.get(0).getSeparator());
             }
                 // display all
@@ -194,7 +195,7 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
                 if(completions.size() > 100) {
                     //if(displayCompletion) {
                      if(askDisplayCompletion) {
-                        displayCompletions(completions, buffer);
+                        displayCompletions(completions, buffer, inputProcessor);
                         //displayCompletion = false;
                          askDisplayCompletion = false;
                     }
@@ -205,7 +206,7 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
                 }
                 // display all
                 else {
-                    displayCompletions(completions, buffer);
+                    displayCompletions(completions, buffer, inputProcessor);
                 }
             }
         }
@@ -230,8 +231,27 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
      * @param completion partial completion
      * @param appendSpace if its an actual complete
      */
-    private void displayCompletion(TerminalString completion, Buffer buffer,
+    private void displayCompletion(TerminalString completion, Buffer buffer, InputProcessor inputProcessor,
                                    boolean appendSpace, char separator) {
+
+        LOGGER.info("completion: "+completion.getCharacters()+" and buffer: "+buffer.asString());
+        if(completion.getCharacters().startsWith(buffer.asString())) {
+            ActionMapper.mapToAction("backward-kill-word").apply(inputProcessor);
+            //consoleBuffer.performAction(new PrevWordAction(buffer.getMultiCursor(), Action.DELETE, EditMode.Mode.EMACS));
+            //buffer.write(completion.getCharacters());
+            inputProcessor.getBuffer().writeString(completion.toString());
+
+            //only append space if its an actual complete, not a partial
+        }
+        else {
+            inputProcessor.getBuffer().writeString(completion.toString());
+            //buffer.insert(completion.toString());
+        }
+        if(appendSpace) { // && fullCompletion.startsWith(buffer.getLine())) {
+            inputProcessor.getBuffer().writeChar(separator);
+            //buffer.write(separator);
+        }
+        /*
         int width = connection.size().getWidth();
         if(completion.getCharacters().startsWith(buffer.asString())) {
             buffer.replace(connection.stdoutHandler(), completion.getCharacters(), width);
@@ -242,6 +262,7 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
         if(appendSpace) { // && fullCompletion.startsWith(buffer.getLine())) {
             buffer.insert(connection.stdoutHandler(), separator, width);
         }
+        */
     }
 
     /**
@@ -249,9 +270,18 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
      *
      * @param completions all completion items
      */
-    private void displayCompletions(List<TerminalString> completions, Buffer buffer) {
+    private void displayCompletions(List<TerminalString> completions, Buffer buffer,
+                                    InputProcessor inputProcessor) {
         Collections.sort(completions);
         //printNewline reset cursor pos, so we need to store it
+
+        inputProcessor.getBuffer().writeOut(Config.CR);
+        inputProcessor.getBuffer().writeOut(Parser.formatDisplayListTerminalString(completions,
+                inputProcessor.getBuffer().getSize().getHeight(), inputProcessor.getBuffer().getSize().getWidth()));
+
+        buffer.setIsPromptDisplayed(false);
+        inputProcessor.getBuffer().drawLine();
+        /*
         int oldCursorPos = buffer.getCursor();
         connection.write(Config.getLineSeparator());
         //buffer.setCursor(oldCursorPos);
@@ -265,6 +295,7 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
         //buffer we need to move it to the correct place
         //out.flush();
         //inputProcessor.getBuffer().syncCursor();
+        */
     }
 
     private AeshCompleteOperation findAliases(String buffer, int cursor) {
