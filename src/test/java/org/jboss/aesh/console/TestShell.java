@@ -21,7 +21,6 @@ package org.jboss.aesh.console;
 
 import java.io.PrintStream;
 
-import org.jboss.aesh.console.reader.AeshStandardStream;
 import org.jboss.aesh.terminal.CursorPosition;
 import org.jboss.aesh.terminal.api.Size;
 import org.jboss.aesh.terminal.api.Terminal;

@@ -22,7 +22,6 @@ package org.jboss.aesh.console.man;
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.completer.OptionCompleter;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
@@ -36,6 +35,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import org.jboss.aesh.console.command.CommandException;
+import org.jboss.aesh.util.Config;
 
 /**
  * A Man implementation for Aesh. ref: http://en.wikipedia.org/wiki/Man_page

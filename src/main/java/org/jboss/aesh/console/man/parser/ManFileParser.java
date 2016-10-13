@@ -19,8 +19,8 @@
  */
 package org.jboss.aesh.console.man.parser;
 
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.man.FileParser;
+import org.jboss.aesh.util.Config;
 
 import java.io.BufferedReader;
 import java.io.IOException;

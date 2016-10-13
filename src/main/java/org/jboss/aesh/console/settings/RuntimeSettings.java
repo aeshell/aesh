@@ -17,93 +17,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.aesh.console;
+package org.jboss.aesh.console.settings;
 
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.editing.EditMode;
-import org.jboss.aesh.util.LoggerUtil;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.logging.Logger;
 
 /**
- *
- * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
+ * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class Config {
-
-    private static final String lineSeparator = System.getProperty("line.separator");
-    private static final String pathSeparator = System.getProperty("file.separator");
-    private static final String tmpDir = System.getProperty("java.io.tmpdir");
-    private static final boolean posixCompatible = checkPosixCompability();
-    private static boolean cygwin = false;
-
-    private static final Logger LOGGER = LoggerUtil.getLogger(Config.class.getName());
-
-    public static boolean isOSPOSIXCompatible() {
-        return posixCompatible;
-    }
-
-    public static boolean isCygwin() {
-        return cygwin;
-    }
-
-    public static String getLineSeparator() {
-        return lineSeparator;
-    }
-
-    public static String getPathSeparator() {
-        return pathSeparator;
-    }
-
-    public static String getTmpDir() {
-        return tmpDir;
-    }
-
-    public static String getHomeDir() {
-        return System.getProperty("user.home");
-    }
-
-    public static String getUserDir() {
-        return System.getProperty("user.dir");
-    }
-
-    private static boolean checkPosixCompability() {
-        if(System.getProperty("os.name").startsWith("Windows")) {
-            //need to check if we're running under cygwin
-            try {
-                java.lang.Process process = Runtime.getRuntime().exec(new String[]{"uname"});
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                int c;
-                InputStream in = process.getInputStream();
-                while ((c = in.read()) != -1) {
-                    bout.write(c);
-                }
-                process.waitFor();
-
-                String output = new String(bout.toByteArray());
-                if(output.toLowerCase().contains("cygwin")) {
-                    cygwin = true;
-                    return true;
-                }
-            }
-            catch (IOException | InterruptedException e) {
-                //silently ignore that we're not running cygwin
-            }
-
-            return false;
-        }
-        else
-            return !System.getProperty("os.name").startsWith("OS/2");
-    }
-
-    protected static Settings readRuntimeProperties(Settings settings) {
+public class RuntimeSettings {
+    public static Settings readRuntimeProperties(Settings settings) {
        SettingsBuilder builder = new SettingsBuilder(settings);
 
             String editMode = System.getProperty("aesh.editmode");

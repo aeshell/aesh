@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.jboss.aesh.comparators.PosixFileNameComparator;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.io.filter.AllResourceFilter;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.io.filter.ResourceFilter;

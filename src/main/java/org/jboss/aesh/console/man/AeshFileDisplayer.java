@@ -19,7 +19,6 @@
  */
 package org.jboss.aesh.console.man;
 
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -27,6 +26,7 @@ import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.readline.action.KeyAction;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.ANSI;
+import org.jboss.aesh.util.Config;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.IOException;
