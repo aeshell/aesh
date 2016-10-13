@@ -71,17 +71,22 @@ public final class AeshCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public KeyAction getInput() throws InterruptedException {
+    public KeyAction input() throws InterruptedException {
         return shell.read();
     }
 
     @Override
-    public String getInputLine() throws InterruptedException {
+    public String inputLine() throws InterruptedException {
         return shell.readLine();
     }
 
     @Override
-    public int getPid() {
+    public String inputLine(Prompt prompt) throws InterruptedException {
+        return shell.readLine(prompt);
+    }
+
+    @Override
+    public int pid() {
         //TODO
         return 0;
     }

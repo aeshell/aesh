@@ -17,315 +17,150 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
+import org.jboss.aesh.cl.GroupCommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.OptionList;
-import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandException;
-import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
+import org.jboss.aesh.cl.activation.CommandActivator;
+import org.jboss.aesh.cl.activation.OptionActivator;
+import org.jboss.aesh.cl.builder.CommandBuilder;
+import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
+import org.jboss.aesh.cl.completer.OptionCompleter;
+import org.jboss.aesh.cl.parser.CommandLineParserException;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
+import org.jboss.aesh.cl.internal.ProcessedOption;
+import org.jboss.aesh.cl.renderer.OptionRenderer;
+import org.jboss.aesh.cl.validator.OptionValidator;
+import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.Shell;
+import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
+import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
+import org.jboss.aesh.console.command.CommandResult;
+import org.jboss.aesh.console.command.validator.ValidatorInvocation;
+import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
+import org.jboss.aesh.console.helper.ManProvider;
+import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.Prompt;
 import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.readline.action.KeyAction;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.terminal.formatting.CharacterType;
+import org.jboss.aesh.terminal.formatting.Color;
+import org.jboss.aesh.terminal.formatting.TerminalColor;
+import org.jboss.aesh.terminal.formatting.TerminalString;
+import org.jboss.aesh.terminal.formatting.TerminalTextStyle;
+import org.jboss.aesh.util.ANSI;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
+import org.jboss.aesh.console.command.CommandException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class Example {
 
-    private static boolean masking = false;
-    private static String password;
-    private static String username;
-    static boolean hasPassword;
+    public static void main(String[] args) throws CommandLineParserException {
 
-    public static void main(String[] args) throws IOException {
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(ExitCommand.class)
-                .command(LsCommand.class)
+        CommandBuilder fooCommand = new CommandBuilder()
+                .name("foo")
+                .description("fooing")
+                .addOption(new ProcessedOptionBuilder()
+                        .name("bar")
+                        .addDefaultValue("en 1 0")
+                        .addDefaultValue("to 2 0")
+                        .fieldName("bar")
+                        .type(String.class)
+                        .renderer(new BlueBoldRenderer())
+                        .create())
+                .addOption(new ProcessedOptionBuilder()
+                        .name("foo")
+                        .fieldName("foo")
+                        .type(String.class)
+                        .create())
+                .command(FooCommand.class);
+
+                /*
+        ProcessedCommand fooCommand = new ProcessedCommandBuilder()
+                .name("foo")
+                .description("fooing")
+                .addOption(new ProcessedOptionBuilder()
+                        .name("bar")
+                        .addDefaultValue("en 1 0")
+                        .addDefaultValue("to 2 0")
+                        .fieldName("bar")
+                        .type(String.class)
+                        .renderer(new BlueBoldRenderer())
+                        .create())
+                .addOption(new ProcessedOptionBuilder()
+                        .name("foo")
+                        .fieldName("foo")
+                        .type(String.class)
+                        .create())
                 .create();
-        ReadlineConsole console = new ReadlineConsole(new SettingsBuilder().commandRegistry(registry).create());
+                */
 
-        console.setPrompt(new Prompt("[aesh@rules]$ "));
+        SettingsBuilder builder = new SettingsBuilder()
+                .logging(true)
+                .enableMan(true)
+                .enableAlias(true)
+                .enableExport(true)
+                .setExecuteFileAtStart(new FileResource(
+                        Config.getHomeDir()+Config.getPathSeparator()+".aeshrc"))
+                .readInputrc(false);
+                /*
+                .interruptHook(new InterruptHook() {
+                    @Override
+                    public void handleInterrupt(Console console) {
+                        console.getShell().out().println("^C");
+                        console.clearBufferAndDisplayPrompt();
+                    }
+                });
+                */
+       CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(ExitCommand.class)
+                .command(fooCommand.create())
+                .command(HiddenCommand.class)
+                .command(LsCommand.class)
+                .command(TestConsoleCommand.class)
+                .command(PromptCommand.class)
+                .command(RunCommand.class)
+                .command(GroupCommand.class)
+                //example on how to create a command with a simple lambda
+                .command(new CommandBuilder().name("quit").command(commandInvocation -> {
+                    commandInvocation.stop();
+                    return CommandResult.SUCCESS;
+                }).create())
+                .create();
+
+        Settings settings = builder
+                .commandRegistry(registry)
+                .manProvider(new ManProviderExample())
+                .validatorInvocationProvider(new ExampleValidatorInvocationProvider())
+                .create();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt(new TerminalString("[aesh@rules]$ ",
+                        new TerminalColor(Color.GREEN, Color.DEFAULT, Color.Intensity.BRIGHT))));
 
         console.start();
-
-        /*
-        //Settings.getInstance().setAnsiConsole(false);
-        SettingsBuilder builder = new SettingsBuilder();
-        builder.readInputrc(false).logging(true);
-        builder.logfile(System.getProperty("user.dir") + System.getProperty("file.separator") + "aesh_example.log");
-        //Settings.getInstance().setAliasEnabled(true);
-        //Settings.getInstance().setAliasFile(new File(System.getProperty("user.dir")+Config.getPathSeparator()+"aesh_aliases.txt"));
-        //Settings.getInstance().setPersistAlias(true);
-        //Settings.getInstance().enableOperatorParser(false);
-        //Settings.getInstance().setHistoryDisabled(true);
-        //Settings.getInstance().setHistoryPersistent(false);
-        List<TerminalCharacter> chars = new ArrayList<TerminalCharacter>();
-        chars.add(new TerminalCharacter('[', new TerminalColor(Color.BLUE, Color.DEFAULT)));
-        chars.add(new TerminalCharacter('t', new TerminalColor(Color.RED, Color.DEFAULT),
-                CharacterType.ITALIC));
-        chars.add(new TerminalCharacter('e', new TerminalColor(Color.RED, Color.DEFAULT),
-                CharacterType.INVERT));
-        chars.add(new TerminalCharacter('s', new TerminalColor(Color.RED, Color.DEFAULT),
-                CharacterType.CROSSED_OUT));
-        chars.add(new TerminalCharacter('t', new TerminalColor(Color.RED ,Color.DEFAULT),
-                CharacterType.BOLD));
-        chars.add(new TerminalCharacter(']', new TerminalColor(Color.BLUE, Color.DEFAULT),
-                CharacterType.FAINT));
-        chars.add(new TerminalCharacter('$', new TerminalColor(Color.GREEN, Color.DEFAULT),
-                CharacterType.UNDERLINE));
-        chars.add(new TerminalCharacter(' ', new TerminalColor(Color.DEFAULT, Color.DEFAULT)));
-
-        final Prompt prompt = new Prompt(chars);
-        //String prompt = ANSI.redText()+"[test@foo]"+ANSI.reset()+"$ ";
-
-        //a simple interruptHook
-        builder.interruptHook((console, action) -> {
-            if(action.name().equals("interrupt")) {
-                console.getShell().out().println("^C");
-                console.clearBufferAndDisplayPrompt();
-            }
-            else if(action.name().equals("ignore-eof")) {
-                console.getShell().out().println("Use \"exit\" to leave the shell.");
-                console.clearBufferAndDisplayPrompt();
-            }
-            else {
-                console.getShell().out().println();
-                console.stop();
-            }
-        });
-
-        final Console exampleConsole = new Console(builder.create());
-
-        Completion completer = co -> {
-            // very simple completor
-            List<String> commands = new ArrayList<String>();
-            if(co.getBuffer().equals("fo") || co.getBuffer().equals("foo")) {
-                commands.add("foo");
-                commands.add("foobaa");
-                commands.add("foobar");
-                commands.add("foobaxxxxxx");
-                commands.add("foobbx");
-                commands.add("foobcx");
-                commands.add("foobdx");
-            }
-            if(co.getBuffer().equals("p")) {
-                commands.add("profile=foo");
-                co.setOffset(0);
-            }
-           if(co.getBuffer().equals("profile="))
-                commands.add("profile=foo");
-            if(co.getBuffer().equals("profile="))
-                commands.add("profile=bar");
-            if(co.getBuffer().equals("--")) {
-                commands.add("--help-");
-            }
-            if("--help-me".startsWith(co.getBuffer())) {
-                commands.add("--help-me");
-            }
-            if(co.getBuffer().equals("fooba")) {
-                commands.add("foobaa");
-                commands.add("foobar");
-                commands.add("foobaxxxxxx");
-            }
-            if(co.getBuffer().equals("foobar")) {
-                commands.add("foobar");
-            }
-            if(co.getBuffer().equals("bar")) {
-                commands.add("bar/");
-            }
-            if(co.getBuffer().equals("h")) {
-                commands.add("help.history");
-                commands.add("help");
-                co.setOffset(0);
-            }
-            if(co.getBuffer().equals("help")) {
-                commands.add("help.history");
-                commands.add("help");
-            }
-            if(co.getBuffer().equals("help.")) {
-                commands.add("help.history");
-            }
-            if(co.getBuffer().equals("deploy")) {
-                commands.add("deploy /home/blabla/foo/bar/alkdfe/en/to/tre");
-            }
-            if(co.getBuffer().equals("testing")) {
-                commands.add("testing YAY");
-            }
-            if(co.getBuffer().equals("val") ||
-                    co.getBuffer().equals("value ")) {
-                commands.add("value 1");
-                commands.add("value 2");
-                commands.add("value 10");
-                commands.add("value 20");
-            }
-            if(co.getBuffer().equals("valu"))
-                commands.add("value 10");
-
-            co.setCompletionCandidates(commands);
-        };
-
-        exampleConsole.addCompletion(completer);
-
-        final ConsoleCallback consoleCallback = new AeshConsoleCallback() {
-            @Override
-            public int execute(ConsoleOperation output) throws InterruptedException {
-                try {
-                //To change body of implemented methods use File | Settings | File Templates.
-                exampleConsole.getShell().out().println("======>\"" + output.getBuffer());
-                if(masking) {
-                    exampleConsole.getShell().out().print("got password: " + output.getBuffer() + ", stopping masking");
-                    masking = false;
-                    exampleConsole.setPrompt(prompt);
-                }
-                else if (output.getBuffer().equalsIgnoreCase("quit") || output.getBuffer().equalsIgnoreCase("exit") ||
-                        output.getBuffer().equalsIgnoreCase("reset")) {
-                    exampleConsole.stop();
-                }
-                else if(output.getBuffer().equalsIgnoreCase("password")) {
-                    masking = true;
-                    exampleConsole.setPrompt(new Prompt("password: ", (char) 0));
-                }
-                else if(output.getBuffer().startsWith("blah")) {
-                    exampleConsole.getShell().err().println("blah. command not found.");
-                    exampleConsole.getShell().out().print("BAH" + Config.getLineSeparator());
-                }
-                else if(output.getBuffer().equals("clear"))
-                    exampleConsole.clear();
-                else if(output.getBuffer().startsWith("man")) {
-                    //exampleConsole.attachProcess(test);
-                    //man = new ExampleConsoleCommand(exampleConsole, output);
-                    exampleConsole.getShell().out().println("trying to wait for input");
-                    exampleConsole.getShell().out().println("got: " + exampleConsole.inputLine());
-                    //exampleConsole.attachProcess(test);
-                }
-                else if(output.getBuffer().startsWith("login")) {
-                    exampleConsole.setConsoleCallback(passwordCallback);
-                    exampleConsole.setPrompt(new Prompt("Username: "));
-                }
-                 return 0;
-                }
-                catch (IOException ioe) {
-                    exampleConsole.getShell().out().println("Exception: "+ioe.getMessage());
-                    return -1;
-                }
-            }
-        };
-
-        exampleConsole.setConsoleCallback(consoleCallback);
-        exampleConsole.start();
-        exampleConsole.setPrompt(prompt);
-
-        passwordCallback = new AeshConsoleCallback() {
-            private boolean hasUsername = false;
-
-            @Override
-            public int execute(ConsoleOperation output) throws InterruptedException {
-                if(hasUsername) {
-                    password = output.getBuffer();
-                    hasPassword = true;
-                    exampleConsole.getShell().out().print("Username: " + username + ", password: " + password + Config.getLineSeparator());
-                    exampleConsole.setPrompt(prompt);
-                    exampleConsole.setConsoleCallback(consoleCallback);
-                }
-                else {
-                    username = output.getBuffer();
-                    exampleConsole.setPrompt( new Prompt("Password: ", (char) 0));
-                    hasUsername = true;
-                }
-                return 0;
-            }
-        };
-
-        //show how we can change the prompt async
-        try {
-            Thread.sleep(4000);
-            exampleConsole.setPrompt(new Prompt(
-                    new TerminalString("[FOO]» ", new TerminalColor( Color.RED, Color.DEFAULT), new TerminalTextStyle(CharacterType.BOLD))));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public static class ExampleConsoleCommand {
-
-        private final Console console;
-        private final ConsoleOperation operation;
-
-        public ExampleConsoleCommand(Console console, ConsoleOperation operation) {
-            this.console = console;
-            this.operation = operation;
-
-            init();
-        }
-
-        private void init() {
-            try {
-                if(!operation.getControlOperator().isRedirectionOut()) {
-                    console.getShell().out().print(ANSI.ALTERNATE_BUFFER);
-                    console.getShell().out().println("print alternate screen...");
-                    console.getShell().out().flush();
-                }
-
-                if(console.getShell().in().getStdIn().available() > 0) {
-                    java.util.Scanner s = new java.util.Scanner(console.getShell().in().getStdIn()).useDelimiter("\\A");
-                    String fileContent = s.hasNext() ? s.next() : "";
-                    console.getShell().out().println("FILECONTENT: ");
-                    console.getShell().out().print(fileContent);
-                    console.getShell().out().flush();
-                }
-                else
-                    console.getShell().out().println("console.in() == null");
-
-
-                readFromFile();
-
-                //detach after init if hasRedirectOut()
-                if(operation.getControlOperator().isRedirectionOut()) {
-                }
-
-                console.getShell().out().println("trying to wait on input");
-                int input = console.getShell().in().getStdIn().read();
-                console.getShell().out().println("we got: "+input);
-            }
-            catch(IOException ioe) {
-
-            }
-        }
-
-        private void readFromFile() throws IOException {
-            if(console.getShell().in().getStdIn().available() > 0) {
-                console.getShell().out().println("FROM STDOUT: ");
-            }
-            else
-                console.getShell().out().println("here should we present some text... press 'q' to quit");
-        }
-
-        public void processOperation(CommandOperation operation) throws IOException {
-            if(operation.input()[0] == 'q') {
-                console.getShell().out().print(ANSI.MAIN_BUFFER);
-            }
-            else if(operation.input()[0] == 'a') {
-                readFromFile();
-            }
-            else {
-
-            }
-        }
-
-*/
     }
 
     @CommandDefinition(name = "exit", description = "exit the program", aliases = {"quit"})
@@ -333,20 +168,147 @@ public class Example {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            commandInvocation.getShell().write("should we stop? ");
-            Key in = commandInvocation.getShell().read();
-            if(in.isPrintable())
-                commandInvocation.getShell().write(in.getKeyValues());
-            commandInvocation.getShell().write("\n");
-            if(in == Key.y) {
-                commandInvocation.getShell().write("we're stopping....\n");
-                commandInvocation.stop();
-            }
-            else {
-                commandInvocation.getShell().write("nope, not stopping...\n");
+            commandInvocation.stop();
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    private static class HideActivator implements CommandActivator {
+        public boolean isActivated() {
+            return false;
+        }
+    }
+
+    @CommandDefinition(name = "hidden", description = "hidden command", activator = HideActivator.class)
+    public static class HiddenCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            commandInvocation.print("Command exists but is not shown");
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "run", description = "")
+    public static class RunCommand implements Command {
+
+        @Arguments
+        private List<Resource> arguments;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+
+            commandInvocation.putProcessInBackground();
+
+            if (arguments != null && arguments.size() > 0 && arguments.get(0).isLeaf()) {
+                try {
+                    List<String> script = readScriptFile(arguments.get(0));
+
+                    for (String line : script) {
+                        commandInvocation.executeCommand(line + Config.getLineSeparator());
+                    }
+                } catch (IOException ex) {
+                    throw new CommandException(ex);
+                }
             }
 
             return CommandResult.SUCCESS;
+        }
+
+        private List<String> readScriptFile(Resource resource) throws IOException {
+            List<String> lines = new ArrayList<>();
+            BufferedReader br = new BufferedReader(new InputStreamReader(resource.read()));
+            String line = br.readLine();
+            while (line != null) {
+                if (line.trim().length() > 0 && !line.trim().startsWith("#"))
+                    lines.add(line);
+                line = br.readLine();
+            }
+
+            return lines;
+        }
+    }
+
+
+    //this command use a builder defined above to specify the meta data needed
+    public static class FooCommand implements Command {
+
+        private String bar;
+
+        private String foo;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+           if(bar == null)
+               commandInvocation.getShell().write("NO BAR!");
+            else {
+               commandInvocation.getShell().write("you set bar to: " + bar);
+               commandInvocation.getShell().write("lets work a bit...... ");
+               Thread.sleep(2000);
+           }
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "testing")
+    public static class TestConsoleCommand implements Command {
+
+        @Option(hasValue = false, required = true)
+        private boolean bar;
+
+        @Option(hasValue = false)
+        private boolean barbar;
+
+        @Option(overrideRequired = true, hasValue = false)
+        private boolean help;
+
+        @Option(hasValue = false)
+        private boolean helpPlease;
+
+        private Shell shell;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            this.shell = commandInvocation.getShell();
+            if(help) {
+                shell.write(commandInvocation.getHelpInfo("test"));
+            }
+            else {
+                try {
+                    //display();
+                    processOperation(commandInvocation);
+                } catch (IOException ex) {
+                    throw new CommandException(ex);
+                }
+            }
+
+            return CommandResult.SUCCESS;
+        }
+
+        private void display() {
+            shell.write(ANSI.ALTERNATE_BUFFER);
+        }
+
+        private void stop() {
+            shell.write(ANSI.MAIN_BUFFER);
+        }
+
+        public void processOperation(CommandInvocation invocation) throws IOException, InterruptedException {
+            //first ask for username, then password
+            String username = promptForUsername(invocation);
+            String password = promptForInput("password: ", '*', invocation);
+
+            shell.write("we got username: " + username + ", password: " + password);
+        }
+
+        private String promptForUsername(CommandInvocation invocation) throws InterruptedException {
+            invocation.print("username: ");
+            return invocation.inputLine();
+        }
+
+        private String promptForInput(String prompt, Character mask,
+                                      CommandInvocation invocation) throws IOException, InterruptedException {
+            return invocation.inputLine(new Prompt(prompt, mask));
         }
     }
 
@@ -356,16 +318,16 @@ public class Example {
         @Option(shortName = 'f', hasValue = false, description = "set foo to true/false")
         private Boolean foo;
 
-        @Option(hasValue = false, description = "set the bar") //, renderer = BlueBoldRenderer.class)
+        @Option(hasValue = false, description = "set the bar", renderer = BlueBoldRenderer.class)
         private boolean bar;
 
-        @Option(shortName = 'l', completer = AeshExample.LessCompleter.class, defaultValue = {"MORE"}, argument = "SIZE")
+        @Option(shortName = 'l', completer = LessCompleter.class, defaultValue = {"MORE"}, argument = "SIZE")
         private String less;
 
-        @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':') //,
-                //validator = DirectoryValidator.class,
-                //activator = BarActivator.class)
-                List<File> files;
+        @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':',
+                validator = DirectoryValidator.class,
+                activator = BarActivator.class)
+        List<File> files;
 
         @Option(hasValue = false, description = "display this help and exit")
         private boolean help;
@@ -397,4 +359,191 @@ public class Example {
         }
     }
 
+    @CommandDefinition(name = "prompt", description = "")
+    public static class PromptCommand implements Command {
+
+        @Option(hasValue = false)
+        private boolean bar;
+
+        private Shell shell;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            this.shell = commandInvocation.getShell();
+            if(bar) {
+                shell.write("are you sure you want bar? (y/n) ");
+                KeyAction operation = null;
+                try {
+                    operation = commandInvocation.input();
+                }
+                catch (InterruptedException e) {
+                    return CommandResult.FAILURE;
+                }
+                if(operation instanceof Key)
+                    processOperation((Key) operation);
+            }
+            return CommandResult.SUCCESS;
+        }
+
+        public void processOperation(Key operation) {
+            if(operation == Key.y) {
+                shell.write(Config.getLineSeparator()+"you wanted bar!");
+            }
+            else
+                shell.write(Config.getLineSeparator()+"you chickened out!!");
+        }
+
+    }
+
+    public static class LessCompleter implements OptionCompleter {
+
+        @Override
+        public void complete(CompleterInvocation completerData) {
+            List<String> completeList = new ArrayList<String>();
+            if(completerData.getGivenCompleteValue() == null || completerData.getGivenCompleteValue().length() == 0)
+                completeList.add("1");
+            else {
+                char lastChar = completerData.getGivenCompleteValue().charAt(completerData.getGivenCompleteValue().length()-1);
+                if(Character.isDigit(lastChar)) {
+                    int i = (int) lastChar;
+                    i++;
+                    completeList.add(completerData.getGivenCompleteValue()+i);
+                }
+            }
+        }
+    }
+
+    public static class DirectoryValidator implements OptionValidator<DirectoryValidatorInvocation> {
+        @Override
+        public void validate(DirectoryValidatorInvocation validatorInvocation) throws OptionValidatorException {
+            if(!validatorInvocation.getValue().isDirectory())
+                throw new OptionValidatorException("File validation failed, must be a directory.");
+        }
+    }
+
+    public static class DirectoryValidatorInvocation implements ValidatorInvocation<File, Command> {
+
+        private final File file;
+        private final Command command;
+        private final AeshContext aeshContext;
+
+        public DirectoryValidatorInvocation(File file, Command command, AeshContext aeshContext) {
+            this.file = file;
+            this.command = command;
+            this.aeshContext = aeshContext;
+        }
+
+        @Override
+        public File getValue() {
+            return file;
+        }
+
+        @Override
+        public Command getCommand() {
+            return command;
+        }
+
+        @Override
+        public AeshContext getAeshContext() {
+            return aeshContext;
+        }
+    }
+
+    public static class ExampleValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>> {
+
+        @Override
+        public ValidatorInvocation<File, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
+            if(validatorInvocation.getValue() instanceof File)
+                return new DirectoryValidatorInvocation( (File) validatorInvocation.getValue(),
+                        (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
+            else
+                return validatorInvocation;
+        }
+    }
+
+    public static class BarActivator implements OptionActivator {
+
+        @Override
+        public boolean isActivated(ProcessedCommand processedCommand) {
+            ProcessedOption bar = processedCommand.findLongOption("bar");
+            return bar != null && bar.getValue() != null;
+        }
+    }
+
+    public static class BlueBoldRenderer implements OptionRenderer {
+
+        private static final TerminalTextStyle style = new TerminalTextStyle(CharacterType.UNDERLINE);
+        private static final TerminalColor color = new TerminalColor(42, Color.DEFAULT);
+
+        @Override
+        public TerminalColor getColor() {
+            return color;
+        }
+
+        @Override
+        public TerminalTextStyle getTextType() {
+            return style;
+        }
+    }
+
+    public static class ManProviderExample implements ManProvider {
+
+        @Override
+        public InputStream getManualDocument(String commandName) {
+            //this is just a stupid example always returning a file located in /tmp
+            try {
+                return new FileInputStream("/tmp/asciitest2.txt");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    @GroupCommandDefinition(name = "group", description = "This is a group command",
+            groupCommands = {Child1.class, Child2.class})
+    public static class GroupCommand implements Command {
+
+        @Option(hasValue = false, description = "display this help option")
+        private boolean help;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            if(help)
+                commandInvocation.getShell().write(commandInvocation.getHelpInfo("group"));
+            else
+                commandInvocation.getShell().write("only executed group, it doesnt do much...");
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "child1", description = "")
+    public static class Child1 implements Command {
+
+        @Option(description = "set foo")
+        private String foo;
+        @Option(hasValue = false, description = "display this help option")
+        private boolean help;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            if(help)
+                commandInvocation.getShell().write(commandInvocation.getHelpInfo("group child1"));
+            else
+                commandInvocation.getShell().write("foo is set to: "+foo);
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "child2", description = "")
+    public static class Child2 implements Command {
+        @Option
+        private boolean bar;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            commandInvocation.getShell().write("bar is set to: "+bar);
+            return CommandResult.SUCCESS;
+        }
+    }
 }

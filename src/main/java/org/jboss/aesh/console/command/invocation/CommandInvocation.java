@@ -68,7 +68,7 @@ public interface CommandInvocation {
      * @return user input
      * @throws InterruptedException
      */
-    KeyAction getInput() throws InterruptedException;
+    KeyAction input() throws InterruptedException;
 
     /**
      * A blocking call that will return user input from the terminal
@@ -77,14 +77,23 @@ public interface CommandInvocation {
      * @return user input line
      * @throws InterruptedException
      */
-    String getInputLine() throws InterruptedException;
+    String inputLine() throws InterruptedException;
+
+    /**
+     * A blocking call that will return user input from the terminal
+     * after the user has pressed enter.
+     *
+     * @return user input line
+     * @throws InterruptedException
+     */
+    String inputLine(Prompt prompt) throws InterruptedException;
 
     /**
      * The process id.
      *
      * @return pid
      */
-    int getPid();
+    int pid();
 
     /**
      * Put the current process in the background
