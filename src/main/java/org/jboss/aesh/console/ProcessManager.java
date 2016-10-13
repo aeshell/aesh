@@ -54,8 +54,8 @@ public class ProcessManager {
         executorService = Executors.newCachedThreadPool();
     }
 
-    public void startNewProcess(ConsoleCallback callback, ConsoleOperation consoleOperation) {
-        AeshProcess process = new AeshProcess(pidCounter++, this, callback, consoleOperation);
+    public void startNewProcess(ConsoleOperation consoleOperation) {
+        AeshProcess process = new AeshProcess(pidCounter++, this, consoleOperation);
         if (doLogging)
             LOGGER.info("starting a new process: " + process + ", consoleOperation: " + consoleOperation);
 
