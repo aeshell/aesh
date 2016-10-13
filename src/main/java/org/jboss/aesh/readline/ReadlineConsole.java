@@ -20,9 +20,12 @@
 package org.jboss.aesh.readline;
 
 import org.jboss.aesh.AeshCommandResolver;
+import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
+import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.CommandResolver;
@@ -37,8 +40,10 @@ import org.jboss.aesh.console.command.invocation.AeshCommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
+import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.readline.action.ActionDecoder;
+import org.jboss.aesh.readline.completion.CompleteOperation;
 import org.jboss.aesh.readline.completion.Completion;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.readline.editing.EditModeBuilder;
@@ -83,6 +88,8 @@ public class ReadlineConsole implements Console {
         commandResolver = new AeshCommandResolver(settings.commandRegistry());
 
         invocationProviders = new AeshInvocationProviders(settings);
+        completions = new ArrayList<>();
+        addCompletion(new AeshCompletion());
     }
 
     public void start() {
@@ -382,6 +389,51 @@ public class ReadlineConsole implements Console {
         public void clear() {
             connection.getTerminal().puts(InfoCmp.Capability.clear_screen);
         }
+    }
+
+    class AeshCompletion implements Completion {
+
+        @Override
+        public void complete(CompleteOperation completeOperation) {
+            completeCommandName(completeOperation);
+            if (completeOperation.getCompletionCandidates().size() < 1) {
+
+                try (CommandContainer commandContainer = commandResolver.resolveCommand( completeOperation.getBuffer())) {
+
+                    CommandLineCompletionParser completionParser = commandContainer
+                            .getParser().getCompletionParser();
+
+                    ParsedCompleteObject completeObject = completionParser
+                            .findCompleteObject(completeOperation.getBuffer(),
+                                    completeOperation.getCursor());
+                    completeObject.getCompletionParser().injectValuesAndComplete(completeObject,
+                            new AeshCompleteOperation(context, completeOperation.getBuffer(), completeOperation.getCursor()),
+                            invocationProviders);
+                }
+                catch (CommandLineParserException e) {
+                    LOGGER.warning(e.getMessage());
+                }
+                catch (CommandNotFoundException ignored) {
+                }
+                catch (Exception ex) {
+                    LOGGER.log(Level.SEVERE,
+                            "Runtime exception when completing: "
+                                    + completeOperation, ex);
+                }
+            }
+        }
+
+        private void completeCommandName(CompleteOperation co) {
+            commandResolver.getRegistry().completeCommandName(co);
+        /* TODO
+        if(internalRegistry != null) {
+            for (String internalCommand : internalRegistry.getAllCommandNames())
+                if (internalCommand.startsWith(co.getBuffer()))
+                    co.addCompletionCandidate(internalCommand);
+        }
+        */
+        }
+
     }
 
 }
