@@ -207,7 +207,7 @@ public class Example {
                     //exampleConsole.attachProcess(test);
                     //man = new ExampleConsoleCommand(exampleConsole, output);
                     exampleConsole.getShell().out().println("trying to wait for input");
-                    exampleConsole.getShell().out().println("got: " + exampleConsole.getInputLine());
+                    exampleConsole.getShell().out().println("got: " + exampleConsole.inputLine());
                     //exampleConsole.attachProcess(test);
                 }
                 else if(output.getBuffer().startsWith("login")) {
@@ -314,10 +314,10 @@ public class Example {
         }
 
         public void processOperation(CommandOperation operation) throws IOException {
-            if(operation.getInput()[0] == 'q') {
+            if(operation.input()[0] == 'q') {
                 console.getShell().out().print(ANSI.MAIN_BUFFER);
             }
-            else if(operation.getInput()[0] == 'a') {
+            else if(operation.input()[0] == 'a') {
                 readFromFile();
             }
             else {

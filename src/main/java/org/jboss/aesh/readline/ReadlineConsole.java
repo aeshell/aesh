@@ -26,6 +26,7 @@ import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.AeshCompleteOperation;
+import org.jboss.aesh.console.AeshCompletionHandler;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.CommandResolver;
@@ -38,15 +39,15 @@ import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainerResult;
 import org.jboss.aesh.console.command.invocation.AeshCommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
-import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
+import org.jboss.aesh.console.settings.DefaultAeshContext;
 import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.readline.action.ActionDecoder;
 import org.jboss.aesh.readline.completion.CompleteOperation;
 import org.jboss.aesh.readline.completion.Completion;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.readline.editing.EditModeBuilder;
+import org.jboss.aesh.readline.history.InMemoryHistory;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.terminal.utils.InfoCmp;
 import org.jboss.aesh.tty.Connection;
@@ -61,7 +62,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 /**
  * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -76,6 +76,7 @@ public class ReadlineConsole implements Console {
     private AeshContext context;
     private Readline readline;
     private InvocationProviders invocationProviders;
+    private AeshCompletionHandler completionHandler;
 
     private final String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
@@ -88,8 +89,9 @@ public class ReadlineConsole implements Console {
         commandResolver = new AeshCommandResolver(settings.commandRegistry());
 
         invocationProviders = new AeshInvocationProviders(settings);
-        completions = new ArrayList<>();
         addCompletion(new AeshCompletion());
+        context = new DefaultAeshContext();
+
     }
 
     public void start() {
@@ -108,7 +110,9 @@ public class ReadlineConsole implements Console {
     }
 
     private void init() {
-        readline = new Readline(EditModeBuilder.builder(EditMode.Mode.VI).create());
+        completionHandler = new AeshCompletionHandler(context, connection, true);
+        readline = new Readline(EditModeBuilder.builder(EditMode.Mode.VI).create(), new InMemoryHistory(50),
+                completionHandler);
         running = true;
         read(connection, readline);
 
@@ -391,10 +395,10 @@ public class ReadlineConsole implements Console {
         }
     }
 
-    class AeshCompletion implements Completion {
+    class AeshCompletion implements Completion<AeshCompleteOperation> {
 
         @Override
-        public void complete(CompleteOperation completeOperation) {
+        public void complete(AeshCompleteOperation completeOperation) {
             completeCommandName(completeOperation);
             if (completeOperation.getCompletionCandidates().size() < 1) {
 
@@ -407,8 +411,7 @@ public class ReadlineConsole implements Console {
                             .findCompleteObject(completeOperation.getBuffer(),
                                     completeOperation.getCursor());
                     completeObject.getCompletionParser().injectValuesAndComplete(completeObject,
-                            new AeshCompleteOperation(context, completeOperation.getBuffer(), completeOperation.getCursor()),
-                            invocationProviders);
+                            completeOperation, invocationProviders);
                 }
                 catch (CommandLineParserException e) {
                     LOGGER.warning(e.getMessage());
