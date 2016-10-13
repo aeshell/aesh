@@ -27,11 +27,11 @@ import org.jboss.aesh.console.operator.RedirectionCompletion;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.readline.Buffer;
 import org.jboss.aesh.readline.InputProcessor;
-import org.jboss.aesh.readline.completion.CompleteOperation;
 import org.jboss.aesh.readline.completion.Completion;
 import org.jboss.aesh.readline.completion.CompletionHandler;
 import org.jboss.aesh.terminal.formatting.TerminalString;
 import org.jboss.aesh.tty.Connection;
+import org.jboss.aesh.tty.Size;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ import java.util.logging.Logger;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCompletionHandler implements CompletionHandler {
+public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOperation> {
 
     private final Connection connection;
     private volatile boolean enabled = true;
@@ -53,23 +53,22 @@ public class AeshCompletionHandler implements CompletionHandler {
     private int displayCompletionSize = 100;
     private final List<Completion> completionList;
     private AliasManager aliasManager;
-    private final Shell shell;
     private final boolean doLogging;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshCompletionHandler.class.getName());
 
     public AeshCompletionHandler(AeshContext aeshContext, Connection connection,
-                                 Shell shell, boolean doLogging) {
+                                 boolean doLogging) {
         completionList = new ArrayList<>();
         this.aeshContext = aeshContext;
-        this.shell = shell;
         this.connection = connection;
         this.doLogging = doLogging;
     }
 
     @Override
     public void addCompletion(Completion completion) {
-        completionList.add(completion);
+        if(completion != null)
+            completionList.add(completion);
     }
 
     @Override
@@ -122,7 +121,7 @@ public class AeshCompletionHandler implements CompletionHandler {
         if(completionList.size() < 1)
             return;
 
-        List<CompleteOperation> possibleCompletions = new ArrayList<>();
+        List<AeshCompleteOperation> possibleCompletions = new ArrayList<>();
         int pipeLinePos = 0;
         boolean redirect = false;
         String line = buffer.asString();
@@ -138,7 +137,7 @@ public class AeshCompletionHandler implements CompletionHandler {
             if(redirect && !completionList.get(i).getClass().equals(RedirectionCompletion.class)) {
                 break;
             }
-            CompleteOperation co;
+            AeshCompleteOperation co;
             if(pipeLinePos > 0) {
                 co = findAliases(line.substring(pipeLinePos, buffer.getCursor()), buffer.getCursor() - pipeLinePos);
             }
@@ -213,13 +212,14 @@ public class AeshCompletionHandler implements CompletionHandler {
     }
 
     @Override
-    public void setAliasHandler(Function<Buffer, CompleteOperation> aliasHandler) {
+    public void setAliasHandler(Function<Buffer, AeshCompleteOperation> aliasHandler) {
 
     }
 
     @Override
     public void addCompletions(List<Completion> completions) {
-        completionList.addAll(completions);
+        if(completions != null && completions.size() > 0)
+            completionList.addAll(completions);
     }
 
     /**
@@ -232,14 +232,15 @@ public class AeshCompletionHandler implements CompletionHandler {
      */
     private void displayCompletion(TerminalString completion, Buffer buffer,
                                    boolean appendSpace, char separator) {
+        int width = connection.size().getWidth();
         if(completion.getCharacters().startsWith(buffer.asString())) {
-            buffer.replace(connection.stdoutHandler(), completion.getCharacters(), shell.size().getWidth());
+            buffer.replace(connection.stdoutHandler(), completion.getCharacters(), width);
         }
         else {
-            buffer.insert(connection.stdoutHandler(), completion.getCharacters(), shell.size().getWidth());
+            buffer.insert(connection.stdoutHandler(), completion.getCharacters(), width);
         }
         if(appendSpace) { // && fullCompletion.startsWith(buffer.getLine())) {
-            buffer.insert(connection.stdoutHandler(), separator, shell.size().getWidth());
+            buffer.insert(connection.stdoutHandler(), separator, width);
         }
     }
 
@@ -254,8 +255,9 @@ public class AeshCompletionHandler implements CompletionHandler {
         int oldCursorPos = buffer.getCursor();
         connection.write(Config.getLineSeparator());
         //buffer.setCursor(oldCursorPos);
+        Size size = connection.size();
         connection.write(Parser.formatDisplayListTerminalString(completions,
-                shell.size().getHeight(), shell.size().getWidth()));
+                size.getHeight(), size.getWidth()));
         //inputProcessor.getBuffer().displayPrompt();
         buffer.replace(connection.stdoutHandler(), buffer.asString(), connection.size().getWidth());
         //out.print(buffer.getLine());
@@ -265,7 +267,7 @@ public class AeshCompletionHandler implements CompletionHandler {
         //inputProcessor.getBuffer().syncCursor();
     }
 
-    private CompleteOperation findAliases(String buffer, int cursor) {
+    private AeshCompleteOperation findAliases(String buffer, int cursor) {
         if(aliasManager != null) {
             String command = Parser.findFirstWord(buffer);
             Alias alias = aliasManager.getAlias(command);
