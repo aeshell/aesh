@@ -28,25 +28,21 @@ import org.jboss.aesh.readline.action.KeyAction;
 public class AeshProcess implements Runnable, Process {
 
     private ProcessManager manager;
-    private final ConsoleCallback consoleCallback;
     private final ConsoleOperation operation;
     private CommandResult exitResult;
     private Thread myThread;
     private Status status;
 
-    public AeshProcess(int pid, ProcessManager manager,
-        ConsoleCallback consoleCallback,
-        ConsoleOperation consoleOperation) {
+    public AeshProcess(int pid, ProcessManager manager, ConsoleOperation consoleOperation) {
         this.manager = manager;
-        this.consoleCallback = consoleCallback;
         this.operation = consoleOperation;
-        this.consoleCallback.setProcess(this);
         this.operation.setPid(pid);
         status = Status.FOREGROUND;
     }
 
     @Override
     public void run() {
+        /*
         try {
             Thread.currentThread().setName("AeshProcess: " + operation.getPid());
             myThread = Thread.currentThread();
@@ -59,6 +55,7 @@ public class AeshProcess implements Runnable, Process {
         finally {
             manager.processHaveFinished(this);
         }
+        */
     }
 
     @Override
@@ -133,7 +130,6 @@ public class AeshProcess implements Runnable, Process {
         return "AeshProcess{" +
             "pid=" + operation.getPid() +
             ", manager=" + manager +
-            ", consoleCallback=" + consoleCallback +
             ", operation=" + operation +
             '}';
     }
