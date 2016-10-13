@@ -25,7 +25,6 @@ import org.jboss.aesh.cl.populator.CommandPopulator;
 import org.jboss.aesh.cl.result.NullResultHandler;
 import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidator;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
 
@@ -35,6 +34,7 @@ import java.util.List;
 import org.jboss.aesh.cl.activation.CommandActivator;
 import org.jboss.aesh.cl.activation.NullCommandActivator;
 import org.jboss.aesh.terminal.formatting.TerminalString;
+import org.jboss.aesh.util.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

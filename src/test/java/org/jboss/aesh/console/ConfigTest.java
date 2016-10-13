@@ -19,6 +19,7 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.console.settings.RuntimeSettings;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.editing.EditMode;
@@ -45,7 +46,7 @@ public class ConfigTest {
         System.setProperty("aesh.execute", "foo -f --bar");
 
         SettingsBuilder builder = new SettingsBuilder();
-        Settings settings = Config.readRuntimeProperties(builder.create());
+        Settings settings = RuntimeSettings.readRuntimeProperties(builder.create());
 
         assertEquals(settings.mode(), EditMode.Mode.VI);
 
@@ -67,7 +68,7 @@ public class ConfigTest {
         System.setProperty("aesh.execute", "");
 
         builder = new SettingsBuilder();
-        settings = Config.readRuntimeProperties(builder.create());
+        settings = RuntimeSettings.readRuntimeProperties(builder.create());
 
         assertEquals(settings.executeAtStart(), null);
     }

@@ -22,11 +22,11 @@ package org.jboss.aesh.cl.parser;
 import org.jboss.aesh.cl.CommandLine;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.populator.CommandPopulator;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.parser.AeshLine;
 import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.parser.ParserStatus;
+import org.jboss.aesh.util.Config;
 
 import java.util.ArrayList;
 import java.util.List;

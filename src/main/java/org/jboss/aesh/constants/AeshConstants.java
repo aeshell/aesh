@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.constants;
 
-import org.jboss.aesh.console.Config;
+import org.jboss.aesh.util.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

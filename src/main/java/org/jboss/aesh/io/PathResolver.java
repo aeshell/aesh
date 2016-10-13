@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.io;
 
-import org.jboss.aesh.console.Config;
+import org.jboss.aesh.util.Config;
 
 import java.io.File;
 import java.io.IOException;
