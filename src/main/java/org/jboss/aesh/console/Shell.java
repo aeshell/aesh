@@ -69,9 +69,9 @@ public interface Shell {
      */
     Key read(Prompt prompt) throws InterruptedException;
 
-    void enableAlternateBuffer();
+    boolean enableAlternateBuffer();
 
-    void enableMainBuffer();
+    boolean enableMainBuffer();
 
     Size size();
 

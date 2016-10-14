@@ -48,7 +48,7 @@ import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.readline.editing.EditModeBuilder;
 import org.jboss.aesh.readline.history.InMemoryHistory;
 import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.utils.InfoCmp;
+import org.jboss.aesh.tty.Capability;
 import org.jboss.aesh.tty.Connection;
 import org.jboss.aesh.tty.Signal;
 import org.jboss.aesh.tty.Size;
@@ -71,7 +71,7 @@ public class ReadlineConsole implements Console {
     private Settings settings;
     private Prompt prompt;
     private List<Completion> completions;
-    private TerminalConnection connection;
+    private Connection connection;
     private CommandResolver commandResolver;
     private AeshContext context;
     private Readline readline;
@@ -91,11 +91,14 @@ public class ReadlineConsole implements Console {
         invocationProviders = new AeshInvocationProviders(settings);
         addCompletion(new AeshCompletion());
         context = new DefaultAeshContext();
+        if(settings.connection() != null)
+            this.connection = settings.connection();
 
     }
 
     public void start() {
-        connection = new TerminalConnection();
+        if(connection == null)
+            connection = new TerminalConnection();
         init();
     }
 
@@ -116,7 +119,7 @@ public class ReadlineConsole implements Console {
         running = true;
         read(connection, readline);
 
-        connection.startBlockingReader();
+        connection.open();
     }
 
     /**
@@ -134,7 +137,7 @@ public class ReadlineConsole implements Console {
         }
 
         if(connection.suspended())
-            connection.startReading();
+            connection.awake();
 
         LOGGER.info("calling readline.readline");
         readline.readline(conn, prompt, line -> {
@@ -158,7 +161,7 @@ public class ReadlineConsole implements Console {
     private void processLine(String line, Connection conn) {
         try (CommandContainer container = commandResolver.resolveCommand(line)) {
             try {
-                connection.suspendReading();
+                connection.suspend();
                 new Process(conn, this, readline, container, line).start();
             }
             catch (IllegalArgumentException e) {
@@ -288,11 +291,10 @@ public class ReadlineConsole implements Console {
 
     class ShellImpl implements Shell {
 
-        private TerminalConnection connection;
+        private Connection connection;
         private Readline readline;
-        private boolean mainBuffer = true;
 
-        public ShellImpl(TerminalConnection connection, Readline readline) {
+        public ShellImpl(Connection connection, Readline readline) {
             this.connection = connection;
             this.readline = readline;
         }
@@ -324,9 +326,9 @@ public class ReadlineConsole implements Console {
             readline.readline(connection, prompt, event -> {
                 out[0] = event;
                 latch.countDown();
-                connection.suspendReading();
+                connection.suspend();
             });
-            connection.startReading();
+            connection.awake();
             try {
                 // Wait until interrupted
                 latch.await();
@@ -347,10 +349,10 @@ public class ReadlineConsole implements Console {
                 if(decoder.hasNext()) {
                     key[0] = Key.findStartKey( decoder.next().buffer().array());
                     latch.countDown();
-                    connection.suspendReading();
+                    connection.suspend();
                 }
             });
-            connection.startReading();
+            connection.awake();
             try {
                 // Wait until interrupted
                 latch.await();
@@ -369,19 +371,13 @@ public class ReadlineConsole implements Console {
         }
 
         @Override
-        public void enableAlternateBuffer() {
-            if(mainBuffer && connection.getTerminal().puts(InfoCmp.Capability.enter_ca_mode)) {
-                connection.getTerminal().flush();
-                mainBuffer = false;
-            }
+        public boolean enableAlternateBuffer() {
+            return connection.put(Capability.enter_ca_mode);
         }
 
         @Override
-        public void enableMainBuffer() {
-            if (!mainBuffer && connection.getTerminal().puts(InfoCmp.Capability.exit_ca_mode)) {
-                connection.getTerminal().flush();
-                mainBuffer = true;
-            }
+        public boolean enableMainBuffer() {
+            return connection.put(Capability.exit_ca_mode);
         }
 
         @Override
@@ -391,7 +387,7 @@ public class ReadlineConsole implements Console {
 
         @Override
         public void clear() {
-            connection.getTerminal().puts(InfoCmp.Capability.clear_screen);
+            connection.put(Capability.clear_screen);
         }
     }
 

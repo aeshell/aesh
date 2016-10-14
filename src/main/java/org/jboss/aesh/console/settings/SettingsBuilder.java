@@ -37,6 +37,7 @@ import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.editing.EditMode;
+import org.jboss.aesh.tty.Connection;
 import org.jboss.aesh.util.LoggerUtil;
 
 import java.io.File;
@@ -250,6 +251,11 @@ public class SettingsBuilder {
 
     public SettingsBuilder manProvider(ManProvider manProvider) {
         settings.setManProvider(manProvider);
+        return this;
+    }
+
+    public SettingsBuilder connection(Connection connection) {
+        settings.setConnection(connection);
         return this;
     }
 

@@ -22,7 +22,7 @@ package org.jboss.aesh.graphics;
 import org.jboss.aesh.terminal.Terminal;
 import org.jboss.aesh.terminal.formatting.TerminalColor;
 import org.jboss.aesh.terminal.formatting.TerminalTextStyle;
-import org.jboss.aesh.terminal.utils.InfoCmp.Capability;
+import org.jboss.aesh.tty.Capability;
 import org.jboss.aesh.tty.Size;
 import org.jboss.aesh.util.ANSI;
 
