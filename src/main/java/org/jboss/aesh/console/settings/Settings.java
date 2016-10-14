@@ -35,6 +35,7 @@ import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.editing.EditMode;
+import org.jboss.aesh.tty.Connection;
 
 /**
  * Object thats define all tunable settings used by Console
@@ -260,6 +261,8 @@ public interface Settings extends Cloneable {
     ManProvider manProvider();
 
     CommandActivatorProvider commandActivatorProvider();
+
+    Connection connection();
 
     Object clone();
 

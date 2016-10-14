@@ -33,6 +33,7 @@ import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.readline.editing.EditModeBuilder;
+import org.jboss.aesh.tty.Connection;
 import org.jboss.aesh.util.Config;
 
 import java.io.File;
@@ -87,6 +88,7 @@ public class SettingsImpl implements Settings {
     private ConverterInvocationProvider converterInvocationProvider;
     private ValidatorInvocationProvider validatorInvocationProvider;
     private ManProvider manProvider;
+    private Connection connection;
 
     protected SettingsImpl() {
     }
@@ -130,6 +132,7 @@ public class SettingsImpl implements Settings {
         setConverterInvocationProvider(baseSettings.converterInvocationProvider());
         setValidatorInvocationProvider(baseSettings.validatorInvocationProvider());
         setManProvider(baseSettings.manProvider());
+        setConnection(baseSettings.connection());
     }
 
     public void resetToDefaults() {
@@ -658,6 +661,11 @@ public class SettingsImpl implements Settings {
         return commandActivatorProvider;
     }
 
+    @Override
+    public Connection connection() {
+        return connection;
+    }
+
     public void setCommandActivatorProvider(CommandActivatorProvider commandActivatorProvider) {
         this.commandActivatorProvider = commandActivatorProvider;
     }
@@ -700,5 +708,9 @@ public class SettingsImpl implements Settings {
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void setConnection(Connection connection) {
+        this.connection = connection;
     }
 }
