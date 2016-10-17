@@ -45,6 +45,7 @@ public class MapProcessedCommandBuilder {
     };
     private static class MapProcessedCommand extends ProcessedCommand<MapCommand> {
         private final ProcessedOptionProvider provider;
+        private List<ProcessedOption> previousOptions;
         public MapProcessedCommand(String name,
                                    List<String> aliases,
                                    MapCommand command,
@@ -68,8 +69,25 @@ public class MapProcessedCommandBuilder {
             // provider is not already set.
             if (provider != null) {
                 allOptions.addAll(provider.getOptions());
+                transferValues(allOptions);
             }
+
             return allOptions;
+        }
+
+        private void transferValues(List<ProcessedOption> options) {
+            if (previousOptions != null) {
+                for (ProcessedOption popt : previousOptions) {
+                    if (popt.getValue() != null) {
+                        for (ProcessedOption opt : options) {
+                            if (opt.getName().equals(popt.getName())) {
+                                opt.addValue(popt.getValue());
+                            }
+                        }
+                    }
+                }
+            }
+            previousOptions = options;
         }
     }
 
