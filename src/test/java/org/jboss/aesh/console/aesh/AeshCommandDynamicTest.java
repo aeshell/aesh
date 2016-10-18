@@ -23,23 +23,20 @@ import org.jboss.aesh.cl.builder.CommandBuilder;
 import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.parser.OptionParserException;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Prompt;
+import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
+import org.jboss.aesh.console.settings.DefaultAeshContext;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import java.util.HashMap;
 import org.jboss.aesh.console.command.CommandException;
 
@@ -52,38 +49,32 @@ public class AeshCommandDynamicTest {
 
     @Test
     public void testDynamic() throws Exception {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .create();
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(createGroupCommand().create())
                 .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
+        Settings settings = new SettingsBuilder()
+                .connection(connection)
                 .commandRegistry(registry)
-                .prompt(new Prompt(""));
+                .logging(true)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
-        CompleteOperation co = new CompleteOperation(aeshConsole.getAeshContext(), "gr", 2);
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        AeshCompleteOperation co = new AeshCompleteOperation(new DefaultAeshContext(), "gr", 2);
         registry.completeCommandName(co);
         assertEquals("group", co.getCompletionCandidates().get(0).toString());
-        aeshConsole.start();
+        console.start();
 
-        outputStream.write("group child1 --foo BAR".getBytes());
-        outputStream.write(Config.getLineSeparator().getBytes());
-        outputStream.flush();
+        connection.read("group child1 --foo BAR");
+        connection.read(Config.getLineSeparator());
+        //outputStream.flush();
 
         Thread.sleep(80);
 
-        aeshConsole.stop();
+        console.stop();
     }
 
     private CommandBuilder createGroupCommand() throws OptionParserException {
@@ -143,7 +134,7 @@ public class AeshCommandDynamicTest {
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
 
             StringBuilder builder = new StringBuilder();
-            commandInvocation.getShell().out().println("creating data packet we're sending over the wire:");
+            commandInvocation.println("creating data packet we're sending over the wire:");
             for(String key : fields.keySet()) {
                 if(fields.get(key) != null) {
                     if(builder.length() > 0)
@@ -152,7 +143,7 @@ public class AeshCommandDynamicTest {
                 }
             }
 
-            commandInvocation.getShell().out().println("Sending: " + builder.toString());
+            commandInvocation.println("Sending: " + builder.toString());
             return CommandResult.SUCCESS;
         }
 

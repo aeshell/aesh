@@ -19,11 +19,12 @@
  */
 package org.jboss.aesh.console;
 
+import org.jboss.aesh.readline.Prompt;
+import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.tty.Size;
+
 import java.io.PrintStream;
 
-import org.jboss.aesh.terminal.CursorPosition;
-import org.jboss.aesh.terminal.api.Size;
-import org.jboss.aesh.terminal.api.Terminal;
 
 public class TestShell implements Shell {
 
@@ -36,61 +37,56 @@ public class TestShell implements Shell {
     }
 
     @Override
-    public Terminal getTerminal() {
-        return null;
-    }
-
-    @Override
     public void clear() {
     }
 
     @Override
-    public PrintStream out() {
-        return out;
-    }
-
-    @Override
-    public PrintStream err() {
-        return err;
-    }
-
-    @Override
-    public AeshStandardStream in() {
-        return null;
-    }
-
-    @Override
-    public Size getSize() {
+    public Size size() {
         return new Size(80, 20);
     }
 
     @Override
-    public CursorPosition getCursor() {
-        return new CursorPosition(1, 1);
-    }
-
-    @Override
-    public void setCursor(CursorPosition position) {
+    public void write(String out) {
 
     }
 
     @Override
-    public void moveCursor(int rows, int columns) {
+    public void writeln(String out) {
 
     }
 
     @Override
-    public boolean isMainBuffer() {
+    public void write(int[] out) {
+
+    }
+
+    @Override
+    public String readLine() throws InterruptedException {
+        return null;
+    }
+
+    @Override
+    public String readLine(Prompt prompt) throws InterruptedException {
+        return null;
+    }
+
+    @Override
+    public Key read() throws InterruptedException {
+        return null;
+    }
+
+    @Override
+    public Key read(Prompt prompt) throws InterruptedException {
+        return null;
+    }
+
+    @Override
+    public boolean enableAlternateBuffer() {
         return false;
     }
 
     @Override
-    public void enableAlternateBuffer() {
-
-    }
-
-    @Override
-    public void enableMainBuffer() {
-
+    public boolean enableMainBuffer() {
+        return false;
     }
 }

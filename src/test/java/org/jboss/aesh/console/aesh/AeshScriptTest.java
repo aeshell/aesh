@@ -24,10 +24,6 @@ import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.result.ResultHandler;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandException;
@@ -38,15 +34,14 @@ import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -75,18 +70,9 @@ public class AeshScriptTest {
     @Test
     public void scriptPoc() throws IOException, CommandLineParserException, InterruptedException {
 
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
 
-          Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .create();
-
-
-        CommandResultHandler resultHandler = new CommandResultHandler();
+       CommandResultHandler resultHandler = new CommandResultHandler();
         ProcessedCommand fooCommand = new ProcessedCommandBuilder()
                 .name("foo")
                 .resultHandler(resultHandler)
@@ -100,19 +86,20 @@ public class AeshScriptTest {
                 .command(ExitCommand.class)
                 .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
-                .commandRegistry(registry)
-                .commandNotFoundHandler(resultHandler)
-                .prompt(new Prompt(""));
+          Settings settings = new SettingsBuilder()
+                  .logging(true)
+                  .commandRegistry(registry)
+                  .connection(connection)
+                  .commandNotFoundHandler(resultHandler)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
+        ReadlineConsole console = new ReadlineConsole(settings);
 
-        aeshConsole.start();
+        console.start();
 
-        outputStream.write("run".getBytes());
-        outputStream.write(Config.getLineSeparator().getBytes());
-        outputStream.flush();
+        connection.read("run");
+        connection.read(Config.getLineSeparator());
+        //outputStream.flush();
 
         counter.await(1, TimeUnit.SECONDS);
 
@@ -165,7 +152,7 @@ public class AeshScriptTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            commandInvocation.getShell().out().println("EXITING");
+            commandInvocation.println("EXITING");
             commandInvocation.stop();
             return CommandResult.SUCCESS;
         }
@@ -177,7 +164,7 @@ public class AeshScriptTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(counter.getCount() > 1) {
-                commandInvocation.getShell().out().println("computing...." + Config.getLineSeparator() + "finished computing, returning...");
+                commandInvocation.println("computing...." + Config.getLineSeparator() + "finished computing, returning...");
                 counter.countDown();
                 return CommandResult.SUCCESS;
             }
@@ -194,7 +181,7 @@ public class AeshScriptTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(counter.getCount() == 1) {
-                commandInvocation.getShell().out().println("baring...." + Config.getLineSeparator() + "finished baring, returning...");
+                commandInvocation.println("baring...." + Config.getLineSeparator() + "finished baring, returning...");
                 counter.countDown();
                 return CommandResult.SUCCESS;
             }

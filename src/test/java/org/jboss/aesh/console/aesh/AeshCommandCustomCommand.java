@@ -28,12 +28,8 @@ import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.populator.CommandPopulator;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.InvocationProviders;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.container.AeshCommandContainer;
@@ -43,12 +39,11 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -66,35 +61,29 @@ public class AeshCommandCustomCommand {
 
     @Test
     public void testCustom() throws Exception {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .create();
+        TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(createBuilder())
                 .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
+        Settings settings = new SettingsBuilder()
                 .commandRegistry(registry)
-                .prompt(new Prompt(""));
+                .connection(connection)
+                .logging(true)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
+         ReadlineConsole console = new ReadlineConsole(settings);
 
-        aeshConsole.start();
+        console.start();
 
-        outputStream.write("foo --bar YES".getBytes());
-        outputStream.write(Config.getLineSeparator().getBytes());
-        outputStream.flush();
+        connection.read("foo --bar YES");
+        connection.read(Config.getLineSeparator());
+       // outputStream.flush();
         Thread.sleep(80);
 
-        aeshConsole.stop();
+        console.stop();
     }
 
     private CommandContainer createBuilder() throws CommandLineParserException {

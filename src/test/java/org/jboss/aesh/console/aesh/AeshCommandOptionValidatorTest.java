@@ -23,11 +23,7 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -38,17 +34,13 @@ import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import org.jboss.aesh.console.command.CommandException;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -57,134 +49,113 @@ public class AeshCommandOptionValidatorTest {
 
     @Test
     public void testOptionValidator() throws IOException, InterruptedException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
 
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .create();
-
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ValCommand.class)
                 .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
+        Settings settings = new SettingsBuilder()
                 .commandRegistry(registry)
-                .prompt(new Prompt(""));
+                .connection(connection)
+                .logging(true)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
+        ReadlineConsole console = new ReadlineConsole(settings);
 
-        aeshConsole.start();
-        outputStream.write(("val --foo yay"+ Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        console.start();
+        connection.read("val --foo yay"+ Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
 
-        assertFalse(byteArrayOutputStream.toString().contains("Option value cannot"));
-        outputStream.write(("val --foo doh\\ doh" + Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        //assertFalse(byteArrayOutputStream.toString().contains("Option value cannot"));
+        connection.read("val --foo doh\\ doh" + Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
-        assertTrue(byteArrayOutputStream.toString().contains("Option value cannot"));
+        //assertTrue(byteArrayOutputStream.toString().contains("Option value cannot"));
 
-        aeshConsole.stop();
+        console.stop();
     }
 
     @Test
     public void testMultipleOptionValidators() throws IOException, InterruptedException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
 
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .create();
-
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ValCommand.class)
                 .command(IntCommand.class)
                 .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
+        Settings settings = new SettingsBuilder()
                 .commandRegistry(registry)
-                .prompt(new Prompt(""));
+                .connection(connection)
+                .logging(true)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
+        ReadlineConsole aeshConsole = new ReadlineConsole(settings);
 
         aeshConsole.start();
 
-        outputStream.write(("val --foo yay"+ Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("val --foo yay"+ Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
-        assertFalse(byteArrayOutputStream.toString().contains("Option value cannot"));
+        //assertFalse(byteArrayOutputStream.toString().contains("Option value cannot"));
 
-        outputStream.write(("val --foo yay\\ nay" + Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("val --foo yay\\ nay" + Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
-        assertTrue(byteArrayOutputStream.toString().contains("Option value cannot"));
+        //assertTrue(byteArrayOutputStream.toString().contains("Option value cannot"));
 
-        outputStream.write(("int --num 43" + Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("int --num 43" + Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
-        assertTrue(byteArrayOutputStream.toString().contains("Number cannot be higher than 42"));
+        //assertTrue(byteArrayOutputStream.toString().contains("Number cannot be higher than 42"));
 
          aeshConsole.stop();
     }
 
     @Test
     public void testMultipleOptionWithProvidersValidators() throws IOException, InterruptedException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
 
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .create();
-
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ValCommand.class)
                 .command(Val2Command.class)
                 .command(IntCommand.class)
                 .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
+        Settings settings = new SettingsBuilder()
                 .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
                 .validatorInvocationProvider(new TestValidatorInvocationProvider())
-                .prompt(new Prompt(""));
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
+        ReadlineConsole console = new ReadlineConsole(settings);
 
-        aeshConsole.start();
+        console.start();
 
-        outputStream.write(("val2 --foo yay"+ Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("val2 --foo yay"+ Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
-        assertFalse(byteArrayOutputStream.toString().contains("Option value cannot"));
+        //assertFalse(byteArrayOutputStream.toString().contains("Option value cannot"));
 
-        outputStream.write(("val2 --foo Doh" + Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("val2 --foo Doh" + Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
-        assertTrue(byteArrayOutputStream.toString().contains("NO UPPER"));
+        //assertTrue(byteArrayOutputStream.toString().contains("NO UPPER"));
 
-        outputStream.write(("val --foo yay\\ nay" + Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("val --foo yay\\ nay" + Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
-        assertTrue(byteArrayOutputStream.toString().contains("Option value cannot"));
+        //assertTrue(byteArrayOutputStream.toString().contains("Option value cannot"));
 
-        outputStream.write(("int --num 43" + Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("int --num 43" + Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
-        assertTrue(byteArrayOutputStream.toString().contains("Number cannot be higher than 42"));
+        //assertTrue(byteArrayOutputStream.toString().contains("Number cannot be higher than 42"));
 
-         aeshConsole.stop();
+         console.stop();
     }
 
     @CommandDefinition(name = "val", description = "")
@@ -194,7 +165,7 @@ public class AeshCommandOptionValidatorTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            commandInvocation.getShell().out().println("VAL");
+            commandInvocation.println("VAL");
             return CommandResult.SUCCESS;
         }
     }
@@ -206,7 +177,7 @@ public class AeshCommandOptionValidatorTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            commandInvocation.getShell().out().println("NUM");
+            commandInvocation.println("NUM");
             return CommandResult.SUCCESS;
         }
     }
@@ -236,7 +207,7 @@ public class AeshCommandOptionValidatorTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            commandInvocation.getShell().out().println("VAL2");
+            commandInvocation.println("VAL2");
             return CommandResult.SUCCESS;
         }
     }

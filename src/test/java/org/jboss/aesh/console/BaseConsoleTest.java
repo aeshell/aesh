@@ -37,12 +37,15 @@ import java.util.concurrent.TimeUnit;
 
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.util.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public abstract class BaseConsoleTest {
 
+    /*
     Settings getDefaultSettings(InputStream is, SettingsBuilder builder) {
         if(builder == null) {
             builder = new SettingsBuilder();
@@ -53,9 +56,6 @@ public abstract class BaseConsoleTest {
         builder.inputStream(is);
         builder.persistAlias(false);
         builder.outputStream(new PrintStream(new ByteArrayOutputStream()));
-
-        if(!Config.isOSPOSIXCompatible())
-            builder.ansi(false);
 
         return builder.create();
     }
@@ -134,10 +134,11 @@ public abstract class BaseConsoleTest {
     }
 
     public interface Setup {
-        void call(Console console, OutputStream out) throws Exception;
+        void call(ReadlineConsole console, OutputStream out) throws Exception;
     }
 
     public interface Verify {
-        int call(Console console, ConsoleOperation op) throws Exception;
+        int call(ReadlineConsole console, ConsoleOperation op) throws Exception;
     }
+    */
 }

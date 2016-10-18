@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.console.alias;
 
-import org.jboss.aesh.console.Config;
+import org.jboss.aesh.util.Config;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

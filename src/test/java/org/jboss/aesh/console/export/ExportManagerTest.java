@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.console.export;
 
-import org.jboss.aesh.console.Config;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 import java.io.File;

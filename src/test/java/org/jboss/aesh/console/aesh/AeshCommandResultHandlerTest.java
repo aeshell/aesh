@@ -23,10 +23,6 @@ import org.jboss.aesh.cl.Arguments;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.result.ResultHandler;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -34,13 +30,12 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import java.util.List;
 import org.jboss.aesh.console.command.CommandException;
 
@@ -53,42 +48,35 @@ public class AeshCommandResultHandlerTest {
 
     @Test
     public void testResultHandler() throws IOException, InterruptedException {
-               PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
 
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .create();
-
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(FooCommand.class)
                 .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
-                .commandRegistry(registry)
-                .prompt(new Prompt(""));
+         Settings settings = new SettingsBuilder()
+                 .commandRegistry(registry)
+                 .connection(connection)
+                .logging(true)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-        outputStream.write(("foo --foo 1 --name aesh"+ Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("foo --foo 1 --name aesh"+ Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(80);
 
-        outputStream.write(("foo --foo 1"+ Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("foo --foo 1"+ Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(80);
 
-        outputStream.write(("foo --fo 1 --name aesh"+ Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("foo --fo 1 --name aesh"+ Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(80);
 
-        outputStream.write(("foo --foo 1 --exception" + Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("foo --foo 1 --exception" + Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(80);
 
     }

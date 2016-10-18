@@ -20,11 +20,9 @@
 package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Config;
+import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
@@ -37,16 +35,14 @@ import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.Prompt;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.readline.action.KeyAction;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import org.jboss.aesh.console.command.CommandException;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -56,9 +52,7 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
     @Test
     public void testCommandInvocationExtension() throws IOException, InterruptedException {
 
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(new BarCommand())
@@ -68,28 +62,23 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
         services.registerProvider("FOO", new FooCommandInvocationProvider());
 
         Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
+                .commandRegistry(registry)
+                .connection(connection)
                 .logging(true)
                 .commandRegistry(registry)
                 .commandInvocationServices(services)
                 .create();
 
+        ReadlineConsole console = new ReadlineConsole(settings);
+        //console.setCurrentCommandInvocationProvider("FOO");
+        console.start();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
-                .prompt(new Prompt(""));
-
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.setCurrentCommandInvocationProvider("FOO");
-        aeshConsole.start();
-
-        outputStream.write(("bar"+ Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("bar"+ Config.getLineSeparator());
+        //outputStream.flush();
 
         Thread.sleep(100);
-        assertTrue( byteArrayOutputStream.toString().contains("FOO") );
-        aeshConsole.stop();
+        //assertTrue( byteArrayOutputStream.toString().contains("FOO") );
+        console.stop();
     }
 
 }
@@ -99,7 +88,7 @@ class BarCommand implements Command<FooCommandInvocation> {
 
     @Override
     public CommandResult execute(FooCommandInvocation commandInvocation) throws CommandException, InterruptedException {
-        commandInvocation.getShell().out().println(commandInvocation.getFoo());
+        commandInvocation.println(commandInvocation.getFoo());
         return CommandResult.SUCCESS;
     }
 }
@@ -111,16 +100,6 @@ class FooCommandInvocation implements CommandInvocation {
 
     public FooCommandInvocation(CommandInvocation commandInvocation) {
         this.commandInvocation = commandInvocation;
-    }
-
-    @Override
-    public ControlOperator getControlOperator() {
-        return commandInvocation.getControlOperator();
-    }
-
-    @Override
-    public CommandRegistry getCommandRegistry() {
-        return commandInvocation.getCommandRegistry();
     }
 
     @Override
@@ -154,18 +133,18 @@ class FooCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public KeyEvent input() throws InterruptedException {
+    public KeyAction input() throws InterruptedException {
         return commandInvocation.input();
-    }
-
-    @Override
-    public <T> CmdOperation<T> getInput(KeyMap<T> keyMap) throws InterruptedException {
-        return commandInvocation.input(keyMap);
     }
 
     @Override
     public String inputLine() throws InterruptedException {
         return commandInvocation.inputLine();
+    }
+
+    @Override
+    public String inputLine(Prompt prompt) throws InterruptedException {
+        return commandInvocation.inputLine(prompt);
     }
 
     @Override

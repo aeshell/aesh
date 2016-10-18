@@ -23,11 +23,7 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.converter.Converter;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.converter.ConverterInvocation;
@@ -37,13 +33,12 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertTrue;
@@ -56,38 +51,27 @@ public class AeshConverterInvocationProviderTest {
     @Test
     public void testConverterInvocationProvider() throws IOException, InterruptedException {
 
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
 
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .create();
-
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(new ConCommand())
                 .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
-                .commandRegistry(registry)
-                .converterInvocationProvider(new FooConverterProvider())
-                .prompt(new Prompt(""));
+         Settings settings = new SettingsBuilder()
+                 .commandRegistry(registry)
+                 .connection(connection)
+                 .logging(true)
+                 .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-        outputStream.write(("convert --foo bar"+ Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("convert --foo bar"+ Config.getLineSeparator());
+        //outputStream.flush();
 
         Thread.sleep(100);
-        assertTrue(byteArrayOutputStream.toString().contains("FOOO"));
-        aeshConsole.stop();
-        outputStream.close();
-        pipedInputStream.close();
-        byteArrayOutputStream.close();
+        //assertTrue(byteArrayOutputStream.toString().contains("FOOO"));
+        console.stop();
     }
 
 @CommandDefinition(name = "convert", description = "")
@@ -101,8 +85,7 @@ public static class ConCommand implements Command {
 
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-        commandInvocation.getShell().out().println(foo);
-        commandInvocation.getShell().out().flush();
+        commandInvocation.println(foo);
         return CommandResult.SUCCESS;
     }
 }

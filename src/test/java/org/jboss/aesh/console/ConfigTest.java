@@ -23,6 +23,7 @@ import org.jboss.aesh.console.settings.RuntimeSettings;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.editing.EditMode;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -56,7 +57,7 @@ public class ConfigTest {
         assertEquals(settings.logging(), false);
         assertEquals(settings.completionDisabled(), true);
 
-        assertEquals(settings.executeAtStart(), "foo -f --bar"+Config.getLineSeparator());
+        assertEquals(settings.executeAtStart(), "foo -f --bar"+ Config.getLineSeparator());
 
         System.setProperty("aesh.terminal", "");
         System.setProperty("aesh.editmode", "");

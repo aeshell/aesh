@@ -44,7 +44,6 @@ import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.readline.action.ActionDecoder;
 import org.jboss.aesh.readline.completion.CompleteOperation;
 import org.jboss.aesh.readline.completion.Completion;
-import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.readline.editing.EditModeBuilder;
 import org.jboss.aesh.readline.history.InMemoryHistory;
 import org.jboss.aesh.terminal.Key;
@@ -98,7 +97,7 @@ public class ReadlineConsole implements Console {
 
     public void start() {
         if(connection == null)
-            connection = new TerminalConnection();
+            connection = new TerminalConnection(settings.stdIn(), settings.stdOut());
         init();
     }
 
@@ -114,7 +113,9 @@ public class ReadlineConsole implements Console {
 
     private void init() {
         completionHandler = new AeshCompletionHandler(context, connection, true);
-        readline = new Readline(EditModeBuilder.builder(EditMode.Mode.VI).create(), new InMemoryHistory(50),
+        if(prompt == null)
+            prompt = new Prompt("");
+        readline = new Readline(EditModeBuilder.builder(settings.mode()).create(), new InMemoryHistory(50),
                 completionHandler);
         running = true;
         read(connection, readline);
