@@ -28,7 +28,9 @@ import org.jboss.aesh.readline.editing.EditModeBuilder;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.util.Parser;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
@@ -49,6 +51,9 @@ public class TestConnection implements Connection {
     private Size size;
 
     private Prompt prompt = new Prompt(": ");
+    private CountDownLatch latch;
+    private volatile boolean waiting = false;
+    private volatile boolean reading = false;
 
     public TestConnection() {
         //default emacs mode
@@ -57,6 +62,10 @@ public class TestConnection implements Connection {
 
     public TestConnection(EditMode editMode) {
         this(editMode, null);
+    }
+
+    public TestConnection(Size size) {
+        this(EditModeBuilder.builder().create(), null, size);
     }
 
     public TestConnection(List<Completion> completions) {
@@ -168,11 +177,41 @@ public class TestConnection implements Connection {
 
     @Override
     public void close() {
+        reading = false;
         closeHandler.accept(null);
     }
 
     @Override
     public void open() {
+        //we're not doing anything here, all input will come from the read(..) methods
+        reading = true;
+    }
+
+    private void doRead(int[] input) {
+        if(reading) {
+            if (waiting) {
+                try {
+                    latch.await();
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(stdinHandler != null) {
+                stdinHandler.accept(input);
+            }
+            else {
+                try {
+                    Thread.sleep(10);
+                    doRead(input);
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        else
+            throw new RuntimeException("Got input when not reading: "+ Arrays.toString(input));
     }
 
     @Override
@@ -181,16 +220,22 @@ public class TestConnection implements Connection {
 
     @Override
     public void suspend() {
-    }
+        latch = new CountDownLatch(1);
+        waiting = true;
+     }
 
     @Override
     public boolean suspended() {
-        return false;
+        return waiting;
     }
 
     @Override
     public void awake() {
-    }
+        if(waiting) {
+            waiting = false;
+            latch.countDown();
+        }
+     }
 
     @Override
     public boolean put(Capability capability, Object... params) {
@@ -202,15 +247,15 @@ public class TestConnection implements Connection {
     }
 
     public void read(int... data) {
-        stdinHandler.accept(data);
+        doRead(data);
     }
 
     public void read(Key key) {
-        stdinHandler.accept(key.getKeyValues());
+        doRead(key.getKeyValues());
     }
 
     public void read(String data) {
-        stdinHandler.accept(Parser.toCodePoints(data));
+        doRead(Parser.toCodePoints(data));
     }
 
 }
