@@ -46,12 +46,8 @@ import org.jboss.aesh.tty.TestConnection;
 import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import java.util.List;
 import org.jboss.aesh.console.command.CommandException;
 
@@ -65,8 +61,6 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
     @Test
     public void testAeshConsole() throws IOException, InterruptedException, CommandLineParserException {
-        //PipedOutputStream outputStream = new PipedOutputStream();
-        //PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
         TestConnection connection = new TestConnection();
 
         ProcessedCommand fooCommand = new ProcessedCommandBuilder()
@@ -90,20 +84,17 @@ public class AeshConsoleTest extends BaseConsoleTest {
         Settings settings = new SettingsBuilder()
                 .logging(true)
                 .commandRegistry(registry)
+                .validatorInvocationProvider(new DirectoryValidatorInvocationProvider())
                 .connection(connection)
                 .create();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
-        connection.read("foo");
-        //outputStream.write(completeChar.getFirstValue());
-        connection.read(Config.getLineSeparator());
-        //outputStream.flush();
+        connection.read("foo"+Config.getLineSeparator());
+        connection.read();
 
-        connection.read("ls --files /home:/tmp");
-        connection.read(Config.getLineSeparator());
-        //outputStream.flush();
+        connection.read("ls --files /home:/tmp"+Config.getLineSeparator());
 
         Thread.sleep(100);
         console.stop();

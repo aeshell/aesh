@@ -80,7 +80,6 @@ public class AeshCommandCustomCommand {
 
         connection.read("foo --bar YES");
         connection.read(Config.getLineSeparator());
-       // outputStream.flush();
         Thread.sleep(80);
 
         console.stop();
