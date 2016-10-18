@@ -68,11 +68,9 @@ public class AeshCommandDynamicTest {
         assertEquals("group", co.getCompletionCandidates().get(0).toString());
         console.start();
 
-        connection.read("group child1 --foo BAR");
-        connection.read(Config.getLineSeparator());
-        //outputStream.flush();
+        connection.read("group child1 --foo BAR"+Config.getLineSeparator());
 
-        Thread.sleep(80);
+        Thread.sleep(10);
 
         console.stop();
     }

@@ -38,6 +38,7 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.Prompt;
 import org.jboss.aesh.readline.ReadlineConsole;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.tty.Size;
 import org.jboss.aesh.tty.TestConnection;
 import org.jboss.aesh.util.Config;
 import org.junit.Test;
@@ -64,10 +65,6 @@ public class AeshCommandCompletionTest {
 
     @Test
     public void testCompletion() throws Exception {
-
-        //PipedOutputStream outputStream = new PipedOutputStream();
-        //PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        //ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -87,64 +84,45 @@ public class AeshCommandCompletionTest {
 
         connection.read("fo");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-        //assertEquals("foo ", ((AeshConsoleImpl) console).getBuffer());
-
-        //assertEquals("foo ", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("foo ", connection.getOutputBuffer());
 
         connection.read("--name aslak --bar ");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-        //assertEquals("foo --name aslak --bar bar\\ 2", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("foo --name aslak --bar bar\\ 2", connection.getOutputBuffer());
 
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-//        assertEquals("foo --name aslak --bar bar\\ 2\\ 3\\ 4 ", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("foo --name aslak --bar bar\\ 2\\ 3\\ 4 ", connection.getOutputBuffer());
 
         connection.read(Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(80);
+        connection.clearOutputBuffer();
 
         connection.read("foo --bar bar\\ 2\\ ");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-//        assertEquals("foo --bar bar\\ 2\\ 3\\ 4 ", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("foo --bar bar\\ 2\\ 3\\ 4 ", connection.getOutputBuffer());
 
         connection.read(Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(80);
+        connection.clearOutputBuffer();
 
         connection.read("foo --bar bar");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-//        assertEquals("foo --bar bar\\ 2 ", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("foo --bar bar\\ 2 ", connection.getOutputBuffer());
 
         connection.read(Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(80);
+        connection.clearOutputBuffer();
 
         connection.read("foo --bar foo ");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-//        assertEquals("foo --bar foo ", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("foo --bar foo ", connection.getOutputBuffer());
         connection.read("--b");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-//        assertEquals("foo --bar foo --b", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("foo --bar foo --b", connection.getOutputBuffer());
 
         console.stop();
     }
@@ -174,23 +152,17 @@ public class AeshCommandCompletionTest {
         TestCommandActivator.activated = true;
         connection.read("hi");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-//        assertEquals("hidden ", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("hidden ", connection.getOutputBuffer());
 
         connection.read(enter.getFirstValue());
-        //outputStream.flush();
-
-        Thread.sleep(80);
+        connection.clearOutputBuffer();
 
         TestCommandActivator.activated = false;
         connection.read("hi");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-        //assertEquals("hi", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("hi", connection.getOutputBuffer());
 
         console.stop();
     }
@@ -202,10 +174,7 @@ public class AeshCommandCompletionTest {
 
     @Test
     public void testRequiredAndActivatorOption() throws IOException, InterruptedException {
-        //PipedOutputStream outputStream = new PipedOutputStream();
-        //PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        //ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        TestConnection connection = new TestConnection();
+        TestConnection connection = new TestConnection(new Size(200,20));
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ArqCommand.class)
@@ -223,19 +192,15 @@ public class AeshCommandCompletionTest {
 
         connection.read("arquillian-container-configuration --container arquillian-tomcat-embedded-7 --containerOption ");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
         Thread.sleep(80);
-//        assertEquals("arquillian-container-configuration --container arquillian-tomcat-embedded-7 --containerOption managed ",
-//                ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("arquillian-container-configuration --container arquillian-tomcat-embedded-7 --containerOption managed ",
+                connection.getOutputBuffer());
 
     }
 
     @Test
     public void testGroupCommand() throws IOException, InterruptedException {
-        //PipedOutputStream outputStream = new PipedOutputStream();
-        //PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        //ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -253,41 +218,34 @@ public class AeshCommandCompletionTest {
 
         connection.read("git --");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
         Thread.sleep(80);
-//        assertEquals("git --help ", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("git --help ", connection.getOutputBuffer());
         connection.read(enter.getFirstValue());
+        connection.clearOutputBuffer();
 
         connection.read("git rebase --");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-//        assertEquals("git rebase --force ", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("git rebase --force ", connection.getOutputBuffer());
 
         connection.read("--");
         connection.read(completeChar.getFirstValue());
         //outputStream.flush();
 
         Thread.sleep(80);
-//        assertEquals("git rebase --force --test ", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("git rebase --force --test ", connection.getOutputBuffer());
         connection.read(enter.getFirstValue());
-        //outputStream.flush();
 
         connection.read("git rebase --fo");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-//        assertEquals("git rebase --force ", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("git rebase --force ", connection.getOutputBuffer());
 
         connection.read("--test bar");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
 
-        Thread.sleep(80);
-//        assertEquals("git rebase --force --test barFOO ", ((AeshConsoleImpl) console).getBuffer());
+        assertEquals("git rebase --force --test barFOO ", connection.getOutputBuffer());
 
         console.stop();
      }

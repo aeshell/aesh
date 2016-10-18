@@ -38,6 +38,7 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.validator.ValidatorInvocation;
+import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.ReadlineConsole;
@@ -45,12 +46,8 @@ import org.jboss.aesh.tty.TestConnection;
 import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import java.util.List;
 import org.jboss.aesh.console.command.CommandException;
 
@@ -64,8 +61,6 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
     @Test
     public void testAeshConsole() throws IOException, InterruptedException, CommandLineParserException {
-        //PipedOutputStream outputStream = new PipedOutputStream();
-        //PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
         TestConnection connection = new TestConnection();
 
         ProcessedCommand fooCommand = new ProcessedCommandBuilder()
@@ -89,20 +84,17 @@ public class AeshConsoleTest extends BaseConsoleTest {
         Settings settings = new SettingsBuilder()
                 .logging(true)
                 .commandRegistry(registry)
+                .validatorInvocationProvider(new DirectoryValidatorInvocationProvider())
                 .connection(connection)
                 .create();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
-        connection.read("foo");
-        //outputStream.write(completeChar.getFirstValue());
-        connection.read(Config.getLineSeparator());
-        //outputStream.flush();
+        connection.read("foo"+Config.getLineSeparator());
+        connection.read();
 
-        connection.read("ls --files /home:/tmp");
-        connection.read(Config.getLineSeparator());
-        //outputStream.flush();
+        connection.read("ls --files /home:/tmp"+Config.getLineSeparator());
 
         Thread.sleep(100);
         console.stop();
@@ -156,12 +148,16 @@ public class AeshConsoleTest extends BaseConsoleTest {
         }
     }
 
-    public class DirectoryValidatorInvocation implements ValidatorInvocation<File, Command> {
+    public static class DirectoryValidatorInvocation implements ValidatorInvocation<File, Command> {
 
         private final File value;
+        private final Command command;
+        private final AeshContext context;
 
-        public DirectoryValidatorInvocation(File value) {
+        public DirectoryValidatorInvocation(File value, Command command, AeshContext context) {
             this.value = value;
+            this.command = command;
+            this.context = context;
         }
 
         @Override
@@ -171,12 +167,25 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
         @Override
         public Command getCommand() {
-            return null;
+            return command;
         }
 
         @Override
         public AeshContext getAeshContext() {
-            return null;
+            return context;
         }
     }
+
+    public static class DirectoryValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>> {
+
+        @Override
+        public ValidatorInvocation<File, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
+            if(validatorInvocation.getValue() instanceof File)
+                return new DirectoryValidatorInvocation( (File) validatorInvocation.getValue(),
+                        (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
+            else
+                return validatorInvocation;
+        }
+    }
+
 }
