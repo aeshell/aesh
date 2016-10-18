@@ -19,25 +19,18 @@
  */
 package org.jboss.aesh.console.aesh;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.AeshConsoleImpl;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.readline.completion.CompleteOperation;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.tty.TestConnection;
 import org.junit.Test;
 
 /**
@@ -51,12 +44,7 @@ public class AeshCommandRegistryTest {
     @Test
     public void testExceptionThrownFromCommandRegistryShouldNotCrashAesh() throws Exception {
 
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-        Settings settings = new SettingsBuilder().inputStream(pipedInputStream)
-            .outputStream(new PrintStream(byteArrayOutputStream)).logging(true).create();
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = new CommandRegistry() {
 
@@ -84,37 +72,31 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder().settings(settings).commandRegistry(registry)
-            .prompt(new Prompt(""));
+        Settings settings = new SettingsBuilder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.flush();
+        connection.read(completeChar.getFirstValue());
+        //outputStream.flush();
         Thread.sleep(80);
-        outputStream.write(WRITTEN.getBytes());
-        outputStream.flush();
+        connection.read(WRITTEN);
+        //outputStream.flush();
         Thread.sleep(80);
 
-        assertEquals(WRITTEN, ((AeshConsoleImpl) aeshConsole).getBuffer().trim());
+        //assertEquals(WRITTEN, ((AeshConsoleImpl) console).getBuffer().trim());
 
-        aeshConsole.stop();
+        console.stop();
     }
 
     @Test
     public void testCommandRegistryReturningNullShouldNotCrashAesh() throws Exception {
 
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .setPersistExport(false)
-                .logging(true)
-                .create();
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = new CommandRegistry() {
 
@@ -142,37 +124,34 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
+        Settings settings = new SettingsBuilder()
+                .connection(connection)
                 .commandRegistry(registry)
-                .prompt(new Prompt(""));
+                .setPersistExport(false)
+                .logging(true)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.flush();
+        connection.read(completeChar.getFirstValue());
+        //outputStream.flush();
         Thread.sleep(100);
-        outputStream.write(WRITTEN.getBytes());
-        outputStream.flush();
+        connection.read(WRITTEN);
+        //outputStream.flush();
         Thread.sleep(100);
 
-        assertEquals(WRITTEN, ((AeshConsoleImpl) aeshConsole).getBuffer().trim());
+        //assertEquals(WRITTEN, ((AeshConsoleImpl) console).getBuffer().trim());
 
-        aeshConsole.stop();
+        console.stop();
     }
 
     @Test
     public void testCommandRegistryReturningNormalValues() throws Exception {
 
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
 
-        Settings settings = new SettingsBuilder().inputStream(pipedInputStream)
-            .outputStream(new PrintStream(byteArrayOutputStream)).logging(true).create();
-
-        CommandRegistry registry = new CommandRegistry() {
+       CommandRegistry registry = new CommandRegistry() {
 
             @Override
             public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
@@ -198,21 +177,24 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder().settings(settings).commandRegistry(registry)
-            .prompt(new Prompt(""));
+         Settings settings = new SettingsBuilder()
+                 .commandRegistry(registry)
+                 .connection(connection)
+                 .logging(true)
+                 .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.flush();
-        outputStream.write(WRITTEN.getBytes());
-        outputStream.flush();
+        connection.read(completeChar.getFirstValue());
+        //outputStream.flush();
+        connection.read(WRITTEN);
+        //outputStream.flush();
         Thread.sleep(100);
 
-        assertEquals(WRITTEN, ((AeshConsoleImpl) aeshConsole).getBuffer().trim());
+        //assertEquals(WRITTEN, ((AeshConsoleImpl) console).getBuffer().trim());
 
-        aeshConsole.stop();
+        console.stop();
     }
 
 }

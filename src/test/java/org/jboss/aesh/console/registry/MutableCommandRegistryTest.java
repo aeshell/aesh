@@ -22,11 +22,12 @@ package org.jboss.aesh.console.registry;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.GroupCommandDefinition;
 import org.jboss.aesh.cl.Option;
+import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
-import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.terminal.formatting.TerminalString;
 import org.junit.Test;
 
 import org.jboss.aesh.console.command.CommandException;
@@ -48,38 +49,38 @@ public class MutableCommandRegistryTest {
         registry.addCommand(Command3.class);
         registry.addCommand(GroupCommand1.class);
 
-        CompleteOperation co = new CompleteOperation(null, "fo", 3);
+        AeshCompleteOperation co = new AeshCompleteOperation(null, "fo", 3);
         registry.completeCommandName(co);
         assertEquals(1, co.getCompletionCandidates().size());
         assertEquals("foo", co.getCompletionCandidates().get(0).toString());
 
-        co = new CompleteOperation(null, "foo", 4);
+        co = new AeshCompleteOperation(null, "foo", 4);
         registry.completeCommandName(co);
         assertEquals(1, co.getCompletionCandidates().size());
         assertEquals("foo", co.getCompletionCandidates().get(0).toString());
 
-        co = new CompleteOperation(null, "", 0);
+        co = new AeshCompleteOperation(null, "", 0);
         registry.completeCommandName(co);
         assertEquals(4, co.getCompletionCandidates().size());
         assertTrue(co.getCompletionCandidates().contains(new TerminalString("bar", true)));
         assertTrue(co.getCompletionCandidates().contains(new TerminalString("group", true)));
 
-        co = new CompleteOperation(null, "group he", 0);
+        co = new AeshCompleteOperation(null, "group he", 0);
         registry.completeCommandName(co);
         assertEquals(1, co.getCompletionCandidates().size());
         assertEquals("group help", co.getCompletionCandidates().get(0).toString());
 
-        co = new CompleteOperation(null, "group ", 0);
+        co = new AeshCompleteOperation(null, "group ", 0);
         registry.completeCommandName(co);
         assertEquals(1, co.getCompletionCandidates().size());
         assertEquals("group help", co.getCompletionCandidates().get(0).toString());
 
-        co = new CompleteOperation(null, "group   ", 0);
+        co = new AeshCompleteOperation(null, "group   ", 0);
         registry.completeCommandName(co);
         assertEquals(1, co.getCompletionCandidates().size());
         assertEquals("group   help", co.getCompletionCandidates().get(0).toString());
 
-        co = new CompleteOperation(null, "group help ", 0);
+        co = new AeshCompleteOperation(null, "group help ", 0);
         registry.completeCommandName(co);
         assertEquals(0, co.getCompletionCandidates().size());
 

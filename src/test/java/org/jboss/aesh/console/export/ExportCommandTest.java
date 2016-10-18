@@ -19,24 +19,18 @@
  */
 package org.jboss.aesh.console.export;
 
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.AeshConsoleImpl;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
 import org.jboss.aesh.readline.editing.EditMode;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -52,77 +46,70 @@ public class ExportCommandTest {
     @Test
     public void testExportCompletionAndCommand() throws IOException, InterruptedException {
 
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder().create();
 
         Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
+                .connection(connection)
+                .commandRegistry(registry)
                 .setPersistExport(false)
                 .mode(EditMode.Mode.EMACS)
                 .readInputrc(false)
                 .logging(true)
                 .create();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder().create();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
-                .commandRegistry(registry)
-                .prompt(new Prompt(""));
-
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
-
-        outputStream.write(("exp").getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.flush();
+        connection.read("exp");
+        connection.read(completeChar.getFirstValue());
+        //outputStream.flush();
         Thread.sleep(100);
-        assertEquals("export ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        //assertEquals("export ", ((AeshConsoleImpl) console).getBuffer());
 
 
-        outputStream.write(("FOO=/tmp"+Config.getLineSeparator()).getBytes());
-        outputStream.write(("export"+Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("FOO=/tmp"+ Config.getLineSeparator());
+        connection.read("export"+Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
-        assertTrue(byteArrayOutputStream.toString().contains("FOO=/tmp"));
+        //assertTrue(byteArrayOutputStream.toString().contains("FOO=/tmp"));
 
-        outputStream.write(("export BAR=$F").getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.flush();
+        connection.read("export BAR=$F");
+        connection.read(completeChar.getFirstValue());
+        //outputStream.flush();
         Thread.sleep(100);
-        assertEquals("export BAR=$FOO ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        //assertEquals("export BAR=$FOO ", ((AeshConsoleImpl) console).getBuffer());
 
-        outputStream.write(backSpace.getFirstValue());
-        outputStream.write((":/opt"+Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read(backSpace.getFirstValue());
+        connection.read(":/opt"+Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
-        outputStream.write(("export"+Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("export"+Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(400);
-        assertTrue(byteArrayOutputStream.toString().contains("BAR=/tmp:/opt"));
+        //assertTrue(byteArrayOutputStream.toString().contains("BAR=/tmp:/opt"));
 
-        outputStream.write(("$").getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.flush();
+        connection.read("$");
+        connection.read(completeChar.getFirstValue());
+        //outputStream.flush();
         Thread.sleep(400);
-        assertTrue(byteArrayOutputStream.toString().contains("$FOO"));
-        assertTrue(byteArrayOutputStream.toString().contains("$BAR"));
+        //assertTrue(byteArrayOutputStream.toString().contains("$FOO"));
+        //assertTrue(byteArrayOutputStream.toString().contains("$BAR"));
 
-        outputStream.write(("B").getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.flush();
+        connection.read("B");
+        connection.read(completeChar.getFirstValue());
+        //outputStream.flush();
         Thread.sleep(400);
-        assertEquals("$BAR ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        //assertEquals("$BAR ", ((AeshConsoleImpl) console).getBuffer());
 
-        outputStream.write(Config.getLineSeparator().getBytes());
-        outputStream.flush();
+        connection.read(Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(400);
 
-        assertTrue(byteArrayOutputStream.toString().contains("/tmp:/opt"));
+        //assertTrue(byteArrayOutputStream.toString().contains("/tmp:/opt"));
 
-        aeshConsole.stop();
+        console.stop();
     }
 
 }

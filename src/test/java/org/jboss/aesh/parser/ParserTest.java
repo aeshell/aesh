@@ -28,9 +28,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.terminal.formatting.TerminalString;
 import org.jboss.aesh.util.ANSI;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 /**

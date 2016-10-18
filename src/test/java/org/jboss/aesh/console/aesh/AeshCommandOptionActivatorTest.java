@@ -23,10 +23,6 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.activation.OptionActivator;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.AeshConsoleImpl;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
@@ -35,17 +31,13 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
 import org.jboss.aesh.terminal.Key;
+import org.jboss.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import org.jboss.aesh.console.command.CommandException;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -57,51 +49,43 @@ public class AeshCommandOptionActivatorTest {
     @Test
     public void testOptionActivator() throws IOException, InterruptedException {
 
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
         TestOptionValidatorProvider validatorProvider = new TestOptionValidatorProvider(new FooContext("bar"));
 
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .create();
-
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ValCommand.class)
                 .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
+        Settings settings = new SettingsBuilder()
+                .connection(connection)
                 .commandRegistry(registry)
-                .optionActivatorProvider(validatorProvider)
-                .prompt(new Prompt(""));
+                .logging(true)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
+        ReadlineConsole console = new ReadlineConsole(settings);
 
-        aeshConsole.start();
-        outputStream.write(("val -").getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.flush();
-
-        Thread.sleep(80);
-        assertEquals("val --bar ", ((AeshConsoleImpl) aeshConsole).getBuffer());
-
-        outputStream.write(("123 --").getBytes());
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.flush();
+        console.start();
+        connection.read("val -");
+        connection.read(completeChar.getFirstValue());
+        //outputStream.flush();
 
         Thread.sleep(80);
-        assertEquals("val --bar 123 --", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        //assertEquals("val --bar ", ((AeshConsoleImpl) console).getBuffer());
+
+        connection.read("123 --");
+        connection.read(completeChar.getFirstValue());
+        //outputStream.flush();
+
+        Thread.sleep(80);
+        //assertEquals("val --bar 123 --", ((AeshConsoleImpl) console).getBuffer());
         validatorProvider.updateContext("foo");
-        outputStream.write(completeChar.getFirstValue());
-        outputStream.flush();
+        connection.read(completeChar.getFirstValue());
+        //outputStream.flush();
 
         Thread.sleep(80);
-        assertEquals("val --bar 123 --foo ", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        //assertEquals("val --bar 123 --foo ", ((AeshConsoleImpl) console).getBuffer());
 
-        aeshConsole.stop();
+        console.stop();
      }
 
     @CommandDefinition(name = "val", description = "")

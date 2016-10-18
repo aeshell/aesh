@@ -20,9 +20,10 @@
 package org.jboss.aesh.complete;
 
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
+import org.jboss.aesh.readline.completion.CompleteOperation;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 import java.util.List;
@@ -46,7 +47,7 @@ public class CompleteOperationTest {
 
     @Test
     public void testGetFormattedCompletionCandidates() {
-        CompleteOperation co = new CompleteOperation(aeshContext, "ls foob", 6);
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "ls foob", 6);
         co.addCompletionCandidate("foobar");
         co.addCompletionCandidate("foobars");
         co.setOffset(3);
@@ -59,7 +60,7 @@ public class CompleteOperationTest {
 
     @Test
     public void testRemoveEscapedSpacesFromCompletionCandidates() {
-        CompleteOperation co = new CompleteOperation(aeshContext, "ls foob", 6);
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "ls foob", 6);
         co.addCompletionCandidate("foo\\ bar");
         co.addCompletionCandidate("foo\\ bars");
         co.setOffset(3);

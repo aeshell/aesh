@@ -19,21 +19,20 @@
  */
 package org.jboss.aesh.console.masking;
 
-import static org.junit.Assert.assertEquals;
 
 import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.terminal.Key;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
+@Ignore
 public class ConsoleMaskingTest extends BaseConsoleTest {
 
     @Test
     public void masking() throws Exception {
+        /*
         invokeTestConsole((console, out) -> {
             Key deletePrevChar =  Key.CTRL_H;
             console.setPrompt(new Prompt("", '\u0000'));
@@ -46,5 +45,6 @@ public class ConsoleMaskingTest extends BaseConsoleTest {
             assertEquals("mypasswor", op.getBuffer());
             return 0;
         });
+        */
     }
 }

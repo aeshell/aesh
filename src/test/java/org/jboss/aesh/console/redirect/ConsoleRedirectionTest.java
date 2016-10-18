@@ -33,18 +33,20 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
 
 import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.operator.ControlOperator;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
   * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
   */
+@Ignore
  public class ConsoleRedirectionTest extends BaseConsoleTest {
 
+     /*
     private Path tempDir;
     private static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
 
@@ -166,5 +168,6 @@ import org.junit.Test;
              return 0;
          }
      }
+     */
 
 }

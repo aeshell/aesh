@@ -58,13 +58,13 @@ import static org.junit.Assert.assertTrue;
  */
 public class CommandLinePopulatorTest {
 
-    private final InvocationProviders invocationProviders =
-            new AeshInvocationProviders(
-                    new AeshConverterInvocationProvider(),
-                    new AeshCompleterInvocationProvider(),
-                    new AeshValidatorInvocationProvider(),
-                    new AeshOptionActivatorProvider(),
-                    new AeshCommandActivatorProvider());
+    private final InvocationProviders invocationProviders = new AeshInvocationProviders(
+            new SettingsBuilder()
+                    .converterInvocationProvider(new AeshConverterInvocationProvider())
+                    .completerInvocationProvider(new AeshCompleterInvocationProvider())
+                    .validatorInvocationProvider(new AeshValidatorInvocationProvider())
+                    .optionActivatorProvider(new AeshOptionActivatorProvider())
+                    .commandActivatorProvider(new AeshCommandActivatorProvider()).create());
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();

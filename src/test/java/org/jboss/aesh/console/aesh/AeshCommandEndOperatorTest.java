@@ -21,10 +21,6 @@ package org.jboss.aesh.console.aesh;
 
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -32,13 +28,12 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import org.jboss.aesh.console.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
@@ -52,36 +47,29 @@ public class AeshCommandEndOperatorTest {
 
     @Test
     public void testEnd() throws IOException, InterruptedException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .setPersistExport(false)
-                .logging(true)
-                .create();
+        TestConnection connection = new TestConnection();
 
          CommandRegistry registry = new AeshCommandRegistryBuilder()
                  .command(FooCommand.class)
                  .command(BarCommand.class)
                  .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
+        Settings settings = new SettingsBuilder()
                 .commandRegistry(registry)
-                .prompt(new Prompt(""));
+                .connection(connection)
+                .setPersistExport(false)
+                .logging(true)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-        outputStream.write(("foo ;bar --info yup; foo"+Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("foo ;bar --info yup; foo"+ Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(100);
         assertEquals(3, counter);
 
-        aeshConsole.stop();
+        console.stop();
     }
 
     @CommandDefinition(name ="foo", description = "")
