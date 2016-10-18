@@ -19,6 +19,11 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.terminal.formatting.CharacterType;
+import org.jboss.aesh.terminal.formatting.Color;
+import org.jboss.aesh.terminal.formatting.TerminalCharacter;
+import org.jboss.aesh.terminal.formatting.TerminalColor;
+import org.jboss.aesh.terminal.formatting.TerminalTextStyle;
 import org.jboss.aesh.util.ANSI;
 import org.junit.Test;
 

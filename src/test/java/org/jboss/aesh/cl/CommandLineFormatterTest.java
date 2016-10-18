@@ -24,8 +24,8 @@ import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.util.ANSI;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

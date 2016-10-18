@@ -30,11 +30,8 @@ import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineParserBuilder;
 import org.jboss.aesh.cl.validator.OptionValidator;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -44,6 +41,9 @@ import org.jboss.aesh.console.command.validator.ValidatorInvocation;
 import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -65,14 +65,9 @@ public class AeshConsoleTest extends BaseConsoleTest {
 
     @Test
     public void testAeshConsole() throws IOException, InterruptedException, CommandLineParserException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(new ByteArrayOutputStream()))
-                .logging(true)
-                .create();
+        //PipedOutputStream outputStream = new PipedOutputStream();
+        //PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
+        TestConnection connection = new TestConnection();
 
         ProcessedCommand fooCommand = new ProcessedCommandBuilder()
                 .name("foo")
@@ -92,25 +87,26 @@ public class AeshConsoleTest extends BaseConsoleTest {
                 .command(LsCommand.class)
                 .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
-                .validatorInvocationProvider(new DirectoryValidatorInvocationProvider())
-                .commandRegistry(registry);
+        Settings settings = new SettingsBuilder()
+                .logging(true)
+                .commandRegistry(registry)
+                .connection(connection)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-        outputStream.write(("foo").getBytes());
+        connection.read("foo");
         //outputStream.write(completeChar.getFirstValue());
-        outputStream.write(Config.getLineSeparator().getBytes());
-        outputStream.flush();
+        connection.read(Config.getLineSeparator());
+        //outputStream.flush();
 
-        outputStream.write("ls --files /home:/tmp".getBytes());
-        outputStream.write(Config.getLineSeparator().getBytes());
-        outputStream.flush();
+        connection.read("ls --files /home:/tmp");
+        connection.read(Config.getLineSeparator());
+        //outputStream.flush();
 
         Thread.sleep(100);
-        aeshConsole.stop();
+        console.stop();
     }
 
     public static class FooTestCommand implements Command {

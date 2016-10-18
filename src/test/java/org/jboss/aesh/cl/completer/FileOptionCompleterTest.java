@@ -24,10 +24,10 @@ import java.io.File;
 import java.io.IOException;
 
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.console.Config;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.terminal.TerminalString;
+import org.jboss.aesh.terminal.formatting.TerminalString;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

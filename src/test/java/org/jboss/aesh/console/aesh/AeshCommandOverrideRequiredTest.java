@@ -23,10 +23,6 @@ import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.Option;
 import org.jboss.aesh.cl.validator.CommandValidator;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
@@ -34,16 +30,14 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import org.jboss.aesh.console.command.CommandException;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -53,34 +47,27 @@ public class AeshCommandOverrideRequiredTest {
 
     @Test
     public void testOverrideRequired() throws IOException, InterruptedException {
-         PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
 
-        Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .create();
-
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(FooCommand.class)
                 .create();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-                .settings(settings)
+        Settings settings = new SettingsBuilder()
                 .commandRegistry(registry)
-                .prompt(new Prompt(""));
+                .connection(connection)
+                .logging(true)
+                .create();
 
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-        outputStream.write(("foo -h"+ Config.getLineSeparator()).getBytes());
-        outputStream.flush();
+        connection.read("foo -h"+ Config.getLineSeparator());
+        //outputStream.flush();
         Thread.sleep(200);
-        assertTrue(byteArrayOutputStream.toString().contains("OVERRIDDEN"));
+        //assertTrue(byteArrayOutputStream.toString().contains("OVERRIDDEN"));
 
-        aeshConsole.stop();
+        console.stop();
 
     }
 
@@ -96,7 +83,7 @@ public class AeshCommandOverrideRequiredTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help)
-                commandInvocation.getShell().out().println("OVERRIDDEN");
+                commandInvocation.println("OVERRIDDEN");
             return CommandResult.SUCCESS;
         }
     }

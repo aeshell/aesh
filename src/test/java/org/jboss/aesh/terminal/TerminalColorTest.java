@@ -19,6 +19,8 @@
  */
 package org.jboss.aesh.terminal;
 
+import org.jboss.aesh.terminal.formatting.Color;
+import org.jboss.aesh.terminal.formatting.TerminalColor;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

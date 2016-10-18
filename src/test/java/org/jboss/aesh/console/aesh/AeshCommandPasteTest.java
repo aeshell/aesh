@@ -19,20 +19,9 @@
  */
 package org.jboss.aesh.console.aesh;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 
 import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.console.AeshConsole;
-import org.jboss.aesh.console.AeshConsoleBuilder;
-import org.jboss.aesh.console.AeshConsoleImpl;
-import org.jboss.aesh.console.Config;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandResult;
@@ -41,6 +30,9 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
+import org.jboss.aesh.readline.ReadlineConsole;
+import org.jboss.aesh.tty.TestConnection;
+import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 /**
@@ -52,68 +44,54 @@ public class AeshCommandPasteTest {
 
     @Test
     public void testPaste() throws IOException, InterruptedException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
+
+       CommandRegistry registry = new AeshCommandRegistryBuilder().create();
 
         Settings settings = new SettingsBuilder()
-            .inputStream(pipedInputStream)
-            .outputStream(new PrintStream(byteArrayOutputStream))
-            .setPersistExport(false)
-            .persistHistory(false)
-            .logging(true)
-            .create();
+                .connection(connection)
+                .commandRegistry(registry)
+                .setPersistExport(false)
+                .persistHistory(false)
+                .logging(true)
+                .create();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder().create();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-            .settings(settings)
-            .commandRegistry(registry)
-            .prompt(new Prompt(""));
-
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
-
-        outputStream.write(("FOO" + LINE_SEPARATOR + "FUU" + LINE_SEPARATOR + "bar").getBytes());
-        outputStream.flush();
+        connection.read("FOO" + LINE_SEPARATOR + "FUU" + LINE_SEPARATOR + "bar");
+        //outputStream.flush();
         Thread.sleep(100);
-        assertEquals("bar", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        //assertEquals("bar", ((AeshConsoleImpl) console).getBuffer());
 
-        aeshConsole.stop();
+        console.stop();
     }
 
     @Test
     public void testPasteWhileACommandIsRunning() throws IOException, InterruptedException {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection connection = new TestConnection();
+
+       CommandRegistry registry = new AeshCommandRegistryBuilder()
+            .command(FooCommand.class)
+            .create();
 
         Settings settings = new SettingsBuilder()
-            .inputStream(pipedInputStream)
-            .outputStream(new PrintStream(byteArrayOutputStream))
+            .connection(connection)
+                .commandRegistry(registry)
             .setPersistExport(false)
             .persistHistory(false)
             .logging(true)
             .create();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
-            .command(FooCommand.class)
-            .create();
+         ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-        AeshConsoleBuilder consoleBuilder = new AeshConsoleBuilder()
-            .settings(settings)
-            .commandRegistry(registry)
-            .prompt(new Prompt(""));
-
-        AeshConsole aeshConsole = consoleBuilder.create();
-        aeshConsole.start();
-
-        outputStream.write(("foo" + LINE_SEPARATOR + "FUU" + LINE_SEPARATOR + "bar").getBytes());
-        outputStream.flush();
+        connection.read("foo" + LINE_SEPARATOR + "FUU" + LINE_SEPARATOR + "bar");
+        //outputStream.flush();
         Thread.sleep(200);
-        assertEquals("bar", ((AeshConsoleImpl) aeshConsole).getBuffer());
+        //assertEquals("bar", ((AeshConsoleImpl) console).getBuffer());
 
-        aeshConsole.stop();
+        console.stop();
     }
 
     @CommandDefinition(name = "foo", description = "")
