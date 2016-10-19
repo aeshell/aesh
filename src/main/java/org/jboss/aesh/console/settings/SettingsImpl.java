@@ -20,6 +20,7 @@
 package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.activator.CommandActivatorProvider;
 import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
@@ -89,6 +90,7 @@ public class SettingsImpl implements Settings {
     private ValidatorInvocationProvider validatorInvocationProvider;
     private ManProvider manProvider;
     private Connection connection;
+    private InvocationProviders invocationProviders;
 
     protected SettingsImpl() {
     }
@@ -133,6 +135,7 @@ public class SettingsImpl implements Settings {
         setValidatorInvocationProvider(baseSettings.validatorInvocationProvider());
         setManProvider(baseSettings.manProvider());
         setConnection(baseSettings.connection());
+        setInvocationProviders(baseSettings.invocationProviders());
     }
 
     public void resetToDefaults() {
@@ -710,7 +713,16 @@ public class SettingsImpl implements Settings {
         }
     }
 
+    @Override
+    public InvocationProviders invocationProviders() {
+        return invocationProviders;
+    }
+
     public void setConnection(Connection connection) {
         this.connection = connection;
+    }
+
+    public void setInvocationProviders(InvocationProviders invocationProviders) {
+        this.invocationProviders = invocationProviders;
     }
 }

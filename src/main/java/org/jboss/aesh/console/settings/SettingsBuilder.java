@@ -20,6 +20,8 @@
 package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.AeshInvocationProviders;
+import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.activator.AeshCommandActivatorProvider;
 import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.activator.CommandActivatorProvider;
@@ -254,6 +256,11 @@ public class SettingsBuilder {
         return this;
     }
 
+    public SettingsBuilder invocationProviders(InvocationProviders invocationProviders) {
+        settings.setInvocationProviders(invocationProviders);
+        return this;
+    }
+
     public SettingsBuilder connection(Connection connection) {
         settings.setConnection(connection);
         return this;
@@ -283,6 +290,11 @@ public class SettingsBuilder {
 
         if(settings.commandActivatorProvider() == null)
             settings.setCommandActivatorProvider(new AeshCommandActivatorProvider());
+
+        if(settings.invocationProviders() == null)
+            settings.setInvocationProviders(new AeshInvocationProviders(settings.converterInvocationProvider(),
+                    settings.completerInvocationProvider(), settings.validatorInvocationProvider(),
+                    settings.optionActivatorProvider(), settings.commandActivatorProvider()));
 
         return settings;
     }

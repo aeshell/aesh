@@ -23,8 +23,6 @@ import org.jboss.aesh.AeshCommandResolver;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
-import org.jboss.aesh.cl.validator.CommandValidatorException;
-import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.AeshCompletionHandler;
 import org.jboss.aesh.console.AeshContext;
@@ -32,15 +30,11 @@ import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.CommandResolver;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.Shell;
-import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.container.CommandContainer;
-import org.jboss.aesh.console.command.container.CommandContainerResult;
-import org.jboss.aesh.console.command.invocation.AeshCommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.settings.DefaultAeshContext;
 import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.parser.Parser;
 import org.jboss.aesh.readline.action.ActionDecoder;
 import org.jboss.aesh.readline.completion.CompleteOperation;
 import org.jboss.aesh.readline.completion.Completion;
@@ -49,7 +43,6 @@ import org.jboss.aesh.readline.history.InMemoryHistory;
 import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.tty.Capability;
 import org.jboss.aesh.tty.Connection;
-import org.jboss.aesh.tty.Signal;
 import org.jboss.aesh.tty.Size;
 import org.jboss.aesh.tty.terminal.TerminalConnection;
 import org.jboss.aesh.util.Config;
@@ -58,7 +51,6 @@ import org.jboss.aesh.util.LoggerUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -77,7 +69,6 @@ public class ReadlineConsole implements Console {
     private InvocationProviders invocationProviders;
     private AeshCompletionHandler completionHandler;
 
-    private final String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
 
     private volatile boolean running = false;
@@ -163,7 +154,7 @@ public class ReadlineConsole implements Console {
         try (CommandContainer container = commandResolver.resolveCommand(line)) {
             try {
                 connection.suspend();
-                new Process(conn, this, readline, container, line).start();
+                new Process(conn, this, readline, container, settings, line).start();
             }
             catch (IllegalArgumentException e) {
                 conn.write(line + ": command not found\n");
@@ -215,181 +206,6 @@ public class ReadlineConsole implements Console {
         if(this.completions == null)
             this.completions = new ArrayList<>();
         this.completions.addAll(completions);
-    }
-
-    class Process extends Thread implements Consumer<Signal> {
-
-        final Connection conn;
-        final Readline readline;
-        final CommandContainer container;
-        final String line;
-        final Console console;
-        volatile boolean running;
-
-        public Process(Connection conn, Console console, Readline readline,
-                       CommandContainer container, String line) {
-            this.conn = conn;
-            this.console = console;
-            this.readline = readline;
-            this.container = container;
-            this.line = line;
-        }
-
-        @Override
-        public void accept(Signal signal) {
-            switch (signal) {
-                case INT:
-                    if (running) {
-                        // Ctrl-C interrupt : we use Thread interrupts to signal the command to stop
-                        LOGGER.info("got interrupted in Task");
-                        interrupt();
-                    }
-            }
-        }
-
-        @Override
-        public void run() {
-            // Subscribe to events, in particular Ctrl-C
-            conn.setSignalHandler(this);
-            running = true;
-            try {
-                runCommand(container, line);
-                //command.execute(conn, args);
-                //command.execute(null);
-            }
-            catch (InterruptedException e) {
-                // Ctlr-C interrupt
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            finally {
-                running = false;
-                conn.setSignalHandler(null);
-                conn.setStdinHandler(null);
-
-                if(console.running()) {
-                    LOGGER.info("trying to read again.");
-                    // Readline again
-                    read(conn, readline);
-                }
-                else {
-                    conn.close();
-                    LOGGER.info("we're exiting...");
-                }
-            }
-        }
-
-        private void runCommand(CommandContainer container, String aeshLine) throws InterruptedException, OptionValidatorException, CommandException, CommandLineParserException, CommandValidatorException {
-            CommandContainerResult ccResult =
-                    container.executeCommand(Parser.findAllWords(aeshLine), invocationProviders, context(),
-                            settings.commandInvocationServices().getCommandInvocationProvider(
-                                    commandInvocationProvider).enhanceCommandInvocation(
-                                    new AeshCommandInvocation(console, new ShellImpl(connection, readline)
-                                    )));
-        }
-    }
-
-    class ShellImpl implements Shell {
-
-        private Connection connection;
-        private Readline readline;
-
-        public ShellImpl(Connection connection, Readline readline) {
-            this.connection = connection;
-            this.readline = readline;
-        }
-
-        @Override
-        public void write(String out) {
-            connection.write(out);
-        }
-
-        @Override
-        public void writeln(String out) {
-            connection.write(out+ Config.getLineSeparator());
-        }
-
-         @Override
-        public void write(int[] out) {
-            connection.stdoutHandler().accept(out);
-        }
-
-        @Override
-        public String readLine() throws InterruptedException {
-            return readLine(new Prompt(""));
-        }
-
-        @Override
-        public String readLine(Prompt prompt) throws InterruptedException {
-            final String[] out = {null};
-            CountDownLatch latch = new CountDownLatch(1);
-            readline.readline(connection, prompt, event -> {
-                out[0] = event;
-                latch.countDown();
-                connection.suspend();
-            });
-            connection.awake();
-            try {
-                // Wait until interrupted
-                latch.await();
-            }
-            finally {
-                connection.setStdinHandler(null);
-            }
-            return out[0];
-        }
-
-        @Override
-        public Key read() throws InterruptedException {
-            ActionDecoder decoder = new ActionDecoder(settings.editMode());
-            final Key[] key = {null};
-            CountDownLatch latch = new CountDownLatch(1);
-            connection.setStdinHandler(keys -> {
-                decoder.add(keys);
-                if(decoder.hasNext()) {
-                    key[0] = Key.findStartKey( decoder.next().buffer().array());
-                    latch.countDown();
-                    connection.suspend();
-                }
-            });
-            connection.awake();
-            try {
-                // Wait until interrupted
-                latch.await();
-            }
-            finally {
-                connection.setStdinHandler(null);
-            }
-            return key[0];
-       }
-
-
-        @Override
-        public Key read(Prompt prompt) throws InterruptedException {
-            //TODO
-            return null;
-        }
-
-        @Override
-        public boolean enableAlternateBuffer() {
-            return connection.put(Capability.enter_ca_mode);
-        }
-
-        @Override
-        public boolean enableMainBuffer() {
-            return connection.put(Capability.exit_ca_mode);
-        }
-
-        @Override
-        public Size size() {
-            return connection.size();
-        }
-
-        @Override
-        public void clear() {
-            connection.put(Capability.clear_screen);
-        }
     }
 
     class AeshCompletion implements Completion<AeshCompleteOperation> {
