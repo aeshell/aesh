@@ -20,24 +20,31 @@
 package org.jboss.aesh.readline;
 
 import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.InvocationProviders;
+import org.jboss.aesh.console.command.container.CommandContainer;
+import org.jboss.aesh.console.command.container.CommandContainerResult;
+import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.tty.Connection;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface Console {
+public class ProcessManager {
 
-    void stop();
+    private final Settings settings;
+    private final InvocationProviders invocationProviders;
+    private AeshContext context;
+    private final Console console;
+    //private final Connection connection;
 
-    boolean running();
 
-    void setPrompt(Prompt prompt);
+    public ProcessManager(Settings setting, InvocationProviders invocationProviders, AeshContext context,
+                          Console console) {
+        this.settings = setting;
+        this.invocationProviders = invocationProviders;
+        this.context = context;
+        this.console = console;
+    }
 
-    Prompt prompt();
 
-    AeshContext context();
-
-    String helpInfo(String commandName);
-
-    void read(Connection conn, Readline readline);
 }

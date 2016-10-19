@@ -45,6 +45,18 @@ public class AeshInvocationProviders implements InvocationProviders {
         this.commandActivatorProvider = settings.commandActivatorProvider();
     }
 
+    public AeshInvocationProviders(ConverterInvocationProvider converterInvocationProvider,
+                                   CompleterInvocationProvider completerInvocationProvider,
+                                   ValidatorInvocationProvider validatorInvocationProvider,
+                                   OptionActivatorProvider optionActivatorProvider,
+                                   CommandActivatorProvider commandActivatorProvider) {
+        this.converterInvocationProvider = converterInvocationProvider;
+        this.completerInvocationProvider = completerInvocationProvider;
+        this.validatorInvocationProvider = validatorInvocationProvider;
+        this.optionActivatorProvider = optionActivatorProvider;
+        this.commandActivatorProvider = commandActivatorProvider;
+    }
+
     @Override
     public ConverterInvocationProvider getConverterProvider() {
         return converterInvocationProvider;
