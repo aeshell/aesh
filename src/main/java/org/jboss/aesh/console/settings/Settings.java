@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.jboss.aesh.console.AeshContext;
+import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.activator.CommandActivatorProvider;
 import org.jboss.aesh.console.command.activator.OptionActivatorProvider;
 import org.jboss.aesh.console.command.completer.CompleterInvocationProvider;
@@ -266,4 +267,5 @@ public interface Settings extends Cloneable {
 
     Object clone();
 
+    InvocationProviders invocationProviders();
 }
