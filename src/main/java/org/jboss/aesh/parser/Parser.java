@@ -524,15 +524,18 @@ public class Parser {
             return false;
         boolean doubleQuote = false;
         boolean singleQuote = false;
+        boolean escapedByBackSlash = false;
         for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == BACK_SLASH || escapedByBackSlash) {
+                escapedByBackSlash = !escapedByBackSlash;
+                continue;
+            }
             if (text.charAt(i) == SINGLE_QUOTE) {
-                if (!doubleQuote &&
-                        (i == 0 || (i > 0 && !(text.charAt(i - 1) == BACK_SLASH))))
+                if (!doubleQuote)
                     singleQuote = !singleQuote;
             }
             else if (text.charAt(i) == DOUBLE_QUOTE) {
-                if (!singleQuote &&
-                        (i == 0 || (i > 0 && !(text.charAt(i - 1) == BACK_SLASH))))
+                if (!singleQuote)
                     doubleQuote = !doubleQuote;
             }
         }
