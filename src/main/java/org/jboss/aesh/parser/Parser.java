@@ -45,6 +45,8 @@ public class Parser {
     private static final Pattern spaceEscapedPattern = Pattern.compile("\\\\ ");
     private static final Pattern spacePattern = Pattern.compile("(?<!\\\\)\\s");
     private static final Pattern ansiPattern = Pattern.compile("\\u001B\\[[\\?]?[0-9;]*[a-zA-Z]?");
+    // command text which starts with '#' is a comment
+    private static final Pattern commentPattern = Pattern.compile("^(\\s*)(#)(.*)");
     private static final char NULL_CHAR = '\u0000';
 
     /**
@@ -522,6 +524,9 @@ public class Parser {
         boolean doubleQuote = false;
         boolean singleQuote = false;
         boolean escapedByBackSlash = false;
+        // do not parse comment
+        if (commentPattern.matcher(text).find())
+            return false;
         for (int i = 0; i < text.length(); i++) {
             if (text.charAt(i) == BACK_SLASH || escapedByBackSlash) {
                 escapedByBackSlash = !escapedByBackSlash;
