@@ -48,10 +48,9 @@ public class AeshCommandLineParserHelper {
      * Populate commandLine.
      * Lines are the user input minus command name;
      *
-     * @param commandLine
-     * @param lines
-     * @param ignoreRequirements
-     * @return
+     * @param commandLine command
+     * @param lines input
+     * @param ignoreRequirements should we ignore requirements
      */
     public void parse(CommandLine commandLine,
             List<String> lines, boolean ignoreRequirements) {
@@ -60,20 +59,17 @@ public class AeshCommandLineParserHelper {
         this.commandLine = commandLine;
         this.active = null;
 
-        for(int i=0; i < lines.size(); i++) {
-            String word = lines.get(i);
-
+        for (String word : lines) {
             ProcessedOption currOption = findOption(word);
-            if(status == Status.ACTIVE) {
-                if(currOption == null) {
+            if (status == Status.ACTIVE) {
+                if (currOption == null) {
                     //add value to active
                     addValueToOption(active, word);
                     //if addValueToOption have added the option to commandline
                     //we need to set active = null
-                    if(status == Status.NULL)
+                    if (status == Status.NULL)
                         active = null;
-                }
-                else {
+                } else {
                     //first add the current active option to commandLine
                     //the process the option
                     commandLine.addOption(active);
@@ -82,14 +78,12 @@ public class AeshCommandLineParserHelper {
 
                     preProcessOption(currOption, word);
                 }
-            }
-            else if(status == Status.NULL) {
-                if(currOption == null) {
+            } else if (status == Status.NULL) {
+                if (currOption == null) {
                     //add the current word as argument
 
                     commandLine.addArgumentValue(word);
-                }
-                else {
+                } else {
                     preProcessOption(currOption, word);
                 }
             }
@@ -318,7 +312,7 @@ public class AeshCommandLineParserHelper {
         status = Status.NULL;
     }
 
-    enum Status {
+    private enum Status {
         NULL, OPTION_FOUND, ACTIVE;
     }
 }

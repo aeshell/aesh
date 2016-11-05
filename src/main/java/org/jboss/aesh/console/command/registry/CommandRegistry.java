@@ -38,7 +38,6 @@ public interface CommandRegistry {
      * @param name command name
      * @param line current terminal buffer line
      * @return the matching CommandContainer's name
-     * @throws org.jboss.aesh.console.command.CommandNotFoundException
      */
     CommandContainer getCommand(String name, String line) throws CommandNotFoundException;
 
@@ -46,14 +45,12 @@ public interface CommandRegistry {
      *
      * @param parent The name of the parent command
      * @return The list of child parsers
-     * @throws CommandNotFoundException
      */
     List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException;
 
     /**
      * @param alias command alias
      * @return the matching CommandContainer's alias
-     * @throws org.jboss.aesh.console.command.CommandNotFoundException
      */
     CommandContainer getCommandByAlias(String alias) throws CommandNotFoundException;
 
@@ -61,7 +58,7 @@ public interface CommandRegistry {
      * Based on input, find all commands that match or partly match
      *
      *
-     * @param completeOperation@return matching/partly patching commands
+     * @param completeOperation operation
      */
     void completeCommandName(CompleteOperation completeOperation);
 

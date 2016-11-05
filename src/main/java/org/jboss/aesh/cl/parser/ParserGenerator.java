@@ -41,7 +41,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.jboss.aesh.console.command.GroupCommand;
-import org.jboss.aesh.console.command.activator.AeshCommandActivatorProvider;
 
 /**
  * Generates a {@link AeshCommandLineParser} based on annotations defined in

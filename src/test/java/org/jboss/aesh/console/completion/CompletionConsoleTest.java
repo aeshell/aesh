@@ -35,11 +35,9 @@ import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
-import org.jboss.aesh.complete.CompletionRegistration;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.ConsoleOperation;
-import org.jboss.aesh.console.Prompt;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
@@ -403,8 +401,10 @@ public class CompletionConsoleTest extends BaseConsoleTest {
         } finally {
             console.stop();
         }
+        */
     }
 
+    /*
     String getLastOutputLine(ByteArrayOutputStream os) {
         String output = new String(os.toByteArray());
         String[] lines = output.split("\n");

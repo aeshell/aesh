@@ -182,9 +182,19 @@ public class TestConnection implements Connection {
     }
 
     @Override
-    public void open() {
+    public void openBlocking() {
         //we're not doing anything here, all input will come from the read(..) methods
         reading = true;
+    }
+
+    @Override
+    public void openNonBlocking() {
+
+    }
+
+    @Override
+    public void stopReading() {
+
     }
 
     private void doRead(int[] input) {
@@ -212,10 +222,6 @@ public class TestConnection implements Connection {
         }
         else
             throw new RuntimeException("Got input when not reading: "+ Arrays.toString(input));
-    }
-
-    @Override
-    public void openNonBlockingReader() {
     }
 
     @Override

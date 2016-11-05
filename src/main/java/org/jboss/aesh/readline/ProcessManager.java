@@ -21,10 +21,7 @@ package org.jboss.aesh.readline;
 
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.InvocationProviders;
-import org.jboss.aesh.console.command.container.CommandContainer;
-import org.jboss.aesh.console.command.container.CommandContainerResult;
 import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.tty.Connection;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
