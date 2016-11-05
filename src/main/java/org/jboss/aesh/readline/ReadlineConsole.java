@@ -48,6 +48,7 @@ import org.jboss.aesh.tty.terminal.TerminalConnection;
 import org.jboss.aesh.util.Config;
 import org.jboss.aesh.util.LoggerUtil;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -86,7 +87,7 @@ public class ReadlineConsole implements Console {
 
     }
 
-    public void start() {
+    public void start() throws IOException {
         if(connection == null)
             connection = new TerminalConnection(settings.stdIn(), settings.stdOut());
         init();
@@ -111,7 +112,7 @@ public class ReadlineConsole implements Console {
         running = true;
         read(connection, readline);
 
-        connection.open();
+        connection.openBlocking();
     }
 
     /**
