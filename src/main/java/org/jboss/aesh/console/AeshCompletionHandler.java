@@ -236,7 +236,7 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
 
         LOGGER.info("completion: "+completion.getCharacters()+" and buffer: "+buffer.asString());
         if(completion.getCharacters().startsWith(buffer.asString())) {
-            ActionMapper.mapToAction("backward-kill-word").apply(inputProcessor);
+            ActionMapper.mapToAction("backward-kill-word").accept(inputProcessor);
             //consoleBuffer.performAction(new PrevWordAction(buffer.getMultiCursor(), Action.DELETE, EditMode.Mode.EMACS));
             //buffer.write(completion.getCharacters());
             inputProcessor.getBuffer().writeString(completion.toString());

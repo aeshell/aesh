@@ -76,8 +76,7 @@ import org.jboss.aesh.util.Config;
  */
 public class Example {
 
-    public static void main(String[] args) throws CommandLineParserException {
-
+    public static void main(String[] args) throws CommandLineParserException, IOException {
 
         CommandBuilder fooCommand = new CommandBuilder()
                 .name("foo")
@@ -174,7 +173,8 @@ public class Example {
     }
 
     private static class HideActivator implements CommandActivator {
-        public boolean isActivated() {
+        @Override
+        public boolean isActivated(ProcessedCommand command) {
             return false;
         }
     }
