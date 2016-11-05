@@ -31,8 +31,8 @@ public interface OptionActivator {
      * Eg: While completing options this option will not be
      * displayed if this method return false.
      *
-     * @param processedCommand
-     * @return
+     * @param processedCommand command
+     * @return false if option is not activated
      */
     boolean isActivated(ProcessedCommand processedCommand);
 }
