@@ -19,8 +19,8 @@
  */
 package org.jboss.aesh.graphics;
 
-import org.jboss.aesh.tty.Size;
-import org.jboss.aesh.tty.terminal.TerminalConnection;
+import org.aesh.tty.Size;
+import org.aesh.tty.terminal.TerminalConnection;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

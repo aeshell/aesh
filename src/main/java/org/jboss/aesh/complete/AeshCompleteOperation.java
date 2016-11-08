@@ -20,7 +20,7 @@
 package org.jboss.aesh.complete;
 
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.readline.completion.CompleteOperationImpl;
+import org.aesh.readline.completion.CompleteOperationImpl;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

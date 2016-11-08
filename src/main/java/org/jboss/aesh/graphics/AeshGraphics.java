@@ -19,12 +19,12 @@
  */
 package org.jboss.aesh.graphics;
 
-import org.jboss.aesh.terminal.Terminal;
-import org.jboss.aesh.terminal.formatting.TerminalColor;
-import org.jboss.aesh.terminal.formatting.TerminalTextStyle;
-import org.jboss.aesh.tty.Capability;
-import org.jboss.aesh.tty.Size;
-import org.jboss.aesh.util.ANSI;
+import org.aesh.terminal.Terminal;
+import org.aesh.terminal.formatting.TerminalColor;
+import org.aesh.terminal.formatting.TerminalTextStyle;
+import org.aesh.tty.Capability;
+import org.aesh.tty.Size;
+import org.aesh.util.ANSI;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

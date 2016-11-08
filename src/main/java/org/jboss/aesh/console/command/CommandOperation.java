@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.console.command;
 
-import org.jboss.aesh.terminal.Key;
+import org.aesh.terminal.Key;
 
 import java.util.Arrays;
 

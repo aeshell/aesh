@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.tty.Signal;
+import org.aesh.tty.Signal;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

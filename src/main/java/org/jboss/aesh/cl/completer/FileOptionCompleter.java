@@ -23,7 +23,7 @@ import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.command.completer.CompleterInvocation;
 import org.jboss.aesh.io.filter.AllResourceFilter;
 import org.jboss.aesh.io.filter.ResourceFilter;
-import org.jboss.aesh.readline.completion.CompleteOperation;
+import org.aesh.readline.completion.CompleteOperation;
 import org.jboss.aesh.util.FileLister;
 
 /**

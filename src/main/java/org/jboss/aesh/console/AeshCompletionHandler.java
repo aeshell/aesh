@@ -19,21 +19,21 @@
  */
 package org.jboss.aesh.console;
 
+import org.aesh.readline.Buffer;
+import org.aesh.readline.InputProcessor;
+import org.aesh.readline.action.mappings.ActionMapper;
+import org.aesh.readline.completion.Completion;
+import org.aesh.readline.completion.CompletionHandler;
+import org.aesh.terminal.formatting.TerminalString;
+import org.aesh.tty.Connection;
+import org.aesh.util.Config;
+import org.aesh.util.LoggerUtil;
 import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.alias.Alias;
 import org.jboss.aesh.console.alias.AliasManager;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
 import org.jboss.aesh.parser.Parser;
-import org.jboss.aesh.readline.Buffer;
-import org.jboss.aesh.readline.InputProcessor;
-import org.jboss.aesh.readline.action.mappings.ActionMapper;
-import org.jboss.aesh.readline.completion.Completion;
-import org.jboss.aesh.readline.completion.CompletionHandler;
-import org.jboss.aesh.terminal.formatting.TerminalString;
-import org.jboss.aesh.tty.Connection;
-import org.jboss.aesh.util.Config;
-import org.jboss.aesh.util.LoggerUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;

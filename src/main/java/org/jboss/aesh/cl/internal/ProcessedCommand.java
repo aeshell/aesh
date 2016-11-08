@@ -33,8 +33,8 @@ import java.util.Collections;
 import java.util.List;
 import org.jboss.aesh.cl.activation.CommandActivator;
 import org.jboss.aesh.cl.activation.NullCommandActivator;
-import org.jboss.aesh.terminal.formatting.TerminalString;
-import org.jboss.aesh.util.Config;
+import org.aesh.terminal.formatting.TerminalString;
+import org.aesh.util.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

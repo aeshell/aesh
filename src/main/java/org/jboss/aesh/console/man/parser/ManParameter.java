@@ -20,7 +20,7 @@
 package org.jboss.aesh.console.man.parser;
 
 import org.jboss.aesh.parser.Parser;
-import org.jboss.aesh.util.Config;
+import org.aesh.util.Config;
 
 import java.util.ArrayList;
 import java.util.List;

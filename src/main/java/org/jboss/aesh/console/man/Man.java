@@ -28,14 +28,14 @@ import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.console.man.parser.ManFileParser;
-import org.jboss.aesh.util.ANSI;
+import org.aesh.util.ANSI;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import org.jboss.aesh.console.command.CommandException;
-import org.jboss.aesh.util.Config;
+import org.aesh.util.Config;
 
 /**
  * A Man implementation for Aesh. ref: http://en.wikipedia.org/wiki/Man_page

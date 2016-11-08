@@ -19,8 +19,10 @@
  */
 package org.jboss.aesh.readline;
 
+import org.aesh.readline.Prompt;
+import org.aesh.readline.Readline;
+import org.aesh.tty.Connection;
 import org.jboss.aesh.console.AeshContext;
-import org.jboss.aesh.tty.Connection;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

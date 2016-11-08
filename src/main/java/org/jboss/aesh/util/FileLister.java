@@ -32,13 +32,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.aesh.util.Config;
+import org.aesh.util.LoggerUtil;
 import org.jboss.aesh.comparators.PosixFileNameComparator;
 import org.jboss.aesh.io.filter.AllResourceFilter;
 import org.jboss.aesh.io.Resource;
 import org.jboss.aesh.io.filter.ResourceFilter;
 import org.jboss.aesh.parser.Parser;
-import org.jboss.aesh.readline.completion.CompleteOperation;
-import org.jboss.aesh.terminal.formatting.TerminalString;
+import org.aesh.readline.completion.CompleteOperation;
+import org.aesh.terminal.formatting.TerminalString;
 
 /**
  * Helper class to list possible files during a complete operation.

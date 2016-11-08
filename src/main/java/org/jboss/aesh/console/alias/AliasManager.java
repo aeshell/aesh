@@ -19,8 +19,8 @@
  */
 package org.jboss.aesh.console.alias;
 
-import org.jboss.aesh.util.Config;
-import org.jboss.aesh.util.LoggerUtil;
+import org.aesh.util.Config;
+import org.aesh.util.LoggerUtil;
 
 import java.io.BufferedReader;
 import java.io.File;

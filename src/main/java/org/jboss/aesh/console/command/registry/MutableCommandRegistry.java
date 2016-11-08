@@ -26,8 +26,8 @@ import org.jboss.aesh.console.command.container.AeshCommandContainerBuilder;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainerBuilder;
 import org.jboss.aesh.parser.Parser;
-import org.jboss.aesh.readline.completion.CompleteOperation;
-import org.jboss.aesh.util.LoggerUtil;
+import org.aesh.readline.completion.CompleteOperation;
+import org.aesh.util.LoggerUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;

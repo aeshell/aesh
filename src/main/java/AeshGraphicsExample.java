@@ -28,11 +28,11 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.graphics.Graphics;
 import org.jboss.aesh.graphics.GraphicsConfiguration;
-import org.jboss.aesh.terminal.Key;
+import org.aesh.terminal.Key;
 
 import org.jboss.aesh.console.command.CommandException;
-import org.jboss.aesh.terminal.formatting.Color;
-import org.jboss.aesh.terminal.formatting.TerminalColor;
+import org.aesh.terminal.formatting.Color;
+import org.aesh.terminal.formatting.TerminalColor;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

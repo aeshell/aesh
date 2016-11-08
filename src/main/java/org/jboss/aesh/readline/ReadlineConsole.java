@@ -19,6 +19,8 @@
  */
 package org.jboss.aesh.readline;
 
+import org.aesh.readline.Prompt;
+import org.aesh.readline.Readline;
 import org.jboss.aesh.AeshCommandResolver;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
@@ -33,14 +35,14 @@ import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.settings.DefaultAeshContext;
 import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.readline.completion.CompleteOperation;
-import org.jboss.aesh.readline.completion.Completion;
-import org.jboss.aesh.readline.editing.EditModeBuilder;
-import org.jboss.aesh.readline.history.InMemoryHistory;
-import org.jboss.aesh.tty.Connection;
-import org.jboss.aesh.tty.terminal.TerminalConnection;
-import org.jboss.aesh.util.Config;
-import org.jboss.aesh.util.LoggerUtil;
+import org.aesh.readline.completion.CompleteOperation;
+import org.aesh.readline.completion.Completion;
+import org.aesh.readline.editing.EditModeBuilder;
+import org.aesh.readline.history.InMemoryHistory;
+import org.aesh.tty.Connection;
+import org.aesh.tty.terminal.TerminalConnection;
+import org.aesh.util.Config;
+import org.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;

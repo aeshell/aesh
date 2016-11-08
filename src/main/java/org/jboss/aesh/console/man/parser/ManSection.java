@@ -19,8 +19,8 @@
  */
 package org.jboss.aesh.console.man.parser;
 
-import org.jboss.aesh.util.ANSI;
-import org.jboss.aesh.util.Config;
+import org.aesh.util.ANSI;
+import org.aesh.util.Config;
 
 import java.util.ArrayList;
 import java.util.List;
