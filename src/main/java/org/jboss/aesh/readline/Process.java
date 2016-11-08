@@ -19,6 +19,7 @@
  */
 package org.jboss.aesh.readline;
 
+import org.aesh.readline.Readline;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
@@ -29,9 +30,9 @@ import org.jboss.aesh.console.command.invocation.AeshCommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.parser.Parser;
-import org.jboss.aesh.tty.Connection;
-import org.jboss.aesh.tty.Signal;
-import org.jboss.aesh.util.LoggerUtil;
+import org.aesh.tty.Connection;
+import org.aesh.tty.Signal;
+import org.aesh.util.LoggerUtil;
 
 import java.util.function.Consumer;
 import java.util.logging.Logger;

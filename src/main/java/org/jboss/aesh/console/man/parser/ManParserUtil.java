@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.console.man.parser;
 
-import org.jboss.aesh.util.ANSI;
+import org.aesh.util.ANSI;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

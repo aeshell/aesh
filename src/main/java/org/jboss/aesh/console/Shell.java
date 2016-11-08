@@ -19,9 +19,9 @@
  */
 package org.jboss.aesh.console;
 
-import org.jboss.aesh.readline.Prompt;
-import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.tty.Size;
+import org.aesh.readline.Prompt;
+import org.aesh.terminal.Key;
+import org.aesh.tty.Size;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

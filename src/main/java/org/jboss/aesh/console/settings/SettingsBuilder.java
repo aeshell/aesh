@@ -38,9 +38,9 @@ import org.jboss.aesh.console.command.validator.ValidatorInvocationProvider;
 import org.jboss.aesh.console.helper.InterruptHook;
 import org.jboss.aesh.console.helper.ManProvider;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.readline.editing.EditMode;
-import org.jboss.aesh.tty.Connection;
-import org.jboss.aesh.util.LoggerUtil;
+import org.aesh.readline.editing.EditMode;
+import org.aesh.tty.Connection;
+import org.aesh.util.LoggerUtil;
 
 import java.io.File;
 import java.io.InputStream;

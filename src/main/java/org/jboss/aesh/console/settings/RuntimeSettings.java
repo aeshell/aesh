@@ -21,7 +21,7 @@ package org.jboss.aesh.console.settings;
 
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.readline.editing.EditMode;
+import org.aesh.readline.editing.EditMode;
 
 import java.io.File;
 

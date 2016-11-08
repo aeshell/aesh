@@ -48,16 +48,16 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
-import org.jboss.aesh.readline.Prompt;
+import org.aesh.readline.Prompt;
 import org.jboss.aesh.readline.ReadlineConsole;
-import org.jboss.aesh.readline.action.KeyAction;
-import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.terminal.formatting.CharacterType;
-import org.jboss.aesh.terminal.formatting.Color;
-import org.jboss.aesh.terminal.formatting.TerminalColor;
-import org.jboss.aesh.terminal.formatting.TerminalString;
-import org.jboss.aesh.terminal.formatting.TerminalTextStyle;
-import org.jboss.aesh.util.ANSI;
+import org.aesh.readline.action.KeyAction;
+import org.aesh.terminal.Key;
+import org.aesh.terminal.formatting.CharacterType;
+import org.aesh.terminal.formatting.Color;
+import org.aesh.terminal.formatting.TerminalColor;
+import org.aesh.terminal.formatting.TerminalString;
+import org.aesh.terminal.formatting.TerminalTextStyle;
+import org.aesh.util.ANSI;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -69,7 +69,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import org.jboss.aesh.console.command.CommandException;
-import org.jboss.aesh.util.Config;
+import org.aesh.util.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

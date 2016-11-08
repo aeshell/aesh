@@ -20,13 +20,16 @@
 
 package org.jboss.aesh.tty;
 
-import org.jboss.aesh.readline.Prompt;
-import org.jboss.aesh.readline.Readline;
-import org.jboss.aesh.readline.completion.Completion;
-import org.jboss.aesh.readline.editing.EditMode;
-import org.jboss.aesh.readline.editing.EditModeBuilder;
-import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.util.Parser;
+import org.aesh.readline.Prompt;
+import org.aesh.readline.completion.Completion;
+import org.aesh.readline.editing.EditMode;
+import org.aesh.readline.editing.EditModeBuilder;
+import org.aesh.terminal.Key;
+import org.aesh.tty.Capability;
+import org.aesh.tty.Connection;
+import org.aesh.tty.Signal;
+import org.aesh.tty.Size;
+import org.aesh.util.Parser;
 
 import java.util.Arrays;
 import java.util.List;

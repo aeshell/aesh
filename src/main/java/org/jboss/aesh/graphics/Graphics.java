@@ -19,8 +19,8 @@
  */
 package org.jboss.aesh.graphics;
 
-import org.jboss.aesh.terminal.formatting.TerminalColor;
-import org.jboss.aesh.terminal.formatting.TerminalTextStyle;
+import org.aesh.terminal.formatting.TerminalColor;
+import org.aesh.terminal.formatting.TerminalTextStyle;
 
 /**
  * Simple Terminal Graphics API

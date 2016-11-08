@@ -23,11 +23,11 @@ import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.operator.ControlOperator;
-import org.jboss.aesh.readline.action.KeyAction;
-import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.util.ANSI;
-import org.jboss.aesh.util.Config;
-import org.jboss.aesh.util.LoggerUtil;
+import org.aesh.readline.action.KeyAction;
+import org.aesh.terminal.Key;
+import org.aesh.util.ANSI;
+import org.aesh.util.Config;
+import org.aesh.util.LoggerUtil;
 
 import java.io.IOException;
 import java.util.List;

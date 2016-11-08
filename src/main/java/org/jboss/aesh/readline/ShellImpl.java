@@ -19,13 +19,15 @@
  */
 package org.jboss.aesh.readline;
 
+import org.aesh.readline.Prompt;
+import org.aesh.readline.Readline;
 import org.jboss.aesh.console.Shell;
-import org.jboss.aesh.readline.action.ActionDecoder;
-import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.tty.Capability;
-import org.jboss.aesh.tty.Connection;
-import org.jboss.aesh.tty.Size;
-import org.jboss.aesh.util.Config;
+import org.aesh.readline.action.ActionDecoder;
+import org.aesh.terminal.Key;
+import org.aesh.tty.Capability;
+import org.aesh.tty.Connection;
+import org.aesh.tty.Size;
+import org.aesh.util.Config;
 
 import java.util.concurrent.CountDownLatch;
 

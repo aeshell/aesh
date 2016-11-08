@@ -20,8 +20,8 @@
 package org.jboss.aesh.console.operator;
 
 import org.jboss.aesh.complete.AeshCompleteOperation;
-import org.jboss.aesh.readline.completion.CompleteOperation;
-import org.jboss.aesh.readline.completion.Completion;
+import org.aesh.readline.completion.CompleteOperation;
+import org.aesh.readline.completion.Completion;
 import org.jboss.aesh.util.FileLister;
 import org.jboss.aesh.parser.Parser;
 

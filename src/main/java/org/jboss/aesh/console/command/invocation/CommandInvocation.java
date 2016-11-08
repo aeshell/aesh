@@ -21,8 +21,8 @@ package org.jboss.aesh.console.command.invocation;
 
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.Shell;
-import org.jboss.aesh.readline.Prompt;
-import org.jboss.aesh.readline.action.KeyAction;
+import org.aesh.readline.Prompt;
+import org.aesh.readline.action.KeyAction;
 
 /**
  * A CommandInvocation is the value object passed to a Command when it is executed.

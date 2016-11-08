@@ -20,8 +20,8 @@
 package org.jboss.aesh.console;
 
 import org.jboss.aesh.readline.ReadlineConsole;
-import org.jboss.aesh.readline.action.KeyAction;
-import org.jboss.aesh.util.LoggerUtil;
+import org.aesh.readline.action.KeyAction;
+import org.aesh.util.LoggerUtil;
 
 import java.util.HashMap;
 import java.util.Map;

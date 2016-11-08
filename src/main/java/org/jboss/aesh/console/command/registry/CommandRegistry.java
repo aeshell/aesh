@@ -22,7 +22,7 @@ package org.jboss.aesh.console.command.registry;
 import java.util.List;
 import org.jboss.aesh.console.command.CommandNotFoundException;
 import org.jboss.aesh.console.command.container.CommandContainer;
-import org.jboss.aesh.readline.completion.CompleteOperation;
+import org.aesh.readline.completion.CompleteOperation;
 
 import java.util.Set;
 import org.jboss.aesh.cl.parser.CommandLineParser;
