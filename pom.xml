@@ -33,7 +33,7 @@
    <groupId>org.jboss.aesh</groupId>
    <artifactId>aesh</artifactId>
    <packaging>jar</packaging>
-   <version>0.66.12-SNAPSHOT</version>
+   <version>0.66.12</version>
    <name>Æsh</name>
    <description>Æsh (Another Extendable SHell)</description>
    <scm>
