@@ -82,6 +82,7 @@ public class AeshConsoleHistoryTest extends BaseConsoleTest {
         out[0] = '\u0000';
         outputStream.write(out);
         outputStream.flush();
+        Thread.sleep(100);
         outputStream.write("n".getBytes());
         outputStream.write(Config.getLineSeparator().getBytes());
         outputStream.flush();
