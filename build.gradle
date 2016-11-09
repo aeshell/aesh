@@ -77,6 +77,10 @@ idea {
     }
 }
 
+checkstyle {
+    sourceSets = [project.sourceSets.main]
+}
+
 install.dependsOn 'check'
 
 task docs(type: Javadoc) {

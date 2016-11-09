@@ -103,7 +103,8 @@ public class AeshInputProcessor implements InputProcessor {
         Action action = operation.getAction();
 
         if (action == Action.EDIT) {
-            consoleBuffer.writeChars(operation.getInput());
+            if(Key.isPrintable(operation.getInput()))
+                consoleBuffer.writeChars(operation.getInput());
         }
         //make sure that every action except delete and interrupt (ctrl-c) is ignored when masking is enabled
         else if(consoleBuffer.getBuffer().isMasking()) {
