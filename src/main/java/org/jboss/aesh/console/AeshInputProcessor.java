@@ -262,6 +262,7 @@ public class AeshInputProcessor implements InputProcessor {
             if (isCurrentLineEnding) {
                 consoleBuffer.getBuffer().setMultiLine(false);
                 consoleBuffer.getBuffer().reset();
+                consoleBuffer.setPrompted(false);
                 return result;
             }
             else

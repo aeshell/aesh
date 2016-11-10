@@ -262,7 +262,6 @@ public class Example {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
     }
 
     public static class ExampleConsoleCommand {
