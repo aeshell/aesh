@@ -22,6 +22,8 @@ package org.jboss.aesh.console;
 import org.aesh.readline.Buffer;
 import org.aesh.readline.InputProcessor;
 import org.aesh.readline.action.mappings.ActionMapper;
+import org.aesh.readline.alias.Alias;
+import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.completion.Completion;
 import org.aesh.readline.completion.CompletionHandler;
 import org.aesh.terminal.formatting.TerminalString;
@@ -29,8 +31,6 @@ import org.aesh.tty.Connection;
 import org.aesh.util.Config;
 import org.aesh.util.LoggerUtil;
 import org.jboss.aesh.complete.AeshCompleteOperation;
-import org.jboss.aesh.console.alias.Alias;
-import org.jboss.aesh.console.alias.AliasManager;
 import org.jboss.aesh.console.operator.ControlOperatorParser;
 import org.jboss.aesh.console.operator.RedirectionCompletion;
 import org.jboss.aesh.parser.Parser;
@@ -38,6 +38,7 @@ import org.jboss.aesh.parser.Parser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
@@ -301,10 +302,10 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
     private AeshCompleteOperation findAliases(String buffer, int cursor) {
         if(aliasManager != null) {
             String command = Parser.findFirstWord(buffer);
-            Alias alias = aliasManager.getAlias(command);
-            if(alias != null) {
-                return new AeshCompleteOperation(aeshContext, alias.getValue()+buffer.substring(command.length()),
-                        cursor+(alias.getValue().length()-command.length()));
+            Optional<Alias> alias = aliasManager.getAlias(command);
+            if(alias.isPresent()) {
+                return new AeshCompleteOperation(aeshContext, alias.get().getValue()+buffer.substring(command.length()),
+                        cursor+(alias.get().getValue().length()-command.length()));
             }
         }
 
