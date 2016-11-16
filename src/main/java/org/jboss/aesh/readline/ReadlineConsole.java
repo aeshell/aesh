@@ -123,10 +123,6 @@ public class ReadlineConsole implements Console {
             conn.close();
             return;
         }
-
-        if(connection.suspended())
-            connection.awake();
-
         LOGGER.info("calling readline.readline");
         readline.readline(conn, prompt, line -> {
             // Ctrl-D
