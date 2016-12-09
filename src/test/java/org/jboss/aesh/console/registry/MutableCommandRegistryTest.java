@@ -27,7 +27,7 @@ import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.registry.MutableCommandRegistry;
-import org.jboss.aesh.terminal.formatting.TerminalString;
+import org.aesh.terminal.formatting.TerminalString;
 import org.junit.Test;
 
 import org.jboss.aesh.console.command.CommandException;

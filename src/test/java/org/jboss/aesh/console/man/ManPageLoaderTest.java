@@ -20,7 +20,7 @@
 package org.jboss.aesh.console.man;
 
 import org.jboss.aesh.console.man.parser.ManFileParser;
-import org.jboss.aesh.util.ANSI;
+import org.aesh.util.ANSI;
 import org.junit.Test;
 
 import java.io.FileInputStream;

@@ -26,7 +26,7 @@ import java.io.PrintStream;
 import org.jboss.aesh.console.command.CommandOperation;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.terminal.Key;
+import org.aesh.terminal.Key;
 import org.junit.Ignore;
 import org.junit.Test;
 

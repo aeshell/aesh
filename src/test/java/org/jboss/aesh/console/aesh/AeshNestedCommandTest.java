@@ -1,5 +1,6 @@
 package org.jboss.aesh.console.aesh;
 
+import org.aesh.util.Config;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandResult;
@@ -10,7 +11,6 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.ReadlineConsole;
 import org.jboss.aesh.tty.TestConnection;
-import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 import java.io.IOException;

@@ -19,12 +19,12 @@
  */
 package org.jboss.aesh.terminal;
 
-import org.jboss.aesh.terminal.formatting.CharacterType;
-import org.jboss.aesh.terminal.formatting.Color;
-import org.jboss.aesh.terminal.formatting.TerminalCharacter;
-import org.jboss.aesh.terminal.formatting.TerminalColor;
-import org.jboss.aesh.terminal.formatting.TerminalTextStyle;
-import org.jboss.aesh.util.ANSI;
+import org.aesh.terminal.formatting.CharacterType;
+import org.aesh.terminal.formatting.Color;
+import org.aesh.terminal.formatting.TerminalCharacter;
+import org.aesh.terminal.formatting.TerminalColor;
+import org.aesh.terminal.formatting.TerminalTextStyle;
+import org.aesh.util.ANSI;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

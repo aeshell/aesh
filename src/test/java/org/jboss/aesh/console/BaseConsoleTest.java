@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.ReadlineConsole;
-import org.jboss.aesh.util.Config;
+import org.aesh.util.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -60,12 +60,12 @@ public abstract class BaseConsoleTest {
         return builder.create();
     }
 
-    Console getTestConsole(SettingsBuilder builder, InputStream is) throws IOException {
-        return new Console(getDefaultSettings(is, builder));
+    ReadlineConsole getTestConsole(SettingsBuilder builder, InputStream is) throws IOException {
+        return new ReadlineConsole(getDefaultSettings(is, builder));
     }
 
-    Console getTestConsole(InputStream is) throws IOException {
-        return new Console(getDefaultSettings(is, null));
+    ReadlineConsole getTestConsole(InputStream is) throws IOException {
+        return new ReadlineConsole(getDefaultSettings(is, null));
     }
 
     public String getContentOfFile(String filename) throws IOException {
@@ -102,13 +102,14 @@ public abstract class BaseConsoleTest {
         CountDownLatch latch = new CountDownLatch(callbackCount);
         List<Throwable> exceptions = new ArrayList<Throwable>();
 
-        Console consoleSetup = null;
+        ReadlineConsole consoleSetup = null;
         if(settings != null) {
             consoleSetup = getTestConsole(settings, pipedInputStream);
         } else {
             consoleSetup = getTestConsole(pipedInputStream);
         }
-        final Console console = consoleSetup;
+        final ReadlineConsole console = consoleSetup;
+
         console.setConsoleCallback(new TestConsoleCallback(latch, exceptions) {
             @Override
             public int verify(ConsoleOperation op) {
