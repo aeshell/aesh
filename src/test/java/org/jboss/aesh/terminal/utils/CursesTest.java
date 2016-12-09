@@ -10,6 +10,7 @@ package org.jboss.aesh.terminal.utils;
 
 import java.io.StringWriter;
 
+import org.aesh.terminal.utils.Curses;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

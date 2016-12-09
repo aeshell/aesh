@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.io;
 
-import org.jboss.aesh.util.Config;
+import org.aesh.util.Config;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

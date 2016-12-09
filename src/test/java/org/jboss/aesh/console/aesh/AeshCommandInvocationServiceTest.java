@@ -19,11 +19,13 @@
  */
 package org.jboss.aesh.console.aesh;
 
+import org.aesh.readline.Prompt;
+import org.aesh.readline.action.KeyAction;
+import org.aesh.util.Config;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.jboss.aesh.console.Shell;
-import org.jboss.aesh.console.command.CmdOperation;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.invocation.CommandInvocationProvider;
@@ -31,14 +33,10 @@ import org.jboss.aesh.console.command.invocation.CommandInvocation;
 import org.jboss.aesh.console.command.invocation.CommandInvocationServices;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.operator.ControlOperator;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.readline.Prompt;
 import org.jboss.aesh.readline.ReadlineConsole;
-import org.jboss.aesh.readline.action.KeyAction;
 import org.jboss.aesh.tty.TestConnection;
-import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 import java.io.IOException;

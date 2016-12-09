@@ -41,8 +41,8 @@ import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.util.Config;
+import org.aesh.terminal.Key;
+import org.aesh.util.Config;
 import org.junit.Ignore;
 import org.junit.Test;
 

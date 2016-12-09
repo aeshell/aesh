@@ -22,8 +22,8 @@ package org.jboss.aesh.console;
 import org.jboss.aesh.console.settings.RuntimeSettings;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.readline.editing.EditMode;
-import org.jboss.aesh.util.Config;
+import org.aesh.readline.editing.EditMode;
+import org.aesh.util.Config;
 import org.junit.Test;
 
 import java.io.IOException;

@@ -25,8 +25,8 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.readline.editing.EditMode;
-import org.jboss.aesh.terminal.Key;
+import org.aesh.readline.editing.EditMode;
+import org.aesh.terminal.Key;
 import org.junit.Ignore;
 import org.junit.Test;
 

@@ -20,10 +20,6 @@
 
 package org.jboss.aesh.tty;
 
-import org.aesh.readline.Prompt;
-import org.aesh.readline.completion.Completion;
-import org.aesh.readline.editing.EditMode;
-import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.terminal.Key;
 import org.aesh.tty.Capability;
 import org.aesh.tty.Connection;
@@ -32,7 +28,6 @@ import org.aesh.tty.Size;
 import org.aesh.util.Parser;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
@@ -53,39 +48,15 @@ public class TestConnection implements Connection {
     private String out;
     private Size size;
 
-    private Prompt prompt = new Prompt(": ");
     private CountDownLatch latch;
     private volatile boolean waiting = false;
     private volatile boolean reading = false;
 
     public TestConnection() {
-        //default emacs mode
-        this(EditModeBuilder.builder().create(), null);
-    }
-
-    public TestConnection(EditMode editMode) {
-        this(editMode, null);
+        this(new Size(80, 20));
     }
 
     public TestConnection(Size size) {
-        this(EditModeBuilder.builder().create(), null, size);
-    }
-
-    public TestConnection(List<Completion> completions) {
-        this(EditModeBuilder.builder().create(), completions);
-    }
-
-    public TestConnection(EditMode editMode, List<Completion> completions) {
-        this(editMode, completions, null);
-    }
-
-    public TestConnection(EditMode editMode, List<Completion> completions, Size size) {
-        this(editMode, completions, size, null);
-    }
-
-    public TestConnection(EditMode editMode, List<Completion> completions, Size size, Prompt prompt) {
-        if(editMode == null)
-            editMode = EditModeBuilder.builder().create();
         bufferBuilder = new StringBuilder();
         stdOutHandler = ints -> {
            bufferBuilder.append(Parser.stripAwayAnsiCodes(Parser.fromCodePoints(ints)));
@@ -95,10 +66,6 @@ public class TestConnection implements Connection {
             this.size = new Size(80, 20);
         else
             this.size = size;
-
-        if(prompt != null)
-            this.prompt = prompt;
-
     }
 
     public void clearOutputBuffer() {
@@ -108,15 +75,6 @@ public class TestConnection implements Connection {
 
     public String getOutputBuffer() {
         return bufferBuilder.toString();
-    }
-
-    public String getPrompt() {
-        return Parser.fromCodePoints(prompt.getPromptAsString());
-    }
-
-    public void setPrompt(Prompt prompt) {
-        if(prompt != null)
-            this.prompt = prompt;
     }
 
     public String getLine() {

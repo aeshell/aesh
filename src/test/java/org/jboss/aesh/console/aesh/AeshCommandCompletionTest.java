@@ -35,19 +35,15 @@ import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.readline.Prompt;
+import org.aesh.readline.Prompt;
 import org.jboss.aesh.readline.ReadlineConsole;
-import org.jboss.aesh.terminal.Key;
-import org.jboss.aesh.tty.Size;
+import org.aesh.terminal.Key;
+import org.aesh.tty.Size;
 import org.jboss.aesh.tty.TestConnection;
-import org.jboss.aesh.util.Config;
+import org.aesh.util.Config;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import java.util.List;
 import org.jboss.aesh.cl.activation.CommandActivator;
 import org.jboss.aesh.console.command.CommandException;
@@ -129,9 +125,6 @@ public class AeshCommandCompletionTest {
 
     @Test
     public void testCommandActivator() throws Exception {
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -139,8 +132,9 @@ public class AeshCommandCompletionTest {
                 .create();
 
         Settings settings = new SettingsBuilder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
+                .connection(connection)
+                //.inputStream(pipedInputStream)
+                //.outputStream(new PrintStream(byteArrayOutputStream))
                 .logging(true)
                 .commandRegistry(registry)
                 .create();

@@ -19,21 +19,18 @@
  */
 package org.jboss.aesh.console.export;
 
+import org.aesh.readline.editing.EditMode;
+import org.aesh.terminal.Key;
+import org.aesh.util.Config;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.ReadlineConsole;
-import org.jboss.aesh.readline.editing.EditMode;
-import org.jboss.aesh.terminal.Key;
 import org.jboss.aesh.tty.TestConnection;
-import org.jboss.aesh.util.Config;
 import org.junit.Test;
 
 import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

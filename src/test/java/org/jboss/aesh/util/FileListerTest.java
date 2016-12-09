@@ -27,13 +27,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+import org.aesh.util.Config;
 import org.jboss.aesh.comparators.PosixFileNameComparator;
 import org.jboss.aesh.complete.AeshCompleteOperation;
 import org.jboss.aesh.console.AeshContext;
 import org.jboss.aesh.io.FileResource;
 import org.jboss.aesh.io.Resource;
 
-import org.jboss.aesh.terminal.formatting.TerminalString;
+import org.aesh.terminal.formatting.TerminalString;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

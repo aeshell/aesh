@@ -13,7 +13,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.aesh.tty.Capability;
+import org.aesh.terminal.utils.InfoCmp;
+import org.aesh.tty.Capability;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

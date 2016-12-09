@@ -10,9 +10,9 @@ import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.readline.Prompt;
+import org.aesh.readline.Prompt;
 import org.jboss.aesh.readline.ReadlineConsole;
-import org.jboss.aesh.util.Config;
+import org.aesh.util.Config;
 import org.junit.Ignore;
 import org.junit.Test;
 

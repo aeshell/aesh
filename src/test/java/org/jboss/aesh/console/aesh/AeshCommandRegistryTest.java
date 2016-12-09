@@ -37,8 +37,8 @@ import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.ReadlineConsole;
-import org.jboss.aesh.readline.completion.CompleteOperation;
-import org.jboss.aesh.terminal.Key;
+import org.aesh.readline.completion.CompleteOperation;
+import org.aesh.terminal.Key;
 import org.jboss.aesh.tty.TestConnection;
 import org.junit.Test;
 
