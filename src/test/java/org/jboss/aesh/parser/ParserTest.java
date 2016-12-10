@@ -196,7 +196,7 @@ public class ParserTest {
         assertEquals(ParserStatus.UNCLOSED_QUOTE, line.getStatus());
         // assertTrue(line.haveBuildError());
 
-        //TOD: we need to fix this
+        //TODO: we need to fix this
         //line = Parser.findAllWords("-s \'redirectUris=[\"http://localhost:8080/blah/*\"]\'");
         //assertEquals("-s", line.getWords().get(0));
         //assertEquals("redirectUris=[\"http://localhost:8080/blah/*\"]\'", line.getWords().get(1));

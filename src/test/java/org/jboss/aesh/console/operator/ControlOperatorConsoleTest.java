@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Console;
+
 import org.jboss.aesh.console.ConsoleOperation;
 import org.junit.Ignore;
 import org.junit.Test;
