@@ -20,7 +20,7 @@
 package org.jboss.aesh.console.script;
 
 import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Console;
+
 import org.jboss.aesh.console.ConsoleOperation;
 import org.junit.Before;
 import org.junit.Ignore;

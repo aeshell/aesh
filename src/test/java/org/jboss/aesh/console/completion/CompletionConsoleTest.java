@@ -36,7 +36,7 @@ import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.console.BaseConsoleTest;
-import org.jboss.aesh.console.Console;
+
 import org.jboss.aesh.console.ConsoleOperation;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.settings.Settings;

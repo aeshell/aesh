@@ -21,8 +21,14 @@ package org.jboss.aesh.console.paste;
 
 import static org.junit.Assert.assertEquals;
 
+import org.aesh.readline.Prompt;
+import org.aesh.util.Config;
 import org.jboss.aesh.console.BaseConsoleTest;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -31,34 +37,32 @@ public class ConsolePasteTest extends BaseConsoleTest {
 
     @Test
     public void paste() throws Exception {
-        /*
         invokeTestConsole(4, new Setup() {
             @Override
-            public void call(Console console, OutputStream out) throws IOException {
+            public void call(ConsoleInteraction console, Consumer<String> out) throws IOException {
                 String pasteLine1 =
                         "connect" + Config.getLineSeparator() +
                         "admin" + Config.getLineSeparator() +
                         "admin!";
                 String pasteLine2 = "234"+ Config.getLineSeparator() + "exit"+ Config.getLineSeparator();
-                out.write(pasteLine1.getBytes());
-                out.write(pasteLine2.getBytes());
+                out.accept(pasteLine1);
+                out.accept(pasteLine2);
             }
         }, new Verify() {
            boolean password = false;
            @Override
-           public int call(Console console, ConsoleOperation op) {
-               if (op.getBuffer().equals("admin")) {
+           public int call(ConsoleInteraction console, Supplier<String> op) {
+               if (op.get().equals("admin")) {
                    console.setPrompt(new Prompt("", new Character('\u0000')));
                    password = true;
                    return 0;
                }
                if(password) {
-                   assertEquals("admin!234", op.getBuffer());
+                   assertEquals("admin!234", op.get());
                    password = false;
                }
                return 0;
            }
         });
-        */
     }
 }

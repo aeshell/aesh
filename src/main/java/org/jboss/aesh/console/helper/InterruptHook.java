@@ -19,8 +19,8 @@
  */
 package org.jboss.aesh.console.helper;
 
-import org.jboss.aesh.console.Console;
 import org.aesh.tty.Signal;
+import org.jboss.aesh.readline.Console;
 
 /**
  * InterruptHook is the handler thats called when an interrupt has occurred.

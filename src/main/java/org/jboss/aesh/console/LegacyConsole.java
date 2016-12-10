@@ -25,7 +25,7 @@ package org.jboss.aesh.console;
  *
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
-public class Console {
+public class LegacyConsole {
 
     /*
     private Settings settings;
@@ -70,9 +70,9 @@ public class Console {
 
     private boolean controlledMode = false;
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(Console.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(LegacyConsole.class.getName());
 
-    public Console(final Settings settings) {
+    public LegacyConsole(final Settings settings) {
         this.settings = settings;
         try {
             init();
@@ -106,7 +106,7 @@ public class Console {
 
     private void init() throws IOException {
         if(running)
-            throw new RuntimeException("Cant reset an already running Console, must stop if first!");
+            throw new RuntimeException("Cant reset an already running LegacyConsole, must stop if first!");
         //if we already have reset, just return
         if(executorService != null && !executorService.isShutdown()) {
             return;
@@ -183,7 +183,7 @@ public class Console {
         //InterruptHandler for InputProcessor
         InputProcessorInterruptHook interruptHook = action -> {
             if(settings.hasInterruptHook()) {
-                settings.interruptHook().handleInterrupt(Console.this, action);
+                settings.interruptHook().handleInterrupt(LegacyConsole.this, action);
             }
             else {
                 if(action.name().equals("ignore-eof")) {
@@ -261,9 +261,9 @@ public class Console {
 
     public synchronized void start() {
         if(running)
-            throw new IllegalStateException("Not allowed to start the Console without stopping it first");
+            throw new IllegalStateException("Not allowed to start the LegacyConsole without stopping it first");
         if(consoleCallback == null)
-            throw new IllegalStateException("Not possible to start the Console without setting ConsoleCallback");
+            throw new IllegalStateException("Not possible to start the LegacyConsole without setting ConsoleCallback");
         // bridge to the current way of supporting signals
         terminal.handle(Signal.INT, s -> {
             try {
@@ -924,22 +924,22 @@ public class Console {
 
         @Override
         public PrintStream out() {
-            return Console.this.out();
+            return LegacyConsole.this.out();
         }
 
         @Override
         public PrintStream err() {
-            return Console.this.err();
+            return LegacyConsole.this.err();
         }
 
         @Override
         public AeshStandardStream in() {
-            return Console.this.in();
+            return LegacyConsole.this.in();
         }
 
         @Override
         public Size getSize() {
-            return Console.this.getTerminalSize();
+            return LegacyConsole.this.getTerminalSize();
         }
 
         @Override
