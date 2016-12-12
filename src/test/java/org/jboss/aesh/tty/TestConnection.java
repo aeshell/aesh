@@ -213,6 +213,10 @@ public class TestConnection implements Connection {
         assertEquals(expected, out);
     }
 
+    public void assertBuffer(String expected) {
+        assertEquals(expected, bufferBuilder.toString());
+    }
+
     public void read(int... data) {
         doRead(data);
     }
