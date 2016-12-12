@@ -30,7 +30,6 @@ import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOption;
 import org.jboss.aesh.cl.parser.AeshCommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParser;
-import org.jboss.aesh.console.BaseConsoleTest;
 
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.settings.Settings;
@@ -45,7 +44,7 @@ import org.junit.Test;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 @Ignore
-public class CompletionConsoleTest extends BaseConsoleTest {
+public class CompletionConsoleTest {
 
     @Test
     public void completionWithOptions() throws IOException, InterruptedException, CommandLineParserException {
