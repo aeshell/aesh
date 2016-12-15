@@ -153,7 +153,12 @@ public class ReadlineConsole implements Console {
             }
         }
         catch (CommandNotFoundException cnfe) {
-            conn.write(cnfe.getMessage()+ Config.getLineSeparator());
+            if(settings.commandNotFoundHandler() != null) {
+                settings.commandNotFoundHandler().handleCommandNotFound(line, new ShellImpl(conn, readline));
+            }
+            else {
+                conn.write(cnfe.getMessage() + Config.getLineSeparator());
+            }
             read(conn, readline);
         }
         catch (Exception e) {
