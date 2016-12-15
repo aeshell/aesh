@@ -32,6 +32,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -55,15 +57,13 @@ public class AeshCommandNotFoundHandlerTest {
         console.start();
 
         connection.read("foo -l 12 -h 20"+ Config.getLineSeparator());
-        //outputStream.flush();
         Thread.sleep(50);
-        //assertTrue(byteArrayOutputStream.toString().contains("DUUUUDE"));
+        assertTrue( connection.getOutputBuffer().endsWith("DUUUUDE, where is your command?"+Config.getLineSeparator()));
 
         console.stop();
     }
 
     public static class HandlerCommandNotFound implements CommandNotFoundHandler {
-
         @Override
         public void handleCommandNotFound(String line, Shell shell) {
             shell.writeln("DUUUUDE, where is your command?");
