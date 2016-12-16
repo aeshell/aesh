@@ -316,8 +316,8 @@ public class ProcessedOptionBuilder {
         if(activator == null)
             activator = new NullActivator();
 
-        if(renderer == null)
-            renderer = new NullOptionRenderer();
+        //if(renderer == null)
+        //    renderer = new NullOptionRenderer();
 
         return new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, defaultValues, type, fieldName, optionType, converter,

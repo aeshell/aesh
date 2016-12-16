@@ -22,7 +22,9 @@ package org.jboss.aesh.readline;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.Readline;
 import org.jboss.aesh.AeshCommandResolver;
+import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.parser.CommandLineCompletionParser;
+import org.jboss.aesh.cl.parser.CommandLineParser;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.parser.ParsedCompleteObject;
 import org.jboss.aesh.complete.AeshCompleteOperation;
@@ -32,6 +34,7 @@ import org.jboss.aesh.console.AeshInvocationProviders;
 import org.jboss.aesh.console.CommandResolver;
 import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.CommandNotFoundException;
+import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.settings.DefaultAeshContext;
 import org.jboss.aesh.console.settings.Settings;
@@ -100,6 +103,7 @@ public class ReadlineConsole implements Console {
 
     private void init() {
         completionHandler = new AeshCompletionHandler(context, connection, true);
+        initializeCommands();
         if(prompt == null)
             prompt = new Prompt("");
         readline = new Readline(EditModeBuilder.builder(settings.mode()).create(), new InMemoryHistory(50),
@@ -108,6 +112,29 @@ public class ReadlineConsole implements Console {
         read(connection, readline);
 
         connection.openBlocking();
+    }
+
+    private void initializeCommands() {
+        if (settings.manEnabled()) {
+            //internalRegistry = new AeshInternalCommandRegistry();
+            //internalRegistry.addCommand(new Man(manProvider));
+        }
+        try {
+            for (String commandName : commandResolver.getRegistry().getAllCommandNames()) {
+                ProcessedCommand cmd = commandResolver.getRegistry().getCommand(commandName, "").getParser().getProcessedCommand();
+                List<CommandLineParser<?>> childParsers = commandResolver.getRegistry().getChildCommandParsers(commandName);
+                if(!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
+                    //we have a custom OptionActivatorProvider, and need to process all options
+                    cmd.updateInvocationProviders(invocationProviders);
+                    for (CommandLineParser<?> child : childParsers) {
+                        child.getProcessedCommand().updateInvocationProviders(invocationProviders);
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            //ignored for now..
+        }
     }
 
     /**
