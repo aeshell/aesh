@@ -19,12 +19,12 @@
  */
 package org.jboss.aesh.console.settings;
 
-import org.jboss.aesh.console.Shell;
+import org.aesh.tty.Connection;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface CommandNotFoundHandler {
 
-    void handleCommandNotFound(String line, Shell shell);
+    void handleCommandNotFound(String line, Connection connection);
 }

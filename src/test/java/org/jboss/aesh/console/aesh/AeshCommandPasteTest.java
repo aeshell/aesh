@@ -46,7 +46,7 @@ public class AeshCommandPasteTest {
     public void testPaste() throws IOException, InterruptedException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = new AeshCommandRegistryBuilder().create();
+        CommandRegistry registry = new AeshCommandRegistryBuilder().create();
 
         Settings settings = new SettingsBuilder()
                 .connection(connection)
@@ -60,9 +60,8 @@ public class AeshCommandPasteTest {
         console.start();
 
         connection.read("FOO" + LINE_SEPARATOR + "FUU" + LINE_SEPARATOR + "bar");
-        //outputStream.flush();
         Thread.sleep(100);
-        //assertEquals("bar", ((AeshConsoleImpl) console).getBuffer());
+        connection.assertBufferEndsWith("bar");
 
         console.stop();
     }
@@ -71,25 +70,24 @@ public class AeshCommandPasteTest {
     public void testPasteWhileACommandIsRunning() throws IOException, InterruptedException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = new AeshCommandRegistryBuilder()
-            .command(FooCommand.class)
-            .create();
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(FooCommand.class)
+                .create();
 
         Settings settings = new SettingsBuilder()
-            .connection(connection)
+                .connection(connection)
                 .commandRegistry(registry)
-            .setPersistExport(false)
-            .persistHistory(false)
-            .logging(true)
-            .create();
+                .setPersistExport(false)
+                .persistHistory(false)
+                .logging(true)
+                .create();
 
-         ReadlineConsole console = new ReadlineConsole(settings);
+        ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("foo" + LINE_SEPARATOR + "FUU" + LINE_SEPARATOR + "bar");
-        //outputStream.flush();
-        Thread.sleep(200);
-        //assertEquals("bar", ((AeshConsoleImpl) console).getBuffer());
+        Thread.sleep(150);
+        connection.assertBufferEndsWith("bar");
 
         console.stop();
     }
@@ -100,7 +98,7 @@ public class AeshCommandPasteTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             try {
-                Thread.sleep(100);
+                Thread.sleep(50);
             }
             catch (InterruptedException e) {
                 e.printStackTrace();
@@ -108,5 +106,4 @@ public class AeshCommandPasteTest {
             return CommandResult.SUCCESS;
         }
     }
-
 }

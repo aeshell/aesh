@@ -65,14 +65,12 @@ public class AeshCommandOptionValidatorTest {
 
         console.start();
         connection.read("val --foo yay"+ Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(100);
-
-        //assertFalse(byteArrayOutputStream.toString().contains("Option value cannot"));
+        Thread.sleep(50);
+        connection.assertBufferEndsWith("VAL"+Config.getLineSeparator());
+        connection.clearOutputBuffer();
         connection.read("val --foo doh\\ doh" + Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(100);
-        //assertTrue(byteArrayOutputStream.toString().contains("Option value cannot"));
+        Thread.sleep(50);
+        connection.assertBufferEndsWith("Option value cannot contain spaces"+Config.getLineSeparator());
 
         console.stop();
     }

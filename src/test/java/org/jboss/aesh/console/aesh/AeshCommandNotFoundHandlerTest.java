@@ -19,7 +19,7 @@
  */
 package org.jboss.aesh.console.aesh;
 
-import org.jboss.aesh.console.Shell;
+import org.aesh.tty.Connection;
 import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
 import org.jboss.aesh.console.command.registry.CommandRegistry;
 import org.jboss.aesh.console.settings.CommandNotFoundHandler;
@@ -65,8 +65,8 @@ public class AeshCommandNotFoundHandlerTest {
 
     public static class HandlerCommandNotFound implements CommandNotFoundHandler {
         @Override
-        public void handleCommandNotFound(String line, Shell shell) {
-            shell.writeln("DUUUUDE, where is your command?");
+        public void handleCommandNotFound(String line, Connection connection) {
+            connection.write("DUUUUDE, where is your command?"+Config.getLineSeparator());
         }
     }
 }
