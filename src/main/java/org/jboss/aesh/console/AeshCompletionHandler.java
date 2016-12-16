@@ -49,9 +49,9 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
 
     private final Connection connection;
     private volatile boolean enabled = true;
+    private CompletionStatus status = CompletionStatus.COMPLETE;
 
     private final AeshContext aeshContext;
-    private boolean askDisplayCompletion = false;
     private int displayCompletionSize = 100;
     private final List<Completion> completionList;
     private AliasManager aliasManager;
@@ -84,13 +84,13 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
     }
 
     @Override
-    public boolean doAskDisplayCompletion() {
-        return askDisplayCompletion;
+    public CompletionStatus completionStatus() {
+        return status;
     }
 
     @Override
-    public void setAskDisplayCompletion(boolean askDisplayCompletion) {
-        this.askDisplayCompletion = askDisplayCompletion;
+    public void setCompletionStatus(CompletionStatus status) {
+        this.status = status;
     }
 
     @Override
@@ -194,15 +194,14 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
                     completions.addAll(possibleCompletions.get(i).getCompletionCandidates());
 
                 if(completions.size() > 100) {
-                    //if(displayCompletion) {
-                     if(askDisplayCompletion) {
-                        displayCompletions(completions, buffer, inputProcessor);
-                        //displayCompletion = false;
-                         askDisplayCompletion = false;
+                     if(status == CompletionStatus.ASKING_FOR_COMPLETIONS) {
+                         displayCompletions(completions, buffer, inputProcessor);
+                         status = CompletionStatus.COMPLETE;
                     }
                     else {
-                        askDisplayCompletion = true;
-                        connection.write(Config.getLineSeparator() + "Display all " + completions.size() + " possibilities? (y or n)");
+                         status = CompletionStatus.ASKING_FOR_COMPLETIONS;
+                         inputProcessor.getBuffer().writeOut(Config.CR);
+                         inputProcessor.getBuffer().writeOut("Display all " + completions.size() + " possibilities? (y or n)");
                     }
                 }
                 // display all
@@ -234,36 +233,19 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
      */
     private void displayCompletion(TerminalString completion, Buffer buffer, InputProcessor inputProcessor,
                                    boolean appendSpace, char separator) {
-
         LOGGER.info("completion: "+completion.getCharacters()+" and buffer: "+buffer.asString());
         if(completion.getCharacters().startsWith(buffer.asString())) {
             ActionMapper.mapToAction("backward-kill-word").accept(inputProcessor);
-            //consoleBuffer.performAction(new PrevWordAction(buffer.getMultiCursor(), Action.DELETE, EditMode.Mode.EMACS));
-            //buffer.write(completion.getCharacters());
             inputProcessor.getBuffer().writeString(completion.toString());
 
             //only append space if its an actual complete, not a partial
         }
         else {
             inputProcessor.getBuffer().writeString(completion.toString());
-            //buffer.insert(completion.toString());
         }
-        if(appendSpace) { // && fullCompletion.startsWith(buffer.getLine())) {
+        if(appendSpace) {
             inputProcessor.getBuffer().writeChar(separator);
-            //buffer.write(separator);
         }
-        /*
-        int width = connection.size().getWidth();
-        if(completion.getCharacters().startsWith(buffer.asString())) {
-            buffer.replace(connection.stdoutHandler(), completion.getCharacters(), width);
-        }
-        else {
-            buffer.insert(connection.stdoutHandler(), completion.getCharacters(), width);
-        }
-        if(appendSpace) { // && fullCompletion.startsWith(buffer.getLine())) {
-            buffer.insert(connection.stdoutHandler(), separator, width);
-        }
-        */
     }
 
     /**
@@ -282,21 +264,6 @@ public class AeshCompletionHandler implements CompletionHandler<AeshCompleteOper
 
         buffer.setIsPromptDisplayed(false);
         inputProcessor.getBuffer().drawLine();
-        /*
-        int oldCursorPos = buffer.getCursor();
-        connection.write(Config.getLineSeparator());
-        //buffer.setCursor(oldCursorPos);
-        Size size = connection.size();
-        connection.write(Parser.formatDisplayListTerminalString(completions,
-                size.getHeight(), size.getWidth()));
-        //inputProcessor.getBuffer().displayPrompt();
-        buffer.replace(connection.stdoutHandler(), buffer.asString(), connection.size().getWidth());
-        //out.print(buffer.getLine());
-        //if we do a complete and the cursor is not at the end of the
-        //buffer we need to move it to the correct place
-        //out.flush();
-        //inputProcessor.getBuffer().syncCursor();
-        */
     }
 
     private AeshCompleteOperation findAliases(String buffer, int cursor) {

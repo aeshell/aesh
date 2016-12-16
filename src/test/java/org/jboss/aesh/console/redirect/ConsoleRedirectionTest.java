@@ -19,30 +19,16 @@
  */
 package org.jboss.aesh.console.redirect;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermissions;
 
 import org.jboss.aesh.console.BaseConsoleTest;
 
-import org.jboss.aesh.console.ConsoleOperation;
-import org.jboss.aesh.console.operator.ControlOperator;
-import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Test;
 
 /**
-  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
-  */
+ * TODO: Enable this when we have redirection implemented.
+ *
+ * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ */
 @Ignore
  public class ConsoleRedirectionTest extends BaseConsoleTest {
 
