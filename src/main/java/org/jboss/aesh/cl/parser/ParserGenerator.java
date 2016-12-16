@@ -30,8 +30,15 @@ import org.jboss.aesh.cl.internal.OptionType;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.internal.ProcessedOptionBuilder;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
+import org.jboss.aesh.console.AeshInvocationProviders;
+import org.jboss.aesh.console.InvocationProviders;
 import org.jboss.aesh.console.command.Command;
+import org.jboss.aesh.console.command.activator.AeshCommandActivatorProvider;
+import org.jboss.aesh.console.command.activator.AeshOptionActivatorProvider;
+import org.jboss.aesh.console.command.completer.AeshCompleterInvocationProvider;
 import org.jboss.aesh.console.command.container.AeshCommandContainer;
+import org.jboss.aesh.console.command.converter.AeshConverterInvocationProvider;
+import org.jboss.aesh.console.command.validator.AeshValidatorInvocationProvider;
 import org.jboss.aesh.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
@@ -310,7 +317,6 @@ public class ParserGenerator {
         parseAndPopulate(instance, builder.toString());
     }
 
-    /*
    public static void parseAndPopulate(Command instance, String input) throws CommandLineParserException, OptionValidatorException {
         CommandLineParser cl = doGenerateCommandLineParser(instance).getParser();
         InvocationProviders invocationProviders = new AeshInvocationProviders(
@@ -321,6 +327,5 @@ public class ParserGenerator {
                 new AeshCommandActivatorProvider());
         cl.getCommandPopulator().populateObject( cl.parse(input), invocationProviders, null, true);
     }
-    */
 
 }

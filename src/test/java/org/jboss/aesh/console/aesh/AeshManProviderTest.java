@@ -50,16 +50,17 @@ public class AeshManProviderTest {
         Settings settings = new SettingsBuilder()
                 .commandRegistry(registry)
                 .connection(connection)
+                .manProvider(new TestManProvider())
                 .logging(true)
                 .create();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
-        //ManProvider manProvider = console.getManProvider();
-        //assertNotNull(manProvider);
+        ManProvider manProvider = settings.manProvider();
+        assertNotNull(manProvider);
 
-        //assertNotNull(console.getManProvider().getManualDocument("foo"));
+        assertNotNull(manProvider.getManualDocument("foo"));
 
         console.stop();
     }

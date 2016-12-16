@@ -70,10 +70,9 @@ public class AeshCommandValidatorTest {
 
         console.start();
         connection.read("foo -l 12 -h 20"+ Config.getLineSeparator());
-        //outputStream.flush();
-
         Thread.sleep(100);
-        //assertTrue(byteArrayOutputStream.toString().contains("Sum of high and"));
+
+        connection.assertBufferEndsWith("Sum of high and low must be over 42!"+Config.getLineSeparator());
 
         console.stop();
     }
@@ -96,10 +95,8 @@ public class AeshCommandValidatorTest {
 
         console.start();
         connection.read("git commit"+ Config.getLineSeparator());
-        //outputStream.flush();
-
         Thread.sleep(100);
-        //assertTrue(byteArrayOutputStream.toString().contains("Either all or message must be set"));
+        connection.assertBufferEndsWith("Either all or message must be set"+Config.getLineSeparator());
 
         console.stop();
     }

@@ -19,12 +19,6 @@
  */
 package org.jboss.aesh.console.aesh;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -99,8 +93,6 @@ public class AeshCommandRegistryTest {
         connection.read(WRITTEN);
         Thread.sleep(50);
         connection.assertBuffer(WRITTEN);
-
-        //assertEquals(WRITTEN, ((AeshConsoleImpl) console).getBuffer().trim());
 
         console.stop();
     }
