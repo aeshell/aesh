@@ -42,8 +42,6 @@ import org.junit.Test;
 import java.io.IOException;
 import org.jboss.aesh.console.command.CommandException;
 
-import static org.junit.Assert.assertTrue;
-
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */

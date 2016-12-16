@@ -59,6 +59,7 @@ public class AeshConverterInvocationProviderTest {
 
          Settings settings = new SettingsBuilder()
                  .commandRegistry(registry)
+                 .converterInvocationProvider(new FooConverterProvider())
                  .connection(connection)
                  .logging(true)
                  .create();
@@ -67,10 +68,9 @@ public class AeshConverterInvocationProviderTest {
         console.start();
 
         connection.read("convert --foo bar"+ Config.getLineSeparator());
-        //outputStream.flush();
 
-        Thread.sleep(100);
-        //assertTrue(byteArrayOutputStream.toString().contains("FOOO"));
+        Thread.sleep(50);
+        connection.assertBufferEndsWith("FOOO"+Config.getLineSeparator());
         console.stop();
     }
 

@@ -11,6 +11,7 @@ import org.jboss.aesh.console.settings.Settings;
 import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.ReadlineConsole;
 import org.jboss.aesh.tty.TestConnection;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -19,8 +20,11 @@ import org.jboss.aesh.console.command.CommandException;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * TODO: Ignored for now, we might not support nested commands in the 1.0 version...
+ *
  * Created by joe on 4/14/15.
  */
+@Ignore
 public class AeshNestedCommandTest {
 
     private volatile boolean fooInBackground = false;
