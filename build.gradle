@@ -27,7 +27,7 @@ apply plugin: 'checkstyle'
 
 group = 'org.jboss.aesh'
 archivesBaseName = 'aesh'
-version = '0.67-SNAPSHOT'
+version = '1.0-SNAPSHOT'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
@@ -66,9 +66,8 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.fusesource.jansi', name: 'jansi', version: '1.11'
-    compile group: 'org.jboss.aesh', name: 'aesh-readline', version: '1.0-SNAPSHOT'
-    testCompile group: 'junit', name: 'junit', version: '4.+'
+    compile group: 'org.aesh', name: 'aesh-readline', version: '1.0-CR8-SNAPSHOT'
+    testCompile 'junit:junit:4.12'
 }
 
 mainClassName = "Example"
