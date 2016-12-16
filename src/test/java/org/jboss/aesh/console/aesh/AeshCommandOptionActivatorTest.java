@@ -44,8 +44,6 @@ import org.jboss.aesh.console.command.CommandException;
  */
 public class AeshCommandOptionActivatorTest {
 
-    private final Key completeChar =  Key.CTRL_I;
-
     @Test
     public void testOptionActivator() throws IOException, InterruptedException {
 
@@ -66,20 +64,20 @@ public class AeshCommandOptionActivatorTest {
 
         console.start();
         connection.read("val -");
-        connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
+        connection.read(Key.CTRL_I);
 
         Thread.sleep(80);
+        connection.assertBuffer("val --bar");
         //assertEquals("val --bar ", ((AeshConsoleImpl) console).getBuffer());
 
         connection.read("123 --");
-        connection.read(completeChar.getFirstValue());
+        connection.read(Key.CTRL_I);
         //outputStream.flush();
 
         Thread.sleep(80);
         //assertEquals("val --bar 123 --", ((AeshConsoleImpl) console).getBuffer());
         validatorProvider.updateContext("foo");
-        connection.read(completeChar.getFirstValue());
+        connection.read(Key.CTRL_I);
         //outputStream.flush();
 
         Thread.sleep(80);

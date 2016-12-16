@@ -31,6 +31,7 @@ import org.jboss.aesh.console.settings.SettingsBuilder;
 import org.jboss.aesh.readline.ReadlineConsole;
 import org.jboss.aesh.tty.TestConnection;
 import org.aesh.util.Config;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -39,8 +40,11 @@ import org.jboss.aesh.console.command.CommandException;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * TODO: Re-enable when command end operator is enabled.
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
+@Ignore
 public class AeshCommandEndOperatorTest {
 
     private static int counter = 0;

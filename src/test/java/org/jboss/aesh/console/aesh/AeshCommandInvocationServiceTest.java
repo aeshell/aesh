@@ -42,6 +42,8 @@ import org.junit.Test;
 import java.io.IOException;
 import org.jboss.aesh.console.command.CommandException;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -57,7 +59,7 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
                 .create();
 
         CommandInvocationServices services = new CommandInvocationServices();
-        services.registerProvider("FOO", new FooCommandInvocationProvider());
+        services.registerDefaultProvider(new FooCommandInvocationProvider());
 
         Settings settings = new SettingsBuilder()
                 .commandRegistry(registry)
@@ -68,13 +70,13 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
                 .create();
 
         ReadlineConsole console = new ReadlineConsole(settings);
-        //console.setCurrentCommandInvocationProvider("FOO");
         console.start();
 
         connection.read("bar"+ Config.getLineSeparator());
-        //outputStream.flush();
 
+        connection.clearOutputBuffer();
         Thread.sleep(100);
+        connection.assertBuffer("FOO"+Config.getLineSeparator());
         //assertTrue( byteArrayOutputStream.toString().contains("FOO") );
         console.stop();
     }

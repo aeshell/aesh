@@ -19,14 +19,9 @@
  */
 package org.jboss.aesh.console.operator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.io.OutputStream;
 
 import org.jboss.aesh.console.BaseConsoleTest;
 
-import org.jboss.aesh.console.ConsoleOperation;
 import org.junit.Ignore;
 import org.junit.Test;
 
