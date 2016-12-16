@@ -96,11 +96,9 @@ public class AeshCommandRegistryTest {
         console.start();
 
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
-        Thread.sleep(80);
         connection.read(WRITTEN);
-        //outputStream.flush();
-        Thread.sleep(80);
+        Thread.sleep(50);
+        connection.assertBuffer(WRITTEN);
 
         //assertEquals(WRITTEN, ((AeshConsoleImpl) console).getBuffer().trim());
 
@@ -154,13 +152,9 @@ public class AeshCommandRegistryTest {
         console.start();
 
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
-        Thread.sleep(100);
         connection.read(WRITTEN);
-        //outputStream.flush();
-        Thread.sleep(100);
-
-        //assertEquals(WRITTEN, ((AeshConsoleImpl) console).getBuffer().trim());
+        Thread.sleep(50);
+        connection.assertBuffer(WRITTEN);
 
         console.stop();
     }
@@ -211,12 +205,9 @@ public class AeshCommandRegistryTest {
         console.start();
 
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
         connection.read(WRITTEN);
-        //outputStream.flush();
-        Thread.sleep(100);
-
-        //assertEquals(WRITTEN, ((AeshConsoleImpl) console).getBuffer().trim());
+        Thread.sleep(50);
+        connection.assertBuffer(WRITTEN);
 
         console.stop();
     }

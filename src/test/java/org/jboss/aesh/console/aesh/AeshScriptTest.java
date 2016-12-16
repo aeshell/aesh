@@ -19,13 +19,13 @@
  */
 package org.jboss.aesh.console.aesh;
 
+import org.aesh.tty.Connection;
 import org.aesh.util.Config;
 import org.jboss.aesh.cl.CommandDefinition;
 import org.jboss.aesh.cl.internal.ProcessedCommandBuilder;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
 import org.jboss.aesh.cl.internal.ProcessedCommand;
 import org.jboss.aesh.cl.result.ResultHandler;
-import org.jboss.aesh.console.Shell;
 import org.jboss.aesh.console.command.Command;
 import org.jboss.aesh.console.command.CommandException;
 import org.jboss.aesh.console.command.CommandResult;
@@ -226,7 +226,7 @@ public class AeshScriptTest {
         }
 
         @Override
-        public void handleCommandNotFound(String line, Shell shell) {
+        public void handleCommandNotFound(String line, Connection connection) {
             failed = true;
             failedString = line;
         }

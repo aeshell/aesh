@@ -64,8 +64,8 @@ public class AeshCommandOverrideRequiredTest {
 
         connection.read("foo -h"+ Config.getLineSeparator());
         //outputStream.flush();
-        Thread.sleep(200);
-        //assertTrue(byteArrayOutputStream.toString().contains("OVERRIDDEN"));
+        Thread.sleep(100);
+        connection.assertBufferEndsWith("OVERRIDDEN"+Config.getLineSeparator());
 
         console.stop();
 

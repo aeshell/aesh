@@ -20,10 +20,14 @@
 package org.jboss.aesh.readline;
 
 import org.aesh.readline.Readline;
+import org.aesh.util.Config;
 import org.jboss.aesh.cl.parser.CommandLineParserException;
+import org.jboss.aesh.cl.result.ResultHandler;
 import org.jboss.aesh.cl.validator.CommandValidatorException;
 import org.jboss.aesh.cl.validator.OptionValidatorException;
 import org.jboss.aesh.console.command.CommandException;
+import org.jboss.aesh.console.command.CommandNotFoundException;
+import org.jboss.aesh.console.command.CommandResult;
 import org.jboss.aesh.console.command.container.CommandContainer;
 import org.jboss.aesh.console.command.container.CommandContainerResult;
 import org.jboss.aesh.console.command.invocation.AeshCommandInvocation;
@@ -35,6 +39,7 @@ import org.aesh.tty.Signal;
 import org.aesh.util.LoggerUtil;
 
 import java.util.function.Consumer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -80,17 +85,43 @@ public class Process extends Thread implements Consumer<Signal> {
         // Subscribe to events, in particular Ctrl-C
         conn.setSignalHandler(this);
         running = true;
+
+        CommandResult result;
+        ResultHandler resultHandler = null;
         try {
-            runCommand(container, line);
-            //command.execute(conn, args);
-            //command.execute(null);
+            resultHandler = container.getParser().getProcessedCommand().getResultHandler();
+            CommandContainerResult ccResult = runCommand(container, line);
+
+
+            result = ccResult.getCommandResult();
+
+            if(result == CommandResult.SUCCESS && resultHandler != null)
+                resultHandler.onSuccess();
+            else if(resultHandler != null)
+                resultHandler.onFailure(result);
+        }
+        catch (CommandLineParserException | CommandValidatorException | OptionValidatorException e) {
+            conn.write(e.getMessage()+ Config.getLineSeparator());
+            result = CommandResult.FAILURE;
+            if(resultHandler != null)
+                resultHandler.onValidationFailure(result, e);
+        }
+       catch (CommandException cmd) {
+            conn.write(cmd.getMessage()+Config.getLineSeparator());
+            result = CommandResult.FAILURE;
+            if (resultHandler != null) {
+                resultHandler.onExecutionFailure(result, cmd);
+            }
         }
         catch (InterruptedException e) {
             // Ctlr-C interrupt
         }
         catch (Exception e) {
             e.printStackTrace();
-        }
+                result = CommandResult.FAILURE;
+                if (resultHandler != null)
+                    resultHandler.onValidationFailure(result, e);
+         }
         finally {
             running = false;
             conn.setSignalHandler(null);

@@ -32,6 +32,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -217,7 +218,11 @@ public class TestConnection implements Connection {
         assertEquals(expected, bufferBuilder.toString());
     }
 
-    public void read(int... data) {
+    public void assertBufferEndsWith(String expected) {
+        assertTrue(bufferBuilder.toString().endsWith(expected));
+    }
+
+     public void read(int... data) {
         doRead(data);
     }
 
