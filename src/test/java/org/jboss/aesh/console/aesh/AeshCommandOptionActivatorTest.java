@@ -57,6 +57,7 @@ public class AeshCommandOptionActivatorTest {
         Settings settings = new SettingsBuilder()
                 .connection(connection)
                 .commandRegistry(registry)
+                .optionActivatorProvider(validatorProvider)
                 .logging(true)
                 .create();
 
@@ -67,21 +68,17 @@ public class AeshCommandOptionActivatorTest {
         connection.read(Key.CTRL_I);
 
         Thread.sleep(80);
-        connection.assertBuffer("val --bar");
-        //assertEquals("val --bar ", ((AeshConsoleImpl) console).getBuffer());
+        connection.assertBuffer("val --bar ");
 
         connection.read("123 --");
         connection.read(Key.CTRL_I);
-        //outputStream.flush();
 
         Thread.sleep(80);
-        //assertEquals("val --bar 123 --", ((AeshConsoleImpl) console).getBuffer());
+        connection.assertBuffer("val --bar 123 --");
         validatorProvider.updateContext("foo");
         connection.read(Key.CTRL_I);
-        //outputStream.flush();
-
         Thread.sleep(80);
-        //assertEquals("val --bar 123 --foo ", ((AeshConsoleImpl) console).getBuffer());
+        connection.assertBuffer("val --bar 123 --foo ");
 
         console.stop();
      }

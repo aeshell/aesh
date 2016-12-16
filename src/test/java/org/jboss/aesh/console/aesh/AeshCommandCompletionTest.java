@@ -214,32 +214,32 @@ public class AeshCommandCompletionTest {
         connection.read(completeChar.getFirstValue());
 
         Thread.sleep(80);
-        assertEquals("git --help ", connection.getOutputBuffer());
+        connection.assertBuffer("git --help ");
         connection.read(enter.getFirstValue());
         connection.clearOutputBuffer();
 
         connection.read("git rebase --");
         connection.read(completeChar.getFirstValue());
-
-        assertEquals("git rebase --force ", connection.getOutputBuffer());
+        connection.assertBuffer("git rebase --force ");
 
         connection.read("--");
         connection.read(completeChar.getFirstValue());
         //outputStream.flush();
 
         Thread.sleep(80);
-        assertEquals("git rebase --force --test ", connection.getOutputBuffer());
+        connection.assertBuffer("git rebase --force --test ");
         connection.read(enter.getFirstValue());
+        connection.clearOutputBuffer();
 
         connection.read("git rebase --fo");
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("git rebase --force ", connection.getOutputBuffer());
+        connection.assertBuffer("git rebase --force ");
 
         connection.read("--test bar");
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("git rebase --force --test barFOO ", connection.getOutputBuffer());
+        connection.assertBuffer("git rebase --force --test barFOO ");
 
         console.stop();
      }
