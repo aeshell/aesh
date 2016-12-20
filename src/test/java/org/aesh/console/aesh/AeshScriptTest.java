@@ -145,7 +145,7 @@ public class AeshScriptTest {
                 }
 
                 return CommandResult.SUCCESS;
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 throw new CommandException(ex);
             }
         }

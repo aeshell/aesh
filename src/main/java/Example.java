@@ -207,7 +207,7 @@ public class Example {
                     for (String line : script) {
                         commandInvocation.executeCommand(line + Config.getLineSeparator());
                     }
-                } catch (IOException ex) {
+                } catch (Exception ex) {
                     throw new CommandException(ex);
                 }
             }

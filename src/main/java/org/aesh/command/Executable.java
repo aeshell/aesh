@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2016 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -17,26 +17,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.console.command;
+package org.aesh.command;
 
-import org.aesh.command.Executable;
+import org.aesh.console.command.CommandException;
+import org.aesh.console.command.CommandResult;
 import org.aesh.console.command.invocation.CommandInvocation;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * The base interface of commands and operators.
+ *
+ * @author jdenise@redhat.com
  */
-@FunctionalInterface
-public interface Command<T extends CommandInvocation> extends Executable<T> {
+public interface Executable<T extends CommandInvocation> {
 
-    /**
-     * Will be executed when this command is triggered by the command line.
-     *
-     * @param commandInvocation invocation
-     * @return success or failure depending on how the execution went.
-     * @throws CommandException In case an exception occurs during execution
-     * @throws InterruptedException In case the current thread is being
-     * interrupted.
-     */
-    @Override
-    CommandResult execute(T commandInvocation) throws CommandException, InterruptedException;
+    CommandResult execute(T ic) throws CommandException, InterruptedException;
 }
