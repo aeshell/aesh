@@ -49,9 +49,9 @@ import java.io.IOException;
 
 import org.jboss.aesh.console.Console;
 import org.jboss.aesh.console.AeshConsoleCallback;
-import org.jboss.aesh.console.ConsoleOperation;
+import ConsoleOperation;
 import org.jboss.aesh.console.Prompt;
-import org.jboss.aesh.console.settings.SettingsBuilder;
+import SettingsBuilder;
 
 public class Example {
 

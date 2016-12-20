@@ -53,7 +53,7 @@
 
    <dependencies>
       <dependency>
-         <groupId>org.jboss.aesh</groupId>
+         <groupId>org.aesh</groupId>
          <artifactId>aesh-readline</artifactId>
          <version>1.0-CR8-SNAPSHOT</version>
       </dependency>

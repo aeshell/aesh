@@ -18,19 +18,19 @@
  * limitations under the License.
  */
 
-import org.jboss.aesh.cl.CommandDefinition;
-import org.jboss.aesh.console.command.Command;
-import org.jboss.aesh.console.command.CommandResult;
-import org.jboss.aesh.console.command.invocation.CommandInvocation;
-import org.jboss.aesh.console.command.registry.AeshCommandRegistryBuilder;
-import org.jboss.aesh.console.command.registry.CommandRegistry;
-import org.jboss.aesh.console.settings.Settings;
-import org.jboss.aesh.console.settings.SettingsBuilder;
-import org.jboss.aesh.graphics.Graphics;
-import org.jboss.aesh.graphics.GraphicsConfiguration;
+import org.aesh.cl.CommandDefinition;
+import org.aesh.console.command.Command;
+import org.aesh.console.command.CommandResult;
+import org.aesh.console.command.invocation.CommandInvocation;
+import org.aesh.console.command.registry.AeshCommandRegistryBuilder;
+import org.aesh.console.command.registry.CommandRegistry;
+import org.aesh.console.settings.Settings;
+import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.graphics.Graphics;
+import org.aesh.graphics.GraphicsConfiguration;
 import org.aesh.terminal.Key;
 
-import org.jboss.aesh.console.command.CommandException;
+import org.aesh.console.command.CommandException;
 import org.aesh.terminal.formatting.Color;
 import org.aesh.terminal.formatting.TerminalColor;
 
