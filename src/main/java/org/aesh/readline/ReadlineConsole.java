@@ -100,7 +100,7 @@ public class ReadlineConsole implements Console {
     }
 
     private void init() {
-        completionHandler = new AeshCompletionHandler(context, connection, true);
+        completionHandler = new AeshCompletionHandler(context);
         initializeCommands();
         if(prompt == null)
             prompt = new Prompt("");
