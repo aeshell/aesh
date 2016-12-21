@@ -20,7 +20,7 @@
 package org.aesh.cl.completer;
 
 import org.aesh.console.command.completer.CompleterInvocation;
-import org.aesh.parser.Parser;
+import org.aesh.util.Parser;
 
 import java.util.List;
 

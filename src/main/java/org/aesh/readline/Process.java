@@ -31,10 +31,10 @@ import org.aesh.console.command.container.CommandContainer;
 import org.aesh.console.command.container.CommandContainerResult;
 import org.aesh.console.command.invocation.AeshCommandInvocation;
 import org.aesh.console.command.invocation.CommandInvocationServices;
-import org.aesh.parser.Parser;
 import org.aesh.tty.Connection;
 import org.aesh.tty.Signal;
 import org.aesh.util.LoggerUtil;
+import org.aesh.util.Parser;
 
 import java.util.function.Consumer;
 import java.util.logging.Logger;

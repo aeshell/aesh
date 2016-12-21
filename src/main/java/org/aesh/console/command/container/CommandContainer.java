@@ -24,12 +24,12 @@ import org.aesh.console.AeshContext;
 import org.aesh.console.command.Command;
 import org.aesh.console.command.CommandException;
 import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.parser.AeshLine;
 import org.aesh.cl.CommandLine;
 import org.aesh.cl.parser.CommandLineParserException;
 import org.aesh.cl.validator.CommandValidatorException;
 import org.aesh.cl.validator.OptionValidatorException;
 import org.aesh.console.InvocationProviders;
+import org.aesh.util.ParsedLine;
 
 /**
  * A CommandContainer hold reference to the Command and
@@ -63,7 +63,7 @@ public interface CommandContainer<T extends Command> extends AutoCloseable {
      */
     String getBuildErrorMessage();
 
-    CommandContainerResult executeCommand(AeshLine line, InvocationProviders invocationProviders,
+    CommandContainerResult executeCommand(ParsedLine line, InvocationProviders invocationProviders,
                                           AeshContext aeshContext,
                                           CommandInvocation commandInvocation)
             throws CommandLineParserException, OptionValidatorException,

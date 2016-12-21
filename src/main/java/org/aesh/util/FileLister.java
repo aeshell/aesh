@@ -36,7 +36,6 @@ import org.aesh.comparators.PosixFileNameComparator;
 import org.aesh.io.filter.AllResourceFilter;
 import org.aesh.io.Resource;
 import org.aesh.io.filter.ResourceFilter;
-import org.aesh.parser.Parser;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.terminal.formatting.TerminalString;
 

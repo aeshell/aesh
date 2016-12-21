@@ -29,9 +29,9 @@ import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.InvocationProviders;
 import org.aesh.console.command.Command;
 import org.aesh.console.command.completer.CompleterInvocation;
-import org.aesh.parser.Parser;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.terminal.formatting.TerminalString;
+import org.aesh.util.Parser;
 
 import java.util.List;
 
@@ -212,7 +212,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 //we have partial/full name
                 if(completeObject.getName() != null && completeObject.getName().length() > 0) {
                     String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( completeObject.getName()));
-                    List<String> words = Parser.findAllWords(rest).getWords();
+                    List<String> words = Parser.findAllWords(rest).words();
                     try {
                         parser.getCommandPopulator().populateObject(parser.parse(words, true), invocationProviders,
                                 completeOperation.getContext(), false);
@@ -236,7 +236,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
                 }
                 else {
                     try {
-                        List<String> words = Parser.findAllWords(completeOperation.getBuffer()).getWords();
+                        List<String> words = Parser.findAllWords(completeOperation.getBuffer()).words();
                         if(words.get(words.size()-1).equals("--") || words.get(words.size()-1).equals("-"))
                             words.remove(words.size()-1);
                         parser.getCommandPopulator().populateObject(parser.parse(words, true),
@@ -281,7 +281,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( displayName));
 
             try {
-                List<String> words = Parser.findAllWords(rest).getWords();
+                List<String> words = Parser.findAllWords(rest).words();
                 parser.getCommandPopulator().populateObject(parser.parse(words, true),
                         invocationProviders, completeOperation.getContext(), false);
             }
@@ -342,7 +342,7 @@ public class AeshCommandLineCompletionParser implements CommandLineCompletionPar
             String lastWord = Parser.findEscapedSpaceWordCloseToEnd(completeOperation.getBuffer());
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length() - lastWord.length());
             try {
-                List<String> words = Parser.findAllWords(rest).getWords();
+                List<String> words = Parser.findAllWords(rest).words();
                 parser.getCommandPopulator().populateObject(parser.parse(words, true),
                         invocationProviders, completeOperation.getContext(), false);
             }

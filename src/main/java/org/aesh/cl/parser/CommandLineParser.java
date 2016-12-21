@@ -23,7 +23,7 @@ import org.aesh.cl.populator.CommandPopulator;
 import org.aesh.cl.CommandLine;
 import org.aesh.cl.internal.ProcessedCommand;
 import org.aesh.console.command.Command;
-import org.aesh.parser.AeshLine;
+import org.aesh.util.ParsedLine;
 
 import java.util.List;
 
@@ -109,7 +109,7 @@ public interface CommandLineParser<C extends Command> {
      */
     CommandLine<? extends Command> parse(String line, boolean ignoreRequirements);
 
-    CommandLine<? extends Command> parse(AeshLine line, boolean ignoreRequirements);
+    CommandLine<? extends Command> parse(ParsedLine line, boolean ignoreRequirements);
 
     /**
      * Parse a command line with the defined command as base of the rules.

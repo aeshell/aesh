@@ -25,7 +25,6 @@ import org.aesh.console.command.Command;
 import org.aesh.console.command.CommandNotFoundException;
 import org.aesh.console.command.container.AeshCommandContainerBuilder;
 import org.aesh.console.command.container.CommandContainer;
-import org.aesh.parser.Parser;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.util.LoggerUtil;
 
@@ -37,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.aesh.cl.internal.ProcessedCommand;
+import org.aesh.util.Parser;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

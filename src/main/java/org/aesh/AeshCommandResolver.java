@@ -23,8 +23,8 @@ import org.aesh.console.CommandResolver;
 import org.aesh.console.command.CommandNotFoundException;
 import org.aesh.console.command.container.CommandContainer;
 import org.aesh.console.command.registry.CommandRegistry;
-import org.aesh.parser.AeshLine;
-import org.aesh.parser.Parser;
+import org.aesh.util.ParsedLine;
+import org.aesh.util.Parser;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -43,8 +43,8 @@ public class AeshCommandResolver implements CommandResolver {
 
     @Override
     public CommandContainer resolveCommand(String line) throws CommandNotFoundException {
-        AeshLine aeshLine = Parser.findAllWords(line);
-        return getCommand( aeshLine, line);
+        ParsedLine aeshLine = Parser.findAllWords(line);
+        return getCommand(aeshLine, line);
     }
 
     /**
@@ -56,8 +56,8 @@ public class AeshCommandResolver implements CommandResolver {
      * @return command
      * @throws CommandNotFoundException
      */
-    private CommandContainer getCommand(AeshLine aeshLine, String line) throws CommandNotFoundException {
-        return getCommand(aeshLine.getWords().get(0), line);
+    private CommandContainer getCommand(ParsedLine aeshLine, String line) throws CommandNotFoundException {
+        return getCommand(aeshLine.words().get(0), line);
     }
 
     /**

@@ -21,12 +21,12 @@ package org.aesh.cl.parser;
 
 import org.aesh.cl.populator.CommandPopulator;
 import org.aesh.console.command.Command;
-import org.aesh.parser.AeshLine;
-import org.aesh.parser.ParserStatus;
 import org.aesh.cl.CommandLine;
 import org.aesh.cl.internal.ProcessedCommand;
-import org.aesh.parser.Parser;
 import org.aesh.util.Config;
+import org.aesh.util.ParsedLine;
+import org.aesh.util.Parser;
+import org.aesh.util.ParserStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -170,24 +170,24 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public CommandLine<? extends Command> parse(AeshLine line, boolean ignoreRequirements) {
-        if(line.getWords().size() > 0) {
-            if (processedCommand.getName().equals(line.getWords().get(0))
-                    || processedCommand.getAliases().contains(line.getWords().get(0))) {
-                if(isGroupCommand() && line.getWords().size() > 1) {
-                   CommandLineParser<? extends Command> clp = getChildParser(line.getWords().get(1));
+    public CommandLine<? extends Command> parse(ParsedLine line, boolean ignoreRequirements) {
+        if(line.words().size() > 0) {
+            if (processedCommand.getName().equals(line.words().get(0))
+                    || processedCommand.getAliases().contains(line.words().get(0))) {
+                if(isGroupCommand() && line.words().size() > 1) {
+                   CommandLineParser<? extends Command> clp = getChildParser(line.words().get(1));
                     if(clp == null)
-                        return parse(line.getWords(), ignoreRequirements);
+                        return parse(line.words(), ignoreRequirements);
                     //we have a group command
                     else
-                        return clp.parse(line.getWords(), ignoreRequirements);
+                        return clp.parse(line.words(), ignoreRequirements);
                 }
                 else
-                    return parse(line.getWords(), ignoreRequirements);
+                    return parse(line.words(), ignoreRequirements);
             }
         }
-        else if(line.getStatus() != ParserStatus.OK)
-            return new CommandLine<>(new CommandLineParserException(line.getErrorMessage()));
+        else if(line.status() != ParserStatus.OK)
+            return new CommandLine<>(new CommandLineParserException(line.errorMessage()));
 
         return new CommandLine<>(new CommandLineParserException("Command:"+ processedCommand +", not found in: "+line));
     }

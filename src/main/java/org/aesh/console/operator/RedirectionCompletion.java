@@ -23,7 +23,7 @@ import org.aesh.util.FileLister;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.readline.completion.Completion;
-import org.aesh.parser.Parser;
+import org.aesh.util.Parser;
 
 /**
  * ControlOperator completor

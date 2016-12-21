@@ -26,11 +26,11 @@ import org.aesh.console.InvocationProviders;
 import org.aesh.console.command.Command;
 import org.aesh.console.command.CommandException;
 import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.parser.AeshLine;
 import org.aesh.cl.CommandLine;
 import org.aesh.cl.parser.CommandLineParserException;
 import org.aesh.cl.validator.CommandValidatorException;
 import org.aesh.console.command.CommandResult;
+import org.aesh.util.ParsedLine;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -38,7 +38,7 @@ import org.aesh.console.command.CommandResult;
 public abstract class DefaultCommandContainer<C extends Command> implements CommandContainer<C> {
 
     @Override
-    public CommandContainerResult executeCommand(AeshLine line, InvocationProviders invocationProviders,
+    public CommandContainerResult executeCommand(ParsedLine line, InvocationProviders invocationProviders,
                                                  AeshContext aeshContext,
                                                  CommandInvocation commandInvocation)
             throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException {
