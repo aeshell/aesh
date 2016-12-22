@@ -19,8 +19,14 @@
  */
 package org.aesh.console.command.invocation;
 
+import org.aesh.cl.parser.CommandLineParserException;
+import org.aesh.cl.validator.CommandValidatorException;
+import org.aesh.cl.validator.OptionValidatorException;
+import org.aesh.command.Executor;
 import org.aesh.console.AeshContext;
 import org.aesh.console.Shell;
+import org.aesh.console.command.CommandException;
+import org.aesh.console.command.CommandNotFoundException;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
 
@@ -114,7 +120,17 @@ public interface CommandInvocation {
      *
      * @param input command input
      */
-    void executeCommand(String input) throws InterruptedException;
+    void executeCommand(String input) throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException,
+            CommandException,
+            InterruptedException;
+
+    Executor<? extends CommandInvocation> buildExecutor(String line) throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException;
 
    /**
     * Print a message on console
