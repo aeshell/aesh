@@ -19,7 +19,7 @@
  */
 package org.aesh.console;
 
-import org.aesh.console.command.CommandResult;
+import org.aesh.command.CommandResult;
 import org.aesh.readline.action.KeyAction;
 
 /**

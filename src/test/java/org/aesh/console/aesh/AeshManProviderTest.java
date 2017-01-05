@@ -21,8 +21,8 @@ package org.aesh.console.aesh;
 
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
-import org.aesh.console.command.registry.AeshCommandRegistryBuilder;
-import org.aesh.console.command.registry.CommandRegistry;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.helper.ManProvider;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;

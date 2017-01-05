@@ -19,16 +19,17 @@
  */
 package org.aesh.cl;
 
-import org.aesh.cl.internal.ProcessedCommandBuilder;
-import org.aesh.cl.internal.ProcessedOptionBuilder;
-import org.aesh.cl.validator.NullCommandValidator;
-import org.aesh.cl.parser.CommandLineParserException;
-import org.aesh.cl.internal.ProcessedCommand;
-import org.aesh.cl.internal.OptionType;
-import org.aesh.cl.parser.CommandLineParser;
-import org.aesh.cl.parser.CommandLineParserBuilder;
-import org.aesh.cl.result.NullResultHandler;
-import org.aesh.console.command.Command;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.CommandLine;
+import org.aesh.command.impl.validator.NullCommandValidator;
+import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.OptionType;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.parser.CommandLineParserBuilder;
+import org.aesh.command.impl.result.NullResultHandler;
+import org.aesh.command.Command;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

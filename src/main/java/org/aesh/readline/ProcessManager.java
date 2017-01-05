@@ -21,7 +21,7 @@ package org.aesh.readline;
 
 import org.aesh.console.AeshContext;
 import org.aesh.console.settings.Settings;
-import org.aesh.console.InvocationProviders;
+import org.aesh.command.invocation.InvocationProviders;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

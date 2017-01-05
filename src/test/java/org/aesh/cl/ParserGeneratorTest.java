@@ -19,14 +19,16 @@
  */
 package org.aesh.cl;
 
-import org.aesh.cl.internal.ProcessedOption;
-import org.aesh.cl.parser.CommandLineParser;
-import org.aesh.cl.parser.ParserGenerator;
-import org.aesh.console.command.CommandException;
-import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.cl.parser.CommandLineParserException;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.CommandResult;
+import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.parser.ParserGenerator;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.Command;
+import org.aesh.command.CommandResult;
+import org.aesh.command.option.Option;
 import org.junit.Test;
 
 import java.util.List;

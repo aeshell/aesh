@@ -19,10 +19,12 @@
  */
 package org.aesh.cl;
 
-import org.aesh.console.command.CommandException;
-import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.CommandResult;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.Command;
+import org.aesh.command.CommandResult;
+import org.aesh.command.option.Option;
 
 @CommandDefinition(name = "subhelp", description = "a simple help")
 public class SubHelp extends HelpPopulator implements Command {

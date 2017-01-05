@@ -5,7 +5,7 @@
  */
 package org.aesh.command;
 
-import org.aesh.console.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocation;
 
 /**
  * TODO

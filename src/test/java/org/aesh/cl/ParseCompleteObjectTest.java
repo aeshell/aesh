@@ -19,17 +19,22 @@
  */
 package org.aesh.cl;
 
-import org.aesh.cl.parser.CommandLineCompletionParser;
-import org.aesh.cl.parser.CommandLineParser;
-import org.aesh.cl.parser.ParsedCompleteObject;
-import org.aesh.cl.parser.ParserGenerator;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.CommandResult;
-import org.aesh.console.command.invocation.CommandInvocation;
+import org.aesh.command.impl.parser.CommandLineCompletionParser;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.parser.ParsedCompleteObject;
+import org.aesh.command.impl.parser.ParserGenerator;
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandResult;
+import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionList;
 import org.junit.Test;
 
 import java.util.List;
-import org.aesh.console.command.CommandException;
+import org.aesh.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

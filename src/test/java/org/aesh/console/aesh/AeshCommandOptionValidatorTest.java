@@ -19,28 +19,28 @@
  */
 package org.aesh.console.aesh;
 
-import org.aesh.cl.Option;
-import org.aesh.cl.validator.OptionValidator;
+import org.aesh.command.option.Option;
+import org.aesh.command.validator.OptionValidator;
 import org.aesh.console.AeshContext;
-import org.aesh.console.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.util.Config;
-import org.aesh.cl.CommandDefinition;
-import org.aesh.cl.validator.OptionValidatorException;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.CommandResult;
-import org.aesh.console.command.registry.AeshCommandRegistryBuilder;
-import org.aesh.console.command.registry.CommandRegistry;
-import org.aesh.console.command.validator.AeshValidatorInvocation;
-import org.aesh.console.command.validator.ValidatorInvocation;
-import org.aesh.console.command.validator.ValidatorInvocationProvider;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.command.Command;
+import org.aesh.command.CommandResult;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.impl.validator.AeshValidatorInvocation;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
 import java.io.IOException;
-import org.aesh.console.command.CommandException;
+import org.aesh.command.CommandException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

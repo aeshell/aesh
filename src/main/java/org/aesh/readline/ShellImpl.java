@@ -19,7 +19,7 @@
  */
 package org.aesh.readline;
 
-import org.aesh.console.Shell;
+import org.aesh.command.Shell;
 import org.aesh.readline.action.ActionDecoder;
 import org.aesh.terminal.Key;
 import org.aesh.tty.Capability;

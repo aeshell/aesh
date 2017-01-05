@@ -24,10 +24,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.aesh.cl.parser.CommandLineParser;
-import org.aesh.console.command.CommandNotFoundException;
-import org.aesh.console.command.container.CommandContainer;
-import org.aesh.console.command.registry.CommandRegistry;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;

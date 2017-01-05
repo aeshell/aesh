@@ -20,21 +20,21 @@
 package org.aesh.readline;
 
 import org.aesh.AeshCommandResolver;
-import org.aesh.cl.internal.ProcessedCommand;
-import org.aesh.cl.parser.CommandLineCompletionParser;
-import org.aesh.cl.parser.CommandLineParser;
-import org.aesh.cl.parser.ParsedCompleteObject;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.parser.CommandLineCompletionParser;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.parser.ParsedCompleteObject;
+import org.aesh.command.impl.invocation.AeshInvocationProviders;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
-import org.aesh.console.AeshInvocationProviders;
-import org.aesh.console.CommandResolver;
-import org.aesh.console.InvocationProviders;
-import org.aesh.console.command.activator.AeshOptionActivatorProvider;
-import org.aesh.console.command.container.CommandContainer;
+import org.aesh.command.CommandResolver;
+import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
+import org.aesh.command.container.CommandContainer;
 import org.aesh.console.settings.Settings;
-import org.aesh.cl.parser.CommandLineParserException;
+import org.aesh.command.impl.parser.CommandLineParserException;
 import org.aesh.console.AeshCompletionHandler;
-import org.aesh.console.command.CommandNotFoundException;
+import org.aesh.command.CommandNotFoundException;
 import org.aesh.console.settings.DefaultAeshContext;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.readline.completion.Completion;
@@ -95,7 +95,7 @@ public class ReadlineConsole implements Console {
     }
 
     @Override
-    public boolean running() {
+    public boolean running(){
         return running;
     }
 

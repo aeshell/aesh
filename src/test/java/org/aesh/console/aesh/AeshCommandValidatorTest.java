@@ -19,22 +19,22 @@
  */
 package org.aesh.console.aesh;
 
-import org.aesh.cl.Option;
-import org.aesh.cl.internal.ProcessedOption;
-import org.aesh.console.command.invocation.CommandInvocation;
+import org.aesh.command.option.Option;
+import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.console.settings.Settings;
-import org.aesh.cl.CommandDefinition;
-import org.aesh.cl.GroupCommandDefinition;
-import org.aesh.cl.activation.OptionActivator;
-import org.aesh.cl.completer.OptionCompleter;
-import org.aesh.cl.internal.ProcessedCommand;
-import org.aesh.cl.validator.CommandValidator;
-import org.aesh.cl.validator.CommandValidatorException;
-import org.aesh.console.command.completer.CompleterInvocation;
-import org.aesh.console.command.registry.AeshCommandRegistryBuilder;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.registry.CommandRegistry;
-import org.aesh.console.command.CommandResult;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.OptionCompleter;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.validator.CommandValidator;
+import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.Command;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.CommandResult;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
@@ -42,7 +42,7 @@ import org.aesh.util.Config;
 import org.junit.Test;
 
 import java.io.IOException;
-import org.aesh.console.command.CommandException;
+import org.aesh.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

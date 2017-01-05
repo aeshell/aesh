@@ -19,15 +19,20 @@
  */
 package org.aesh.cl;
 
-import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.CommandResult;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.Command;
+import org.aesh.command.CommandResult;
 
 import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import org.aesh.console.command.CommandException;
+import org.aesh.command.CommandException;
+import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionGroup;
+import org.aesh.command.option.OptionList;
 
 @CommandDefinition(name = "test", description = "a simple test")
 public class TestPopulator4 implements Command {

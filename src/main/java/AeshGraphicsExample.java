@@ -18,19 +18,19 @@
  * limitations under the License.
  */
 
-import org.aesh.cl.CommandDefinition;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.CommandResult;
-import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.console.command.registry.AeshCommandRegistryBuilder;
-import org.aesh.console.command.registry.CommandRegistry;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.Command;
+import org.aesh.command.CommandResult;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.graphics.Graphics;
 import org.aesh.graphics.GraphicsConfiguration;
 import org.aesh.terminal.Key;
 
-import org.aesh.console.command.CommandException;
+import org.aesh.command.CommandException;
 import org.aesh.terminal.formatting.Color;
 import org.aesh.terminal.formatting.TerminalColor;
 

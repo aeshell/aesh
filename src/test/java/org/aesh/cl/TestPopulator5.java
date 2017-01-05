@@ -19,14 +19,19 @@
  */
 package org.aesh.cl;
 
-import org.aesh.cl.validator.OptionValidator;
+import org.aesh.command.validator.OptionValidator;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionGroup;
+import org.aesh.command.option.OptionList;
 import org.aesh.console.AeshContext;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.CommandException;
-import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.cl.validator.OptionValidatorException;
-import org.aesh.console.command.CommandResult;
-import org.aesh.console.command.validator.ValidatorInvocation;
+import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.validator.ValidatorInvocation;
 
 import java.util.Currency;
 import java.util.List;
