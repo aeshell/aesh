@@ -17,7 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh;
+
+package org.aesh.command.impl;
 
 import org.aesh.command.CommandResolver;
 import org.aesh.command.CommandNotFoundException;

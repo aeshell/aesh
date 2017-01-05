@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2016 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -17,12 +17,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.command;
+package org.aesh.command.impl;
 
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.aesh.AeshCommandResolver;
+
+import org.aesh.command.AeshCommandProcessor;
+import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.CommandResolver;
+import org.aesh.command.CommandResult;
+import org.aesh.command.Executor;
+import org.aesh.command.Shell;
 import org.aesh.command.impl.parser.CommandLine;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineCompletionParser;

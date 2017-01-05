@@ -31,7 +31,7 @@ public class Executor<T extends CommandInvocation> {
     private final T commandInvocation;
     private final Executable<T> exe;
 
-    Executor(T commandInvocation, Executable<T> exe) {
+    public Executor(T commandInvocation, Executable<T> exe) {
         this.commandInvocation = commandInvocation;
         this.exe = exe;
     }

@@ -19,7 +19,7 @@
  */
 package org.aesh.readline;
 
-import org.aesh.AeshCommandResolver;
+import org.aesh.command.impl.AeshCommandResolver;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
