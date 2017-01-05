@@ -19,9 +19,9 @@
  */
 package org.aesh.cl;
 
-import org.aesh.cl.converter.Converter;
-import org.aesh.cl.validator.OptionValidatorException;
-import org.aesh.console.command.converter.ConverterInvocation;
+import org.aesh.command.converter.Converter;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.command.converter.ConverterInvocation;
 
 import java.util.Currency;
 

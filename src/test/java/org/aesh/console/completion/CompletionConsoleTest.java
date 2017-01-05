@@ -22,18 +22,18 @@ package org.aesh.console.completion;
 
 import java.io.IOException;
 
-import org.aesh.cl.internal.ProcessedCommandBuilder;
-import org.aesh.cl.internal.ProcessedOption;
-import org.aesh.cl.internal.ProcessedOptionBuilder;
-import org.aesh.cl.parser.CommandLineParser;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.completion.Completion;
-import org.aesh.cl.parser.CommandLineParserException;
-import org.aesh.cl.internal.ProcessedCommand;
-import org.aesh.cl.parser.AeshCommandLineParser;
+import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
 
-import org.aesh.console.command.Command;
+import org.aesh.command.Command;
 import org.aesh.terminal.Key;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;

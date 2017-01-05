@@ -19,8 +19,8 @@
  */
 package org.aesh.util;
 
-import org.aesh.cl.converter.Converter;
-import org.aesh.console.command.converter.ConverterInvocation;
+import org.aesh.command.converter.Converter;
+import org.aesh.command.converter.ConverterInvocation;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;

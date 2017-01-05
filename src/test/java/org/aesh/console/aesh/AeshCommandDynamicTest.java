@@ -19,19 +19,19 @@
  */
 package org.aesh.console.aesh;
 
-import org.aesh.cl.builder.CommandBuilder;
-import org.aesh.cl.internal.OptionType;
-import org.aesh.cl.internal.ProcessedOptionBuilder;
-import org.aesh.cl.parser.OptionParserException;
+import org.aesh.command.builder.CommandBuilder;
+import org.aesh.command.impl.internal.OptionType;
+import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.OptionParserException;
 import org.aesh.complete.AeshCompleteOperation;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.CommandException;
-import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.console.command.registry.AeshCommandRegistryBuilder;
-import org.aesh.console.command.registry.CommandRegistry;
+import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
-import org.aesh.console.command.CommandResult;
+import org.aesh.command.CommandResult;
 import org.aesh.console.settings.DefaultAeshContext;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;

@@ -19,18 +19,18 @@
  */
 package org.aesh.readline;
 
-import org.aesh.cl.result.ResultHandler;
-import org.aesh.console.command.CommandException;
+import org.aesh.command.result.ResultHandler;
+import org.aesh.command.CommandException;
 import org.aesh.console.settings.Settings;
 import org.aesh.util.Config;
-import org.aesh.cl.parser.CommandLineParserException;
-import org.aesh.cl.validator.CommandValidatorException;
-import org.aesh.cl.validator.OptionValidatorException;
-import org.aesh.console.command.CommandResult;
-import org.aesh.console.command.container.CommandContainer;
-import org.aesh.console.command.container.CommandContainerResult;
-import org.aesh.console.command.invocation.AeshCommandInvocation;
-import org.aesh.console.command.invocation.CommandInvocationServices;
+import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.container.CommandContainerResult;
+import org.aesh.command.impl.invocation.AeshCommandInvocation;
+import org.aesh.command.invocation.CommandInvocationServices;
 import org.aesh.tty.Connection;
 import org.aesh.tty.Signal;
 import org.aesh.util.LoggerUtil;

@@ -19,10 +19,10 @@
  */
 package org.aesh;
 
-import org.aesh.console.CommandResolver;
-import org.aesh.console.command.CommandNotFoundException;
-import org.aesh.console.command.container.CommandContainer;
-import org.aesh.console.command.registry.CommandRegistry;
+import org.aesh.command.CommandResolver;
+import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.util.ParsedLine;
 import org.aesh.util.Parser;
 

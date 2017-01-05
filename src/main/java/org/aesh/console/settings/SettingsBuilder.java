@@ -19,22 +19,22 @@
  */
 package org.aesh.console.settings;
 
-import org.aesh.console.AeshInvocationProviders;
-import org.aesh.console.command.activator.OptionActivatorProvider;
+import org.aesh.command.impl.invocation.AeshInvocationProviders;
+import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.console.AeshContext;
-import org.aesh.console.InvocationProviders;
-import org.aesh.console.command.activator.AeshCommandActivatorProvider;
-import org.aesh.console.command.activator.AeshOptionActivatorProvider;
-import org.aesh.console.command.activator.CommandActivatorProvider;
-import org.aesh.console.command.completer.AeshCompleterInvocationProvider;
-import org.aesh.console.command.completer.CompleterInvocationProvider;
-import org.aesh.console.command.converter.AeshConverterInvocationProvider;
-import org.aesh.console.command.converter.ConverterInvocationProvider;
-import org.aesh.console.command.invocation.CommandInvocationServices;
-import org.aesh.console.command.registry.CommandRegistry;
-import org.aesh.console.command.registry.MutableCommandRegistry;
-import org.aesh.console.command.validator.AeshValidatorInvocationProvider;
-import org.aesh.console.command.validator.ValidatorInvocationProvider;
+import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.impl.activator.AeshCommandActivatorProvider;
+import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
+import org.aesh.command.activator.CommandActivatorProvider;
+import org.aesh.command.impl.completer.AeshCompleterInvocationProvider;
+import org.aesh.command.completer.CompleterInvocationProvider;
+import org.aesh.command.impl.converter.AeshConverterInvocationProvider;
+import org.aesh.command.converter.ConverterInvocationProvider;
+import org.aesh.command.invocation.CommandInvocationServices;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.impl.registry.MutableCommandRegistry;
+import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
+import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.helper.InterruptHook;
 import org.aesh.console.helper.ManProvider;
 import org.aesh.io.Resource;

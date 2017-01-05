@@ -19,6 +19,8 @@
  */
 package org.aesh.cl;
 
+import org.aesh.command.option.Option;
+
 public class HelpPopulator {
     @Option(shortName = 'h', name = "help", hasValue = false)
     private boolean int1;

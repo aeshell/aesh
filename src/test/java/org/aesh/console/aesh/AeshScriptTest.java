@@ -19,23 +19,23 @@
  */
 package org.aesh.console.aesh;
 
-import org.aesh.cl.internal.ProcessedCommand;
-import org.aesh.cl.internal.ProcessedCommandBuilder;
-import org.aesh.cl.result.ResultHandler;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.CommandException;
-import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.console.command.registry.AeshCommandRegistryBuilder;
-import org.aesh.console.command.registry.CommandRegistry;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.result.ResultHandler;
+import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.settings.CommandNotFoundHandler;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.Connection;
 import org.aesh.util.Config;
-import org.aesh.cl.CommandDefinition;
-import org.aesh.cl.parser.CommandLineParserException;
-import org.aesh.console.command.CommandResult;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.CommandResult;
 import org.aesh.tty.TestConnection;
 import org.junit.Ignore;
 import org.junit.Test;

@@ -19,26 +19,26 @@
  */
 package org.aesh.console.aesh;
 
-import org.aesh.cl.internal.ProcessedCommandBuilder;
-import org.aesh.cl.internal.ProcessedOption;
-import org.aesh.cl.internal.ProcessedOptionBuilder;
-import org.aesh.cl.parser.CommandLineParser;
-import org.aesh.cl.populator.CommandPopulator;
-import org.aesh.console.command.invocation.CommandInvocation;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.populator.CommandPopulator;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
-import org.aesh.cl.CommandLine;
-import org.aesh.cl.internal.ProcessedCommand;
-import org.aesh.cl.parser.CommandLineParserBuilder;
-import org.aesh.cl.parser.CommandLineParserException;
+import org.aesh.command.impl.parser.CommandLine;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.parser.CommandLineParserBuilder;
+import org.aesh.command.impl.parser.CommandLineParserException;
 import org.aesh.console.AeshContext;
-import org.aesh.console.InvocationProviders;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.CommandResult;
-import org.aesh.console.command.container.AeshCommandContainer;
-import org.aesh.console.command.container.CommandContainer;
-import org.aesh.console.command.registry.AeshCommandRegistryBuilder;
-import org.aesh.console.command.registry.CommandRegistry;
+import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.Command;
+import org.aesh.command.CommandResult;
+import org.aesh.command.impl.container.AeshCommandContainer;
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.util.Config;
@@ -48,7 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aesh.console.command.CommandException;
+import org.aesh.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 

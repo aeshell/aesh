@@ -19,9 +19,9 @@
  */
 package org.aesh.console.man;
 
-import org.aesh.console.Shell;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.invocation.CommandInvocation;
+import org.aesh.command.Shell;
+import org.aesh.command.Command;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.console.operator.ControlOperator;
 import org.aesh.readline.action.KeyAction;
 import org.aesh.terminal.Key;

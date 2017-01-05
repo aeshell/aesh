@@ -19,15 +19,13 @@
  */
 package org.aesh.command;
 
-import org.aesh.cl.parser.CommandLineParserException;
-import org.aesh.cl.validator.CommandValidatorException;
-import org.aesh.cl.validator.OptionValidatorException;
+import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
-import org.aesh.console.command.CommandException;
-import org.aesh.console.command.CommandNotFoundException;
-import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.console.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistry;
 
 /**
  * An Aesh Command processor.

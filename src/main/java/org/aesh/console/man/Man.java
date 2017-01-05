@@ -19,16 +19,16 @@
  */
 package org.aesh.console.man;
 
-import org.aesh.cl.completer.OptionCompleter;
-import org.aesh.console.command.CommandException;
-import org.aesh.console.command.completer.CompleterInvocation;
-import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.console.command.registry.CommandRegistry;
+import org.aesh.command.completer.OptionCompleter;
+import org.aesh.command.CommandException;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.helper.ManProvider;
 import org.aesh.console.man.parser.ManFileParser;
-import org.aesh.cl.Arguments;
-import org.aesh.cl.CommandDefinition;
-import org.aesh.console.command.CommandResult;
+import org.aesh.command.option.Arguments;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandResult;
 import org.aesh.util.ANSI;
 
 import java.io.IOException;

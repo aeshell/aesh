@@ -19,18 +19,18 @@
  */
 package org.aesh.console.registry;
 
-import org.aesh.cl.Option;
-import org.aesh.console.command.invocation.CommandInvocation;
-import org.aesh.cl.CommandDefinition;
-import org.aesh.cl.GroupCommandDefinition;
+import org.aesh.command.option.Option;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.GroupCommandDefinition;
 import org.aesh.complete.AeshCompleteOperation;
-import org.aesh.console.command.Command;
-import org.aesh.console.command.CommandResult;
-import org.aesh.console.command.registry.MutableCommandRegistry;
+import org.aesh.command.Command;
+import org.aesh.command.CommandResult;
+import org.aesh.command.impl.registry.MutableCommandRegistry;
 import org.aesh.terminal.formatting.TerminalString;
 import org.junit.Test;
 
-import org.aesh.console.command.CommandException;
+import org.aesh.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
