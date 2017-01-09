@@ -29,7 +29,7 @@ import org.aesh.command.impl.parser.CommandLine;
 import org.aesh.command.impl.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.util.ParsedLine;
+import org.aesh.parser.ParsedLine;
 
 /**
  * A CommandContainer hold reference to the Command and

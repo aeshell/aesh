@@ -22,7 +22,7 @@ package org.aesh.command.impl.parser;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.Command;
-import org.aesh.util.ParsedLine;
+import org.aesh.parser.ParsedLine;
 
 import java.util.List;
 
@@ -109,18 +109,6 @@ public interface CommandLineParser<C extends Command> {
     CommandLine<? extends Command> parse(String line, boolean ignoreRequirements);
 
     CommandLine<? extends Command> parse(ParsedLine line, boolean ignoreRequirements);
-
-    /**
-     * Parse a command line with the defined command as base of the rules.
-     * This method is useful when parsing a command line program thats not
-     * in aesh, but rather a standalone command that want to parse input
-     * parameters.
-     *
-     * @param lines input
-     * @param ignoreRequirements if we should ignore
-     * @return CommandLine
-     */
-    CommandLine<? extends Command> parse(List<String> lines, boolean ignoreRequirements);
 
     void clear();
 

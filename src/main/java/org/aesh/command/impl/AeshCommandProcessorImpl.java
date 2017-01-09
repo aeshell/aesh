@@ -56,8 +56,8 @@ import org.aesh.command.invocation.CommandInvocationProvider;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.settings.CommandNotFoundHandler;
-import org.aesh.util.ParsedLine;
-import org.aesh.util.Parser;
+import org.aesh.parser.LineParser;
+import org.aesh.parser.ParsedLine;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
 import org.aesh.terminal.Key;
@@ -311,7 +311,7 @@ class AeshCommandProcessorImpl<T extends CommandInvocation, V extends AeshComple
         try (CommandContainer container = commandResolver.resolveCommand(line)) {
             resultHandler = container.getParser().getProcessedCommand().getResultHandler();
             CommandContainerResult ccResult = container.executeCommand(
-                    Parser.findAllWords(line),
+                    LineParser.parseLine(line),
                     invocationProviders,
                     ctx,
                     commandInvocationProvider.enhanceCommandInvocation(
@@ -390,11 +390,11 @@ class AeshCommandProcessorImpl<T extends CommandInvocation, V extends AeshComple
             return null;
         }
 
-        ParsedLine aeshLine = Parser.findAllWords(commandLine);
+        ParsedLine aeshLine = LineParser.parseLine(commandLine);
         if (aeshLine.words().isEmpty()) {
             return null;
         }
-        String opName = aeshLine.words().get(0);
+        String opName = aeshLine.words().get(0).word();
         CommandContainer<Command> container = registry.
                 getCommand(opName, commandLine);
         if (container == null) {

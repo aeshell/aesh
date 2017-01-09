@@ -22,6 +22,7 @@ package org.aesh.readline;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.CommandException;
 import org.aesh.console.settings.Settings;
+import org.aesh.parser.LineParser;
 import org.aesh.util.Config;
 import org.aesh.command.impl.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
@@ -34,7 +35,6 @@ import org.aesh.command.invocation.CommandInvocationServices;
 import org.aesh.tty.Connection;
 import org.aesh.tty.Signal;
 import org.aesh.util.LoggerUtil;
-import org.aesh.util.Parser;
 
 import java.util.function.Consumer;
 import java.util.logging.Logger;
@@ -137,7 +137,7 @@ public class Process extends Thread implements Consumer<Signal> {
     }
 
     private CommandContainerResult runCommand(CommandContainer container, String aeshLine) throws InterruptedException, OptionValidatorException, CommandException, CommandLineParserException, CommandValidatorException {
-        return container.executeCommand(Parser.findAllWords(aeshLine), settings.invocationProviders(), settings.aeshContext(),
+        return container.executeCommand(LineParser.parseLine(aeshLine), settings.invocationProviders(), settings.aeshContext(),
                 settings.commandInvocationServices().getCommandInvocationProvider(
                         commandInvocationProvider).enhanceCommandInvocation(
                         new AeshCommandInvocation(console, new ShellImpl(conn, readline))));

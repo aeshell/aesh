@@ -24,8 +24,8 @@ import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.Command;
-
-import java.util.List;
+import org.aesh.parser.ParsedLine;
+import org.aesh.parser.ParsedWord;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -46,24 +46,23 @@ public class AeshCommandLineParserHelper {
     /**
      * Populate commandLine.
      * Lines are the user input minus command name;
-     *
-     * @param commandLine command
-     * @param lines input
+     *  @param commandLine command
+     * @param line input
      * @param ignoreRequirements should we ignore requirements
      */
     public void parse(CommandLine commandLine,
-            List<String> lines, boolean ignoreRequirements) {
+                      ParsedLine line, boolean ignoreRequirements) {
 
         status = Status.NULL;
         this.commandLine = commandLine;
         this.active = null;
 
-        for (String word : lines) {
-            ProcessedOption currOption = findOption(word);
+        for (ParsedWord word : line.words()) {
+            ProcessedOption currOption = findOption(word.word());
             if (status == Status.ACTIVE) {
                 if (currOption == null) {
                     //add value to active
-                    addValueToOption(active, word);
+                    addValueToOption(active, word.word());
                     //if addValueToOption have added the option to commandline
                     //we need to set active = null
                     if (status == Status.NULL)
@@ -75,15 +74,15 @@ public class AeshCommandLineParserHelper {
                     active = null;
                     status = Status.NULL;
 
-                    preProcessOption(currOption, word);
+                    preProcessOption(currOption, word.word());
                 }
             } else if (status == Status.NULL) {
                 if (currOption == null) {
                     //add the current word as argument
 
-                    commandLine.addArgumentValue(word);
+                    commandLine.addArgumentValue(word.word());
                 } else {
-                    preProcessOption(currOption, word);
+                    preProcessOption(currOption, word.word());
                 }
             }
         }

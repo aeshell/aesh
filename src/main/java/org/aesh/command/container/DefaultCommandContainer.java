@@ -30,7 +30,7 @@ import org.aesh.command.impl.parser.CommandLine;
 import org.aesh.command.impl.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.CommandResult;
-import org.aesh.util.ParsedLine;
+import org.aesh.parser.ParsedLine;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

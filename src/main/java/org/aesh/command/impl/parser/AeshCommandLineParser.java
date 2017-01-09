@@ -22,10 +22,10 @@ package org.aesh.command.impl.parser;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.parser.LineParser;
 import org.aesh.util.Config;
-import org.aesh.util.ParsedLine;
-import org.aesh.util.Parser;
-import org.aesh.util.ParserStatus;
+import org.aesh.parser.ParsedLine;
+import org.aesh.parser.ParserStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -171,18 +171,20 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     @Override
     public CommandLine<? extends Command> parse(ParsedLine line, boolean ignoreRequirements) {
         if(line.words().size() > 0) {
-            if (processedCommand.getName().equals(line.words().get(0))
-                    || processedCommand.getAliases().contains(line.words().get(0))) {
+            if (processedCommand.getName().equals(line.words().get(0).word())
+                    || processedCommand.getAliases().contains(line.words().get(0).word())) {
                 if(isGroupCommand() && line.words().size() > 1) {
-                   CommandLineParser<? extends Command> clp = getChildParser(line.words().get(1));
+                   CommandLineParser<? extends Command> clp = getChildParser(line.words().get(1).word());
                     if(clp == null)
-                        return parse(line.words(), ignoreRequirements);
+                        return doParse(line, ignoreRequirements);
                     //we have a group command
-                    else
-                        return clp.parse(line.words(), ignoreRequirements);
+                    else {
+                        line.words().remove(0);
+                        return clp.parse(line, ignoreRequirements);
+                    }
                 }
                 else
-                    return parse(line.words(), ignoreRequirements);
+                    return doParse(line, ignoreRequirements);
             }
         }
         else if(line.status() != ParserStatus.OK)
@@ -190,6 +192,19 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
         return new CommandLine<>(new CommandLineParserException("Command:"+ processedCommand +", not found in: "+line));
     }
+
+
+    private CommandLine<? extends Command> doParse(ParsedLine line, boolean ignoreRequirements) {
+        AeshCommandLineParserHelper helper = new AeshCommandLineParserHelper(processedCommand);
+        line.words().remove(0);
+
+        clear();
+        CommandLine<? extends Command> commandLine = new CommandLine<>(this);
+        helper.parse(commandLine, line, ignoreRequirements);
+        return commandLine;
+    }
+
+
     /**
      * Parse a command line with the defined command as base of the rules.
      * If any options are found, but not defined in the command object an
@@ -206,30 +221,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      */
     @Override
     public CommandLine<? extends Command> parse(String line, boolean ignoreRequirements) {
-        return parse(Parser.findAllWords(line), ignoreRequirements);
-    }
-
-    /**
-     * Parse a command line with the defined command as base of the rules.
-     * This method is useful when parsing a command line program thats not
-     * in aesh, but rather a standalone command that want to parse input
-     * parameters.
-     *
-     * @param lines input
-     * @param ignoreRequirements if we should ignore
-     * @return CommandLine
-     */
-    @Override
-    public CommandLine<? extends Command> parse(List<String> lines, boolean ignoreRequirements) {
-        AeshCommandLineParserHelper helper = new AeshCommandLineParserHelper(processedCommand);
-        lines.remove(0);
-        if(isChild)
-            lines.remove(0);
-
-        clear();
-        CommandLine<? extends Command> commandLine = new CommandLine<>(this);
-        helper.parse(commandLine, lines, ignoreRequirements);
-        return commandLine;
+        return parse(LineParser.parseLine(line), ignoreRequirements);
     }
 
     @Override
