@@ -98,6 +98,6 @@ public class RuntimeSettings {
                     builder.setExecuteFileAtStart(resourceFile);
             }
 
-        return builder.create();
+        return builder.build();
     }
 }

@@ -70,7 +70,7 @@ public @interface OptionList {
     /**
      * If set will force the option to be of the form:
      * name[separator]value
-     * As an example, if we want to create an option like: --foo bar1,bar2
+     * As an example, if we want to build an option like: --foo bar1,bar2
      */
     char valueSeparator() default ',';
 

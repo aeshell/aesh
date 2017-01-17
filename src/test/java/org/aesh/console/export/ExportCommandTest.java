@@ -47,14 +47,14 @@ public class ExportCommandTest {
 
         CommandRegistry registry = new AeshCommandRegistryBuilder().create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .connection(connection)
                 .commandRegistry(registry)
                 .setPersistExport(false)
                 .mode(EditMode.Mode.EMACS)
                 .readInputrc(false)
                 .logging(true)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

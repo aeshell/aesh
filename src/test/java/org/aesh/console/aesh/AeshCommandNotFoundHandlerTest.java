@@ -46,12 +46,12 @@ public class AeshCommandNotFoundHandlerTest {
        CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .create();
 
-         Settings settings = new SettingsBuilder()
+         Settings settings = SettingsBuilder.builder()
                  .commandRegistry(registry)
                  .connection(connection)
                  .commandNotFoundHandler(new HandlerCommandNotFound())
                 .logging(true)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

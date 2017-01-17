@@ -90,12 +90,12 @@ public class AeshScriptTest {
                 .command(ExitCommand.class)
                 .create();
 
-          Settings settings = new SettingsBuilder()
+          Settings settings = SettingsBuilder.builder()
                   .logging(true)
                   .commandRegistry(registry)
                   .connection(connection)
                   .commandNotFoundHandler(resultHandler)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 

@@ -60,12 +60,12 @@ import static org.junit.Assert.assertTrue;
 public class CommandLinePopulatorTest {
 
     private final InvocationProviders invocationProviders = new AeshInvocationProviders(
-            new SettingsBuilder()
+            SettingsBuilder.builder()
                     .converterInvocationProvider(new AeshConverterInvocationProvider())
                     .completerInvocationProvider(new AeshCompleterInvocationProvider())
                     .validatorInvocationProvider(new AeshValidatorInvocationProvider())
                     .optionActivatorProvider(new AeshOptionActivatorProvider())
-                    .commandActivatorProvider(new AeshCommandActivatorProvider()).create());
+                    .commandActivatorProvider(new AeshCommandActivatorProvider()).build());
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
@@ -75,7 +75,7 @@ public class CommandLinePopulatorTest {
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(TestPopulator1.class).getParser();
 
         TestPopulator1 test1 = (TestPopulator1) parser.getCommand();
-        AeshContext aeshContext = new SettingsBuilder().create().aeshContext();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
 
         parser.getCommandPopulator().populateObject(parser.parse("test -e enable --X -f -i 2 -n=3"), invocationProviders, aeshContext, true);
 
@@ -115,7 +115,7 @@ public class CommandLinePopulatorTest {
     public void testListObjects() throws Exception {
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(TestPopulator2.class).getParser();
         TestPopulator2 test2 = (TestPopulator2) parser.getCommand();
-        AeshContext aeshContext = new SettingsBuilder().create().aeshContext();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
 
         parser.getCommandPopulator().populateObject(parser.parse("test -b s1,s2,s3,s4"), invocationProviders, aeshContext, true);
         assertNotNull(test2.getBasicSet());
@@ -187,7 +187,7 @@ public class CommandLinePopulatorTest {
         try {
             parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class).getParser();
             TestPopulator5 test5 = (TestPopulator5) parser.getCommand();
-            AeshContext aeshContext = new SettingsBuilder().create().aeshContext();
+            AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
             parser.getCommandPopulator().populateObject(parser.parse("test --strings foo1 --bar "), invocationProviders, aeshContext, true);
 
             assertEquals("foo1", test5.getStrings().get(0));
@@ -201,7 +201,7 @@ public class CommandLinePopulatorTest {
     public void testGroupObjects() throws Exception {
         CommandLineParser<TestPopulator3> parser = ParserGenerator.generateCommandLineParser(TestPopulator3.class).getParser();
         TestPopulator3 test3 = parser.getCommand();
-        AeshContext aeshContext = new SettingsBuilder().create().aeshContext();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
 
         parser.getCommandPopulator().populateObject(parser.parse("test -bX1=foo -bX2=bar"), invocationProviders, aeshContext, true);
 
@@ -228,7 +228,7 @@ public class CommandLinePopulatorTest {
     public void testArguments() throws Exception {
         CommandLineParser<TestPopulator4>  parser = ParserGenerator.generateCommandLineParser(TestPopulator4.class).getParser();
         TestPopulator4 test4 =  parser.getCommand();
-        AeshContext aeshContext = new SettingsBuilder().create().aeshContext();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
 
         parser.getCommandPopulator().populateObject(parser.parse("test test2.txt test4.txt"), invocationProviders, aeshContext, true);
 
@@ -280,7 +280,7 @@ public class CommandLinePopulatorTest {
         CommandLineParser parser =  new AeshCommandLineParser( commandBuilder.create());
 
         //TestPopulator1A test1 = (TestPopulator1A) parser.getCommandPopulator().getObject();
-        AeshContext aeshContext = new SettingsBuilder().create().aeshContext();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
 
         parser.getCommandPopulator().populateObject(parser.parse("test -e enable --XX -f -i 2 -n=3"), invocationProviders, aeshContext, true);
 
@@ -303,7 +303,7 @@ public class CommandLinePopulatorTest {
     public void testCustomConverter() throws Exception {
         CommandLineParser<TestPopulator5>  parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class).getParser();
         TestPopulator5 test5 = parser.getCommand();
-        AeshContext aeshContext = new SettingsBuilder().create().aeshContext();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
 
         parser.getCommandPopulator().populateObject(parser.parse("test test2.txt test4.txt"), invocationProviders, aeshContext, true);
 
@@ -322,7 +322,7 @@ public class CommandLinePopulatorTest {
         try {
             CommandLineParser<TestPopulator5>  parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class).getParser();
             TestPopulator5 test5 = parser.getCommand();
-            AeshContext aeshContext = new SettingsBuilder().create().aeshContext();
+            AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
 
             parser.getCommandPopulator().populateObject(parser.parse("test -v 42"), invocationProviders, aeshContext, true);
 
@@ -341,7 +341,7 @@ public class CommandLinePopulatorTest {
         try {
             CommandLineParser<TestPopulator5>  parser = ParserGenerator.generateCommandLineParser(TestPopulator5.class).getParser();
             TestPopulator5 test5 = parser.getCommand();
-            AeshContext aeshContext = new SettingsBuilder().create().aeshContext();
+            AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
 
             parser.getCommandPopulator().populateObject(parser.parse("test --longs 42;43;44 -v 42"), invocationProviders, aeshContext, true);
             assertEquals(3, test5.getLongs().size());
@@ -366,7 +366,7 @@ public class CommandLinePopulatorTest {
         CommandLineParser parser = ParserGenerator.generateCommandLineParser(SubHelp.class).getParser();
 
         SubHelp test1 = (SubHelp) parser.getCommand();
-        AeshContext aeshContext = new SettingsBuilder().create().aeshContext();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
 
         parser.getCommandPopulator().populateObject(parser.parse("subhelp -e enable -h"), invocationProviders, aeshContext, true);
 

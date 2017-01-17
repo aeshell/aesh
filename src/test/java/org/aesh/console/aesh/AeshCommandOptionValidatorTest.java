@@ -55,11 +55,11 @@ public class AeshCommandOptionValidatorTest {
                 .command(ValCommand.class)
                 .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -84,11 +84,11 @@ public class AeshCommandOptionValidatorTest {
                 .command(IntCommand.class)
                 .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
-                .create();
+                .build();
 
         ReadlineConsole aeshConsole = new ReadlineConsole(settings);
 
@@ -122,12 +122,12 @@ public class AeshCommandOptionValidatorTest {
                 .command(IntCommand.class)
                 .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
                 .validatorInvocationProvider(new TestValidatorInvocationProvider())
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 

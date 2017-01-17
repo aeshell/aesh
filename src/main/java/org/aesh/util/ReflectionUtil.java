@@ -30,7 +30,7 @@ public class ReflectionUtil {
 
     public static <T> T newInstance(final Class<T> clazz) {
         if(clazz.isAnonymousClass() || clazz.isInterface() || clazz.isAnnotation()) {
-            throw new RuntimeException("Can not create new instance of an " + clazz.getName());
+            throw new RuntimeException("Can not build new instance of an " + clazz.getName());
         }
 
         T instance = null;

@@ -45,6 +45,7 @@ import org.aesh.util.LoggerUtil;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.function.Consumer;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -53,7 +54,16 @@ public class SettingsBuilder {
 
     SettingsImpl settings;
 
-    public SettingsBuilder() {
+    private SettingsBuilder apply(Consumer<SettingsBuilder> consumer) {
+        consumer.accept(this);
+        return this;
+    }
+
+    public static SettingsBuilder builder() {
+        return new SettingsBuilder();
+    }
+
+    private SettingsBuilder() {
         settings = new SettingsImpl();
     }
 
@@ -62,211 +72,170 @@ public class SettingsBuilder {
     }
 
     public SettingsBuilder mode(EditMode.Mode mode) {
-        settings.setMode(mode);
-        return this;
+        return apply(c -> c.settings.setMode(mode));
     }
 
     public SettingsBuilder historyFile(File history) {
-        settings.setHistoryFile(history);
-        return this;
+        return apply(c -> c.settings.setHistoryFile(history));
     }
 
     public SettingsBuilder historyFilePermission(FileAccessPermission fileAccessPermission) {
-        settings.setHistoryFilePermission(fileAccessPermission);
-        return this;
+        return apply(c -> c.settings.setHistoryFilePermission(fileAccessPermission));
     }
 
     public SettingsBuilder historySize(int size) {
-        settings.setHistorySize(size);
-        return this;
+        return apply(c -> c.settings.setHistorySize(size));
     }
 
     public SettingsBuilder bellStyle(String bellStyle) {
-        settings.setBellStyle(bellStyle);
-        return this;
+        return apply(c -> c.settings.setBellStyle(bellStyle));
     }
 
     public SettingsBuilder inputStream(InputStream inputStream) {
-        settings.setStdIn(inputStream);
-        return this;
+        return apply(c -> c.settings.setStdIn(inputStream));
     }
 
     public SettingsBuilder outputStream(PrintStream outputStream) {
-        settings.setStdOut(outputStream);
-        return this;
+        return apply(c -> c.settings.setStdOut(outputStream));
     }
 
     public SettingsBuilder outputStreamError(PrintStream error) {
-        settings.setStdErr(error);
-        return this;
+        return apply(c -> c.settings.setStdErr(error));
     }
 
     public SettingsBuilder inputrc(File inputrc) {
-        settings.setInputrc(inputrc);
-        return this;
+        return apply(c -> c.settings.setInputrc(inputrc));
     }
 
     public SettingsBuilder logging(boolean logging) {
-        settings.setLogging(logging);
-        return this;
+        return apply(c -> c.settings.setLogging(logging));
     }
 
     public SettingsBuilder disableCompletion(boolean disableCompletion) {
-        settings.setDisableCompletion(disableCompletion);
-        return this;
+        return apply(c -> c.settings.setDisableCompletion(disableCompletion));
     }
 
     public SettingsBuilder logfile(String logFile) {
-        settings.setLogFile(logFile);
-        return this;
+        return apply(c -> c.settings.setLogFile(logFile));
     }
 
     public SettingsBuilder readInputrc(boolean readInputrc) {
-        settings.setReadInputrc(readInputrc);
-        return this;
+        return apply(c -> c.settings.setReadInputrc(readInputrc));
     }
 
     public SettingsBuilder disableHistory(boolean disableHistory) {
-        settings.setHistoryDisabled(disableHistory);
-        return this;
+        return apply(c -> c.settings.setHistoryDisabled(disableHistory));
     }
 
     public SettingsBuilder persistHistory(boolean persistHistory) {
-        settings.setHistoryPersistent(persistHistory);
-        return this;
+        return apply(c -> c.settings.setHistoryPersistent(persistHistory));
     }
 
     public SettingsBuilder aliasFile(File aliasFile) {
-        settings.setAliasFile(aliasFile);
-        return this;
+        return apply(c -> c.settings.setAliasFile(aliasFile));
     }
 
     public SettingsBuilder enableAlias(boolean enableAlias) {
-        settings.setAliasEnabled(enableAlias);
-        return this;
+        return apply(c -> c.settings.setAliasEnabled(enableAlias));
     }
 
     public SettingsBuilder persistAlias(boolean persistAlias) {
-        settings.setPersistAlias(persistAlias);
-        return this;
+        return apply(c -> c.settings.setPersistAlias(persistAlias));
     }
 
     public SettingsBuilder quitHandler(QuitHandler quitHandler) {
-        settings.setQuitHandler(quitHandler);
-        return this;
+        return apply(c -> c.settings.setQuitHandler(quitHandler));
     }
 
     public SettingsBuilder interruptHook(InterruptHook interruptHook) {
-        settings.setInterruptHook(interruptHook);
-        return this;
+        return apply(c -> c.settings.setInterruptHook(interruptHook));
     }
 
     public SettingsBuilder parseOperators(boolean parseOperators) {
-        settings.enableOperatorParser(parseOperators);
-        return this;
+        return apply(c -> c.settings.enableOperatorParser(parseOperators));
     }
 
     public SettingsBuilder enableMan(boolean enableMan) {
-        settings.setManEnabled(enableMan);
-        return this;
+        return apply(c -> c.settings.setManEnabled(enableMan));
     }
 
     public SettingsBuilder aeshContext(AeshContext aeshContext) {
-        settings.setAeshContext(aeshContext);
-        return this;
+        return apply(c -> c.settings.setAeshContext(aeshContext));
     }
 
     public SettingsBuilder enableExport(boolean enableExport) {
-        settings.setExportEnabled(enableExport);
-        return this;
+        return apply(c -> c.settings.setExportEnabled(enableExport));
     }
 
     public SettingsBuilder exportFile(File exportFile) {
-        settings.setExportFile(exportFile);
-        return this;
+        return apply(c -> c.settings.setExportFile(exportFile));
     }
 
     public SettingsBuilder setPersistExport(boolean persistExport) {
-        settings.setPersistExport(persistExport);
-        return this;
+        return apply(c -> c.settings.setPersistExport(persistExport));
     }
 
     public SettingsBuilder setExportUsesSystemEnvironment(boolean isLoad) {
-        settings.setExportUsesSystemEnvironment(isLoad);
-        return this;
+        return apply(c -> c.settings.setExportUsesSystemEnvironment(isLoad));
     }
 
     public SettingsBuilder setFileResource(Resource resource) {
-        settings.setResource(resource);
-        return this;
+        return apply(c -> c.settings.setResource(resource));
     }
 
     public SettingsBuilder setExecuteAtStart(String execute) {
-        settings.setExecuteAtStart(execute);
-        return this;
+        return apply(c -> c.settings.setExecuteAtStart(execute));
     }
 
     public SettingsBuilder setExecuteFileAtStart(Resource executeFile) {
-        settings.setExecuteFileAtStart(executeFile);
-        return this;
+        return apply(c -> c.settings.setExecuteFileAtStart(executeFile));
     }
 
      public SettingsBuilder commandActivatorProvider(CommandActivatorProvider commandActivatorProvider) {
-        settings.setCommandActivatorProvider(commandActivatorProvider);
-        return this;
+         return apply(c -> c.settings.setCommandActivatorProvider(commandActivatorProvider));
     }
 
     public SettingsBuilder optionActivatorProvider(OptionActivatorProvider optionActivatorProvider) {
-        settings.setOptionActivatorProvider(optionActivatorProvider);
-        return this;
+        return apply(c -> c.settings.setOptionActivatorProvider(optionActivatorProvider));
     }
 
     public SettingsBuilder commandRegistry(CommandRegistry commandRegistry) {
-        settings.setCommandRegistry(commandRegistry);
-        return this;
+        return apply(c -> c.settings.setCommandRegistry(commandRegistry));
     }
 
     public SettingsBuilder commandInvocationServices(CommandInvocationServices commandInvocationServices) {
-        settings.setCommandInvocationServices(commandInvocationServices);
-        return this;
+        return apply(c -> c.settings.setCommandInvocationServices(commandInvocationServices));
     }
 
     public SettingsBuilder commandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
-        settings.setCommandNotFoundHandler(commandNotFoundHandler);
-        return this;
+        return apply(c -> c.settings.setCommandNotFoundHandler(commandNotFoundHandler));
     }
 
     public SettingsBuilder completerInvocationProvider(CompleterInvocationProvider completerInvocationProvider) {
-        settings.setCompleterInvocationProvider(completerInvocationProvider);
-        return this;
+        return apply(c -> c.settings.setCompleterInvocationProvider(completerInvocationProvider));
     }
 
     public SettingsBuilder converterInvocationProvider(ConverterInvocationProvider converterInvocationProvider) {
-        settings.setConverterInvocationProvider(converterInvocationProvider);
-        return this;
+        return apply(c -> c.settings.setConverterInvocationProvider(converterInvocationProvider));
     }
 
     public SettingsBuilder validatorInvocationProvider(ValidatorInvocationProvider validatorInvocationProvider) {
-        settings.setValidatorInvocationProvider(validatorInvocationProvider);
-        return this;
+        return apply(c -> c.settings.setValidatorInvocationProvider(validatorInvocationProvider));
     }
 
     public SettingsBuilder manProvider(ManProvider manProvider) {
-        settings.setManProvider(manProvider);
-        return this;
+        return apply(c -> c.settings.setManProvider(manProvider));
     }
 
     public SettingsBuilder invocationProviders(InvocationProviders invocationProviders) {
-        settings.setInvocationProviders(invocationProviders);
-        return this;
+        return apply(c -> c.settings.setInvocationProviders(invocationProviders));
     }
 
     public SettingsBuilder connection(Connection connection) {
-        settings.setConnection(connection);
-        return this;
+        return apply(c -> c.settings.setConnection(connection));
     }
 
-    public Settings create() {
+    public Settings build() {
         if(settings.logging())
             LoggerUtil.doLog();
 

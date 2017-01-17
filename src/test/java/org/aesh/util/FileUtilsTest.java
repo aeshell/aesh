@@ -48,11 +48,11 @@ public class FileUtilsTest {
     public void setUp() throws IOException {
         PipedOutputStream pos = new PipedOutputStream();
         PipedInputStream pis = new PipedInputStream(pos);
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .inputStream(pis)
                 .outputStream(new PrintStream(new ByteArrayOutputStream()))
                 .logging(true)
-                .create();
+                .build();
 
         aeshContext = settings.aeshContext();
     }

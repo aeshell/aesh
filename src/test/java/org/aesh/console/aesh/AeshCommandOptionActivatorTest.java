@@ -54,12 +54,12 @@ public class AeshCommandOptionActivatorTest {
                 .command(ValCommand.class)
                 .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .connection(connection)
                 .commandRegistry(registry)
                 .optionActivatorProvider(validatorProvider)
                 .logging(true)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 

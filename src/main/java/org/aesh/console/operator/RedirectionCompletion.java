@@ -19,11 +19,11 @@
  */
 package org.aesh.console.operator;
 
+import org.aesh.parser.LineParser;
 import org.aesh.util.FileLister;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.readline.completion.Completion;
-import org.aesh.util.Parser;
 
 /**
  * ControlOperator completor
@@ -39,7 +39,8 @@ public class RedirectionCompletion implements Completion {
             int redirectPos =  ControlOperatorParser.findLastRedirectionPositionBeforeCursor(
                     completeOperation.getBuffer(), completeOperation.getCursor());
 
-            String word = Parser.findCurrentWordFromCursor(completeOperation.getBuffer().substring(redirectPos, completeOperation.getCursor()), completeOperation.getCursor() - redirectPos);
+            String word = LineParser.parseLine(completeOperation.getBuffer(),
+                    completeOperation.getCursor()).selectedWord().word();
 
             completeOperation.setOffset(completeOperation.getCursor());
             if(completeOperation instanceof AeshCompleteOperation) {

@@ -46,8 +46,8 @@ public class ConfigTest {
         System.setProperty("aesh.disablecompletion", "true");
         System.setProperty("aesh.execute", "foo -f --bar");
 
-        SettingsBuilder builder = new SettingsBuilder();
-        Settings settings = RuntimeSettings.readRuntimeProperties(builder.create());
+        SettingsBuilder builder = SettingsBuilder.builder();
+        Settings settings = RuntimeSettings.readRuntimeProperties(builder.build());
 
         assertEquals(settings.mode(), EditMode.Mode.VI);
 
@@ -68,8 +68,8 @@ public class ConfigTest {
         System.setProperty("aesh.disablecompletion", "");
         System.setProperty("aesh.execute", "");
 
-        builder = new SettingsBuilder();
-        settings = RuntimeSettings.readRuntimeProperties(builder.create());
+        builder = SettingsBuilder.builder();
+        settings = RuntimeSettings.readRuntimeProperties(builder.build());
 
         assertEquals(settings.executeAtStart(), null);
     }

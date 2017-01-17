@@ -19,6 +19,7 @@
  */
 package org.aesh.console.export;
 
+import org.aesh.parser.LineParser;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.readline.completion.Completion;
 import org.aesh.util.Parser;
@@ -50,7 +51,7 @@ public class ExportCompletion implements Completion {
             completeOperation.setOffset(completeOperation.getCursor());
         }
         else if(completeOperation.getBuffer().startsWith(EXPORT_SPACE)) {
-            String word = Parser.findCurrentWordFromCursor(completeOperation.getBuffer(), completeOperation.getCursor());
+            String word = LineParser.parseLine(completeOperation.getBuffer(), completeOperation.getCursor()).selectedWord().word();
             if(word.length() > 0) {
                 completeOperation.addCompletionCandidates( exportManager.findAllMatchingKeys(word));
                 if(Parser.containsNonEscapedDollar(word)) {
@@ -62,7 +63,7 @@ public class ExportCompletion implements Completion {
             }
         }
         else if(Parser.containsNonEscapedDollar( completeOperation.getBuffer())) {
-            String word = Parser.findCurrentWordFromCursor(completeOperation.getBuffer(), completeOperation.getCursor());
+            String word = LineParser.parseLine(completeOperation.getBuffer(), completeOperation.getCursor()).selectedWord().word();
             if(Parser.containsNonEscapedDollar(word)) {
                 completeOperation.addCompletionCandidates(exportManager.findAllMatchingKeys(word));
                 completeOperation.setOffset(completeOperation.getCursor()-word.length());

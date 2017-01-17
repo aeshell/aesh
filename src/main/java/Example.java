@@ -107,16 +107,16 @@ public class Example {
                         .fieldName("bar")
                         .type(String.class)
                         .renderer(new BlueBoldRenderer())
-                        .create())
+                        .build())
                 .addOption(new ProcessedOptionBuilder()
                         .name("foo")
                         .fieldName("foo")
                         .type(String.class)
-                        .create())
-                .create();
+                        .build())
+                .build();
                 */
 
-        SettingsBuilder builder = new SettingsBuilder()
+        SettingsBuilder builder = SettingsBuilder.builder()
                 .logging(true)
                 .enableMan(true)
                 .enableAlias(true)
@@ -142,7 +142,7 @@ public class Example {
                 .command(PromptCommand.class)
                 .command(RunCommand.class)
                 .command(GroupCommand.class)
-                //example on how to create a command with a simple lambda
+                //example on how to build a command with a simple lambda
                 .command(new CommandBuilder().name("quit").command(commandInvocation -> {
                     commandInvocation.stop();
                     return CommandResult.SUCCESS;
@@ -153,7 +153,7 @@ public class Example {
                 .commandRegistry(registry)
                 .manProvider(new ManProviderExample())
                 .validatorInvocationProvider(new ExampleValidatorInvocationProvider())
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(new TerminalString("[aesh@rules]$ ",

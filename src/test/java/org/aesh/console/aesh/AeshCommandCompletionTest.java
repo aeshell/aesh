@@ -67,11 +67,11 @@ public class AeshCommandCompletionTest {
                 .command(FooCommand.class)
                 .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
-                .create();
+                .build();
 
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -131,13 +131,13 @@ public class AeshCommandCompletionTest {
                 .command(TotoCommand.class)
                 .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .connection(connection)
                 //.inputStream(pipedInputStream)
                 //.outputStream(new PrintStream(byteArrayOutputStream))
                 .logging(true)
                 .commandRegistry(registry)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
@@ -174,11 +174,11 @@ public class AeshCommandCompletionTest {
                 .command(ArqCommand.class)
                 .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
@@ -201,11 +201,11 @@ public class AeshCommandCompletionTest {
                 .command(GitCommand.class)
                 .create();
 
-         Settings settings = new SettingsBuilder()
+         Settings settings = SettingsBuilder.builder()
                  .logging(true)
                  .connection(connection)
                  .commandRegistry(registry)
-                 .create();
+                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

@@ -157,7 +157,7 @@ public class LegacyConsole {
                 .shell(shell)
                 .editMode(editMode)
                 .ansi(settings.isAnsiConsole())
-                .create();
+                .build();
 
         completionHandler = new AeshCompletionHandler(context, shell, true);
         //enable completion for redirection
@@ -201,7 +201,7 @@ public class LegacyConsole {
                 .completion(completionHandler)
                 .settings(settings)
                 .interruptHook(interruptHook)
-                .create();
+                .build();
 
         reader = new NonBlockingReader(terminal.getName(),
                                        terminal.reader());

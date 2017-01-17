@@ -64,13 +64,13 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
         CommandInvocationServices services = new CommandInvocationServices();
         services.registerDefaultProvider(new FooCommandInvocationProvider());
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
                 .commandRegistry(registry)
                 .commandInvocationServices(services)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

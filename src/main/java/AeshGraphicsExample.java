@@ -40,7 +40,7 @@ import org.aesh.terminal.formatting.TerminalColor;
 public class AeshGraphicsExample {
 
     public static void main(String[] args) {
-        SettingsBuilder builder = new SettingsBuilder().logging(true);
+        SettingsBuilder builder = SettingsBuilder.builder().logging(true);
         builder.enableMan(true);
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -50,13 +50,13 @@ public class AeshGraphicsExample {
 
         Settings settings = builder
                 .commandRegistry(registry)
-                .create();
+                .build();
 
         /*
         AeshConsole aeshConsole = new AeshConsoleBuilder()
                 .settings(settings)
                 .prompt(new Prompt("[aesh@rules]$ "))
-                .create();
+                .build();
 
         aeshConsole.start();
         */

@@ -55,11 +55,11 @@ public class AeshCommandDynamicTest {
                 .command(createGroupCommand().create())
                 .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .connection(connection)
                 .commandRegistry(registry)
                 .logging(true)
-                .create();
+                .build();
 
 
         ReadlineConsole console = new ReadlineConsole(settings);

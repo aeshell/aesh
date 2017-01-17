@@ -57,12 +57,12 @@ public class AeshConverterInvocationProviderTest {
                 .command(new ConCommand())
                 .create();
 
-         Settings settings = new SettingsBuilder()
+         Settings settings = SettingsBuilder.builder()
                  .commandRegistry(registry)
                  .converterInvocationProvider(new FooConverterProvider())
                  .connection(connection)
                  .logging(true)
-                 .create();
+                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

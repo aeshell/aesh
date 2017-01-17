@@ -81,11 +81,11 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -134,12 +134,12 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .connection(connection)
                 .commandRegistry(registry)
                 .setPersistExport(false)
                 .logging(true)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -188,11 +188,11 @@ public class AeshCommandRegistryTest {
             }
         };
 
-         Settings settings = new SettingsBuilder()
+         Settings settings = SettingsBuilder.builder()
                  .commandRegistry(registry)
                  .connection(connection)
                  .logging(true)
-                 .create();
+                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

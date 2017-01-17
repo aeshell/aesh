@@ -43,7 +43,7 @@ public abstract class BaseConsoleTest {
 
     Settings getDefaultSettings(SettingsBuilder builder) {
         if(builder == null) {
-            builder = new SettingsBuilder();
+            builder = SettingsBuilder.builder();
             builder.enableAlias(false);
             builder.persistHistory(false);
         }
@@ -55,7 +55,7 @@ public abstract class BaseConsoleTest {
         builder.persistAlias(false);
         //builder.outputStream(new PrintStream(new ByteArrayOutputStream()));
 
-        return builder.create();
+        return builder.build();
     }
 
     ReadlineConsole getTestConsole(SettingsBuilder builder) throws IOException {

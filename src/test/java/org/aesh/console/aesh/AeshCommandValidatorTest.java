@@ -60,11 +60,11 @@ public class AeshCommandValidatorTest {
                 .command(FooCommand.class)
                 .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -85,11 +85,11 @@ public class AeshCommandValidatorTest {
                 .command(GitCommand.class)
                 .create();
 
-         Settings settings = new SettingsBuilder()
+         Settings settings = SettingsBuilder.builder()
                  .connection(connection)
                  .commandRegistry(registry)
                  .logging(true)
-                 .create();
+                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 

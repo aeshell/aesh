@@ -80,12 +80,12 @@ public class AeshConsoleTest {
                 .command(LsCommand.class)
                 .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .logging(true)
                 .commandRegistry(registry)
                 .validatorInvocationProvider(new DirectoryValidatorInvocationProvider())
                 .connection(connection)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

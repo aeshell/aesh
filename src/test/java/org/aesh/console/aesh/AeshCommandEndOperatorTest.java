@@ -58,12 +58,12 @@ public class AeshCommandEndOperatorTest {
                  .command(BarCommand.class)
                  .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .commandRegistry(registry)
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

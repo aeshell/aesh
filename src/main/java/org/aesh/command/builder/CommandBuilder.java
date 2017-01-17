@@ -39,7 +39,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Builder to create commands during runtime
+ * Builder to build commands during runtime
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
@@ -171,7 +171,7 @@ public class CommandBuilder {
 
     private AeshCommandLineParser createParser() throws CommandLineParserException {
         if(command == null)
-            throw new CommandLineParserException("Command object is null, cannot create command");
+            throw new CommandLineParserException("Command object is null, cannot build command");
         ProcessedCommand processedCommand = createProcessedCommand();
         AeshCommandLineParser parser = new AeshCommandLineParser<>(processedCommand);
         if(children != null) {

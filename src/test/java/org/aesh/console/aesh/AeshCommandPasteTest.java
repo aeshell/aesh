@@ -48,13 +48,13 @@ public class AeshCommandPasteTest {
 
         CommandRegistry registry = new AeshCommandRegistryBuilder().create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .connection(connection)
                 .commandRegistry(registry)
                 .setPersistExport(false)
                 .persistHistory(false)
                 .logging(true)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -74,13 +74,13 @@ public class AeshCommandPasteTest {
                 .command(FooCommand.class)
                 .create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .connection(connection)
                 .commandRegistry(registry)
                 .setPersistExport(false)
                 .persistHistory(false)
                 .logging(true)
-                .create();
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

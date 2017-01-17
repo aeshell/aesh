@@ -40,14 +40,14 @@ public class AeshChangeOutputStream {
 
         CommandRegistry registry = new AeshCommandRegistryBuilder().create();
 
-        Settings settings = new SettingsBuilder()
+        Settings settings = SettingsBuilder.builder()
                 .inputStream(pipedInputStream)
                 .outputStream(new PrintStream(byteArrayOutputStream))
                 .setPersistExport(false)
                 .persistHistory(false)
                 .logging(true)
                 .commandRegistry(registry)
-                .create();
+                .build();
 
 
         ReadlineConsole console = new ReadlineConsole(settings);
