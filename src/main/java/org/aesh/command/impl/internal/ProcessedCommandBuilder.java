@@ -40,16 +40,16 @@ import org.aesh.command.activator.CommandActivator;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  */
-public class ProcessedCommandBuilder {
+public class ProcessedCommandBuilder<C extends Command> {
 
     private String name;
     private String description;
-    private CommandValidator<?> validator;
+    private CommandValidator<C> validator;
     private ResultHandler resultHandler;
     private ProcessedOption argument;
     private final List<ProcessedOption> options;
-    private CommandPopulator populator;
-    private Command command;
+    private CommandPopulator<Object,C> populator;
+    private C command;
     private List<String> aliases;
     private CommandActivator activator;
 
@@ -57,45 +57,45 @@ public class ProcessedCommandBuilder {
         options = new ArrayList<>();
     }
 
-    public ProcessedCommandBuilder name(String name) {
+    public ProcessedCommandBuilder<C> name(String name) {
         this.name = name;
         return this;
     }
 
-    public ProcessedCommandBuilder aliases(List<String> aliases) {
+    public ProcessedCommandBuilder<C> aliases(List<String> aliases) {
         this.aliases = aliases == null ? Collections.<String>emptyList()
                 : Collections.unmodifiableList(aliases);
         return this;
     }
 
-    public ProcessedCommandBuilder description(String usage) {
+    public ProcessedCommandBuilder<C> description(String usage) {
         this.description = usage;
         return this;
     }
 
-    public ProcessedCommandBuilder argument(ProcessedOption argument) {
+    public ProcessedCommandBuilder<C> argument(ProcessedOption argument) {
         this.argument = argument;
         return this;
     }
 
-    public ProcessedCommandBuilder validator(CommandValidator<?> validator) {
+    public ProcessedCommandBuilder<C> validator(CommandValidator<C> validator) {
         this.validator = validator;
         return this;
     }
 
-    public ProcessedCommandBuilder validator(Class<? extends CommandValidator> validator) {
+    public ProcessedCommandBuilder<C> validator(Class<? extends CommandValidator<C>> validator) {
         this.validator = initValidator(validator);
         return this;
     }
 
-    private CommandValidator initValidator(Class<? extends CommandValidator> validator) {
+    private CommandValidator<C> initValidator(Class<? extends CommandValidator<C>> validator) {
         if(validator != null && !validator.equals(NullCommandValidator.class))
             return ReflectionUtil.newInstance(validator);
         else
-            return new NullCommandValidator();
+            return new NullCommandValidator<>();
     }
 
-    public ProcessedCommandBuilder resultHandler(Class<? extends ResultHandler> resultHandler) {
+    public ProcessedCommandBuilder<C> resultHandler(Class<? extends ResultHandler> resultHandler) {
         this.resultHandler = initResultHandler(resultHandler);
         return this;
     }
@@ -107,17 +107,17 @@ public class ProcessedCommandBuilder {
             return new NullResultHandler();
     }
 
-    public ProcessedCommandBuilder resultHandler(ResultHandler resultHandler) {
+    public ProcessedCommandBuilder<C> resultHandler(ResultHandler resultHandler) {
         this.resultHandler = resultHandler;
         return this;
     }
 
-    public ProcessedCommandBuilder populator(CommandPopulator populator) {
+    public ProcessedCommandBuilder<C> populator(CommandPopulator<Object, C> populator) {
         this.populator = populator;
         return this;
     }
 
-    public ProcessedCommandBuilder activator(CommandActivator activator) {
+    public ProcessedCommandBuilder<C> activator(CommandActivator activator) {
         this.activator = activator;
         return this;
     }
@@ -134,38 +134,38 @@ public class ProcessedCommandBuilder {
             return new NullCommandActivator();
     }
 
-    public ProcessedCommandBuilder command(Command command) {
+    public ProcessedCommandBuilder<C> command(C command) {
         this.command = command;
         return this;
     }
 
-    public ProcessedCommandBuilder command(Class<? extends Command> command) {
+    public ProcessedCommandBuilder<C> command(Class<C> command) {
         this.command = ReflectionUtil.newInstance(command);
         return this;
     }
 
-    public ProcessedCommandBuilder addOption(ProcessedOption option) {
+    public ProcessedCommandBuilder<C> addOption(ProcessedOption option) {
         this.options.add(option);
         return this;
     }
 
-    public ProcessedCommandBuilder addOptions(List<ProcessedOption> options) {
+    public ProcessedCommandBuilder<C> addOptions(List<ProcessedOption> options) {
         if(options != null)
             this.options.addAll(options);
         return this;
     }
 
-    public ProcessedCommand create() throws CommandLineParserException {
+    public ProcessedCommand<C> create() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
 
         if(validator == null)
-            validator = new NullCommandValidator();
+            validator = new NullCommandValidator<>();
 
         if(resultHandler == null)
             resultHandler = new NullResultHandler();
 
-        return new ProcessedCommand(name, aliases, command, description, validator,
+        return new ProcessedCommand<>(name, aliases, command, description, validator,
                 resultHandler, argument, options, populator, activator);
     }
 }

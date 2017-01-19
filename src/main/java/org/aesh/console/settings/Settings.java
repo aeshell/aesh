@@ -23,13 +23,20 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 
+import org.aesh.command.Command;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocationProvider;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocationProvider;
-import org.aesh.command.invocation.CommandInvocationServices;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.helper.InterruptHook;
@@ -43,7 +50,10 @@ import org.aesh.tty.Connection;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface Settings extends Cloneable {
+public interface Settings<C extends Command, CI extends CommandInvocation,
+        CI3 extends ConverterInvocation, CI2 extends CompleterInvocation,
+        VI extends ValidatorInvocation, OA extends OptionActivator,
+        CA extends CommandActivator> extends Cloneable {
 
     /**
      * Get the current Mode.
@@ -235,13 +245,13 @@ public interface Settings extends Cloneable {
     /**
      * @return get command registry
      */
-    CommandRegistry commandRegistry();
+    CommandRegistry<C> commandRegistry();
 
     /**
      *
      * @return get CommandInvocationServices
      */
-    CommandInvocationServices commandInvocationServices();
+    CommandInvocationProvider<CI> commandInvocationProvider();
 
     /**
      * @return get CommandNotFoundHandler
@@ -251,21 +261,21 @@ public interface Settings extends Cloneable {
     /**
      * @return CompleterInvocationProvider
      */
-    CompleterInvocationProvider completerInvocationProvider();
+    CompleterInvocationProvider<CI2> completerInvocationProvider();
 
-    ConverterInvocationProvider converterInvocationProvider();
+    ConverterInvocationProvider<CI3> converterInvocationProvider();
 
-    ValidatorInvocationProvider validatorInvocationProvider();
+    ValidatorInvocationProvider<VI> validatorInvocationProvider();
 
-    OptionActivatorProvider optionActivatorProvider();
+    OptionActivatorProvider<OA> optionActivatorProvider();
 
     ManProvider manProvider();
 
-    CommandActivatorProvider commandActivatorProvider();
+    CommandActivatorProvider<CA> commandActivatorProvider();
 
     Connection connection();
 
     Object clone();
 
-    InvocationProviders invocationProviders();
+    InvocationProviders<CA, CI3, CI2, VI, OA> invocationProviders();
 }

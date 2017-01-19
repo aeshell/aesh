@@ -19,6 +19,14 @@
  */
 package org.aesh.console.settings;
 
+import org.aesh.command.Command;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocationProvider;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.AeshContext;
 import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.validator.ValidatorInvocationProvider;
@@ -28,7 +36,6 @@ import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocationProvider;
-import org.aesh.command.invocation.CommandInvocationServices;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.helper.InterruptHook;
 import org.aesh.io.FileResource;
@@ -80,22 +87,25 @@ public class SettingsImpl implements Settings {
     private Resource resource;
     private String execute;
     private Resource executeFileAtStart;
-    private CommandActivatorProvider commandActivatorProvider;
-    private OptionActivatorProvider optionActivatorProvider;
-    private CommandRegistry commandRegistry;
-    private CommandInvocationServices commandInvocationServices;
+    private CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider;
+    private OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider;
+    private CommandRegistry<? extends Command> commandRegistry;
+    private CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider;
     private CommandNotFoundHandler commandNotFoundHandler;
-    private CompleterInvocationProvider completerInvocationProvider;
-    private ConverterInvocationProvider converterInvocationProvider;
-    private ValidatorInvocationProvider validatorInvocationProvider;
+    private CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider;
+    private ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider;
+    private ValidatorInvocationProvider<? extends ValidatorInvocation> validatorInvocationProvider;
     private ManProvider manProvider;
     private Connection connection;
-    private InvocationProviders invocationProviders;
+    private InvocationProviders<? extends CommandActivator, ? extends ConverterInvocation,
+            ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator> invocationProviders;
 
-    protected SettingsImpl() {
+    SettingsImpl() {
     }
 
-    protected SettingsImpl(Settings baseSettings) {
+    protected SettingsImpl(Settings<? extends Command, ? extends CommandInvocation, ? extends ConverterInvocation,
+            ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator,
+            ? extends CommandActivator> baseSettings) {
         setMode(baseSettings.mode());
         setHistoryFile(baseSettings.historyFile());
         setHistoryFilePermission(baseSettings.historyFilePermission());
@@ -128,7 +138,7 @@ public class SettingsImpl implements Settings {
         setCommandActivatorProvider(baseSettings.commandActivatorProvider());
         setOptionActivatorProvider(baseSettings.optionActivatorProvider());
         setCommandRegistry(baseSettings.commandRegistry());
-        setCommandInvocationServices(baseSettings.commandInvocationServices());
+        setCommandInvocationProvider(baseSettings.commandInvocationProvider());
         setCommandNotFoundHandler(baseSettings.commandNotFoundHandler());
         setCompleterInvocationProvider(baseSettings.completerInvocationProvider());
         setConverterInvocationProvider(baseSettings.converterInvocationProvider());
@@ -620,13 +630,13 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public CommandRegistry commandRegistry() {
+    public CommandRegistry<? extends Command> commandRegistry() {
         return commandRegistry;
     }
 
     @Override
-    public CommandInvocationServices commandInvocationServices() {
-        return commandInvocationServices;
+    public CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider() {
+        return commandInvocationProvider;
     }
 
     @Override
@@ -635,22 +645,22 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public CompleterInvocationProvider completerInvocationProvider() {
+    public CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider() {
         return completerInvocationProvider;
     }
 
     @Override
-    public ConverterInvocationProvider converterInvocationProvider() {
+    public ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider() {
         return converterInvocationProvider;
     }
 
     @Override
-    public ValidatorInvocationProvider validatorInvocationProvider() {
+    public ValidatorInvocationProvider<? extends ValidatorInvocation> validatorInvocationProvider() {
         return validatorInvocationProvider;
     }
 
     @Override
-    public OptionActivatorProvider optionActivatorProvider() {
+    public OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider() {
         return optionActivatorProvider;
     }
 
@@ -660,7 +670,7 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public CommandActivatorProvider commandActivatorProvider() {
+    public CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider() {
         return commandActivatorProvider;
     }
 
@@ -669,35 +679,35 @@ public class SettingsImpl implements Settings {
         return connection;
     }
 
-    public void setCommandActivatorProvider(CommandActivatorProvider commandActivatorProvider) {
+    public void setCommandActivatorProvider(CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider) {
         this.commandActivatorProvider = commandActivatorProvider;
     }
 
-    public void setOptionActivatorProvider(OptionActivatorProvider optionActivatorProvider) {
+    public void setOptionActivatorProvider(OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider) {
         this.optionActivatorProvider = optionActivatorProvider;
     }
 
-    public void setCommandRegistry(CommandRegistry commandRegistry) {
+    public void setCommandRegistry(CommandRegistry<? extends Command> commandRegistry) {
         this.commandRegistry = commandRegistry;
     }
 
-    public void setCommandInvocationServices(CommandInvocationServices commandInvocationServices) {
-        this.commandInvocationServices = commandInvocationServices;
+    public void setCommandInvocationProvider(CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider) {
+        this.commandInvocationProvider = commandInvocationProvider;
     }
 
     public void setCommandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
         this.commandNotFoundHandler = commandNotFoundHandler;
     }
 
-    public void setCompleterInvocationProvider(CompleterInvocationProvider completerInvocationProvider) {
+    public void setCompleterInvocationProvider(CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider) {
         this.completerInvocationProvider = completerInvocationProvider;
     }
 
-    public void setConverterInvocationProvider(ConverterInvocationProvider converterInvocationProvider) {
+    public void setConverterInvocationProvider(ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider) {
         this.converterInvocationProvider = converterInvocationProvider;
     }
 
-    public void setValidatorInvocationProvider(ValidatorInvocationProvider validatorInvocationProvider) {
+    public void setValidatorInvocationProvider(ValidatorInvocationProvider<? extends ValidatorInvocation> validatorInvocationProvider) {
         this.validatorInvocationProvider = validatorInvocationProvider;
     }
 
@@ -714,7 +724,8 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public InvocationProviders invocationProviders() {
+    public InvocationProviders<? extends CommandActivator, ? extends ConverterInvocation,
+            ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator> invocationProviders() {
         return invocationProviders;
     }
 
@@ -722,7 +733,8 @@ public class SettingsImpl implements Settings {
         this.connection = connection;
     }
 
-    public void setInvocationProviders(InvocationProviders invocationProviders) {
+    public void setInvocationProviders(InvocationProviders<? extends CommandActivator, ? extends ConverterInvocation,
+            ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator> invocationProviders) {
         this.invocationProviders = invocationProviders;
     }
 }

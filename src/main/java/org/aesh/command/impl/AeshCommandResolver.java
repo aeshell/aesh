@@ -20,6 +20,7 @@
 
 package org.aesh.command.impl;
 
+import org.aesh.command.Command;
 import org.aesh.command.CommandResolver;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.container.CommandContainer;
@@ -32,18 +33,18 @@ import org.aesh.parser.ParsedLine;
  */
 public class AeshCommandResolver implements CommandResolver {
 
-    private CommandRegistry registry;
+    private CommandRegistry<? extends Command> registry;
 
-    public AeshCommandResolver(CommandRegistry commandRegistry) {
+    public AeshCommandResolver(CommandRegistry<? extends Command> commandRegistry) {
         this.registry = commandRegistry;
     }
 
-    public CommandRegistry getRegistry() {
+    public CommandRegistry<? extends Command> getRegistry() {
         return registry;
     }
 
     @Override
-    public CommandContainer resolveCommand(String line) throws CommandNotFoundException {
+    public CommandContainer<? extends Command> resolveCommand(String line) throws CommandNotFoundException {
         ParsedLine aeshLine = LineParser.parseLine(line);
         return getCommand(aeshLine, line);
     }
@@ -57,7 +58,7 @@ public class AeshCommandResolver implements CommandResolver {
      * @return command
      * @throws CommandNotFoundException
      */
-    private CommandContainer getCommand(ParsedLine aeshLine, String line) throws CommandNotFoundException {
+    private CommandContainer<? extends Command> getCommand(ParsedLine aeshLine, String line) throws CommandNotFoundException {
         return getCommand(aeshLine.words().get(0).word(), line);
     }
 
@@ -71,7 +72,7 @@ public class AeshCommandResolver implements CommandResolver {
      * @return command
      * @throws CommandNotFoundException
      */
-    private CommandContainer getCommand(String commandName, String line) throws CommandNotFoundException {
+    private CommandContainer<? extends Command> getCommand(String commandName, String line) throws CommandNotFoundException {
         try {
             return registry.getCommand(commandName, line);
         }

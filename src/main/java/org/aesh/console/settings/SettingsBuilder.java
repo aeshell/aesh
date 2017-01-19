@@ -19,8 +19,17 @@
  */
 package org.aesh.console.settings;
 
+import org.aesh.command.Command;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.impl.invocation.AeshCommandInvocationProvider;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.activator.OptionActivatorProvider;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocationProvider;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.impl.activator.AeshCommandActivatorProvider;
@@ -30,7 +39,6 @@ import org.aesh.command.impl.completer.AeshCompleterInvocationProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.impl.converter.AeshConverterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocationProvider;
-import org.aesh.command.invocation.CommandInvocationServices;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.impl.registry.MutableCommandRegistry;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
@@ -52,7 +60,7 @@ import java.util.function.Consumer;
  */
 public class SettingsBuilder {
 
-    SettingsImpl settings;
+    private SettingsImpl settings;
 
     private SettingsBuilder apply(Consumer<SettingsBuilder> consumer) {
         consumer.accept(this);
@@ -67,7 +75,10 @@ public class SettingsBuilder {
         settings = new SettingsImpl();
     }
 
-    public SettingsBuilder(Settings baseSettings) {
+    public SettingsBuilder(Settings<? extends Command,? extends CommandInvocation,
+            ? extends ConverterInvocation, ? extends CompleterInvocation,
+            ? extends ValidatorInvocation, ? extends OptionActivator,
+            ? extends CommandActivator> baseSettings) {
        settings = (SettingsImpl) baseSettings.clone();
     }
 
@@ -191,35 +202,36 @@ public class SettingsBuilder {
         return apply(c -> c.settings.setExecuteFileAtStart(executeFile));
     }
 
-     public SettingsBuilder commandActivatorProvider(CommandActivatorProvider commandActivatorProvider) {
+     public SettingsBuilder commandActivatorProvider(CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider) {
+        settings.setCommandActivatorProvider(commandActivatorProvider);
          return apply(c -> c.settings.setCommandActivatorProvider(commandActivatorProvider));
     }
 
-    public SettingsBuilder optionActivatorProvider(OptionActivatorProvider optionActivatorProvider) {
+    public SettingsBuilder optionActivatorProvider(OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider) {
         return apply(c -> c.settings.setOptionActivatorProvider(optionActivatorProvider));
     }
 
-    public SettingsBuilder commandRegistry(CommandRegistry commandRegistry) {
+    public SettingsBuilder commandRegistry(CommandRegistry<? extends Command> commandRegistry) {
         return apply(c -> c.settings.setCommandRegistry(commandRegistry));
     }
 
-    public SettingsBuilder commandInvocationServices(CommandInvocationServices commandInvocationServices) {
-        return apply(c -> c.settings.setCommandInvocationServices(commandInvocationServices));
+    public SettingsBuilder commandInvocationProvider(CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider) {
+        return apply(c -> c.settings.setCommandInvocationProvider(commandInvocationProvider));
     }
 
     public SettingsBuilder commandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
         return apply(c -> c.settings.setCommandNotFoundHandler(commandNotFoundHandler));
     }
 
-    public SettingsBuilder completerInvocationProvider(CompleterInvocationProvider completerInvocationProvider) {
+    public SettingsBuilder completerInvocationProvider(CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider) {
         return apply(c -> c.settings.setCompleterInvocationProvider(completerInvocationProvider));
     }
 
-    public SettingsBuilder converterInvocationProvider(ConverterInvocationProvider converterInvocationProvider) {
+    public SettingsBuilder converterInvocationProvider(ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider) {
         return apply(c -> c.settings.setConverterInvocationProvider(converterInvocationProvider));
     }
 
-    public SettingsBuilder validatorInvocationProvider(ValidatorInvocationProvider validatorInvocationProvider) {
+    public SettingsBuilder validatorInvocationProvider(ValidatorInvocationProvider<? extends ValidatorInvocation> validatorInvocationProvider) {
         return apply(c -> c.settings.setValidatorInvocationProvider(validatorInvocationProvider));
     }
 
@@ -242,8 +254,8 @@ public class SettingsBuilder {
         if(settings.commandRegistry() == null)
             settings.setCommandRegistry(new MutableCommandRegistry());
 
-        if(settings.commandInvocationServices() == null)
-            settings.setCommandInvocationServices( new CommandInvocationServices());
+        if(settings.commandInvocationProvider() == null)
+            settings.setCommandInvocationProvider( new AeshCommandInvocationProvider());
 
         if(settings.completerInvocationProvider() == null)
             settings.setCompleterInvocationProvider(new AeshCompleterInvocationProvider());

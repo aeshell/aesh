@@ -40,12 +40,12 @@ import org.aesh.parser.ParsedLine;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandContainer<T extends Command> extends AutoCloseable {
+public interface CommandContainer<C extends Command> extends AutoCloseable {
 
     /**
      * @return parser generated from Command
      */
-    CommandLineParser<T> getParser();
+    CommandLineParser<C> getParser();
 
     /**
      * @return true if the CommandLineParser or Command generation generated any errors

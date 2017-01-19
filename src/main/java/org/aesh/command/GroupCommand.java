@@ -27,8 +27,8 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface GroupCommand<T extends CommandInvocation> extends Command<T> {
+public interface GroupCommand<CI extends CommandInvocation, C extends Command> extends Command<CI> {
 
-    List<Command> getCommands();
+    List<C> getCommands();
 
 }

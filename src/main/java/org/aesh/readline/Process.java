@@ -31,7 +31,6 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerResult;
 import org.aesh.command.impl.invocation.AeshCommandInvocation;
-import org.aesh.command.invocation.CommandInvocationServices;
 import org.aesh.tty.Connection;
 import org.aesh.tty.Signal;
 import org.aesh.util.LoggerUtil;
@@ -52,7 +51,6 @@ public class Process extends Thread implements Consumer<Signal> {
     private final Settings settings;
     private volatile boolean running;
 
-    private static final String commandInvocationProvider = CommandInvocationServices.DEFAULT_PROVIDER_NAME;
     private static final Logger LOGGER = LoggerUtil.getLogger(Process.class.getName());
 
     public Process(Connection conn, Console console, Readline readline,
@@ -138,8 +136,7 @@ public class Process extends Thread implements Consumer<Signal> {
 
     private CommandContainerResult runCommand(CommandContainer container, String aeshLine) throws InterruptedException, OptionValidatorException, CommandException, CommandLineParserException, CommandValidatorException {
         return container.executeCommand(LineParser.parseLine(aeshLine), settings.invocationProviders(), settings.aeshContext(),
-                settings.commandInvocationServices().getCommandInvocationProvider(
-                        commandInvocationProvider).enhanceCommandInvocation(
+                settings.commandInvocationProvider().enhanceCommandInvocation(
                         new AeshCommandInvocation(console, new ShellImpl(conn, readline))));
     }
 }

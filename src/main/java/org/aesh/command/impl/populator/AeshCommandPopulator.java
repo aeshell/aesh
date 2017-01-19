@@ -34,11 +34,11 @@ import java.lang.reflect.Modifier;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandPopulator implements CommandPopulator<Object, Command> {
+public class AeshCommandPopulator<O extends Object, C extends Command> implements CommandPopulator<O, C> {
 
-    private final Object instance;
+    private final O instance;
 
-    public AeshCommandPopulator(Object instance) {
+    public AeshCommandPopulator(O instance) {
         this.instance = instance;
     }
 
@@ -50,7 +50,7 @@ public class AeshCommandPopulator implements CommandPopulator<Object, Command> {
      * @throws CommandLineParserException
      */
     @Override
-    public void populateObject(CommandLine<Command> line, InvocationProviders invocationProviders,
+    public void populateObject(CommandLine<C> line, InvocationProviders invocationProviders,
                                AeshContext aeshContext, boolean validate)
             throws CommandLineParserException, OptionValidatorException {
         if(line.hasParserError())
@@ -135,7 +135,7 @@ public class AeshCommandPopulator implements CommandPopulator<Object, Command> {
     }
 
     @Override
-    public Object getObject() {
+    public O getObject() {
         return instance;
     }
 

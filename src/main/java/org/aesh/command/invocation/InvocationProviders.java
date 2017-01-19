@@ -20,7 +20,12 @@
 
 package org.aesh.command.invocation;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.activator.OptionActivatorProvider;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
@@ -29,15 +34,16 @@ import org.aesh.command.converter.ConverterInvocationProvider;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface InvocationProviders {
+public interface InvocationProviders<CA extends CommandActivator, CI extends ConverterInvocation, CI2 extends CompleterInvocation,
+        VI extends ValidatorInvocation, OA extends OptionActivator> {
 
-    ConverterInvocationProvider getConverterProvider();
+    ConverterInvocationProvider<CI> getConverterProvider();
 
-    CompleterInvocationProvider getCompleterProvider();
+    CompleterInvocationProvider<CI2> getCompleterProvider();
 
-    ValidatorInvocationProvider getValidatorProvider();
+    ValidatorInvocationProvider<VI> getValidatorProvider();
 
-    OptionActivatorProvider getOptionActivatorProvider();
+    OptionActivatorProvider<OA> getOptionActivatorProvider();
 
-    CommandActivatorProvider getCommandActivatorProvider();
+    CommandActivatorProvider<CA> getCommandActivatorProvider();
 }

@@ -25,9 +25,9 @@ import org.aesh.command.Command;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  * @author <a href="mailto:danielsoro@gmail.com>Daniel Cunha (soro)</a>
  */
-public interface CommandContainerBuilder {
+public interface CommandContainerBuilder<C extends Command> {
 
-    CommandContainer create(Command command);
+    CommandContainer<C> create(C command);
 
-    CommandContainer create(Class<? extends Command> command);
+    CommandContainer<C> create(Class<C> command);
 }

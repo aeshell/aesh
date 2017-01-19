@@ -45,7 +45,7 @@ public class ProcessedCommand<C extends Command> {
     private String description;
     private CommandValidator validator;
     private ResultHandler resultHandler = new NullResultHandler();
-    private CommandPopulator populator;
+    private CommandPopulator<Object, C> populator;
     private CommandActivator activator;
 
     private List<ProcessedOption> options;
@@ -57,7 +57,7 @@ public class ProcessedCommand<C extends Command> {
             String description, CommandValidator validator,
             ResultHandler resultHandler,
             ProcessedOption argument, List<ProcessedOption> options,
-            CommandPopulator populator, CommandActivator activator) throws OptionParserException {
+            CommandPopulator<Object, C> populator, CommandActivator activator) throws OptionParserException {
         setName(name);
         setDescription(description);
         this.aliases = aliases == null ? Collections.<String>emptyList() : aliases;
@@ -68,7 +68,7 @@ public class ProcessedCommand<C extends Command> {
         this.command = command;
         this.activator = activator == null ? new NullCommandActivator() : activator;
         if(populator == null)
-            this.populator = new AeshCommandPopulator(this.command);
+            this.populator = new AeshCommandPopulator<>(this.command);
         else
             this.populator = populator;
         setOptions(options);
@@ -139,7 +139,7 @@ public class ProcessedCommand<C extends Command> {
         this.argument = argument;
     }
 
-    public CommandPopulator getCommandPopulator() {
+    public CommandPopulator<Object, C> getCommandPopulator() {
         return populator;
     }
 

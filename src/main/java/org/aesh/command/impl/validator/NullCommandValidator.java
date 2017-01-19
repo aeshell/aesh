@@ -27,8 +27,8 @@ import org.aesh.command.validator.CommandValidatorException;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class NullCommandValidator implements CommandValidator {
+public class NullCommandValidator<C extends Command> implements CommandValidator<C> {
     @Override
-    public void validate(Command command) throws CommandValidatorException {
+    public void validate(C command) throws CommandValidatorException {
     }
 }

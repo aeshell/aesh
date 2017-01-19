@@ -68,7 +68,7 @@ import org.aesh.tty.Size;
  *
  * @author jdenise@redhat.com
  */
-class AeshCommandProcessorImpl<T extends CommandInvocation, V extends AeshCompleteOperation> implements AeshCommandProcessor<T, V> {
+class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, CO extends AeshCompleteOperation> implements AeshCommandProcessor<CI, CO> {
 
     private static class DefaultCommandInvocation implements CommandInvocation {
 
@@ -227,8 +227,8 @@ class AeshCommandProcessorImpl<T extends CommandInvocation, V extends AeshComple
 
     }
 
-    private final CommandRegistry registry;
-    private final CommandInvocationProvider<T> commandInvocationProvider;
+    private final CommandRegistry<C> registry;
+    private final CommandInvocationProvider<CI> commandInvocationProvider;
     private final InvocationProviders invocationProviders;
 
     private static final Logger LOGGER = Logger.getLogger(AeshCommandProcessorImpl.class.getName());
@@ -238,8 +238,8 @@ class AeshCommandProcessorImpl<T extends CommandInvocation, V extends AeshComple
     private final AeshContext ctx;
 
     AeshCommandProcessorImpl(AeshContext ctx,
-            CommandRegistry registry,
-            CommandInvocationProvider<T> commandInvocationProvider,
+            CommandRegistry<C> registry,
+            CommandInvocationProvider<CI> commandInvocationProvider,
             CommandNotFoundHandler commandNotFoundHandler,
             CompleterInvocationProvider completerInvocationProvider,
             ConverterInvocationProvider converterInvocationProvider,
@@ -258,7 +258,7 @@ class AeshCommandProcessorImpl<T extends CommandInvocation, V extends AeshComple
     }
 
     @Override
-    public CommandRegistry getCommandRegistry() {
+    public CommandRegistry<C> getCommandRegistry() {
         return registry;
     }
 
@@ -278,7 +278,7 @@ class AeshCommandProcessorImpl<T extends CommandInvocation, V extends AeshComple
     }
 
     @Override
-    public void complete(V completeOperation) {
+    public void complete(CO completeOperation) {
         registry.completeCommandName(completeOperation);
 
         if (completeOperation.getCompletionCandidates().size() < 1) {
@@ -358,7 +358,7 @@ class AeshCommandProcessorImpl<T extends CommandInvocation, V extends AeshComple
         try {
             for (String commandName : registry.getAllCommandNames()) {
                 ProcessedCommand cmd = registry.getCommand(commandName, "").getParser().getProcessedCommand();
-                List<CommandLineParser<?>> childParsers = registry.getChildCommandParsers(commandName);
+                List<? extends CommandLineParser<C>> childParsers = registry.getChildCommandParsers(commandName);
                 if (!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
                     //we have a custom OptionActivatorProvider, and need to process all options
                     cmd.updateInvocationProviders(invocationProviders);
@@ -373,18 +373,18 @@ class AeshCommandProcessorImpl<T extends CommandInvocation, V extends AeshComple
     }
 
     @Override
-    public Executor<T> buildExecutor(String line) throws CommandNotFoundException,
+    public Executor<CI> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException, OptionValidatorException,
             CommandValidatorException {
         // XXX JFDENISE, for now no OPERATORS
-        Command<T> c = getPopulatedCommand(line);
-        T ic = commandInvocationProvider.enhanceCommandInvocation(
+        Command<CI> c = getPopulatedCommand(line);
+        CI ic = commandInvocationProvider.enhanceCommandInvocation(
                 new DefaultCommandInvocation(this));
-        Executor<T> executor = new Executor<>(ic, c);
+        Executor<CI> executor = new Executor<>(ic, c);
         return executor;
     }
 
-    private Command<T> getPopulatedCommand(String commandLine) throws CommandNotFoundException,
+    private Command<CI> getPopulatedCommand(String commandLine) throws CommandNotFoundException,
             CommandLineParserException, OptionValidatorException {
         if (commandLine == null || commandLine.isEmpty()) {
             return null;
@@ -395,8 +395,7 @@ class AeshCommandProcessorImpl<T extends CommandInvocation, V extends AeshComple
             return null;
         }
         String opName = aeshLine.words().get(0).word();
-        CommandContainer<Command> container = registry.
-                getCommand(opName, commandLine);
+        CommandContainer<C> container = registry.getCommand(opName, commandLine);
         if (container == null) {
             throw new CommandNotFoundException("No command handler for '" + opName + "'.");
         }

@@ -19,10 +19,10 @@
  */
 package org.aesh.cl;
 
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.ParsedCompleteObject;
-import org.aesh.command.impl.parser.ParserGenerator;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
@@ -48,7 +48,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testParseCompleteObject() throws Exception {
-        CommandLineParser<ParseCompleteTest1> clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class).getParser();
+        CommandLineParser<ParseCompleteTest1> clp = new AeshCommandContainerBuilder<ParseCompleteTest1>().create(ParseCompleteTest1.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1", 100);
@@ -154,7 +154,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testParseCompleteObject2() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class).getParser();
+        CommandLineParser clp = new AeshCommandContainerBuilder<ParseCompleteTest2>().create(ParseCompleteTest2.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e ", 100);
@@ -170,7 +170,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testParseCompleteObject3() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest3.class).getParser();
+        CommandLineParser clp = new AeshCommandContainerBuilder<ParseCompleteTest3>().create(ParseCompleteTest3.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -v 1 2 3 ", 100);
@@ -186,7 +186,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testCursorInsideBuffer() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest1.class).getParser();
+        CommandLineParser clp = new AeshCommandContainerBuilder<ParseCompleteTest1>().create(ParseCompleteTest1.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test -e foo1  asdfjeaasdfae", 12);
@@ -228,7 +228,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testCompletionWithNoArguments() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteTest2.class).getParser();
+        CommandLineParser clp = new AeshCommandContainerBuilder<ParseCompleteTest2>().create(ParseCompleteTest2.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("test ", 4);
@@ -242,7 +242,7 @@ public class ParseCompleteObjectTest {
 
     @Test
     public void testGroupCompletion() throws Exception {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(ParseCompleteGroupTest.class).getParser();
+        CommandLineParser clp = new AeshCommandContainerBuilder<ParseCompleteGroupTest>().create(ParseCompleteGroupTest.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         ParsedCompleteObject pco = completeParser.findCompleteObject("group child1 --en", 20);

@@ -26,7 +26,7 @@ import org.aesh.command.validator.ValidatorInvocationProvider;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshValidatorInvocationProvider implements ValidatorInvocationProvider {
+public class AeshValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation> {
     @Override
     public ValidatorInvocation enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
         return validatorInvocation;

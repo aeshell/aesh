@@ -33,7 +33,6 @@ import org.aesh.util.Config;
 import org.aesh.command.CommandDefinition;
 import org.aesh.console.BaseConsoleTest;
 import org.aesh.command.invocation.CommandInvocationProvider;
-import org.aesh.command.invocation.CommandInvocationServices;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.CommandResult;
 import org.aesh.readline.ReadlineConsole;
@@ -61,15 +60,12 @@ public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
                 .command(new BarCommand())
                 .create();
 
-        CommandInvocationServices services = new CommandInvocationServices();
-        services.registerDefaultProvider(new FooCommandInvocationProvider());
-
         Settings settings = SettingsBuilder.builder()
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
                 .commandRegistry(registry)
-                .commandInvocationServices(services)
+                .commandInvocationProvider(new FooCommandInvocationProvider())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);

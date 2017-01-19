@@ -19,13 +19,13 @@
  */
 package org.aesh.cl;
 
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLine;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.impl.parser.CommandLineParserException;
-import org.aesh.command.impl.parser.ParserGenerator;
 import org.aesh.command.Command;
 import org.aesh.command.CommandResult;
 import org.aesh.command.option.Arguments;
@@ -51,19 +51,19 @@ public class CommandLineParserTest {
     @Test
     public void testParseCommandLine1() throws CommandLineParserException {
 
-        CommandLineParser<Parser1Test> parser = ParserGenerator.generateCommandLineParser(Parser1Test.class).getParser();
+        CommandLineParser<Parser1Test> parser = new AeshCommandContainerBuilder<Parser1Test>().create(Parser1Test.class).getParser();
 
-        CommandLine<Parser1Test> cl = (CommandLine<Parser1Test>) parser.parse("test -f -e bar -Df=g /tmp/file.txt");
+        CommandLine<Parser1Test> cl = parser.parse("test -f -e bar -Df=g /tmp/file.txt");
         assertEquals("f", cl.getOptions().get(0).getShortName());
         assertEquals("e", cl.getOptions().get(1).getShortName());
         assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test -f -e=bar -Df=g /tmp/file.txt");
+        cl = parser.parse("test -f -e=bar -Df=g /tmp/file.txt");
         assertEquals("f", cl.getOptions().get(0).getShortName());
         assertEquals("e", cl.getOptions().get(1).getShortName());
         assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test -f -Df=g /tmp/file.txt -e=bar foo bar");
+        cl = parser.parse("test -f -Df=g /tmp/file.txt -e=bar foo bar");
         assertEquals("f", cl.getOptions().get(0).getShortName());
         assertEquals("D", cl.getOptions().get(1).getShortName());
         assertEquals("e", cl.getOptions().get(2).getShortName());
@@ -71,7 +71,7 @@ public class CommandLineParserTest {
         assertEquals("foo", cl.getArgument().getValues().get(1));
         assertEquals("bar", cl.getArgument().getValues().get(2));
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test -e bar -DXms=128m -DXmx=512m --X /tmp/file.txt");
+        cl = parser.parse("test -e bar -DXms=128m -DXmx=512m --X /tmp/file.txt");
         assertEquals("e", cl.getOptions().get(0).getShortName());
         assertEquals("bar", cl.getOptions().get(0).getValue());
         assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
@@ -81,20 +81,20 @@ public class CommandLineParserTest {
         assertEquals("128m", properties.get("Xms"));
         assertEquals("512m", properties.get("Xmx"));
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test -e=bar -DXms=128m -DXmx=512m /tmp/file.txt");
+        cl = parser.parse("test -e=bar -DXms=128m -DXmx=512m /tmp/file.txt");
         assertEquals("e", cl.getOptions().get(0).getShortName());
         assertEquals("bar", cl.getOptions().get(0).getValue());
 
-        cl = (CommandLine<Parser1Test>) parser.parse("toto -e=bar -DXms=128m -DXmx=512m /tmp/file.txt");
+        cl = parser.parse("toto -e=bar -DXms=128m -DXmx=512m /tmp/file.txt");
         assertEquals("e", cl.getOptions().get(0).getShortName());
         assertEquals("bar", cl.getOptions().get(0).getValue());
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test --equal=bar -DXms=128m -DXmx=512m /tmp/file.txt");
+        cl = parser.parse("test --equal=bar -DXms=128m -DXmx=512m /tmp/file.txt");
         assertEquals("e", cl.getOptions().get(0).getShortName());
         assertEquals("equal", cl.getOptions().get(0).getName());
         assertEquals("bar", cl.getOptions().get(0).getValue());
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test --equal \"bar bar2\" -DXms=\"128g \" -DXmx=512g\\ m /tmp/file.txt");
+        cl = parser.parse("test --equal \"bar bar2\" -DXms=\"128g \" -DXmx=512g\\ m /tmp/file.txt");
         assertEquals("bar bar2", cl.getOptionValue("equal"));
 
         assertTrue(cl.getOptionProperties("D").containsKey("Xms"));
@@ -102,7 +102,7 @@ public class CommandLineParserTest {
         assertTrue(cl.getOptionProperties("D").containsKey("Xmx"));
         assertEquals("512g m", cl.getOptionProperties("D").get("Xmx"));
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test -fX -e bar -Df=g /tmp/file.txt\\ ");
+        cl = parser.parse("test -fX -e bar -Df=g /tmp/file.txt\\ ");
         assertEquals("f", cl.getOptions().get(0).getShortName());
         assertEquals("X", cl.getOptions().get(1).getShortName());
         assertEquals("e", cl.getOptions().get(2).getShortName());
@@ -110,7 +110,7 @@ public class CommandLineParserTest {
         assertEquals("/tmp/file.txt ", cl.getArgument().getValues().get(0));
         assertFalse(cl.hasParserError());
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test -f -e bar -Df=g -X");
+        cl = parser.parse("test -f -e bar -Df=g -X");
         assertEquals("f", cl.getOptions().get(0).getShortName());
         assertEquals("e", cl.getOptions().get(1).getShortName());
         assertEquals("D", cl.getOptions().get(2).getShortName());
@@ -118,29 +118,29 @@ public class CommandLineParserTest {
         assertEquals("true", cl.getOptionValue('X'));
         assertFalse(cl.hasParserError());
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test -fXe -Df=g /tmp/file.txt");
+        cl = parser.parse("test -fXe -Df=g /tmp/file.txt");
         assertEquals("f", cl.getOptions().get(0).getShortName());
         assertEquals("X", cl.getOptions().get(1).getShortName());
         assertEquals("D", cl.getOptions().get(2).getShortName());
         assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
         assertTrue(cl.hasParserError());
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test -a /tmp/file.txt");
+        cl = parser.parse("test -a /tmp/file.txt");
         assertTrue(cl.hasParserError());
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test -a /tmp/file.txt");
-        assertTrue(cl.hasParserError());
-        cl.getArgument();
-
-        cl = (CommandLine<Parser1Test>) parser.parse("test -e bar --equal bar2 -DXms=128m -DXmx=512m /tmp/file.txt");
+        cl = parser.parse("test -a /tmp/file.txt");
         assertTrue(cl.hasParserError());
         cl.getArgument();
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test -f -Dfoo:bar /tmp/file.txt");
+        cl = parser.parse("test -e bar --equal bar2 -DXms=128m -DXmx=512m /tmp/file.txt");
         assertTrue(cl.hasParserError());
         cl.getArgument();
 
-        cl = (CommandLine<Parser1Test>) parser.parse("test -f foobar /tmp/file.txt");
+        cl = parser.parse("test -f -Dfoo:bar /tmp/file.txt");
+        assertTrue(cl.hasParserError());
+        cl.getArgument();
+
+        cl = parser.parse("test -f foobar /tmp/file.txt");
         assertTrue(cl.hasParserError());
         cl.getArgument();
 
@@ -149,7 +149,7 @@ public class CommandLineParserTest {
     @Test
     public void testParseCommandLine2() throws CommandLineParserException {
 
-        CommandLineParser parser = ParserGenerator.generateCommandLineParser(Parser2Test.class).getParser();
+        CommandLineParser<Parser2Test> parser = new AeshCommandContainerBuilder<Parser2Test>().create(Parser2Test.class).getParser();
 
         CommandLine cl = parser.parse("test -d true --bar Foo.class");
         assertTrue(cl.hasOption('d'));
@@ -173,7 +173,7 @@ public class CommandLineParserTest {
 
     @Test
     public void testParseGroupCommand() throws CommandLineParserException {
-        CommandLineParser parser = ParserGenerator.generateCommandLineParser(GroupCommandTest.class).getParser();
+        CommandLineParser<GroupCommandTest> parser = new AeshCommandContainerBuilder<GroupCommandTest>().create(GroupCommandTest.class).getParser();
 
         CommandLine cl = parser.parse("group child1 --foo BAR");
         assertTrue(cl.hasOption("foo"));
@@ -200,7 +200,7 @@ public class CommandLineParserTest {
 
     @Test
     public void testParseCommandLine4() throws CommandLineParserException {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(Parser4Test.class).getParser();
+        CommandLineParser clp = new AeshCommandContainerBuilder<Parser4Test>().create(Parser4Test.class).getParser();
 
         CommandLine cl = clp.parse("test -o bar1,bar2,bar3 foo");
         assertTrue(cl.hasOption('o'));
@@ -237,7 +237,7 @@ public class CommandLineParserTest {
 
     @Test
     public void testParseCommandLine5() throws CommandLineParserException {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(Parser5Test.class).getParser();
+        CommandLineParser<Parser5Test> clp = new AeshCommandContainerBuilder<Parser5Test>().create(Parser5Test.class).getParser();
 
         CommandLine cl = clp.parse("test  --foo  \"-X1 X2 -X3\" --baz -wrong --bar -q \"-X4 -X5\"",true);
         assertTrue(cl.hasOption("foo"));
@@ -272,7 +272,7 @@ public class CommandLineParserTest {
 
     @Test
     public void testSubClass() throws CommandLineParserException {
-        CommandLineParser clp = ParserGenerator.generateCommandLineParser(SubHelp.class).getParser();
+        CommandLineParser<SubHelp> clp = new AeshCommandContainerBuilder<SubHelp>().create(SubHelp.class).getParser();
 
         CommandLine cl = clp.parse("subhelp --foo bar -h",true);
         assertTrue(cl.hasOption("foo"));

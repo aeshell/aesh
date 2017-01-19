@@ -19,16 +19,22 @@
  */
 package org.aesh.readline;
 
+import org.aesh.command.Command;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.AeshCommandResolver;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.ParsedCompleteObject;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
-import org.aesh.command.CommandResolver;
 import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.console.settings.Settings;
@@ -56,11 +62,13 @@ import java.util.logging.Logger;
  */
 public class ReadlineConsole implements Console {
 
-    private Settings settings;
+    private Settings<? extends Command, ? extends CommandInvocation, ? extends ConverterInvocation,
+            ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator,
+            ? extends CommandActivator> settings;
     private Prompt prompt;
     private List<Completion> completions;
     private Connection connection;
-    private CommandResolver commandResolver;
+    private AeshCommandResolver commandResolver;
     private AeshContext context;
     private Readline readline;
     private InvocationProviders invocationProviders;
@@ -70,7 +78,9 @@ public class ReadlineConsole implements Console {
 
     private volatile boolean running = false;
 
-    public ReadlineConsole(Settings settings) {
+    public ReadlineConsole(Settings<? extends Command, ? extends CommandInvocation, ? extends ConverterInvocation,
+            ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator,
+            ? extends CommandActivator> settings) {
         LoggerUtil.doLog();
         this.settings = settings;
         commandResolver = new AeshCommandResolver(settings.commandRegistry());
@@ -120,7 +130,7 @@ public class ReadlineConsole implements Console {
         try {
             for (String commandName : commandResolver.getRegistry().getAllCommandNames()) {
                 ProcessedCommand cmd = commandResolver.getRegistry().getCommand(commandName, "").getParser().getProcessedCommand();
-                List<CommandLineParser<?>> childParsers = commandResolver.getRegistry().getChildCommandParsers(commandName);
+                List<? extends CommandLineParser<? extends Command>> childParsers = commandResolver.getRegistry().getChildCommandParsers(commandName);
                 if(!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
                     //we have a custom OptionActivatorProvider, and need to process all options
                     cmd.updateInvocationProviders(invocationProviders);

@@ -26,10 +26,10 @@ import org.aesh.command.container.CommandContainer;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandResolver {
+public interface CommandResolver<C extends Command> {
 
-    CommandRegistry getRegistry();
+    CommandRegistry<C> getRegistry();
 
-    CommandContainer resolveCommand(String line) throws CommandNotFoundException;
+    CommandContainer<C> resolveCommand(String line) throws CommandNotFoundException;
 
 }

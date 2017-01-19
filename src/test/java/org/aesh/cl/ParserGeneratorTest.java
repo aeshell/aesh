@@ -19,9 +19,9 @@
  */
 package org.aesh.cl;
 
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.ParserGenerator;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
@@ -46,7 +46,7 @@ public class ParserGeneratorTest {
     public void testClassGenerator() throws CommandLineParserException {
 
         Test1 test1 = new Test1();
-        CommandLineParser parser = ParserGenerator.generateCommandLineParser(test1).getParser();
+        CommandLineParser<Test1> parser = new AeshCommandContainerBuilder<Test1>().create(test1).getParser();
 
         assertEquals("a simple test", parser.getProcessedCommand().getDescription());
         List<ProcessedOption> options = parser.getProcessedCommand().getOptions();
@@ -60,14 +60,14 @@ public class ParserGeneratorTest {
         assertFalse(options.get(2).hasValue());
 
         Test2 test2 = new Test2();
-        parser = ParserGenerator.generateCommandLineParser(test2).getParser();
-        assertEquals("more [options] file...", parser.getProcessedCommand().getDescription());
-        options = parser.getProcessedCommand().getOptions();
+        CommandLineParser<Test2> parser2 = new AeshCommandContainerBuilder<Test2>().create(test2).getParser();
+        assertEquals("more [options] file...", parser2.getProcessedCommand().getDescription());
+        options = parser2.getProcessedCommand().getOptions();
         assertEquals("d", options.get(0).getShortName());
         assertEquals("V", options.get(1).getShortName());
 
-        parser = ParserGenerator.generateCommandLineParser(Test3.class).getParser();
-        options = parser.getProcessedCommand().getOptions();
+        CommandLineParser<Test3> parser3 = new AeshCommandContainerBuilder<Test3>().create(Test3.class).getParser();
+        options = parser3.getProcessedCommand().getOptions();
         assertEquals("t", options.get(0).getShortName());
         assertEquals("e", options.get(1).getShortName());
 

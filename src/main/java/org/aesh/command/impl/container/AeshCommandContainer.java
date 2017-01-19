@@ -35,7 +35,7 @@ public class AeshCommandContainer<C extends Command> extends DefaultCommandConta
     private CommandLineParser<C> parser;
     private String errorMessage;
 
-    public AeshCommandContainer(CommandLineParser parser) {
+    public AeshCommandContainer(CommandLineParser<C> parser) {
         if (parser != null && parser.getProcessedCommand() != null) {
             this.parser = parser;
         }
@@ -69,7 +69,7 @@ public class AeshCommandContainer<C extends Command> extends DefaultCommandConta
 
     }
 
-    public void addChild(CommandContainer<?> commandContainer) {
+    public void addChild(CommandContainer<C> commandContainer) {
         getParser().addChildParser(commandContainer.getParser());
     }
 

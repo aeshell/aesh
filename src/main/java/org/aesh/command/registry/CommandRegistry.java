@@ -21,6 +21,7 @@ package org.aesh.command.registry;
 
 import java.util.List;
 
+import org.aesh.command.Command;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.CommandNotFoundException;
@@ -33,27 +34,27 @@ import java.util.Set;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandRegistry {
+public interface CommandRegistry<C extends Command> {
 
     /**
      * @param name command name
      * @param line current terminal buffer line
      * @return the matching CommandContainer's name
      */
-    CommandContainer getCommand(String name, String line) throws CommandNotFoundException;
+    CommandContainer<C> getCommand(String name, String line) throws CommandNotFoundException;
 
     /**
      *
      * @param parent The name of the parent command
      * @return The list of child parsers
      */
-    List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException;
+    List<CommandLineParser<C>> getChildCommandParsers(String parent) throws CommandNotFoundException;
 
     /**
      * @param alias command alias
      * @return the matching CommandContainer's alias
      */
-    CommandContainer getCommandByAlias(String alias) throws CommandNotFoundException;
+    CommandContainer<C> getCommandByAlias(String alias) throws CommandNotFoundException;
 
     /**
      * Based on input, find all commands that match or partly match

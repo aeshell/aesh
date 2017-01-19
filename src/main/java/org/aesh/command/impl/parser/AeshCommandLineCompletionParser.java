@@ -39,11 +39,11 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandLineCompletionParser implements CommandLineCompletionParser {
+public class AeshCommandLineCompletionParser<C extends Command> implements CommandLineCompletionParser {
 
-    private final AeshCommandLineParser<? extends Command> parser;
+    private final AeshCommandLineParser<C> parser;
 
-    public AeshCommandLineCompletionParser(AeshCommandLineParser<? extends Command> parser) {
+    public AeshCommandLineCompletionParser(AeshCommandLineParser<C> parser) {
         this.parser = parser;
     }
 
