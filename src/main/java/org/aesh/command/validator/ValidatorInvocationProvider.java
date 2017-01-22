@@ -22,6 +22,6 @@ package org.aesh.command.validator;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface ValidatorInvocationProvider<T extends ValidatorInvocation> {
-    T enhanceValidatorInvocation(ValidatorInvocation validatorInvocation);
+public interface ValidatorInvocationProvider<VI extends ValidatorInvocation> {
+    VI enhanceValidatorInvocation(VI validatorInvocation);
 }

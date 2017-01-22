@@ -22,7 +22,7 @@ package org.aesh.command.converter;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface ConverterInvocationProvider<T extends ConverterInvocation> {
+public interface ConverterInvocationProvider<CI extends ConverterInvocation> {
 
-    T enhanceConverterInvocation(ConverterInvocation converterInvocation);
+    CI enhanceConverterInvocation(ConverterInvocation converterInvocation);
 }

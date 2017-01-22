@@ -113,9 +113,9 @@ public class AeshCommandProcessorBuilder {
         return apply(c -> c.ctx = ctx);
     }
 
-    public AeshCommandProcessorBuilder settings(Settings<? extends Command, ? extends CommandInvocation, ? extends ConverterInvocation,
-            ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator,
-            ? extends CommandActivator> settings) {
+    public AeshCommandProcessorBuilder settings(Settings<? extends Command, ? extends CommandInvocation,
+            ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation,
+            ? extends OptionActivator, ? extends CommandActivator> settings) {
         return apply(c -> {
             c.commandInvocationProvider = settings.commandInvocationProvider();
             c.commandNotFoundHandler = settings.commandNotFoundHandler();
@@ -130,7 +130,7 @@ public class AeshCommandProcessorBuilder {
 
     public AeshCommandProcessorImpl<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> build() {
         if (registry == null) {
-            registry = new MutableCommandRegistry();
+            registry = new MutableCommandRegistry<>();
         }
 
         if (commandInvocationProvider == null) {

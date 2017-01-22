@@ -22,7 +22,6 @@ package org.aesh.command.invocation;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandInvocationProvider<T extends CommandInvocation> {
-
-    T enhanceCommandInvocation(CommandInvocation commandInvocation);
+public interface CommandInvocationProvider<CI extends CommandInvocation> {
+    CI enhanceCommandInvocation(CommandInvocation commandInvocation);
 }

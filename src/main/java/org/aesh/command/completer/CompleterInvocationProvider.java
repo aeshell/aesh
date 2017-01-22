@@ -22,7 +22,7 @@ package org.aesh.command.completer;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CompleterInvocationProvider<T extends CompleterInvocation> {
+public interface CompleterInvocationProvider<CI extends CompleterInvocation> {
 
-    T enhanceCompleterInvocation(CompleterInvocation completerInvocation);
+    CI enhanceCompleterInvocation(CI completerInvocation);
 }

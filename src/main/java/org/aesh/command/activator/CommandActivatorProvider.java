@@ -22,7 +22,7 @@ package org.aesh.command.activator;
 /**
  * @author jdenise@redhat.com
  */
-public interface CommandActivatorProvider<T extends CommandActivator> {
+public interface CommandActivatorProvider<CA extends CommandActivator> {
 
-    T enhanceCommandActivator(CommandActivator commandActivator);
+    CA enhanceCommandActivator(CommandActivator commandActivator);
 }

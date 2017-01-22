@@ -31,20 +31,20 @@ import org.aesh.parser.ParsedLine;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandResolver implements CommandResolver {
+public class AeshCommandResolver<C extends Command> implements CommandResolver<C> {
 
-    private CommandRegistry<? extends Command> registry;
+    private CommandRegistry<C> registry;
 
-    public AeshCommandResolver(CommandRegistry<? extends Command> commandRegistry) {
+    public AeshCommandResolver(CommandRegistry<C> commandRegistry) {
         this.registry = commandRegistry;
     }
 
-    public CommandRegistry<? extends Command> getRegistry() {
+    public CommandRegistry<C> getRegistry() {
         return registry;
     }
 
     @Override
-    public CommandContainer<? extends Command> resolveCommand(String line) throws CommandNotFoundException {
+    public CommandContainer<C> resolveCommand(String line) throws CommandNotFoundException {
         ParsedLine aeshLine = LineParser.parseLine(line);
         return getCommand(aeshLine, line);
     }
@@ -58,7 +58,7 @@ public class AeshCommandResolver implements CommandResolver {
      * @return command
      * @throws CommandNotFoundException
      */
-    private CommandContainer<? extends Command> getCommand(ParsedLine aeshLine, String line) throws CommandNotFoundException {
+    private CommandContainer<C> getCommand(ParsedLine aeshLine, String line) throws CommandNotFoundException {
         return getCommand(aeshLine.words().get(0).word(), line);
     }
 
@@ -72,7 +72,7 @@ public class AeshCommandResolver implements CommandResolver {
      * @return command
      * @throws CommandNotFoundException
      */
-    private CommandContainer<? extends Command> getCommand(String commandName, String line) throws CommandNotFoundException {
+    private CommandContainer<C> getCommand(String commandName, String line) throws CommandNotFoundException {
         try {
             return registry.getCommand(commandName, line);
         }

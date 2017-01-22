@@ -27,7 +27,6 @@ import org.aesh.command.completer.CompleterInvocationProvider;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshCompleterInvocationProvider implements CompleterInvocationProvider<CompleterInvocation> {
-
     @Override
     public CompleterInvocation enhanceCompleterInvocation(CompleterInvocation completerInvocation) {
         return completerInvocation;

@@ -68,7 +68,7 @@ public class ReadlineConsole implements Console {
     private Prompt prompt;
     private List<Completion> completions;
     private Connection connection;
-    private AeshCommandResolver commandResolver;
+    private AeshCommandResolver<? extends Command> commandResolver;
     private AeshContext context;
     private Readline readline;
     private InvocationProviders invocationProviders;
@@ -83,7 +83,7 @@ public class ReadlineConsole implements Console {
             ? extends CommandActivator> settings) {
         LoggerUtil.doLog();
         this.settings = settings;
-        commandResolver = new AeshCommandResolver(settings.commandRegistry());
+        commandResolver = new AeshCommandResolver<>(settings.commandRegistry());
 
         invocationProviders = new AeshInvocationProviders(settings);
         addCompletion(new AeshCompletion());

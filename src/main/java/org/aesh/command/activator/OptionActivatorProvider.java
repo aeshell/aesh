@@ -22,7 +22,7 @@ package org.aesh.command.activator;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface OptionActivatorProvider<T extends OptionActivator> {
+public interface OptionActivatorProvider<OA extends OptionActivator> {
 
-    T enhanceOptionActivator(OptionActivator optionActivator);
+    OA enhanceOptionActivator(OptionActivator optionActivator);
 }

@@ -130,9 +130,9 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
         }
 
         private final Shell shell = new DefaultShell();
-        private final AeshCommandProcessorImpl processor;
+        private final AeshCommandProcessorImpl<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor;
 
-        DefaultCommandInvocation(AeshCommandProcessorImpl processor) {
+        DefaultCommandInvocation(AeshCommandProcessorImpl<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor) {
             this.processor = processor;
         }
 
@@ -234,7 +234,7 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
     private static final Logger LOGGER = Logger.getLogger(AeshCommandProcessorImpl.class.getName());
     private final CommandNotFoundHandler commandNotFoundHandler;
 
-    private final CommandResolver commandResolver;
+    private final CommandResolver<? extends Command> commandResolver;
     private final AeshContext ctx;
 
     AeshCommandProcessorImpl(AeshContext ctx,
@@ -248,7 +248,7 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
             CommandActivatorProvider commandActivatorProvider) {
         this.ctx = ctx;
         this.registry = registry;
-        commandResolver = new AeshCommandResolver(registry);
+        commandResolver = new AeshCommandResolver<>(registry);
         this.commandInvocationProvider = commandInvocationProvider;
         this.commandNotFoundHandler = commandNotFoundHandler;
         this.invocationProviders
@@ -268,7 +268,7 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
     }
 
     public String getHelpInfo(String commandName) {
-        try (CommandContainer commandContainer = commandResolver.resolveCommand(commandName)) {
+        try (CommandContainer<? extends Command> commandContainer = commandResolver.resolveCommand(commandName)) {
             if (commandContainer != null) {
                 return commandContainer.printHelp(commandName);
             }
@@ -282,7 +282,7 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
         registry.completeCommandName(completeOperation);
 
         if (completeOperation.getCompletionCandidates().size() < 1) {
-            try (CommandContainer commandContainer = commandResolver.resolveCommand(completeOperation.getBuffer())) {
+            try (CommandContainer<? extends Command> commandContainer = commandResolver.resolveCommand(completeOperation.getBuffer())) {
 
                 CommandLineCompletionParser completionParser = commandContainer
                         .getParser().getCompletionParser();
@@ -308,7 +308,7 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
             CommandException,
             InterruptedException {
         ResultHandler resultHandler = null;
-        try (CommandContainer container = commandResolver.resolveCommand(line)) {
+        try (CommandContainer<? extends Command> container = commandResolver.resolveCommand(line)) {
             resultHandler = container.getParser().getProcessedCommand().getResultHandler();
             CommandContainerResult ccResult = container.executeCommand(
                     LineParser.parseLine(line),
