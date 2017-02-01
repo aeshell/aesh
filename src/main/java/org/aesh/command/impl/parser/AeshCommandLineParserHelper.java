@@ -25,6 +25,7 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.Command;
 import org.aesh.parser.ParsedLine;
+import org.aesh.parser.ParsedLineIterator;
 import org.aesh.parser.ParsedWord;
 
 /**
@@ -57,7 +58,9 @@ public class AeshCommandLineParserHelper {
         this.commandLine = commandLine;
         this.active = null;
 
-        for (ParsedWord word : line.words()) {
+        ParsedLineIterator iter = new ParsedLineIterator(line);
+        while(iter.hasNextWord()) {
+            ParsedWord word = iter.nextParsedWord();
             ProcessedOption currOption = findOption(word.word());
             if (status == Status.ACTIVE) {
                 if (currOption == null) {
