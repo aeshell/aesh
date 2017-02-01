@@ -309,7 +309,7 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
             InterruptedException {
         ResultHandler resultHandler = null;
         try (CommandContainer<? extends Command> container = commandResolver.resolveCommand(line)) {
-            resultHandler = container.getParser().getProcessedCommand().getResultHandler();
+            resultHandler = container.getParser().getProcessedCommand().resultHandler();
             CommandContainerResult ccResult = container.executeCommand(
                     LineParser.parseLine(line),
                     invocationProviders,

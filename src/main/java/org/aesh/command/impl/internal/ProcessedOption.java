@@ -23,6 +23,7 @@ import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
 import org.aesh.command.impl.parser.OptionParserException;
+import org.aesh.command.parser.OptionParser;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.command.validator.OptionValidatorException;
@@ -72,6 +73,7 @@ public final class ProcessedOption {
     private boolean overrideRequired = false;
     private boolean ansiMode = true;
     private ProcessedCommand parent;
+    private OptionParser parser;
 
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator,
@@ -79,7 +81,8 @@ public final class ProcessedOption {
                            OptionType optionType, Converter converter, OptionCompleter completer,
                            OptionValidator optionValidator,
                            OptionActivator activator,
-                           OptionRenderer renderer, boolean overrideRequired) throws OptionParserException {
+                           OptionRenderer renderer, OptionParser parser,
+                           boolean overrideRequired) throws OptionParserException {
 
         if(shortName != '\u0000')
             this.shortName = String.valueOf(shortName);
@@ -96,6 +99,7 @@ public final class ProcessedOption {
         this.completer = completer;
         this.validator = optionValidator;
         this.activator = activator;
+        this.parser = parser;
 
         if(renderer != null)
             this.renderer = renderer;
@@ -106,11 +110,11 @@ public final class ProcessedOption {
         values = new ArrayList<>();
     }
 
-    public String getShortName() {
+    public String shortName() {
         return shortName;
     }
 
-    public String getName() {
+    public String name() {
         return name;
     }
 
@@ -145,11 +149,11 @@ public final class ProcessedOption {
         return overrideRequired;
     }
 
-    public Class<?> getType() {
+    public Class<?> type() {
         return type;
     }
 
-    public String getDescription() {
+    public String description() {
         return description;
     }
 
@@ -185,20 +189,24 @@ public final class ProcessedOption {
         return fieldName;
     }
 
-    public Converter getConverter() {
+    public Converter converter() {
         return converter;
     }
 
-    public OptionCompleter getCompleter() {
+    public OptionCompleter completer() {
         return completer;
     }
 
-    public OptionValidator getValidator() {
+    public OptionValidator validator() {
         return validator;
     }
 
-    public OptionActivator getActivator() {
+    public OptionActivator activator() {
         return activator;
+    }
+
+    public OptionParser parser() {
+        return parser;
     }
 
     void setParent(ProcessedCommand parent) {

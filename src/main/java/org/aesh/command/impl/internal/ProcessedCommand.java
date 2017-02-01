@@ -91,27 +91,27 @@ public class ProcessedCommand<C extends Command> {
     }
 
     public void addOption(ProcessedOption opt) throws OptionParserException {
-        this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
-                opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
-                opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(), opt.getConverter(),
-                opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer(), opt.doOverrideRequired()));
+        this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
+                opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
+                opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(), opt.converter(),
+                opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(), opt.parser(), opt.doOverrideRequired()));
 
         options.get(options.size()-1).setParent(this);
     }
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
         for(ProcessedOption opt : options) {
-            this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.getShortName(), opt.getName()), opt.getName(),
-                    opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
-                    opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(),
-                    opt.getConverter(), opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer(),
-                    opt.doOverrideRequired()));
+            this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
+                    opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
+                    opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(),
+                    opt.converter(), opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(),
+                    opt.parser(), opt.doOverrideRequired()));
 
             options.get(options.size()-1).setParent(this);
         }
     }
 
-    public String getName() {
+    public String name() {
         return name;
     }
 
@@ -119,7 +119,7 @@ public class ProcessedCommand<C extends Command> {
         this.name = name;
     }
 
-    public String getDescription() {
+    public String description() {
         return description;
     }
 
@@ -127,11 +127,11 @@ public class ProcessedCommand<C extends Command> {
         this.description = description;
     }
 
-    public CommandValidator getValidator() {
+    public CommandValidator validator() {
         return validator;
     }
 
-    public ResultHandler getResultHandler() {
+    public ResultHandler resultHandler() {
       return resultHandler;
     }
 
@@ -188,9 +188,9 @@ public class ProcessedCommand<C extends Command> {
 
     public ProcessedOption findOption(String name) {
         for (ProcessedOption option : getOptions())
-            if(option.getShortName() != null &&
-                    option.getShortName().equals(name) &&
-                    option.getActivator().isActivated(this))
+            if(option.shortName() != null &&
+                    option.shortName().equals(name) &&
+                    option.activator().isActivated(this))
                 return option;
 
         return null;
@@ -198,8 +198,8 @@ public class ProcessedCommand<C extends Command> {
 
     public ProcessedOption findOptionNoActivatorCheck(String name) {
         for (ProcessedOption option : getOptions())
-            if(option.getShortName() != null &&
-                    option.getShortName().equals(name))
+            if(option.shortName() != null &&
+                    option.shortName().equals(name))
                 return option;
 
         return null;
@@ -207,9 +207,9 @@ public class ProcessedCommand<C extends Command> {
 
     public ProcessedOption findLongOption(String name) {
         for (ProcessedOption option : getOptions())
-            if(option.getName() != null &&
-                    option.getName().equals(name) &&
-                    option.getActivator().isActivated(this))
+            if(option.name() != null &&
+                    option.name().equals(name) &&
+                    option.activator().isActivated(this))
                 return option;
 
         return null;
@@ -217,7 +217,7 @@ public class ProcessedCommand<C extends Command> {
 
     public ProcessedOption findLongOptionNoActivatorCheck(String name) {
         for (ProcessedOption option : getOptions())
-            if(option.getName() != null && option.getName().equals(name))
+            if(option.name() != null && option.name().equals(name))
                 return option;
 
         return null;
@@ -225,8 +225,8 @@ public class ProcessedCommand<C extends Command> {
 
     public ProcessedOption startWithOption(String name) {
         for (ProcessedOption option : getOptions())
-            if(option.getShortName() != null && name.startsWith(option.getShortName()) &&
-                    option.getActivator().isActivated(this))
+            if(option.shortName() != null && name.startsWith(option.shortName()) &&
+                    option.activator().isActivated(this))
                 return option;
 
         return null;
@@ -234,8 +234,8 @@ public class ProcessedCommand<C extends Command> {
 
     public ProcessedOption startWithLongOption(String name) {
         for (ProcessedOption option : getOptions())
-            if(name.startsWith(option.getName()) &&
-                    option.getActivator().isActivated(this))
+            if(name.startsWith(option.name()) &&
+                    option.activator().isActivated(this))
                 return option;
 
         return null;
@@ -259,7 +259,7 @@ public class ProcessedCommand<C extends Command> {
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
             if(o.getValues().size() == 0 &&
-                    o.getActivator().isActivated(this))
+                    o.activator().isActivated(this))
                 names.add(o.getRenderedNameWithDashes());
         }
 
@@ -270,10 +270,10 @@ public class ProcessedCommand<C extends Command> {
         List<ProcessedOption> opts = getOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-           if(((o.getShortName() != null && o.getShortName().equals(name) &&
+           if(((o.shortName() != null && o.shortName().equals(name) &&
                    !o.isLongNameUsed() && o.getValues().size() == 0) ||
-                   (o.getName().startsWith(name) && o.getValues().size() == 0)) &&
-                   o.getActivator().isActivated(this))
+                   (o.name().startsWith(name) && o.getValues().size() == 0)) &&
+                   o.activator().isActivated(this))
                names.add(o.getRenderedNameWithDashes());
         }
         return names;
@@ -301,7 +301,7 @@ public class ProcessedCommand<C extends Command> {
             sb.append(Config.getLineSeparator()).append("Arguments:").append(Config.getLineSeparator());
             sb.append(argument.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
         }
-        return "Usage: "+getName()+" "+ getDescription()+ Config.getLineSeparator()+sb.toString();
+        return "Usage: "+ name()+" "+ description()+ Config.getLineSeparator()+sb.toString();
     }
 
     @Override
@@ -335,7 +335,7 @@ public class ProcessedCommand<C extends Command> {
 
     public boolean hasLongOption(String optionName) {
         for(ProcessedOption o : getOptions()) {
-            if (o.getName().equals(optionName))
+            if (o.name().equals(optionName))
                 return true;
         }
         return false;
@@ -351,7 +351,7 @@ public class ProcessedCommand<C extends Command> {
     public boolean hasUniqueLongOption(String optionName) {
         if(hasLongOption(optionName)) {
             for(ProcessedOption o : getOptions()) {
-                if(o.getName().startsWith(optionName) && !o.getName().equals(optionName))
+                if(o.name().startsWith(optionName) && !o.name().equals(optionName))
                     return false;
             }
             return true;

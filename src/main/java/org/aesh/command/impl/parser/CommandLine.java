@@ -61,7 +61,7 @@ public class CommandLine<T extends Command> {
     }
 
     public void addOption(ProcessedOption option) {
-        ProcessedOption existingOption = getOption(option.getName());
+        ProcessedOption existingOption = getOption(option.name());
         if (existingOption == null) {
             options.add(option);
         }
@@ -107,8 +107,8 @@ public class CommandLine<T extends Command> {
 
     public ProcessedOption getOption(String name) {
         for(ProcessedOption po : options) {
-            if((po.getShortName() != null && po.getShortName().equals(name)) ||
-                    (po.getName() != null && po.getName().equals(name)))
+            if((po.shortName() != null && po.shortName().equals(name)) ||
+                    (po.name() != null && po.name().equals(name)))
                 return po;
         }
         return null;
@@ -116,8 +116,8 @@ public class CommandLine<T extends Command> {
 
     public boolean hasOption(String name) {
         for(ProcessedOption po : options) {
-            if((po.getShortName() != null && po.getShortName().equals(name)) ||
-                    po.getName().equals(name))
+            if((po.shortName() != null && po.shortName().equals(name)) ||
+                    po.name().equals(name))
                 return true;
         }
         return false;
@@ -133,8 +133,8 @@ public class CommandLine<T extends Command> {
 
     public String getOptionValue(String name, String fallback) {
         for(ProcessedOption po : options) {
-            if((po.getShortName() != null && po.getShortName().equals(name)) ||
-                    (po.getName() != null && po.getName().equals(name)))
+            if((po.shortName() != null && po.shortName().equals(name)) ||
+                    (po.name() != null && po.name().equals(name)))
                 return po.getValue();
         }
         return fallback;
@@ -150,8 +150,8 @@ public class CommandLine<T extends Command> {
 
     public List<String> getOptionValues(String name, List<String> fallback) {
         for(ProcessedOption po : options) {
-            if((po.getShortName() != null && po.getShortName().equals(name)) ||
-                    (po.getName() != null && po.getName().equals(name)))
+            if((po.shortName() != null && po.shortName().equals(name)) ||
+                    (po.name() != null && po.name().equals(name)))
                 return po.getValues();
         }
 
@@ -160,8 +160,8 @@ public class CommandLine<T extends Command> {
 
     public Map<String,String> getOptionProperties(String name) {
         for(ProcessedOption po : options) {
-            if((po.getShortName() != null && po.getShortName().equals(name)) ||
-                    (po.getName() != null && po.getName().equals(name)))
+            if((po.shortName() != null && po.shortName().equals(name)) ||
+                    (po.name() != null && po.name().equals(name)))
                 return po.getProperties();
         }
 

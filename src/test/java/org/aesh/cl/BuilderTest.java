@@ -123,8 +123,8 @@ public class BuilderTest {
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
-        assertEquals("version", clp.getProcessedCommand().findOption("v").getName());
-        assertEquals("verbose", clp.getProcessedCommand().findOption("e").getName());
+        assertEquals("version", clp.getProcessedCommand().findOption("v").name());
+        assertEquals("verbose", clp.getProcessedCommand().findOption("e").name());
 
         CommandLine cl = clp.parse("less -v -e test1.txt");
         assertTrue(cl.hasOption('v'));
@@ -144,9 +144,9 @@ public class BuilderTest {
         processedCommand.addOption(ProcessedOptionBuilder.builder().name("foo2").shortName('o').type(String.class).build());
         processedCommand.addOption(ProcessedOptionBuilder.builder().name("foo3").shortName('3').type(String.class).build());
 
-        assertEquals("f", processedCommand.getOptions().get(0).getShortName());
-        assertEquals("o", processedCommand.getOptions().get(1).getShortName());
-        assertEquals("3", processedCommand.getOptions().get(2).getShortName());
+        assertEquals("f", processedCommand.getOptions().get(0).shortName());
+        assertEquals("o", processedCommand.getOptions().get(1).shortName());
+        assertEquals("3", processedCommand.getOptions().get(2).shortName());
     }
 
 }

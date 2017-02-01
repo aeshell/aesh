@@ -145,9 +145,9 @@ public class AeshCommandLineParserHelper {
             if(o.isRequired()) {
                 boolean found = false;
                 for(ProcessedOption po : commandLine.getOptions()) {
-                    if(po.getShortName() != null && o.getShortName() != null &&
-                            po.getShortName().equals(o.getShortName()) ||
-                            (po.getName() != null && po.getName().equals(o.getName()))) {
+                    if(po.shortName() != null && o.shortName() != null &&
+                            po.shortName().equals(o.shortName()) ||
+                            (po.name() != null && po.name().equals(o.name()))) {
                         found = true;
                         break;
                     }
@@ -204,8 +204,8 @@ public class AeshCommandLineParserHelper {
 
     private void preProcessOption(ProcessedOption option, String line) {
         if(option.isLongNameUsed()) {
-            if(line.length()-2 != option.getName().length())
-                processOption(option, line.substring(2), option.getName());
+            if(line.length()-2 != option.name().length())
+                processOption(option, line.substring(2), option.name());
             else if(option.getOptionType() == OptionType.BOOLEAN) {
                 option.addValue("true");
                 commandLine.addOption(option);
@@ -217,7 +217,7 @@ public class AeshCommandLineParserHelper {
         }
         else {
             if(line.length() > 2)
-                processOption(option, line.substring(1), option.getShortName());
+                processOption(option, line.substring(1), option.shortName());
             else if(option.getOptionType() == OptionType.BOOLEAN) {
                 option.addValue("true");
                 commandLine.addOption(option);

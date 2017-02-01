@@ -73,13 +73,13 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
             List<CommandLineParser<C>> parsers = getChildParsers();
             List<String> names = new ArrayList<>(parsers.size());
             for (CommandLineParser child : parsers) {
-                names.add(processedCommand.getName()+" "+child.getProcessedCommand().getName());
+                names.add(processedCommand.name()+" "+child.getProcessedCommand().name());
             }
             return names;
         }
         else {
             List<String> names = new ArrayList<>(1);
-            names.add(processedCommand.getName());
+            names.add(processedCommand.name());
             return names;
         }
     }
@@ -93,7 +93,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         if(!isGroupCommand())
             return null;
         for (CommandLineParser clp : getChildParsers()) {
-            if(clp.getProcessedCommand().getName().equals(name))
+            if(clp.getProcessedCommand().name().equals(name))
                 return clp;
         }
         return null;
@@ -138,11 +138,11 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
             StringBuilder sb = new StringBuilder();
             sb.append(processedCommand.printHelp())
                     .append(Config.getLineSeparator())
-                    .append(processedCommand.getName())
+                    .append(processedCommand.name())
                     .append(" commands:")
                     .append(Config.getLineSeparator());
             for (CommandLineParser child : parsers)
-                sb.append("    ").append(child.getProcessedCommand().getName()).append(Config.getLineSeparator());
+                sb.append("    ").append(child.getProcessedCommand().name()).append(Config.getLineSeparator());
 
             return sb.toString();
         }
@@ -171,7 +171,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     @Override
     public CommandLine<C> parse(ParsedLine line, boolean ignoreRequirements) {
         if(line.words().size() > 0) {
-            if (processedCommand.getName().equals(line.words().get(0).word())
+            if (processedCommand.name().equals(line.words().get(0).word())
                     || processedCommand.getAliases().contains(line.words().get(0).word())) {
                 if(isGroupCommand() && line.words().size() > 1) {
                    CommandLineParser<C> clp = getChildParser(line.words().get(1).word());

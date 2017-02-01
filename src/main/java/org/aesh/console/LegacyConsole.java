@@ -70,7 +70,7 @@ public class LegacyConsole {
 
     private boolean controlledMode = false;
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(LegacyConsole.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(LegacyConsole.class.name());
 
     public LegacyConsole(final Settings settings) {
         this.settings = settings;
@@ -167,7 +167,7 @@ public class LegacyConsole {
         if(settings.aliasEnabled()) {
             if(settings.logging())
                 LOGGER.info("enable aliasmanager with file: "+settings.aliasFile());
-            aliasManager = new AliasManager(settings.aliasFile(), settings.persistAlias(), settings.getName());
+            aliasManager = new AliasManager(settings.aliasFile(), settings.persistAlias(), settings.name());
             completionHandler.addCompletion(new AliasCompletion(aliasManager));
             completionHandler.setAliasManager(aliasManager);
         }
@@ -203,7 +203,7 @@ public class LegacyConsole {
                 .interruptHook(interruptHook)
                 .build();
 
-        reader = new NonBlockingReader(terminal.getName(),
+        reader = new NonBlockingReader(terminal.name(),
                                        terminal.reader());
         bindingReader = new BindingReader(reader);
     }
@@ -662,8 +662,8 @@ public class LegacyConsole {
         //this should never happen (all overwrite_in should be parsed in parseOperations())
         else if(currentOperation.getControlOperator() == ControlOperator.OVERWRITE_IN) {
             if(settings.logging())
-                LOGGER.info(settings.getName()+": syntax error while reading token: \'<\'");
-            err().print(settings.getName() + ": syntax error while reading token: \'<\'");
+                LOGGER.info(settings.name()+": syntax error while reading token: \'<\'");
+            err().print(settings.name() + ": syntax error while reading token: \'<\'");
             return null;
         }
         //ControlOperator.NONE
@@ -731,23 +731,23 @@ public class LegacyConsole {
                         output = new ConsoleOperation(nextOperation.getControlOperator(),op.getBuffer());
                     }
                     else {
-                        err().println(settings.getName() + ": " + readFile.toString()+ " no such file.");
+                        err().println(settings.name() + ": " + readFile.toString()+ " no such file.");
                         currentOperation = null;
                         output = new ConsoleOperation(ControlOperator.NONE, op.getBuffer());
                     }
                 }
                 else {
                     if(settings.logging())
-                        LOGGER.info(settings.getName()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
-                    err().print(settings.getName() + ": syntax error near unexpected token '<'" + Config.getLineSeparator());
+                        LOGGER.info(settings.name()+": syntax error near unexpected token '<'"+Config.getLineSeparator());
+                    err().print(settings.name() + ": syntax error near unexpected token '<'" + Config.getLineSeparator());
                     currentOperation = null;
                     output = new ConsoleOperation(ControlOperator.NONE, "");
                 }
             }
             else {
                 if(settings.logging())
-                    LOGGER.info(settings.getName()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
-                err().print(settings.getName() + ": syntax error near unexpected token 'newline'" + Config.getLineSeparator());
+                    LOGGER.info(settings.name()+": syntax error near unexpected token 'newline'"+Config.getLineSeparator());
+                err().print(settings.name() + ": syntax error near unexpected token 'newline'" + Config.getLineSeparator());
                 currentOperation = null;
                 output = new ConsoleOperation(ControlOperator.NONE, "");
             }
@@ -843,8 +843,8 @@ public class LegacyConsole {
         AeshLine line = Parser.findAllWords(fileName);
         if(line.getWords().size() > 1) {
             if(settings.logging())
-                LOGGER.info(settings.getName()+": can't redirect to more than one file."+Config.getLineSeparator());
-            err().print(settings.getName() + ": can't redirect to more than one file." + Config.getLineSeparator());
+                LOGGER.info(settings.name()+": can't redirect to more than one file."+Config.getLineSeparator());
+            err().print(settings.name() + ": can't redirect to more than one file." + Config.getLineSeparator());
             return;
         }
         //this is safe since we check that buffer do contain text earlier

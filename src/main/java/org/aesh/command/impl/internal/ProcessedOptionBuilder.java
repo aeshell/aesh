@@ -28,6 +28,7 @@ import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
 import org.aesh.command.impl.converter.CLConverterManager;
 import org.aesh.command.impl.converter.NullConverter;
+import org.aesh.command.impl.parser.AeshOptionParser;
 import org.aesh.command.impl.parser.OptionParserException;
 import org.aesh.command.impl.renderer.NullOptionRenderer;
 import org.aesh.command.parser.OptionParser;
@@ -269,7 +270,22 @@ public class ProcessedOptionBuilder {
         return apply(c -> c.overrideRequired = overrideRequired);
     }
 
-    public ProcessedOption build() throws OptionParserException {
+    public ProcessedOptionBuilder parser(OptionParser parser) {
+        return apply(c -> c.parser = parser);
+    }
+
+    public ProcessedOptionBuilder parser(Class<? extends OptionParser> parser) {
+        return apply(c -> c.parser = initParser(parser));
+    }
+
+    private OptionParser initParser(Class<? extends OptionParser> parser) {
+        if(parser != null)
+            return ReflectionUtil.newInstance(parser);
+        else
+            return null;
+    }
+
+     public ProcessedOption build() throws OptionParserException {
         if(optionType == null) {
             if(!hasValue)
                 optionType = OptionType.BOOLEAN;
@@ -303,11 +319,14 @@ public class ProcessedOptionBuilder {
         if(activator == null)
             activator = new NullActivator();
 
+        if(parser == null)
+            parser = new AeshOptionParser();
+
         //if(renderer == null)
         //    renderer = new NullOptionRenderer();
 
         return new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, defaultValues, type, fieldName, optionType, converter,
-                completer, validator, activator, renderer, overrideRequired);
+                completer, validator, activator, renderer, parser, overrideRequired);
     }
 }

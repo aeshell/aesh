@@ -57,8 +57,8 @@ public class AeshOptionParser implements OptionParser {
 
     private void preProcessOption(ProcessedOption option, String line) {
         if(option.isLongNameUsed()) {
-            if(line.length()-2 != option.getName().length())
-                processOption(option, line.substring(2), option.getName());
+            if(line.length()-2 != option.name().length())
+                processOption(option, line.substring(2), option.name());
             else if(option.getOptionType() == OptionType.BOOLEAN) {
                 option.addValue("true");
                 //commandLine.addOption(option);
@@ -70,7 +70,7 @@ public class AeshOptionParser implements OptionParser {
         }
         else {
             if(line.length() > 2)
-                processOption(option, line.substring(1), option.getShortName());
+                processOption(option, line.substring(1), option.shortName());
             else if(option.getOptionType() == OptionType.BOOLEAN) {
                 option.addValue("true");
                 //commandLine.addOption(option);

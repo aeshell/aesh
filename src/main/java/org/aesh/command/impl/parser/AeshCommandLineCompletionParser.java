@@ -74,25 +74,25 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         CommandLine cl = parser.parse(line, true);
         //check if we try to complete just after the command name
         if(parser.isGroupCommand()) {
-            if (line.trim().equals(parser.getProcessedCommand().getName() + " " +
-                    cl.getParser().getProcessedCommand().getName())) {
+            if (line.trim().equals(parser.getProcessedCommand().name() + " " +
+                    cl.getParser().getProcessedCommand().name())) {
                 if (cl.getParser().getProcessedCommand().getArgument() == null) {
                     //basically an empty string except command name
                     return new ParsedCompleteObject(true, "", 0, cl.getParser().getCompletionParser());
-                } else if (cl.getParser().getProcessedCommand().getArgument().getActivator().isActivated(cl.getParser().getProcessedCommand())) {
-                    return new ParsedCompleteObject(null, "", cl.getParser().getProcessedCommand().getArgument().getType(),
+                } else if (cl.getParser().getProcessedCommand().getArgument().activator().isActivated(cl.getParser().getProcessedCommand())) {
+                    return new ParsedCompleteObject(null, "", cl.getParser().getProcessedCommand().getArgument().type(),
                             false, getCorrectCompletionParser(line));
                 }
                 //basically an empty string except command name
                 return new ParsedCompleteObject(true, "", 0, cl.getParser().getCompletionParser());
             }
         }
-        else if(line.trim().equals(cl.getParser().getProcessedCommand().getName())) {
+        else if(line.trim().equals(cl.getParser().getProcessedCommand().name())) {
             if(cl.getParser().getProcessedCommand().getArgument() == null) {
                 //basically an empty string except command name
                 return new ParsedCompleteObject(true, "", 0, cl.getParser().getCompletionParser());
-            } else if (cl.getParser().getProcessedCommand().getArgument().getActivator().isActivated(cl.getParser().getProcessedCommand())) {
-                return new ParsedCompleteObject(null, "", cl.getParser().getProcessedCommand().getArgument().getType(),
+            } else if (cl.getParser().getProcessedCommand().getArgument().activator().isActivated(cl.getParser().getProcessedCommand())) {
+                return new ParsedCompleteObject(null, "", cl.getParser().getProcessedCommand().getArgument().type(),
                         false, getCorrectCompletionParser(line));
             }
             //basically an empty string except command name
@@ -168,7 +168,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         if(cl.getArgument() != null && !cl.getArgument().getValues().isEmpty()) {
             return new ParsedCompleteObject("", endsWithSpace ? "" :
                     cl.getArgument().getValues().get(cl.getArgument().getValues().size() - 1),
-                    cl.getArgument().getType(), false, cl.getParser().getCompletionParser());
+                    cl.getArgument().type(), false, cl.getParser().getCompletionParser());
         }
         //get the last option
         else if (cl.getOptions() != null && cl.getOptions().size() > 0) {
@@ -184,14 +184,14 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 else
                     return new ParsedCompleteObject(true, cl.getParser().getCompletionParser());
             }
-            else if(po.isLongNameUsed() || (po.getShortName() == null || po.getShortName().length() < 1))
-                return new ParsedCompleteObject(po.getName(),
+            else if(po.isLongNameUsed() || (po.shortName() == null || po.shortName().length() < 1))
+                return new ParsedCompleteObject(po.name(),
                         endsWithSpace ? "" : po.getValues().get(po.getValues().size()-1),
-                        po.getType(), true, cl.getParser().getCompletionParser());
+                        po.type(), true, cl.getParser().getCompletionParser());
             else
-                return new ParsedCompleteObject( po.getShortName(),
+                return new ParsedCompleteObject( po.shortName(),
                         endsWithSpace ? "" : po.getValues().get(po.getValues().size()-1),
-                        po.getType(), true, cl.getParser().getCompletionParser());
+                        po.type(), true, cl.getParser().getCompletionParser());
         }
         //probably something wrong with the parser
         else
@@ -292,13 +292,13 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             //this should be ignored at some point
             catch (CommandLineParserException | OptionValidatorException ignored) { }
 
-            if(currentOption.getCompleter() != null &&
-                    currentOption.getActivator().isActivated(parser.getProcessedCommand())) {
+            if(currentOption.completer() != null &&
+                    currentOption.activator().isActivated(parser.getProcessedCommand())) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
                                 new CompleterData(completeOperation.getContext(), completeObject.getValue(), parser.getCommand()));
 
-                currentOption.getCompleter().complete(completions);
+                currentOption.completer().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completionSetOffSet(completeObject, completeOperation, completions);
                 completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
@@ -353,11 +353,11 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             catch (CommandLineParserException | OptionValidatorException ignored) { }
 
             if(parser.getProcessedCommand().getArgument() != null &&
-                    parser.getProcessedCommand().getArgument().getCompleter() != null) {
+                    parser.getProcessedCommand().getArgument().completer() != null) {
                 CompleterInvocation completions =
                         invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
                                 new CompleterData(completeOperation.getContext(), completeObject.getValue(), parser.getCommand()));
-                parser.getProcessedCommand().getArgument().getCompleter().complete(completions);
+                parser.getProcessedCommand().getArgument().completer().complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
                 completionSetOffSet(completeObject, completeOperation, completions);
                 completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
@@ -410,7 +410,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         if(!parser.isGroupCommand())
             return this;
         else {
-            String childLine = line.trim().substring(parser.getProcessedCommand().getName().length());
+            String childLine = line.trim().substring(parser.getProcessedCommand().name().length());
             String child = Parser.findFirstWord(childLine);
             CommandLineParser childParser = parser.getChildParser(child);
             if(childParser != null)

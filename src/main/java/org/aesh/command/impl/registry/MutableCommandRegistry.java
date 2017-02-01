@@ -86,7 +86,7 @@ public class MutableCommandRegistry<C extends Command> implements CommandRegistr
         List<String> names = new ArrayList<>();
         for(CommandContainer<C> command : registry.values()) {
             ProcessedCommand<C> com = command.getParser().getProcessedCommand();
-            if(com.getName().startsWith(co.getBuffer()) &&
+            if(com.name().startsWith(co.getBuffer()) &&
                 com.getActivator().isActivated(com)) {
                 if(command.getParser().isGroupCommand()) {
                     LOGGER.info("command is a group command");
@@ -98,20 +98,20 @@ public class MutableCommandRegistry<C extends Command> implements CommandRegistr
                         co.setIgnoreNonEscapedSpace(true);
                     }
                     else
-                        names.add(com.getName());
+                        names.add(com.name());
                 }
                 else
-                    names.add(com.getName());
+                    names.add(com.name());
             }
             else if(command.getParser().isGroupCommand() &&
-                    co.getBuffer().startsWith(com.getName()) &&
+                    co.getBuffer().startsWith(com.name()) &&
                     com.getActivator().isActivated(com)) {
-                String groupLine = Parser.trimInFront( co.getBuffer().substring(com.getName().length()));
+                String groupLine = Parser.trimInFront( co.getBuffer().substring(com.name().length()));
                 int diff = co.getBuffer().length() - groupLine.length();
                 for(CommandLineParser child : command.getParser().getAllChildParsers()) {
-                    if(child.getProcessedCommand().getName().startsWith(groupLine) &&
+                    if(child.getProcessedCommand().name().startsWith(groupLine) &&
                         child.getProcessedCommand().getActivator().isActivated(child.getProcessedCommand()))
-                        names.add(co.getBuffer().substring(0, diff) + child.getProcessedCommand().getName());
+                        names.add(co.getBuffer().substring(0, diff) + child.getProcessedCommand().name());
                 }
             }
         }
@@ -152,7 +152,7 @@ public class MutableCommandRegistry<C extends Command> implements CommandRegistr
     private void putIntoRegistry(CommandContainer<C> commandContainer) {
         if (!commandContainer.haveBuildError()
                 && !contains(commandContainer.getParser().getProcessedCommand())) {
-            registry.put(commandContainer.getParser().getProcessedCommand().getName(),
+            registry.put(commandContainer.getParser().getProcessedCommand().name(),
                     commandContainer);
             ProcessedCommand<?> command = commandContainer.getParser().
                     getProcessedCommand();
@@ -163,7 +163,7 @@ public class MutableCommandRegistry<C extends Command> implements CommandRegistr
     }
 
     private boolean contains(ProcessedCommand<?> command) {
-        if (registry.containsKey(command.getName())) {
+        if (registry.containsKey(command.name())) {
             return true;
         }
         for (String alias : command.getAliases()) {

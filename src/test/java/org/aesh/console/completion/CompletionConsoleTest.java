@@ -59,23 +59,23 @@ public class CompletionConsoleTest {
         final StringBuilder builder = new StringBuilder();
 
         Completion completion = co -> {
-            if(parser.getProcessedCommand().getName().startsWith(co.getBuffer())) {
-                co.addCompletionCandidate(parser.getProcessedCommand().getName());
+            if(parser.getProcessedCommand().name().startsWith(co.getBuffer())) {
+                co.addCompletionCandidate(parser.getProcessedCommand().name());
             }
             // commandline longer than the name
-            else if(co.getBuffer().startsWith(parser.getProcessedCommand().getName())){
-               if(co.getBuffer().length() > parser.getProcessedCommand().getName().length())  {
+            else if(co.getBuffer().startsWith(parser.getProcessedCommand().name())){
+               if(co.getBuffer().length() > parser.getProcessedCommand().name().length())  {
                   if(co.getBuffer().endsWith(" --")) {
                      for(ProcessedOption o : parser.getProcessedCommand().getOptions()) {
-                         co.addCompletionCandidate("less --"+o.getName());
-                         builder.append(o.getName()+" ");
+                         co.addCompletionCandidate("less --"+o.name());
+                         builder.append(o.name()+" ");
                      }
                       co.setOffset(co.getOffset());
                   }
                   else if(co.getBuffer().endsWith(" -")) {
                       for(ProcessedOption o : parser.getProcessedCommand().getOptions()) {
-                          co.addCompletionCandidate("less -"+o.getShortName());
-                          builder.append("-"+o.getShortName()+" ");
+                          co.addCompletionCandidate("less -"+o.shortName());
+                          builder.append("-"+o.shortName()+" ");
                       }
                   }
                }

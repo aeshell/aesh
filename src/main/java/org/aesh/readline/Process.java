@@ -84,7 +84,7 @@ public class Process extends Thread implements Consumer<Signal> {
         CommandResult result;
         ResultHandler resultHandler = null;
         try {
-            resultHandler = container.getParser().getProcessedCommand().getResultHandler();
+            resultHandler = container.getParser().getProcessedCommand().resultHandler();
             CommandContainerResult ccResult = runCommand(container, line);
 
 

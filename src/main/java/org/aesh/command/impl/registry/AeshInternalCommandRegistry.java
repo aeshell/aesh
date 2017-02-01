@@ -43,8 +43,8 @@ public class AeshInternalCommandRegistry {
 
     private void putIntoRegistry(CommandContainer commandContainer) {
         if(!commandContainer.haveBuildError() &&
-                !registry.containsKey(commandContainer.getParser().getProcessedCommand().getName()))
-            registry.put(commandContainer.getParser().getProcessedCommand().getName(), commandContainer);
+                !registry.containsKey(commandContainer.getParser().getProcessedCommand().name()))
+            registry.put(commandContainer.getParser().getProcessedCommand().name(), commandContainer);
     }
 
     public CommandContainer getCommand(String name) {

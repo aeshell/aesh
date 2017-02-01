@@ -26,7 +26,9 @@ import org.aesh.command.impl.completer.NullOptionCompleter;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
 import org.aesh.command.impl.converter.NullConverter;
+import org.aesh.command.impl.parser.AeshOptionParser;
 import org.aesh.command.impl.renderer.NullOptionRenderer;
+import org.aesh.command.parser.OptionParser;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.impl.validator.NullValidator;
 import org.aesh.command.validator.OptionValidator;
@@ -111,4 +113,10 @@ public @interface OptionList {
      * Define a renderer
      */
     Class<? extends OptionRenderer> renderer() default NullOptionRenderer.class;
+
+    /**
+     * Define a parser
+     * Only change this if you want to specify a custom parser
+     */
+    Class<? extends OptionParser> parser() default AeshOptionParser.class;
 }

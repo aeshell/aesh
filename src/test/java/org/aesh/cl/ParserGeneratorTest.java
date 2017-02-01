@@ -48,28 +48,28 @@ public class ParserGeneratorTest {
         Test1 test1 = new Test1();
         CommandLineParser<Test1> parser = new AeshCommandContainerBuilder<Test1>().create(test1).getParser();
 
-        assertEquals("a simple test", parser.getProcessedCommand().getDescription());
+        assertEquals("a simple test", parser.getProcessedCommand().description());
         List<ProcessedOption> options = parser.getProcessedCommand().getOptions();
-        assertEquals("f", options.get(0).getShortName());
-        assertEquals("foo", options.get(0).getName());
-        assertEquals("e", options.get(1).getShortName());
-        assertEquals("enable e", options.get(1).getDescription());
+        assertEquals("f", options.get(0).shortName());
+        assertEquals("foo", options.get(0).name());
+        assertEquals("e", options.get(1).shortName());
+        assertEquals("enable e", options.get(1).description());
         assertTrue(options.get(1).hasValue());
         assertTrue(options.get(1).isRequired());
-        assertEquals("bar", options.get(2).getName());
+        assertEquals("bar", options.get(2).name());
         assertFalse(options.get(2).hasValue());
 
         Test2 test2 = new Test2();
         CommandLineParser<Test2> parser2 = new AeshCommandContainerBuilder<Test2>().create(test2).getParser();
-        assertEquals("more [options] file...", parser2.getProcessedCommand().getDescription());
+        assertEquals("more [options] file...", parser2.getProcessedCommand().description());
         options = parser2.getProcessedCommand().getOptions();
-        assertEquals("d", options.get(0).getShortName());
-        assertEquals("V", options.get(1).getShortName());
+        assertEquals("d", options.get(0).shortName());
+        assertEquals("V", options.get(1).shortName());
 
         CommandLineParser<Test3> parser3 = new AeshCommandContainerBuilder<Test3>().create(Test3.class).getParser();
         options = parser3.getProcessedCommand().getOptions();
-        assertEquals("t", options.get(0).getShortName());
-        assertEquals("e", options.get(1).getShortName());
+        assertEquals("t", options.get(0).shortName());
+        assertEquals("e", options.get(1).shortName());
 
     }
 

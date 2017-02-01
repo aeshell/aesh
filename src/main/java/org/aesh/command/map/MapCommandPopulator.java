@@ -56,18 +56,18 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
             throw line.getParserException();
         }
         for (ProcessedOption option : line.getParser().getProcessedCommand().getOptions()) {
-            if (line.hasOption(option.getName())) {
-                ProcessedOption o = line.getOption(option.getName());
-                instance.setValue(o.getName(),
+            if (line.hasOption(option.name())) {
+                ProcessedOption o = line.getOption(option.name());
+                instance.setValue(o.name(),
                         o.doConvert(o.getValue(), invocationProviders,
                                 instance, aeshContext, validate));
             } else if (option.getDefaultValues().size() > 0) {
-                instance.setValue(option.getName(),
+                instance.setValue(option.name(),
                         option.doConvert(option.getDefaultValues().get(0),
                                 invocationProviders, instance, aeshContext,
                                 validate));
             } else {
-                instance.resetValue(option.getName());
+                instance.resetValue(option.name());
             }
         }
         if ((line.getArgument() != null && line.getArgument().getValues().size() > 0)
@@ -76,13 +76,13 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
                 getDefaultValues().size() > 0)) {
             Object val = line.getArgument().getValue();
             if (val == null) {
-                instance.setValue(line.getArgument().getName(),
+                instance.setValue(line.getArgument().name(),
                         line.getArgument().
                         doConvert(line.getArgument().getDefaultValues().get(0),
                                 invocationProviders, instance, aeshContext,
                                 validate));
             } else {
-                instance.setValue(line.getArgument().getName(),
+                instance.setValue(line.getArgument().name(),
                         line.getArgument().
                         doConvert(line.getArgument().getValue(),
                                 invocationProviders, instance, aeshContext,
@@ -90,7 +90,7 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
             }
         } else if (line.getArgument() != null) {
             // Must be named
-            instance.resetValue(line.getArgument().getName());
+            instance.resetValue(line.getArgument().name());
         }
     }
 

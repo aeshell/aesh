@@ -181,6 +181,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                             .validator(o.validator())
                             .activator(o.activator())
                             .renderer(o.renderer())
+                            .parser(o.parser())
                             .overrideRequired(o.overrideRequired())
                             .build()
             );
@@ -209,7 +210,9 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                             .completer(ol.completer())
                             .validator(ol.validator())
                             .activator(ol.activator())
-                            .renderer(ol.renderer()).build());
+                            .renderer(ol.renderer())
+                            .parser(ol.parser())
+                            .build());
 
         }
         else if((og = field.getAnnotation(OptionGroup.class)) != null) {
@@ -236,6 +239,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                     .validator(og.validator())
                     .activator(og.activator())
                     .renderer(og.renderer())
+                    .parser(og.parser())
                     .build());
         }
 
@@ -261,6 +265,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                     .completer(a.completer())
                     .validator(a.validator())
                     .activator(a.activator())
+                    .parser(a.parser())
                     .build());
         }
     }

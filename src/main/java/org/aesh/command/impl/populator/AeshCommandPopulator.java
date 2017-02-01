@@ -56,8 +56,8 @@ public class AeshCommandPopulator<O extends Object, C extends Command> implement
         if(line.hasParserError())
             throw line.getParserException();
         for(ProcessedOption option : line.getParser().getProcessedCommand().getOptions()) {
-            if(line.hasOption(option.getName()))
-                line.getOption(option.getName()).injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
+            if(line.hasOption(option.name()))
+                line.getOption(option.name()).injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             else if(option.getDefaultValues().size() > 0) {
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             }

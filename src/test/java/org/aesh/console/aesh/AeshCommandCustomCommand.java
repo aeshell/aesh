@@ -171,11 +171,11 @@ class CustomPopulator implements CommandPopulator<Object, Command> {
         if(line.hasParserError())
             throw line.getParserException();
         for(ProcessedOption option : line.getParser().getProcessedCommand().getOptions()) {
-            if(line.hasOption(option.getName()))
-                putValue(option.getName(), (String) line.getOption(option.getName()).getValue());
-                //line.getOption(option.getName()).injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
+            if(line.hasOption(option.name()))
+                putValue(option.name(), (String) line.getOption(option.name()).getValue());
+                //line.getOption(option.name()).injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             else if(option.getDefaultValues().size() > 0) {
-                putValue(option.getName(), (String) line.getOption(option.getName()).getDefaultValues().get(0));
+                putValue(option.name(), (String) line.getOption(option.name()).getDefaultValues().get(0));
                 //option.injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             }
             else
