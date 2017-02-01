@@ -128,7 +128,7 @@ public class CommandBuilder {
         if(options == null)
             options = new ArrayList<>();
         try {
-            options.add(option.create());
+            options.add(option.build());
         }
         catch (OptionParserException ope) {
             parserException = ope;

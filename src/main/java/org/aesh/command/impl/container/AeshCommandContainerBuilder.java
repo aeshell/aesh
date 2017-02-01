@@ -166,7 +166,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                 optionType = OptionType.BOOLEAN;
 
             processedCommand.addOption(
-                    new ProcessedOptionBuilder()
+                    ProcessedOptionBuilder.builder()
                             .shortName(o.shortName())
                             .name(o.name().length() < 1 ? field.getName() : o.name())
                             .description(o.description())
@@ -182,7 +182,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                             .activator(o.activator())
                             .renderer(o.renderer())
                             .overrideRequired(o.overrideRequired())
-                            .create()
+                            .build()
             );
         }
         else if((ol = field.getAnnotation(OptionList.class)) != null) {
@@ -195,7 +195,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
             }
 
             processedCommand.addOption(
-                    new ProcessedOptionBuilder()
+                    ProcessedOptionBuilder.builder()
                             .shortName(ol.shortName())
                             .name(ol.name().length() < 1 ? field.getName() : ol.name())
                             .description(ol.description())
@@ -209,7 +209,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                             .completer(ol.completer())
                             .validator(ol.validator())
                             .activator(ol.activator())
-                            .renderer(ol.renderer()).create());
+                            .renderer(ol.renderer()).build());
 
         }
         else if((og = field.getAnnotation(OptionGroup.class)) != null) {
@@ -221,7 +221,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                 type = (Class) listType.getActualTypeArguments()[1];
             }
 
-            processedCommand.addOption( new ProcessedOptionBuilder()
+            processedCommand.addOption( ProcessedOptionBuilder.builder()
                     .shortName(og.shortName())
                     .name( og.name().length() < 1 ? field.getName() : og.name())
                     .description(og.description())
@@ -236,7 +236,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                     .validator(og.validator())
                     .activator(og.activator())
                     .renderer(og.renderer())
-                    .create());
+                    .build());
         }
 
         else if((a = field.getAnnotation(Arguments.class)) != null) {
@@ -247,7 +247,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                 ParameterizedType listType = (ParameterizedType) field.getGenericType();
                 type = (Class) listType.getActualTypeArguments()[0];
             }
-            processedCommand.setArgument( new ProcessedOptionBuilder()
+            processedCommand.setArgument( ProcessedOptionBuilder.builder()
                     .shortName('\u0000')
                     .name("")
                     .description(a.description())
@@ -261,7 +261,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                     .completer(a.completer())
                     .validator(a.validator())
                     .activator(a.activator())
-                    .create());
+                    .build());
         }
     }
 

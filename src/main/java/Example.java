@@ -81,19 +81,19 @@ public class Example {
         CommandBuilder fooCommand = new CommandBuilder()
                 .name("foo")
                 .description("fooing")
-                .addOption(new ProcessedOptionBuilder()
+                .addOption(ProcessedOptionBuilder.builder()
                         .name("bar")
                         .addDefaultValue("en 1 0")
                         .addDefaultValue("to 2 0")
                         .fieldName("bar")
                         .type(String.class)
                         .renderer(new BlueBoldRenderer())
-                        .create())
-                .addOption(new ProcessedOptionBuilder()
+                        .build())
+                .addOption(ProcessedOptionBuilder.builder()
                         .name("foo")
                         .fieldName("foo")
                         .type(String.class)
-                        .create())
+                        .build())
                 .command(FooCommand.class);
 
                 /*

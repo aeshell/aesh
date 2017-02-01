@@ -53,7 +53,7 @@ public class CompletionConsoleTest {
                 .description("less --options <files>")
                 .create();
 
-        param.addOption(new ProcessedOptionBuilder().shortName('f').name("foo").hasValue(true).type(String.class).create());
+        param.addOption(ProcessedOptionBuilder.builder().shortName('f').name("foo").hasValue(true).type(String.class).build());
 
         final CommandLineParser<Command> parser = new AeshCommandLineParser(param);
         final StringBuilder builder = new StringBuilder();

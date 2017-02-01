@@ -30,6 +30,7 @@ import org.aesh.command.impl.converter.CLConverterManager;
 import org.aesh.command.impl.converter.NullConverter;
 import org.aesh.command.impl.parser.OptionParserException;
 import org.aesh.command.impl.renderer.NullOptionRenderer;
+import org.aesh.command.parser.OptionParser;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.impl.validator.NullValidator;
 import org.aesh.command.validator.OptionValidator;
@@ -39,6 +40,7 @@ import org.aesh.util.ReflectionUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Build a {@link ProcessedOption} object using the Builder pattern.
@@ -66,17 +68,26 @@ public class ProcessedOptionBuilder {
     private OptionActivator activator;
     private OptionRenderer renderer;
     private boolean overrideRequired;
+    private OptionParser parser;
 
-    public ProcessedOptionBuilder() {
+    private ProcessedOptionBuilder() {
         defaultValues = new ArrayList<>();
+    }
+
+    public static ProcessedOptionBuilder builder() {
+        return new ProcessedOptionBuilder();
+    }
+
+    private ProcessedOptionBuilder apply(Consumer<ProcessedOptionBuilder> consumer) {
+        consumer.accept(this);
+        return this;
     }
 
     /**
      * The short option Name
      */
     public ProcessedOptionBuilder shortName(char n) {
-        shortName = n;
-        return this;
+        return apply(c -> c.shortName = n);
     }
 
     /**
@@ -85,8 +96,7 @@ public class ProcessedOptionBuilder {
      * If name is not defined, the variable name will be used.
      */
     public ProcessedOptionBuilder name(String name) {
-        this.name = name;
-        return this;
+        return apply(c -> c.name = name);
     }
 
     /**
@@ -94,16 +104,14 @@ public class ProcessedOptionBuilder {
      * This text will be printed out as part of a usage info.
      */
     public ProcessedOptionBuilder description(String description) {
-        this.description = description;
-        return this;
+        return apply(c -> c.description = description);
     }
 
     /**
      * A description on what kind of value is used for this option.
      */
     public ProcessedOptionBuilder argument(String argument) {
-        this.argument = argument;
-        return this;
+        return apply(c -> c.argument = argument);
     }
 
     /**
@@ -113,50 +121,42 @@ public class ProcessedOptionBuilder {
      * Note that the
      *
      * If its a property option the
-     * @param type
-     * @return
+     * @param type class
+     * @return this
      */
     public ProcessedOptionBuilder type(Class<?> type) {
-        this.type = type;
-        return this;
+        return apply(c -> c.type = type);
     }
 
     /**
      * Specify if this option is required
      */
     public ProcessedOptionBuilder required(boolean required) {
-        this.required = required;
-        return this;
+        return apply(c -> c.required = required);
     }
 
     public ProcessedOptionBuilder fieldName(String fieldName) {
-        this.fieldName = fieldName;
-        return this;
+        return apply(c -> c.fieldName = fieldName);
     }
 
     public ProcessedOptionBuilder hasValue(boolean hasValue) {
-        this.hasValue = hasValue;
-        return this;
+        return apply(c -> c.hasValue = hasValue);
     }
 
     public ProcessedOptionBuilder isProperty(boolean isProperty) {
-        this.isProperty = isProperty;
-        return this;
+        return apply(c -> c.isProperty = isProperty);
     }
 
     public ProcessedOptionBuilder hasMultipleValues(boolean hasMultipleValues) {
-        this.hasMultipleValues = hasMultipleValues;
-        return this;
+        return apply(c -> c.hasMultipleValues = hasMultipleValues);
     }
 
     public ProcessedOptionBuilder addDefaultValue(String defaultValue) {
-        this.defaultValues.add(defaultValue);
-        return this;
+        return apply(c -> c.defaultValues.add(defaultValue));
     }
 
     public ProcessedOptionBuilder addAllDefaultValues(List<String> defaultValues) {
-        this.defaultValues.addAll(defaultValues);
-        return this;
+        return apply(c -> c.defaultValues.addAll(defaultValues));
     }
 
     public ProcessedOptionBuilder addAllDefaultValues(String[] defaultValues) {
@@ -165,23 +165,19 @@ public class ProcessedOptionBuilder {
         return this;
     }
     public ProcessedOptionBuilder valueSeparator(char valueSeparator) {
-        this.valueSeparator = valueSeparator;
-        return this;
+        return apply(c -> c.valueSeparator = valueSeparator);
     }
 
     public ProcessedOptionBuilder optionType(OptionType optionType) {
-        this.optionType = optionType;
-        return this;
+        return apply(c -> c.optionType = optionType);
     }
 
     public ProcessedOptionBuilder converter(Converter converter) {
-        this.converter = converter;
-        return this;
+        return apply(c -> c.converter = converter);
     }
 
     public ProcessedOptionBuilder converter(Class<? extends Converter> converter) {
-        this.converter = initConverter(converter);
-        return this;
+        return apply(c -> c.converter = initConverter(converter));
     }
 
     private Converter initConverter(Class<? extends Converter> converterClass) {
@@ -196,13 +192,11 @@ public class ProcessedOptionBuilder {
     }
 
     public ProcessedOptionBuilder completer(OptionCompleter completer) {
-        this.completer = completer;
-        return this;
+        return apply(c -> c.completer = completer);
     }
 
     public ProcessedOptionBuilder completer(Class<? extends OptionCompleter> completer) {
-        this.completer = initCompleter(completer);
-        return this;
+        return apply(c -> c.completer = initCompleter(completer));
     }
 
     private OptionCompleter initCompleter(Class<? extends OptionCompleter> completerClass) {
@@ -227,13 +221,11 @@ public class ProcessedOptionBuilder {
     }
 
     public ProcessedOptionBuilder validator(OptionValidator validator) {
-        this.validator = validator;
-        return this;
+        return apply(c -> c.validator = validator);
     }
 
     public ProcessedOptionBuilder validator(Class<? extends OptionValidator> validator) {
-        this.validator = initValidator(validator);
-        return this;
+        return apply(c -> c.validator = initValidator(validator));
     }
 
     private OptionValidator initValidator(Class<? extends OptionValidator> validator) {
@@ -244,13 +236,11 @@ public class ProcessedOptionBuilder {
     }
 
     public ProcessedOptionBuilder activator(OptionActivator activator) {
-        this.activator = activator;
-        return this;
+        return apply(c -> c.activator = activator);
     }
 
     public ProcessedOptionBuilder activator(Class<? extends OptionActivator> activator) {
-        this.activator = initActivator(activator);
-        return this;
+        return apply(c -> c.activator = initActivator(activator));
     }
 
     private OptionActivator initActivator(Class<? extends OptionActivator> activator) {
@@ -261,13 +251,11 @@ public class ProcessedOptionBuilder {
     }
 
     public ProcessedOptionBuilder renderer(OptionRenderer renderer) {
-        this.renderer = renderer;
-        return this;
+        return apply(c -> c.renderer = renderer);
     }
 
     public ProcessedOptionBuilder renderer(Class<? extends OptionRenderer> renderer) {
-        this.renderer = initRenderer(renderer);
-        return this;
+        return apply(c -> c.renderer = initRenderer(renderer));
     }
 
     private OptionRenderer initRenderer(Class<? extends OptionRenderer> renderer) {
@@ -278,11 +266,10 @@ public class ProcessedOptionBuilder {
     }
 
     public ProcessedOptionBuilder overrideRequired(boolean overrideRequired) {
-        this.overrideRequired = overrideRequired;
-        return this;
+        return apply(c -> c.overrideRequired = overrideRequired);
     }
 
-    public ProcessedOption create() throws OptionParserException {
+    public ProcessedOption build() throws OptionParserException {
         if(optionType == null) {
             if(!hasValue)
                 optionType = OptionType.BOOLEAN;

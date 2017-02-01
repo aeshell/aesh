@@ -71,6 +71,7 @@ public final class ProcessedOption {
     private OptionRenderer renderer;
     private boolean overrideRequired = false;
     private boolean ansiMode = true;
+    private ProcessedCommand parent;
 
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator,
@@ -133,7 +134,7 @@ public final class ProcessedOption {
     }
 
     public boolean hasMultipleValues() {
-        return optionType == OptionType.LIST || optionType == OptionType.ARGUMENT;
+        return optionType == OptionType.LIST || optionType == OptionType.ARGUMENT || optionType == OptionType.GROUP;
     }
 
     public boolean isRequired() {
@@ -198,6 +199,14 @@ public final class ProcessedOption {
 
     public OptionActivator getActivator() {
         return activator;
+    }
+
+    void setParent(ProcessedCommand parent) {
+        this.parent = parent;
+    }
+
+    public ProcessedCommand parent() {
+        return parent;
     }
 
     /**

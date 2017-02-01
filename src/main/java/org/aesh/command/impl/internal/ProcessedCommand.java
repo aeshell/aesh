@@ -20,6 +20,7 @@
 package org.aesh.command.impl.internal;
 
 import org.aesh.command.impl.activator.NullCommandActivator;
+import org.aesh.command.impl.parser.CommandLineParserException;
 import org.aesh.command.impl.parser.OptionParserException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.impl.result.NullResultHandler;
@@ -52,6 +53,7 @@ public class ProcessedCommand<C extends Command> {
     private ProcessedOption argument;
     private C command;
     private final List<String> aliases;
+    private List<CommandLineParserException> parserExceptions;
 
     public ProcessedCommand(String name, List<String> aliases, C command,
             String description, CommandValidator validator,
@@ -60,7 +62,7 @@ public class ProcessedCommand<C extends Command> {
             CommandPopulator<Object, C> populator, CommandActivator activator) throws OptionParserException {
         setName(name);
         setDescription(description);
-        this.aliases = aliases == null ? Collections.<String>emptyList() : aliases;
+        this.aliases = aliases == null ? Collections.emptyList() : aliases;
         this.validator = validator;
         this.resultHandler = resultHandler;
         this.argument = argument;
@@ -72,6 +74,8 @@ public class ProcessedCommand<C extends Command> {
         else
             this.populator = populator;
         setOptions(options);
+
+        parserExceptions = new ArrayList<>();
     }
 
     public List<ProcessedOption> getOptions() {
@@ -91,6 +95,8 @@ public class ProcessedCommand<C extends Command> {
                 opt.getDescription(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
                 opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(), opt.getConverter(),
                 opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer(), opt.doOverrideRequired()));
+
+        options.get(options.size()-1).setParent(this);
     }
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
@@ -100,6 +106,8 @@ public class ProcessedCommand<C extends Command> {
                     opt.getDefaultValues(), opt.getType(), opt.getFieldName(), opt.getOptionType(),
                     opt.getConverter(), opt.getCompleter(), opt.getValidator(), opt.getActivator(), opt.getRenderer(),
                     opt.doOverrideRequired()));
+
+            options.get(options.size()-1).setParent(this);
         }
     }
 
@@ -238,6 +246,8 @@ public class ProcessedCommand<C extends Command> {
            processedOption.clear();
        if(argument != null)
            argument.clear();
+
+       parserExceptions.clear();
     }
 
     /**
@@ -357,5 +367,13 @@ public class ProcessedCommand<C extends Command> {
 
     public boolean containsArgumentWithDefaultValues() {
         return getArgument() != null && getArgument().hasDefaultValue();
+    }
+
+    public void addParserException(CommandLineParserException exception) {
+        parserExceptions.add(exception);
+    }
+
+    public List<CommandLineParserException> parserExceptions() {
+        return parserExceptions;
     }
 }

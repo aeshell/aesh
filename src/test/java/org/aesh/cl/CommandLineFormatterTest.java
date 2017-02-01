@@ -41,20 +41,20 @@ public class CommandLineFormatterTest {
         ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("man").description("[OPTION...]");
 
         pb.addOption(
-                new ProcessedOptionBuilder()
+                ProcessedOptionBuilder.builder()
                         .shortName('d')
                         .name("debug")
                         .description("emit debugging messages")
                         .type(String.class)
-                        .create());
+                        .build());
 
         pb.addOption(
-                new ProcessedOptionBuilder()
+                ProcessedOptionBuilder.builder()
                         .shortName('D')
                         .name("default")
                         .description("reset all options to their default values")
                         .type(String.class)
-                        .create());
+                        .build());
 
         CommandLineParser clp = new CommandLineParserBuilder()
                 .processedCommand(pb.create())
@@ -73,32 +73,32 @@ public class CommandLineFormatterTest {
         ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("man").description("[OPTION...]");
 
         pb.addOption(
-                new ProcessedOptionBuilder()
+                ProcessedOptionBuilder.builder()
                         .shortName('d')
                         .name("debug")
                         .description("emit debugging messages")
                         .type(String.class)
-                        .create());
+                        .build());
 
         pb.addOption(
-                new ProcessedOptionBuilder()
+                ProcessedOptionBuilder.builder()
                         .shortName('D')
                         .name("default")
                         .required(true)
                         .description("reset all options to their default values")
                         .type(String.class)
-                        .create()
+                        .build()
         );
 
         pb.addOption(
-                new ProcessedOptionBuilder()
+                ProcessedOptionBuilder.builder()
                         .shortName('f')
                         .name("file")
                         .hasValue(true)
                         .argument("filename")
                         .description("set the filename")
                         .type(String.class)
-                        .create());
+                        .build());
 
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
@@ -119,34 +119,34 @@ public class CommandLineFormatterTest {
     public void groupFormatter() throws CommandLineParserException {
         ProcessedCommandBuilder git = new ProcessedCommandBuilder().name("git").description("[OPTION...]");
         git.addOption(
-                new ProcessedOptionBuilder()
+                ProcessedOptionBuilder.builder()
                         .shortName('h')
                         .name("help")
                         .description("display help info")
                         .type(boolean.class)
-                        .create()
+                        .build()
         );
 
         ProcessedCommandBuilder rebase = new ProcessedCommandBuilder().name("rebase").description("[OPTION...]");
         rebase.addOption(
-                new ProcessedOptionBuilder()
+                ProcessedOptionBuilder.builder()
                         .shortName('f')
                         .name("foo")
                         .required(true)
                         .description("reset all options to their default values")
                         .type(String.class)
-                        .create()
+                        .build()
         );
 
         ProcessedCommandBuilder branch = new ProcessedCommandBuilder().name("branch").description("branching");
         branch.addOption(
-                new ProcessedOptionBuilder()
+                ProcessedOptionBuilder.builder()
                         .shortName('b')
                         .name("bar")
                         .required(true)
                         .description("reset all options to their default values")
                         .type(String.class)
-                        .create()
+                        .build()
         );
 
 

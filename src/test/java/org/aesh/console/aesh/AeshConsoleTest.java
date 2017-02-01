@@ -66,13 +66,13 @@ public class AeshConsoleTest {
                 .name("foo")
                 .description("fooing")
                 .command(FooTestCommand.class)
-                .addOption(new ProcessedOptionBuilder()
+                .addOption(ProcessedOptionBuilder.builder()
                         .name("bar")
                         .addDefaultValue("en")
                         .addDefaultValue("to")
                         .type(String.class)
                         .fieldName("bar")
-                        .create())
+                        .build())
                 .create();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()

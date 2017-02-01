@@ -95,10 +95,10 @@ public class AeshCommandCustomCommand {
                         .description("this is foo")
                         .populator(populator)
                         .command(new CustomCommand(populator))
-                        .addOption(new ProcessedOptionBuilder()
+                        .addOption(ProcessedOptionBuilder.builder()
                                         .name("bar")
                                         .type(String.class)
-                                        .create()
+                                        .build()
                         )
                         .create();
 

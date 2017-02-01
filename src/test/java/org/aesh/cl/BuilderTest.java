@@ -46,8 +46,8 @@ public class BuilderTest {
         ProcessedCommandBuilder pb = new ProcessedCommandBuilder();
         pb.name("foo").description("foo is bar");
         pb.addOption(
-                new ProcessedOptionBuilder().description("filename given").shortName('f').name("filename")
-                        .type(String.class).hasValue(true).create());
+                ProcessedOptionBuilder.builder().description("filename given").shortName('f').name("filename")
+                        .type(String.class).hasValue(true).build());
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
@@ -62,22 +62,22 @@ public class BuilderTest {
 
         ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("less").description("less is more");
         pb.addOption(
-                new ProcessedOptionBuilder().description("version").shortName('V').name("version")
-                        .hasValue(false).required(true).type(String.class).create());
+                ProcessedOptionBuilder.builder().description("version").shortName('V').name("version")
+                        .hasValue(false).required(true).type(String.class).build());
         pb.addOption(
-                new ProcessedOptionBuilder().description("is verbose").shortName('v').name("verbose")
-                        .hasValue(false).type(String.class).create());
+                ProcessedOptionBuilder.builder().description("is verbose").shortName('v').name("verbose")
+                        .hasValue(false).type(String.class).build());
 
         pb.addOption(
-                new ProcessedOptionBuilder().description("attributes").shortName('D').name("attributes")
-                        .isProperty(true).type(String.class).create());
+                ProcessedOptionBuilder.builder().description("attributes").shortName('D').name("attributes")
+                        .isProperty(true).type(String.class).build());
 
         pb.addOption(
-                new ProcessedOptionBuilder().description("values").name("values").shortName('a')
-                        .hasMultipleValues(true).type(String.class).create());
+                ProcessedOptionBuilder.builder().description("values").name("values").shortName('a')
+                        .hasMultipleValues(true).type(String.class).build());
 
-        pb.argument(new ProcessedOptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
-                .optionType(OptionType.ARGUMENT).type(String.class).create());
+        pb.argument(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
+                .optionType(OptionType.ARGUMENT).type(String.class).build());
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
@@ -101,25 +101,25 @@ public class BuilderTest {
     public void testBuilder3() throws CommandLineParserException {
         ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("less").description("less is more");
         pb.addOption(
-                new ProcessedOptionBuilder()
+                ProcessedOptionBuilder.builder()
                         .description("version")
                         .name("version")
                         .shortName('v')
                         .hasValue(false)
                         .required(true)
                         .type(String.class)
-                        .create());
+                        .build());
         pb.addOption(
-                new ProcessedOptionBuilder()
+                ProcessedOptionBuilder.builder()
                         .description("is verbose")
                         .name("verbose")
                         .hasValue(false)
                         .shortName('e')
                         .type(String.class)
-                        .create());
+                        .build());
 
-        pb.argument(new ProcessedOptionBuilder().shortName('\u0000').name("").hasMultipleValues(true)
-                .optionType(OptionType.ARGUMENT).type(String.class).create());
+        pb.argument(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
+                .optionType(OptionType.ARGUMENT).type(String.class).build());
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
@@ -140,9 +140,9 @@ public class BuilderTest {
                         .validator(NullCommandValidator.class)
                         .resultHandler(NullResultHandler.class)
                         .create();
-        processedCommand.addOption(new ProcessedOptionBuilder().name("foo1").shortName('f').type(String.class).create());
-        processedCommand.addOption(new ProcessedOptionBuilder().name("foo2").shortName('o').type(String.class).create());
-        processedCommand.addOption(new ProcessedOptionBuilder().name("foo3").shortName('3').type(String.class).create());
+        processedCommand.addOption(ProcessedOptionBuilder.builder().name("foo1").shortName('f').type(String.class).build());
+        processedCommand.addOption(ProcessedOptionBuilder.builder().name("foo2").shortName('o').type(String.class).build());
+        processedCommand.addOption(ProcessedOptionBuilder.builder().name("foo3").shortName('3').type(String.class).build());
 
         assertEquals("f", processedCommand.getOptions().get(0).getShortName());
         assertEquals("o", processedCommand.getOptions().get(1).getShortName());

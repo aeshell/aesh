@@ -267,14 +267,14 @@ public class CommandLinePopulatorTest {
                 .populator(new AeshCommandPopulator(test1))
                 .description("a simple test");
         commandBuilder
-                .addOption(new ProcessedOptionBuilder().name("XX").description("enable X").fieldName("enableX")
-                        .type(Boolean.class).hasValue(false).create())
-                .addOption(new ProcessedOptionBuilder().shortName('f').name("foo").description("enable foo").fieldName("foo")
-                        .type(boolean.class).hasValue(false).create())
-                .addOption(new ProcessedOptionBuilder().shortName('e').name("equal").description("enable equal").fieldName("equal")
-                        .type(String.class).addDefaultValue("en").addDefaultValue("to").create())
-                .addOption(new ProcessedOptionBuilder().shortName('i').name("int1").fieldName("int1").type(Integer.class).create())
-                .addOption(new ProcessedOptionBuilder().shortName('n').fieldName("int2").type(int.class).addDefaultValue("12345").create());
+                .addOption(ProcessedOptionBuilder.builder().name("XX").description("enable X").fieldName("enableX")
+                        .type(Boolean.class).hasValue(false).build())
+                .addOption(ProcessedOptionBuilder.builder().shortName('f').name("foo").description("enable foo").fieldName("foo")
+                        .type(boolean.class).hasValue(false).build())
+                .addOption(ProcessedOptionBuilder.builder().shortName('e').name("equal").description("enable equal").fieldName("equal")
+                        .type(String.class).addDefaultValue("en").addDefaultValue("to").build())
+                .addOption(ProcessedOptionBuilder.builder().shortName('i').name("int1").fieldName("int1").type(Integer.class).build())
+                .addOption(ProcessedOptionBuilder.builder().shortName('n').fieldName("int2").type(int.class).addDefaultValue("12345").build());
 
         CommandLineParser parser =  new AeshCommandLineParser( commandBuilder.create());
 
@@ -440,17 +440,17 @@ public class CommandLinePopulatorTest {
 
         cmd.name("mycmd");
 
-        cmd.addOption(new ProcessedOptionBuilder()
+        cmd.addOption(ProcessedOptionBuilder.builder()
                 .name("abc")
                 .optionType(OptionType.NORMAL)
                 .type(String.class)
-                .create());
-        cmd.addOption(new ProcessedOptionBuilder()
+                .build());
+        cmd.addOption(ProcessedOptionBuilder.builder()
                 .name("myoption")
                 .optionType(OptionType.NORMAL)
                 .type(String.class)
                 .addDefaultValue("")
-                .create());
+                .build());
 
         return cmd.create();
     }
