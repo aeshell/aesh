@@ -447,8 +447,7 @@ public class Console {
      * @throws IOException stream
      */
     private synchronized void doStop() throws IOException {
-        if(running) {
-            running = false;
+        if (running) {
             if(initiateStop)
                 initiateStop = false;
 
@@ -483,6 +482,10 @@ public class Console {
 
         getTerminal().close();
         getTerminal().reset();
+
+        if (running) {
+            running = false;
+        }
     }
 
     /**
