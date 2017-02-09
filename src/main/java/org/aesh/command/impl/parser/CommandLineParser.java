@@ -101,13 +101,11 @@ public interface CommandLineParser<C extends Command> {
      * Also, if a required option is not found or options specified with value,
      * but is not given any value an OptionParserException will be thrown.
      *
-     * The options found will be returned as a {@link CommandLine} object where
-     * they can be queried after.
+     * The parsed values will be added to the ProcessedCommand and its options
      *
      * @param line input
-     * @return CommandLine
      */
-    CommandLine<C> parse(String line);
+    void parse(String line);
 
     ProcessedOption lastParsedOption();
 
@@ -118,16 +116,12 @@ public interface CommandLineParser<C extends Command> {
      * Also, if a required option is not found or options specified with value,
      * but is not given any value an CommandLineParserException will be thrown.
      *
-     * The options found will be returned as a {@link CommandLine} object where
-     * they can be queried after.
-     *
      * @param line input
      * @param ignoreRequirements if we should ignore
-     * @return CommandLine
      */
-    CommandLine<C> parse(String line, boolean ignoreRequirements);
+    void parse(String line, boolean ignoreRequirements);
 
-    CommandLine<C> parse(ParsedLineIterator iterator, boolean ignoreRequirements);
+    void parse(ParsedLineIterator iterator, boolean ignoreRequirements);
 
     void clear();
 

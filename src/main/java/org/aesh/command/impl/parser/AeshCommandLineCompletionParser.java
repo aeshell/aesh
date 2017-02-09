@@ -145,11 +145,11 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                                     Parser.trimOptionName(lastWord), lastWord.length(), true, getCorrectCompletionParser(line));
                         else {
                             String optionName = Parser.trimOptionName(lastWord);
-                            CommandLine cl = parser.parse(line, true);
-                            if (cl.getParser().getProcessedCommand().hasUniqueLongOption(optionName))
-                                return new ParsedCompleteObject(true, optionName, lastWord.length(), true, cl.getParser().getCompletionParser());
+                            parser.parse(line, true);
+                            if (parser.parsedCommand().getProcessedCommand().hasUniqueLongOption(optionName))
+                                return new ParsedCompleteObject(true, optionName, lastWord.length(), true, parser.parsedCommand().getCompletionParser());
                             else
-                                return new ParsedCompleteObject(true, optionName, lastWord.length(), false, cl.getParser().getCompletionParser());
+                                return new ParsedCompleteObject(true, optionName, lastWord.length(), false, parser.parsedCommand().getCompletionParser());
                         }
                 }
             }

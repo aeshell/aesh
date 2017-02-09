@@ -31,7 +31,6 @@ import org.aesh.command.CommandResolver;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Executor;
 import org.aesh.command.Shell;
-import org.aesh.command.impl.parser.CommandLine;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
@@ -399,12 +398,13 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
         if (container == null) {
             throw new CommandNotFoundException("No command handler for '" + opName + "'.");
         }
-        CommandLine line = container.getParser().parse(commandLine, false);
-        if (line == null) {
-            throw new CommandLineParserException("Invalid Command " + commandLine);
+        container.getParser().parse(commandLine, false);
+        if(container.getParser().getProcessedCommand().parserExceptions().size() > 0) {
+            throw new CommandLineParserException("Invalid Command " + commandLine +". Error: "+
+            container.getParser().getProcessedCommand().parserExceptions().get(0));
         }
-        line.getParser().getCommandPopulator().populateObject(container.getParser().getProcessedCommand(),
+        container.getParser().parsedCommand().getCommandPopulator().populateObject(container.getParser().parsedCommand().getProcessedCommand(),
                 invocationProviders, getAeshContext(), true);
-        return line.getParser().getCommand();
+        return container.getParser().parsedCommand().getCommand();
     }
 }

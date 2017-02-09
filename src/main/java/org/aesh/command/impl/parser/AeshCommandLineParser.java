@@ -37,7 +37,6 @@ import java.util.List;
 /**
  * A simple command line parser.
  * It parses a given string based on the Command given and
- * returns a {@link CommandLine}
  *
  * It can also print a formatted usage/help information.
  *
@@ -194,19 +193,15 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      * Also, if a required option is not found or options specified with value,
      * but is not given any value an OptionParserException will be thrown.
      *
-     * The options found will be returned as a {@link CommandLine} object where
-     * they can be queried after.
-     *
      * @param line input
-     * @return CommandLine
      */
     @Override
-    public CommandLine<C> parse(String line) {
-        return parse(line, false);
+    public void parse(String line) {
+        parse(line, false);
     }
 
     @Override
-    public CommandLine<C> parse(ParsedLineIterator iterator, boolean ignoreRequirements) {
+    public void parse(ParsedLineIterator iterator, boolean ignoreRequirements) {
         if(iterator.hasNextWord()) {
             String command = iterator.pollWord();
             if (processedCommand.name().equals(command)
@@ -214,27 +209,24 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                 if(isGroupCommand() && iterator.hasNextWord()) {
                    CommandLineParser<C> clp = getChildParser(iterator.peekWord());
                     if(clp == null)
-                        return doParse(iterator, ignoreRequirements);
+                        doParse(iterator, ignoreRequirements);
                     //we have a group command
                     else {
                         //remove the child name
-                        return clp.parse(iterator, ignoreRequirements);
+                        clp.parse(iterator, ignoreRequirements);
                     }
                 }
                 else
-                    return doParse(iterator, ignoreRequirements);
+                    doParse(iterator, ignoreRequirements);
             }
         }
         else if(iterator.parserError() != null)
             processedCommand.addParserException(new CommandLineParserException(iterator.parserError()));
-
-        return null;
     }
 
 
-    private CommandLine<C> doParse(ParsedLineIterator iter, boolean ignoreRequirements) {
+    private void doParse(ParsedLineIterator iter, boolean ignoreRequirements) {
         clear();
-        CommandLine<C> commandLine = new CommandLine<>(this);
         parsedCommand = true;
         while(iter.hasNextWord()) {
             ParsedWord word = iter.peekParsedWord();
@@ -269,8 +261,6 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
             if(re != null)
                 processedCommand.addParserException(re);
         }
-
-        return commandLine;
     }
 
     private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand<C> command) {
@@ -315,8 +305,8 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      * @return CommandLine
      */
     @Override
-    public CommandLine<C> parse(String line, boolean ignoreRequirements) {
-        return parse(LineParser.parseLine(line).iterator(), ignoreRequirements);
+    public void parse(String line, boolean ignoreRequirements) {
+        parse(LineParser.parseLine(line).iterator(), ignoreRequirements);
     }
 
     @Override
