@@ -25,7 +25,6 @@ import org.aesh.console.AeshContext;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.impl.parser.CommandLine;
 import org.aesh.command.impl.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
@@ -69,8 +68,4 @@ public interface CommandContainer<C extends Command> extends AutoCloseable {
             throws CommandLineParserException, OptionValidatorException,
             CommandValidatorException, CommandException, InterruptedException;
 
-    CommandContainerResult executeCommand(CommandLine commandLine, InvocationProviders invocationProviders,
-            AeshContext aeshContext,
-            CommandInvocation commandInvocation)
-            throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException;
 }

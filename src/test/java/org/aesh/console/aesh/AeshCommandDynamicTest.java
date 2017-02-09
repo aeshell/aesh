@@ -79,7 +79,7 @@ public class AeshCommandDynamicTest {
         CommandBuilder builder = new CommandBuilder()
                 .name("group")
                 .description("")
-                .addOption(ProcessedOptionBuilder.builder().name("foo").type(Boolean.class).build())
+                .addOption(ProcessedOptionBuilder.builder().name("bar").type(Boolean.class).build())
                 .addChild(
                         new CommandBuilder()
                                 .name("child1")
@@ -98,6 +98,8 @@ public class AeshCommandDynamicTest {
 
 
     public class GroupCommand implements Command<CommandInvocation> {
+
+        private boolean bar;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {

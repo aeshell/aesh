@@ -19,13 +19,17 @@
  */
 package org.aesh.command.impl.parser;
 
+import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.console.AeshContext;
 import org.aesh.parser.LineParser;
+import org.aesh.parser.ParsedLineIterator;
+import org.aesh.parser.ParsedWord;
 import org.aesh.util.Config;
-import org.aesh.parser.ParsedLine;
-import org.aesh.parser.ParserStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,9 +46,10 @@ import java.util.List;
 public class AeshCommandLineParser<C extends Command> implements CommandLineParser<C> {
 
     private final ProcessedCommand<C> processedCommand;
-    private static final String EQUALS = "=";
     private List<CommandLineParser<C>> childParsers;
     private boolean isChild = false;
+    private ProcessedOption lastParsedOption;
+    private boolean parsedCommand = false;
 
     public AeshCommandLineParser(ProcessedCommand<C> processedCommand) {
         this.processedCommand = processedCommand;
@@ -65,6 +70,21 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     @Override
     public void setChild(boolean child) {
         isChild = child;
+    }
+
+    @Override
+    public CommandLineParser<C> parsedCommand() {
+        if(parsedCommand)
+            return this;
+        else if(isGroupCommand()) {
+            CommandLineParser<C> correct;
+            for(CommandLineParser<C> child : childParsers) {
+                correct = child.parsedCommand();
+                if(correct != null)
+                    return correct;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -127,6 +147,23 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         return processedCommand.getCommandPopulator();
     }
 
+    @Override
+    public void populateObject(String line, InvocationProviders invocationProviders, AeshContext aeshContext, boolean validate) throws CommandLineParserException, OptionValidatorException {
+        //first parse, then populate
+        parse(line, validate);
+        if(validate && getProcessedCommand().parserExceptions().size() > 0) {
+            throw getProcessedCommand().parserExceptions().get(0);
+        }
+        else {
+            getCommandPopulator().populateObject(processedCommand, invocationProviders, aeshContext, validate);
+            if(isGroupCommand()) {
+                for(CommandLineParser parser : getChildParsers()) {
+                    parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, validate);
+                }
+            }
+        }
+    }
+
     /**
      * Returns a usage String based on the defined command and options.
      * Useful when printing "help" info etc.
@@ -169,41 +206,99 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public CommandLine<C> parse(ParsedLine line, boolean ignoreRequirements) {
-        if(line.words().size() > 0) {
-            if (processedCommand.name().equals(line.words().get(0).word())
-                    || processedCommand.getAliases().contains(line.words().get(0).word())) {
-                if(isGroupCommand() && line.words().size() > 1) {
-                   CommandLineParser<C> clp = getChildParser(line.words().get(1).word());
+    public CommandLine<C> parse(ParsedLineIterator iterator, boolean ignoreRequirements) {
+        if(iterator.hasNextWord()) {
+            String command = iterator.pollWord();
+            if (processedCommand.name().equals(command)
+                    || processedCommand.getAliases().contains(command)) {
+                if(isGroupCommand() && iterator.hasNextWord()) {
+                   CommandLineParser<C> clp = getChildParser(iterator.peekWord());
                     if(clp == null)
-                        return doParse(line, ignoreRequirements);
+                        return doParse(iterator, ignoreRequirements);
                     //we have a group command
                     else {
-                        line.words().remove(0);
-                        return clp.parse(line, ignoreRequirements);
+                        //remove the child name
+                        return clp.parse(iterator, ignoreRequirements);
                     }
                 }
                 else
-                    return doParse(line, ignoreRequirements);
+                    return doParse(iterator, ignoreRequirements);
             }
         }
-        else if(line.status() != ParserStatus.OK)
-            return new CommandLine<>(new CommandLineParserException(line.errorMessage()));
+        else if(iterator.parserError() != null)
+            processedCommand.addParserException(new CommandLineParserException(iterator.parserError()));
 
-        return new CommandLine<>(new CommandLineParserException("Command:"+ processedCommand +", not found in: "+line));
+        return null;
     }
 
 
-    private CommandLine<C> doParse(ParsedLine line, boolean ignoreRequirements) {
-        AeshCommandLineParserHelper helper = new AeshCommandLineParserHelper(processedCommand);
-        line.words().remove(0);
-
+    private CommandLine<C> doParse(ParsedLineIterator iter, boolean ignoreRequirements) {
         clear();
         CommandLine<C> commandLine = new CommandLine<>(this);
-        helper.parse(commandLine, line, ignoreRequirements);
+        parsedCommand = true;
+        while(iter.hasNextWord()) {
+            ParsedWord word = iter.peekParsedWord();
+            lastParsedOption = processedCommand.searchAllOptions(word.word());
+            if(lastParsedOption != null) {
+                //if we have a group we might need the current word so we wont poll it
+                //if (!currOption.getOptionType().equals(OptionType.GROUP))
+                //    iter.pollParsedWord();
+                lastParsedOption.parser().parse(iter, lastParsedOption);
+            }
+            else {
+                if(processedCommand.hasArgument()) {
+                    processedCommand.getArgument().addValue(word.word());
+                }
+                else {
+                    processedCommand.addParserException(
+                            new OptionParserException("A value " + word.word() +
+                                    " was given as an argument, but the command do not support it."));
+                }
+                iter.pollParsedWord();
+            }
+
+        }
+        //if(active != null)
+        //    active.addOption(active);
+        //verify that options have values and/or add default values
+        //if(!ignoreRequirements)
+        //    checkForDefaultValues(commandLine);
+        //this will throw and CommandLineParserException if needed
+        if(!ignoreRequirements) {
+            RequiredOptionException re = checkForMissingRequiredOptions(processedCommand);
+            if(re != null)
+                processedCommand.addParserException(re);
+        }
+
         return commandLine;
     }
 
+    private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand<C> command) {
+        for(ProcessedOption o : command.getOptions())
+            if(o.isRequired() && o.getValue() == null) {
+                boolean found = false;
+                for(ProcessedOption po : command.getOptions()) {
+                    if(po.getValue() != null && po.doOverrideRequired()) {
+                        found = true;
+                        break;
+                    }
+                    /*
+                    else if(po.doOverrideRequired()) {
+                        found = true;
+                        break;
+                    }
+                    */
+                }
+                if(!found)
+                    return new RequiredOptionException("Option: "+o.getDisplayName()+" is required for this command.");
+            }
+        return null;
+    }
+
+    @Override
+    public ProcessedOption lastParsedOption() {
+        return lastParsedOption;
+    }
 
     /**
      * Parse a command line with the defined command as base of the rules.
@@ -221,7 +316,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      */
     @Override
     public CommandLine<C> parse(String line, boolean ignoreRequirements) {
-        return parse(LineParser.parseLine(line), ignoreRequirements);
+        return parse(LineParser.parseLine(line).iterator(), ignoreRequirements);
     }
 
     @Override
@@ -231,6 +326,8 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
             for (CommandLineParser<C> child : getChildParsers())
                 child.getProcessedCommand().clear();
         }
+        lastParsedOption = null;
+        parsedCommand = false;
     }
 
     @Override

@@ -26,7 +26,6 @@ import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.impl.parser.CommandLine;
 import org.aesh.command.impl.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.CommandResult;
@@ -43,25 +42,23 @@ public abstract class DefaultCommandContainer<C extends Command> implements Comm
                                                  CommandInvocation commandInvocation)
             throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException {
 
-        CommandLine commandLine = getParser().parse(line, false);
-        return executeCommand(commandLine, invocationProviders, aeshContext, commandInvocation);
+        getParser().parse(line.iterator(), false);
+        return executeCommand(invocationProviders, aeshContext, commandInvocation);
     }
 
-    @Override
-    public CommandContainerResult executeCommand(CommandLine commandLine, InvocationProviders invocationProviders,
+    private CommandContainerResult executeCommand(InvocationProviders invocationProviders,
             AeshContext aeshContext,
             CommandInvocation commandInvocation)
             throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException {
 
-        commandLine.getParser().getCommandPopulator().populateObject(commandLine, invocationProviders, aeshContext, true);
-        if (commandLine.getParser().getProcessedCommand().validator() != null
-                && !commandLine.hasOptionWithOverrideRequired()) {
-            commandLine.getParser().getProcessedCommand().validator().validate(commandLine.getParser().getCommand());
+        getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(), invocationProviders, aeshContext, true);
+        if (getParser().parsedCommand().getProcessedCommand().validator() != null  && !getParser().parsedCommand().getProcessedCommand().hasOptionWithOverrideRequired()) {
+            getParser().parsedCommand().getProcessedCommand().validator().validate(getParser().parsedCommand().getCommand());
         }
 
-        CommandResult result = commandLine.getParser().getCommand().execute(commandInvocation);
+        CommandResult result = getParser().parsedCommand().getCommand().execute(commandInvocation);
 
-        return new CommandContainerResult(commandLine.getParser().getProcessedCommand().resultHandler(), result);
+        return new CommandContainerResult(getParser().parsedCommand().getProcessedCommand().resultHandler(), result);
     }
 
     @Override

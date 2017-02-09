@@ -27,7 +27,6 @@ import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
-import org.aesh.command.impl.parser.CommandLine;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.impl.parser.CommandLineParserException;
@@ -167,27 +166,27 @@ class CustomPopulator implements CommandPopulator<Object, Command> {
     }
 
     @Override
-    public void populateObject(CommandLine<Command> line, InvocationProviders invocationProviders, AeshContext aeshContext, boolean validate) throws CommandLineParserException {
-        if(line.hasParserError())
-            throw line.getParserException();
-        for(ProcessedOption option : line.getParser().getProcessedCommand().getOptions()) {
-            if(line.hasOption(option.name()))
-                putValue(option.name(), (String) line.getOption(option.name()).getValue());
+    public void populateObject(ProcessedCommand<Command> processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, boolean validate) throws CommandLineParserException {
+        if(processedCommand.parserExceptions().size() > 0)
+            throw processedCommand.parserExceptions().get(0);
+        for(ProcessedOption option : processedCommand.getOptions()) {
+            if(option.getValue() != null)
+                putValue(option.name(), option.getValue());
                 //line.getOption(option.name()).injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
+            /*
             else if(option.getDefaultValues().size() > 0) {
-                putValue(option.name(), (String) line.getOption(option.name()).getDefaultValues().get(0));
+                putValue(option.name(), (String) processedCommand.getOption(option.name()).getDefaultValues().get(0));
                 //option.injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             }
+            */
             else
                 clearValue(option.getFieldName());
         }
-        if((line.getArgument() != null && line.getArgument().getValues().size() > 0) ||
-                (line.getParser().getProcessedCommand().getArgument() != null &&
-                        line.getParser().getProcessedCommand().getArgument().getDefaultValues().size() > 0)) {
+        if((processedCommand.getArgument() != null && processedCommand.getArgument().getValues().size() > 0)) {
             //line.getArgument().injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
-            putArgumentValue((String) line.getArgument().getValue());
+            putArgumentValue(processedCommand.getArgument().getValue());
         }
-        else if(line.getArgument() != null)
+        else if(processedCommand.getArgument() != null)
             clearArguments();
      }
 

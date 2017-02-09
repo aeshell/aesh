@@ -19,10 +19,14 @@
  */
 package org.aesh.command.impl.parser;
 
+import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.Command;
-import org.aesh.parser.ParsedLine;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.console.AeshContext;
+import org.aesh.parser.ParsedLineIterator;
 
 import java.util.List;
 
@@ -71,6 +75,19 @@ public interface CommandLineParser<C extends Command> {
      */
     CommandPopulator<Object, C> getCommandPopulator();
 
+
+    /**
+     * Direct call to CommandPopulator to populate this command
+     *
+     * @param invocationProviders providers
+     * @param aeshContext context
+     * @param validate validate
+     * @throws CommandLineParserException parser exception
+     * @throws OptionValidatorException validator exception
+     */
+    void populateObject(String line, InvocationProviders invocationProviders,
+                        AeshContext aeshContext, boolean validate) throws CommandLineParserException, OptionValidatorException;
+
     /**
      * Returns a usage String based on the defined command and options.
      * Useful when printing "help" info etc.
@@ -92,6 +109,8 @@ public interface CommandLineParser<C extends Command> {
      */
     CommandLine<C> parse(String line);
 
+    ProcessedOption lastParsedOption();
+
     /**
      * Parse a command line with the defined command as base of the rules.
      * If any options are found, but not defined in the command object an
@@ -108,11 +127,19 @@ public interface CommandLineParser<C extends Command> {
      */
     CommandLine<C> parse(String line, boolean ignoreRequirements);
 
-    CommandLine<C> parse(ParsedLine line, boolean ignoreRequirements);
+    CommandLine<C> parse(ParsedLineIterator iterator, boolean ignoreRequirements);
 
     void clear();
 
     boolean isGroupCommand();
 
     void setChild(boolean b);
+
+    /**
+     * Will return the correct command's parser. Used when a command have child commands and
+     * we need to know which parser to use for completions.
+     *
+     * @return  correct parser
+     */
+    CommandLineParser<C> parsedCommand();
 }

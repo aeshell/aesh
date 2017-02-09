@@ -23,13 +23,13 @@ package org.aesh.command.map;
 
 import java.util.Objects;
 
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.Command;
-import org.aesh.command.impl.parser.CommandLine;
 import org.aesh.command.impl.parser.CommandLineParserException;
 
 /**
@@ -48,49 +48,53 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
     }
 
     @Override
-    public void populateObject(CommandLine<Command> line,
+    public void populateObject(ProcessedCommand<Command> processedCommand,
                                InvocationProviders invocationProviders,
                                AeshContext aeshContext, boolean validate)
             throws CommandLineParserException, OptionValidatorException {
-        if (line.hasParserError()) {
-            throw line.getParserException();
+        if (processedCommand.parserExceptions().size() > 0) {
+            throw processedCommand.parserExceptions().get(0);
         }
-        for (ProcessedOption option : line.getParser().getProcessedCommand().getOptions()) {
-            if (line.hasOption(option.name())) {
-                ProcessedOption o = line.getOption(option.name());
-                instance.setValue(o.name(),
-                        o.doConvert(o.getValue(), invocationProviders,
+        for (ProcessedOption option : processedCommand.getOptions()) {
+            if (option.getValue() != null) {
+                instance.setValue(option.name(),
+                        option.doConvert(option.getValue(), invocationProviders,
                                 instance, aeshContext, validate));
-            } else if (option.getDefaultValues().size() > 0) {
+            }
+            //TODO: should not be needed since default values should be pushed to values during parsing
+            /*
+            else if (option.getDefaultValues().size() > 0) {
                 instance.setValue(option.name(),
                         option.doConvert(option.getDefaultValues().get(0),
                                 invocationProviders, instance, aeshContext,
                                 validate));
-            } else {
+            }
+            */
+            else {
                 instance.resetValue(option.name());
             }
         }
-        if ((line.getArgument() != null && line.getArgument().getValues().size() > 0)
-                || (line.getParser().getProcessedCommand().getArgument() != null
-                && line.getParser().getProcessedCommand().getArgument().
-                getDefaultValues().size() > 0)) {
-            Object val = line.getArgument().getValue();
+        if ((processedCommand.getArgument() != null && processedCommand.getArgument().getValues().size() > 0)) {
+            Object val = processedCommand.getArgument().getValue();
             if (val == null) {
-                instance.setValue(line.getArgument().name(),
-                        line.getArgument().
-                        doConvert(line.getArgument().getDefaultValues().get(0),
-                                invocationProviders, instance, aeshContext,
-                                validate));
-            } else {
-                instance.setValue(line.getArgument().name(),
-                        line.getArgument().
-                        doConvert(line.getArgument().getValue(),
+                instance.setValue(processedCommand.getArgument().name(),
+                        processedCommand.getArgument().
+                        doConvert(processedCommand.getArgument().getDefaultValues().get(0),
                                 invocationProviders, instance, aeshContext,
                                 validate));
             }
-        } else if (line.getArgument() != null) {
+            /*
+            else {
+                instance.setValue(processedCommand.getArgument().name(),
+                        processedCommand.getArgument().
+                        doConvert(processedCommand.getArgument().getValue(),
+                                invocationProviders, instance, aeshContext,
+                                validate));
+            }
+        } else if (processedCommand.getArgument() != null) {
             // Must be named
-            instance.resetValue(line.getArgument().name());
+            instance.resetValue(processedCommand.getArgument().name());
+        */
         }
     }
 

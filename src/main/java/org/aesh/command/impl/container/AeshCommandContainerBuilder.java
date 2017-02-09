@@ -279,7 +279,8 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                 new AeshValidatorInvocationProvider(),
                 new AeshOptionActivatorProvider(),
                 new AeshCommandActivatorProvider());
-        cl.getCommandPopulator().populateObject( cl.parse(input), invocationProviders, null, true);
+        cl.parse(input);
+        cl.getCommandPopulator().populateObject( cl.getProcessedCommand(), invocationProviders, null, true);
     }
 
 }

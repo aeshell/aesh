@@ -19,19 +19,26 @@
  */
 package org.aesh.cl;
 
+import org.aesh.command.impl.activator.AeshCommandActivatorProvider;
+import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
+import org.aesh.command.impl.completer.AeshCompleterInvocationProvider;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
-import org.aesh.command.impl.parser.CommandLine;
+import org.aesh.command.impl.converter.AeshConverterInvocationProvider;
+import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.impl.parser.CommandLineParserException;
 import org.aesh.command.Command;
 import org.aesh.command.CommandResult;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
+import org.aesh.console.AeshContext;
+import org.aesh.console.settings.SettingsBuilder;
 import org.junit.Test;
 
 import java.util.List;
@@ -40,7 +47,7 @@ import org.aesh.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -48,236 +55,176 @@ import static org.junit.Assert.assertTrue;
  */
 public class CommandLineParserTest {
 
-    @Test
-    public void testParseCommandLine1() throws CommandLineParserException {
+    private final InvocationProviders invocationProviders = new AeshInvocationProviders(
+            SettingsBuilder.builder()
+                    .converterInvocationProvider(new AeshConverterInvocationProvider())
+                    .completerInvocationProvider(new AeshCompleterInvocationProvider())
+                    .validatorInvocationProvider(new AeshValidatorInvocationProvider())
+                    .optionActivatorProvider(new AeshOptionActivatorProvider())
+                    .commandActivatorProvider(new AeshCommandActivatorProvider()).build());
 
+    @Test
+    public void testParseCommandLine1() throws Exception {
+
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         CommandLineParser<Parser1Test> parser = new AeshCommandContainerBuilder<Parser1Test>().create(Parser1Test.class).getParser();
 
-        CommandLine<Parser1Test> cl = parser.parse("test -f -e bar -Df=g /tmp/file.txt");
-        assertEquals("f", cl.getOptions().get(0).shortName());
-        assertEquals("e", cl.getOptions().get(1).shortName());
-        assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
+        parser.populateObject("test -f -e bar -Df=g /tmp/file.txt", invocationProviders, aeshContext, true);
+        Parser1Test p1 = parser.getCommand();
 
-        cl = parser.parse("test -f -e=bar -Df=g /tmp/file.txt");
-        assertEquals("f", cl.getOptions().get(0).shortName());
-        assertEquals("e", cl.getOptions().get(1).shortName());
-        assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
+        assertTrue(p1.foo);
+        assertEquals("bar", p1.equal);
+        assertEquals("/tmp/file.txt", p1.arguments.get(0));
 
-        cl = parser.parse("test -f -Df=g /tmp/file.txt -e=bar foo bar");
-        assertEquals("f", cl.getOptions().get(0).shortName());
-        assertEquals("D", cl.getOptions().get(1).shortName());
-        assertEquals("e", cl.getOptions().get(2).shortName());
-        assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
-        assertEquals("foo", cl.getArgument().getValues().get(1));
-        assertEquals("bar", cl.getArgument().getValues().get(2));
+        parser.populateObject("test -f -e=bar -Df=g /tmp/file.txt", invocationProviders, aeshContext, true);
+        assertTrue(p1.foo);
+        assertEquals("bar", p1.equal);
+        assertEquals("/tmp/file.txt", p1.arguments.get(0));
+        assertEquals("g", p1.define.get("f"));
 
-        cl = parser.parse("test -e bar -DXms=128m -DXmx=512m --X /tmp/file.txt");
-        assertEquals("e", cl.getOptions().get(0).shortName());
-        assertEquals("bar", cl.getOptions().get(0).getValue());
-        assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
-        assertNotNull(cl.hasOption("X"));
+        parser.populateObject("test -Dg=f /tmp/file.txt -e=bar foo bar", invocationProviders, aeshContext, true);
+        assertFalse(p1.foo);
+        assertEquals("f", p1.define.get("g"));
+        assertEquals("bar", p1.equal);
+        assertEquals("/tmp/file.txt", p1.arguments.get(0));
+        assertEquals("foo", p1.arguments.get(1));
+        assertEquals("bar", p1.arguments.get(2));
 
-        Map<String,String> properties = cl.getOptionProperties("D");
-        assertEquals("128m", properties.get("Xms"));
-        assertEquals("512m", properties.get("Xmx"));
+        parser.populateObject("test -e beer -DXms=128m -DXmx=512m --X /tmp/file.txt", invocationProviders, aeshContext, true);
+        assertEquals("beer", p1.equal);
+        assertEquals("/tmp/file.txt", p1.arguments.get(0));
+        assertTrue(p1.enableX);
 
-        cl = parser.parse("test -e=bar -DXms=128m -DXmx=512m /tmp/file.txt");
-        assertEquals("e", cl.getOptions().get(0).shortName());
-        assertEquals("bar", cl.getOptions().get(0).getValue());
+        assertEquals("128m", p1.define.get("Xms"));
+        assertEquals("512m", p1.define.get("Xmx"));
 
-        cl = parser.parse("toto -e=bar -DXms=128m -DXmx=512m /tmp/file.txt");
-        assertEquals("e", cl.getOptions().get(0).shortName());
-        assertEquals("bar", cl.getOptions().get(0).getValue());
+        parser.populateObject("test --equal \"bar bar2\" -DXms=\"128g \" -DXmx=512g\\ m /tmp/file.txt", invocationProviders, aeshContext, true);
+        assertEquals("bar bar2", p1.equal);
 
-        cl = parser.parse("test --equal=bar -DXms=128m -DXmx=512m /tmp/file.txt");
-        assertEquals("e", cl.getOptions().get(0).shortName());
-        assertEquals("equal", cl.getOptions().get(0).name());
-        assertEquals("bar", cl.getOptions().get(0).getValue());
+        assertEquals("128g ", p1.define.get("Xms"));
+        assertEquals("512g m", p1.define.get("Xmx"));
 
-        cl = parser.parse("test --equal \"bar bar2\" -DXms=\"128g \" -DXmx=512g\\ m /tmp/file.txt");
-        assertEquals("bar bar2", cl.getOptionValue("equal"));
-
-        assertTrue(cl.getOptionProperties("D").containsKey("Xms"));
-        assertEquals("128g ", cl.getOptionProperties("D").get("Xms"));
-        assertTrue(cl.getOptionProperties("D").containsKey("Xmx"));
-        assertEquals("512g m", cl.getOptionProperties("D").get("Xmx"));
-
-        cl = parser.parse("test -fX -e bar -Df=g /tmp/file.txt\\ ");
-        assertEquals("f", cl.getOptions().get(0).shortName());
-        assertEquals("X", cl.getOptions().get(1).shortName());
-        assertEquals("e", cl.getOptions().get(2).shortName());
-        assertEquals("D", cl.getOptions().get(3).shortName());
-        assertEquals("/tmp/file.txt ", cl.getArgument().getValues().get(0));
-        assertFalse(cl.hasParserError());
-
-        cl = parser.parse("test -f -e bar -Df=g -X");
-        assertEquals("f", cl.getOptions().get(0).shortName());
-        assertEquals("e", cl.getOptions().get(1).shortName());
-        assertEquals("D", cl.getOptions().get(2).shortName());
-        assertEquals("X", cl.getOptions().get(3).shortName());
-        assertEquals("true", cl.getOptionValue('X'));
-        assertFalse(cl.hasParserError());
-
-        cl = parser.parse("test -fXe -Df=g /tmp/file.txt");
-        assertEquals("f", cl.getOptions().get(0).shortName());
-        assertEquals("X", cl.getOptions().get(1).shortName());
-        assertEquals("D", cl.getOptions().get(2).shortName());
-        assertEquals("/tmp/file.txt", cl.getArgument().getValues().get(0));
-        assertTrue(cl.hasParserError());
-
-        cl = parser.parse("test -a /tmp/file.txt");
-        assertTrue(cl.hasParserError());
-
-        cl = parser.parse("test -a /tmp/file.txt");
-        assertTrue(cl.hasParserError());
-        cl.getArgument();
-
-        cl = parser.parse("test -e bar --equal bar2 -DXms=128m -DXmx=512m /tmp/file.txt");
-        assertTrue(cl.hasParserError());
-        cl.getArgument();
-
-        cl = parser.parse("test -f -Dfoo:bar /tmp/file.txt");
-        assertTrue(cl.hasParserError());
-        cl.getArgument();
-
-        cl = parser.parse("test -f foobar /tmp/file.txt");
-        assertTrue(cl.hasParserError());
-        cl.getArgument();
-
+        parser.populateObject("test -fX -e bar -Df=g /tmp/file.txt\\ ", invocationProviders, aeshContext, true);
+        assertTrue(p1.foo);
+        assertTrue(p1.enableX);
+        assertEquals("bar", p1.equal);
+        assertEquals("g", p1.define.get("f"));
+        assertEquals("/tmp/file.txt ", p1.arguments.get(0));
     }
 
     @Test
-    public void testParseCommandLine2() throws CommandLineParserException {
+    public void testParseCommandLine2() throws Exception {
 
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         CommandLineParser<Parser2Test> parser = new AeshCommandContainerBuilder<Parser2Test>().create(Parser2Test.class).getParser();
+        Parser2Test p2 = parser.getCommand();
 
-        CommandLine cl = parser.parse("test -d true --bar Foo.class");
-        assertTrue(cl.hasOption('d'));
-        assertFalse(cl.hasOption('V'));
-        assertEquals("Foo.class", cl.getOptionValue("bar"));
-        assertNotNull(cl.getArgument());
+        parser.populateObject("test -d true --bar Foo.class", invocationProviders, aeshContext, true);
+        assertEquals("true", p2.display);
+        assertNull(p2.version);
+        assertEquals("Foo.class", p2.bar);
+        assertNull(p2.arguments);
 
-        cl = parser.parse("test -V verbose -d false -b com.bar.Bar.class /tmp/file\\ foo.txt /tmp/bah.txt");
-        assertTrue(cl.hasOption('V'));
-        assertTrue(cl.hasOption('d'));
-        assertTrue(cl.hasOption('b'));
-        assertEquals("com.bar.Bar.class", cl.getOptionValue("b"));
-        assertEquals("/tmp/file foo.txt", cl.getArgument().getValues().get(0));
-        assertEquals("/tmp/bah.txt", cl.getArgument().getValues().get(1));
+        parser.populateObject("test -V verbose -d false -b com.bar.Bar.class /tmp/file\\ foo.txt /tmp/bah.txt", invocationProviders, aeshContext, true);
+        assertEquals("verbose", p2.version);
+        assertEquals("false", p2.display);
+        assertEquals("com.bar.Bar.class", p2.bar);
+        assertEquals("/tmp/file foo.txt", p2.arguments.get(0));
+        assertEquals("/tmp/bah.txt", p2.arguments.get(1));
 
-        cl = parser.parse("test -d /tmp/file.txt");
-        assertTrue(cl.hasParserError());
-        cl.getArgument();
-
+        assertTrue(parser.getProcessedCommand().parserExceptions().isEmpty());
     }
 
     @Test
-    public void testParseGroupCommand() throws CommandLineParserException {
-        CommandLineParser<GroupCommandTest> parser = new AeshCommandContainerBuilder<GroupCommandTest>().create(GroupCommandTest.class).getParser();
+    public void testParseGroupCommand() throws Exception {
 
-        CommandLine cl = parser.parse("group child1 --foo BAR");
-        assertTrue(cl.hasOption("foo"));
-        assertEquals("BAR", cl.getOptionValue("foo"));
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser parser = new AeshCommandContainerBuilder().create(GroupCommandTest.class).getParser();
+        GroupCommandTest g1 = (GroupCommandTest) parser.getCommand();
+        ChildTest1 c1 = (ChildTest1) parser.getChildParser("child1").getCommand();
 
-        cl = parser.parse("group child1 --foo BAR --bar FOO");
-        assertTrue(cl.hasOption("foo"));
-        assertTrue(cl.hasOption("bar"));
-        assertEquals("BAR", cl.getOptionValue("foo"));
-        assertEquals("FOO", cl.getOptionValue("bar"));
-    }
+        parser.populateObject("group child1 --foo BAR", invocationProviders, aeshContext, true);
+        assertEquals("BAR", c1.foo);
 
-    public void testParseCommandLine3() {
-        /*
-        try {
-            ParserGenerator.generateParser(Parser3Test.class);
-            assertTrue(false);
-        }
-        catch (CommandLineParserException iae) {
-            assertTrue(true);
-        }
-        */
+        parser.populateObject("group child1 --foo BAR --bar FOO", invocationProviders, aeshContext, true);
+        assertEquals("BAR", c1.foo);
+        assertEquals("FOO", c1.bar);
     }
 
     @Test
-    public void testParseCommandLine4() throws CommandLineParserException {
-        CommandLineParser clp = new AeshCommandContainerBuilder<Parser4Test>().create(Parser4Test.class).getParser();
+    public void testParseCommandLine4() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<Parser4Test> parser = new AeshCommandContainerBuilder<Parser4Test>().create(Parser4Test.class).getParser();
+        Parser4Test p4 = parser.getCommand();
 
-        CommandLine cl = clp.parse("test -o bar1,bar2,bar3 foo");
-        assertTrue(cl.hasOption('o'));
-        assertEquals("bar1", cl.getOptionValues("o").get(0));
-        assertEquals("bar3", cl.getOptionValues("o").get(2));
-        assertEquals(3, cl.getOptionValues("o").size());
+        parser.populateObject("test -o bar1,bar2,bar3 foo", invocationProviders, aeshContext, true);
+        assertEquals("bar1", p4.option.get(0));
+        assertEquals("bar3", p4.option.get(2));
+        assertEquals(3, p4.option.size());
 
-        cl = clp.parse("test -o=bar1,bar2,bar3 foo");
-        assertTrue(cl.hasOption('o'));
-        assertEquals("bar1", cl.getOptionValues("o").get(0));
-        assertEquals("bar3", cl.getOptionValues("o").get(2));
-        assertEquals(3, cl.getOptionValues("o").size());
+        parser.populateObject("test -o=bar1,bar2,bar3 foo", invocationProviders, aeshContext, true);
+        assertEquals("bar1", p4.option.get(0));
+        assertEquals("bar3", p4.option.get(2));
+        assertEquals(3, p4.option.size());
+        assertEquals("foo", p4.arguments.get(0));
 
-        cl = clp.parse("test --option=bar1,bar2,bar3 foo");
-        assertTrue(cl.hasOption('o'));
-        assertEquals("bar1", cl.getOptionValues("o").get(0));
-        assertEquals("bar3", cl.getOptionValues("o").get(2));
-        assertEquals(3, cl.getOptionValues("o").size());
+        parser.populateObject("test --option=bar1,bar2,bar3 foo", invocationProviders, aeshContext, true);
+        assertEquals("bar1", p4.option.get(0));
+        assertEquals("bar3", p4.option.get(2));
+        assertEquals(3, p4.option.size());
+        assertEquals("foo", p4.arguments.get(0));
 
-        cl = clp.parse("test --help bar4:bar5:bar6 foo");
-        assertTrue(cl.hasOption("help"));
-        assertEquals("bar4", cl.getOptionValues("help").get(0));
-        assertEquals("bar6", cl.getOptionValues("h").get(2));
+        parser.populateObject("test --help bar4:bar5:bar6 foo", invocationProviders, aeshContext, true);
+        assertEquals("bar4", p4.help.get(0));
+        assertEquals("bar6", p4.help.get(2));
 
-        cl = clp.parse("test --help2 bar4 bar5 bar6");
-        assertTrue(cl.hasOption("help2"));
-        assertEquals("bar4", cl.getOptionValues("help2").get(0));
-        assertEquals("bar6", cl.getOptionValues("e").get(2));
+        parser.populateObject("test --help2 bar4 bar5 bar6", invocationProviders, aeshContext, true);
+        assertEquals("bar4", p4.help2.get(0));
+        assertEquals("bar6", p4.help2.get(2));
 
-        cl = clp.parse("test --bar 1,2,3");
-        assertTrue(cl.hasOption("bar"));
-        assertEquals(Integer.class, cl.getOption("bar").type());
+        parser.populateObject("test --bar 1,2,3", invocationProviders, aeshContext, true);
+        assertEquals(new Integer(1), p4.bar.get(0));
+        assertEquals(new Integer(2), p4.bar.get(1));
+        assertEquals(new Integer(3), p4.bar.get(2));
     }
 
     @Test
-    public void testParseCommandLine5() throws CommandLineParserException {
-        CommandLineParser<Parser5Test> clp = new AeshCommandContainerBuilder<Parser5Test>().create(Parser5Test.class).getParser();
+    public void testParseCommandLine5() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<Parser5Test> parser = new AeshCommandContainerBuilder<Parser5Test>().create(Parser5Test.class).getParser();
+        Parser5Test p5 = parser.getCommand();
 
-        CommandLine cl = clp.parse("test  --foo  \"-X1 X2 -X3\" --baz -wrong --bar -q \"-X4 -X5\"",true);
-        assertTrue(cl.hasOption("foo"));
-        assertEquals(3, cl.getOptionValues("foo").size());
-        assertEquals("-X1", cl.getOptionValues("foo").get(0));
-        assertEquals("X2", cl.getOptionValues("foo").get(1));
-        assertEquals("-X3", cl.getOptionValues("foo").get(2));
-        assertTrue(cl.hasOption("bar"));
-        assertTrue(cl.hasOption("baz"));
-        assertFalse(cl.hasOption("wrong"));
-        assertTrue(cl.hasOption("qux"));
-        assertEquals(2, cl.getOptionValues("qux").size());
-        assertEquals("-X4", cl.getOptionValues("qux").get(0));
-        assertEquals("-X5", cl.getOptionValues("qux").get(1));
+        parser.populateObject("test  --foo  \"-X1 X2 -X3\" --baz -wrong --bar -q \"-X4 -X5\"", invocationProviders, aeshContext, true);
+        assertEquals("-X1", p5.foo.get(0));
+        assertEquals("X2", p5.foo.get(1));
+        assertEquals("-X3", p5.foo.get(2));
+        assertTrue(p5.baz);
+        assertTrue(p5.bar);
+        assertEquals(2, p5.qux.size());
+        assertEquals("-X4", p5.qux.get(0));
+        assertEquals("-X5", p5.qux.get(1));
 
 
-        cl = clp.parse("test  --foo -X1 X2 -X3 --baz -wrong --bar -q -X4 -X5",true);
-        assertTrue(cl.hasOption("foo"));
-        assertEquals(3, cl.getOptionValues("foo").size());
-        assertEquals("-X1", cl.getOptionValues("foo").get(0));
-        assertEquals("X2", cl.getOptionValues("foo").get(1));
-        assertEquals("-X3", cl.getOptionValues("foo").get(2));
-        assertTrue(cl.hasOption("bar"));
-        assertTrue(cl.hasOption("baz"));
-        assertFalse(cl.hasOption("wrong"));
-        assertTrue(cl.hasOption("qux"));
-        assertEquals(2, cl.getOptionValues("qux").size());
-        assertEquals("-X4", cl.getOptionValues("qux").get(0));
-        assertEquals("-X5", cl.getOptionValues("qux").get(1));
-
+        parser.populateObject("test  --foo  -X1 X2 -X3 --baz -wrong --bar -q -X4 -X5", invocationProviders, aeshContext, true);
+        assertEquals("-X1", p5.foo.get(0));
+        assertEquals("X2", p5.foo.get(1));
+        assertEquals("-X3", p5.foo.get(2));
+        assertTrue(p5.baz);
+        assertTrue(p5.bar);
+        assertEquals(2, p5.qux.size());
+        assertEquals("-X4", p5.qux.get(0));
+        assertEquals("-X5", p5.qux.get(1));
     }
 
     @Test
-    public void testSubClass() throws CommandLineParserException {
-        CommandLineParser<SubHelp> clp = new AeshCommandContainerBuilder<SubHelp>().create(SubHelp.class).getParser();
+    public void testSubClass() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<SubHelp> parser = new AeshCommandContainerBuilder<SubHelp>().create(SubHelp.class).getParser();
+        SubHelp subHelp = parser.getCommand();
 
-        CommandLine cl = clp.parse("subhelp --foo bar -h",true);
-        assertTrue(cl.hasOption("foo"));
-        assertTrue(cl.hasOption("h"));
-        assertEquals("bar", cl.getOptionValue("foo"));
+        parser.populateObject("subhelp --foo bar -h", invocationProviders, aeshContext, true);
+        assertEquals("bar", subHelp.foo);
+        assertTrue(subHelp.getHelp());
     }
 
     @CommandDefinition(name = "test", description = "a simple test", aliases = {"toto"})
@@ -384,6 +331,11 @@ public class CommandLineParserTest {
 
         @Option(name = "help", shortName = 'h', hasValue = false)
         private boolean help;
+
+        public boolean getHelp() {
+            return help;
+        }
+
     }
 
     @CommandDefinition(name = "subhelp", description = "")
@@ -396,5 +348,6 @@ public class CommandLineParserTest {
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
+
     }
 }

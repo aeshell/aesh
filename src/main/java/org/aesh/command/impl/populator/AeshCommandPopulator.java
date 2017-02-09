@@ -19,13 +19,14 @@
  */
 package org.aesh.command.impl.populator;
 
+import org.aesh.command.impl.internal.OptionType;
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.console.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.Command;
-import org.aesh.command.impl.parser.CommandLine;
 import org.aesh.command.impl.parser.CommandLineParserException;
 
 import java.lang.reflect.Field;
@@ -45,32 +46,33 @@ public class AeshCommandPopulator<O extends Object, C extends Command> implement
     /**
      * Populate a Command instance with the values parsed from a command line
      * If any parser errors are detected it will throw an exception
-     * @param line command line
+     * @param processedCommand command line
      * @param validate do validation or not
      * @throws CommandLineParserException
      */
     @Override
-    public void populateObject(CommandLine<C> line, InvocationProviders invocationProviders,
+    public void populateObject(ProcessedCommand<C> processedCommand, InvocationProviders invocationProviders,
                                AeshContext aeshContext, boolean validate)
             throws CommandLineParserException, OptionValidatorException {
-        if(line.hasParserError())
-            throw line.getParserException();
-        for(ProcessedOption option : line.getParser().getProcessedCommand().getOptions()) {
-            if(line.hasOption(option.name()))
-                line.getOption(option.name()).injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
+        if(processedCommand.parserExceptions().size() > 0)
+            throw processedCommand.parserExceptions().get(0);
+        for(ProcessedOption option : processedCommand.getOptions()) {
+            if(option.getValues() != null && option.getValues().size() > 0)
+                option.injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             else if(option.getDefaultValues().size() > 0) {
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             }
+            else if(option.getOptionType().equals(OptionType.GROUP) && option.getProperties().size() > 0)
+                option.injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             else
                 resetField(getObject(), option.getFieldName(), option.hasValue());
         }
-        if((line.getArgument() != null && line.getArgument().getValues().size() > 0) ||
-                (line.getParser().getProcessedCommand().getArgument() != null &&
-                        line.getParser().getProcessedCommand().getArgument().getDefaultValues().size() > 0)) {
-            line.getArgument().injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
-        }
-        else if(line.getArgument() != null)
-            resetField(getObject(), line.getArgument().getFieldName(), true);
+        if(processedCommand.getArgument() != null &&
+                (processedCommand.getArgument().getValues().size() > 0 || processedCommand.getArgument().getDefaultValues().size() > 0))
+            processedCommand.getArgument().injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
+
+        else if(processedCommand.getArgument() != null)
+            resetField(getObject(), processedCommand.getArgument().getFieldName(), true);
     }
 
     /**

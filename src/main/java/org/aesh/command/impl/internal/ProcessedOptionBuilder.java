@@ -303,6 +303,10 @@ public class ProcessedOptionBuilder {
             else
                 name = fieldName;
         }
+        //by default fieldName will be given the same name as the option name
+        if(fieldName == null)
+            fieldName = name;
+
         if(type == null)
             throw new OptionParserException("Type must be defined to build an Option");
 

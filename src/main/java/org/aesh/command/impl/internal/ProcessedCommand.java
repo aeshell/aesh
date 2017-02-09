@@ -107,7 +107,7 @@ public class ProcessedCommand<C extends Command> {
                     opt.converter(), opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(),
                     opt.parser(), opt.doOverrideRequired()));
 
-            options.get(options.size()-1).setParent(this);
+            this.options.get(this.options.size()-1).setParent(this);
         }
     }
 
@@ -203,6 +203,37 @@ public class ProcessedCommand<C extends Command> {
                 return option;
 
         return null;
+    }
+
+    /**
+     * Generic search for matching options with input that start with either -- or -
+     *
+     * @param input input
+     * @return matching option
+     */
+    public ProcessedOption searchAllOptions(String input) {
+        if (input.startsWith("--")) {
+            ProcessedOption currentOption = findLongOptionNoActivatorCheck(input.substring(2));
+            if(currentOption == null)
+                currentOption = startWithLongOption(input.substring(2));
+            if (currentOption != null)
+                currentOption.setLongNameUsed(true);
+
+            return currentOption;
+        }
+        else if (input.startsWith("-")) {
+            ProcessedOption currentOption = findOption(input.substring(1));
+            if(currentOption == null)
+                currentOption = startWithOption(input.substring(1));
+
+            if (currentOption != null)
+                currentOption.setLongNameUsed(false);
+
+            return currentOption;
+        }
+        else {
+            return null;
+        }
     }
 
     public ProcessedOption findLongOption(String name) {
@@ -375,5 +406,20 @@ public class ProcessedCommand<C extends Command> {
 
     public List<CommandLineParserException> parserExceptions() {
         return parserExceptions;
+    }
+
+    public boolean hasOptionsWithInjectedValues() {
+        for(ProcessedOption option : options)
+            if(option.getValue() != null)
+                return true;
+        return false;
+    }
+
+    public boolean hasOptionWithOverrideRequired() {
+        for(ProcessedOption option : options) {
+            if(option.getValue() != null && option.doOverrideRequired())
+                return true;
+        }
+        return false;
     }
 }

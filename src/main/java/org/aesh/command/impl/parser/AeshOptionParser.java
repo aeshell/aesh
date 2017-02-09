@@ -23,7 +23,6 @@ import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.parser.OptionParser;
 import org.aesh.parser.ParsedLineIterator;
-import org.aesh.parser.ParsedWord;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -35,33 +34,66 @@ public class AeshOptionParser implements OptionParser {
 
     @Override
     public void parse(ParsedLineIterator parsedLineIterator, ProcessedOption option) {
+        if(option.isProperty()) {
+            processProperty(parsedLineIterator, option);
+        }
+        else {
+            preProcessOption(option, parsedLineIterator);
+            while(status != Status.NULL && parsedLineIterator.hasNextWord()) {
+                String word = parsedLineIterator.peekWord();
+                ProcessedOption nextOption = option.parent().searchAllOptions(word);
+                if(nextOption == null)
+                    doParse(parsedLineIterator, option);
+                else {
+                    //TODO: we need to do something better here
+                    if(option.hasValue() && option.getValue() == null) {
+                        option.parent().addParserException(new OptionParserException("Option "+option.name()+" was specified, but no value was given."));
+                    }
+                    return;
+                }
+            }
+        }
+        /*
+        else if(option.getOptionType().equals(OptionType.BOOLEAN)){
+            option.addValue("true");
+        }
+        else if(option.getOptionType().equals(OptionType.LIST)){
+
+        }
+        else {
+
+        }
+        */
+        /*
         status = Status.NULL;
-        doParse(parsedLineIterator.nextParsedWord(), option);
+        doParse(parsedLineIterator, option);
         if(option.hasMultipleValues())
             while(parsedLineIterator.hasNextWord()) {
-                ParsedWord word = parsedLineIterator.nextParsedWord();
+                ParsedWord word = parsedLineIterator.peekParsedWord();
                 ProcessedOption nextOption = option.parent().findOption(word.word());
                 if(nextOption == null)
-                    doParse(word, option);
+                    doParse(parsedLineIterator, option);
                 else
                     return;
             }
+            */
     }
 
-    private void doParse(ParsedWord word, ProcessedOption option) {
+    private void doParse(ParsedLineIterator iterator, ProcessedOption option) {
             if(status == Status.ACTIVE)
-                addValueToOption(option, word.word());
+                addValueToOption(option, iterator);
             else if(status == Status.NULL)
-                preProcessOption(option, word.word());
+                preProcessOption(option, iterator);
     }
 
-    private void preProcessOption(ProcessedOption option, String line) {
+    private void preProcessOption(ProcessedOption option, ParsedLineIterator iterator) {
+
+        String word = iterator.peekWord();
         if(option.isLongNameUsed()) {
-            if(line.length()-2 != option.name().length())
-                processOption(option, line.substring(2), option.name());
+            if(word.length()-2 != option.name().length())
+                processOption(option, word.substring(2), option.name());
             else if(option.getOptionType() == OptionType.BOOLEAN) {
                 option.addValue("true");
-                //commandLine.addOption(option);
                 status = Status.NULL;
             }
             else
@@ -69,8 +101,8 @@ public class AeshOptionParser implements OptionParser {
 
         }
         else {
-            if(line.length() > 2)
-                processOption(option, line.substring(1), option.shortName());
+            if(word.length() > 2)
+                processOption(option, word.substring(1), option.shortName());
             else if(option.getOptionType() == OptionType.BOOLEAN) {
                 option.addValue("true");
                 //commandLine.addOption(option);
@@ -90,49 +122,63 @@ public class AeshOptionParser implements OptionParser {
                 status = Status.NULL;
             }
         }
+        //we've parsed the current word, lets pop it
+        iterator.pollParsedWord();
     }
-      private void processOption(ProcessedOption option, String line, String name) {
+
+    private void processOption(ProcessedOption option, String line, String name) {
+        /*
         if (option.isProperty()) {
             processProperty(option, line, name);
         }
         else {
-            String rest = line.substring(name.length());
-            if (option.getOptionType().equals(OptionType.LIST)) {
-                processList(option, rest);
-            }
-            else if (!rest.contains(EQUALS)) {
-                // we might have two or more options in a group
-                // if so, we only allow options (boolean) without value
-                if (rest.length() > 0 && !option.isLongNameUsed()) {
-                    //first we add the first option
-                    //commandLine.addOption(option);
-                    for (char shortName : rest.toCharArray()) {
-                        ProcessedOption currOption = option.parent().findOption(String.valueOf(shortName));
-                        if (currOption != null) {
-                            if (!currOption.hasValue()) {
-                                currOption.setLongNameUsed(false);
-                                currOption.addValue("true");
-                                //commandLine.addOption(currOption);
-                            }
-                            else
-                                option.parent().addParserException(new OptionParserException("Option: -" + shortName +
-                                        " can not be grouped with other options since it need to be given a value"));
+        */
+        String rest = line.substring(name.length());
+        if (option.getOptionType().equals(OptionType.LIST)) {
+            processList(option, rest);
+        }
+        else if (!rest.contains(EQUALS)) {
+            // we might have two or more options in a group
+            // if so, we only allow options (boolean) without value
+            if (rest.length() > 0 && !option.isLongNameUsed()) {
+                //first we add the first option
+                if(!option.hasValue()) {
+                    option.setLongNameUsed(false);
+                    option.addValue("true");
+                }
+
+                for (char shortName : rest.toCharArray()) {
+                    ProcessedOption currOption = option.parent().findOption(String.valueOf(shortName));
+                    if (currOption != null) {
+                        if (!currOption.hasValue()) {
+                            currOption.setLongNameUsed(false);
+                            currOption.addValue("true");
+                            //commandLine.addOption(currOption);
                         }
                         else
-                            option.parent().addParserException(new OptionParserException("Option: -" + shortName + " was not found."));
+                            option.parent().addParserException(new OptionParserException("Option: -" + shortName +
+                                    " can not be grouped with other options since it need to be given a value"));
                     }
+                    else
+                        option.parent().addParserException(new OptionParserException("Option: -" + shortName + " was not found."));
                 }
-                else
-                    option.parent().addParserException(new OptionParserException("Option: - must be followed by a valid operator"));
             }
-            //line contain equals, we need to add a value(s) to the currentOption
-            else {
-                addValueToOption(option, line.substring(line.indexOf(EQUALS)+1));
-            }
+            else
+                option.parent().addParserException(new OptionParserException("Option: - must be followed by a valid operator"));
+        }
+        //line contain equals, we need to add a value(s) to the currentOption
+        else {
+            doAddValueToOption(option, line.substring(line.indexOf(EQUALS)+1));
         }
     }
 
-    private void addValueToOption(ProcessedOption currOption, String word) {
+    private void addValueToOption(ProcessedOption currOption, ParsedLineIterator iterator) {
+        //we know that the option will accept a value, so we can poll the value
+        String word = iterator.pollWord();
+        doAddValueToOption(currOption, word);
+    }
+
+    private void doAddValueToOption(ProcessedOption currOption, String word) {
         if(currOption.hasMultipleValues()) {
             if(word.contains(String.valueOf(currOption.getValueSeparator()))) {
                 for(String value : word.split(String.valueOf(currOption.getValueSeparator()))) {
@@ -171,12 +217,15 @@ public class AeshOptionParser implements OptionParser {
         }
     }
 
-    private void processProperty(ProcessedOption currOption, String word, String name) {
+    private void processProperty(ParsedLineIterator iterator, ProcessedOption currOption) {
+        String word = currOption.isLongNameUsed() ? iterator.pollWord().substring(2) : iterator.pollWord().substring(1);
+        String name = currOption.isLongNameUsed() ? currOption.name() : currOption.shortName();
         if (word.length() < (1 + name.length()) || !word.contains(EQUALS))
             currOption.parent().addParserException(new OptionParserException(
                     "Option " + currOption.getDisplayName() + ", must be part of a property"));
         else {
-            String propertyName = word.substring(name.length(), word.indexOf(EQUALS));
+            String propertyName =
+                    word.substring(name.length(), word.indexOf(EQUALS));
             String value = word.substring(word.indexOf(EQUALS) + 1);
             if (value.length() < 1)
                 currOption.parent().addParserException(new OptionParserException("Option " + currOption.getDisplayName() + ", must have a value"));

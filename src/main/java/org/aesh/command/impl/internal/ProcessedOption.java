@@ -22,15 +22,16 @@ package org.aesh.command.impl.internal;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
+import org.aesh.command.impl.converter.AeshConverterInvocation;
+import org.aesh.command.impl.parser.AeshOptionParser;
 import org.aesh.command.impl.parser.OptionParserException;
+import org.aesh.command.impl.validator.AeshValidatorInvocation;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.OptionParser;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
-import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.impl.converter.AeshConverterInvocation;
-import org.aesh.command.impl.validator.AeshValidatorInvocation;
 import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.util.ANSI;
 
@@ -99,7 +100,10 @@ public final class ProcessedOption {
         this.completer = completer;
         this.validator = optionValidator;
         this.activator = activator;
-        this.parser = parser;
+        if(parser != null)
+            this.parser = parser;
+        else
+            this.parser = new AeshOptionParser();
 
         if(renderer != null)
             this.renderer = renderer;
@@ -332,7 +336,7 @@ public final class ProcessedOption {
     @SuppressWarnings("unchecked")
     public void injectValueIntoField(Object instance, InvocationProviders invocationProviders, AeshContext aeshContext,
                                      boolean doValidation) throws OptionValidatorException {
-        if(converter == null)
+        if(converter == null || instance == null)
             return;
         try {
             Field field = getField(instance.getClass(), fieldName);

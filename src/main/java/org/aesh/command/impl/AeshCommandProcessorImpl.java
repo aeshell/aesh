@@ -403,7 +403,7 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
         if (line == null) {
             throw new CommandLineParserException("Invalid Command " + commandLine);
         }
-        line.getParser().getCommandPopulator().populateObject(line,
+        line.getParser().getCommandPopulator().populateObject(container.getParser().getProcessedCommand(),
                 invocationProviders, getAeshContext(), true);
         return line.getParser().getCommand();
     }
