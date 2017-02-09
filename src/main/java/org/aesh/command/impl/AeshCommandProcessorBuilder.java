@@ -19,6 +19,7 @@
  */
 package org.aesh.command.impl;
 
+import org.aesh.command.AeshCommandProcessor;
 import org.aesh.command.Command;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
@@ -128,7 +129,7 @@ public class AeshCommandProcessorBuilder {
         });
     }
 
-    public AeshCommandProcessorImpl<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> build() {
+    public AeshCommandProcessor<? extends CommandInvocation, ? extends AeshCompleteOperation> build() {
         if (registry == null) {
             registry = new MutableCommandRegistry<>();
         }
