@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.aesh.command.AeshCommandProcessor;
+import org.aesh.command.AeshCommandRuntime;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
@@ -67,7 +67,7 @@ import org.aesh.tty.Size;
  *
  * @author jdenise@redhat.com
  */
-class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, CO extends AeshCompleteOperation> implements AeshCommandProcessor<CI, CO> {
+class AeshCommandRuntimeImpl<C extends Command, CI extends CommandInvocation, CO extends AeshCompleteOperation> implements AeshCommandRuntime<CI, CO> {
 
     private static class DefaultCommandInvocation implements CommandInvocation {
 
@@ -129,9 +129,9 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
         }
 
         private final Shell shell = new DefaultShell();
-        private final AeshCommandProcessorImpl<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor;
+        private final AeshCommandRuntimeImpl<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor;
 
-        DefaultCommandInvocation(AeshCommandProcessorImpl<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor) {
+        DefaultCommandInvocation(AeshCommandRuntimeImpl<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor) {
             this.processor = processor;
         }
 
@@ -230,21 +230,21 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
     private final CommandInvocationProvider<CI> commandInvocationProvider;
     private final InvocationProviders invocationProviders;
 
-    private static final Logger LOGGER = Logger.getLogger(AeshCommandProcessorImpl.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AeshCommandRuntimeImpl.class.getName());
     private final CommandNotFoundHandler commandNotFoundHandler;
 
     private final CommandResolver<? extends Command> commandResolver;
     private final AeshContext ctx;
 
-    AeshCommandProcessorImpl(AeshContext ctx,
-            CommandRegistry<C> registry,
-            CommandInvocationProvider<CI> commandInvocationProvider,
-            CommandNotFoundHandler commandNotFoundHandler,
-            CompleterInvocationProvider completerInvocationProvider,
-            ConverterInvocationProvider converterInvocationProvider,
-            ValidatorInvocationProvider validatorInvocationProvider,
-            OptionActivatorProvider optionActivatorProvider,
-            CommandActivatorProvider commandActivatorProvider) {
+    AeshCommandRuntimeImpl(AeshContext ctx,
+                           CommandRegistry<C> registry,
+                           CommandInvocationProvider<CI> commandInvocationProvider,
+                           CommandNotFoundHandler commandNotFoundHandler,
+                           CompleterInvocationProvider completerInvocationProvider,
+                           ConverterInvocationProvider converterInvocationProvider,
+                           ValidatorInvocationProvider validatorInvocationProvider,
+                           OptionActivatorProvider optionActivatorProvider,
+                           CommandActivatorProvider commandActivatorProvider) {
         this.ctx = ctx;
         this.registry = registry;
         commandResolver = new AeshCommandResolver<>(registry);
@@ -376,14 +376,15 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
             CommandLineParserException, OptionValidatorException,
             CommandValidatorException {
         // XXX JFDENISE, for now no OPERATORS
-        Command<CI> c = getPopulatedCommand(line);
-        CI ic = commandInvocationProvider.enhanceCommandInvocation(
-                new DefaultCommandInvocation(this));
-        Executor<CI> executor = new Executor<>(ic, c);
-        return executor;
+
+        //Command<CI> c = getPopulatedCommand(line);
+        ProcessedCommand<C> processedCommand = getPopulatedCommand(line);
+        return new Executor<>(commandInvocationProvider.enhanceCommandInvocation(
+                new DefaultCommandInvocation(this)),
+                processedCommand.getCommand(), processedCommand.resultHandler());
     }
 
-    private Command<CI> getPopulatedCommand(String commandLine) throws CommandNotFoundException,
+    private ProcessedCommand<C> getPopulatedCommand(String commandLine) throws CommandNotFoundException,
             CommandLineParserException, OptionValidatorException {
         if (commandLine == null || commandLine.isEmpty()) {
             return null;
@@ -405,6 +406,6 @@ class AeshCommandProcessorImpl<C extends Command, CI extends CommandInvocation, 
         }
         container.getParser().parsedCommand().getCommandPopulator().populateObject(container.getParser().parsedCommand().getProcessedCommand(),
                 invocationProviders, getAeshContext(), true);
-        return container.getParser().parsedCommand().getCommand();
+        return container.getParser().parsedCommand().getProcessedCommand();
     }
 }

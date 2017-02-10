@@ -19,7 +19,7 @@
  */
 package org.aesh.command.impl;
 
-import org.aesh.command.AeshCommandProcessor;
+import org.aesh.command.AeshCommandRuntime;
 import org.aesh.command.Command;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
@@ -27,7 +27,6 @@ import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.command.impl.activator.AeshCommandActivatorProvider;
 import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
@@ -53,7 +52,7 @@ import java.util.function.Consumer;
  *
  * @author jdenise@redhat.com
  */
-public class AeshCommandProcessorBuilder {
+public class AeshCommandRuntimeBuilder {
 
     private CommandRegistry<? extends Command> registry;
     private CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider;
@@ -65,56 +64,56 @@ public class AeshCommandProcessorBuilder {
     private CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider;
     private AeshContext ctx;
 
-    private AeshCommandProcessorBuilder() {
+    private AeshCommandRuntimeBuilder() {
     }
 
-    public static AeshCommandProcessorBuilder builder() {
-        return new AeshCommandProcessorBuilder();
+    public static AeshCommandRuntimeBuilder builder() {
+        return new AeshCommandRuntimeBuilder();
     }
 
-    public AeshCommandProcessorBuilder commandRegistry(CommandRegistry<? extends Command> registry) {
+    public AeshCommandRuntimeBuilder commandRegistry(CommandRegistry<? extends Command> registry) {
         this.registry = registry;
         return this;
     }
 
-    private AeshCommandProcessorBuilder apply(Consumer<AeshCommandProcessorBuilder> consumer) {
+    private AeshCommandRuntimeBuilder apply(Consumer<AeshCommandRuntimeBuilder> consumer) {
         consumer.accept(this);
         return this;
     }
 
-    public AeshCommandProcessorBuilder commandInvocationProvider(CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider) {
+    public AeshCommandRuntimeBuilder commandInvocationProvider(CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider) {
         return apply(c -> c.commandInvocationProvider = commandInvocationProvider);
     }
 
-    public AeshCommandProcessorBuilder commandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
+    public AeshCommandRuntimeBuilder commandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
         return apply(c -> c.commandNotFoundHandler = commandNotFoundHandler);
     }
 
-    public AeshCommandProcessorBuilder completerInvocationProvider(CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider) {
+    public AeshCommandRuntimeBuilder completerInvocationProvider(CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider) {
         return apply(c -> c.completerInvocationProvider = completerInvocationProvider);
     }
 
-    public AeshCommandProcessorBuilder converterInvocationProvider(ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider) {
+    public AeshCommandRuntimeBuilder converterInvocationProvider(ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider) {
         return apply(c -> c.converterInvocationProvider = converterInvocationProvider);
     }
 
-    public AeshCommandProcessorBuilder validatorInvocationProvider(ValidatorInvocationProvider<? extends ValidatorInvocation> validatorInvocationProvider) {
+    public AeshCommandRuntimeBuilder validatorInvocationProvider(ValidatorInvocationProvider<? extends ValidatorInvocation> validatorInvocationProvider) {
         return apply(c -> c.validatorInvocationProvider = validatorInvocationProvider);
     }
 
-    public AeshCommandProcessorBuilder optionActivatorProvider(OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider) {
+    public AeshCommandRuntimeBuilder optionActivatorProvider(OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider) {
         return apply(c -> c.optionActivatorProvider = optionActivatorProvider);
     }
 
-    public AeshCommandProcessorBuilder commandActivatorProvider(CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider) {
+    public AeshCommandRuntimeBuilder commandActivatorProvider(CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider) {
         return apply(c -> c.commandActivatorProvider = commandActivatorProvider);
     }
 
-    public AeshCommandProcessorBuilder aeshContext(AeshContext ctx) {
+    public AeshCommandRuntimeBuilder aeshContext(AeshContext ctx) {
         return apply(c -> c.ctx = ctx);
     }
 
-    public AeshCommandProcessorBuilder settings(Settings<? extends Command, ? extends CommandInvocation,
+    public AeshCommandRuntimeBuilder settings(Settings<? extends Command, ? extends CommandInvocation,
             ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation,
             ? extends OptionActivator, ? extends CommandActivator> settings) {
         return apply(c -> {
@@ -129,7 +128,7 @@ public class AeshCommandProcessorBuilder {
         });
     }
 
-    public AeshCommandProcessor<? extends CommandInvocation, ? extends AeshCompleteOperation> build() {
+    public AeshCommandRuntime build() {
         if (registry == null) {
             registry = new MutableCommandRegistry<>();
         }
@@ -162,7 +161,7 @@ public class AeshCommandProcessorBuilder {
             ctx = new DefaultAeshContext();
         }
 
-        return new AeshCommandProcessorImpl<>(ctx, registry, commandInvocationProvider,
+        return new AeshCommandRuntimeImpl<>(ctx, registry, commandInvocationProvider,
                         commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
                         validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider);
     }

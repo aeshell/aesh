@@ -32,7 +32,7 @@ import org.aesh.command.registry.CommandRegistry;
  *
  * @author jdenise@redhat.com
  */
-public interface AeshCommandProcessor<T extends CommandInvocation, V extends AeshCompleteOperation> {
+public interface AeshCommandRuntime<T extends CommandInvocation, V extends AeshCompleteOperation> {
 
     /**
      * The registry in which commands are registered.

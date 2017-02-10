@@ -20,6 +20,7 @@
 package org.aesh.command;
 
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.result.ResultHandler;
 
 /**
  * Contains both the executable and the execution context.
@@ -30,10 +31,12 @@ public class Executor<T extends CommandInvocation> {
 
     private final T commandInvocation;
     private final Executable<T> exe;
+    private final ResultHandler resultHandler;
 
-    public Executor(T commandInvocation, Executable<T> exe) {
+    public Executor(T commandInvocation, Executable<T> exe, ResultHandler resultHandler) {
         this.commandInvocation = commandInvocation;
         this.exe = exe;
+        this.resultHandler = resultHandler;
     }
 
     public Executable<T> getExecutable() {
@@ -45,6 +48,15 @@ public class Executor<T extends CommandInvocation> {
     }
 
     public CommandResult execute() throws CommandException, InterruptedException {
-        return exe.execute(commandInvocation);
+
+        CommandResult result = exe.execute(commandInvocation);
+
+        if(resultHandler != null) {
+            if( result.equals(CommandResult.SUCCESS))
+                resultHandler.onSuccess();
+            else
+                resultHandler.onFailure(result);
+        }
+        return result;
     }
 }
