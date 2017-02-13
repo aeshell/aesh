@@ -24,5 +24,5 @@ package org.aesh.command.completer;
  */
 public interface CompleterInvocationProvider<CI extends CompleterInvocation> {
 
-    CI enhanceCompleterInvocation(CI completerInvocation);
+    CI enhanceCompleterInvocation(CompleterInvocation completerInvocation);
 }
