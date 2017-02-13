@@ -107,8 +107,8 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 lastWord = lastWord.substring(1);
             if(lastWord.length() == 0)
                 return new ParsedCompleteObject(false, null, offset, getCorrectCompletionParser(line));
-            else if(parser.getProcessedCommand().findOptionNoActivatorCheck(lastWord) != null ||
-                    parser.getProcessedCommand().findLongOptionNoActivatorCheck(lastWord) != null)
+            else if(parser.parsedCommand().getProcessedCommand().findOptionNoActivatorCheck(lastWord) != null ||
+                    parser.parsedCommand().getProcessedCommand().findLongOptionNoActivatorCheck(lastWord) != null)
                 return findCompleteObjectValue(line, true);
             else
                 return new ParsedCompleteObject(false, null, offset, getCorrectCompletionParser(line));
@@ -122,7 +122,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
     private ParsedCompleteObject optionFinder(String line) throws CommandLineParserException {
         String lastWord = Parser.findEscapedSpaceWordCloseToEnd(line);
         //last word might be an option
-        if(lastWord.startsWith("-") ) {
+        if(lastWord.startsWith("-") && !lastWord.contains("=")) {
             String secLastWord =
                     Parser.findEscapedSpaceWordCloseToEnd(
                             line.substring(0,line.length()-lastWord.length()));

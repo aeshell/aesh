@@ -75,6 +75,11 @@ public class CommandLinePopulatorTest {
 
         TestPopulator1 test1 = parser.getCommand();
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        parser.parse("test --equal eck --int1 ");
+        parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, true);
+        assertEquals("eck", test1.equal);
+
         parser.parse("test -e enable --X -f -i 2 -n=3");
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, true);
 
