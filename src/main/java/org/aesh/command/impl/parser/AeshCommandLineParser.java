@@ -202,6 +202,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
     @Override
     public void parse(ParsedLineIterator iterator, boolean ignoreRequirements) {
+        clear();
         if(iterator.hasNextWord()) {
             String command = iterator.pollWord();
             if (processedCommand.name().equals(command)
@@ -226,7 +227,6 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
 
     private void doParse(ParsedLineIterator iter, boolean ignoreRequirements) {
-        clear();
         parsedCommand = true;
         while(iter.hasNextWord()) {
             ParsedWord word = iter.peekParsedWord();
@@ -297,12 +297,8 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      * Also, if a required option is not found or options specified with value,
      * but is not given any value an CommandLineParserException will be thrown.
      *
-     * The options found will be returned as a {@link CommandLine} object where
-     * they can be queried after.
-     *
      * @param line input
      * @param ignoreRequirements if we should ignore
-     * @return CommandLine
      */
     @Override
     public void parse(String line, boolean ignoreRequirements) {
@@ -311,13 +307,18 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
     @Override
     public void clear() {
-        processedCommand.clear();
-        if(isGroupCommand()) {
-            for (CommandLineParser<C> child : getChildParsers())
-                child.getProcessedCommand().clear();
+        //if this is the parsed command, clear it
+        if(parsedCommand) {
+            processedCommand.clear();
+            lastParsedOption = null;
+            parsedCommand = false;
         }
-        lastParsedOption = null;
-        parsedCommand = false;
+        //else find the parsed command and clear that one
+        else {
+            CommandLineParser parsed = parsedCommand();
+            if (parsed != null)
+                parsed.clear();
+        }
     }
 
     @Override

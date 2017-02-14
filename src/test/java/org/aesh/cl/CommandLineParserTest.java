@@ -142,6 +142,7 @@ public class CommandLineParserTest {
         CommandLineParser parser = new AeshCommandContainerBuilder().create(GroupCommandTest.class).getParser();
         GroupCommandTest g1 = (GroupCommandTest) parser.getCommand();
         ChildTest1 c1 = (ChildTest1) parser.getChildParser("child1").getCommand();
+        ChildTest2 c2 = (ChildTest2) parser.getChildParser("child2").getCommand();
 
         parser.populateObject("group child1 --foo BAR", invocationProviders, aeshContext, true);
         assertEquals("BAR", c1.foo);
@@ -149,6 +150,13 @@ public class CommandLineParserTest {
         parser.populateObject("group child1 --foo BAR --bar FOO", invocationProviders, aeshContext, true);
         assertEquals("BAR", c1.foo);
         assertEquals("FOO", c1.bar);
+
+        parser.populateObject("group child2 --foo BAR --bar FOO", invocationProviders, aeshContext, true);
+        assertNull(c1.foo);
+        assertNull(c1.bar);
+        assertEquals("BAR", c2.foo);
+        assertEquals("FOO", c2.bar);
+
     }
 
     @Test
@@ -311,7 +319,17 @@ public class CommandLineParserTest {
 
     }
 
-    @GroupCommandDefinition(name = "group", description = "", groupCommands = {ChildTest1.class})
+    @CommandDefinition(name = "child2", description = "")
+    public class ChildTest2 extends TestingCommand {
+
+        @Option
+        private String foo;
+
+        @Option
+        private String bar;
+    }
+
+    @GroupCommandDefinition(name = "group", description = "", groupCommands = {ChildTest1.class, ChildTest2.class})
     public class GroupCommandTest extends TestingCommand {
 
         @Option(hasValue = false)
