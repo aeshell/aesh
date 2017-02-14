@@ -67,7 +67,8 @@ import org.aesh.tty.Size;
  *
  * @author jdenise@redhat.com
  */
-class AeshCommandRuntimeImpl<C extends Command, CI extends CommandInvocation, CO extends AeshCompleteOperation> implements AeshCommandRuntime<CI, CO> {
+class AeshCommandRuntimeImpl<C extends Command, CI extends CommandInvocation, CO extends AeshCompleteOperation>
+        implements AeshCommandRuntime<CI, CO>, CommandRegistry.CommandRegistrationListener {
 
     private static class DefaultCommandInvocation implements CommandInvocation {
 
@@ -254,6 +255,7 @@ class AeshCommandRuntimeImpl<C extends Command, CI extends CommandInvocation, CO
                 = new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
                         validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider);
         processAfterInit();
+        registry.addRegistrationListener(this);
     }
 
     @Override
@@ -356,18 +358,22 @@ class AeshCommandRuntimeImpl<C extends Command, CI extends CommandInvocation, CO
     private void processAfterInit() {
         try {
             for (String commandName : registry.getAllCommandNames()) {
-                ProcessedCommand cmd = registry.getCommand(commandName, "").getParser().getProcessedCommand();
-                List<? extends CommandLineParser<C>> childParsers = registry.getChildCommandParsers(commandName);
-                if (!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
-                    //we have a custom OptionActivatorProvider, and need to process all options
-                    cmd.updateInvocationProviders(invocationProviders);
-                    for (CommandLineParser<?> child : childParsers) {
-                        child.getProcessedCommand().updateInvocationProviders(invocationProviders);
-                    }
-                }
+                updateCommand(commandName);
             }
         } catch (Exception e) {
             LOGGER.log(Level.FINER, "Exception while iterating commands.", e);
+        }
+    }
+
+    private void updateCommand(String commandName) throws CommandNotFoundException {
+        ProcessedCommand cmd = registry.getCommand(commandName, "").getParser().getProcessedCommand();
+        List<? extends CommandLineParser<C>> childParsers = registry.getChildCommandParsers(commandName);
+        if (!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
+            //we have a custom OptionActivatorProvider, and need to process all options
+            cmd.updateInvocationProviders(invocationProviders);
+            for (CommandLineParser<?> child : childParsers) {
+                child.getProcessedCommand().updateInvocationProviders(invocationProviders);
+            }
         }
     }
 
@@ -407,5 +413,22 @@ class AeshCommandRuntimeImpl<C extends Command, CI extends CommandInvocation, CO
         container.getParser().parsedCommand().getCommandPopulator().populateObject(container.getParser().parsedCommand().getProcessedCommand(),
                 invocationProviders, getAeshContext(), true);
         return container.getParser().parsedCommand().getProcessedCommand();
+    }
+
+    @Override
+    public void registrationAction(String commandName, CommandRegistry.REGISTRATION_ACTION action) {
+        if (action == CommandRegistry.REGISTRATION_ACTION.ADDED) {
+            try {
+                updateCommand(commandName);
+            } catch (Exception e) {
+                LOGGER.log(Level.FINER, "Exception while iterating commands.", e);
+            }
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        registry.removeRegistrationListener(this);
+        super.finalize();
     }
 }
