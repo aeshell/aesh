@@ -45,7 +45,7 @@ public class CompleterData implements CompleterInvocation {
     private final String completeValue;
     private final Command command;
     private final AeshContext aeshContext;
-    private int offset;
+    private int offset = -1;
     private boolean ignoreOffset = false;
     private boolean ignoreStartsWith = false;
 

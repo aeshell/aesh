@@ -153,6 +153,24 @@ public class ParseCompleteObjectTest {
     }
 
     @Test
+    public void testParseCompleteObjectWithEquals() throws Exception {
+        CommandLineParser<ParseCompleteTest1> clp = new AeshCommandContainerBuilder<ParseCompleteTest1>().create(ParseCompleteTest1.class).getParser();
+        CommandLineCompletionParser completeParser = clp.getCompletionParser();
+
+        ParsedCompleteObject pco = completeParser.findCompleteObject("test -e=foo1", 100);
+        assertEquals("foo1", pco.getValue());
+        assertEquals(String.class, pco.getType());
+        assertTrue(pco.isOption());
+
+        pco = completeParser.findCompleteObject("test -f=true --equal=", 100);
+        assertEquals("", pco.getValue());
+        assertEquals(String.class, pco.getType());
+        assertEquals("equal", pco.getName());
+        assertTrue(pco.isOption());
+        assertFalse(pco.doDisplayOptions());
+    }
+
+    @Test
     public void testParseCompleteObject2() throws Exception {
         CommandLineParser clp = new AeshCommandContainerBuilder<ParseCompleteTest2>().create(ParseCompleteTest2.class).getParser();
         CommandLineCompletionParser completeParser = clp.getCompletionParser();

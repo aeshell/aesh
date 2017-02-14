@@ -410,7 +410,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
     }
 
     private void completionSetOffSet(ParsedCompleteObject completeObject, CompleteOperation completeOperation, CompleterInvocation completions) {
-        if(completions.getOffset() > 0)
+        if(completions.getOffset() >= 0)
             completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
         else if(completeObject.getValue() != null)
             completeOperation.setOffset( completeOperation.getCursor() - completeObject.getValue().length());
@@ -429,5 +429,6 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 return this;
         }
     }
+
 
 }

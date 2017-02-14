@@ -112,7 +112,6 @@ public class CommandLinePopulatorTest {
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, true);
         assertEquals("enable2 ", test1.getEqual());
         assertFalse(test1.getEnableX());
-
     }
 
     @Test(expected = OptionParserException.class)
