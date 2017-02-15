@@ -79,6 +79,14 @@ public class AeshCommandRegistryTest {
             public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
                 return Collections.emptyList();
             }
+
+            @Override
+            public void addRegistrationListener(CommandRegistry.CommandRegistrationListener listener) {
+            }
+
+            @Override
+            public void removeRegistrationListener(CommandRegistry.CommandRegistrationListener listener) {
+            }
         };
 
         Settings settings = SettingsBuilder.builder()
@@ -131,6 +139,14 @@ public class AeshCommandRegistryTest {
             @Override
             public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
                 return Collections.emptyList();
+            }
+
+            @Override
+            public void addRegistrationListener(CommandRegistry.CommandRegistrationListener listener) {
+            }
+
+            @Override
+            public void removeRegistrationListener(CommandRegistry.CommandRegistrationListener listener) {
             }
         };
 
@@ -185,6 +201,14 @@ public class AeshCommandRegistryTest {
             @Override
             public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
                 return Collections.emptyList();
+           }
+
+           @Override
+           public void addRegistrationListener(CommandRegistry.CommandRegistrationListener listener) {
+           }
+
+            @Override
+            public void removeRegistrationListener(CommandRegistry.CommandRegistrationListener listener) {
             }
         };
 

@@ -50,6 +50,8 @@ public class MutableCommandRegistry<C extends Command> implements CommandRegistr
 
     private CommandContainerBuilder<C> containerBuilder;
 
+    private final List<CommandRegistrationListener> listeners = new ArrayList<>();
+
     public void setCommandContainerBuilder(CommandContainerBuilder<C> containerBuilder) {
         this.containerBuilder = containerBuilder;
     }
@@ -159,6 +161,8 @@ public class MutableCommandRegistry<C extends Command> implements CommandRegistr
             for (String alias : command.getAliases()) {
                 aliases.put(alias, commandContainer);
             }
+            emit(commandContainer.getParser().getProcessedCommand().name(),
+                    REGISTRATION_ACTION.ADDED);
         }
     }
 
@@ -183,6 +187,7 @@ public class MutableCommandRegistry<C extends Command> implements CommandRegistr
             for (String alias : command.getAliases()) {
                 aliases.remove(alias);
             }
+            emit(name, REGISTRATION_ACTION.REMOVED);
         }
     }
 
@@ -199,6 +204,22 @@ public class MutableCommandRegistry<C extends Command> implements CommandRegistr
         } else {
             throw new CommandNotFoundException("Command: named " + alias + " was not found.");
         }
+    }
+
+    private void emit(String name, REGISTRATION_ACTION action) {
+        for (CommandRegistrationListener listener : listeners) {
+            listener.registrationAction(name, action);
+        }
+    }
+
+    @Override
+    public void addRegistrationListener(CommandRegistrationListener listener) {
+        listeners.add(listener);
+    }
+
+    @Override
+    public void removeRegistrationListener(CommandRegistrationListener listener) {
+        listeners.remove(listener);
     }
 
 }

@@ -37,6 +37,35 @@ import java.util.Set;
 public interface CommandRegistry<C extends Command> {
 
     /**
+     * Command registration actions.
+     */
+    enum REGISTRATION_ACTION {
+        ADDED,
+        REMOVED
+    }
+
+    /**
+     * Implemented by listeners to receive added/removed events.
+     */
+    interface CommandRegistrationListener {
+        void registrationAction(String commandName, REGISTRATION_ACTION action);
+    }
+
+    /**
+     * To register to registry events.
+     *
+     * @param listener Listener to register.
+     */
+    void addRegistrationListener(CommandRegistrationListener listener);
+
+    /**
+     * To unregister from registry events.
+     *
+     * @param listener Listener to unregister.
+     */
+    void removeRegistrationListener(CommandRegistrationListener listener);
+
+    /**
      * @param name command name
      * @param line current terminal buffer line
      * @return the matching CommandContainer's name
