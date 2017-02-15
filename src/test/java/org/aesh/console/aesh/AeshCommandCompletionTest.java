@@ -229,6 +229,7 @@ public class AeshCommandCompletionTest {
         Thread.sleep(80);
         connection.assertBuffer("git rebase --force --test ");
         connection.read(enter.getFirstValue());
+        Thread.sleep(80);
         connection.clearOutputBuffer();
 
         connection.read("git rebase --fo");

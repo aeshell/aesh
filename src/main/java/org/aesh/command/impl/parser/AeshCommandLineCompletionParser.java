@@ -293,8 +293,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( displayName));
 
             try {
-                ParsedLine parsedLine = LineParser.parseLine(rest);
-                parser.parse(parsedLine.iterator(), true);
+                //no validation for now when we populate for completion
                 parser.getCommandPopulator().populateObject(parser.getProcessedCommand(),
                         invocationProviders, completeOperation.getContext(), false);
             }

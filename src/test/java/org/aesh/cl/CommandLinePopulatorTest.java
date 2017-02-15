@@ -52,6 +52,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -80,9 +81,14 @@ public class CommandLinePopulatorTest {
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, true);
         assertEquals("foo", test1.equal);
 
-        parser.parse("test --equal eck --int1 ");
-        parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, true);
-        assertEquals("eck", test1.equal);
+        try {
+            parser.parse("test --equal eck --int1 ");
+            parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, true);
+            fail("Should throw an OptionParserException");
+        }
+        catch (OptionParserException ope) {
+            //ignored
+        }
 
         parser.parse("test -e enable --X -f -i 2 -n=3");
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, true);
@@ -419,7 +425,7 @@ public class CommandLinePopulatorTest {
     }
 
     // specify --myoption at the end of the cmdline
-    @Test
+    @Test(expected = OptionParserException.class)
     public void testMyOptionAtEndWithoutValue() throws Exception {
         ProcessedCommand<?> cmd = buildCommandLineOptions();
         parseArgLine(cmd, "mycmd --abc 123 --myoption");

@@ -52,31 +52,9 @@ public class AeshOptionParser implements OptionParser {
                     return;
                 }
             }
+            if(option.hasValue() && option.getValue() == null)
+                option.parent().addParserException(new OptionParserException("Option "+option.name()+" was specified, but no value was given."));
         }
-        /*
-        else if(option.getOptionType().equals(OptionType.BOOLEAN)){
-            option.addValue("true");
-        }
-        else if(option.getOptionType().equals(OptionType.LIST)){
-
-        }
-        else {
-
-        }
-        */
-        /*
-        status = Status.NULL;
-        doParse(parsedLineIterator, option);
-        if(option.hasMultipleValues())
-            while(parsedLineIterator.hasNextWord()) {
-                ParsedWord word = parsedLineIterator.peekParsedWord();
-                ProcessedOption nextOption = option.parent().findOption(word.word());
-                if(nextOption == null)
-                    doParse(parsedLineIterator, option);
-                else
-                    return;
-            }
-            */
     }
 
     private void doParse(ParsedLineIterator iterator, ProcessedOption option) {

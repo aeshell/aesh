@@ -54,7 +54,7 @@ public class AeshCommandPopulator<O extends Object, C extends Command> implement
     public void populateObject(ProcessedCommand<C> processedCommand, InvocationProviders invocationProviders,
                                AeshContext aeshContext, boolean validate)
             throws CommandLineParserException, OptionValidatorException {
-        if(processedCommand.parserExceptions().size() > 0)
+        if(processedCommand.parserExceptions().size() > 0 && validate)
             throw processedCommand.parserExceptions().get(0);
         for(ProcessedOption option : processedCommand.getOptions()) {
             if(option.getValues() != null && option.getValues().size() > 0)
