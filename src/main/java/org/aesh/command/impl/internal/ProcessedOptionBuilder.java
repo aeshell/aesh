@@ -29,7 +29,7 @@ import org.aesh.command.converter.Converter;
 import org.aesh.command.impl.converter.CLConverterManager;
 import org.aesh.command.impl.converter.NullConverter;
 import org.aesh.command.impl.parser.AeshOptionParser;
-import org.aesh.command.impl.parser.OptionParserException;
+import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.impl.renderer.NullOptionRenderer;
 import org.aesh.command.parser.OptionParser;
 import org.aesh.command.renderer.OptionRenderer;

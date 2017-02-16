@@ -21,7 +21,7 @@
 package org.aesh.command.invocation;
 
 import org.aesh.command.Executor;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;

@@ -29,7 +29,7 @@ import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.completion.Completion;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 

@@ -22,6 +22,7 @@ package org.aesh.command.impl.parser;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.parser.OptionParser;
+import org.aesh.command.parser.OptionParserException;
 import org.aesh.parser.ParsedLineIterator;
 
 /**
@@ -33,7 +34,7 @@ public class AeshOptionParser implements OptionParser {
     private Status status;
 
     @Override
-    public void parse(ParsedLineIterator parsedLineIterator, ProcessedOption option) {
+    public void parse(ParsedLineIterator parsedLineIterator, ProcessedOption option) throws OptionParserException {
         if(option.isProperty()) {
             processProperty(parsedLineIterator, option);
         }
@@ -47,24 +48,24 @@ public class AeshOptionParser implements OptionParser {
                 else {
                     //TODO: we need to do something better here
                     if(option.hasValue() && option.getValue() == null) {
-                        option.parent().addParserException(new OptionParserException("Option "+option.name()+" was specified, but no value was given."));
+                        throw new OptionParserException("Option "+option.name()+" was specified, but no value was given.");
                     }
                     return;
                 }
             }
             if(option.hasValue() && option.getValue() == null)
-                option.parent().addParserException(new OptionParserException("Option "+option.name()+" was specified, but no value was given."));
+                throw new OptionParserException("Option "+option.name()+" was specified, but no value was given.");
         }
     }
 
-    private void doParse(ParsedLineIterator iterator, ProcessedOption option) {
+    private void doParse(ParsedLineIterator iterator, ProcessedOption option) throws OptionParserException {
             if(status == Status.ACTIVE)
                 addValueToOption(option, iterator);
             else if(status == Status.NULL)
                 preProcessOption(option, iterator);
     }
 
-    private void preProcessOption(ProcessedOption option, ParsedLineIterator iterator) {
+    private void preProcessOption(ProcessedOption option, ParsedLineIterator iterator) throws OptionParserException {
 
         String word = iterator.peekWord();
         if(option.isLongNameUsed()) {
@@ -104,7 +105,7 @@ public class AeshOptionParser implements OptionParser {
         iterator.pollParsedWord();
     }
 
-    private void processOption(ProcessedOption option, String line, String name) {
+    private void processOption(ProcessedOption option, String line, String name) throws OptionParserException {
         /*
         if (option.isProperty()) {
             processProperty(option, line, name);
@@ -134,15 +135,15 @@ public class AeshOptionParser implements OptionParser {
                             //commandLine.addOption(currOption);
                         }
                         else
-                            option.parent().addParserException(new OptionParserException("Option: -" + shortName +
-                                    " can not be grouped with other options since it need to be given a value"));
+                            throw new OptionParserException("Option: -"+shortName+
+                                    " can not be grouped with other options since it need to be given a value");
                     }
                     else
-                        option.parent().addParserException(new OptionParserException("Option: -" + shortName + " was not found."));
+                        throw new OptionParserException("Option: -" + shortName + " was not found.");
                 }
             }
             else
-                option.parent().addParserException(new OptionParserException("Option: - must be followed by a valid operator"));
+                throw new OptionParserException("Option: - must be followed by a valid operator");
         }
         //line contain equals, we need to add a value(s) to the currentOption
         else {
@@ -195,18 +196,17 @@ public class AeshOptionParser implements OptionParser {
         }
     }
 
-    private void processProperty(ParsedLineIterator iterator, ProcessedOption currOption) {
+    private void processProperty(ParsedLineIterator iterator, ProcessedOption currOption) throws OptionParserException {
         String word = currOption.isLongNameUsed() ? iterator.pollWord().substring(2) : iterator.pollWord().substring(1);
         String name = currOption.isLongNameUsed() ? currOption.name() : currOption.shortName();
         if (word.length() < (1 + name.length()) || !word.contains(EQUALS))
-            currOption.parent().addParserException(new OptionParserException(
-                    "Option " + currOption.getDisplayName() + ", must be part of a property"));
+            throw new OptionParserException("Option "+currOption.getDisplayName()+", must be part of a property");
         else {
             String propertyName =
                     word.substring(name.length(), word.indexOf(EQUALS));
             String value = word.substring(word.indexOf(EQUALS) + 1);
             if (value.length() < 1)
-                currOption.parent().addParserException(new OptionParserException("Option " + currOption.getDisplayName() + ", must have a value"));
+                throw new OptionParserException("Option " + currOption.getDisplayName() + ", must have a value");
             else {
                 currOption.addProperty(propertyName, value);
                 //commandLine.addOption(currOption);

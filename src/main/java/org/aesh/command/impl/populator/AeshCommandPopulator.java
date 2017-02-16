@@ -27,7 +27,7 @@ import org.aesh.command.populator.CommandPopulator;
 import org.aesh.console.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.Command;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

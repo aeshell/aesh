@@ -24,7 +24,7 @@ import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
 import org.aesh.command.impl.converter.AeshConverterInvocation;
 import org.aesh.command.impl.parser.AeshOptionParser;
-import org.aesh.command.impl.parser.OptionParserException;
+import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.impl.validator.AeshValidatorInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.OptionParser;

@@ -30,5 +30,5 @@ import org.aesh.parser.ParsedLineIterator;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface OptionParser {
-    void parse(ParsedLineIterator parsedLineIterator, ProcessedOption option);
+    void parse(ParsedLineIterator parsedLineIterator, ProcessedOption option) throws OptionParserException;
 }

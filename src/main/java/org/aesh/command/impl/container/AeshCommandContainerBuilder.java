@@ -37,7 +37,7 @@ import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.Command;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Arguments;

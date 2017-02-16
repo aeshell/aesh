@@ -24,6 +24,7 @@ import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.DefaultValueOptionCompleter;
 import org.aesh.command.impl.internal.OptionType;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.command.invocation.InvocationProviders;
@@ -221,7 +222,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                     String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( completeObject.getName()));
                     ParsedLine parsedLine = LineParser.parseLine(rest);
                     try {
-                        parser.parse(parsedLine.iterator(), true);
+                        //parser.parse(parsedLine.iterator(), true);
                         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders,
                                 completeOperation.getContext(), false);
                     }

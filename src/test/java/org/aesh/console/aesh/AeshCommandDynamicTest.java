@@ -22,7 +22,7 @@ package org.aesh.console.aesh;
 import org.aesh.command.builder.CommandBuilder;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
-import org.aesh.command.impl.parser.OptionParserException;
+import org.aesh.command.parser.OptionParserException;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;

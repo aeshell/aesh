@@ -21,6 +21,9 @@ package org.aesh.command.impl.parser;
 
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.parser.OptionParserException;
+import org.aesh.command.parser.RequiredOptionException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -228,34 +231,30 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
     private void doParse(ParsedLineIterator iter, boolean ignoreRequirements) {
         parsedCommand = true;
-        while(iter.hasNextWord()) {
-            ParsedWord word = iter.peekParsedWord();
-            lastParsedOption = processedCommand.searchAllOptions(word.word());
-            if(lastParsedOption != null) {
-                //if we have a group we might need the current word so we wont poll it
-                //if (!currOption.getOptionType().equals(OptionType.GROUP))
-                //    iter.pollParsedWord();
-                lastParsedOption.parser().parse(iter, lastParsedOption);
-            }
-            else {
-                if(processedCommand.hasArgument()) {
-                    processedCommand.getArgument().addValue(word.word());
+        try {
+            while (iter.hasNextWord()) {
+                ParsedWord word = iter.peekParsedWord();
+                lastParsedOption = processedCommand.searchAllOptions(word.word());
+                if (lastParsedOption != null) {
+                    lastParsedOption.parser().parse(iter, lastParsedOption);
                 }
                 else {
-                    processedCommand.addParserException(
-                            new OptionParserException("A value " + word.word() +
-                                    " was given as an argument, but the command do not support it."));
+                    if (processedCommand.hasArgument()) {
+                        processedCommand.getArgument().addValue(word.word());
+                    }
+                    else {
+                        processedCommand.addParserException(
+                                new OptionParserException("A value " + word.word() +
+                                        " was given as an argument, but the command do not support it."));
+                    }
+                    iter.pollParsedWord();
                 }
-                iter.pollParsedWord();
-            }
 
+            }
         }
-        //if(active != null)
-        //    active.addOption(active);
-        //verify that options have values and/or add default values
-        //if(!ignoreRequirements)
-        //    checkForDefaultValues(commandLine);
-        //this will throw and CommandLineParserException if needed
+        catch (OptionParserException ope) {
+            processedCommand.addParserException(ope);
+        }
         if(!ignoreRequirements) {
             RequiredOptionException re = checkForMissingRequiredOptions(processedCommand);
             if(re != null)

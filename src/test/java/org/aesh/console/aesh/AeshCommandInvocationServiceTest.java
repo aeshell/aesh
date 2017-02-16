@@ -40,7 +40,7 @@ import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
 import java.io.IOException;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.Executor;

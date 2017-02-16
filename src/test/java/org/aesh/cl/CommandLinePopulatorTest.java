@@ -27,7 +27,7 @@ import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
-import org.aesh.command.impl.parser.OptionParserException;
+import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
@@ -39,7 +39,7 @@ import org.aesh.command.impl.completer.AeshCompleterInvocationProvider;
 import org.aesh.command.impl.converter.AeshConverterInvocationProvider;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.console.settings.SettingsBuilder;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -396,7 +396,7 @@ public class CommandLinePopulatorTest {
         assert "value".equals(cmd.findLongOption("myoption").getValue()) : "bad myoption value";
     }
 
-    @Test(expected = org.aesh.command.impl.parser.OptionParserException.class)
+    @Test(expected = OptionParserException.class)
     public void testMyOptionWithoutValue() throws Exception {
         ProcessedCommand<?> cmd = buildCommandLineOptions();
         parseArgLine(cmd, "mycmd --myoption --abc 23");

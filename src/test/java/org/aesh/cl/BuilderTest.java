@@ -22,7 +22,7 @@ package org.aesh.cl;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.validator.NullCommandValidator;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.parser.CommandLineParser;

@@ -21,7 +21,7 @@
 package org.aesh.command.populator;
 
 import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;

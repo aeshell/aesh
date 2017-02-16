@@ -20,6 +20,7 @@
 package org.aesh.command.impl.parser;
 
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.complete.AeshCompleteOperation;
 
 /**

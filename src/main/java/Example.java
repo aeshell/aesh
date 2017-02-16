@@ -27,7 +27,7 @@ import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.builder.CommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.completer.OptionCompleter;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.renderer.OptionRenderer;

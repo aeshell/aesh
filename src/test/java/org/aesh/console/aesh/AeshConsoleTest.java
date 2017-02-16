@@ -38,7 +38,7 @@ import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.option.OptionList;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.ReadlineConsole;

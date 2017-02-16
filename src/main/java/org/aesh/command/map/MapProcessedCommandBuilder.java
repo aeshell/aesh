@@ -25,14 +25,14 @@ import java.util.Collections;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.impl.parser.OptionParserException;
+import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
 import org.aesh.command.impl.validator.NullCommandValidator;
 import org.aesh.util.ReflectionUtil;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import java.util.List;
 
 public class MapProcessedCommandBuilder {

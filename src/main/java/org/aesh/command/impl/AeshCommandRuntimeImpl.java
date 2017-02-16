@@ -34,7 +34,7 @@ import org.aesh.command.Shell;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.parser.ParsedCompleteObject;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidatorException;

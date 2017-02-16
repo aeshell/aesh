@@ -34,7 +34,7 @@ import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.Connection;
 import org.aesh.util.Config;
 import org.aesh.command.CommandDefinition;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.CommandResult;
 import org.aesh.tty.TestConnection;
 import org.junit.Ignore;

@@ -24,7 +24,7 @@ import org.aesh.command.CommandException;
 import org.aesh.console.settings.Settings;
 import org.aesh.parser.LineParser;
 import org.aesh.util.Config;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.CommandResult;

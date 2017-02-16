@@ -38,7 +38,7 @@ import org.aesh.console.AeshContext;
 import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.console.settings.Settings;
-import org.aesh.command.impl.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.console.AeshCompletionHandler;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.console.settings.DefaultAeshContext;

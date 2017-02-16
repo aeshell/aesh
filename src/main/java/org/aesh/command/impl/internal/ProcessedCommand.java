@@ -20,8 +20,8 @@
 package org.aesh.command.impl.internal;
 
 import org.aesh.command.impl.activator.NullCommandActivator;
-import org.aesh.command.impl.parser.CommandLineParserException;
-import org.aesh.command.impl.parser.OptionParserException;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.result.ResultHandler;
