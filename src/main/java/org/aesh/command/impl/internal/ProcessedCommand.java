@@ -215,7 +215,7 @@ public class ProcessedCommand<C extends Command> {
         if (input.startsWith("--")) {
             ProcessedOption currentOption = findLongOptionNoActivatorCheck(input.substring(2));
             if(currentOption == null)
-                currentOption = startWithLongOption(input.substring(2));
+                currentOption = startWithLongOptionNoActivatorCheck(input.substring(2));
             if (currentOption != null)
                 currentOption.setLongNameUsed(true);
 
@@ -268,6 +268,16 @@ public class ProcessedCommand<C extends Command> {
             if(name.startsWith(option.name()) &&
                     option.activator().isActivated(this))
                 return option;
+
+        return null;
+    }
+
+    public ProcessedOption startWithLongOptionNoActivatorCheck(String name) {
+        for (ProcessedOption option : getOptions()) {
+            if (name.startsWith(option.name())) {
+                return option;
+            }
+        }
 
         return null;
     }
