@@ -71,10 +71,6 @@ public class AeshCommandRegistryTest {
                 throw new IllegalStateException("Should not crash Aesh");
             }
 
-            @Override public void removeCommand(String name) {
-
-            }
-
             @Override
             public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
                 return Collections.emptyList();
@@ -130,10 +126,6 @@ public class AeshCommandRegistryTest {
             @Override
             public Set<String> getAllCommandNames() {
                 return null;
-            }
-
-            @Override public void removeCommand(String name) {
-
             }
 
             @Override
@@ -192,11 +184,7 @@ public class AeshCommandRegistryTest {
             @Override
             public Set<String> getAllCommandNames() {
                 return new HashSet<>();
-            }
-
-            @Override public void removeCommand(String name) {
-
-            }
+           }
 
             @Override
             public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {

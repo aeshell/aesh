@@ -39,7 +39,7 @@ import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.impl.invocation.AeshCommandInvocationProvider;
 import org.aesh.command.invocation.CommandInvocationProvider;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.impl.registry.MutableCommandRegistry;
+import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.settings.CommandNotFoundHandler;
@@ -130,7 +130,7 @@ public class AeshCommandRuntimeBuilder {
 
     public AeshCommandRuntime build() {
         if (registry == null) {
-            registry = new MutableCommandRegistry<>();
+            registry = new MutableCommandRegistryImpl<>();
         }
 
         if (commandInvocationProvider == null) {

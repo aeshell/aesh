@@ -26,7 +26,7 @@ import org.aesh.command.GroupCommandDefinition;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.command.Command;
 import org.aesh.command.CommandResult;
-import org.aesh.command.impl.registry.MutableCommandRegistry;
+import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.terminal.formatting.TerminalString;
 import org.junit.Test;
 
@@ -43,7 +43,7 @@ public class MutableCommandRegistryTest {
     @Test
     public void testFindCommandNames() {
 
-        MutableCommandRegistry registry = new MutableCommandRegistry();
+        MutableCommandRegistryImpl registry = new MutableCommandRegistryImpl();
         registry.addCommand(Command1.class);
         registry.addCommand(Command2.class);
         registry.addCommand(Command3.class);
