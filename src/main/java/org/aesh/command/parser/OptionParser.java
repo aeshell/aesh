@@ -30,5 +30,14 @@ import org.aesh.parser.ParsedLineIterator;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface OptionParser {
+
+    /**
+     * Parse from the current position in the iterator.
+     * Note that the first position in the iterator contain the word with the option name.
+     *
+     * @param parsedLineIterator word iterator
+     * @param option current option
+     * @throws OptionParserException parser exception
+     */
     void parse(ParsedLineIterator parsedLineIterator, ProcessedOption option) throws OptionParserException;
 }
