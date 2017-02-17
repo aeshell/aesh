@@ -40,7 +40,7 @@ import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.impl.converter.AeshConverterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.impl.registry.MutableCommandRegistry;
+import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.helper.InterruptHook;
@@ -252,7 +252,7 @@ public class SettingsBuilder {
             LoggerUtil.doLog();
 
         if(settings.commandRegistry() == null)
-            settings.setCommandRegistry(new MutableCommandRegistry());
+            settings.setCommandRegistry(new MutableCommandRegistryImpl());
 
         if(settings.commandInvocationProvider() == null)
             settings.setCommandInvocationProvider( new AeshCommandInvocationProvider());

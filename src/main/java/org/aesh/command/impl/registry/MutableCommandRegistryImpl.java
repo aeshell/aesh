@@ -26,7 +26,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.container.CommandContainer;
-import org.aesh.command.registry.CommandRegistry;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.util.LoggerUtil;
 
@@ -38,12 +37,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.registry.MutableCommandRegistry;
 import org.aesh.util.Parser;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class MutableCommandRegistry<C extends Command> implements CommandRegistry<C> {
+public class MutableCommandRegistryImpl<C extends Command> implements MutableCommandRegistry<C> {
 
     private final Map<String, CommandContainer<C>> registry = new HashMap<>();
     private final Map<String, CommandContainer<C>> aliases = new HashMap<>();
@@ -56,7 +56,7 @@ public class MutableCommandRegistry<C extends Command> implements CommandRegistr
         this.containerBuilder = containerBuilder;
     }
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(MutableCommandRegistry.class.getName());
+    private static final Logger LOGGER = LoggerUtil.getLogger(MutableCommandRegistryImpl.class.getName());
 
     @Override
     public CommandContainer<C> getCommand(String name, String line) throws CommandNotFoundException {
@@ -125,18 +125,22 @@ public class MutableCommandRegistry<C extends Command> implements CommandRegistr
         return registry.keySet();
     }
 
+    @Override
     public void addCommand(CommandContainer<C> container) {
         putIntoRegistry(container);
     }
 
+    @Override
     public void addCommand(C command) {
         putIntoRegistry(getBuilder().create(command));
     }
 
+    @Override
     public void addCommand(Class<C> command) {
         putIntoRegistry(getBuilder().create(command));
     }
 
+    @Override
     public void addAllCommands(List<C> commands) {
         if(commands != null) {
             for(C command : commands)
@@ -144,6 +148,7 @@ public class MutableCommandRegistry<C extends Command> implements CommandRegistr
         }
     }
 
+    @Override
     public void addAllCommandContainers(List<CommandContainer<C>> commands) {
         if(commands != null) {
             for(CommandContainer<C> command : commands)

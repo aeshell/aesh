@@ -33,10 +33,10 @@ import org.aesh.command.registry.CommandRegistry;
  */
 public class AeshCommandRegistryBuilder {
 
-    private final MutableCommandRegistry commandRegistry;
+    private final MutableCommandRegistryImpl commandRegistry;
 
     public AeshCommandRegistryBuilder() {
-        commandRegistry = new MutableCommandRegistry();
+        commandRegistry = new MutableCommandRegistryImpl();
     }
 
     public AeshCommandRegistryBuilder containerBuilder(CommandContainerBuilder builder) {
