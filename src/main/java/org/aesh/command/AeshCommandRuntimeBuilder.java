@@ -17,14 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.command.impl;
 
-import org.aesh.command.CommandRuntime;
-import org.aesh.command.Command;
+package org.aesh.command;
+
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.impl.AeshCommandRuntime;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.AeshContext;

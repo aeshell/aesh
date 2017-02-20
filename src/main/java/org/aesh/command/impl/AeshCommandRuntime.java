@@ -67,7 +67,7 @@ import org.aesh.tty.Size;
  *
  * @author jdenise@redhat.com
  */
-class AeshCommandRuntime<C extends Command, CI extends CommandInvocation, CO extends AeshCompleteOperation>
+public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation, CO extends AeshCompleteOperation>
         implements CommandRuntime<CI, CO>, CommandRegistry.CommandRegistrationListener {
 
     private static class DefaultCommandInvocation implements CommandInvocation {
