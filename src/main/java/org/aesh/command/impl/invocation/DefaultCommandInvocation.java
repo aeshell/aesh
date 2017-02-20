@@ -1,0 +1,197 @@
+/*
+ * JBoss, Home of Professional Open Source
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @authors tag. All rights reserved.
+ * See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.aesh.command.impl.invocation;import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.Executor;
+import org.aesh.command.Shell;
+import org.aesh.command.impl.AeshCommandRuntime;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.complete.AeshCompleteOperation;
+import org.aesh.console.AeshContext;
+import org.aesh.readline.Prompt;
+import org.aesh.readline.action.KeyAction;
+import org.aesh.terminal.Key;
+import org.aesh.tty.Size;
+
+/**
+ * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ */
+public class DefaultCommandInvocation implements CommandInvocation{
+
+
+    private final Shell shell = new DefaultShell();
+
+    private final AeshCommandRuntime<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor;
+
+    public DefaultCommandInvocation(AeshCommandRuntime<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor) {
+        this.processor = processor;
+    }
+
+    @Override
+    public Shell getShell() {
+        return shell;
+    }
+
+    @Override
+    public void setPrompt(Prompt prompt) {
+    }
+
+    @Override
+    public Prompt getPrompt() {
+        return null;
+    }
+
+    @Override
+    public String getHelpInfo(String commandName) {
+        return processor.getHelpInfo(commandName);
+    }
+
+    @Override
+    public void stop() {
+
+    }
+
+    @Override
+    public AeshContext getAeshContext() {
+        return processor.getAeshContext();
+    }
+
+    // XXX JFDENISE SHOULD BE REMOVED
+    @Override
+    public KeyAction input() throws InterruptedException {
+        return null;
+    }
+
+    @Override
+    public String inputLine() throws InterruptedException {
+        return null;
+    }
+
+    @Override
+    public String inputLine(Prompt prompt) throws InterruptedException {
+        return null;
+    }
+
+    // XXX JFDENISE SHOULD BE REMOVED
+    @Override
+    public int pid() {
+        return -1;
+    }
+
+    // XXX JFDENISE SHOULD BE REMOVED
+    @Override
+    public void putProcessInBackground() {
+    }
+
+    // XXX JFDENISE SHOULD BE REMOVED
+    @Override
+    public void putProcessInForeground() {
+    }
+
+    @Override
+    public void executeCommand(String input) throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException,
+            CommandException,
+            InterruptedException {
+        processor.executeCommand(input);
+    }
+
+    @Override
+    public void print(String msg) {
+        shell.write(msg);
+    }
+
+    @Override
+    public void println(String msg) {
+        shell.writeln(msg);
+    }
+
+    @Override
+    public Executor<? extends CommandInvocation> buildExecutor(String line) throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException {
+        return processor.buildExecutor(line);
+    }
+
+    private static class DefaultShell implements Shell {
+
+        @Override
+        public void write(String out) {
+            System.out.print(out);
+        }
+
+        @Override
+        public void writeln(String out) {
+            System.out.println(out);
+        }
+
+        @Override
+        public void write(int[] out) {
+            // Not supported.
+        }
+
+        @Override
+        public String readLine() throws InterruptedException {
+            return null;
+        }
+
+        @Override
+        public String readLine(Prompt prompt) throws InterruptedException {
+            return null;
+        }
+
+        @Override
+        public Key read() throws InterruptedException {
+            return null;
+        }
+
+        @Override
+        public Key read(Prompt prompt) throws InterruptedException {
+            return null;
+        }
+
+        @Override
+        public boolean enableAlternateBuffer() {
+            return false;
+        }
+
+        @Override
+        public boolean enableMainBuffer() {
+            return false;
+        }
+
+        @Override
+        public Size size() {
+            return new Size(1, -1);
+        }
+
+        @Override
+        public void clear() {
+        }
+    }
+}

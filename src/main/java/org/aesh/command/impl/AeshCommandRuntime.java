@@ -30,8 +30,8 @@ import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResolver;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Executor;
-import org.aesh.command.Shell;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.invocation.DefaultCommandInvocation;
 import org.aesh.command.impl.parser.CommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.parser.CommandLineParserException;
@@ -57,10 +57,6 @@ import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.settings.CommandNotFoundHandler;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
-import org.aesh.readline.Prompt;
-import org.aesh.readline.action.KeyAction;
-import org.aesh.terminal.Key;
-import org.aesh.tty.Size;
 
 /**
  * Implementation of the Command processor.
@@ -69,163 +65,6 @@ import org.aesh.tty.Size;
  */
 public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation, CO extends AeshCompleteOperation>
         implements CommandRuntime<CI, CO>, CommandRegistry.CommandRegistrationListener {
-
-    private static class DefaultCommandInvocation implements CommandInvocation {
-
-        private static class DefaultShell implements Shell {
-
-            @Override
-            public void write(String out) {
-                System.out.print(out);
-            }
-
-            @Override
-            public void writeln(String out) {
-                System.out.println(out);
-            }
-
-            @Override
-            public void write(int[] out) {
-                // Not supported.
-            }
-
-            @Override
-            public String readLine() throws InterruptedException {
-                return null;
-            }
-
-            @Override
-            public String readLine(Prompt prompt) throws InterruptedException {
-                return null;
-            }
-
-            @Override
-            public Key read() throws InterruptedException {
-                return null;
-            }
-
-            @Override
-            public Key read(Prompt prompt) throws InterruptedException {
-                return null;
-            }
-
-            @Override
-            public boolean enableAlternateBuffer() {
-                return false;
-            }
-
-            @Override
-            public boolean enableMainBuffer() {
-                return false;
-            }
-
-            @Override
-            public Size size() {
-                return new Size(1, -1);
-            }
-
-            @Override
-            public void clear() {
-            }
-        }
-
-        private final Shell shell = new DefaultShell();
-        private final AeshCommandRuntime<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor;
-
-        DefaultCommandInvocation(AeshCommandRuntime<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor) {
-            this.processor = processor;
-        }
-
-        @Override
-        public Shell getShell() {
-            return shell;
-        }
-
-        @Override
-        public void setPrompt(Prompt prompt) {
-        }
-
-        @Override
-        public Prompt getPrompt() {
-            return null;
-        }
-
-        @Override
-        public String getHelpInfo(String commandName) {
-            return processor.getHelpInfo(commandName);
-        }
-
-        @Override
-        public void stop() {
-
-        }
-
-        @Override
-        public AeshContext getAeshContext() {
-            return processor.getAeshContext();
-        }
-
-        // XXX JFDENISE SHOULD BE REMOVED
-        @Override
-        public KeyAction input() throws InterruptedException {
-            return null;
-        }
-
-        @Override
-        public String inputLine() throws InterruptedException {
-            return null;
-        }
-
-        @Override
-        public String inputLine(Prompt prompt) throws InterruptedException {
-            return null;
-        }
-
-        // XXX JFDENISE SHOULD BE REMOVED
-        @Override
-        public int pid() {
-            return -1;
-        }
-
-        // XXX JFDENISE SHOULD BE REMOVED
-        @Override
-        public void putProcessInBackground() {
-        }
-
-        // XXX JFDENISE SHOULD BE REMOVED
-        @Override
-        public void putProcessInForeground() {
-        }
-
-        @Override
-        public void executeCommand(String input) throws CommandNotFoundException,
-                CommandLineParserException,
-                OptionValidatorException,
-                CommandValidatorException,
-                CommandException,
-                InterruptedException {
-            processor.executeCommand(input);
-        }
-
-        @Override
-        public void print(String msg) {
-            shell.write(msg);
-        }
-
-        @Override
-        public void println(String msg) {
-            shell.writeln(msg);
-        }
-
-        @Override
-        public Executor<? extends CommandInvocation> buildExecutor(String line) throws CommandNotFoundException,
-                CommandLineParserException,
-                OptionValidatorException,
-                CommandValidatorException {
-            return processor.buildExecutor(line);
-        }
-
-    }
 
     private final CommandRegistry<C> registry;
     private final CommandInvocationProvider<CI> commandInvocationProvider;
@@ -237,15 +76,15 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation,
     private final CommandResolver<? extends Command> commandResolver;
     private final AeshContext ctx;
 
-    AeshCommandRuntime(AeshContext ctx,
-                       CommandRegistry<C> registry,
-                       CommandInvocationProvider<CI> commandInvocationProvider,
-                       CommandNotFoundHandler commandNotFoundHandler,
-                       CompleterInvocationProvider completerInvocationProvider,
-                       ConverterInvocationProvider converterInvocationProvider,
-                       ValidatorInvocationProvider validatorInvocationProvider,
-                       OptionActivatorProvider optionActivatorProvider,
-                       CommandActivatorProvider commandActivatorProvider) {
+    public AeshCommandRuntime(AeshContext ctx,
+                              CommandRegistry<C> registry,
+                              CommandInvocationProvider<CI> commandInvocationProvider,
+                              CommandNotFoundHandler commandNotFoundHandler,
+                              CompleterInvocationProvider completerInvocationProvider,
+                              ConverterInvocationProvider converterInvocationProvider,
+                              ValidatorInvocationProvider validatorInvocationProvider,
+                              OptionActivatorProvider optionActivatorProvider,
+                              CommandActivatorProvider commandActivatorProvider) {
         this.ctx = ctx;
         this.registry = registry;
         commandResolver = new AeshCommandResolver<>(registry);
