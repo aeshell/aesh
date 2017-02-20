@@ -118,29 +118,6 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation,
     }
 
     @Override
-    public void complete(CO completeOperation) {
-        registry.completeCommandName(completeOperation);
-
-        if (completeOperation.getCompletionCandidates().size() < 1) {
-            try (CommandContainer<? extends Command> commandContainer = commandResolver.resolveCommand(completeOperation.getBuffer())) {
-
-                CommandLineCompletionParser completionParser = commandContainer
-                        .getParser().getCompletionParser();
-
-                ParsedCompleteObject completeObject = completionParser
-                        .findCompleteObject(completeOperation.getBuffer(),
-                                completeOperation.getCursor());
-                completeObject.getCompletionParser().injectValuesAndComplete(completeObject,
-                        completeOperation, invocationProviders);
-            } catch (Exception ex) {
-                LOGGER.log(Level.FINER,
-                        "Exception when completing: "
-                        + completeOperation, ex);
-            }
-        }
-    }
-
-    @Override
     public void executeCommand(String line) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,

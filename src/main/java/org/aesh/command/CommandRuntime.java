@@ -75,13 +75,6 @@ public interface CommandRuntime<T extends CommandInvocation, V extends AeshCompl
             InterruptedException;
 
     /**
-     * Complete a command.
-     *
-     * @param op The command to complete.
-     */
-    void complete(V op);
-
-    /**
      * Returns the aesh context.
      *
      * @return The aesh context.
