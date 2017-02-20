@@ -19,7 +19,7 @@
  */
 package org.aesh.command.impl;
 
-import org.aesh.command.AeshCommandRuntime;
+import org.aesh.command.CommandRuntime;
 import org.aesh.command.Command;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
@@ -128,7 +128,7 @@ public class AeshCommandRuntimeBuilder {
         });
     }
 
-    public AeshCommandRuntime build() {
+    public CommandRuntime build() {
         if (registry == null) {
             registry = new MutableCommandRegistryImpl<>();
         }
@@ -161,7 +161,7 @@ public class AeshCommandRuntimeBuilder {
             ctx = new DefaultAeshContext();
         }
 
-        return new AeshCommandRuntimeImpl<>(ctx, registry, commandInvocationProvider,
+        return new AeshCommandRuntime<>(ctx, registry, commandInvocationProvider,
                         commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
                         validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider);
     }

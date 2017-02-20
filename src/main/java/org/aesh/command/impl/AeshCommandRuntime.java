@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.aesh.command.AeshCommandRuntime;
+import org.aesh.command.CommandRuntime;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
@@ -67,8 +67,8 @@ import org.aesh.tty.Size;
  *
  * @author jdenise@redhat.com
  */
-class AeshCommandRuntimeImpl<C extends Command, CI extends CommandInvocation, CO extends AeshCompleteOperation>
-        implements AeshCommandRuntime<CI, CO>, CommandRegistry.CommandRegistrationListener {
+class AeshCommandRuntime<C extends Command, CI extends CommandInvocation, CO extends AeshCompleteOperation>
+        implements CommandRuntime<CI, CO>, CommandRegistry.CommandRegistrationListener {
 
     private static class DefaultCommandInvocation implements CommandInvocation {
 
@@ -130,9 +130,9 @@ class AeshCommandRuntimeImpl<C extends Command, CI extends CommandInvocation, CO
         }
 
         private final Shell shell = new DefaultShell();
-        private final AeshCommandRuntimeImpl<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor;
+        private final AeshCommandRuntime<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor;
 
-        DefaultCommandInvocation(AeshCommandRuntimeImpl<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor) {
+        DefaultCommandInvocation(AeshCommandRuntime<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor) {
             this.processor = processor;
         }
 
@@ -231,21 +231,21 @@ class AeshCommandRuntimeImpl<C extends Command, CI extends CommandInvocation, CO
     private final CommandInvocationProvider<CI> commandInvocationProvider;
     private final InvocationProviders invocationProviders;
 
-    private static final Logger LOGGER = Logger.getLogger(AeshCommandRuntimeImpl.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AeshCommandRuntime.class.getName());
     private final CommandNotFoundHandler commandNotFoundHandler;
 
     private final CommandResolver<? extends Command> commandResolver;
     private final AeshContext ctx;
 
-    AeshCommandRuntimeImpl(AeshContext ctx,
-                           CommandRegistry<C> registry,
-                           CommandInvocationProvider<CI> commandInvocationProvider,
-                           CommandNotFoundHandler commandNotFoundHandler,
-                           CompleterInvocationProvider completerInvocationProvider,
-                           ConverterInvocationProvider converterInvocationProvider,
-                           ValidatorInvocationProvider validatorInvocationProvider,
-                           OptionActivatorProvider optionActivatorProvider,
-                           CommandActivatorProvider commandActivatorProvider) {
+    AeshCommandRuntime(AeshContext ctx,
+                       CommandRegistry<C> registry,
+                       CommandInvocationProvider<CI> commandInvocationProvider,
+                       CommandNotFoundHandler commandNotFoundHandler,
+                       CompleterInvocationProvider completerInvocationProvider,
+                       ConverterInvocationProvider converterInvocationProvider,
+                       ValidatorInvocationProvider validatorInvocationProvider,
+                       OptionActivatorProvider optionActivatorProvider,
+                       CommandActivatorProvider commandActivatorProvider) {
         this.ctx = ctx;
         this.registry = registry;
         commandResolver = new AeshCommandResolver<>(registry);
