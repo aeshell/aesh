@@ -31,16 +31,13 @@ import org.aesh.command.CommandResolver;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Executor;
 import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.invocation.DefaultCommandInvocation;
-import org.aesh.command.impl.parser.CommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.impl.parser.ParsedCompleteObject;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.invocation.InvocationProviders;
@@ -63,8 +60,8 @@ import org.aesh.parser.ParsedLine;
  *
  * @author jdenise@redhat.com
  */
-public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation, CO extends AeshCompleteOperation>
-        implements CommandRuntime<CI, CO>, CommandRegistry.CommandRegistrationListener {
+public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
+        implements CommandRuntime<CI>, CommandRegistry.CommandRegistrationListener {
 
     private final CommandRegistry<C> registry;
     private final CommandInvocationProvider<CI> commandInvocationProvider;
@@ -75,6 +72,7 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation,
 
     private final CommandResolver<? extends Command> commandResolver;
     private final AeshContext ctx;
+    private final CommandInvocationBuilder<CI> commandInvocationBuilder;
 
     public AeshCommandRuntime(AeshContext ctx,
                               CommandRegistry<C> registry,
@@ -84,12 +82,14 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation,
                               ConverterInvocationProvider converterInvocationProvider,
                               ValidatorInvocationProvider validatorInvocationProvider,
                               OptionActivatorProvider optionActivatorProvider,
-                              CommandActivatorProvider commandActivatorProvider) {
+                              CommandActivatorProvider commandActivatorProvider,
+                              CommandInvocationBuilder<CI> commandInvocationBuilder) {
         this.ctx = ctx;
         this.registry = registry;
         commandResolver = new AeshCommandResolver<>(registry);
         this.commandInvocationProvider = commandInvocationProvider;
         this.commandNotFoundHandler = commandNotFoundHandler;
+        this.commandInvocationBuilder = commandInvocationBuilder;
         this.invocationProviders
                 = new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
                         validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider);
@@ -107,14 +107,9 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation,
         return ctx;
     }
 
-    public String getHelpInfo(String commandName) {
-        try (CommandContainer<? extends Command> commandContainer = commandResolver.resolveCommand(commandName)) {
-            if (commandContainer != null) {
-                return commandContainer.printHelp(commandName);
-            }
-        } catch (Exception e) { // ignored
-        }
-        return "";
+    @Override
+    public CommandInvocationBuilder<CI> commandInvocationBuilder() {
+        return commandInvocationBuilder;
     }
 
     @Override
@@ -132,7 +127,7 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation,
                     invocationProviders,
                     ctx,
                     commandInvocationProvider.enhanceCommandInvocation(
-                            new DefaultCommandInvocation(this)));
+                            commandInvocationBuilder.build(this)));
 
             CommandResult result = ccResult.getCommandResult();
 
@@ -202,7 +197,7 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation,
         //Command<CI> c = getPopulatedCommand(line);
         ProcessedCommand<C> processedCommand = getPopulatedCommand(line);
         return new Executor<>(commandInvocationProvider.enhanceCommandInvocation(
-                new DefaultCommandInvocation(this)),
+                commandInvocationBuilder.build(this)),
                 processedCommand.getCommand(), processedCommand.resultHandler());
     }
 

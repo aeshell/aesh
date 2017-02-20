@@ -20,6 +20,7 @@
 
 package org.aesh.command.impl.invocation;
 
+import org.aesh.command.CommandRuntime;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.validator.CommandValidatorException;
@@ -41,10 +42,12 @@ public final class AeshCommandInvocation implements CommandInvocation {
 
     private final Console console;
     private final Shell shell;
+    private final CommandRuntime<AeshCommandInvocation> runtime;
 
-    public AeshCommandInvocation(Console console, Shell shell) {
+    public AeshCommandInvocation(Console console, Shell shell, CommandRuntime<AeshCommandInvocation> runtime) {
         this.console = console;
         this.shell = shell;
+        this.runtime = runtime;
     }
 
     @Override
@@ -115,9 +118,8 @@ public final class AeshCommandInvocation implements CommandInvocation {
             CommandLineParserException,
             OptionValidatorException,
             CommandValidatorException,
-            CommandException {
-        //TODO:
-        //console.execute(input);
+            CommandException, InterruptedException {
+            runtime.executeCommand(input);
     }
 
     @Override
@@ -125,9 +127,7 @@ public final class AeshCommandInvocation implements CommandInvocation {
             CommandLineParserException,
             OptionValidatorException,
             CommandValidatorException {
-        //TODO:
-        //console.buildExecutor(input);
-        return null;
+        return runtime.buildExecutor(line);
     }
 
 

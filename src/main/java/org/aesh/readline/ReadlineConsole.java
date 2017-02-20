@@ -19,13 +19,17 @@
  */
 package org.aesh.readline;
 
+import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
+import org.aesh.command.CommandRuntime;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.AeshCommandResolver;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.invocation.AeshCommandInvocation;
+import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
 import org.aesh.command.impl.parser.CommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.ParsedCompleteObject;
@@ -48,7 +52,6 @@ import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.readline.history.InMemoryHistory;
 import org.aesh.tty.Connection;
 import org.aesh.tty.terminal.TerminalConnection;
-import org.aesh.util.Config;
 import org.aesh.util.LoggerUtil;
 
 import java.io.IOException;
@@ -73,6 +76,7 @@ public class ReadlineConsole implements Console {
     private Readline readline;
     private InvocationProviders invocationProviders;
     private AeshCompletionHandler completionHandler;
+    private CommandRuntime<AeshCommandInvocation> runtime;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
 
@@ -91,12 +95,15 @@ public class ReadlineConsole implements Console {
         if(settings.connection() != null)
             this.connection = settings.connection();
 
+
     }
 
-    public void start() throws IOException {
+   public void start() throws IOException {
         if(connection == null)
             connection = new TerminalConnection(settings.stdIn(), settings.stdOut());
-        init();
+
+       this.runtime = generateRuntime();
+       init();
     }
 
     @Override
@@ -178,14 +185,15 @@ public class ReadlineConsole implements Console {
     }
 
     private void processLine(String line, Connection conn) {
-        try (CommandContainer container = commandResolver.resolveCommand(line)) {
+        //try (CommandContainer container = commandResolver.resolveCommand(line)) {
             try {
                 connection.suspend();
-                new Process(conn, this, readline, container, settings, line).start();
+                new Process(conn, this, readline, runtime, line).start();
             }
             catch (IllegalArgumentException e) {
                 conn.write(line + ": command not found\n");
             }
+            /*
         }
         catch (CommandNotFoundException cnfe) {
             if(settings.commandNotFoundHandler() != null) {
@@ -196,6 +204,7 @@ public class ReadlineConsole implements Console {
             }
             read(conn, readline);
         }
+        */
         catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Got exception while starting new process", e);
             read(conn, readline);
@@ -283,5 +292,13 @@ public class ReadlineConsole implements Console {
         }
 
     }
+
+    private CommandRuntime<AeshCommandInvocation> generateRuntime() {
+        return AeshCommandRuntimeBuilder.builder()
+                .settings(settings)
+                .commandInvocationBuilder(new AeshCommandInvocationBuilder(new ShellImpl(connection, readline), this))
+                .build();
+    }
+
 
 }
