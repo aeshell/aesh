@@ -24,6 +24,7 @@ import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.util.Parser;
@@ -33,7 +34,7 @@ import org.aesh.util.Parser;
  *
  * @author jdenise@redhat.com
  */
-public interface CommandRuntime<T extends CommandInvocation> {
+public interface CommandRuntime<CI extends CommandInvocation> {
 
     /**
      * The registry in which commands are registered.
@@ -52,7 +53,7 @@ public interface CommandRuntime<T extends CommandInvocation> {
      * @throws OptionValidatorException
      * @throws CommandValidatorException
      */
-    Executor<T> buildExecutor(String line) throws CommandNotFoundException,
+    Executor<CI> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,
             CommandValidatorException;
@@ -97,5 +98,7 @@ public interface CommandRuntime<T extends CommandInvocation> {
         }
     }
 
-    CommandInvocationBuilder<T> commandInvocationBuilder();
+    CommandInvocationBuilder<CI> commandInvocationBuilder();
+
+    void complete(AeshCompleteOperation completeOperation);
 }

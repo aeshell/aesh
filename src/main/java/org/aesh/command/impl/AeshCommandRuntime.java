@@ -31,13 +31,16 @@ import org.aesh.command.CommandResolver;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Executor;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.parser.CommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.parser.ParsedCompleteObject;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.invocation.InvocationProviders;
@@ -233,6 +236,35 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
                 updateCommand(commandName);
             } catch (Exception e) {
                 LOGGER.log(Level.FINER, "Exception while iterating commands.", e);
+            }
+        }
+    }
+
+    @Override
+    public void complete(AeshCompleteOperation completeOperation) {
+        commandResolver.getRegistry().completeCommandName(completeOperation);
+        if (completeOperation.getCompletionCandidates().size() < 1) {
+
+            try (CommandContainer commandContainer = commandResolver.resolveCommand( completeOperation.getBuffer())) {
+
+                CommandLineCompletionParser completionParser = commandContainer
+                        .getParser().getCompletionParser();
+
+                ParsedCompleteObject completeObject = completionParser
+                        .findCompleteObject(completeOperation.getBuffer(),
+                                completeOperation.getCursor());
+                completeObject.getCompletionParser().injectValuesAndComplete(completeObject,
+                        completeOperation, invocationProviders);
+            }
+            catch (CommandLineParserException e) {
+                LOGGER.warning(e.getMessage());
+            }
+            catch (CommandNotFoundException ignored) {
+            }
+            catch (Exception ex) {
+                LOGGER.log(Level.SEVERE,
+                        "Runtime exception when completing: "
+                                + completeOperation, ex);
             }
         }
     }
