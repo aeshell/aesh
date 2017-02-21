@@ -19,6 +19,7 @@
  */
 package org.aesh.command;
 
+import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
@@ -26,13 +27,14 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.util.Parser;
 
 /**
  * An Aesh Command processor.
  *
  * @author jdenise@redhat.com
  */
-public interface CommandRuntime<T extends CommandInvocation, V extends AeshCompleteOperation> {
+public interface CommandRuntime<CI extends CommandInvocation> {
 
     /**
      * The registry in which commands are registered.
@@ -51,7 +53,7 @@ public interface CommandRuntime<T extends CommandInvocation, V extends AeshCompl
      * @throws OptionValidatorException
      * @throws CommandValidatorException
      */
-    Executor<T> buildExecutor(String line) throws CommandNotFoundException,
+    Executor<CI> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,
             CommandValidatorException;
@@ -75,17 +77,28 @@ public interface CommandRuntime<T extends CommandInvocation, V extends AeshCompl
             InterruptedException;
 
     /**
-     * Complete a command.
-     *
-     * @param op The command to complete.
-     */
-    void complete(V op);
-
-    /**
      * Returns the aesh context.
      *
      * @return The aesh context.
      */
     AeshContext getAeshContext();
 
+    /**
+     *
+     * @param line input line
+     * @return condensed information regarding the specific command
+     */
+    default String commandInfo(String line) {
+        try {
+            String name = Parser.findFirstWord(line);
+            return getCommandRegistry().getCommand(name, line).printHelp(name);
+        }
+        catch (CommandNotFoundException e) {
+            return null;
+        }
+    }
+
+    CommandInvocationBuilder<CI> commandInvocationBuilder();
+
+    void complete(AeshCompleteOperation completeOperation);
 }

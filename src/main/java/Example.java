@@ -240,10 +240,10 @@ public class Example {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
            if(bar == null)
-               commandInvocation.getShell().write("NO BAR!");
+               commandInvocation.getShell().writeln("NO BAR!");
             else {
-               commandInvocation.getShell().write("you set bar to: " + bar);
-               commandInvocation.getShell().write("lets work a bit...... ");
+               commandInvocation.getShell().writeln("you set bar to: " + bar);
+               commandInvocation.getShell().writeln("lets work a bit...... ");
                Thread.sleep(2000);
            }
             return CommandResult.SUCCESS;
@@ -271,7 +271,7 @@ public class Example {
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             this.shell = commandInvocation.getShell();
             if(help) {
-                shell.write(commandInvocation.getHelpInfo("test"));
+                shell.writeln(commandInvocation.getHelpInfo("test"));
             }
             else {
                 try {
@@ -298,7 +298,7 @@ public class Example {
             String username = promptForUsername(invocation);
             String password = promptForInput("password: ", '*', invocation);
 
-            shell.write("we got username: " + username + ", password: " + password);
+            shell.writeln("we got username: " + username + ", password: " + password);
         }
 
         private String promptForUsername(CommandInvocation invocation) throws InterruptedException {
@@ -338,21 +338,21 @@ public class Example {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help) {
-                commandInvocation.getShell().write(commandInvocation.getHelpInfo("ls"));
+                commandInvocation.getShell().writeln(commandInvocation.getHelpInfo("ls"));
             }
             else {
                 if(foo)
-                    commandInvocation.getShell().write("you set foo to: " + foo);
+                    commandInvocation.getShell().writeln("you set foo to: " + foo);
                 if(bar)
-                    commandInvocation.getShell().write("you set bar to: " + bar);
+                    commandInvocation.getShell().writeln("you set bar to: " + bar);
                 if(less != null)
-                    commandInvocation.getShell().write("you set less to: " + less);
+                    commandInvocation.getShell().writeln("you set less to: " + less);
                 if(files != null)
-                    commandInvocation.getShell().write("you set file to: " + files);
+                    commandInvocation.getShell().writeln("you set file to: " + files);
 
                 if(arguments != null) {
                     for(Resource f : arguments)
-                        commandInvocation.getShell().write(f.toString());
+                        commandInvocation.getShell().writeln(f.toString());
                 }
             }
             return CommandResult.SUCCESS;
@@ -387,10 +387,10 @@ public class Example {
 
         public void processOperation(Key operation) {
             if(operation == Key.y) {
-                shell.write(Config.getLineSeparator()+"you wanted bar!");
+                shell.writeln(Config.getLineSeparator()+"you wanted bar!");
             }
             else
-                shell.write(Config.getLineSeparator()+"you chickened out!!");
+                shell.writeln(Config.getLineSeparator()+"you chickened out!!");
         }
 
     }
@@ -510,9 +510,9 @@ public class Example {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help)
-                commandInvocation.getShell().write(commandInvocation.getHelpInfo("group"));
+                commandInvocation.getShell().writeln(commandInvocation.getHelpInfo("group"));
             else
-                commandInvocation.getShell().write("only executed group, it doesnt do much...");
+                commandInvocation.getShell().writeln("only executed group, it doesnt do much...");
             return CommandResult.SUCCESS;
         }
     }
@@ -528,9 +528,9 @@ public class Example {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help)
-                commandInvocation.getShell().write(commandInvocation.getHelpInfo("group child1"));
+                commandInvocation.getShell().writeln(commandInvocation.getHelpInfo("group child1"));
             else
-                commandInvocation.getShell().write("foo is set to: "+foo);
+                commandInvocation.getShell().writeln("foo is set to: "+foo);
             return CommandResult.SUCCESS;
         }
     }
@@ -542,7 +542,7 @@ public class Example {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            commandInvocation.getShell().write("bar is set to: "+bar);
+            commandInvocation.getShell().writeln("bar is set to: "+bar);
             return CommandResult.SUCCESS;
         }
     }

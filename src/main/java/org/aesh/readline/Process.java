@@ -19,17 +19,15 @@
  */
 package org.aesh.readline;
 
+import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.CommandRuntime;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.CommandException;
-import org.aesh.console.settings.Settings;
-import org.aesh.parser.LineParser;
 import org.aesh.util.Config;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.container.CommandContainer;
-import org.aesh.command.container.CommandContainerResult;
 import org.aesh.command.impl.invocation.AeshCommandInvocation;
 import org.aesh.tty.Connection;
 import org.aesh.tty.Signal;
@@ -45,21 +43,19 @@ public class Process extends Thread implements Consumer<Signal> {
 
     private final Connection conn;
     private final Readline readline;
-    private final CommandContainer container;
     private final String line;
     private final Console console;
-    private final Settings settings;
+    private final CommandRuntime<AeshCommandInvocation> runtime;
     private volatile boolean running;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(Process.class.getName());
 
     public Process(Connection conn, Console console, Readline readline,
-                   CommandContainer container, Settings settings, String line) {
+                   CommandRuntime<AeshCommandInvocation> runtime, String line) {
         this.conn = conn;
         this.console = console;
         this.readline = readline;
-        this.container = container;
-        this.settings = settings;
+        this.runtime = runtime;
         this.line = line;
     }
 
@@ -84,38 +80,26 @@ public class Process extends Thread implements Consumer<Signal> {
         CommandResult result;
         ResultHandler resultHandler = null;
         try {
-            resultHandler = container.getParser().getProcessedCommand().resultHandler();
-            CommandContainerResult ccResult = runCommand(container, line);
+            //resultHandler = container.getParser().getProcessedCommand().resultHandler();
+            //CommandContainerResult ccResult = runCommand(container, line);
+            runtime.executeCommand(line);
 
+            //result = ccResult.getCommandResult();
 
-            result = ccResult.getCommandResult();
-
-            if(result == CommandResult.SUCCESS && resultHandler != null)
-                resultHandler.onSuccess();
-            else if(resultHandler != null)
-                resultHandler.onFailure(result);
+            //if(result == CommandResult.SUCCESS && resultHandler != null)
+            //    resultHandler.onSuccess();
+            //else if(resultHandler != null)
+            //    resultHandler.onFailure(result);
         }
-        catch (CommandLineParserException | CommandValidatorException | OptionValidatorException e) {
+        catch (CommandLineParserException | CommandValidatorException | OptionValidatorException |
+                CommandException | CommandNotFoundException e) {
             conn.write(e.getMessage()+ Config.getLineSeparator());
-            result = CommandResult.FAILURE;
-            if(resultHandler != null)
-                resultHandler.onValidationFailure(result, e);
-        }
-       catch (CommandException cmd) {
-            conn.write(cmd.getMessage()+Config.getLineSeparator());
-            result = CommandResult.FAILURE;
-            if (resultHandler != null) {
-                resultHandler.onExecutionFailure(result, cmd);
-            }
         }
         catch (InterruptedException e) {
             // Ctlr-C interrupt
         }
         catch (Exception e) {
             e.printStackTrace();
-                result = CommandResult.FAILURE;
-                if (resultHandler != null)
-                    resultHandler.onValidationFailure(result, e);
          }
         finally {
             running = false;
@@ -132,11 +116,5 @@ public class Process extends Thread implements Consumer<Signal> {
                 LOGGER.info("we're exiting...");
             }
         }
-    }
-
-    private CommandContainerResult runCommand(CommandContainer container, String aeshLine) throws InterruptedException, OptionValidatorException, CommandException, CommandLineParserException, CommandValidatorException {
-        return container.executeCommand(LineParser.parseLine(aeshLine), settings.invocationProviders(), settings.aeshContext(),
-                settings.commandInvocationProvider().enhanceCommandInvocation(
-                        new AeshCommandInvocation(console, new ShellImpl(conn, readline))));
     }
 }

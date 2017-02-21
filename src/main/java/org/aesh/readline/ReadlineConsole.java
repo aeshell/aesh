@@ -19,36 +19,31 @@
  */
 package org.aesh.readline;
 
+import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
+import org.aesh.command.CommandRuntime;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.AeshCommandResolver;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.parser.CommandLineCompletionParser;
-import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.ParsedCompleteObject;
+import org.aesh.command.impl.invocation.AeshCommandInvocation;
+import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
-import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.console.settings.Settings;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.console.AeshCompletionHandler;
-import org.aesh.command.CommandNotFoundException;
 import org.aesh.console.settings.DefaultAeshContext;
-import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.readline.completion.Completion;
 import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.readline.history.InMemoryHistory;
 import org.aesh.tty.Connection;
 import org.aesh.tty.terminal.TerminalConnection;
-import org.aesh.util.Config;
 import org.aesh.util.LoggerUtil;
 
 import java.io.IOException;
@@ -73,6 +68,7 @@ public class ReadlineConsole implements Console {
     private Readline readline;
     private InvocationProviders invocationProviders;
     private AeshCompletionHandler completionHandler;
+    private CommandRuntime<AeshCommandInvocation> runtime;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
 
@@ -91,12 +87,15 @@ public class ReadlineConsole implements Console {
         if(settings.connection() != null)
             this.connection = settings.connection();
 
+
     }
 
-    public void start() throws IOException {
+   public void start() throws IOException {
         if(connection == null)
             connection = new TerminalConnection(settings.stdIn(), settings.stdOut());
-        init();
+
+       this.runtime = generateRuntime();
+       init();
     }
 
     @Override
@@ -111,7 +110,6 @@ public class ReadlineConsole implements Console {
 
     private void init() {
         completionHandler = new AeshCompletionHandler(context);
-        initializeCommands();
         if(prompt == null)
             prompt = new Prompt("");
         readline = new Readline(EditModeBuilder.builder(settings.mode()).create(), new InMemoryHistory(50),
@@ -120,29 +118,6 @@ public class ReadlineConsole implements Console {
         read(connection, readline);
 
         connection.openBlocking();
-    }
-
-    private void initializeCommands() {
-        if (settings.manEnabled()) {
-            //internalRegistry = new AeshInternalCommandRegistry();
-            //internalRegistry.addCommand(new Man(manProvider));
-        }
-        try {
-            for (String commandName : commandResolver.getRegistry().getAllCommandNames()) {
-                ProcessedCommand cmd = commandResolver.getRegistry().getCommand(commandName, "").getParser().getProcessedCommand();
-                List<? extends CommandLineParser<? extends Command>> childParsers = commandResolver.getRegistry().getChildCommandParsers(commandName);
-                if(!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
-                    //we have a custom OptionActivatorProvider, and need to process all options
-                    cmd.updateInvocationProviders(invocationProviders);
-                    for (CommandLineParser<?> child : childParsers) {
-                        child.getProcessedCommand().updateInvocationProviders(invocationProviders);
-                    }
-                }
-            }
-        }
-        catch (Exception e) {
-            //ignored for now..
-        }
     }
 
     /**
@@ -178,14 +153,15 @@ public class ReadlineConsole implements Console {
     }
 
     private void processLine(String line, Connection conn) {
-        try (CommandContainer container = commandResolver.resolveCommand(line)) {
+        //try (CommandContainer container = commandResolver.resolveCommand(line)) {
             try {
                 connection.suspend();
-                new Process(conn, this, readline, container, settings, line).start();
+                new Process(conn, this, readline, runtime, line).start();
             }
             catch (IllegalArgumentException e) {
                 conn.write(line + ": command not found\n");
             }
+            /*
         }
         catch (CommandNotFoundException cnfe) {
             if(settings.commandNotFoundHandler() != null) {
@@ -196,6 +172,7 @@ public class ReadlineConsole implements Console {
             }
             read(conn, readline);
         }
+        */
         catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Got exception while starting new process", e);
             read(conn, readline);
@@ -241,38 +218,11 @@ public class ReadlineConsole implements Console {
     }
 
     class AeshCompletion implements Completion<AeshCompleteOperation> {
-
         @Override
         public void complete(AeshCompleteOperation completeOperation) {
-            completeCommandName(completeOperation);
-            if (completeOperation.getCompletionCandidates().size() < 1) {
-
-                try (CommandContainer commandContainer = commandResolver.resolveCommand( completeOperation.getBuffer())) {
-
-                    CommandLineCompletionParser completionParser = commandContainer
-                            .getParser().getCompletionParser();
-
-                    ParsedCompleteObject completeObject = completionParser
-                            .findCompleteObject(completeOperation.getBuffer(),
-                                    completeOperation.getCursor());
-                    completeObject.getCompletionParser().injectValuesAndComplete(completeObject,
-                            completeOperation, invocationProviders);
-                }
-                catch (CommandLineParserException e) {
-                    LOGGER.warning(e.getMessage());
-                }
-                catch (CommandNotFoundException ignored) {
-                }
-                catch (Exception ex) {
-                    LOGGER.log(Level.SEVERE,
-                            "Runtime exception when completing: "
-                                    + completeOperation, ex);
-                }
-            }
+            runtime.complete(completeOperation);
         }
 
-        private void completeCommandName(CompleteOperation co) {
-            commandResolver.getRegistry().completeCommandName(co);
         /* TODO
         if(internalRegistry != null) {
             for (String internalCommand : internalRegistry.getAllCommandNames())
@@ -280,8 +230,14 @@ public class ReadlineConsole implements Console {
                     co.addCompletionCandidate(internalCommand);
         }
         */
-        }
-
     }
+
+    private CommandRuntime<AeshCommandInvocation> generateRuntime() {
+        return AeshCommandRuntimeBuilder.builder()
+                .settings(settings)
+                .commandInvocationBuilder(new AeshCommandInvocationBuilder(new ShellImpl(connection, readline), this))
+                .build();
+    }
+
 
 }

@@ -17,18 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.aesh.command.impl.invocation;
 
-package org.aesh.command.impl.invocation;import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
 import org.aesh.command.Shell;
-import org.aesh.command.impl.AeshCommandRuntime;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
@@ -43,9 +42,9 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
     private final Shell shell = new DefaultShell();
 
-    private final AeshCommandRuntime<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor;
+    private final CommandRuntime<DefaultCommandInvocation> processor;
 
-    public DefaultCommandInvocation(AeshCommandRuntime<? extends Command, ? extends CommandInvocation, ? extends AeshCompleteOperation> processor) {
+    public DefaultCommandInvocation(CommandRuntime<DefaultCommandInvocation> processor) {
         this.processor = processor;
     }
 
@@ -65,7 +64,7 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
     @Override
     public String getHelpInfo(String commandName) {
-        return processor.getHelpInfo(commandName);
+        return processor.commandInfo(commandName);
     }
 
     @Override
