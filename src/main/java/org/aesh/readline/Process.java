@@ -92,8 +92,11 @@ public class Process extends Thread implements Consumer<Signal> {
             //    resultHandler.onFailure(result);
         }
         catch (CommandLineParserException | CommandValidatorException | OptionValidatorException |
-                CommandException | CommandNotFoundException e) {
+                CommandException e) {
             conn.write(e.getMessage()+ Config.getLineSeparator());
+        }
+        catch (CommandNotFoundException cnfe) {
+
         }
         catch (InterruptedException e) {
             // Ctlr-C interrupt

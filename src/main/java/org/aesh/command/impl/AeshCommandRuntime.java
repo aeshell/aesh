@@ -150,9 +150,8 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
             }
             throw cmd;
         } catch (CommandNotFoundException cmd) {
-            // XXX JFDENISE, SHOULD BE REMOVED.
             if (commandNotFoundHandler != null) {
-                commandNotFoundHandler.handleCommandNotFound(line, null);
+                commandNotFoundHandler.handleCommandNotFound(line, commandInvocationBuilder.build(this).getShell());
             }
             throw cmd;
         } catch (InterruptedException ex) {

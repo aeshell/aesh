@@ -29,9 +29,7 @@ import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.AeshCommandResolver;
 import org.aesh.command.impl.invocation.AeshCommandInvocation;
 import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
-import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
@@ -66,7 +64,6 @@ public class ReadlineConsole implements Console {
     private AeshCommandResolver<? extends Command> commandResolver;
     private AeshContext context;
     private Readline readline;
-    private InvocationProviders invocationProviders;
     private AeshCompletionHandler completionHandler;
     private CommandRuntime<AeshCommandInvocation> runtime;
 
@@ -81,7 +78,6 @@ public class ReadlineConsole implements Console {
         this.settings = settings;
         commandResolver = new AeshCommandResolver<>(settings.commandRegistry());
 
-        invocationProviders = new AeshInvocationProviders(settings);
         addCompletion(new AeshCompletion());
         context = new DefaultAeshContext();
         if(settings.connection() != null)

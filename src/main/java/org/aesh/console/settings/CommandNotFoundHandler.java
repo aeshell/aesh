@@ -19,12 +19,12 @@
  */
 package org.aesh.console.settings;
 
-import org.aesh.tty.Connection;
+import org.aesh.command.Shell;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface CommandNotFoundHandler {
 
-    void handleCommandNotFound(String line, Connection connection);
+    void handleCommandNotFound(String line, Shell shell);
 }

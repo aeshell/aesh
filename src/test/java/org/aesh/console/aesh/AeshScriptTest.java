@@ -19,6 +19,7 @@
  */
 package org.aesh.console.aesh;
 
+import org.aesh.command.Shell;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.result.ResultHandler;
@@ -31,7 +32,6 @@ import org.aesh.console.settings.CommandNotFoundHandler;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;
-import org.aesh.tty.Connection;
 import org.aesh.util.Config;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.parser.CommandLineParserException;
@@ -230,7 +230,7 @@ public class AeshScriptTest {
         }
 
         @Override
-        public void handleCommandNotFound(String line, Connection connection) {
+        public void handleCommandNotFound(String line, Shell shell) {
             failed = true;
             failedString = line;
         }
