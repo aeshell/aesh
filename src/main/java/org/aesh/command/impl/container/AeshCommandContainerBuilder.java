@@ -280,7 +280,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                 new AeshOptionActivatorProvider(),
                 new AeshCommandActivatorProvider());
         cl.parse(input);
-        cl.getCommandPopulator().populateObject( cl.getProcessedCommand(), invocationProviders, null, true);
+        cl.getCommandPopulator().populateObject( cl.getProcessedCommand(), invocationProviders, null, CommandLineParser.Mode.VALIDATE);
     }
 
 }

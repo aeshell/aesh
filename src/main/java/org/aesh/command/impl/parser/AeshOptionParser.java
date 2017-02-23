@@ -101,17 +101,13 @@ public class AeshOptionParser implements OptionParser {
                 status = Status.NULL;
             }
         }
+        if(iterator.isNextWordCursorWord())
+            option.setCursorOption(true);
         //we've parsed the current word, lets pop it
         iterator.pollParsedWord();
     }
 
     private void processOption(ProcessedOption option, String line, String name) throws OptionParserException {
-        /*
-        if (option.isProperty()) {
-            processProperty(option, line, name);
-        }
-        else {
-        */
         String rest = line.substring(name.length());
         if (option.getOptionType().equals(OptionType.LIST)) {
             processList(option, rest);
@@ -178,6 +174,7 @@ public class AeshOptionParser implements OptionParser {
             //commandLine.addOption(currOption);
             status = Status.NULL;
         }
+        currOption.setCursorValue(true);
     }
 
     private void processList(ProcessedOption currOption, String rest) {

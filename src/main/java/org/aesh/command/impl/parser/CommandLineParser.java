@@ -82,12 +82,12 @@ public interface CommandLineParser<C extends Command> {
      *
      * @param invocationProviders providers
      * @param aeshContext context
-     * @param validate validate
+     * @param mode validate
      * @throws CommandLineParserException parser exception
      * @throws OptionValidatorException validator exception
      */
     void populateObject(String line, InvocationProviders invocationProviders,
-                        AeshContext aeshContext, boolean validate) throws CommandLineParserException, OptionValidatorException;
+                        AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException;
 
     /**
      * Returns a usage String based on the defined command and options.
@@ -118,11 +118,11 @@ public interface CommandLineParser<C extends Command> {
      * but is not given any value an CommandLineParserException will be thrown.
      *
      * @param line input
-     * @param ignoreRequirements if we should ignore
+     * @param mode which parser mode
      */
-    void parse(String line, boolean ignoreRequirements);
+    void parse(String line, Mode mode);
 
-    void parse(ParsedLineIterator iterator, boolean ignoreRequirements);
+    void parse(ParsedLineIterator iterator, Mode mode);
 
     void clear();
 
@@ -137,4 +137,9 @@ public interface CommandLineParser<C extends Command> {
      * @return  correct parser
      */
     CommandLineParser<C> parsedCommand();
+
+
+    enum Mode {
+        COMPLETION, STRICT, VALIDATE, NONE
+    }
 }

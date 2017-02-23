@@ -25,6 +25,7 @@ import java.util.Objects;
 
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
@@ -50,7 +51,7 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
     @Override
     public void populateObject(ProcessedCommand<Command> processedCommand,
                                InvocationProviders invocationProviders,
-                               AeshContext aeshContext, boolean validate)
+                               AeshContext aeshContext, CommandLineParser.Mode validate)
             throws CommandLineParserException, OptionValidatorException {
         if (processedCommand.parserExceptions().size() > 0) {
             throw processedCommand.parserExceptions().get(0);
@@ -59,7 +60,7 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
             if (option.getValue() != null) {
                 instance.setValue(option.name(),
                         option.doConvert(option.getValue(), invocationProviders,
-                                instance, aeshContext, validate));
+                                instance, aeshContext, validate == CommandLineParser.Mode.VALIDATE));
             }
             //TODO: should not be needed since default values should be pushed to values during parsing
             /*
@@ -81,7 +82,7 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
                         processedCommand.getArgument().
                         doConvert(processedCommand.getArgument().getDefaultValues().get(0),
                                 invocationProviders, instance, aeshContext,
-                                validate));
+                                validate == CommandLineParser.Mode.VALIDATE));
             }
             /*
             else {

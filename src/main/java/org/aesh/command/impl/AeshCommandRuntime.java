@@ -218,13 +218,13 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
         if (container == null) {
             throw new CommandNotFoundException("No command handler for '" + opName + "'.");
         }
-        container.getParser().parse(commandLine, false);
+        container.getParser().parse(commandLine, CommandLineParser.Mode.STRICT);
         if(container.getParser().getProcessedCommand().parserExceptions().size() > 0) {
             throw new CommandLineParserException("Invalid Command " + commandLine +". Error: "+
             container.getParser().getProcessedCommand().parserExceptions().get(0));
         }
         container.getParser().parsedCommand().getCommandPopulator().populateObject(container.getParser().parsedCommand().getProcessedCommand(),
-                invocationProviders, getAeshContext(), true);
+                invocationProviders, getAeshContext(), CommandLineParser.Mode.VALIDATE);
         return container.getParser().parsedCommand().getProcessedCommand();
     }
 

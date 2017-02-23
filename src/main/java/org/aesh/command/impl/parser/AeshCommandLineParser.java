@@ -150,17 +150,17 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public void populateObject(String line, InvocationProviders invocationProviders, AeshContext aeshContext, boolean validate) throws CommandLineParserException, OptionValidatorException {
+    public void populateObject(String line, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException {
         //first parse, then populate
-        parse(line, validate);
-        if(validate && getProcessedCommand().parserExceptions().size() > 0) {
+        parse(line, mode);
+        if(mode == Mode.VALIDATE && getProcessedCommand().parserExceptions().size() > 0) {
             throw getProcessedCommand().parserExceptions().get(0);
         }
         else {
-            getCommandPopulator().populateObject(processedCommand, invocationProviders, aeshContext, validate);
+            getCommandPopulator().populateObject(processedCommand, invocationProviders, aeshContext, mode);
             if(isGroupCommand()) {
                 for(CommandLineParser parser : getChildParsers()) {
-                    parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, validate);
+                    parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, mode);
                 }
             }
         }
@@ -200,11 +200,11 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      */
     @Override
     public void parse(String line) {
-        parse(line, false);
+        parse(line, Mode.STRICT);
     }
 
     @Override
-    public void parse(ParsedLineIterator iterator, boolean ignoreRequirements) {
+    public void parse(ParsedLineIterator iterator, Mode mode) {
         clear();
         if(iterator.hasNextWord()) {
             String command = iterator.pollWord();
@@ -213,15 +213,15 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                 if(isGroupCommand() && iterator.hasNextWord()) {
                    CommandLineParser<C> clp = getChildParser(iterator.peekWord());
                     if(clp == null)
-                        doParse(iterator, ignoreRequirements);
+                        doParse(iterator, mode);
                     //we have a group command
                     else {
                         //remove the child name
-                        clp.parse(iterator, ignoreRequirements);
+                        clp.parse(iterator, mode);
                     }
                 }
                 else
-                    doParse(iterator, ignoreRequirements);
+                    doParse(iterator, mode);
             }
         }
         else if(iterator.parserError() != null)
@@ -229,7 +229,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
 
-    private void doParse(ParsedLineIterator iter, boolean ignoreRequirements) {
+    private void doParse(ParsedLineIterator iter, Mode mode) {
         parsedCommand = true;
         try {
             while (iter.hasNextWord()) {
@@ -255,7 +255,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         catch (OptionParserException ope) {
             processedCommand.addParserException(ope);
         }
-        if(!ignoreRequirements) {
+        if(mode == Mode.STRICT) {
             RequiredOptionException re = checkForMissingRequiredOptions(processedCommand);
             if(re != null)
                 processedCommand.addParserException(re);
@@ -297,11 +297,11 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      * but is not given any value an CommandLineParserException will be thrown.
      *
      * @param line input
-     * @param ignoreRequirements if we should ignore
+     * @param mode parser mode
      */
     @Override
-    public void parse(String line, boolean ignoreRequirements) {
-        parse(LineParser.parseLine(line).iterator(), ignoreRequirements);
+    public void parse(String line, Mode mode) {
+        parse(LineParser.parseLine(line).iterator(), mode);
     }
 
     @Override

@@ -42,7 +42,7 @@ public abstract class DefaultCommandContainer<C extends Command> implements Comm
                                                  CommandInvocation commandInvocation)
             throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException {
 
-        getParser().parse(line.iterator(), false);
+        getParser().parse(line.iterator(), CommandLineParser.Mode.STRICT);
         return executeCommand(invocationProviders, aeshContext, commandInvocation);
     }
 
@@ -51,7 +51,7 @@ public abstract class DefaultCommandContainer<C extends Command> implements Comm
             CommandInvocation commandInvocation)
             throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException {
 
-        getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(), invocationProviders, aeshContext, true);
+        getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         if (getParser().parsedCommand().getProcessedCommand().validator() != null  && !getParser().parsedCommand().getProcessedCommand().hasOptionWithOverrideRequired()) {
             getParser().parsedCommand().getProcessedCommand().validator().validate(getParser().parsedCommand().getCommand());
         }

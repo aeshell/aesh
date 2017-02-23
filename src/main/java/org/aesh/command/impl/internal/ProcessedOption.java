@@ -75,6 +75,8 @@ public final class ProcessedOption {
     private boolean ansiMode = true;
     private ProcessedCommand parent;
     private OptionParser parser;
+    private boolean cursorOption = false;
+    private boolean cursorValue = false;
 
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator,
@@ -251,6 +253,8 @@ public final class ProcessedOption {
             properties.clear();
         longNameUsed = true;
         endsWithSeparator = false;
+        cursorOption = false;
+        cursorValue = false;
     }
 
     public String getDisplayName() {
@@ -439,6 +443,21 @@ public final class ProcessedOption {
         }
     }
 
+    public boolean isCursorOption() {
+        return cursorOption;
+    }
+
+    public void setCursorOption(boolean cursorOption) {
+        this.cursorOption = cursorOption;
+    }
+
+    public boolean isCursorValue() {
+        return cursorValue;
+    }
+
+    public void setCursorValue(boolean cursorValue) {
+        this.cursorValue = cursorValue;
+    }
 
     public boolean hasDefaultValue() {
         return getDefaultValues() != null && getDefaultValues().size() > 0;
