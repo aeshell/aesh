@@ -148,11 +148,17 @@ public class Parser {
             for (int i = 0; i < numRows; i++) {
                 for (int c = 0; c < numColumns; c++) {
                     int fetch = i + (c * numRows);
-                    if (fetch < displayList.size())
-                        completionOutput.append(padRight(maxLength + displayList.get(i + (c * numRows)).getANSILength(),
-                                displayList.get(i + (c * numRows)).toString()));
-                    else
+                    if (fetch < displayList.size()) {
+                        if (c == numColumns - 1) {  // No need to pad the right most column
+                            completionOutput.append(displayList.get(i + (c * numRows)).toString());
+                        } else {
+                            completionOutput.append(padRight(maxLength
+                                    + displayList.get(i + (c * numRows)).getANSILength(),
+                                    displayList.get(i + (c * numRows)).toString()));
+                        }
+                    } else {
                         break;
+                    }
                 }
                 completionOutput.append(Config.getLineSeparator());
             }
