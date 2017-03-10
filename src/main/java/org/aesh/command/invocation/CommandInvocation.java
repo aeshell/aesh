@@ -20,6 +20,7 @@
 
 package org.aesh.command.invocation;
 
+import java.io.IOException;
 import org.aesh.command.Executor;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
@@ -67,8 +68,15 @@ public interface CommandInvocation {
     /**
      * Get AeshContext
      */
+    @Deprecated
     AeshContext getAeshContext();
 
+    /**
+     * Get the configuration.
+     *
+     * @return The configuration.
+     */
+    CommandInvocationConfiguration getConfiguration();
     /**
      * A blocking call that will return user input from the terminal
      *
@@ -126,12 +134,14 @@ public interface CommandInvocation {
             OptionValidatorException,
             CommandValidatorException,
             CommandException,
-            InterruptedException;
+            InterruptedException,
+            IOException;
 
     Executor<? extends CommandInvocation> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,
-            CommandValidatorException;
+            CommandValidatorException,
+            IOException;
 
    /**
     * Print a message on console

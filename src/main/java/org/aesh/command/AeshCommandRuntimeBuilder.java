@@ -20,6 +20,7 @@
 
 package org.aesh.command;
 
+import java.util.EnumSet;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
@@ -49,12 +50,17 @@ import org.aesh.console.settings.DefaultAeshContext;
 import org.aesh.console.settings.Settings;
 
 import java.util.function.Consumer;
+import org.aesh.command.operator.OperatorType;
 
 /**
  *
  * @author jdenise@redhat.com
  */
 public class AeshCommandRuntimeBuilder {
+
+    public static final EnumSet<OperatorType> ALL_OPERATORS = EnumSet.allOf(OperatorType.class);
+
+    private static final EnumSet<OperatorType> NO_OPERATORS = EnumSet.noneOf(OperatorType.class);
 
     private CommandRegistry<? extends Command> registry;
     private CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider;
@@ -67,11 +73,24 @@ public class AeshCommandRuntimeBuilder {
     private AeshContext ctx;
     private CommandInvocationBuilder<? extends CommandInvocation> commandInvocationBuilder;
 
+    private boolean parseBrackets;
+    private EnumSet<OperatorType> operators;
+
     private AeshCommandRuntimeBuilder() {
     }
 
     public static AeshCommandRuntimeBuilder builder() {
         return new AeshCommandRuntimeBuilder();
+    }
+
+    public AeshCommandRuntimeBuilder parseBrackets(boolean parseBrackets) {
+        this.parseBrackets = parseBrackets;
+        return this;
+    }
+
+    public AeshCommandRuntimeBuilder operators(EnumSet<OperatorType> operators) {
+        this.operators = operators;
+        return this;
     }
 
     public AeshCommandRuntimeBuilder commandRegistry(CommandRegistry<? extends Command> registry) {
@@ -172,8 +191,13 @@ public class AeshCommandRuntimeBuilder {
             ctx = new DefaultAeshContext();
         }
 
+        if (operators == null) {
+            operators = NO_OPERATORS;
+        }
+
         return new AeshCommandRuntime(ctx, registry, commandInvocationProvider,
                         commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
-                        validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider, commandInvocationBuilder);
+                validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider,
+                commandInvocationBuilder, parseBrackets, operators);
     }
 }

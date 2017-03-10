@@ -23,9 +23,7 @@ package org.aesh.parser;
 import org.aesh.command.operator.OperatorType;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 

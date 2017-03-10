@@ -19,44 +19,32 @@
  */
 package org.aesh.command;
 
+import java.util.Collections;
+import java.util.List;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.result.ResultHandler;
+import org.aesh.command.validator.CommandValidatorException;
 
 /**
- * Contains both the executable and the execution context.
+ * Contains the list of Execution to execute.
  *
  * @author jdenise@redhat.com
  */
 public class Executor<T extends CommandInvocation> {
 
-    private final T commandInvocation;
-    private final Executable<T> exe;
-    private final ResultHandler resultHandler;
+    private final List<Execution<T>> executions;
 
-    public Executor(T commandInvocation, Executable<T> exe, ResultHandler resultHandler) {
-        this.commandInvocation = commandInvocation;
-        this.exe = exe;
-        this.resultHandler = resultHandler;
+    public Executor(List<Execution<T>> executions) {
+        this.executions = Collections.unmodifiableList(executions);
     }
 
-    public Executable<T> getExecutable() {
-        return exe;
-    }
+    public void execute() throws CommandException, CommandValidatorException, InterruptedException {
 
-    public T getCommandInvocation() {
-        return commandInvocation;
-    }
-
-    public CommandResult execute() throws CommandException, InterruptedException {
-
-        CommandResult result = exe.execute(commandInvocation);
-
-        if(resultHandler != null) {
-            if( result.equals(CommandResult.SUCCESS))
-                resultHandler.onSuccess();
-            else
-                resultHandler.onFailure(result);
+        for (Execution<T> exec : executions) {
+            exec.execute();
         }
-        return result;
+    }
+
+    public List<Execution<T>> getExecutions() {
+        return executions;
     }
 }

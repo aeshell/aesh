@@ -19,6 +19,7 @@
  */
 package org.aesh.command;
 
+import java.io.IOException;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
@@ -52,11 +53,13 @@ public interface CommandRuntime<CI extends CommandInvocation> {
      * @throws CommandLineParserException
      * @throws OptionValidatorException
      * @throws CommandValidatorException
+     * @throws java.io.IOException
      */
     Executor<CI> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,
-            CommandValidatorException;
+            CommandValidatorException,
+            IOException;
 
     /**
      * Execute a command line.
@@ -68,13 +71,15 @@ public interface CommandRuntime<CI extends CommandInvocation> {
      * @throws CommandValidatorException
      * @throws CommandException
      * @throws java.lang.InterruptedException
+     * @throws java.io.IOException
      */
     void executeCommand(String line) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,
             CommandValidatorException,
             CommandException,
-            InterruptedException;
+            InterruptedException,
+            IOException;
 
     /**
      * Returns the aesh context.

@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2017 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -17,15 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.command.invocation;
-
-import org.aesh.command.CommandRuntime;
+package org.aesh.command.impl.operator;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ *
+ * @author jdenise@redhat.com
  */
-public interface CommandInvocationBuilder<CI extends CommandInvocation> {
+public interface Operator {
 
-    CommandInvocation build(CommandRuntime<CI> runtime,
-            CommandInvocationConfiguration configuration);
 }
