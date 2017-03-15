@@ -52,9 +52,11 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     private boolean isChild = false;
     private ProcessedOption lastParsedOption;
     private boolean parsedCommand = false;
+    private final LineParser lineParser;
 
     public AeshCommandLineParser(ProcessedCommand<C> processedCommand) {
         this.processedCommand = processedCommand;
+        lineParser = new LineParser();
     }
 
     @Override
@@ -301,7 +303,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      */
     @Override
     public void parse(String line, Mode mode) {
-        parse(LineParser.parseLine(line).iterator(), mode);
+        parse(lineParser.parseLine(line).iterator(), mode);
     }
 
     @Override

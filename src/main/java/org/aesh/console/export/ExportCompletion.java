@@ -32,9 +32,11 @@ public class ExportCompletion implements Completion {
     private static final String EXPORT = "export";
     private static final String EXPORT_SPACE = "export ";
     private final ExportManager exportManager;
+    private final LineParser lineParser;
 
     public ExportCompletion(ExportManager manager) {
         this.exportManager = manager;
+        lineParser = new LineParser();
     }
 
     @Override
@@ -51,7 +53,7 @@ public class ExportCompletion implements Completion {
             completeOperation.setOffset(completeOperation.getCursor());
         }
         else if(completeOperation.getBuffer().startsWith(EXPORT_SPACE)) {
-            String word = LineParser.parseLine(completeOperation.getBuffer(), completeOperation.getCursor()).selectedWord().word();
+            String word = lineParser.parseLine(completeOperation.getBuffer(), completeOperation.getCursor()).selectedWord().word();
             if(word.length() > 0) {
                 completeOperation.addCompletionCandidates( exportManager.findAllMatchingKeys(word));
                 if(Parser.containsNonEscapedDollar(word)) {
@@ -63,7 +65,7 @@ public class ExportCompletion implements Completion {
             }
         }
         else if(Parser.containsNonEscapedDollar( completeOperation.getBuffer())) {
-            String word = LineParser.parseLine(completeOperation.getBuffer(), completeOperation.getCursor()).selectedWord().word();
+            String word = lineParser.parseLine(completeOperation.getBuffer(), completeOperation.getCursor()).selectedWord().word();
             if(Parser.containsNonEscapedDollar(word)) {
                 completeOperation.addCompletionCandidates(exportManager.findAllMatchingKeys(word));
                 completeOperation.setOffset(completeOperation.getCursor()-word.length());

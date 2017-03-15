@@ -39,7 +39,7 @@ public class RedirectionCompletion implements Completion {
             int redirectPos =  ControlOperatorParser.findLastRedirectionPositionBeforeCursor(
                     completeOperation.getBuffer(), completeOperation.getCursor());
 
-            String word = LineParser.parseLine(completeOperation.getBuffer(),
+            String word = new LineParser().parseLine(completeOperation.getBuffer(),
                     completeOperation.getCursor()).selectedWord().word();
 
             completeOperation.setOffset(completeOperation.getCursor());

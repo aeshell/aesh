@@ -44,9 +44,11 @@ import java.util.List;
 public class AeshCommandLineCompletionParser<C extends Command> implements CommandLineCompletionParser {
 
     private final AeshCommandLineParser<C> parser;
+    private final LineParser lineParser;
 
     public AeshCommandLineCompletionParser(AeshCommandLineParser<C> parser) {
         this.parser = parser;
+        lineParser = new LineParser();
     }
 
 
@@ -220,7 +222,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 //we have partial/full name
                 if(completeObject.getName() != null && completeObject.getName().length() > 0) {
                     String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().lastIndexOf( completeObject.getName()));
-                    ParsedLine parsedLine = LineParser.parseLine(rest);
+                    ParsedLine parsedLine = lineParser.parseLine(rest);
                     try {
                         //parser.parse(parsedLine.iterator(), true);
                         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders,
@@ -245,7 +247,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 }
                 else {
                     try {
-                        ParsedLine parsedLine = LineParser.parseLine(completeOperation.getBuffer());
+                        ParsedLine parsedLine = lineParser.parseLine(completeOperation.getBuffer());
                         if(parsedLine.words().get(parsedLine.words().size()-1).word().equals("--") ||
                                 parsedLine.words().get(parsedLine.words().size()-1).word().equals("-"))
                             parsedLine.words().remove(parsedLine.words().size()-1);
@@ -355,7 +357,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             String lastWord = Parser.findEscapedSpaceWordCloseToEnd(completeOperation.getBuffer());
             String rest = completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length() - lastWord.length());
             try {
-                ParsedLine parsedLine = LineParser.parseLine(rest);
+                ParsedLine parsedLine = lineParser.parseLine(rest);
                 parser.parse(parsedLine.iterator(), CommandLineParser.Mode.NONE);
                 parser.getCommandPopulator().populateObject(parser.getProcessedCommand(),
                         invocationProviders, completeOperation.getContext(), CommandLineParser.Mode.NONE);

@@ -34,9 +34,11 @@ import org.aesh.parser.ParsedLine;
 public class AeshCommandResolver<C extends Command> implements CommandResolver<C> {
 
     private CommandRegistry<C> registry;
+    private LineParser lineParser;
 
     public AeshCommandResolver(CommandRegistry<C> commandRegistry) {
         this.registry = commandRegistry;
+        lineParser = new LineParser();
     }
 
     public CommandRegistry<C> getRegistry() {
@@ -45,8 +47,7 @@ public class AeshCommandResolver<C extends Command> implements CommandResolver<C
 
     @Override
     public CommandContainer<C> resolveCommand(String line) throws CommandNotFoundException {
-        ParsedLine aeshLine = LineParser.parseLine(line);
-        return getCommand(aeshLine, line);
+        return getCommand(lineParser.parseLine(line), line);
     }
 
     /**

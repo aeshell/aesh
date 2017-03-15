@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.aesh.parser;
 
 import java.util.ArrayList;
@@ -32,6 +33,22 @@ public class LineParser {
     private static final char BACK_SLASH = '\\';
     private static final char SINGLE_QUOTE = '\'';
     private static final char DOUBLE_QUOTE = '\"';
+    private static final char CURLY_START = '{';
+    private static final char CURLY_END = '}';
+
+    private List<ParsedWord> textList = new ArrayList<>();
+    private boolean haveEscape = false;
+    private boolean haveSingleQuote = false;
+    private boolean haveDoubleQuote = false;
+    private boolean ternaryQuote = false;
+    private boolean haveCurlyBracket = false;
+    private boolean haveSquareBracket = false;
+    private boolean haveBlock = false;
+    private StringBuilder builder = new StringBuilder();
+    private char prev = NULL_CHAR;
+    private int index = 0;
+    private int cursorWord = -1;
+    private int wordCursor = -1;
 
     /**
      * Split up the text into words, escaped spaces and quotes are handled
@@ -39,22 +56,17 @@ public class LineParser {
      * @param text test
      * @return aeshline with all the words
      */
-    public static ParsedLine parseLine(String text) {
+    public ParsedLine parseLine(String text) {
         return parseLine(text, -1);
     }
 
-    public static ParsedLine parseLine(String text, int cursor) {
-        List<ParsedWord> textList = new ArrayList<>();
-        boolean haveEscape = false;
-        boolean haveSingleQuote = false;
-        boolean haveDoubleQuote = false;
-        boolean ternaryQuote = false;
-        StringBuilder builder = new StringBuilder();
-        char prev = NULL_CHAR;
-        int index = 0;
-        int cursorWord = -1;
-        int wordCursor = -1;
+    public ParsedLine parseLine(String text, int cursor) {
+        return parseLine(text, cursor, false);
+    }
 
+    public ParsedLine parseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets) {
+        //first reset all values
+        reset();
         for (char c : text.toCharArray()) {
             //if the previous char was a space, there is no word "connected" to cursor
             if(cursor == index && (prev != SPACE_CHAR || haveEscape)) {
@@ -62,17 +74,7 @@ public class LineParser {
                 wordCursor = builder.length();
             }
             if (c == SPACE_CHAR) {
-                if (haveEscape) {
-                    builder.append(c);
-                    haveEscape = false;
-                }
-                else if (haveSingleQuote || haveDoubleQuote) {
-                    builder.append(c);
-                }
-                else if (builder.length() > 0) {
-                    textList.add(new ParsedWord(builder.toString(), index-builder.length()));
-                    builder = new StringBuilder();
-                }
+                handleSpace(c);
             }
             else if (c == BACK_SLASH) {
                 if (haveEscape || ternaryQuote) {
@@ -83,52 +85,17 @@ public class LineParser {
                     haveEscape = true;
             }
             else if (c == SINGLE_QUOTE) {
-                if (haveEscape || ternaryQuote) {
-                    builder.append(c);
-                    haveEscape = false;
-                }
-                else if (haveSingleQuote) {
-                    if (builder.length() > 0) {
-                        textList.add(new ParsedWord(builder.toString(), index-builder.length()));
-                        builder = new StringBuilder();
-                    }
-                    haveSingleQuote = false;
-                }
-                else if(haveDoubleQuote) {
-                    builder.append(c);
-                }
-                else
-                    haveSingleQuote = true;
+                handleSingleQuote(c);
             }
             else if (c == DOUBLE_QUOTE) {
-                if (haveEscape || (ternaryQuote && prev != DOUBLE_QUOTE)) {
-                    builder.append(c);
-                    haveEscape = false;
-                }
-                else if (haveDoubleQuote) {
-                    if (!ternaryQuote && prev == DOUBLE_QUOTE)
-                        ternaryQuote = true;
-                    else if (ternaryQuote && prev == DOUBLE_QUOTE) {
-                        if (builder.length() > 0) {
-                            builder.deleteCharAt(builder.length() - 1);
-                            textList.add(new ParsedWord(builder.toString(), index-builder.length()));
-                            builder = new StringBuilder();
-                        }
-                        haveDoubleQuote = false;
-                        ternaryQuote = false;
-                    }
-                    else {
-                        if (builder.length() > 0) {
-                            textList.add(new ParsedWord(builder.toString(), index-builder.length()));
-                            builder = new StringBuilder();
-                        }
-                        haveDoubleQuote = false;
-                    }
-                }
-                else if(haveSingleQuote)
-                    builder.append(c);
-                else
-                    haveDoubleQuote = true;
+                handleDoubleQuote(c);
+            }
+            else if(parseCurlyAndSquareBrackets &&  c == CURLY_START) {
+                handleCurlyStart(c);
+
+            }
+            else if(parseCurlyAndSquareBrackets &&  c == CURLY_END && haveCurlyBracket) {
+                handleCurlyEnd(c);
             }
             else if (haveEscape) {
                 builder.append(BACK_SLASH);
@@ -156,9 +123,108 @@ public class LineParser {
         ParserStatus status = ParserStatus.OK;
         if (haveSingleQuote && haveDoubleQuote)
             status = ParserStatus.DOUBLE_UNCLOSED_QUOTE;
-        else if (haveSingleQuote || haveDoubleQuote)
+        else if (haveSingleQuote || haveDoubleQuote || haveCurlyBracket)
             status = ParserStatus.UNCLOSED_QUOTE;
 
         return new ParsedLine(text, textList, cursor, cursorWord, wordCursor, status, "");
+    }
+
+    private void handleCurlyEnd(char c) {
+        if(haveEscape)
+            haveEscape = false;
+        else {
+            haveCurlyBracket = false;
+        }
+        builder.append(c);
+    }
+
+    private void handleCurlyStart(char c) {
+        if(haveEscape) {
+            haveEscape = false;
+        }
+        else {
+            haveCurlyBracket = true;
+        }
+        builder.append(c);
+    }
+
+    private void handleDoubleQuote(char c) {
+        if (haveEscape || (ternaryQuote && prev != DOUBLE_QUOTE)) {
+            builder.append(c);
+            haveEscape = false;
+        }
+        else if (haveDoubleQuote) {
+            if (!ternaryQuote && prev == DOUBLE_QUOTE)
+                ternaryQuote = true;
+            else if (ternaryQuote && prev == DOUBLE_QUOTE) {
+                if (builder.length() > 0) {
+                    builder.deleteCharAt(builder.length() - 1);
+                    textList.add(new ParsedWord(builder.toString(), index-builder.length()));
+                    builder = new StringBuilder();
+                }
+                haveDoubleQuote = false;
+                ternaryQuote = false;
+            }
+            else {
+                if (builder.length() > 0) {
+                    textList.add(new ParsedWord(builder.toString(), index-builder.length()));
+                    builder = new StringBuilder();
+                }
+                haveDoubleQuote = false;
+            }
+        }
+        else if(haveSingleQuote)
+            builder.append(c);
+        else
+            haveDoubleQuote = true;
+    }
+
+    private void handleSingleQuote(char c) {
+        if (haveEscape || ternaryQuote) {
+            builder.append(c);
+            haveEscape = false;
+        }
+        else if (haveSingleQuote) {
+            if (builder.length() > 0) {
+                textList.add(new ParsedWord(builder.toString(), index-builder.length()));
+                builder = new StringBuilder();
+            }
+            haveSingleQuote = false;
+        }
+        else if(haveDoubleQuote) {
+            builder.append(c);
+        }
+        else
+            haveSingleQuote = true;
+    }
+
+    private void handleSpace(char c) {
+        if (haveEscape) {
+            builder.append(c);
+            haveEscape = false;
+        }
+        else if (haveSingleQuote || haveDoubleQuote || haveCurlyBracket) {
+            builder.append(c);
+        }
+        else if (builder.length() > 0) {
+            textList.add(new ParsedWord(builder.toString(), index-builder.length()));
+            builder = new StringBuilder();
+        }
+    }
+
+    private void reset() {
+        textList = new ArrayList<>();
+        haveEscape = false;
+        haveSingleQuote = false;
+        haveDoubleQuote = false;
+        ternaryQuote = false;
+        haveCurlyBracket = false;
+        haveSquareBracket = false;
+        haveBlock = false;
+        builder = new StringBuilder();
+        prev = NULL_CHAR;
+        index = 0;
+        cursorWord = -1;
+        wordCursor = -1;
     }
 }

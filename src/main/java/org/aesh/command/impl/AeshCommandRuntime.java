@@ -77,6 +77,8 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
     private final AeshContext ctx;
     private final CommandInvocationBuilder<CI> commandInvocationBuilder;
 
+    private final LineParser lineParser;
+
     public AeshCommandRuntime(AeshContext ctx,
                               CommandRegistry<C> registry,
                               CommandInvocationProvider<CI> commandInvocationProvider,
@@ -98,6 +100,7 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
                         validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider);
         processAfterInit();
         registry.addRegistrationListener(this);
+        lineParser = new LineParser();
     }
 
     @Override
@@ -126,7 +129,7 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
         try (CommandContainer<? extends Command> container = commandResolver.resolveCommand(line)) {
             resultHandler = container.getParser().getProcessedCommand().resultHandler();
             CommandContainerResult ccResult = container.executeCommand(
-                    LineParser.parseLine(line),
+                    lineParser.parseLine(line),
                     invocationProviders,
                     ctx,
                     commandInvocationProvider.enhanceCommandInvocation(
@@ -209,7 +212,7 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
             return null;
         }
 
-        ParsedLine aeshLine = LineParser.parseLine(commandLine);
+        ParsedLine aeshLine = lineParser.parseLine(commandLine);
         if (aeshLine.words().isEmpty()) {
             return null;
         }
