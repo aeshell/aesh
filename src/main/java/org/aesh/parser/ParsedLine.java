@@ -17,7 +17,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.aesh.parser;
+
+import org.aesh.command.operator.Operator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,17 +48,19 @@ public class ParsedLine {
     private final int cursor;
     private final int cursorWord;
     private final int wordCursor;
+    private final Operator operator;
 
 
     public ParsedLine(String originalInput, List<ParsedWord> words,
                       int cursor, int cursorWord, int wordCursor,
-                      ParserStatus status, String errorMessage) {
+                      ParserStatus status, String errorMessage, Operator operator) {
         this.originalInput = originalInput;
         this.cursor = cursor;
         this.cursorWord = cursorWord;
         this.wordCursor = wordCursor;
         this.status = status;
         this.errorMessage = errorMessage;
+        this.operator = operator;
 
         if (words == null) {
             this.words = new ArrayList<>(0);
@@ -146,6 +151,10 @@ public class ParsedLine {
         return new ParsedLineIterator(this);
     }
 
+    public Operator operator() {
+        return operator;
+    }
+
     @Override
     public String toString() {
         return "ParsedLine{" +
@@ -156,6 +165,7 @@ public class ParsedLine {
                 ", cursor=" + cursor +
                 ", cursorWord=" + cursorWord +
                 ", wordCursor=" + wordCursor +
+                ", operator=" + operator +
                 '}';
     }
 }

@@ -20,6 +20,8 @@
 
 package org.aesh.parser;
 
+import org.aesh.command.operator.Operator;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +45,6 @@ public class LineParser {
     private boolean ternaryQuote = false;
     private boolean haveCurlyBracket = false;
     private boolean haveSquareBracket = false;
-    private boolean haveBlock = false;
     private StringBuilder builder = new StringBuilder();
     private char prev = NULL_CHAR;
     private int index = 0;
@@ -92,7 +93,6 @@ public class LineParser {
             }
             else if(parseCurlyAndSquareBrackets &&  c == CURLY_START) {
                 handleCurlyStart(c);
-
             }
             else if(parseCurlyAndSquareBrackets &&  c == CURLY_END && haveCurlyBracket) {
                 handleCurlyEnd(c);
@@ -107,6 +107,22 @@ public class LineParser {
             prev = c;
             index++;
         }
+        return endOfLineProcessing(text, cursor);
+   }
+
+   public List<ParsedLine> parseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets, List<Operator> operators) {
+        List<ParsedLine> lines = new ArrayList<>();
+        if(operators == null || operators.size() == 0) {
+            lines.add(parseLine(text, cursor, parseCurlyAndSquareBrackets));
+            return lines;
+        }
+
+
+
+        return lines;
+    }
+
+    private ParsedLine endOfLineProcessing(String text, int cursor) {
         // if the escape was the last char, add it to the builder
         if (haveEscape)
             builder.append(BACK_SLASH);
@@ -126,7 +142,7 @@ public class LineParser {
         else if (haveSingleQuote || haveDoubleQuote || haveCurlyBracket)
             status = ParserStatus.UNCLOSED_QUOTE;
 
-        return new ParsedLine(text, textList, cursor, cursorWord, wordCursor, status, "");
+        return new ParsedLine(text, textList, cursor, cursorWord, wordCursor, status, "", Operator.NONE);
     }
 
     private void handleCurlyEnd(char c) {
@@ -142,7 +158,7 @@ public class LineParser {
         if(haveEscape) {
             haveEscape = false;
         }
-        else {
+        else if(!haveSingleQuote && !haveDoubleQuote){
             haveCurlyBracket = true;
         }
         builder.append(c);
@@ -220,7 +236,6 @@ public class LineParser {
         ternaryQuote = false;
         haveCurlyBracket = false;
         haveSquareBracket = false;
-        haveBlock = false;
         builder = new StringBuilder();
         prev = NULL_CHAR;
         index = 0;
