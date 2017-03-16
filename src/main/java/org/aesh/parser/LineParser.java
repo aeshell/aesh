@@ -20,9 +20,10 @@
 
 package org.aesh.parser;
 
-import org.aesh.command.operator.Operator;
+import org.aesh.command.operator.OperatorType;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -110,7 +111,7 @@ public class LineParser {
         return endOfLineProcessing(text, cursor);
    }
 
-   public List<ParsedLine> parseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets, List<Operator> operators) {
+   public List<ParsedLine> parseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets, EnumSet<OperatorType> operators) {
         List<ParsedLine> lines = new ArrayList<>();
         if(operators == null || operators.size() == 0) {
             lines.add(parseLine(text, cursor, parseCurlyAndSquareBrackets));
@@ -142,7 +143,7 @@ public class LineParser {
         else if (haveSingleQuote || haveDoubleQuote || haveCurlyBracket)
             status = ParserStatus.UNCLOSED_QUOTE;
 
-        return new ParsedLine(text, textList, cursor, cursorWord, wordCursor, status, "", Operator.NONE);
+        return new ParsedLine(text, textList, cursor, cursorWord, wordCursor, status, "", OperatorType.NONE);
     }
 
     private void handleCurlyEnd(char c) {

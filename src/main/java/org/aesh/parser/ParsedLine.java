@@ -20,7 +20,7 @@
 
 package org.aesh.parser;
 
-import org.aesh.command.operator.Operator;
+import org.aesh.command.operator.OperatorType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,12 +48,12 @@ public class ParsedLine {
     private final int cursor;
     private final int cursorWord;
     private final int wordCursor;
-    private final Operator operator;
+    private final OperatorType operator;
 
 
     public ParsedLine(String originalInput, List<ParsedWord> words,
                       int cursor, int cursorWord, int wordCursor,
-                      ParserStatus status, String errorMessage, Operator operator) {
+                      ParserStatus status, String errorMessage, OperatorType operator) {
         this.originalInput = originalInput;
         this.cursor = cursor;
         this.cursorWord = cursorWord;
@@ -151,7 +151,7 @@ public class ParsedLine {
         return new ParsedLineIterator(this);
     }
 
-    public Operator operator() {
+    public OperatorType operator() {
         return operator;
     }
 

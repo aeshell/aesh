@@ -22,7 +22,7 @@ package org.aesh.command.operator;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public enum Operator {
+public enum OperatorType {
     PIPE("|"),
     REDIRECT_OUT(">"),
     REDIRECT_IN("<"),
@@ -32,7 +32,7 @@ public enum Operator {
 
     private String value;
 
-    Operator(String c) {
+    OperatorType(String c) {
         value = c;
     }
 
