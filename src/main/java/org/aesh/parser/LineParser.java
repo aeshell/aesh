@@ -115,12 +115,66 @@ public class LineParser {
         List<ParsedLine> lines = new ArrayList<>();
         if(operators == null || operators.size() == 0) {
             lines.add(parseLine(text, cursor, parseCurlyAndSquareBrackets));
-            return lines;
+        }
+        else {
+            for (char c : text.toCharArray()) {
+                //if the previous char was a space, there is no word "connected" to cursor
+                if(cursor == index && (prev != SPACE_CHAR || haveEscape)) {
+                    cursorWord = textList.size();
+                    wordCursor = builder.length();
+                }
+                if (c == SPACE_CHAR) {
+                    handleSpace(c);
+                }
+                else if (c == BACK_SLASH) {
+                    if (haveEscape || ternaryQuote) {
+                        builder.append(c);
+                        haveEscape = false;
+                    }
+                    else
+                        haveEscape = true;
+                }
+                else if (c == SINGLE_QUOTE) {
+                    handleSingleQuote(c);
+                }
+                else if (c == DOUBLE_QUOTE) {
+                    handleDoubleQuote(c);
+                }
+                else if(parseCurlyAndSquareBrackets &&  c == CURLY_START) {
+                    handleCurlyStart(c);
+                }
+                else if(parseCurlyAndSquareBrackets &&  c == CURLY_END && haveCurlyBracket) {
+                    handleCurlyEnd(c);
+                }
+                else if (haveEscape) {
+                    builder.append(BACK_SLASH);
+                    builder.append(c);
+                    haveEscape = false;
+                }
+                else if(matchesOperators(operators, c)) {
+
+                }
+                else
+                    builder.append(c);
+                prev = c;
+                index++;
+            }
+
         }
 
-
-
         return lines;
+    }
+
+    private boolean isQuoted() {
+
+    }
+
+    private boolean matchesOperators(EnumSet<OperatorType> operators, char c) {
+        for(OperatorType o : operators) {
+            if(o.value().indexOf(c) > 0)
+                return true;
+        }
+        return false;
     }
 
     private ParsedLine endOfLineProcessing(String text, int cursor) {
