@@ -20,7 +20,14 @@
 
 package org.aesh.parser;
 
+import org.aesh.command.operator.OperatorType;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -311,15 +318,33 @@ public class LineParserTest {
      @Test
      public void testCurlyBrackets() {
          LineParser lineParser = new LineParser();
-        ParsedLine line = lineParser.parseLine("foo bar {baz 12345} ", 19, true);
-        assertEquals("foo", line.words().get(0).word());
-        assertEquals(0, line.words().get(0).lineIndex());
-        assertEquals("bar", line.words().get(1).word());
-        assertEquals(4, line.words().get(1).lineIndex());
-        assertEquals("{baz 12345}", line.words().get(2).word());
-        assertEquals(8, line.words().get(2).lineIndex());
-        assertEquals("{baz 12345}", line.selectedWord().word());
-        assertEquals(11, line.wordCursor());
+         ParsedLine line = lineParser.parseLine("foo bar {baz 12345} ", 19, true);
+         assertEquals("foo", line.words().get(0).word());
+         assertEquals(0, line.words().get(0).lineIndex());
+         assertEquals("bar", line.words().get(1).word());
+         assertEquals(4, line.words().get(1).lineIndex());
+         assertEquals("{baz 12345}", line.words().get(2).word());
+         assertEquals(8, line.words().get(2).lineIndex());
+         assertEquals("{baz 12345}", line.selectedWord().word());
+         assertEquals(11, line.wordCursor());
+
+         line = lineParser.parseLine("cmd1 --option1=bar{x1; x2}", 19, true);
+         assertEquals("cmd1", line.words().get(0).word());
+         assertEquals("--option1=bar{x1; x2}", line.words().get(1).word());
+         line = lineParser.parseLine("cmd1 --option1=bar{x1; x2}", 19, false);
+         assertEquals("--option1=bar{x1;", line.words().get(1).word());
      }
 
+     @Test
+    public void testOperatorParsing() {
+         Set<OperatorType> operators = EnumSet.of(OperatorType.PIPE);
+         LineParser lineParser = new LineParser();
+         List<ParsedLine> lines = lineParser.parseLine("foo | bar", 19, true, operators);
+
+         assertEquals("foo", lines.get(0).words().get(0).word());
+         assertEquals("foo ", lines.get(0).line());
+         assertEquals(OperatorType.PIPE, lines.get(0).operator());
+         assertEquals("bar", lines.get(1).words().get(0).word());
+         assertEquals(OperatorType.NONE, lines.get(1).operator());
+      }
 }

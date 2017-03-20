@@ -23,8 +23,8 @@ package org.aesh.parser;
 import org.aesh.command.operator.OperatorType;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -111,12 +111,14 @@ public class LineParser {
         return endOfLineProcessing(text, cursor);
    }
 
-   public List<ParsedLine> parseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets, EnumSet<OperatorType> operators) {
+   public List<ParsedLine> parseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets, Set<OperatorType> operators) {
         List<ParsedLine> lines = new ArrayList<>();
         if(operators == null || operators.size() == 0) {
             lines.add(parseLine(text, cursor, parseCurlyAndSquareBrackets));
         }
         else {
+            OperatorType currentOperator = null;
+            int startIndex = 0;
             for (char c : text.toCharArray()) {
                 //if the previous char was a space, there is no word "connected" to cursor
                 if(cursor == index && (prev != SPACE_CHAR || haveEscape)) {
@@ -151,30 +153,47 @@ public class LineParser {
                     builder.append(c);
                     haveEscape = false;
                 }
-                else if(matchesOperators(operators, c)) {
+                else if(!haveEscape && !isQuoted() &&
+                        (currentOperator = matchesOperators(operators, c)) != null) {
+                    if (builder.length() > 0)
+                        textList.add(new ParsedWord(builder.toString(), index-builder.length()));
 
+                    if (cursor == text.length()) {
+                        cursorWord = textList.size() - 1;
+                        if(textList.size() > 0)
+                            wordCursor = textList.get(textList.size() - 1).word().length();
+                    }
+
+                    lines.add(
+                            new ParsedLine(text.substring(startIndex, index), textList, cursor, cursorWord, wordCursor, ParserStatus.OK, "", currentOperator));
+
+                    cursorWord = -1;
+                    wordCursor = -1;
+                    startIndex = index;
+                    textList = new ArrayList<>();
                 }
                 else
                     builder.append(c);
                 prev = c;
                 index++;
             }
-
+            if(builder.length() > 0)
+                lines.add(endOfLineProcessing(text.substring(startIndex, index), cursor));
         }
 
         return lines;
     }
 
     private boolean isQuoted() {
-
+        return (haveDoubleQuote || haveSingleQuote || haveCurlyBracket || haveSquareBracket);
     }
 
-    private boolean matchesOperators(EnumSet<OperatorType> operators, char c) {
+    private OperatorType matchesOperators(Set<OperatorType> operators, char c) {
         for(OperatorType o : operators) {
-            if(o.value().indexOf(c) > 0)
-                return true;
+            if(o.value().indexOf(c) > -1)
+                return o;
         }
-        return false;
+        return null;
     }
 
     private ParsedLine endOfLineProcessing(String text, int cursor) {
