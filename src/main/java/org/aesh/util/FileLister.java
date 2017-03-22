@@ -37,7 +37,7 @@ import org.aesh.io.filter.AllResourceFilter;
 import org.aesh.io.Resource;
 import org.aesh.io.filter.ResourceFilter;
 import org.aesh.readline.completion.CompleteOperation;
-import org.aesh.terminal.formatting.TerminalString;
+import org.aesh.readline.terminal.formatting.TerminalString;
 
 /**
  * Helper class to list possible files during a complete operation.

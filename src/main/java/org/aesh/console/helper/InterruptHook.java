@@ -20,7 +20,7 @@
 package org.aesh.console.helper;
 
 import org.aesh.readline.Console;
-import org.aesh.tty.Signal;
+import org.aesh.terminal.tty.Signal;
 
 /**
  * InterruptHook is the handler thats called when an interrupt has occurred.

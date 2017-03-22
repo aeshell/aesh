@@ -43,7 +43,7 @@ import org.aesh.console.helper.InterruptHook;
 import org.aesh.console.helper.ManProvider;
 import org.aesh.io.Resource;
 import org.aesh.readline.editing.EditMode;
-import org.aesh.tty.Connection;
+import org.aesh.terminal.Connection;
 
 /**
  * Object thats define all tunable settings used by Console

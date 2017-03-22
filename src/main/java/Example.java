@@ -51,12 +51,12 @@ import org.aesh.io.Resource;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.readline.action.KeyAction;
-import org.aesh.terminal.Key;
-import org.aesh.terminal.formatting.CharacterType;
-import org.aesh.terminal.formatting.Color;
-import org.aesh.terminal.formatting.TerminalColor;
-import org.aesh.terminal.formatting.TerminalString;
-import org.aesh.terminal.formatting.TerminalTextStyle;
+import org.aesh.readline.terminal.Key;
+import org.aesh.readline.terminal.formatting.CharacterType;
+import org.aesh.readline.terminal.formatting.Color;
+import org.aesh.readline.terminal.formatting.TerminalColor;
+import org.aesh.readline.terminal.formatting.TerminalString;
+import org.aesh.readline.terminal.formatting.TerminalTextStyle;
 import org.aesh.util.ANSI;
 
 import java.io.BufferedReader;

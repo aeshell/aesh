@@ -33,8 +33,8 @@ import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
-import org.aesh.terminal.Key;
-import org.aesh.tty.Size;
+import org.aesh.readline.terminal.Key;
+import org.aesh.terminal.tty.Size;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

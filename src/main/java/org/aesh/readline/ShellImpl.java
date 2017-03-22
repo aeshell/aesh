@@ -21,10 +21,10 @@ package org.aesh.readline;
 
 import org.aesh.command.Shell;
 import org.aesh.readline.action.ActionDecoder;
-import org.aesh.terminal.Key;
-import org.aesh.tty.Capability;
-import org.aesh.tty.Connection;
-import org.aesh.tty.Size;
+import org.aesh.readline.terminal.Key;
+import org.aesh.terminal.Connection;
+import org.aesh.terminal.tty.Capability;
+import org.aesh.terminal.tty.Size;
 import org.aesh.util.Config;
 
 import java.util.concurrent.CountDownLatch;

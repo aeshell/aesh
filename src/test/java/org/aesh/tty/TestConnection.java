@@ -20,7 +20,11 @@
 
 package org.aesh.tty;
 
-import org.aesh.terminal.Key;
+import org.aesh.readline.terminal.Key;
+import org.aesh.terminal.Connection;
+import org.aesh.terminal.tty.Capability;
+import org.aesh.terminal.tty.Signal;
+import org.aesh.terminal.tty.Size;
 import org.aesh.util.Parser;
 
 import java.util.Arrays;

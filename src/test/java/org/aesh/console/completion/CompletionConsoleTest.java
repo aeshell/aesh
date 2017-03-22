@@ -19,7 +19,6 @@
  */
 package org.aesh.console.completion;
 
-
 import java.io.IOException;
 
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -34,8 +33,8 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 
 import org.aesh.command.Command;
-import org.aesh.terminal.Key;
 import org.aesh.readline.ReadlineConsole;
+import org.aesh.readline.terminal.Key;
 import org.aesh.tty.TestConnection;
 import org.junit.Ignore;
 import org.junit.Test;

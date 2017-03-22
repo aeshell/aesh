@@ -21,8 +21,8 @@
 package org.aesh.command;
 
 import org.aesh.readline.Prompt;
-import org.aesh.terminal.Key;
-import org.aesh.tty.Size;
+import org.aesh.readline.terminal.Key;
+import org.aesh.terminal.tty.Size;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

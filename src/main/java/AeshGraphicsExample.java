@@ -28,11 +28,11 @@ import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.graphics.Graphics;
 import org.aesh.graphics.GraphicsConfiguration;
-import org.aesh.terminal.Key;
 
 import org.aesh.command.CommandException;
-import org.aesh.terminal.formatting.Color;
-import org.aesh.terminal.formatting.TerminalColor;
+import org.aesh.readline.terminal.Key;
+import org.aesh.readline.terminal.formatting.Color;
+import org.aesh.readline.terminal.formatting.TerminalColor;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

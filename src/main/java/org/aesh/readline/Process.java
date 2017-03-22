@@ -23,14 +23,14 @@ import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.CommandException;
+import org.aesh.terminal.tty.Signal;
 import org.aesh.util.Config;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.invocation.AeshCommandInvocation;
-import org.aesh.tty.Connection;
-import org.aesh.tty.Signal;
+import org.aesh.terminal.Connection;
 import org.aesh.util.LoggerUtil;
 
 import java.util.function.Consumer;

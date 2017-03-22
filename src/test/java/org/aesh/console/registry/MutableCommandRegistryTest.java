@@ -27,7 +27,7 @@ import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.command.Command;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
-import org.aesh.terminal.formatting.TerminalString;
+import org.aesh.readline.terminal.formatting.TerminalString;
 import org.junit.Test;
 
 import org.aesh.command.CommandException;

@@ -33,7 +33,7 @@ import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
-import org.aesh.terminal.formatting.TerminalString;
+import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.util.Parser;
 
 import java.util.List;

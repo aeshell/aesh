@@ -19,8 +19,8 @@
  */
 package org.aesh.graphics;
 
-import org.aesh.tty.Size;
-import org.aesh.tty.terminal.TerminalConnection;
+import org.aesh.readline.tty.terminal.TerminalConnection;
+import org.aesh.terminal.tty.Size;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

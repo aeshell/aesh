@@ -40,8 +40,8 @@ import org.aesh.console.settings.DefaultAeshContext;
 import org.aesh.readline.completion.Completion;
 import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.readline.history.InMemoryHistory;
-import org.aesh.tty.Connection;
-import org.aesh.tty.terminal.TerminalConnection;
+import org.aesh.readline.tty.terminal.TerminalConnection;
+import org.aesh.terminal.Connection;
 import org.aesh.util.LoggerUtil;
 
 import java.io.IOException;

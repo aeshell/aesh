@@ -19,11 +19,11 @@
  */
 package org.aesh.graphics;
 
+import org.aesh.readline.terminal.formatting.TerminalColor;
+import org.aesh.readline.terminal.formatting.TerminalTextStyle;
 import org.aesh.terminal.Terminal;
-import org.aesh.terminal.formatting.TerminalColor;
-import org.aesh.terminal.formatting.TerminalTextStyle;
-import org.aesh.tty.Capability;
-import org.aesh.tty.Size;
+import org.aesh.terminal.tty.Capability;
+import org.aesh.terminal.tty.Size;
 import org.aesh.util.ANSI;
 
 /**

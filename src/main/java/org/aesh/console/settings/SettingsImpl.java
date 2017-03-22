@@ -41,7 +41,7 @@ import org.aesh.console.helper.InterruptHook;
 import org.aesh.io.FileResource;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.readline.editing.EditModeBuilder;
-import org.aesh.tty.Connection;
+import org.aesh.terminal.Connection;
 import org.aesh.util.Config;
 
 import java.io.File;

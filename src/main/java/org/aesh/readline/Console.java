@@ -19,7 +19,7 @@
  */
 package org.aesh.readline;
 
-import org.aesh.tty.Connection;
+import org.aesh.terminal.Connection;
 import org.aesh.console.AeshContext;
 
 /**
