@@ -169,7 +169,7 @@ public class LineParser {
 
                     cursorWord = -1;
                     wordCursor = -1;
-                    startIndex = index;
+                    startIndex = index + 1;
                     textList = new ArrayList<>();
                 }
                 else
@@ -179,6 +179,9 @@ public class LineParser {
             }
             if(builder.length() > 0)
                 lines.add(endOfLineProcessing(text.substring(startIndex, index), cursor));
+            if (!textList.isEmpty()) {
+
+            }
         }
 
         return lines;

@@ -20,6 +20,7 @@
 
 package org.aesh.command.impl.invocation;
 
+import java.io.IOException;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.invocation.CommandInvocation;
@@ -30,6 +31,8 @@ import org.aesh.console.AeshContext;
 import org.aesh.command.Shell;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.impl.operator.OutputDelegate;
+import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.readline.Console;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
@@ -43,11 +46,14 @@ public final class AeshCommandInvocation implements CommandInvocation {
     private final Console console;
     private final Shell shell;
     private final CommandRuntime<AeshCommandInvocation> runtime;
-
-    public AeshCommandInvocation(Console console, Shell shell, CommandRuntime<AeshCommandInvocation> runtime) {
+    private final CommandInvocationConfiguration config;
+    public AeshCommandInvocation(Console console, Shell shell,
+            CommandRuntime<AeshCommandInvocation> runtime,
+            CommandInvocationConfiguration config) {
         this.console = console;
         this.shell = shell;
         this.runtime = runtime;
+        this.config = config;
     }
 
     @Override
@@ -76,8 +82,9 @@ public final class AeshCommandInvocation implements CommandInvocation {
     }
 
     @Override
+    @Deprecated
     public AeshContext getAeshContext() {
-        return console.context();
+        return config.getAeshContext();
     }
 
     @Override
@@ -118,7 +125,7 @@ public final class AeshCommandInvocation implements CommandInvocation {
             CommandLineParserException,
             OptionValidatorException,
             CommandValidatorException,
-            CommandException, InterruptedException {
+            CommandException, InterruptedException, IOException {
             runtime.executeCommand(input);
     }
 
@@ -126,19 +133,44 @@ public final class AeshCommandInvocation implements CommandInvocation {
     public Executor<? extends CommandInvocation> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,
-            CommandValidatorException {
+            CommandValidatorException, IOException {
         return runtime.buildExecutor(line);
     }
 
 
    @Override
    public void print(String msg) {
-      shell.write(msg);
+       print(msg, false);
    }
 
     @Override
     public void println(String msg) {
-        shell.write(msg+ Config.getLineSeparator());
+        print(msg, true);
+    }
+
+    private void print(String msg, boolean newLine) {
+        if (getConfiguration().getOutputRedirection() != null) {
+            OutputDelegate output = getConfiguration().getOutputRedirection();
+            try {
+                output.write(msg);
+                if (newLine) {
+                    output.write(Config.getLineSeparator());
+                }
+            } catch (IOException ex) {
+                // XXX JFDENISE, we should throw IOException in interface.
+                throw new RuntimeException(ex);
+            }
+        } else {
+            shell.write(msg);
+            if (newLine) {
+                shell.write(Config.getLineSeparator());
+            }
+        }
+    }
+
+    @Override
+    public CommandInvocationConfiguration getConfiguration() {
+        return config;
     }
 
 }

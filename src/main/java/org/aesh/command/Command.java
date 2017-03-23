@@ -27,7 +27,7 @@ import org.aesh.command.invocation.CommandInvocation;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 @FunctionalInterface
-public interface Command<T extends CommandInvocation> extends Executable<T> {
+public interface Command<T extends CommandInvocation> {
 
     /**
      * Will be executed when this command is triggered by the command line.
@@ -38,6 +38,5 @@ public interface Command<T extends CommandInvocation> extends Executable<T> {
      * @throws InterruptedException In case the current thread is being
      * interrupted.
      */
-    @Override
     CommandResult execute(T commandInvocation) throws CommandException, InterruptedException;
 }

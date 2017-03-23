@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2017 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -17,15 +17,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.command.invocation;
+package org.aesh.command;
 
-import org.aesh.command.CommandRuntime;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.result.ResultHandler;
+import org.aesh.command.validator.CommandValidatorException;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * Contains an execution content.
+ *
+ * @author jdenise@redhat.com
  */
-public interface CommandInvocationBuilder<CI extends CommandInvocation> {
+public interface Execution<T extends CommandInvocation> {
 
-    CommandInvocation build(CommandRuntime<CI> runtime,
-            CommandInvocationConfiguration configuration);
+    T getCommandInvocation();
+
+    Executable getExecutable();
+
+    Command<T> getCommand();
+
+    ResultHandler getResultHandler();
+
+    CommandResult execute() throws CommandException, CommandValidatorException,
+            InterruptedException;
 }

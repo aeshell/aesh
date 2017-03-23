@@ -22,6 +22,7 @@ package org.aesh.command.impl.invocation;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationBuilder;
+import org.aesh.command.invocation.CommandInvocationConfiguration;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -29,7 +30,7 @@ import org.aesh.command.invocation.CommandInvocationBuilder;
 public class DefaultCommandInvocationBuilder implements CommandInvocationBuilder<DefaultCommandInvocation> {
 
     @Override
-    public CommandInvocation build(CommandRuntime<DefaultCommandInvocation> runtime) {
-        return new DefaultCommandInvocation(runtime);
+    public CommandInvocation build(CommandRuntime<DefaultCommandInvocation> runtime, CommandInvocationConfiguration config) {
+        return new DefaultCommandInvocation(runtime, config);
     }
 }

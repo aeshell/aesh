@@ -19,12 +19,14 @@
  */
 package org.aesh.command.impl.invocation;
 
+import java.io.IOException;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
 import org.aesh.command.Shell;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
@@ -44,8 +46,11 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
     private final CommandRuntime<DefaultCommandInvocation> processor;
 
-    public DefaultCommandInvocation(CommandRuntime<DefaultCommandInvocation> processor) {
+    private final CommandInvocationConfiguration config;
+
+    public DefaultCommandInvocation(CommandRuntime<DefaultCommandInvocation> processor, CommandInvocationConfiguration config) {
         this.processor = processor;
+        this.config = config;
     }
 
     @Override
@@ -115,7 +120,8 @@ public class DefaultCommandInvocation implements CommandInvocation{
             OptionValidatorException,
             CommandValidatorException,
             CommandException,
-            InterruptedException {
+            InterruptedException,
+            IOException {
         processor.executeCommand(input);
     }
 
@@ -133,8 +139,14 @@ public class DefaultCommandInvocation implements CommandInvocation{
     public Executor<? extends CommandInvocation> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,
-            CommandValidatorException {
+            CommandValidatorException,
+            IOException {
         return processor.buildExecutor(line);
+    }
+
+    @Override
+    public CommandInvocationConfiguration getConfiguration() {
+        return config;
     }
 
     private static class DefaultShell implements Shell {

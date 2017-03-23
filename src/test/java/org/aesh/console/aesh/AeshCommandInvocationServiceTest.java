@@ -45,6 +45,7 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.Executor;
 import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.invocation.CommandInvocationConfiguration;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -164,7 +165,7 @@ class FooCommandInvocation implements CommandInvocation {
     @Override
     public void executeCommand(String input) throws CommandNotFoundException,
             CommandLineParserException, OptionValidatorException,
-            CommandValidatorException, CommandException, InterruptedException {
+            CommandValidatorException, CommandException, InterruptedException, IOException {
         commandInvocation.executeCommand(input);
     }
 
@@ -184,8 +185,13 @@ class FooCommandInvocation implements CommandInvocation {
 
     @Override
     public Executor<? extends CommandInvocation> buildExecutor(String line) throws CommandNotFoundException,
-            CommandLineParserException, OptionValidatorException, CommandValidatorException {
+            CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException {
         return commandInvocation.buildExecutor(line);
+    }
+
+    @Override
+    public CommandInvocationConfiguration getConfiguration() {
+        return null;
     }
 }
 

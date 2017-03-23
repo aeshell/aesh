@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2017 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -19,13 +19,32 @@
  */
 package org.aesh.command.invocation;
 
-import org.aesh.command.CommandRuntime;
+import org.aesh.command.impl.operator.OutputDelegate;
+import org.aesh.console.AeshContext;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ *
+ * @author jdenise@redhat.com
  */
-public interface CommandInvocationBuilder<CI extends CommandInvocation> {
+public class CommandInvocationConfiguration {
 
-    CommandInvocation build(CommandRuntime<CI> runtime,
-            CommandInvocationConfiguration configuration);
+    private final OutputDelegate delegate;
+    private final AeshContext context;
+
+    public CommandInvocationConfiguration(AeshContext context) {
+        this(context, null);
+    }
+
+    public CommandInvocationConfiguration(AeshContext context, OutputDelegate delegate) {
+        this.context = context;
+        this.delegate = delegate;
+    }
+
+    public OutputDelegate getOutputRedirection() {
+        return delegate;
+    }
+
+    public AeshContext getAeshContext() {
+        return context;
+    }
 }

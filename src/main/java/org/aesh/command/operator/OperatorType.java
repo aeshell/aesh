@@ -20,23 +20,43 @@
 package org.aesh.command.operator;
 
 /**
+ * Operators. Only configuration operators can have an argument.
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public enum OperatorType {
     PIPE("|"),
-    REDIRECT_OUT(">"),
-    REDIRECT_IN("<"),
+    REDIRECT_OUT(">", true),
+    REDIRECT_IN("<", true),
     END(";"),
-    APPEND_OUT(">>"),
+    APPEND_OUT(">>", true),
     NONE("");
 
-    private String value;
+    private final String value;
+    private final boolean hasArgument;
+    private final boolean isConfiguration;
+
+    OperatorType(String c, boolean hasArgument) {
+        value = c;
+        this.hasArgument = hasArgument;
+        this.isConfiguration = true;
+    }
 
     OperatorType(String c) {
         value = c;
+        this.hasArgument = false;
+        this.isConfiguration = false;
     }
 
     public String value() {
         return value;
+    }
+
+    public boolean hasArgument() {
+        return hasArgument;
+    }
+
+    public boolean isConfiguration() {
+        return isConfiguration;
     }
 }
