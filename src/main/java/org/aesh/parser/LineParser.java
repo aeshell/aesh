@@ -121,7 +121,10 @@ public class LineParser {
             reset();
             OperatorType currentOperator = null;
             int startIndex = 0;
-            for (char c : text.toCharArray()) {
+            char c;
+            //for (char c : text.toCharArray()) {
+            for(index=0; index < text.length();) {
+                c = text.charAt(index);
                 //if the previous char was a space, there is no word "connected" to cursor
                 if(cursor == index && (prev != SPACE_CHAR || haveEscape)) {
                     cursorWord = textList.size();
@@ -156,7 +159,7 @@ public class LineParser {
                     haveEscape = false;
                 }
                 else if(!haveEscape && !isQuoted() &&
-                        (currentOperator = matchesOperators(operators, c, text)) != null) {
+                        (currentOperator = matchesOperators(operators, text, index)) != OperatorType.NONE) {
                     if (builder.length() > 0)
                         textList.add(new ParsedWord(builder.toString(), index-builder.length()));
 
@@ -171,13 +174,23 @@ public class LineParser {
 
                     cursorWord = -1;
                     wordCursor = -1;
-                    startIndex = index + 1;
+                    startIndex = index + currentOperator.value().length();
                     textList = new ArrayList<>();
                 }
                 else
                     builder.append(c);
-                prev = c;
-                index++;
+
+                //if current operator is set, we need to handle index/prev specially
+                if(currentOperator != OperatorType.NONE) {
+                   index = index + currentOperator.value().length();
+                   prev = text.charAt(index-1);
+                   //we need to reset operator
+                   currentOperator = OperatorType.NONE;
+                }
+                else {
+                    prev = c;
+                    index++;
+                }
             }
 
             if(builder.length() > 0 || !textList.isEmpty())
@@ -198,18 +211,8 @@ public class LineParser {
         return (haveDoubleQuote || haveSingleQuote || haveCurlyBracket || haveSquareBracket);
     }
 
-    private OperatorType matchesOperators(Set<OperatorType> operators, char c, String text) {
-        for(OperatorType o : operators) {
-            if(o.value().indexOf(c) == 0) {
-                if(o.value().length() == 1)
-                    return o;
-                //we have an operator of length > 1
-                else {
-
-                }
-            }
-        }
-        return null;
+    private OperatorType matchesOperators(Set<OperatorType> operators, String text, int index) {
+        return OperatorType.matches(operators, text, index);
     }
 
     private ParsedLine endOfLineProcessing(String text, int cursor) {

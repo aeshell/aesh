@@ -81,16 +81,13 @@ public enum OperatorType {
     }
 
     public static OperatorType matches(Set<OperatorType> operators, String text, int index) {
-        OperatorType found = null;
+        OperatorType found = OperatorType.NONE;
         for(OperatorType operator : operators) {
             if(operator.matches(text, index)) {
-                if(found == null)
-                    found = operator;
-                else if(found.value().length() < operator.value().length())
+                if(found.value().length() < operator.value().length())
                     found = operator;
             }
         }
-
         return found;
     }
 }
