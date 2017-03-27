@@ -117,6 +117,8 @@ public class LineParser {
             lines.add(parseLine(text, cursor, parseCurlyAndSquareBrackets));
         }
         else {
+            //first reset all values
+            reset();
             OperatorType currentOperator = null;
             int startIndex = 0;
             for (char c : text.toCharArray()) {
@@ -154,7 +156,7 @@ public class LineParser {
                     haveEscape = false;
                 }
                 else if(!haveEscape && !isQuoted() &&
-                        (currentOperator = matchesOperators(operators, c)) != null) {
+                        (currentOperator = matchesOperators(operators, c, text)) != null) {
                     if (builder.length() > 0)
                         textList.add(new ParsedWord(builder.toString(), index-builder.length()));
 
@@ -177,24 +179,35 @@ public class LineParser {
                 prev = c;
                 index++;
             }
-            if(builder.length() > 0)
-                lines.add(endOfLineProcessing(text.substring(startIndex, index), cursor));
-            if (!textList.isEmpty()) {
 
-            }
+            if(builder.length() > 0 || !textList.isEmpty())
+                lines.add(endOfLineProcessing(text.substring(startIndex, index), cursor));
         }
 
         return lines;
+    }
+
+    private char nextChar(String text, int index) {
+        if(text.length() > index+1)
+            return text.charAt(index+1);
+        else
+            return '\u0000';
     }
 
     private boolean isQuoted() {
         return (haveDoubleQuote || haveSingleQuote || haveCurlyBracket || haveSquareBracket);
     }
 
-    private OperatorType matchesOperators(Set<OperatorType> operators, char c) {
+    private OperatorType matchesOperators(Set<OperatorType> operators, char c, String text) {
         for(OperatorType o : operators) {
-            if(o.value().indexOf(c) > -1)
-                return o;
+            if(o.value().indexOf(c) == 0) {
+                if(o.value().length() == 1)
+                    return o;
+                //we have an operator of length > 1
+                else {
+
+                }
+            }
         }
         return null;
     }

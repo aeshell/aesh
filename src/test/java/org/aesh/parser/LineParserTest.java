@@ -335,7 +335,8 @@ public class LineParserTest {
 
      @Test
     public void testOperatorParsing() {
-         Set<OperatorType> operators = EnumSet.of(OperatorType.PIPE);
+         Set<OperatorType> operators = EnumSet.of(OperatorType.PIPE, OperatorType.APPEND_OUT,
+                 OperatorType.REDIRECT_OUT, OperatorType.END);
          LineParser lineParser = new LineParser();
          List<ParsedLine> lines = lineParser.parseLine("foo | bar", 19, true, operators);
 
@@ -344,5 +345,26 @@ public class LineParserTest {
          assertEquals(OperatorType.PIPE, lines.get(0).operator());
          assertEquals("bar", lines.get(1).words().get(0).word());
          assertEquals(OperatorType.NONE, lines.get(1).operator());
-      }
+
+         lines = lineParser.parseLine("foo | bar |car", 19, true, operators);
+         assertEquals("foo", lines.get(0).words().get(0).word());
+         assertEquals("foo ", lines.get(0).line());
+         assertEquals(OperatorType.PIPE, lines.get(0).operator());
+         assertEquals("bar", lines.get(1).words().get(0).word());
+         assertEquals(OperatorType.PIPE, lines.get(1).operator());
+         assertEquals("car", lines.get(2).words().get(0).word());
+         assertEquals(OperatorType.NONE, lines.get(2).operator());
+
+         lines = lineParser.parseLine("foo --option1 value1 > bar -o \"ba ra\";car! ", 19, true, operators);
+         assertEquals("foo", lines.get(0).words().get(0).word());
+         assertEquals("value1", lines.get(0).words().get(2).word());
+         assertEquals("foo --option1 value1 ", lines.get(0).line());
+         assertEquals(OperatorType.REDIRECT_OUT, lines.get(0).operator());
+         assertEquals("bar", lines.get(1).words().get(0).word());
+         assertEquals("ba ra", lines.get(1).words().get(2).word());
+         assertEquals(OperatorType.END, lines.get(1).operator());
+         assertEquals("car!", lines.get(2).words().get(0).word());
+         assertEquals(OperatorType.NONE, lines.get(2).operator());
+
+       }
 }

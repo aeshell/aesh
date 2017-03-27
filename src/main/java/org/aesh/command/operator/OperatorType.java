@@ -19,6 +19,8 @@
  */
 package org.aesh.command.operator;
 
+import java.util.Set;
+
 /**
  * Operators. Only configuration operators can have an argument.
  *
@@ -26,10 +28,17 @@ package org.aesh.command.operator;
  */
 public enum OperatorType {
     PIPE("|"),
+    PIPE_AND_ERROR("|&"),
     REDIRECT_OUT(">", true),
+    REDIRECT_OUT_ERROR("2>", true),
     REDIRECT_IN("<", true),
     END(";"),
     APPEND_OUT(">>", true),
+    APPEND_OUT_ERROR("2>>", true),
+    REDIRECT_OUT_ALL("2>&1", true),
+    AMP("&", true),
+    AND("&&", true),
+    OR("||", true),
     NONE("");
 
     private final String value;
@@ -58,5 +67,30 @@ public enum OperatorType {
 
     public boolean isConfiguration() {
         return isConfiguration;
+    }
+
+    public boolean matches(String text, int index) {
+        if(text.length() >= index+value.length()) {
+            for(int i=0; i < value.length(); i++)
+                if(text.charAt(index+i) != value.charAt(i))
+                    return false;
+
+            return true;
+        }
+        return false;
+    }
+
+    public static OperatorType matches(Set<OperatorType> operators, String text, int index) {
+        OperatorType found = null;
+        for(OperatorType operator : operators) {
+            if(operator.matches(text, index)) {
+                if(found == null)
+                    found = operator;
+                else if(found.value().length() < operator.value().length())
+                    found = operator;
+            }
+        }
+
+        return found;
     }
 }
