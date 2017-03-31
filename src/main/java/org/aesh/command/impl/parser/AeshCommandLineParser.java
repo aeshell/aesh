@@ -53,6 +53,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     private ProcessedOption lastParsedOption;
     private boolean parsedCommand = false;
     private final LineParser lineParser;
+    private CompleteStatus completeStatus;
 
     public AeshCommandLineParser(ProcessedCommand<C> processedCommand) {
         this.processedCommand = processedCommand;
@@ -233,34 +234,67 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
     private void doParse(ParsedLineIterator iter, Mode mode) {
         parsedCommand = true;
-        try {
-            while (iter.hasNextWord()) {
-                ParsedWord word = iter.peekParsedWord();
-                lastParsedOption = processedCommand.searchAllOptions(word.word());
-                if (lastParsedOption != null) {
-                    lastParsedOption.parser().parse(iter, lastParsedOption);
-                }
-                else {
-                    if (processedCommand.hasArgument()) {
-                        processedCommand.getArgument().addValue(word.word());
+        if(mode == Mode.COMPLETION)
+            doParseCompletion(iter);
+        else {
+            try {
+                while (iter.hasNextWord()) {
+                    ParsedWord word = iter.peekParsedWord();
+                    lastParsedOption = processedCommand.searchAllOptions(word.word());
+                    if (lastParsedOption != null) {
+                        lastParsedOption.parser().parse(iter, lastParsedOption);
                     }
                     else {
-                        processedCommand.addParserException(
-                                new OptionParserException("A value " + word.word() +
-                                        " was given as an argument, but the command do not support it."));
+                        if (processedCommand.hasArgument()) {
+                            processedCommand.getArgument().addValue(word.word());
+                        }
+                        else {
+                            processedCommand.addParserException(
+                                    new OptionParserException("A value " + word.word() +
+                                            " was given as an argument, but the command do not support it."));
+                        }
+                        iter.pollParsedWord();
                     }
-                    iter.pollParsedWord();
-                }
 
+                }
+            }
+            catch (OptionParserException ope) {
+                processedCommand.addParserException(ope);
+            }
+            if (mode == Mode.STRICT) {
+                RequiredOptionException re = checkForMissingRequiredOptions(processedCommand);
+                if (re != null)
+                    processedCommand.addParserException(re);
             }
         }
-        catch (OptionParserException ope) {
-            processedCommand.addParserException(ope);
+    }
+
+    private void doParseCompletion(ParsedLineIterator iter) {
+        if(!iter.hasNextWord()) {
+            //we list all the options
         }
-        if(mode == Mode.STRICT) {
-            RequiredOptionException re = checkForMissingRequiredOptions(processedCommand);
-            if(re != null)
-                processedCommand.addParserException(re);
+        else {
+            while(iter.hasNextWord()) {
+                try {
+                    ParsedWord word = iter.peekParsedWord();
+                    lastParsedOption = processedCommand.searchAllOptions(word.word());
+                    if (lastParsedOption != null) {
+                        lastParsedOption.parser().parse(iter, lastParsedOption);
+                    }
+                    //got a partial option
+                    else if(word.word().startsWith("-")) {
+
+                    }
+                    //we're completing an argument
+                    else {
+
+                    }
+                }
+                catch (OptionParserException e) {
+                    e.printStackTrace();
+                }
+            }
+
         }
     }
 
@@ -313,6 +347,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
             processedCommand.clear();
             lastParsedOption = null;
             parsedCommand = false;
+            completeStatus = null;
         }
         //else find the parsed command and clear that one
         else {
@@ -330,9 +365,13 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
     @Override
     public String toString() {
-        return "CommandLineParser{" +
+        return "AeshCommandLineParser{" +
                 "processedCommand=" + processedCommand +
-                "command=" + processedCommand.getCommand() +
+                ", childParsers=" + childParsers +
+                ", isChild=" + isChild +
+                ", lastParsedOption=" + lastParsedOption +
+                ", parsedCommand=" + parsedCommand +
+                ", completeStatus=" + completeStatus +
                 '}';
     }
 

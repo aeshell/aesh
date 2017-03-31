@@ -90,9 +90,8 @@ public class ReadlineConsole implements Console {
         if(connection == null)
             connection = new TerminalConnection(settings.stdIn(), settings.stdOut());
 
-       this.runtime = generateRuntime();
        init();
-    }
+   }
 
     @Override
     public void stop() {
@@ -111,8 +110,9 @@ public class ReadlineConsole implements Console {
         readline = new Readline(EditModeBuilder.builder(settings.mode()).create(), new InMemoryHistory(50),
                 completionHandler);
         running = true;
-        read(connection, readline);
+        this.runtime = generateRuntime();
 
+        read(connection, readline);
         connection.openBlocking();
     }
 
