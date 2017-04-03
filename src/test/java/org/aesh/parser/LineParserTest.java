@@ -377,5 +377,14 @@ public class LineParserTest {
          assertEquals("car!", lines.get(2).words().get(0).word());
          assertEquals(OperatorType.NONE, lines.get(2).operator());
 
+         lines = lineParser.parseLine("foo get >> test1.txt ; foo get >> test1.txt", 19, true, operators);
+         assertEquals("foo", lines.get(0).words().get(0).word());
+         assertEquals("test1.txt", lines.get(1).words().get(0).word());
+         assertEquals("foo", lines.get(2).words().get(0).word());
+
+         lines = lineParser.parseLine("foo get >> test1.txt; foo get >> test1.txt", 19, true, operators);
+         assertEquals("foo", lines.get(0).words().get(0).word());
+         assertEquals("test1.txt", lines.get(1).words().get(0).word());
+         assertEquals("foo", lines.get(2).words().get(0).word());
        }
 }
