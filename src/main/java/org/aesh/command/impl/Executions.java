@@ -29,6 +29,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.Executable;
 import org.aesh.command.Execution;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.operator.AppendOutputRedirectionOperator;
 import org.aesh.command.impl.operator.EndOperator;
 import org.aesh.command.impl.operator.OutputRedirectionOperator;
 import org.aesh.command.impl.operator.PipeOperator;
@@ -203,6 +204,9 @@ class Executions {
             }
             case REDIRECT_OUT: {
                 return new OutputRedirectionOperator(context);
+            }
+            case APPEND_OUT: {
+                return new AppendOutputRedirectionOperator(context);
             }
             case PIPE: {
                 return new PipeOperator();
