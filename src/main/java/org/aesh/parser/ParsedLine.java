@@ -21,6 +21,7 @@
 package org.aesh.parser;
 
 import org.aesh.command.operator.OperatorType;
+import org.aesh.readline.terminal.Key;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -153,6 +154,14 @@ public class ParsedLine {
 
     public OperatorType operator() {
         return operator;
+    }
+
+    public boolean cursorAtEnd() {
+        return cursor == originalInput.length();
+    }
+
+    public boolean spaceAtEnd() {
+        return originalInput.charAt(originalInput.length()-1) == ' ';
     }
 
     @Override

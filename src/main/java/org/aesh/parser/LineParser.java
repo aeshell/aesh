@@ -69,6 +69,8 @@ public class LineParser {
     public ParsedLine parseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets) {
         //first reset all values
         reset();
+        if(cursor > text.length())
+            cursor = text.length();
         for (char c : text.toCharArray()) {
             //if the previous char was a space, there is no word "connected" to cursor
             if(cursor == index && (prev != SPACE_CHAR || haveEscape)) {
@@ -224,9 +226,9 @@ public class LineParser {
         if (builder.length() > 0)
             textList.add(new ParsedWord(builder.toString(), index-builder.length()));
 
-        if (cursor == text.length()) {
+        if (cursor == text.length() && (prev != SPACE_CHAR || haveEscape)) {
             cursorWord = textList.size() - 1;
-            if(textList.size() > 0)
+            if (textList.size() > 0)
                 wordCursor = textList.get(textList.size() - 1).word().length();
         }
 

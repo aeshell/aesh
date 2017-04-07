@@ -111,6 +111,7 @@ public class LineParserTest {
         assertEquals("12345", line.words().get(2).word());
         assertEquals("foo", line.selectedWord().word());
         assertEquals(2, line.wordCursor());
+        assertTrue(line.spaceAtEnd());
 
         line = lineParser.parseLine("man < foo\\ bar ", 14);
         assertEquals("man", line.words().get(0).word());
@@ -158,10 +159,12 @@ public class LineParserTest {
         assertEquals(9, line.words().get(2).lineIndex());
         assertEquals("", line.selectedWord().word());
         assertEquals(0, line.wordCursor());
+        assertFalse(line.cursorAtEnd());
 
-        line = lineParser.parseLine("java -cp \"foo/bar\" \"Example\"");
+        line = lineParser.parseLine("java -cp \"foo/bar\" \"Example\"", 32);
         assertEquals("foo/bar", line.words().get(2).word());
         assertEquals("Example", line.words().get(3).word());
+        assertTrue(line.cursorAtEnd());
 
         line = lineParser.parseLine("'foo/bar/' Example\\ 1");
         assertEquals("foo/bar/", line.words().get(0).word());
