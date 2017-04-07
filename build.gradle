@@ -66,7 +66,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.aesh', name: 'aesh-readline', version: '1.0-CR14'
+    compile group: 'org.aesh', name: 'aesh-readline', version: '1.0-CR15-SNAPSHOT'
     testCompile 'junit:junit:4.12'
 }
 
