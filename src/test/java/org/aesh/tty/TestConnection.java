@@ -27,6 +27,7 @@ import org.aesh.terminal.tty.Signal;
 import org.aesh.terminal.tty.Size;
 import org.aesh.util.Parser;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
@@ -208,6 +209,16 @@ public class TestConnection implements Connection {
     @Override
     public boolean put(Capability capability, Object... params) {
         return false;
+    }
+
+    @Override
+    public Charset inputCharset() {
+        return Charset.defaultCharset();
+    }
+
+    @Override
+    public Charset outputCharset() {
+        return Charset.defaultCharset();
     }
 
     public void assertLine(String expected) {

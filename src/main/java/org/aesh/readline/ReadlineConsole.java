@@ -45,6 +45,7 @@ import org.aesh.terminal.Connection;
 import org.aesh.util.LoggerUtil;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -88,7 +89,7 @@ public class ReadlineConsole implements Console {
 
    public void start() throws IOException {
         if(connection == null)
-            connection = new TerminalConnection(settings.stdIn(), settings.stdOut());
+            connection = new TerminalConnection(Charset.defaultCharset(), settings.stdIn(), settings.stdOut());
 
        init();
    }
