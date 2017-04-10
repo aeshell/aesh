@@ -22,6 +22,7 @@ package org.aesh.command.impl.parser;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.complete.AeshCompleteOperation;
+import org.aesh.parser.ParsedLine;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -38,4 +39,9 @@ public interface CommandLineCompletionParser {
     void injectValuesAndComplete(ParsedCompleteObject completeObject,
                                  AeshCompleteOperation completeOperation,
                                  InvocationProviders invocationProviders);
+
+
+    void injectValuesAndComplete(AeshCompleteOperation completeOperation,
+                                 InvocationProviders invocationProviders,
+                                 ParsedLine line);
 }

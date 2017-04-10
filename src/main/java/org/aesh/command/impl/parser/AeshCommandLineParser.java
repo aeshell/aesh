@@ -280,18 +280,28 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                     lastParsedOption = processedCommand.searchAllOptions(word.word());
                     if (lastParsedOption != null) {
                         lastParsedOption.parser().parse(iter, lastParsedOption);
+                        if(!iter.hasNextWord())
+                           processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
                     }
                     //got a partial option
+                    else if(word.word().startsWith("--")) {
+                        processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
+                        iter.pollParsedWord();
+                    }
                     else if(word.word().startsWith("-")) {
-
+                        processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.SHORT_OPTION, word.word().substring(1)));
+                        iter.pollParsedWord();
                     }
                     //we're completing an argument
                     else {
-
+                        processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
+                        iter.pollParsedWord();
                     }
                 }
                 catch (OptionParserException e) {
-                    e.printStackTrace();
+                    //TODO: needs to be improved
+                    //ignored for now
+                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
                 }
             }
 
@@ -337,7 +347,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      */
     @Override
     public void parse(String line, Mode mode) {
-        parse(lineParser.parseLine(line).iterator(), mode);
+        parse(lineParser.parseLine(line, line.length()).iterator(), mode);
     }
 
     @Override

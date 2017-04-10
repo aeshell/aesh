@@ -22,6 +22,7 @@ package org.aesh.cl;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.impl.parser.ParsedCompleteObject;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -44,6 +45,26 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ParseCompleteObjectTest {
+
+
+    @Test
+    public void testNewCompletionParser() throws Exception {
+        CommandLineParser<ParseCompleteTest1> clp = new AeshCommandContainerBuilder<ParseCompleteTest1>().create(ParseCompleteTest1.class).getParser();
+        CommandLineCompletionParser completeParser = clp.getCompletionParser();
+
+        clp.parse("test -e foo1", CommandLineParser.Mode.COMPLETION);
+        assertEquals("foo1", clp.getProcessedCommand().findOption("e").getValue());
+        assertTrue(clp.getProcessedCommand().findOption("e").isCursorValue());
+        assertEquals(CompleteStatus.Status.COMPLETE_OPTION, clp.getProcessedCommand().completeStatus().status());
+
+        clp.parse("test -e foo1 ", CommandLineParser.Mode.COMPLETION);
+        assertEquals("foo1", clp.getProcessedCommand().findOption("e").getValue());
+        assertFalse(clp.getProcessedCommand().findOption("e").isCursorValue());
+        assertEquals(CompleteStatus.Status.COMPLETE_OPTION, clp.getProcessedCommand().completeStatus().status());
+
+        clp.parse("test --X", CommandLineParser.Mode.COMPLETION);
+        assertTrue(clp.getProcessedCommand().findOption("e").hasValue());
+    }
 
 
     @Test

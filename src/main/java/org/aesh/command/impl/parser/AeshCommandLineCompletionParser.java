@@ -411,6 +411,39 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         }
     }
 
+    @Override
+    public void injectValuesAndComplete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders, ParsedLine line) {
+
+        //we have parsed one or more options and their values
+        if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.COMPLETE_OPTION)) {
+            //space and end, we display other options/arguments
+            if(line.spaceAtEnd()) {
+
+            }
+            //no space means we should try to complete the value of the last parsed option
+            else {
+
+            }
+        }
+        //partial long option name, contains atleast --
+        else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.LONG_OPTION)) {
+
+        }
+        //partial short option, contains atleast -
+        else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.SHORT_OPTION)) {
+
+        }
+        //we have an option, but no value
+        else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.OPTION_MISSING_VALUE)) {
+
+        }
+
+        else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.ARGUMENT)) {
+
+        }
+
+    }
+
     private void completionSetOffSet(ParsedCompleteObject completeObject, CompleteOperation completeOperation, CompleterInvocation completions) {
         if(completions.getOffset() >= 0)
             completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());

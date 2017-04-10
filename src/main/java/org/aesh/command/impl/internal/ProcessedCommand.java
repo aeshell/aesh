@@ -20,6 +20,7 @@
 package org.aesh.command.impl.internal;
 
 import org.aesh.command.impl.activator.NullCommandActivator;
+import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.populator.CommandPopulator;
@@ -54,7 +55,7 @@ public class ProcessedCommand<C extends Command> {
     private C command;
     private final List<String> aliases;
     private List<CommandLineParserException> parserExceptions;
-    private CompletionStatus completionStatus;
+    private CompleteStatus completeStatus;
 
     public ProcessedCommand(String name, List<String> aliases, C command,
             String description, CommandValidator validator,
@@ -290,6 +291,7 @@ public class ProcessedCommand<C extends Command> {
            argument.clear();
 
        parserExceptions.clear();
+       completeStatus = null;
     }
 
     /**
@@ -434,16 +436,11 @@ public class ProcessedCommand<C extends Command> {
         return false;
     }
 
-    public void setCompletionStatus(CompletionStatus status) {
-        completionStatus = status;
+    public CompleteStatus completeStatus() {
+        return completeStatus;
     }
 
-    public CompletionStatus completionStatus() {
-        return completionStatus;
+    public void setCompleteStatus(CompleteStatus completeStatus) {
+        this.completeStatus = completeStatus;
     }
-
-    enum CompletionStatus {
-        LIST_ALL_OPTIONS, LIST_OPTION
-    }
-
 }
