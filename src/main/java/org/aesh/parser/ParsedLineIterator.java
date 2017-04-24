@@ -180,4 +180,7 @@ public class ParsedLineIterator {
         return word == parsedLine.selectedIndex();
     }
 
+    public ParsedLine baseLine() {
+        return parsedLine;
+    }
 }

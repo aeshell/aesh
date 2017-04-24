@@ -28,6 +28,7 @@ import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLineIterator;
@@ -90,6 +91,14 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
             }
         }
         return null;
+    }
+
+    @Override
+    public void complete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders, ParsedLineIterator iterator) {
+        //first parse
+        parse(iterator, Mode.COMPLETION);
+        //then use completion parser to populate completeOperation
+        parsedCommand().getCompletionParser().injectValuesAndComplete(completeOperation, invocationProviders, iterator.baseLine());
     }
 
     @Override
@@ -272,6 +281,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     private void doParseCompletion(ParsedLineIterator iter) {
         if(!iter.hasNextWord()) {
             //we list all the options
+            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
         }
         else {
             while(iter.hasNextWord()) {
@@ -304,7 +314,6 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                     processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
                 }
             }
-
         }
     }
 

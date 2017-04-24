@@ -26,6 +26,7 @@ import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.Command;
 import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.parser.ParsedLineIterator;
 
@@ -138,6 +139,14 @@ public interface CommandLineParser<C extends Command> {
      */
     CommandLineParser<C> parsedCommand();
 
+    /**
+     * Parse a command line and populate the
+     * @param completeOperation
+     * @param invocationProviders
+     * @param iterator
+     */
+    void complete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders,
+                  ParsedLineIterator iterator);
 
     enum Mode {
         COMPLETION, STRICT, VALIDATE, NONE
