@@ -32,6 +32,8 @@ import org.aesh.command.Command;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
+import org.aesh.parser.ParsedLineIterator;
+import org.aesh.parser.ParsedWord;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.util.Parser;
@@ -412,17 +414,67 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
     }
 
     @Override
-    public void injectValuesAndComplete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders, ParsedLine line) {
+    public void injectValuesAndComplete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders,
+                                        ParsedLine line) {
 
         //we have parsed one or more options and their values
         if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.COMPLETE_OPTION)) {
-            //space and end, we display other options/arguments
-            if(line.spaceAtEnd()) {
+            //space and end, we display other options/arguments or option value if the option have a list of values
+            if (line.spaceAtEnd()) {
+                if(parser.lastParsedOption() != null) {
+                        if (parser.lastParsedOption().getValue() == null ||
+                                parser.lastParsedOption().hasMultipleValues()) {
+                            //need to complete option value
+                        }
+                        //complete argument
+                        else {
 
+                        }
+                }
+                //complete argument
+                else {
+                    completeArgument(completeOperation, invocationProviders, line);
+                }
             }
             //no space means we should try to complete the value of the last parsed option
             else {
+                //first we need to remove the value for the option
+                String value = parser.lastParsedOption().getValue();
+                try {
+                    //no validation for now when we populate for completion
+                    parser.getCommandPopulator().populateObject(parser.getProcessedCommand(),
+                            invocationProviders, completeOperation.getContext(), CommandLineParser.Mode.NONE);
+                }
+                //this should be ignored at some point
+                catch (CommandLineParserException | OptionValidatorException ignored) {
+                }
 
+                if (parser.lastParsedOption().completer() != null &&
+                        parser.lastParsedOption().activator().isActivated(parser.getProcessedCommand())) {
+                    CompleterInvocation completions =
+                            invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
+                                    new CompleterData(completeOperation.getContext(), value, parser.getCommand()));
+
+                    parser.lastParsedOption().completer().complete(completions);
+                    completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
+                    //completionSetOffSet(completeObject, completeOperation, completions);
+                    completeOperation.setOffset(completeOperation.getCursor() - value.length());
+                    completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
+                    completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
+
+                    if (completions.getCompleterValues().size() == 1) {
+                        //if the contain spaces we need to add the number of spaces to the size
+                        // of the value.length since they are chopped off during parsing
+                        if (value.indexOf(Parser.SPACE_CHAR) > 0) {
+                            completeOperation.setOffset(completeOperation.getCursor() -
+                                    (Parser.findNumberOfSpacesInWord(value)));
+                        }
+                        if (completeOperation.getCompletionCandidates().get(0).containSpaces())
+                            completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
+
+                        completeOperation.doAppendSeparator(completions.isAppendSpace());
+                    }
+                }
             }
         }
         //partial long option name, contains atleast --
@@ -442,6 +494,40 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
         }
 
+    }
+
+    private void completeArgument(AeshCompleteOperation completeOperation,
+                                  InvocationProviders invocationProviders, ParsedLine parsedLine) {
+        ParsedWord lastWord = parsedLine.selectedWord();
+        try {
+            parser.getCommandPopulator().populateObject(parser.getProcessedCommand(),
+                    invocationProviders, completeOperation.getContext(), CommandLineParser.Mode.NONE);
+        }
+        catch (CommandLineParserException | OptionValidatorException ignored) { }
+
+        if(parser.getProcessedCommand().getArgument() != null &&
+                parser.getProcessedCommand().getArgument().completer() != null) {
+            CompleterInvocation completions =
+                    invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
+                            new CompleterData(completeOperation.getContext(), lastWord != null ? lastWord.word() : "", parser.getCommand()));
+            parser.getProcessedCommand().getArgument().completer().complete(completions);
+            completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
+            completeOperation.setOffset(completeOperation.getCursor() - (lastWord != null ? lastWord.word().length() : 0));
+            completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
+            completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
+
+            if (completions.getCompleterValues().size() == 1) {
+                if(lastWord != null &&
+                        lastWord.word().indexOf(Parser.SPACE_CHAR) > 0) {
+                    completeOperation.setOffset(completeOperation.getCursor() -
+                            (Parser.findNumberOfSpacesInWord(lastWord.word())));
+                }
+                if (completeOperation.getCompletionCandidates().get(0).containSpaces())
+                    completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
+
+                completeOperation.doAppendSeparator(completions.isAppendSpace());
+            }
+        }
     }
 
     private void completionSetOffSet(ParsedCompleteObject completeObject, CompleteOperation completeOperation, CompleterInvocation completions) {

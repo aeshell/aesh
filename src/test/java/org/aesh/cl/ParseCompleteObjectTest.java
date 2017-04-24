@@ -29,9 +29,18 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionList;
+import org.aesh.complete.AeshCompleteOperation;
+import org.aesh.console.AeshContext;
+import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.io.FileResource;
+import org.aesh.io.Resource;
+import org.aesh.parser.LineParser;
+import org.aesh.parser.ParsedLine;
+import org.aesh.util.Config;
 import org.junit.Test;
 
 import java.util.List;
@@ -46,6 +55,15 @@ import static org.junit.Assert.assertTrue;
  */
 public class ParseCompleteObjectTest {
 
+    private final AeshContext aeshContext = new AeshContext() {
+        @Override
+        public Resource getCurrentWorkingDirectory() {
+            return new FileResource(Config.getUserDir());
+        }
+        @Override
+        public void setCurrentWorkingDirectory(Resource cwd) {
+        }
+    };
 
     @Test
     public void testNewCompletionParser() throws Exception {
@@ -64,6 +82,21 @@ public class ParseCompleteObjectTest {
 
         clp.parse("test --X", CommandLineParser.Mode.COMPLETION);
         assertTrue(clp.getProcessedCommand().findOption("e").hasValue());
+    }
+
+    @Test
+    public void testNewCompletonParserInjection() throws Exception {
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "ls foob", 6);
+        CommandLineParser<ParseCompleteTest1> clp = new AeshCommandContainerBuilder<ParseCompleteTest1>().create(ParseCompleteTest1.class).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        ParsedLine line = new LineParser().parseLine("test -e foo ", 11);
+
+        clp.complete(co, ip, line.iterator());
+
+        assertEquals("", co.getFormattedCompletionCandidates().get(0));
+        
+
     }
 
 
