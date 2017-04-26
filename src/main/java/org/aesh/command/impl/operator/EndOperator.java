@@ -19,7 +19,6 @@
  */
 package org.aesh.command.impl.operator;
 
-import java.util.concurrent.ExecutionException;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
@@ -33,24 +32,12 @@ public class EndOperator<T extends CommandInvocation> implements ExecutableOpera
 
     private Command<T> executable;
 
-    private DataProvider dataProvider;
-
     public EndOperator() {
 
     }
 
     @Override
     public CommandResult execute(T ic) throws CommandException, InterruptedException {
-        // XXX JFDENISE, do something with Data provider if not null.
-        // Such as introspect command to findout the target.
-        if (dataProvider != null) {
-            try {
-                String data = dataProvider.getData().get();
-                // XXX TODO
-            } catch (ExecutionException ex) {
-                throw new CommandException(ex);
-            }
-        }
         return executable.execute(ic);
     }
 
@@ -58,10 +45,4 @@ public class EndOperator<T extends CommandInvocation> implements ExecutableOpera
     public void setCommand(Command<T> executable) {
         this.executable = executable;
     }
-
-    @Override
-    public void setDataProvider(DataProvider dataProvider) {
-        this.dataProvider = dataProvider;
-    }
-
 }

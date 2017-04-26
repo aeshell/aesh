@@ -19,12 +19,33 @@
  */
 package org.aesh.command.impl.operator;
 
-import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.util.Objects;
+import org.aesh.console.AeshContext;
 
 /**
+ * Output to a file.
  *
  * @author jdenise@redhat.com
  */
-public interface DataProvider {
-    BufferedInputStream getData();
+public abstract class FileOutputDelegate extends OutputDelegate {
+    private final File outputFile;
+
+    protected FileOutputDelegate(AeshContext context, String file) {
+        Objects.requireNonNull(file);
+        File f = new File(file);
+        if (!f.isAbsolute()) {
+            f = new File(context.getCurrentWorkingDirectory().getAbsolutePath(), file);
+        }
+        outputFile = f;
+    }
+
+    @Override
+    protected BufferedWriter buildWriter() throws IOException {
+        return buildWriter(outputFile);
+    }
+
+    protected abstract BufferedWriter buildWriter(File f) throws IOException;
 }

@@ -33,7 +33,7 @@ import org.aesh.console.AeshContext;
  */
 public class OutputRedirectionOperator implements ConfigurationOperator {
 
-    private class OutputDelegateImpl extends OutputDelegate {
+    private class OutputDelegateImpl extends FileOutputDelegate {
 
         private OutputDelegateImpl(String file) throws IOException {
             super(context, file);
