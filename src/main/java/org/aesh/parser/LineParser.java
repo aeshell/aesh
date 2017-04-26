@@ -160,9 +160,10 @@ public class LineParser {
                 }
                 else if(!haveEscape && !isQuoted() &&
                         (currentOperator = matchesOperators(operators, text, index)) != OperatorType.NONE) {
-                    if (builder.length() > 0)
+                    if (builder.length() > 0) {
                         textList.add(new ParsedWord(builder.toString(), index-builder.length()));
-
+                        builder = new StringBuilder();
+                    }
                     if (cursor == text.length()) {
                         cursorWord = textList.size() - 1;
                         if(textList.size() > 0)
