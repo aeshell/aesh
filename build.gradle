@@ -63,6 +63,9 @@ test {
 repositories {
     mavenCentral()
     mavenLocal()
+    maven {
+        url "http://repository.jboss.org/nexus/content/groups/public/"
+    }
 }
 
 dependencies {
