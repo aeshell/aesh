@@ -19,56 +19,53 @@
  */
 package org.aesh.command.impl.operator;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import org.aesh.command.CommandException;
-import org.aesh.command.CommandResult;
-import org.aesh.command.invocation.CommandInvocation;
+import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import org.aesh.command.invocation.CommandInvocationConfiguration;
+import org.aesh.console.AeshContext;
 
 /**
  *
  * @author jdenise@redhat.com
  */
-public class PipeOperator extends EndOperator implements DataProvider {
+public class PipeOperator extends EndOperator implements
+        ConfigurationOperator, DataProvider {
 
-    private String data;
+    private class OutputDelegateImpl extends OutputDelegate {
 
-    @Override
-    public Future<String> getData() {
-        return new Future<String>() {
-            @Override
-            public boolean cancel(boolean mayInterruptIfRunning) {
-                return false;
-            }
+        @Override
+        protected BufferedWriter buildWriter() throws IOException {
+            return new BufferedWriter(new OutputStreamWriter(stream));
+        }
+    }
 
-            @Override
-            public boolean isCancelled() {
-                return false;
-            }
+    private ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    private final AeshContext context;
+    private CommandInvocationConfiguration config;
 
-            @Override
-            public boolean isDone() {
-                return true;
-            }
-
-            @Override
-            public String get() throws InterruptedException, ExecutionException {
-                return data;
-            }
-
-            @Override
-            public String get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-                return data;
-            }
-        };
+    public PipeOperator(AeshContext context) {
+        this.context = context;
     }
 
     @Override
-    public CommandResult execute(CommandInvocation ic) throws CommandException, InterruptedException {
-        // XXX JFDENISE, retrieve data....
-        return super.execute(ic);
+    public CommandInvocationConfiguration getConfiguration() throws IOException {
+        if (config == null) {
+            config = new CommandInvocationConfiguration(context, new OutputDelegateImpl(), this);
+        }
+        return config;
     }
 
+    @Override
+    public void setArgument(String value) {
+        // NOOP
+    }
+
+    @Override
+    public BufferedInputStream getData() {
+        return new BufferedInputStream(new ByteArrayInputStream(stream.toByteArray()));
+    }
 }

@@ -19,6 +19,9 @@
  */
 package org.aesh.command.invocation;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import org.aesh.command.impl.operator.DataProvider;
 import org.aesh.command.impl.operator.OutputDelegate;
 import org.aesh.console.AeshContext;
 
@@ -28,16 +31,26 @@ import org.aesh.console.AeshContext;
  */
 public class CommandInvocationConfiguration {
 
+    private static final BufferedInputStream EMPTY_INPUT
+            = new BufferedInputStream(new ByteArrayInputStream(new byte[0]));
+    private static final DataProvider EMPTY_DATA_PROVIDER = () -> {
+        return EMPTY_INPUT;
+    };
     private final OutputDelegate delegate;
     private final AeshContext context;
-
+    private final DataProvider dataProvider;
     public CommandInvocationConfiguration(AeshContext context) {
-        this(context, null);
+        this(context, null, null);
     }
 
     public CommandInvocationConfiguration(AeshContext context, OutputDelegate delegate) {
+        this(context, delegate, null);
+    }
+
+    public CommandInvocationConfiguration(AeshContext context, OutputDelegate delegate, DataProvider dataProvider) {
         this.context = context;
         this.delegate = delegate;
+        this.dataProvider = dataProvider == null ? EMPTY_DATA_PROVIDER : dataProvider;
     }
 
     public OutputDelegate getOutputRedirection() {
@@ -46,5 +59,9 @@ public class CommandInvocationConfiguration {
 
     public AeshContext getAeshContext() {
         return context;
+    }
+
+    public BufferedInputStream getPipedData() {
+        return dataProvider.getData();
     }
 }

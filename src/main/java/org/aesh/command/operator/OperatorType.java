@@ -27,28 +27,28 @@ import java.util.Set;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public enum OperatorType {
-    PIPE("|"),
+    PIPE("|", false, true),
     PIPE_AND_ERROR("|&"),
-    REDIRECT_OUT(">", true),
-    REDIRECT_OUT_ERROR("2>", true),
-    REDIRECT_IN("<", true),
+    REDIRECT_OUT(">", true, true),
+    REDIRECT_OUT_ERROR("2>", true, true),
+    REDIRECT_IN("<", true, true),
     END(";"),
-    APPEND_OUT(">>", true),
-    APPEND_OUT_ERROR("2>>", true),
-    REDIRECT_OUT_ALL("2>&1", true),
-    AMP("&", true),
-    AND("&&", true),
-    OR("||", true),
+    APPEND_OUT(">>", true, true),
+    APPEND_OUT_ERROR("2>>", true, true),
+    REDIRECT_OUT_ALL("2>&1", true, true),
+    AMP("&", true, true),
+    AND("&&", true, true),
+    OR("||", true, true),
     NONE("");
 
     private final String value;
     private final boolean hasArgument;
     private final boolean isConfiguration;
 
-    OperatorType(String c, boolean hasArgument) {
+    OperatorType(String c, boolean hasArgument, boolean isConfiguration) {
         value = c;
         this.hasArgument = hasArgument;
-        this.isConfiguration = true;
+        this.isConfiguration = isConfiguration;
     }
 
     OperatorType(String c) {

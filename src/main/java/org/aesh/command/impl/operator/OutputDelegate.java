@@ -20,10 +20,7 @@
 package org.aesh.command.impl.operator;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
-import org.aesh.console.AeshContext;
 import org.aesh.util.Parser;
 
 /**
@@ -33,22 +30,15 @@ import org.aesh.util.Parser;
 public abstract class OutputDelegate {
 
     private BufferedWriter writer;
-    private final File outputFile;
-    protected OutputDelegate(AeshContext context, String file) {
-        Objects.requireNonNull(file);
-        File f = new File(file);
-        if (!f.isAbsolute()) {
-            f = new File(context.getCurrentWorkingDirectory().getAbsolutePath(), file);
-        }
-        outputFile = f;
+    protected OutputDelegate() {
     }
 
-    protected abstract BufferedWriter buildWriter(File f) throws IOException;
+    protected abstract BufferedWriter buildWriter() throws IOException;
 
     public void write(String msg) throws IOException {
         msg = Parser.stripAwayAnsiCodes(msg);
         if (writer == null) {
-            writer = buildWriter(outputFile);
+            writer = buildWriter();
         }
         writer.append(msg);
         writer.flush();

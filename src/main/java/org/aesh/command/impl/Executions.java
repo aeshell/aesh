@@ -36,6 +36,7 @@ import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.impl.operator.ConfigurationOperator;
+import org.aesh.command.impl.operator.DataProvider;
 import org.aesh.command.impl.operator.ExecutableOperator;
 import org.aesh.command.impl.operator.Operator;
 import org.aesh.command.operator.OperatorType;
@@ -44,7 +45,6 @@ import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
 import org.aesh.parser.ParsedLine;
-import org.aesh.command.impl.operator.DataProvider;
 import org.aesh.command.validator.CommandValidatorException;
 
 /**
@@ -100,7 +100,7 @@ class Executions {
             CommandResult result = executable.execute(getCommandInvocation());
 
             if (getResultHandler() != null) {
-                if (result.equals(CommandResult.SUCCESS)) {
+                if (result == null || result.equals(CommandResult.SUCCESS)) {
                     getResultHandler().onSuccess();
                 } else {
                     getResultHandler().onFailure(result);
@@ -146,21 +146,20 @@ class Executions {
                         Operator op = buildOperator(pl.operator(), runtime.getAeshContext());
                         if (ot.isConfiguration()) {
                             config = (ConfigurationOperator) op;
-                            if (ot.hasArgument()) {
-                                state = State.NEED_ARGUMENT;
-                            } else {
-                                state = State.NEED_OPERATOR;
-                            }
+                        }
+                        if (ot.isConfiguration() && ot.hasArgument()) {
+                            state = State.NEED_ARGUMENT;
                         } else {
-                            ExecutableOperator exec = (ExecutableOperator) op;
-                            // In case the previous operator was a dataSource (e.g: Pipe).
-                            if (dataProvider != null) {
-                                exec.setDataProvider(dataProvider);
+                            // The operator must be an executor one
+                            if (!(op instanceof ExecutableOperator)) {
+                                throw new IllegalArgumentException("Op " + ot + " is not executable");
                             }
+                            ExecutableOperator exec = (ExecutableOperator) op;
+                            CommandInvocationConfiguration invocationConfiguration = config == null
+                                    ? new CommandInvocationConfiguration(runtime.getAeshContext(), null,
+                                            dataProvider) : config.getConfiguration();
                             Execution execution = new ExecutionImpl(exec,
-                                    runtime.buildCommandInvocation(config == null
-                                            ? new CommandInvocationConfiguration(runtime.getAeshContext())
-                                            : config.getConfiguration()), processedCommand);
+                                    runtime.buildCommandInvocation(invocationConfiguration), processedCommand);
                             if (exec instanceof DataProvider) {
                                 dataProvider = (DataProvider) exec;
                             } else {
@@ -180,14 +179,11 @@ class Executions {
             // The implicit execution operator is missing.
             ExecutableOperator exec = (ExecutableOperator) buildOperator(OperatorType.NONE,
                     runtime.getAeshContext());
-            // In case the previous operator was a dataSource (e.g: Pipe).
-            if (dataProvider != null) {
-                exec.setDataProvider(dataProvider);
-            }
+            CommandInvocationConfiguration invocationConfiguration = config == null
+                    ? new CommandInvocationConfiguration(runtime.getAeshContext(), null,
+                            dataProvider) : config.getConfiguration();
             Execution execution = new ExecutionImpl(exec,
-                    runtime.buildCommandInvocation(config == null
-                            ? new CommandInvocationConfiguration(runtime.getAeshContext())
-                            : config.getConfiguration()), processedCommand);
+                    runtime.buildCommandInvocation(invocationConfiguration), processedCommand);
             executions.add(execution);
         }
         return executions;
@@ -209,7 +205,7 @@ class Executions {
                 return new AppendOutputRedirectionOperator(context);
             }
             case PIPE: {
-                return new PipeOperator();
+                return new PipeOperator(context);
             }
         }
         throw new IllegalArgumentException("Unsupported operator " + op);

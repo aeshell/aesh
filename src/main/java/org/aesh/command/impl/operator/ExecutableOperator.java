@@ -29,6 +29,4 @@ import org.aesh.command.invocation.CommandInvocation;
  */
 public interface ExecutableOperator<T extends CommandInvocation> extends Operator, Executable<T> {
     void setCommand(Command<T> exec);
-
-    void setDataProvider(DataProvider dataProvider);
 }
