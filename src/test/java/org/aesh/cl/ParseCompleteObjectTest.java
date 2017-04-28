@@ -85,17 +85,35 @@ public class ParseCompleteObjectTest {
     }
 
     @Test
-    public void testNewCompletonParserInjection() throws Exception {
-        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "ls foob", 6);
+    public void testNewCompletonParserOptionInjection() throws Exception {
         CommandLineParser<ParseCompleteTest1> clp = new AeshCommandContainerBuilder<ParseCompleteTest1>().create(ParseCompleteTest1.class).getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test --", 7);
 
-        ParsedLine line = new LineParser().parseLine("test -e foo ", 11);
+        clp.complete(co, ip);
+        assertEquals(4, co.getFormattedCompletionCandidates().size());
 
-        clp.complete(co, ip, line.iterator());
+        co = new AeshCompleteOperation(aeshContext, "test --X foo --", 15);
+        clp.complete(co, ip);
+        assertEquals(3, co.getFormattedCompletionCandidates().size());
+        assertEquals("foo", clp.getCommand().X);
 
-        assertEquals("", co.getFormattedCompletionCandidates().get(0));
-        
+        co = new AeshCompleteOperation(aeshContext, "test --X foo -", 14);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("-", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("foo", clp.getCommand().X);
+
+        co = new AeshCompleteOperation(aeshContext, "test --foo ", 10);
+        clp.complete(co, ip);
+        assertEquals(2, co.getFormattedCompletionCandidates().size());
+        assertEquals("true", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("false", co.getFormattedCompletionCandidates().get(1));
+
+        co = new AeshCompleteOperation(aeshContext, "test --foo t", 11);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("rue", co.getFormattedCompletionCandidates().get(0));
 
     }
 
