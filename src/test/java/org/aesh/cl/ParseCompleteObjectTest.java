@@ -115,6 +115,17 @@ public class ParseCompleteObjectTest {
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("rue", co.getFormattedCompletionCandidates().get(0));
 
+        co = new AeshCompleteOperation(aeshContext, "test --foo=", 10);
+        clp.complete(co, ip);
+        assertEquals(2, co.getFormattedCompletionCandidates().size());
+        assertEquals("true", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("false", co.getFormattedCompletionCandidates().get(1));
+
+        co = new AeshCompleteOperation(aeshContext, "test --foo=f", 10);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("alse", co.getFormattedCompletionCandidates().get(0));
+
     }
 
 

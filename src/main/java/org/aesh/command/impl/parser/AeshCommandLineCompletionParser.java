@@ -429,9 +429,15 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                                 parser.lastParsedOption().hasMultipleValues()) {
                             //need to complete option value
                         }
-                        //complete argument
+                        //complete argument or options if the command do not have any args defined
+                        //complete options if there are no arguments, else complete arguments
                         else {
-
+                            if(parser.getProcessedCommand().hasArgument()) {
+                                //complete argument
+                            }
+                            else {
+                                //list options
+                            }
                         }
                 }
                 //complete argument
