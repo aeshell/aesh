@@ -143,10 +143,8 @@ public interface CommandLineParser<C extends Command> {
      * Parse a command line and populate the
      * @param completeOperation
      * @param invocationProviders
-     * @param iterator
      */
-    void complete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders,
-                  ParsedLineIterator iterator);
+    void complete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders);
 
     enum Mode {
         COMPLETION, STRICT, VALIDATE, NONE

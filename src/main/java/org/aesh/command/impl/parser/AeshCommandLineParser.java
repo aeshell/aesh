@@ -31,6 +31,7 @@ import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.parser.LineParser;
+import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedLineIterator;
 import org.aesh.parser.ParsedWord;
 import org.aesh.util.Config;
@@ -94,11 +95,12 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public void complete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders, ParsedLineIterator iterator) {
+    public void complete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders) {
+        ParsedLine line = new LineParser().parseLine(completeOperation.getBuffer(), completeOperation.getCursor());
         //first parse
-        parse(iterator, Mode.COMPLETION);
+        parse(line.iterator(), Mode.COMPLETION);
         //then use completion parser to populate completeOperation
-        parsedCommand().getCompletionParser().injectValuesAndComplete(completeOperation, invocationProviders, iterator.baseLine());
+        parsedCommand().getCompletionParser().injectValuesAndComplete(completeOperation, invocationProviders, line);
     }
 
     @Override
