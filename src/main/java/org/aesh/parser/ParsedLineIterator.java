@@ -37,6 +37,10 @@ public class ParsedLineIterator {
         this.parsedLine = parsedLine;
     }
 
+    public String getOriginalLine() {
+        return parsedLine.line();
+    }
+
     /**
      * @return true if there is a next word
      */
