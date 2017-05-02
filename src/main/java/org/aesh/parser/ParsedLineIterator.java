@@ -37,7 +37,7 @@ public class ParsedLineIterator {
         this.parsedLine = parsedLine;
     }
 
-    public String getOriginalLine() {
+    public String originalLine() {
         return parsedLine.line();
     }
 
