@@ -182,7 +182,7 @@ public class LineParser {
                     builder.append(c);
 
                 //if current operator is set, we need to handle index/prev specially
-                if(currentOperator != OperatorType.NONE) {
+                if (currentOperator != null && currentOperator != OperatorType.NONE) {
                    index = index + currentOperator.value().length();
                    prev = text.charAt(index-1);
                    //we need to reset operator
