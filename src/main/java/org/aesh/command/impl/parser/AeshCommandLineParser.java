@@ -306,7 +306,10 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                     }
                     //we're completing an argument
                     else {
-                        processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
+                        if(iter.isNextWordCursorWord())
+                            processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
+                        else
+                            processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
                         iter.pollParsedWord();
                     }
                 }

@@ -20,7 +20,6 @@
 package org.aesh.command.impl.parser;
 
 import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.parser.ParsedLine;
 
@@ -28,18 +27,6 @@ import org.aesh.parser.ParsedLine;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface CommandLineCompletionParser {
-    /**
-     * 1. find the "word" connected with cursor
-     *   if it starts with '-', we need to check if its a value or name
-     * @param line buffer
-     * @return ParsedCompleteObject
-     */
-    ParsedCompleteObject findCompleteObject(String line, int cursor) throws CommandLineParserException;
-
-    void injectValuesAndComplete(ParsedCompleteObject completeObject,
-                                 AeshCompleteOperation completeOperation,
-                                 InvocationProviders invocationProviders);
-
 
     void injectValuesAndComplete(AeshCompleteOperation completeOperation,
                                  InvocationProviders invocationProviders,

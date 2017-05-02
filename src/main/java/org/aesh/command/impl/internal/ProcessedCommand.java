@@ -310,7 +310,7 @@ public class ProcessedCommand<C extends Command> {
         return names;
     }
 
-    public List<TerminalString> findPossibleLongNamesWitdDash(String name) {
+    public List<TerminalString> findPossibleLongNamesWithDash(String name) {
         List<ProcessedOption> opts = getOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
