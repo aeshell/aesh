@@ -53,20 +53,29 @@ import org.aesh.command.validator.CommandValidatorException;
  */
 class Executions {
 
-    private static class ExecutionImpl<T extends CommandInvocation> implements Execution {
+    private static class ExecutionImpl<T extends CommandInvocation> implements Execution<T> {
 
         private final ExecutableOperator executable;
         private final ProcessedCommand<? extends Command> cmd;
-        private final T invocation;
-        public ExecutionImpl(ExecutableOperator executable, T invocation, ProcessedCommand<? extends Command> cmd) {
+        private T invocation;
+        private final CommandInvocationConfiguration invocationConfiguration;
+        private final AeshCommandRuntime<? extends Command, T> runtime;
+        public ExecutionImpl(ExecutableOperator executable,
+                AeshCommandRuntime<? extends Command, T> runtime,
+                CommandInvocationConfiguration invocationConfiguration,
+                ProcessedCommand<? extends Command> cmd) {
             this.executable = executable;
-            this.invocation = invocation;
+            this.runtime = runtime;
+            this.invocationConfiguration = invocationConfiguration;
             this.cmd = cmd;
             this.executable.setCommand(cmd.getCommand());
         }
 
         @Override
         public T getCommandInvocation() {
+            if (invocation == null) {
+                invocation = runtime.buildCommandInvocation(invocationConfiguration);
+            }
             return invocation;
         }
 
@@ -116,7 +125,8 @@ class Executions {
         NEED_ARGUMENT
     }
 
-    static <CI extends CommandInvocation> List<Execution<CI>> buildExecution(List<ParsedLine> fullLine, AeshCommandRuntime runtime)
+    static <CI extends CommandInvocation> List<Execution<CI>> buildExecution(List<ParsedLine> fullLine,
+            AeshCommandRuntime<? extends Command, CI> runtime)
             throws CommandNotFoundException, CommandLineParserException, OptionValidatorException, IOException {
         State state = State.NEED_COMMAND;
         ProcessedCommand<? extends Command> processedCommand = null;
@@ -158,8 +168,8 @@ class Executions {
                             CommandInvocationConfiguration invocationConfiguration = config == null
                                     ? new CommandInvocationConfiguration(runtime.getAeshContext(), null,
                                             dataProvider) : config.getConfiguration();
-                            Execution execution = new ExecutionImpl(exec,
-                                    runtime.buildCommandInvocation(invocationConfiguration), processedCommand);
+                            Execution execution = new ExecutionImpl(exec, runtime,
+                                    invocationConfiguration, processedCommand);
                             if (exec instanceof DataProvider) {
                                 dataProvider = (DataProvider) exec;
                             } else {
@@ -182,8 +192,7 @@ class Executions {
             CommandInvocationConfiguration invocationConfiguration = config == null
                     ? new CommandInvocationConfiguration(runtime.getAeshContext(), null,
                             dataProvider) : config.getConfiguration();
-            Execution execution = new ExecutionImpl(exec,
-                    runtime.buildCommandInvocation(invocationConfiguration), processedCommand);
+            Execution execution = new ExecutionImpl(exec, runtime, invocationConfiguration, processedCommand);
             executions.add(execution);
         }
         return executions;
