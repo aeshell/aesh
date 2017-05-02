@@ -19,6 +19,8 @@
  */
 package org.aesh.cl;
 
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
@@ -68,7 +70,6 @@ public class ParseCompleteObjectTest {
     @Test
     public void testNewCompletionParser() throws Exception {
         CommandLineParser<ParseCompleteTest1> clp = new AeshCommandContainerBuilder<ParseCompleteTest1>().create(ParseCompleteTest1.class).getParser();
-        CommandLineCompletionParser completeParser = clp.getCompletionParser();
 
         clp.parse("test -e foo1", CommandLineParser.Mode.COMPLETION);
         assertEquals("foo1", clp.getProcessedCommand().findOption("e").getValue());
@@ -125,9 +126,26 @@ public class ParseCompleteObjectTest {
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("alse", co.getFormattedCompletionCandidates().get(0));
-
     }
 
+    @Test
+    public void testNewCompletonParserArgumentInjection() throws Exception {
+        CommandLineParser<ParseCompleteTest2> clp = new AeshCommandContainerBuilder<ParseCompleteTest2>().create(ParseCompleteTest2.class).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 5);
+
+        clp.complete(co, ip);
+        assertEquals(4, co.getFormattedCompletionCandidates().size());
+
+        CommandLineParser<ParseCompleteTest1> clp2 = new AeshCommandContainerBuilder<ParseCompleteTest1>().create(ParseCompleteTest1.class).getParser();
+
+        co = new AeshCompleteOperation(aeshContext, "test ",5);
+        clp2.complete(co, ip);
+        assertEquals(2, co.getFormattedCompletionCandidates().size());
+        assertEquals("one!", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("two!", co.getFormattedCompletionCandidates().get(1));
+
+    }
 
     @Test
     public void testParseCompleteObject() throws Exception {
@@ -402,7 +420,7 @@ public class ParseCompleteObjectTest {
         @Option(shortName = 'D', description = "define properties", required = true)
         private String define;
 
-        @Arguments
+        @Arguments(completer = ParseTestCompleter.class)
         private List<String> arguments;
 
     }
@@ -465,6 +483,19 @@ public class ParseCompleteObjectTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
+        }
+    }
+
+    public class ParseTestCompleter implements OptionCompleter<CompleterInvocation> {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            ParseCompleteTest1 test1 = (ParseCompleteTest1) completerInvocation.getCommand();
+            if(test1.X != null && test1.X.equals("foo"))
+                completerInvocation.addCompleterValue("BAR!");
+            else {
+                completerInvocation.addCompleterValue("one!");
+                completerInvocation.addCompleterValue("two!");
+            }
         }
     }
 }

@@ -428,8 +428,8 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                         if (parser.lastParsedOption().getValue() == null ||
                                 parser.lastParsedOption().hasMultipleValues()) {
                             //need to complete option value
+                            doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
                         }
-                        //complete argument or options if the command do not have any args defined
                         //complete options if there are no arguments, else complete arguments
                         else {
                             if(parser.getProcessedCommand().hasArgument()) {
@@ -440,71 +440,31 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                             }
                         }
                 }
-                //complete argument
+                //complete options if there are no arguments, else complete arguments
                 else {
-                    completeArgument(completeOperation, invocationProviders, line);
+                    if(parser.getProcessedCommand().hasArgument()) {
+                        ParsedWord lastWord = line.selectedWord();
+                        if(lastWord != null)
+                            parser.getProcessedCommand().getArgument().addValue(lastWord.word());
+
+                        doCompleteOptionValue(invocationProviders, completeOperation, parser.getProcessedCommand().getArgument());
+                        //completeArgument(completeOperation, invocationProviders, line);
+                    }
+                    else
+                        doListOptions(completeOperation);
                 }
             }
             //no space means we should try to complete the value of the last parsed option
             else {
-                //first we need to remove the value for the option
-                String value = parser.lastParsedOption().getValue();
-
-                if (parser.lastParsedOption().completer() != null &&
-                        parser.lastParsedOption().activator().isActivated(parser.getProcessedCommand())) {
-                    CompleterInvocation completions =
-                            invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
-                                    new CompleterData(completeOperation.getContext(), value, parser.getCommand()));
-
-                    parser.lastParsedOption().completer().complete(completions);
-                    completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-                    //completionSetOffSet(completeObject, completeOperation, completions);
-                    completeOperation.setOffset(completeOperation.getCursor() - value.length());
-                    completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
-                    completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
-
-                    if (completions.getCompleterValues().size() == 1) {
-                        //if the contain spaces we need to add the number of spaces to the size
-                        // of the value.length since they are chopped off during parsing
-                        if (value.indexOf(Parser.SPACE_CHAR) > 0) {
-                            completeOperation.setOffset(completeOperation.getCursor() -
-                                    (Parser.findNumberOfSpacesInWord(value)));
-                        }
-                        if (completeOperation.getCompletionCandidates().get(0).containSpaces())
-                            completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
-
-                        completeOperation.doAppendSeparator(completions.isAppendSpace());
-                    }
-                }
+                doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
             }
         }
         //partial long option name, contains atleast --
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.LONG_OPTION)) {
             //not option value so we'll complete all options not already listed
             if(parser.getProcessedCommand().completeStatus().value().length() == 0) {
-                List<TerminalString> optionNamesWithDash = parser.getProcessedCommand().getOptionLongNamesWithDash();
-                    if(optionNamesWithDash.size() > 1)
-                        completeOperation.addCompletionCandidatesTerminalString(optionNamesWithDash);
-                    else if(optionNamesWithDash.size() == 1) {
-                        /*
-                        int count = 0;
-                        if(completeOperation.getCursor() < completeOperation.getBuffer().length()) {
-                            String line = completeOperation.getBuffer().substring(0, completeOperation.getCursor());
-                            while(line.substring(0, line.length()-count).endsWith("-"))
-                                count++;
-                        }
-                        else {
-                            while(completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length()-count).endsWith("-"))
-                                count++;
-                        }
-                        */
-                        completeOperation.addCompletionCandidate(optionNamesWithDash.get(0));
-                        //completeOperation.setOffset( completeOperation.getCursor() - count);
-                        completeOperation.setOffset( completeOperation.getCursor());
-                    }
-
+                doListOptions(completeOperation);
             }
-
         }
         //partial short option, contains atleast -
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.SHORT_OPTION)) {
@@ -518,7 +478,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         //we have an option, but no value
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.OPTION_MISSING_VALUE)) {
             //we need to complete a value
-            doCompleteOptionValue(invocationProviders, completeOperation);
+            doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
 
         }
 
@@ -528,9 +488,41 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
     }
 
-    private void doCompleteOptionValue(InvocationProviders invocationProviders, AeshCompleteOperation completeOperation) {
-        ProcessedOption currentOption = parser.lastParsedOption();
-        String value = parser.getProcessedCommand().completeStatus().value();
+    private void doListOptions(AeshCompleteOperation completeOperation) {
+        List<TerminalString> optionNamesWithDash = parser.getProcessedCommand().getOptionLongNamesWithDash();
+        if(optionNamesWithDash.size() > 1)
+            completeOperation.addCompletionCandidatesTerminalString(optionNamesWithDash);
+        else if(optionNamesWithDash.size() == 1) {
+                        /*
+                        int count = 0;
+                        if(completeOperation.getCursor() < completeOperation.getBuffer().length()) {
+                            String line = completeOperation.getBuffer().substring(0, completeOperation.getCursor());
+                            while(line.substring(0, line.length()-count).endsWith("-"))
+                                count++;
+                        }
+                        else {
+                            while(completeOperation.getBuffer().substring(0, completeOperation.getBuffer().length()-count).endsWith("-"))
+                                count++;
+                        }
+                        */
+            completeOperation.addCompletionCandidate(optionNamesWithDash.get(0));
+            //completeOperation.setOffset( completeOperation.getCursor() - count);
+            completeOperation.setOffset( completeOperation.getCursor());
+        }
+
+    }
+
+    private void doCompleteOptionValue(InvocationProviders invocationProviders, AeshCompleteOperation completeOperation,
+                                       ProcessedOption currentOption) {
+        //ProcessedOption currentOption = parser.lastParsedOption();
+        //String value = parser.getProcessedCommand().completeStatus().value();
+        String value = currentOption.getValue();
+        if(value == null)
+            value = "";
+
+        //set offset
+        //completeOperation.setOffset(completeOperation.getCursor() - value.length());
+
         if(currentOption.completer() != null &&
                 currentOption.activator().isActivated(parser.getProcessedCommand())) {
             CompleterInvocation completions =
@@ -544,16 +536,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
 
                 if(completions.getCompleterValues().size() == 1) {
-                    //if the contain spaces we need to add the number of spaces to the size
-                    // of the value.length since they are chopped off during parsing
-                    if(value.indexOf(Parser.SPACE_CHAR) > 0) {
-                        completeOperation.setOffset( completeOperation.getCursor() -
-                                (completeOperation.getOffset() + Parser.findNumberOfSpacesInWord(value)));
-                    }
-                    if(completeOperation.getCompletionCandidates().get(0).containSpaces())
-                        completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
-
-                    completeOperation.doAppendSeparator( completions.isAppendSpace());
+                    verifyCompleteValue(completeOperation, completions, value);
                 }
             }
             //only try to complete default values if completer is null
@@ -563,24 +546,30 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                                 new CompleterData(completeOperation.getContext(), value, parser.getCommand()));
                 new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
                 completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-                calcOffset(value, completeOperation, completions);
+                //calcOffset(value, completeOperation, completions);
                 completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
                 completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
 
                 if(completions.getCompleterValues().size() == 1) {
-                    //if the contain spaces we need to add the number of spaces to the size
-                    // of the value.length since they are chopped off during parsing
-                    if(value.indexOf(Parser.SPACE_CHAR) > 0) {
-                        completeOperation.setOffset( completeOperation.getCursor() -
-                                (completeOperation.getOffset() + Parser.findNumberOfSpacesInWord(value)));
-                    }
-                    if(completeOperation.getCompletionCandidates().get(0).containSpaces())
-                        completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
 
-                    completeOperation.doAppendSeparator( completions.isAppendSpace());
                 }
             }
 
+    }
+
+    private void verifyCompleteValue(AeshCompleteOperation completeOperation,
+                                     CompleterInvocation completions,
+                                     String value) {
+        //if the contain spaces we need to add the number of spaces to the size
+        // of the value.length since they are chopped off during parsing
+        if(value.indexOf(Parser.SPACE_CHAR) > 0) {
+            completeOperation.setOffset( completeOperation.getCursor() -
+                    (completeOperation.getOffset() + Parser.findNumberOfSpacesInWord(value)));
+        }
+        if(completeOperation.getCompletionCandidates().get(0).containSpaces())
+            completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
+
+        completeOperation.doAppendSeparator( completions.isAppendSpace());
     }
 
     private void doInjectValues(InvocationProviders invocationProviders, AeshContext context) {
@@ -591,40 +580,6 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         }
         //this should be ignored at some point
         catch (CommandLineParserException | OptionValidatorException ignored) {
-        }
-    }
-
-    private void completeArgument(AeshCompleteOperation completeOperation,
-                                  InvocationProviders invocationProviders, ParsedLine parsedLine) {
-        ParsedWord lastWord = parsedLine.selectedWord();
-        try {
-            parser.getCommandPopulator().populateObject(parser.getProcessedCommand(),
-                    invocationProviders, completeOperation.getContext(), CommandLineParser.Mode.NONE);
-        }
-        catch (CommandLineParserException | OptionValidatorException ignored) { }
-
-        if(parser.getProcessedCommand().getArgument() != null &&
-                parser.getProcessedCommand().getArgument().completer() != null) {
-            CompleterInvocation completions =
-                    invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
-                            new CompleterData(completeOperation.getContext(), lastWord != null ? lastWord.word() : "", parser.getCommand()));
-            parser.getProcessedCommand().getArgument().completer().complete(completions);
-            completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-            completeOperation.setOffset(completeOperation.getCursor() - (lastWord != null ? lastWord.word().length() : 0));
-            completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
-            completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
-
-            if (completions.getCompleterValues().size() == 1) {
-                if(lastWord != null &&
-                        lastWord.word().indexOf(Parser.SPACE_CHAR) > 0) {
-                    completeOperation.setOffset(completeOperation.getCursor() -
-                            (Parser.findNumberOfSpacesInWord(lastWord.word())));
-                }
-                if (completeOperation.getCompletionCandidates().get(0).containSpaces())
-                    completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
-
-                completeOperation.doAppendSeparator(completions.isAppendSpace());
-            }
         }
     }
 
