@@ -64,7 +64,7 @@ public class AeshCommandOptionActivatorTest {
         ReadlineConsole console = new ReadlineConsole(settings);
 
         console.start();
-        connection.read("val -");
+        connection.read("val --");
         connection.read(Key.CTRL_I);
 
         Thread.sleep(80);

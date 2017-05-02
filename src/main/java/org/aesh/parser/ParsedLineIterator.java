@@ -37,7 +37,7 @@ public class ParsedLineIterator {
         this.parsedLine = parsedLine;
     }
 
-    public String getOriginalLine() {
+    public String originalLine() {
         return parsedLine.line();
     }
 
@@ -184,4 +184,7 @@ public class ParsedLineIterator {
         return word == parsedLine.selectedIndex();
     }
 
+    public ParsedLine baseLine() {
+        return parsedLine;
+    }
 }

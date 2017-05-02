@@ -45,6 +45,7 @@ public class AeshOptionParser implements OptionParser {
                 ProcessedOption nextOption = option.parent().searchAllOptions(word);
                 if(nextOption == null)
                     doParse(parsedLineIterator, option);
+                //we have something like: --foo --bar eg, two options after another
                 else {
                     //TODO: we need to do something better here
                     if(option.hasValue() && option.getValue() == null) {
@@ -148,6 +149,9 @@ public class AeshOptionParser implements OptionParser {
     }
 
     private void addValueToOption(ProcessedOption currOption, ParsedLineIterator iterator) {
+        //we know that the next word is a value and if its the cursor word, we set it...
+        if(iterator.isNextWordCursorWord())
+            currOption.setCursorValue(true);
         //we know that the option will accept a value, so we can poll the value
         String word = iterator.pollWord();
         doAddValueToOption(currOption, word);
@@ -174,7 +178,6 @@ public class AeshOptionParser implements OptionParser {
             //commandLine.addOption(currOption);
             status = Status.NULL;
         }
-        currOption.setCursorValue(true);
     }
 
     private void processList(ProcessedOption currOption, String rest) {

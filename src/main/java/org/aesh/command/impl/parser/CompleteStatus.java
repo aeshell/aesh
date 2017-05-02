@@ -40,8 +40,8 @@ public class CompleteStatus {
         return value;
     }
 
-    enum Status {
-        OPTION,VALUE
+    public enum Status {
+        SHORT_OPTION,LONG_OPTION, COMPLETE_OPTION, OPTION_MISSING_VALUE, ARGUMENT
     }
 
     @Override

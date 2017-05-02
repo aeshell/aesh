@@ -155,6 +155,20 @@ public class ParsedLine {
         return operator;
     }
 
+    public boolean cursorAtEnd() {
+        return cursor == originalInput.length();
+    }
+
+    public boolean spaceAtEnd() {
+        if(originalInput.length() > 1) {
+            return originalInput.charAt(originalInput.length()-1) == ' ' &&
+                   originalInput.charAt(originalInput.length()-2) != '\\' ;
+        }
+        else
+            return (originalInput.length() > 0 &&
+                    originalInput.charAt(originalInput.length()-1) == ' ');
+    }
+
     @Override
     public String toString() {
         return "ParsedLine{" +

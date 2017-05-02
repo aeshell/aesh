@@ -28,8 +28,10 @@ import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.parser.LineParser;
+import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedLineIterator;
 import org.aesh.parser.ParsedWord;
 import org.aesh.util.Config;
@@ -90,6 +92,15 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
             }
         }
         return null;
+    }
+
+    @Override
+    public void complete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders) {
+        ParsedLine line = new LineParser().parseLine(completeOperation.getBuffer(), completeOperation.getCursor());
+        //first parse
+        parse(line.iterator(), Mode.COMPLETION);
+        //then use completion parser to populate completeOperation
+        parsedCommand().getCompletionParser().injectValuesAndComplete(completeOperation, invocationProviders, line);
     }
 
     @Override
@@ -272,6 +283,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     private void doParseCompletion(ParsedLineIterator iter) {
         if(!iter.hasNextWord()) {
             //we list all the options
+            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
         }
         else {
             while(iter.hasNextWord()) {
@@ -280,21 +292,33 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                     lastParsedOption = processedCommand.searchAllOptions(word.word());
                     if (lastParsedOption != null) {
                         lastParsedOption.parser().parse(iter, lastParsedOption);
+                        if(!iter.hasNextWord())
+                           processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
                     }
                     //got a partial option
+                    else if(word.word().startsWith("--")) {
+                        processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
+                        iter.pollParsedWord();
+                    }
                     else if(word.word().startsWith("-")) {
-
+                        processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.SHORT_OPTION, word.word().substring(1)));
+                        iter.pollParsedWord();
                     }
                     //we're completing an argument
                     else {
-
+                        if(iter.isNextWordCursorWord())
+                            processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
+                        else
+                            processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
+                        iter.pollParsedWord();
                     }
                 }
                 catch (OptionParserException e) {
-                    e.printStackTrace();
+                    //TODO: needs to be improved
+                    //ignored for now
+                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
                 }
             }
-
         }
     }
 
@@ -337,7 +361,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      */
     @Override
     public void parse(String line, Mode mode) {
-        parse(lineParser.parseLine(line).iterator(), mode);
+        parse(lineParser.parseLine(line, line.length()).iterator(), mode);
     }
 
     @Override
