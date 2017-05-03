@@ -32,7 +32,6 @@ import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.util.Config;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -44,7 +43,6 @@ import static org.junit.Assert.assertEquals;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@Ignore
 public class AeshCommandEndOperatorTest {
 
     private static int counter = 0;
@@ -60,6 +58,7 @@ public class AeshCommandEndOperatorTest {
 
         Settings settings = SettingsBuilder.builder()
                 .commandRegistry(registry)
+                .enableOperatorParser(true)
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
@@ -68,8 +67,7 @@ public class AeshCommandEndOperatorTest {
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
-        connection.read("foo ;bar --info yup; foo"+ Config.getLineSeparator());
-        //outputStream.flush();
+        connection.read("foo ;bar --info yup; foo" + Config.getLineSeparator());
         Thread.sleep(100);
         assertEquals(3, counter);
 
