@@ -55,13 +55,24 @@ public class TestConnection implements Connection {
     private volatile boolean reading = false;
 
     public TestConnection() {
-        this(new Size(80, 20));
+        this(new Size(80, 20), true);
+    }
+
+    public TestConnection(boolean stripAnsiCodes) {
+        this(new Size(80, 20), stripAnsiCodes);
     }
 
     public TestConnection(Size size) {
+        this(size, true);
+    }
+
+    public TestConnection(Size size, boolean stripAnsiCodes) {
         bufferBuilder = new StringBuilder();
         stdOutHandler = ints -> {
-           bufferBuilder.append(Parser.stripAwayAnsiCodes(Parser.fromCodePoints(ints)));
+            if(stripAnsiCodes)
+                bufferBuilder.append(Parser.stripAwayAnsiCodes(Parser.fromCodePoints(ints)));
+            else
+                bufferBuilder.append(Parser.fromCodePoints(ints));
         };
 
         if(size == null)

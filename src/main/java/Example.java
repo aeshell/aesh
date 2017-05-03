@@ -399,9 +399,10 @@ public class Example {
 
         @Override
         public void complete(CompleterInvocation completerData) {
-            List<String> completeList = new ArrayList<String>();
-            if(completerData.getGivenCompleteValue() == null || completerData.getGivenCompleteValue().length() == 0)
+            List<String> completeList = new ArrayList<>();
+            if(completerData.getGivenCompleteValue() == null || completerData.getGivenCompleteValue().length() == 0) {
                 completeList.add("1");
+            }
             else {
                 char lastChar = completerData.getGivenCompleteValue().charAt(completerData.getGivenCompleteValue().length()-1);
                 if(Character.isDigit(lastChar)) {
@@ -410,6 +411,7 @@ public class Example {
                     completeList.add(completerData.getGivenCompleteValue()+i);
                 }
             }
+            completerData.addAllCompleterValues(completeList);
         }
     }
 

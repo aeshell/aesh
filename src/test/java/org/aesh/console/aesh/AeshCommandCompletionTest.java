@@ -61,7 +61,7 @@ public class AeshCommandCompletionTest {
 
     @Test
     public void testCompletion() throws Exception {
-        TestConnection connection = new TestConnection();
+        TestConnection connection = new TestConnection(false);
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(FooCommand.class)
@@ -78,19 +78,24 @@ public class AeshCommandCompletionTest {
         console.setPrompt(new Prompt(""));
         console.start();
 
+        connection.clearOutputBuffer();
         connection.read("fo");
         connection.read(completeChar.getFirstValue());
 
         assertEquals("foo ", connection.getOutputBuffer());
+        connection.read("--");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("foo --\n--bar  --name  \nfoo --", connection.getOutputBuffer());
 
-        connection.read("--name aslak --bar ");
+        connection.clearOutputBuffer();
+        connection.read("name aslak --bar ");
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("foo --name aslak --bar bar\\ 2", connection.getOutputBuffer());
+        assertEquals("name aslak --bar bar\\ 2", connection.getOutputBuffer());
 
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("foo --name aslak --bar bar\\ 2\\ 3\\ 4 ", connection.getOutputBuffer());
+        assertEquals("name aslak --bar bar\\ 2\\ 3\\ 4 ", connection.getOutputBuffer());
 
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();

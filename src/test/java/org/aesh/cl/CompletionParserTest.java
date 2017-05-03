@@ -196,10 +196,19 @@ public class CompletionParserTest {
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("\\ 3", co.getFormattedCompletionCandidates().get(0));
 
-         co = new AeshCompleteOperation(aeshContext, "test one! bar\\ 2\\ ", 16);
+        co = new AeshCompleteOperation(aeshContext, "test one! bar\\ 2\\ ", 16);
         clp2.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("3", co.getFormattedCompletionCandidates().get(0));
+
+        co = new AeshCompleteOperation(aeshContext, "test one! --", 16);
+        clp2.complete(co, ip);
+        assertEquals(4, co.getFormattedCompletionCandidates().size());
+
+        co = new AeshCompleteOperation(aeshContext, "test one! --f", 16);
+        clp2.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("oo", co.getFormattedCompletionCandidates().get(0));
     }
 
 
