@@ -72,7 +72,7 @@ public class BuilderTest {
                         .hasMultipleValues(true).type(String.class).build());
 
         pb.argument(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
-                .optionType(OptionType.ARGUMENT).type(String.class).build());
+                .optionType(OptionType.ARGUMENTS).type(String.class).build());
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
@@ -110,7 +110,7 @@ public class BuilderTest {
                         .build());
 
         pb.argument(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
-                .optionType(OptionType.ARGUMENT).type(String.class).build());
+                .optionType(OptionType.ARGUMENTS).type(String.class).build());
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 

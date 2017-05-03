@@ -151,7 +151,7 @@ public final class ProcessedOption {
     }
 
     public boolean hasMultipleValues() {
-        return optionType == OptionType.LIST || optionType == OptionType.ARGUMENT || optionType == OptionType.GROUP;
+        return optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS || optionType == OptionType.GROUP;
     }
 
     public boolean isRequired() {
@@ -365,7 +365,7 @@ public final class ProcessedOption {
                     field.set(instance, doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation));
                 }
             }
-            else if(optionType == OptionType.LIST || optionType == OptionType.ARGUMENT) {
+            else if(optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
                 if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
                     if(Set.class.isAssignableFrom(field.getType())) {
                         Set tmpSet = new HashSet<Object>();

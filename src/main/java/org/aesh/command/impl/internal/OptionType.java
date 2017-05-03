@@ -25,7 +25,7 @@ package org.aesh.command.impl.internal;
 public enum OptionType {
     LIST,
     GROUP,
-    ARGUMENT,
+    ARGUMENTS,
     NORMAL,
     BOOLEAN
 }

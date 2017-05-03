@@ -260,7 +260,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                     .addAllDefaultValues(a.defaultValue())
                     .type(type)
                     .fieldName(field.getName())
-                    .optionType(OptionType.ARGUMENT)
+                    .optionType(OptionType.ARGUMENTS)
                     .converter(a.converter())
                     .completer(a.completer())
                     .validator(a.validator())
