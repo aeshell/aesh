@@ -247,6 +247,10 @@ public class SettingsBuilder {
         return apply(c -> c.settings.setConnection(connection));
     }
 
+    public SettingsBuilder enableOperatorParser(boolean enabled) {
+        return apply(c -> c.settings.enableOperatorParser(enabled));
+    }
+
     public Settings build() {
         if(settings.logging())
             LoggerUtil.doLog();

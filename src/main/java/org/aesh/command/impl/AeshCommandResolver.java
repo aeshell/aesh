@@ -50,6 +50,12 @@ public class AeshCommandResolver<C extends Command> implements CommandResolver<C
         return getCommand(lineParser.parseLine(line), line);
     }
 
+    @Override
+    public CommandContainer<C> resolveCommand(String name, String line) throws CommandNotFoundException {
+        return getCommand(name, line);
+    }
+
+
     /**
      * try to return the command in the given registry if the given registry do not find the command, check if we have a
      * internal registry and if its there.
@@ -82,6 +88,5 @@ public class AeshCommandResolver<C extends Command> implements CommandResolver<C
             return registry.getCommandByAlias(commandName);
         }
     }
-
 
 }

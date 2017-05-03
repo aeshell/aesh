@@ -152,6 +152,7 @@ public class AeshCommandRuntimeBuilder {
             c.commandActivatorProvider = settings.commandActivatorProvider();
             c.registry = settings.commandRegistry();
             c.ctx = settings.aeshContext();
+            c.operators = settings.operatorParserEnabled() ? EnumSet.allOf(OperatorType.class) : null;
         });
     }
 

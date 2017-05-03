@@ -220,7 +220,7 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
             return null;
         }
         String opName = aeshLine.words().get(0).word();
-        CommandContainer<C> container = registry.getCommand(opName, commandLine);
+        CommandContainer container = commandResolver.resolveCommand(opName, commandLine);
         if (container == null) {
             throw new CommandNotFoundException("No command handler for '" + opName + "'.");
         }

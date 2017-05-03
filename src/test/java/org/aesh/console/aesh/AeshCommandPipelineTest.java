@@ -31,7 +31,6 @@ import org.aesh.command.CommandResult;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.util.Config;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -41,22 +40,22 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@Ignore
 public class AeshCommandPipelineTest {
 
     @Test
     public void testPipeline() throws InterruptedException, IOException {
         TestConnection connection = new TestConnection();
 
-       PipeCommand pipe = new PipeCommand();
+        FooCommand foo = new FooCommand();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(pipe)
-                .command(FooCommand.class)
+                .command(PipeCommand.class)
+                .command(foo)
                 .create();
 
         Settings settings = SettingsBuilder.builder()
                 .connection(connection)
+                .enableOperatorParser(true)
                 .commandRegistry(registry)
                 .logging(true)
                 .build();
@@ -64,39 +63,40 @@ public class AeshCommandPipelineTest {
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
-        connection.read("pipe | bar"+ Config.getLineSeparator());
-        //outputStream.flush();
+        connection.read("pipe | foo" + Config.getLineSeparator());
         Thread.sleep(100);
-        assertEquals(1, pipe.getCounter());
+        assertEquals(1, foo.getCounter());
         console.stop();
     }
 
     @CommandDefinition(name ="pipe", description = "")
     public static class PipeCommand implements Command {
 
-        private int counter = 0;
-
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            /*
-            if(commandInvocation.getControlOperator().isPipe()) {
-                counter++;
-            }
-            */
+            commandInvocation.println("hello");
             return CommandResult.SUCCESS;
-        }
-
-        public int getCounter() {
-            return counter;
         }
     }
 
     @CommandDefinition(name = "foo", description = "")
     public static class FooCommand implements Command {
+        private int counter = 0;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            try {
+                if (commandInvocation.getConfiguration().getPipedData().available() > 0) {
+                    counter++;
+                }
+            } catch (IOException ex) {
+                throw new CommandException(ex);
+            }
             return CommandResult.SUCCESS;
+        }
+
+        public int getCounter() {
+            return counter;
         }
     }
 }

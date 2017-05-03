@@ -32,4 +32,6 @@ public interface CommandResolver<C extends Command> {
 
     CommandContainer<C> resolveCommand(String line) throws CommandNotFoundException;
 
+    CommandContainer<C> resolveCommand(String name, String line) throws CommandNotFoundException;
+
 }
