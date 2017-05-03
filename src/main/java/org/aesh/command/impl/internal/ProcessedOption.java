@@ -276,9 +276,10 @@ public final class ProcessedOption {
 
     public TerminalString getRenderedNameWithDashes() {
         if(renderer == null || !ansiMode)
-            return new TerminalString("--"+name, true);
+            //if hasValue append a = after the name
+            return new TerminalString( hasValue() ? "--"+name+"=" : "--"+name, true);
         else
-            return new TerminalString("--"+name, renderer.getColor(), renderer.getTextType());
+            return new TerminalString( hasValue() ? "--"+name+"=" : "--"+name, renderer.getColor(), renderer.getTextType());
     }
 
     public int getFormattedLength() {

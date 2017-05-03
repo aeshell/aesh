@@ -85,7 +85,7 @@ public class AeshCommandCompletionTest {
         assertEquals("foo ", connection.getOutputBuffer());
         connection.read("--");
         connection.read(completeChar.getFirstValue());
-        assertEquals("foo --\n--bar  --name  \nfoo --", connection.getOutputBuffer());
+        assertEquals("foo --\n--bar=  --name=  \nfoo --", connection.getOutputBuffer());
 
         connection.clearOutputBuffer();
         connection.read("name aslak --bar ");
@@ -232,7 +232,7 @@ public class AeshCommandCompletionTest {
         //outputStream.flush();
 
         Thread.sleep(80);
-        connection.assertBuffer("git rebase --force --test ");
+        connection.assertBuffer("git rebase --force --test=");
         connection.read(enter.getFirstValue());
         Thread.sleep(80);
         connection.clearOutputBuffer();

@@ -144,6 +144,9 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             completeOperation.addCompletionCandidate(optionNamesWithDash.get(0));
             //we should always have -- at the end here so always subtract 2
             completeOperation.setOffset( completeOperation.getCursor() - value.length());
+            //do not append separator, we do that in the getOptionLongNames
+            if(optionNamesWithDash.get(0).getCharacters().endsWith("="))
+                completeOperation.doAppendSeparator(false);
         }
 
     }

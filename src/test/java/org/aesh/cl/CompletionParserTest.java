@@ -208,7 +208,7 @@ public class CompletionParserTest {
         co = new AeshCompleteOperation(aeshContext, "test one! --f", 16);
         clp2.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("oo", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("oo=", co.getFormattedCompletionCandidates().get(0));
     }
 
 
@@ -230,18 +230,18 @@ public class CompletionParserTest {
 
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("able", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("able=", co.getFormattedCompletionCandidates().get(0));
 
         co = new AeshCompleteOperation(aeshContext, "group child1 --enable foo ", 100);
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("--help", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("--help=", co.getFormattedCompletionCandidates().get(0));
 
         co = new AeshCompleteOperation(aeshContext, "group child2 --", 100);
         clp.complete(co, ip);
         assertEquals(2, co.getFormattedCompletionCandidates().size());
-        assertEquals("--print", co.getFormattedCompletionCandidates().get(0));
-        assertEquals("--help", co.getFormattedCompletionCandidates().get(1));
+        assertEquals("--print=", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("--help=", co.getFormattedCompletionCandidates().get(1));
 
     }
 
