@@ -251,7 +251,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                 ParameterizedType listType = (ParameterizedType) field.getGenericType();
                 type = (Class) listType.getActualTypeArguments()[0];
             }
-            processedCommand.setArgument( ProcessedOptionBuilder.builder()
+            processedCommand.setArguments( ProcessedOptionBuilder.builder()
                     .shortName('\u0000')
                     .name("")
                     .description(a.description())

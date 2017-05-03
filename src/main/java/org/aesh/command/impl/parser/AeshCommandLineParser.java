@@ -256,8 +256,8 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                         lastParsedOption.parser().parse(iter, lastParsedOption);
                     }
                     else {
-                        if (processedCommand.hasArgument()) {
-                            processedCommand.getArgument().addValue(word.word());
+                        if (processedCommand.hasArguments()) {
+                            processedCommand.getArguments().addValue(word.word());
                         }
                         else {
                             processedCommand.addParserException(
@@ -304,7 +304,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                         processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.SHORT_OPTION, word.word().substring(1)));
                         iter.pollParsedWord();
                     }
-                    //we're completing an argument
+                    //we're completing arguments
                     else {
                         if(iter.isNextWordCursorWord())
                             processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));

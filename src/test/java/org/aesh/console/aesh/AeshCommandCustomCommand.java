@@ -182,11 +182,11 @@ class CustomPopulator implements CommandPopulator<Object, Command> {
             else
                 clearValue(option.getFieldName());
         }
-        if((processedCommand.getArgument() != null && processedCommand.getArgument().getValues().size() > 0)) {
-            //line.getArgument().injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
-            putArgumentValue(processedCommand.getArgument().getValue());
+        if((processedCommand.getArguments() != null && processedCommand.getArguments().getValues().size() > 0)) {
+            //line.getArguments().injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
+            putArgumentValue(processedCommand.getArguments().getValue());
         }
-        else if(processedCommand.getArgument() != null)
+        else if(processedCommand.getArguments() != null)
             clearArguments();
      }
 

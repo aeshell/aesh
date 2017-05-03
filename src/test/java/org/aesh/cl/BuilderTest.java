@@ -71,21 +71,21 @@ public class BuilderTest {
                 ProcessedOptionBuilder.builder().description("values").name("values").shortName('a')
                         .hasMultipleValues(true).type(String.class).build());
 
-        pb.argument(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
+        pb.arguments(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENTS).type(String.class).build());
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
         clp.parse("less -V test1.txt");
         assertEquals("true", clp.getProcessedCommand().findOption("V").getValue());
-        assertEquals("test1.txt", clp.getProcessedCommand().getArgument().getValues().get(0));
+        assertEquals("test1.txt", clp.getProcessedCommand().getArguments().getValues().get(0));
 
         clp.parse("less -V -Dfoo1=bar1 -Dfoo2=bar2 test1.txt");
         assertEquals("bar2", clp.getProcessedCommand().findOption("D").getProperties().get("foo2"));
 
         clp.parse("less -V -Dfoo1=bar1 -Dfoo2=bar2 --values f1,f2,f3 test1.txt");
         assertEquals("f2", clp.getProcessedCommand().findLongOption("values").getValues().get(1));
-        assertEquals("test1.txt", clp.getProcessedCommand().getArgument().getValues().get(0));
+        assertEquals("test1.txt", clp.getProcessedCommand().getArguments().getValues().get(0));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class BuilderTest {
                         .type(String.class)
                         .build());
 
-        pb.argument(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
+        pb.arguments(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENTS).type(String.class).build());
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
@@ -120,7 +120,7 @@ public class BuilderTest {
         clp.parse("less -v -e test1.txt");
         assertEquals("true", clp.getProcessedCommand().findOption("v").getValue());
         assertEquals("true", clp.getProcessedCommand().findOption("e").getValue());
-        assertEquals("test1.txt", clp.getProcessedCommand().getArgument().getValues().get(0));
+        assertEquals("test1.txt", clp.getProcessedCommand().getArguments().getValues().get(0));
     }
 
     @Test

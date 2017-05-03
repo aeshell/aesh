@@ -73,7 +73,7 @@ public class ProcessedCommandBuilder<C extends Command> {
         return this;
     }
 
-    public ProcessedCommandBuilder<C> argument(ProcessedOption argument) {
+    public ProcessedCommandBuilder<C> arguments(ProcessedOption argument) {
         this.argument = argument;
         return this;
     }

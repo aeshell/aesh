@@ -75,26 +75,26 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
                 instance.resetValue(option.name());
             }
         }
-        if ((processedCommand.getArgument() != null && processedCommand.getArgument().getValues().size() > 0)) {
-            Object val = processedCommand.getArgument().getValue();
+        if ((processedCommand.getArguments() != null && processedCommand.getArguments().getValues().size() > 0)) {
+            Object val = processedCommand.getArguments().getValue();
             if (val == null) {
-                instance.setValue(processedCommand.getArgument().name(),
-                        processedCommand.getArgument().
-                        doConvert(processedCommand.getArgument().getDefaultValues().get(0),
+                instance.setValue(processedCommand.getArguments().name(),
+                        processedCommand.getArguments().
+                        doConvert(processedCommand.getArguments().getDefaultValues().get(0),
                                 invocationProviders, instance, aeshContext,
                                 validate == CommandLineParser.Mode.VALIDATE));
             }
             /*
             else {
-                instance.setValue(processedCommand.getArgument().name(),
-                        processedCommand.getArgument().
-                        doConvert(processedCommand.getArgument().getValue(),
+                instance.setValue(processedCommand.getArguments().name(),
+                        processedCommand.getArguments().
+                        doConvert(processedCommand.getArguments().getValue(),
                                 invocationProviders, instance, aeshContext,
                                 validate));
             }
-        } else if (processedCommand.getArgument() != null) {
+        } else if (processedCommand.getArguments() != null) {
             // Must be named
-            instance.resetValue(processedCommand.getArgument().name());
+            instance.resetValue(processedCommand.getArguments().name());
         */
         }
     }

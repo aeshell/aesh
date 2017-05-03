@@ -478,7 +478,7 @@ public final class ProcessedOption {
                 ", description='" + description + '\'' +
                 ", values=" + values +
                 ", defaultValues=" + defaultValues +
-                ", argument='" + argument + '\'' +
+                ", arguments='" + argument + '\'' +
                 ", type=" + type +
                 ", required=" + required +
                 ", valueSeparator=" + valueSeparator +

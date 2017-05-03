@@ -94,7 +94,7 @@ public class MutableCommandRegistryImpl<C extends Command> implements MutableCom
                     LOGGER.info("command is a group command");
                     //if we dont have any arguments we'll add the child commands as well
                     if(!com.hasOptions() &&
-                            !com.hasArgument()) {
+                            !com.hasArguments()) {
                         LOGGER.info("adding add: "+command.getParser().getAllNames());
                         names.addAll(command.getParser().getAllNames());
                         co.setIgnoreNonEscapedSpace(true);

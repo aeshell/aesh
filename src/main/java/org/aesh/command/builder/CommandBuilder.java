@@ -191,7 +191,7 @@ public class CommandBuilder {
                 .addOptions(options)
                 .resultHandler(resultHandler)
                 .validator(validator)
-                .argument(argument)
+                .arguments(argument)
                 .populator(populator)
                 .create();
     }

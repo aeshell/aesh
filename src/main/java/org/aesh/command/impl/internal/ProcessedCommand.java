@@ -51,23 +51,23 @@ public class ProcessedCommand<C extends Command> {
     private CommandActivator activator;
 
     private List<ProcessedOption> options;
-    private ProcessedOption argument;
+    private ProcessedOption arguments;
     private C command;
     private final List<String> aliases;
     private List<CommandLineParserException> parserExceptions;
     private CompleteStatus completeStatus;
 
     public ProcessedCommand(String name, List<String> aliases, C command,
-            String description, CommandValidator validator,
-            ResultHandler resultHandler,
-            ProcessedOption argument, List<ProcessedOption> options,
-            CommandPopulator<Object, C> populator, CommandActivator activator) throws OptionParserException {
+                            String description, CommandValidator validator,
+                            ResultHandler resultHandler,
+                            ProcessedOption arguments, List<ProcessedOption> options,
+                            CommandPopulator<Object, C> populator, CommandActivator activator) throws OptionParserException {
         setName(name);
         setDescription(description);
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
         this.validator = validator;
         this.resultHandler = resultHandler;
-        this.argument = argument;
+        this.arguments = arguments;
         this.options = new ArrayList<>();
         this.command = command;
         this.activator = activator == null ? new NullCommandActivator() : activator;
@@ -137,16 +137,16 @@ public class ProcessedCommand<C extends Command> {
       return resultHandler;
     }
 
-    public boolean hasArgument() {
-        return argument != null && argument.hasMultipleValues();
+    public boolean hasArguments() {
+        return arguments != null && arguments.hasMultipleValues();
     }
 
-    public ProcessedOption getArgument() {
-        return argument;
+    public ProcessedOption getArguments() {
+        return arguments;
     }
 
-    public void setArgument(ProcessedOption argument) {
-        this.argument = argument;
+    public void setArguments(ProcessedOption arguments) {
+        this.arguments = arguments;
     }
 
     public CommandPopulator<Object, C> getCommandPopulator() {
@@ -287,8 +287,8 @@ public class ProcessedCommand<C extends Command> {
    public void clear() {
        for (ProcessedOption processedOption : getOptions())
            processedOption.clear();
-       if(argument != null)
-           argument.clear();
+       if(arguments != null)
+           arguments.clear();
 
        parserExceptions.clear();
        completeStatus = null;
@@ -341,9 +341,9 @@ public class ProcessedCommand<C extends Command> {
            sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
         for (ProcessedOption o : opts)
             sb.append(o.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
-        if(argument != null) {
+        if(arguments != null) {
             sb.append(Config.getLineSeparator()).append("Arguments:").append(Config.getLineSeparator());
-            sb.append(argument.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
+            sb.append(arguments.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
         }
         return "Usage: "+ name()+" "+ description()+ Config.getLineSeparator()+sb.toString();
     }
@@ -410,7 +410,7 @@ public class ProcessedCommand<C extends Command> {
     }
 
     public boolean containsArgumentWithDefaultValues() {
-        return getArgument() != null && getArgument().hasDefaultValue();
+        return getArguments() != null && getArguments().hasDefaultValue();
     }
 
     public void addParserException(CommandLineParserException exception) {

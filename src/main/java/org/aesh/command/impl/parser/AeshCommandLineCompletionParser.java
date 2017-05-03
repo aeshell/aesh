@@ -72,10 +72,10 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                         }
                         //complete options if there are no arguments, else complete arguments
                         else {
-                            if(parser.getProcessedCommand().hasArgument()) {
-                                //complete argument
+                            if(parser.getProcessedCommand().hasArguments()) {
+                                //complete arguments
                                 doCompleteOptionValue(invocationProviders, completeOperation,
-                                        parser.getProcessedCommand().getArgument());
+                                        parser.getProcessedCommand().getArguments());
                             }
                             else {
                                 //list options
@@ -85,12 +85,12 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 }
                 //complete options if there are no arguments, else complete arguments
                 else {
-                    if(parser.getProcessedCommand().hasArgument()) {
+                    if(parser.getProcessedCommand().hasArguments()) {
                         ParsedWord lastWord = line.selectedWord();
                         if(lastWord != null)
-                            parser.getProcessedCommand().getArgument().addValue(lastWord.word());
+                            parser.getProcessedCommand().getArguments().addValue(lastWord.word());
 
-                        doCompleteOptionValue(invocationProviders, completeOperation, parser.getProcessedCommand().getArgument());
+                        doCompleteOptionValue(invocationProviders, completeOperation, parser.getProcessedCommand().getArguments());
                         //completeArgument(completeOperation, invocationProviders, line);
                     }
                     else
@@ -123,8 +123,8 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         }
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.ARGUMENT)) {
             if(parser.getProcessedCommand().completeStatus().value() != null)
-                parser.getProcessedCommand().getArgument().addValue(parser.getProcessedCommand().completeStatus().value());
-            doCompleteOptionValue(invocationProviders, completeOperation, parser.getProcessedCommand().getArgument());
+                parser.getProcessedCommand().getArguments().addValue(parser.getProcessedCommand().completeStatus().value());
+            doCompleteOptionValue(invocationProviders, completeOperation, parser.getProcessedCommand().getArguments());
         }
     }
 
