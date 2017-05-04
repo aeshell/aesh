@@ -268,6 +268,13 @@ public class AeshCommandCompletionTest {
 
         connection.assertBuffer("git rebase --force --test barFOO ");
 
+        connection.read(Config.getLineSeparator());
+        connection.clearOutputBuffer();
+
+        connection.read("git commit ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("git commit --all ");
+
         console.stop();
      }
 

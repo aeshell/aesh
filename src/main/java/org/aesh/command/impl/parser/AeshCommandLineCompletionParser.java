@@ -110,7 +110,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                         doCompleteOptionValue(invocationProviders, completeOperation, parser.getProcessedCommand().getArgument());
                     }
                     else
-                        doListOptions(completeOperation, "--");
+                        doListOptions(completeOperation, "");
                 }
             }
             //no space means we should try to complete the value of the last parsed option
