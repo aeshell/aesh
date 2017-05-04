@@ -45,11 +45,14 @@ public class BuilderTest {
         pb.addOption(
                 ProcessedOptionBuilder.builder().description("filename given").shortName('f').name("filename")
                         .type(String.class).hasValue(true).build());
+        pb.argument(ProcessedOptionBuilder.builder().shortName('\u0000').name("")
+                .description("argument!!").type(Integer.class).optionType(OptionType.ARGUMENT).hasValue(true).build());
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
-        clp.parse("foo -f test1.txt");
+        clp.parse("foo -f test1.txt baAar");
         assertEquals("test1.txt", clp.getProcessedCommand().findOption("f").getValue());
+        assertEquals("baAar", clp.getProcessedCommand().getArgument().getValue());
     }
 
     @Test

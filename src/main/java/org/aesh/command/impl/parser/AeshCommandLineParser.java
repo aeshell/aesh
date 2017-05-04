@@ -259,6 +259,8 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                         if (processedCommand.hasArguments()) {
                             processedCommand.getArguments().addValue(word.word());
                         }
+                        else if(processedCommand.hasArgumentWithNoValue())
+                            processedCommand.getArgument().addValue(word.word());
                         else {
                             processedCommand.addParserException(
                                     new OptionParserException("A value " + word.word() +

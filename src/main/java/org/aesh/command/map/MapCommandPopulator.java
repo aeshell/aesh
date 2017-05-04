@@ -97,7 +97,17 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
             instance.resetValue(processedCommand.getArguments().name());
         */
         }
-    }
+        if ((processedCommand.getArgument() != null && processedCommand.getArgument().getValues().size() > 0)) {
+            Object val = processedCommand.getArgument().getValue();
+            if (val == null) {
+                instance.setValue(processedCommand.getArgument().name(),
+                        processedCommand.getArgument().
+                                doConvert(processedCommand.getArgument().getDefaultValues().get(0),
+                                        invocationProviders, instance, aeshContext,
+                                        validate == CommandLineParser.Mode.VALIDATE));
+            }
+        }
+     }
 
     @Override
     public Object getObject() {

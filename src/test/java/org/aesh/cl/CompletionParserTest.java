@@ -216,10 +216,11 @@ public class CompletionParserTest {
     public void testParseCompleteObject3() throws Exception {
         CommandLineParser<ParseCompleteTest3> clp = new AeshCommandContainerBuilder<ParseCompleteTest3>().create(ParseCompleteTest3.class).getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
-        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test -v 1 2 3 ", 100);
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,", 100);
 
         clp.complete(co, ip);
-        assertEquals(0, co.getFormattedCompletionCandidates().size());
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+//        assertEquals("4", co.getFormattedCompletionCandidates().get(0));
     }
 
     @Test
@@ -288,7 +289,7 @@ public class CompletionParserTest {
         @Option(shortName = 'X', description = "enable X")
         private String X;
 
-        @OptionList(shortName = 'v', name = "value", description = "enable equal")
+        @OptionList(shortName = 'v', name = "value", description = "enable equal", completer = ValueTestCompleter.class)
         private List<String> values;
 
         @Option(shortName = 'D', description = "define properties",
@@ -348,6 +349,16 @@ public class CompletionParserTest {
                 completerInvocation.addCompleterValue("bar 2 3");
             }
          }
+    }
+    public class ValueTestCompleter implements OptionCompleter<CompleterInvocation> {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            ParseCompleteTest3 test3 = (ParseCompleteTest3) completerInvocation.getCommand();
+            if(test3.values != null)
+                completerInvocation.addCompleterValue(String.valueOf(test3.values.size()+1));
+            else
+                completerInvocation.addCompleterValue("1");
+        }
     }
 }
 

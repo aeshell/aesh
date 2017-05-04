@@ -37,6 +37,7 @@ import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.Command;
+import org.aesh.command.option.Argument;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.invocation.InvocationProviders;
@@ -158,6 +159,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
         OptionGroup og;
         OptionList ol;
         Arguments a;
+        Argument arg;
         if((o = field.getAnnotation(Option.class)) != null) {
             OptionType optionType;
             if(o.hasValue())
@@ -267,6 +269,33 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                     .activator(a.activator())
                     .parser(a.parser())
                     .build());
+        }
+        else if((arg = field.getAnnotation(Argument.class)) != null) {
+            if(processedCommand.getArgument() != null)
+                throw new CommandLineParserException("Argument can not be defined more than once pr class");
+            if(Collection.class.isAssignableFrom(field.getType()))
+                throw new CommandLineParserException("Argument field can not be an instance of Collection");
+             OptionType optionType = OptionType.NORMAL;
+            processedCommand.setArgument(
+                    ProcessedOptionBuilder.builder()
+                            .shortName('\u0000')
+                            .name("")
+                            .description(arg.description())
+                            .required(arg.required())
+                            .valueSeparator(',')
+                            .addAllDefaultValues(arg.defaultValue())
+                            .type(field.getType())
+                            .fieldName(field.getName())
+                            .optionType(optionType)
+                            .converter(arg.converter())
+                            .completer(arg.completer())
+                            .validator(arg.validator())
+                            .activator(arg.activator())
+                            .renderer(arg.renderer())
+                            .parser(arg.parser())
+                            .overrideRequired(arg.overrideRequired())
+                            .build()
+            );
         }
     }
 

@@ -52,6 +52,7 @@ public class ProcessedCommand<C extends Command> {
 
     private List<ProcessedOption> options;
     private ProcessedOption arguments;
+    private ProcessedOption argument;
     private C command;
     private final List<String> aliases;
     private List<CommandLineParserException> parserExceptions;
@@ -61,6 +62,7 @@ public class ProcessedCommand<C extends Command> {
                             String description, CommandValidator validator,
                             ResultHandler resultHandler,
                             ProcessedOption arguments, List<ProcessedOption> options,
+                            ProcessedOption argument,
                             CommandPopulator<Object, C> populator, CommandActivator activator) throws OptionParserException {
         setName(name);
         setDescription(description);
@@ -68,6 +70,7 @@ public class ProcessedCommand<C extends Command> {
         this.validator = validator;
         this.resultHandler = resultHandler;
         this.arguments = arguments;
+        this.argument = argument;
         this.options = new ArrayList<>();
         this.command = command;
         this.activator = activator == null ? new NullCommandActivator() : activator;
@@ -289,6 +292,8 @@ public class ProcessedCommand<C extends Command> {
            processedOption.clear();
        if(arguments != null)
            arguments.clear();
+       if(argument != null)
+           argument.clear();
 
        parserExceptions.clear();
        completeStatus = null;
@@ -344,6 +349,10 @@ public class ProcessedCommand<C extends Command> {
         if(arguments != null) {
             sb.append(Config.getLineSeparator()).append("Arguments:").append(Config.getLineSeparator());
             sb.append(arguments.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
+        }
+        if(argument != null) {
+            sb.append(Config.getLineSeparator()).append("Argument:").append(Config.getLineSeparator());
+            sb.append(argument.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
         }
         return "Usage: "+ name()+" "+ description()+ Config.getLineSeparator()+sb.toString();
     }
@@ -409,10 +418,6 @@ public class ProcessedCommand<C extends Command> {
         activator = invocationProviders.getCommandActivatorProvider().enhanceCommandActivator(activator);
     }
 
-    public boolean containsArgumentWithDefaultValues() {
-        return getArguments() != null && getArguments().hasDefaultValue();
-    }
-
     public void addParserException(CommandLineParserException exception) {
         parserExceptions.add(exception);
     }
@@ -442,5 +447,21 @@ public class ProcessedCommand<C extends Command> {
 
     public void setCompleteStatus(CompleteStatus completeStatus) {
         this.completeStatus = completeStatus;
+    }
+
+    public void setArgument(ProcessedOption arg) {
+        this.argument = arg;
+    }
+
+    public ProcessedOption getArgument() {
+        return argument;
+    }
+
+    public boolean hasArgument() {
+        return argument != null;
+    }
+
+    public boolean hasArgumentWithNoValue() {
+        return argument != null && argument.getValue() == null;
     }
 }

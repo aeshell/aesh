@@ -297,7 +297,8 @@ public class ProcessedOptionBuilder {
                 optionType = OptionType.NORMAL;
         }
 
-        if(name == null || (name.length() < 1 && optionType != OptionType.ARGUMENTS)) {
+        if((name == null || name.length() < 1) &&
+                optionType != OptionType.ARGUMENTS && optionType != OptionType.ARGUMENT) {
             if(fieldName == null || fieldName.length() < 1)
                 throw new OptionParserException("Name must be defined to build an Option");
             else
@@ -310,7 +311,8 @@ public class ProcessedOptionBuilder {
         if(type == null)
             throw new OptionParserException("Type must be defined to build an Option");
 
-        if((shortName == Character.MIN_VALUE) && name.equals("") && optionType != OptionType.ARGUMENTS) {
+        if((shortName == Character.MIN_VALUE) && name.equals("") &&
+                optionType != OptionType.ARGUMENTS && optionType != OptionType.ARGUMENT) {
             throw new OptionParserException("Either shortName or name must be set.");
         }
 

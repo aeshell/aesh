@@ -77,6 +77,11 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                                 doCompleteOptionValue(invocationProviders, completeOperation,
                                         parser.getProcessedCommand().getArguments());
                             }
+                            //if we have argument and the value isnt set yet
+                            else if(parser.getProcessedCommand().hasArgumentWithNoValue()) {
+                                doCompleteOptionValue(invocationProviders, completeOperation,
+                                        parser.getProcessedCommand().getArgument());
+                            }
                             else {
                                 //list options
                                 doListOptions(completeOperation, "");
@@ -92,6 +97,13 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
                         doCompleteOptionValue(invocationProviders, completeOperation, parser.getProcessedCommand().getArguments());
                         //completeArgument(completeOperation, invocationProviders, line);
+                    }
+                    else if(parser.getProcessedCommand().hasArgumentWithNoValue()) {
+                        ParsedWord lastWord = line.selectedWord();
+                        if(lastWord != null)
+                            parser.getProcessedCommand().getArgument().addValue(lastWord.word());
+
+                        doCompleteOptionValue(invocationProviders, completeOperation, parser.getProcessedCommand().getArgument());
                     }
                     else
                         doListOptions(completeOperation, "--");
@@ -121,10 +133,15 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             //we need to complete a value
             doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
         }
+        //argument
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.ARGUMENT)) {
+            ProcessedOption arg =
+                    parser.getProcessedCommand().hasArguments() ?
+                            parser.getProcessedCommand().getArguments() :
+                            parser.getProcessedCommand().getArgument();
             if(parser.getProcessedCommand().completeStatus().value() != null)
-                parser.getProcessedCommand().getArguments().addValue(parser.getProcessedCommand().completeStatus().value());
-            doCompleteOptionValue(invocationProviders, completeOperation, parser.getProcessedCommand().getArguments());
+                arg.addValue(parser.getProcessedCommand().completeStatus().value());
+            doCompleteOptionValue(invocationProviders, completeOperation, arg);
         }
     }
 

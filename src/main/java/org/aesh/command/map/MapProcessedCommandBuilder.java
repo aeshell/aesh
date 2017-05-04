@@ -52,13 +52,14 @@ public class MapProcessedCommandBuilder {
                 String description,
                 CommandValidator validator,
                 ResultHandler resultHandler,
-                ProcessedOption argument,
+                ProcessedOption arguments,
                 List<ProcessedOption> options,
+                ProcessedOption argument,
                 CommandPopulator populator,
                 ProcessedOptionProvider provider,
                 CommandActivator activator) throws OptionParserException {
-            super(name, aliases, command, description, validator, resultHandler, argument,
-                    options, populator, activator);
+            super(name, aliases, command, description, validator, resultHandler, arguments,
+                    options, argument, populator, activator);
             this.provider = provider == null ? EMPTY_PROVIDER : provider;
         }
 
@@ -83,6 +84,7 @@ public class MapProcessedCommandBuilder {
     private String description;
     private CommandValidator<?> validator;
     private ResultHandler resultHandler;
+    private ProcessedOption arguments;
     private ProcessedOption argument;
     private final List<ProcessedOption> options;
     private CommandPopulator populator;
@@ -112,6 +114,11 @@ public class MapProcessedCommandBuilder {
 
     public MapProcessedCommandBuilder optionProvider(ProcessedOptionProvider provider) {
         this.provider = provider;
+        return this;
+    }
+
+    public MapProcessedCommandBuilder arguments(ProcessedOption arguments) {
+        this.arguments = arguments;
         return this;
     }
 
@@ -217,8 +224,9 @@ public class MapProcessedCommandBuilder {
                 description,
                 validator,
                 resultHandler,
-                argument,
+                arguments,
                 options,
+                argument,
                 populator,
                 provider,
                 activator);

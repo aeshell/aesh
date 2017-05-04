@@ -46,7 +46,8 @@ public class ProcessedCommandBuilder<C extends Command> {
     private String description;
     private CommandValidator<C> validator;
     private ResultHandler resultHandler;
-    private ProcessedOption argument;
+    private ProcessedOption arguments;
+    private ProcessedOption arg;
     private final List<ProcessedOption> options;
     private CommandPopulator<Object,C> populator;
     private C command;
@@ -73,8 +74,13 @@ public class ProcessedCommandBuilder<C extends Command> {
         return this;
     }
 
-    public ProcessedCommandBuilder<C> arguments(ProcessedOption argument) {
-        this.argument = argument;
+    public ProcessedCommandBuilder<C> arguments(ProcessedOption arguments) {
+        this.arguments = arguments;
+        return this;
+    }
+
+    public ProcessedCommandBuilder<C> argument(ProcessedOption argument) {
+        this.arg = argument;
         return this;
     }
 
@@ -166,6 +172,6 @@ public class ProcessedCommandBuilder<C extends Command> {
             resultHandler = new NullResultHandler();
 
         return new ProcessedCommand<>(name, aliases, command, description, validator,
-                resultHandler, argument, options, populator, activator);
+                resultHandler, arguments, options, arg, populator, activator);
     }
 }

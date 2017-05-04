@@ -71,13 +71,20 @@ public class AeshCommandPopulator<O extends Object, C extends Command> implement
             else
                 resetField(getObject(), option.getFieldName(), option.hasValue());
         }
+        //arguments
         if(processedCommand.getArguments() != null &&
                 (processedCommand.getArguments().getValues().size() > 0 || processedCommand.getArguments().getDefaultValues().size() > 0))
             processedCommand.getArguments().injectValueIntoField(getObject(), invocationProviders, aeshContext,
                     mode == CommandLineParser.Mode.VALIDATE);
-
         else if(processedCommand.getArguments() != null)
             resetField(getObject(), processedCommand.getArguments().getFieldName(), true);
+        //argument
+         if(processedCommand.getArgument() != null &&
+                (processedCommand.getArgument().getValues().size() > 0 || processedCommand.getArgument().getDefaultValues().size() > 0))
+            processedCommand.getArgument().injectValueIntoField(getObject(), invocationProviders, aeshContext,
+                    mode == CommandLineParser.Mode.VALIDATE);
+        else if(processedCommand.getArgument() != null)
+            resetField(getObject(), processedCommand.getArgument().getFieldName(), true);
     }
 
     /**
