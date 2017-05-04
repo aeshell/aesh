@@ -71,6 +71,8 @@ public class ProcessedCommand<C extends Command> {
         this.resultHandler = resultHandler;
         this.arguments = arguments;
         this.argument = argument;
+        if(argument != null && arguments != null)
+            throw new OptionParserException("Argument and Arguments cannot be defined in the same Command");
         this.options = new ArrayList<>();
         this.command = command;
         this.activator = activator == null ? new NullCommandActivator() : activator;

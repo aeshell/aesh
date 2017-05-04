@@ -223,7 +223,17 @@ public class CompletionParserTest {
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("4", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,4 ", 100);
+        clp.parse("test -v 1,2,3,4 foo -D=foo1");
+        assertEquals("foo1", clp.getProcessedCommand().findOption("D").getValue());
+        assertEquals("foo", clp.getProcessedCommand().getArgument().getValue());
+
+        clp.parse("test -v 1,2,3,4 foo -D=foo1 foo2");
+        assertTrue(clp.getProcessedCommand().parserExceptions().size() > 0);
+
+        co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,4 -D=foot ", 100);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("BAR", co.getFormattedCompletionCandidates().get(0));
     }
 
     @Test
@@ -371,7 +381,7 @@ public class CompletionParserTest {
     public class ArgTestCompleter implements OptionCompleter<CompleterInvocation> {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            
+            completerInvocation.addCompleterValue("BAR");
         }
     }
 }
