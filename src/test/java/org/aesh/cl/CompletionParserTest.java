@@ -30,6 +30,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionList;
@@ -220,7 +221,9 @@ public class CompletionParserTest {
 
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-//        assertEquals("4", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("4", co.getFormattedCompletionCandidates().get(0));
+
+        co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,4 ", 100);
     }
 
     @Test
@@ -295,6 +298,9 @@ public class CompletionParserTest {
         @Option(shortName = 'D', description = "define properties",
                 required = true)
         private String define;
+
+        @Argument(completer = ArgTestCompleter.class)
+        private String arg;
     }
 
     @GroupCommandDefinition(name = "group", description = "groups",
@@ -350,6 +356,7 @@ public class CompletionParserTest {
             }
          }
     }
+
     public class ValueTestCompleter implements OptionCompleter<CompleterInvocation> {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
@@ -358,6 +365,13 @@ public class CompletionParserTest {
                 completerInvocation.addCompleterValue(String.valueOf(test3.values.size()+1));
             else
                 completerInvocation.addCompleterValue("1");
+        }
+    }
+
+    public class ArgTestCompleter implements OptionCompleter<CompleterInvocation> {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            
         }
     }
 }

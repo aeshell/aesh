@@ -63,11 +63,15 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         //we have parsed one or more options and their values
         if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.COMPLETE_OPTION)) {
             //space and end, we display other options/arguments or option value if the option have a list of values
-            if (line.spaceAtEnd()) {
+            //- if it ends with a separator we also try to complete an option value
+            if (line.spaceAtEnd() || parser.lastParsedOption().getEndsWithSeparator()) {
                 if(parser.lastParsedOption() != null) {
                         if (parser.lastParsedOption().getValue() == null ||
                                 parser.lastParsedOption().hasMultipleValues()) {
                             //need to complete option value
+                            //extra check to make sure that lists are properly parsed
+                            if(line.spaceAtEnd() && parser.lastParsedOption().getValueSeparator() == ' ')
+                                parser.lastParsedOption().setEndsWithSeparator(true);
                             doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
                         }
                         //complete options if there are no arguments, else complete arguments
@@ -173,7 +177,8 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         //ProcessedOption currentOption = parser.lastParsedOption();
         //String value = parser.getProcessedCommand().completeStatus().value();
         String value = currentOption.getLastValue();
-        if(value == null)
+        //if value is null or ends with a separator
+        if(value == null || currentOption.getEndsWithSeparator())
             value = "";
 
         //set offset
