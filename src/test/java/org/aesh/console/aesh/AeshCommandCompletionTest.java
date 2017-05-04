@@ -81,9 +81,12 @@ public class AeshCommandCompletionTest {
         connection.clearOutputBuffer();
         connection.read("fo");
         connection.read(completeChar.getFirstValue());
-
         assertEquals("foo ", connection.getOutputBuffer());
-        connection.read("--");
+
+        connection.read("-");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("foo --", connection.getOutputBuffer());
+
         connection.read(completeChar.getFirstValue());
         assertEquals("foo --\n--bar=  --name=  \nfoo --", connection.getOutputBuffer());
 

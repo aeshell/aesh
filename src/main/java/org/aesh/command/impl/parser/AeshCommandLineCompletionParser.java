@@ -128,6 +128,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             //if we do not have any value, we add another -
             if(parser.getProcessedCommand().completeStatus().value().length() == 0) {
                         completeOperation.addCompletionCandidate("-");
+                        completeOperation.doAppendSeparator(false);
                         //completeOperation.setOffset( completeOperation.getCursor() - count);
                         completeOperation.setOffset( completeOperation.getCursor());
             }
