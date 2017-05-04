@@ -136,7 +136,17 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         //we have an option, but no value
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.OPTION_MISSING_VALUE)) {
             //we need to complete a value
-            doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
+            //if we have a short option without a value lets check for missing equals
+            if(!parser.lastParsedOption().isLongNameUsed() &&
+                    parser.lastParsedOption().getValue() == null && !parser.lastParsedOption().getEndsWithSeparator()
+                    && !line.spaceAtEnd()) {
+                //TODO: fix this
+                //do nothing
+            }
+            //complete value
+            else {
+                doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
+            }
         }
         //argument
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.ARGUMENT)) {

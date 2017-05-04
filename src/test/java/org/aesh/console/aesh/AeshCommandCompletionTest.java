@@ -128,6 +128,24 @@ public class AeshCommandCompletionTest {
 
         assertEquals("foo --bar foo --b", connection.getOutputBuffer());
 
+        connection.read(Config.getLineSeparator());
+        connection.clearOutputBuffer();
+
+        connection.read("foo -n");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("foo -n", connection.getOutputBuffer());
+
+        connection.read(" ");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("foo -n two ", connection.getOutputBuffer());
+
+        connection.read(Config.getLineSeparator());
+        connection.clearOutputBuffer();
+
+        connection.read("foo -n=");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("foo -n=two ", connection.getOutputBuffer());
+
         console.stop();
     }
 
@@ -259,7 +277,7 @@ public class AeshCommandCompletionTest {
         @Option(completer = FooCompletor.class)
         private String bar;
 
-        @Option
+        @Option(shortName = 'n', completer = NameTestCompleter.class)
         private String name;
 
         @Arguments
@@ -417,6 +435,13 @@ public class AeshCommandCompletionTest {
         public boolean isActivated(ProcessedCommand processedCommand) {
             ProcessedOption option = processedCommand.findLongOption("force");
             return option != null && option.getValue() != null && option.getValue().equals("true");
+        }
+    }
+
+    public static class NameTestCompleter implements OptionCompleter {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            completerInvocation.addCompleterValue("two");
         }
     }
 }
