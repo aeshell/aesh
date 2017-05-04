@@ -238,10 +238,10 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             completeOperation.setOffset( completeOperation.getCursor() -
                     (value.length() + Parser.findNumberOfSpacesInWord(value)));
         }
-        else if(value != null)
-            completeOperation.setOffset( completeOperation.getCursor() - value.length());
+        else if(completions.getOffset() > 0)
+            completeOperation.setOffset(completeOperation.getCursor() - (value.length() + completions.getOffset()));
         else
-            completeOperation.setOffset( completeOperation.getCursor() - completions.getOffset());
+            completeOperation.setOffset(completeOperation.getCursor() - value.length());
 
         if(completions.getCompleterValues().size() == 1) {
             if (completeOperation.getCompletionCandidates().get(0).containSpaces())
