@@ -58,6 +58,7 @@ import static org.junit.Assert.assertTrue;
 public class AeshCommandCompletionTest {
 
     private final Key completeChar =  Key.CTRL_I;
+    private final Key backspace =  Key.BACKSPACE;
     private final Key enter =  Key.ENTER;
 
     @Test
@@ -216,11 +217,16 @@ public class AeshCommandCompletionTest {
         assertEquals("arg --bool=true ", connection.getOutputBuffer());
         connection.read(completeChar.getFirstValue());
         assertEquals("arg --bool=true ARG ", connection.getOutputBuffer());
+        connection.read(backspace);
+        connection.clearOutputBuffer();
+        
         connection.read(completeChar.getFirstValue());
-        assertEquals("arg --bool=true ARG --input=", connection.getOutputBuffer());
+        assertEquals(" ", connection.getOutputBuffer());
+        connection.read(completeChar.getFirstValue());
+        assertEquals(" --input=", connection.getOutputBuffer());
         connection.read("bar ");
         connection.read(completeChar.getFirstValue());
-        assertEquals("arg --bool=true ARG --input=bar ", connection.getOutputBuffer());
+        assertEquals(" --input=bar ", connection.getOutputBuffer());
 
         console.stop();
     }
