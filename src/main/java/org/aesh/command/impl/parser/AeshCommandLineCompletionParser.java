@@ -65,7 +65,8 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.COMPLETE_OPTION)) {
             //space and end, we display other options/arguments or option value if the option have a list of values
             //- if it ends with a separator we also try to complete an option value
-            if (line.spaceAtEnd() || parser.lastParsedOption().getEndsWithSeparator()) {
+            ParsedWord.Status selectedWordStatus = line.selectedWord() != null ? line.selectedWord().status() : line.lastWord().status();
+            if ((line.spaceAtEnd() || parser.lastParsedOption().getEndsWithSeparator()) && selectedWordStatus == ParsedWord.Status.OK) {
                 if(parser.lastParsedOption() != null) {
                         if (parser.lastParsedOption().getValue() == null ||
                                 parser.lastParsedOption().hasMultipleValues()) {
@@ -115,7 +116,11 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 }
             }
             //no space means we should try to complete the value of the last parsed option
+            //or unclosed quote/bracket
             else {
+                //need to make sure that the open brackets or quotes negates ends on separators
+                if(selectedWordStatus != ParsedWord.Status.OK)
+                    parser.lastParsedOption().setEndsWithSeparator(false);
                 doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
             }
         }

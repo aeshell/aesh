@@ -228,6 +228,12 @@ public class AeshCommandCompletionTest {
         connection.read(completeChar.getFirstValue());
         assertEquals(" --input=bar ", connection.getOutputBuffer());
 
+        connection.read(enter);
+        connection.clearOutputBuffer();
+        connection.read("arg --input={foo-bar ");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("arg --input={foo-bar bArg ", connection.getOutputBuffer());
+
         console.stop();
     }
 
@@ -482,7 +488,7 @@ public class AeshCommandCompletionTest {
         @Option
         private boolean bool;
 
-        @Option
+        @Option(completer = InputTestCompleter.class)
         private String input;
 
         @Argument(completer = ArgTestCompleter.class)
@@ -513,6 +519,13 @@ public class AeshCommandCompletionTest {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
             completerInvocation.addCompleterValue("ARG");
+        }
+    }
+
+    public static class InputTestCompleter implements OptionCompleter {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"bArg");
         }
     }
 

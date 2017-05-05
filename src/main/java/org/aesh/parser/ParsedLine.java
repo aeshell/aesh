@@ -144,6 +144,10 @@ public class ParsedLine {
         return status;
     }
 
+    public ParsedWord lastWord() {
+        return words().get(words.size()-1);
+    }
+
     /**
      * @return a highly specialized iterator to make it easier to parse the input
      */
