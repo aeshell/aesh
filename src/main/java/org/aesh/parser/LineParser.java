@@ -235,7 +235,7 @@ public class LineParser {
         }
 
         if (cursor == text.length() &&
-                (prev != SPACE_CHAR || (haveEscape || textList.get(textList.size()-1).status() != ParsedWord.Status.OK))) {
+                (prev != SPACE_CHAR || (haveEscape || isQuoted()))) {
             cursorWord = textList.size() - 1;
             if (textList.size() > 0)
                 wordCursor = textList.get(textList.size() - 1).word().length();

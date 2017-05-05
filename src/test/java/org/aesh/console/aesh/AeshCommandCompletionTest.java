@@ -219,7 +219,6 @@ public class AeshCommandCompletionTest {
         assertEquals("arg --bool=true ARG ", connection.getOutputBuffer());
         connection.read(backspace);
         connection.clearOutputBuffer();
-        
         connection.read(completeChar.getFirstValue());
         assertEquals(" ", connection.getOutputBuffer());
         connection.read(completeChar.getFirstValue());
