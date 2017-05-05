@@ -233,6 +233,12 @@ public class AeshCommandCompletionTest {
         connection.read(completeChar.getFirstValue());
         assertEquals("arg --input={foo-bar bArg ", connection.getOutputBuffer());
 
+        connection.read(enter);
+        connection.clearOutputBuffer();
+        connection.read("arg {foo-bar ");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("arg {foo-bar YEAH ", connection.getOutputBuffer());
+
         console.stop();
     }
 
@@ -517,7 +523,12 @@ public class AeshCommandCompletionTest {
     public static class ArgTestCompleter implements OptionCompleter {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            completerInvocation.addCompleterValue("ARG");
+            if(completerInvocation.getGivenCompleteValue().equals("{foo-bar "))
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"YEAH");
+            else if(!completerInvocation.getGivenCompleteValue().equals("ARG"))
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"ARG");
+            else
+                completerInvocation.addCompleterValue("ARG");
         }
     }
 

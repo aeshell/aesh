@@ -359,7 +359,7 @@ public final class ProcessedOption {
                 if(constructor != null)
                     constructor.setAccessible(true);
             }
-            if(optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN) {
+            if(optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN || optionType == OptionType.ARGUMENT) {
                 if(getValue() != null)
                     field.set(instance, doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation));
                 else if(defaultValues.size() > 0) {
