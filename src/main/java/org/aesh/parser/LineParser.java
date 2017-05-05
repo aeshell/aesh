@@ -225,8 +225,14 @@ public class LineParser {
         if (haveEscape)
             builder.append(BACK_SLASH);
 
-        if (builder.length() > 0)
-            textList.add(new ParsedWord(builder.toString(), index-builder.length()));
+        if (builder.length() > 0) {
+            if(haveDoubleQuote || haveSingleQuote)
+                textList.add(new ParsedWord(builder.toString(), index - builder.length(), ParsedWord.Status.OPEN_QUOTE));
+            else if(haveSquareBracket || haveCurlyBracket)
+                textList.add(new ParsedWord(builder.toString(), index - builder.length(), ParsedWord.Status.OPEN_BRACKET));
+            else
+                textList.add(new ParsedWord(builder.toString(), index - builder.length()));
+        }
 
         if (cursor == text.length() && (prev != SPACE_CHAR || haveEscape)) {
             cursorWord = textList.size() - 1;

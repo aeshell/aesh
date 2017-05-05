@@ -31,10 +31,18 @@ public class ParsedWord {
 
     private final String word;
     private final int lineIndex;
+    private final Status status;
 
     public ParsedWord(String word, int lineIndex) {
         this.word = word;
         this.lineIndex = lineIndex;
+        this.status = Status.OK;
+    }
+
+    public ParsedWord(String word, int lineIndex, Status status) {
+        this.word = word;
+        this.lineIndex = lineIndex;
+        this.status = status;
     }
 
     public int lineIndex() {
@@ -43,5 +51,13 @@ public class ParsedWord {
 
     public String word() {
         return word;
+    }
+
+    public Status status() {
+        return status;
+    }
+
+    public enum Status {
+        OK, OPEN_BRACKET, OPEN_QUOTE
     }
 }

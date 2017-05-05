@@ -334,7 +334,12 @@ public class LineParserTest {
          assertEquals("--option1=bar{x1; x2}", line.words().get(1).word());
          line = lineParser.parseLine("cmd1 --option1=bar{x1; x2}", 19, false);
          assertEquals("--option1=bar{x1;", line.words().get(1).word());
-     }
+
+         line = lineParser.parseLine("cmd1 --option1=bar{x1; x2 ", 19, true);
+         assertEquals("cmd1", line.words().get(0).word());
+         assertEquals("--option1=bar{x1; x2 ", line.words().get(1).word());
+         assertEquals(ParsedWord.Status.OPEN_BRACKET, line.words().get(1).status());
+      }
 
      @Test
     public void testOperatorParsing() {
