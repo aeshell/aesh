@@ -38,6 +38,8 @@ public class LineParser {
     private static final char DOUBLE_QUOTE = '\"';
     private static final char CURLY_START = '{';
     private static final char CURLY_END = '}';
+    private static final char PARENTHESIS_START = '(';
+    private static final char PARENTHESIS_END = ')';
 
     private List<ParsedWord> textList = new ArrayList<>();
     private boolean haveEscape = false;
@@ -94,10 +96,10 @@ public class LineParser {
             else if (c == DOUBLE_QUOTE) {
                 handleDoubleQuote(c);
             }
-            else if(parseCurlyAndSquareBrackets &&  c == CURLY_START) {
+            else if (parseCurlyAndSquareBrackets && (c == CURLY_START || c == PARENTHESIS_START)) {
                 handleCurlyStart(c);
             }
-            else if(parseCurlyAndSquareBrackets &&  c == CURLY_END && haveCurlyBracket) {
+            else if (parseCurlyAndSquareBrackets && (c == CURLY_END || c == PARENTHESIS_END) && haveCurlyBracket) {
                 handleCurlyEnd(c);
             }
             else if (haveEscape) {
@@ -149,10 +151,10 @@ public class LineParser {
                 else if (c == DOUBLE_QUOTE) {
                     handleDoubleQuote(c);
                 }
-                else if(parseCurlyAndSquareBrackets &&  c == CURLY_START) {
+                else if (parseCurlyAndSquareBrackets && (c == CURLY_START || c == PARENTHESIS_START)) {
                     handleCurlyStart(c);
                 }
-                else if(parseCurlyAndSquareBrackets &&  c == CURLY_END && haveCurlyBracket) {
+                else if (parseCurlyAndSquareBrackets && (c == CURLY_END || c == PARENTHESIS_END) && haveCurlyBracket) {
                     handleCurlyEnd(c);
                 }
                 else if (haveEscape) {
