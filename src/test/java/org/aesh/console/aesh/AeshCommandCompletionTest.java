@@ -20,6 +20,7 @@
 package org.aesh.console.aesh;
 
 import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.OptionCompleter;
@@ -188,8 +189,40 @@ public class AeshCommandCompletionTest {
     }
 
     @Test
-    public void testCompletionNoArguments() {
+    public void testCompletionArgument() throws IOException {
+        TestConnection connection = new TestConnection();
 
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(ArgCommand.class)
+                .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("arg -");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("arg --", connection.getOutputBuffer());
+        connection.read("b");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("arg --bool=", connection.getOutputBuffer());
+        connection.read("t");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("arg --bool=true ", connection.getOutputBuffer());
+        connection.read(completeChar.getFirstValue());
+        assertEquals("arg --bool=true ARG ", connection.getOutputBuffer());
+        connection.read(completeChar.getFirstValue());
+        assertEquals("arg --bool=true ARG --input=", connection.getOutputBuffer());
+        connection.read("bar ");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("arg --bool=true ARG --input=bar ", connection.getOutputBuffer());
+
+        console.stop();
     }
 
     @Test
@@ -437,6 +470,24 @@ public class AeshCommandCompletionTest {
         }
     }
 
+    @CommandDefinition(name = "arg", description = "")
+    public static class ArgCommand implements Command {
+
+        @Option
+        private boolean bool;
+
+        @Option
+        private String input;
+
+        @Argument(completer = ArgTestCompleter.class)
+        private String arg;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     public static class RebaseTestActivator implements OptionActivator {
         @Override
         public boolean isActivated(ProcessedCommand processedCommand) {
@@ -451,4 +502,14 @@ public class AeshCommandCompletionTest {
             completerInvocation.addCompleterValue("two");
         }
     }
+
+    public static class ArgTestCompleter implements OptionCompleter {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            completerInvocation.addCompleterValue("ARG");
+        }
+    }
+
+
+
 }

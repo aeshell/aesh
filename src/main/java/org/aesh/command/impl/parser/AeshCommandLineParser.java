@@ -310,8 +310,15 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                     else {
                         if(iter.isNextWordCursorWord())
                             processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
-                        else
-                            processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
+                        else {
+                            //add the value to argument/arguments
+                            if(processedCommand.hasArguments())
+                                processedCommand.getArguments().addValue(word.word());
+                            else if(processedCommand.hasArgument())
+                                processedCommand.getArgument().addValue(word.word());
+
+                            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
+                        }
                         iter.pollParsedWord();
                     }
                 }

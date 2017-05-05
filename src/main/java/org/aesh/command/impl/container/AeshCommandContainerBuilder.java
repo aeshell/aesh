@@ -279,7 +279,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                 throw new CommandLineParserException("Argument can not be defined with an Arguments type");
             if(Collection.class.isAssignableFrom(field.getType()))
                 throw new CommandLineParserException("Argument field can not be an instance of Collection");
-             OptionType optionType = OptionType.NORMAL;
+             OptionType optionType = OptionType.ARGUMENT;
             processedCommand.setArgument(
                     ProcessedOptionBuilder.builder()
                             .shortName('\u0000')

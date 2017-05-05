@@ -19,6 +19,7 @@
  */
 package org.aesh.command.impl.parser;
 
+import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.DefaultValueOptionCompleter;
@@ -154,9 +155,20 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                     parser.getProcessedCommand().hasArguments() ?
                             parser.getProcessedCommand().getArguments() :
                             parser.getProcessedCommand().getArgument();
-            if(parser.getProcessedCommand().completeStatus().value() != null)
-                arg.addValue(parser.getProcessedCommand().completeStatus().value());
-            doCompleteOptionValue(invocationProviders, completeOperation, arg);
+            //first check if arg is argument, if so check if it already have a value, if so to an option complete
+            if(arg.getOptionType() == OptionType.ARGUMENT && arg.getValue() != null) {
+                //list options
+                doListOptions(completeOperation, "");
+            }
+            //argument(s)
+            else {
+                if (parser.getProcessedCommand().completeStatus().value() != null)
+                    arg.addValue(parser.getProcessedCommand().completeStatus().value());
+                else
+                    //set this to true since we do not want to use previous values in the completion value
+                    arg.setEndsWithSeparator(true);
+                doCompleteOptionValue(invocationProviders, completeOperation, arg);
+            }
         }
     }
 
@@ -238,7 +250,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             completeOperation.setOffset( completeOperation.getCursor() -
                     (value.length() + Parser.findNumberOfSpacesInWord(value)));
         }
-        else if(completions.getOffset() > 0)
+        else if(completions.getOffset() >= 0)
             completeOperation.setOffset(completeOperation.getCursor() - completions.getOffset());
         else
             completeOperation.setOffset(completeOperation.getCursor() - value.length());
