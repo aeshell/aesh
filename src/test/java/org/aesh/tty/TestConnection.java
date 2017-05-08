@@ -29,7 +29,6 @@ import org.aesh.util.Parser;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
@@ -50,8 +49,6 @@ public class TestConnection implements Connection {
     private String out;
     private Size size;
 
-    private CountDownLatch latch;
-    private volatile boolean waiting = false;
     private volatile boolean reading = false;
 
     public TestConnection() {
@@ -166,21 +163,8 @@ public class TestConnection implements Connection {
 
     }
 
-    @Override
-    public void stopReading() {
-
-    }
-
     private void doRead(int[] input) {
         if(reading) {
-            if (waiting) {
-                try {
-                    latch.await();
-                }
-                catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
             if(stdinHandler != null) {
                 stdinHandler.accept(input);
             }
@@ -197,25 +181,6 @@ public class TestConnection implements Connection {
         else
             throw new RuntimeException("Got input when not reading: "+ Arrays.toString(input));
     }
-
-    @Override
-    public void suspend() {
-        latch = new CountDownLatch(1);
-        waiting = true;
-     }
-
-    @Override
-    public boolean suspended() {
-        return waiting;
-    }
-
-    @Override
-    public void awake() {
-        if(waiting) {
-            waiting = false;
-            latch.countDown();
-        }
-     }
 
     @Override
     public boolean put(Capability capability, Object... params) {
