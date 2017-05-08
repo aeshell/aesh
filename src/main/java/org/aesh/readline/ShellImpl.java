@@ -69,9 +69,7 @@ class ShellImpl implements Shell {
         readline.readline(connection, prompt, event -> {
             out[0] = event;
             latch.countDown();
-            connection.suspend();
         });
-        connection.awake();
         try {
             // Wait until interrupted
             latch.await();
@@ -92,10 +90,8 @@ class ShellImpl implements Shell {
             if (decoder.hasNext()) {
                 key[0] = Key.findStartKey(decoder.next().buffer().array());
                 latch.countDown();
-                connection.suspend();
             }
         });
-        connection.awake();
         try {
             // Wait until interrupted
             latch.await();

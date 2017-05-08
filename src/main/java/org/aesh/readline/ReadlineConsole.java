@@ -152,7 +152,6 @@ public class ReadlineConsole implements Console {
     private void processLine(String line, Connection conn) {
         //try (CommandContainer container = commandResolver.resolveCommand(line)) {
             try {
-                connection.suspend();
                 new Process(conn, this, readline, runtime, line).start();
             }
             catch (IllegalArgumentException e) {
