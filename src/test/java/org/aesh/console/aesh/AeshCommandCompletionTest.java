@@ -124,11 +124,11 @@ public class AeshCommandCompletionTest {
         connection.read("foo --bar foo ");
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("foo --bar foo ", connection.getOutputBuffer());
-        connection.read("--b");
+        assertEquals("foo --bar foo --name=", connection.getOutputBuffer());
+        connection.read("val --b");
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("foo --bar foo --b", connection.getOutputBuffer());
+        assertEquals("foo --bar foo --name=val --b", connection.getOutputBuffer());
 
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
@@ -470,6 +470,9 @@ public class AeshCommandCompletionTest {
 
         @Option(completer = RebaseTestCompleter.class, activator = RebaseTestActivator.class)
         private String test;
+
+        @Argument
+        private String arg;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {

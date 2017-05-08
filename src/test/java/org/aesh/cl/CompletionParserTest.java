@@ -230,10 +230,21 @@ public class CompletionParserTest {
         clp.parse("test -v 1,2,3,4 foo -D=foo1 foo2");
         assertTrue(clp.getProcessedCommand().parserExceptions().size() > 0);
 
-        co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,4 -D=foot ", 100);
+        co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,4 -D=foot B", 100);
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("BAR", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("AR", co.getFormattedCompletionCandidates().get(0));
+    }
+
+    @Test
+    public void testArgumentNotRequired() throws Exception {
+        CommandLineParser<ParseCompleteTest3> clp = new AeshCommandContainerBuilder<ParseCompleteTest3>().create(ParseCompleteTest3.class).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 100);
+
+        clp.complete(co, ip);
+        assertEquals(3, co.getFormattedCompletionCandidates().size());
+
     }
 
     @Test
@@ -381,7 +392,9 @@ public class CompletionParserTest {
     public class ArgTestCompleter implements OptionCompleter<CompleterInvocation> {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            completerInvocation.addCompleterValue("BAR");
+            if(completerInvocation.getGivenCompleteValue() != null &&
+                    completerInvocation.getGivenCompleteValue().length() > 0)
+                completerInvocation.addCompleterValue("BAR");
         }
     }
 }

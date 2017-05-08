@@ -78,15 +78,10 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                         }
                         //complete options if there are no arguments, else complete arguments
                         else {
-                            if(parser.getProcessedCommand().hasArguments()) {
+                            if(parser.getProcessedCommand().hasArguments() ||
+                                    parser.getProcessedCommand().hasArgumentWithNoValue()) {
                                 //complete arguments
-                                doCompleteOptionValue(invocationProviders, completeOperation,
-                                        parser.getProcessedCommand().getArguments());
-                            }
-                            //if we have argument and the value isnt set yet
-                            else if(parser.getProcessedCommand().hasArgumentWithNoValue()) {
-                                doCompleteOptionValue(invocationProviders, completeOperation,
-                                        parser.getProcessedCommand().getArgument());
+                                doProcessArgument(completeOperation, invocationProviders);
                             }
                             else {
                                 //list options
@@ -96,20 +91,12 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 }
                 //complete options if there are no arguments, else complete arguments
                 else {
-                    if(parser.getProcessedCommand().hasArguments()) {
-                        ParsedWord lastWord = line.selectedWord();
-                        if(lastWord != null)
-                            parser.getProcessedCommand().getArguments().addValue(lastWord.word());
-
-                        doCompleteOptionValue(invocationProviders, completeOperation, parser.getProcessedCommand().getArguments());
-                        //completeArgument(completeOperation, invocationProviders, line);
-                    }
-                    else if(parser.getProcessedCommand().hasArgumentWithNoValue()) {
-                        ParsedWord lastWord = line.selectedWord();
-                        if(lastWord != null)
-                            parser.getProcessedCommand().getArgument().addValue(lastWord.word());
-
-                        doCompleteOptionValue(invocationProviders, completeOperation, parser.getProcessedCommand().getArgument());
+                    if(parser.getProcessedCommand().hasArguments() ||
+                            parser.getProcessedCommand().hasArgumentWithNoValue()) {
+                        //ParsedWord lastWord = line.selectedWord();
+                        //if(lastWord != null)
+                        //    parser.getProcessedCommand().getArguments().addValue(lastWord.word());
+                        doProcessArgument(completeOperation, invocationProviders);
                     }
                     else
                         doListOptions(completeOperation, "");
@@ -156,7 +143,12 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         }
         //argument
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.ARGUMENT)) {
-            ProcessedOption arg =
+            doProcessArgument(completeOperation, invocationProviders);
+        }
+    }
+
+    private void doProcessArgument(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders) {
+           ProcessedOption arg =
                     parser.getProcessedCommand().hasArguments() ?
                             parser.getProcessedCommand().getArguments() :
                             parser.getProcessedCommand().getArgument();
@@ -172,9 +164,15 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 else
                     //set this to true since we do not want to use previous values in the completion value
                     arg.setEndsWithSeparator(true);
-                doCompleteOptionValue(invocationProviders, completeOperation, arg);
+                boolean haveCompletion =
+                        doCompleteOptionValue(invocationProviders, completeOperation, arg);
+
+                //if there are not completions and argument(s) is not required
+                //lets display options
+                if(!haveCompletion && !arg.isRequired() && arg.getValue() != null) {
+                    doListOptions(completeOperation, "");
+                }
             }
-        }
     }
 
     private void doListOptions(AeshCompleteOperation completeOperation, String value) {
@@ -200,17 +198,12 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
     }
 
-    private void doCompleteOptionValue(InvocationProviders invocationProviders, AeshCompleteOperation completeOperation,
+    private boolean doCompleteOptionValue(InvocationProviders invocationProviders, AeshCompleteOperation completeOperation,
                                        ProcessedOption currentOption) {
-        //ProcessedOption currentOption = parser.lastParsedOption();
-        //String value = parser.getProcessedCommand().completeStatus().value();
         String value = currentOption.getLastValue();
         //if value is null or ends with a separator
         if(value == null || currentOption.getEndsWithSeparator())
             value = "";
-
-        //set offset
-        //completeOperation.setOffset(completeOperation.getCursor() - value.length());
 
         if(currentOption.completer() != null &&
                 currentOption.activator().isActivated(parser.getProcessedCommand())) {
@@ -221,13 +214,6 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             currentOption.completer().complete(completions);
             completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
             verifyCompleteValue(completeOperation, completions, value);
-            //calcOffset(value, completeOperation, completions);
-            completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
-            completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
-
-            //if(completions.getCompleterValues().size() == 1) {
-            //    verifyCompleteValue(completeOperation, completions, value);
-            //}
         }
         //only try to complete default values if completer is null
         else if(currentOption.getDefaultValues().size() > 0) {
@@ -236,14 +222,10 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                             new CompleterData(completeOperation.getContext(), value, parser.getCommand()));
             new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
             completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-            //calcOffset(value, completeOperation, completions);
-            completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
-            completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
-
-            if(completions.getCompleterValues().size() == 1) {
-
-            }
+            verifyCompleteValue(completeOperation, completions, value);
         }
+
+        return completeOperation.getCompletionCandidates().size() > 0;
     }
 
     private void verifyCompleteValue(AeshCompleteOperation completeOperation,
@@ -266,6 +248,9 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
             completeOperation.doAppendSeparator(completions.isAppendSpace());
         }
+        //finally set flags
+        completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
+        completeOperation.setIgnoreStartsWith(completions.isIgnoreStartsWith());
     }
 
     private void doInjectValues(InvocationProviders invocationProviders, AeshContext context) {
