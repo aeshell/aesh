@@ -40,12 +40,14 @@ public class MapProcessedCommandBuilder {
     private static final ProcessedOptionProvider EMPTY_PROVIDER
             = new ProcessedOptionProvider() {
         @Override
-        public List<ProcessedOption> getOptions() {
+        public List<ProcessedOption> getOptions(List<ProcessedOption> options) {
             return Collections.emptyList();
         }
     };
     private static class MapProcessedCommand extends ProcessedCommand<MapCommand> {
         private final ProcessedOptionProvider provider;
+        private List<ProcessedOption> currentOptions;
+
         public MapProcessedCommand(String name,
                 List<String> aliases,
                 MapCommand command,
@@ -69,7 +71,8 @@ public class MapProcessedCommandBuilder {
             // During super construction, properties are retrieved. In this case
             // provider is not already set.
             if (provider != null) {
-                allOptions.addAll(provider.getOptions());
+                currentOptions = provider.getOptions(currentOptions);
+                allOptions.addAll(currentOptions);
             }
             return allOptions;
         }
@@ -77,7 +80,7 @@ public class MapProcessedCommandBuilder {
 
     public interface ProcessedOptionProvider {
 
-        List<ProcessedOption> getOptions();
+        List<ProcessedOption> getOptions(List<ProcessedOption> currentOptions);
     }
     private ProcessedOptionProvider provider;
     private String name;
