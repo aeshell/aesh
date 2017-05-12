@@ -76,11 +76,11 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
             }
         }
         if ((processedCommand.getArguments() != null && processedCommand.getArguments().getValues().size() > 0)) {
-            Object val = processedCommand.getArguments().getValue();
-            if (val == null) {
+            String val = processedCommand.getArguments().getValue();
+            if (val != null) {
                 instance.setValue(processedCommand.getArguments().name(),
                         processedCommand.getArguments().
-                        doConvert(processedCommand.getArguments().getDefaultValues().get(0),
+                        doConvert(val,
                                 invocationProviders, instance, aeshContext,
                                 validate == CommandLineParser.Mode.VALIDATE));
             }
@@ -98,12 +98,11 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
         */
         }
         if ((processedCommand.getArgument() != null && processedCommand.getArgument().getValues().size() > 0)) {
-            Object val = processedCommand.getArgument().getValue();
-            if (val == null) {
+            String val = processedCommand.getArgument().getValue();
+            if (val != null) {
                 instance.setValue(processedCommand.getArgument().name(),
                         processedCommand.getArgument().
-                                doConvert(processedCommand.getArgument().getDefaultValues().get(0),
-                                        invocationProviders, instance, aeshContext,
+                        doConvert(val,                                        invocationProviders, instance, aeshContext,
                                         validate == CommandLineParser.Mode.VALIDATE));
             }
         }
