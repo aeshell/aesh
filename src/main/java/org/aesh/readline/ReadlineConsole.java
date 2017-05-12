@@ -146,7 +146,6 @@ public class ReadlineConsole implements Console {
             else
                read(conn, readline);
         }, completions);
-        LOGGER.info("end of read()");
     }
 
     private void processLine(String line, Connection conn) {

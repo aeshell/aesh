@@ -106,17 +106,17 @@ public class Process extends Thread implements Consumer<Signal> {
          }
         finally {
             running = false;
-            conn.setSignalHandler(null);
-            conn.setStdinHandler(null);
+            if(conn.getSignalHandler() != null)
+                conn.setSignalHandler(null);
+            if(conn.getStdinHandler() != null)
+                conn.setStdinHandler(null);
 
             if (console.running()) {
-                LOGGER.info("trying to read again.");
                 // Readline again
                 console.read(conn, readline);
             }
             else {
                 conn.close();
-                LOGGER.info("we're exiting...");
             }
         }
     }
