@@ -78,11 +78,17 @@ public class Parser {
             termWidth = 80; // setting it to default
 
         int maxLength = 0;
-        for (String completion : displayList)
+        for (String completion : displayList){
+            if(completion.length() > termWidth){
+                maxLength = termWidth;
+                break;
+            }
             if (completion.length() > maxLength)
                 maxLength = completion.length();
+        }
 
-        maxLength = maxLength + 2; // adding two spaces for better readability
+        if (maxLength + 2 <= termWidth)
+            maxLength = maxLength + 2; // adding two spaces for better readability
         int numColumns = termWidth / maxLength;
         if (numColumns > displayList.size()) // we dont need more columns than items
             numColumns = displayList.size();
