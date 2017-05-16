@@ -264,10 +264,14 @@ public class ParserTest {
     @Test
     public void testFormatDisplayList() {
         List<String> list = new ArrayList<>();
-        String s1 = "this is a loooooong string thats longer than the terminal width";
+        String s1 = "this is a short string thats shorter than the terminal width";
         list.add(s1);
+        assertEquals(s1 + "  " + Config.getLineSeparator(), Parser.formatDisplayList(list, 80, 120));
 
-        assertEquals(s1 + "  " + Config.getLineSeparator(), Parser.formatDisplayList(list, 20, 20));
+        String s2 = "this is a loooooong string thats longer than the terminal width";
+        list.clear();
+        list.add(s2);
+        assertEquals(s2 + Config.getLineSeparator(), Parser.formatDisplayList(list, 20, 20));
     }
 
     @Test
