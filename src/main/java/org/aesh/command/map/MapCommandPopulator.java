@@ -61,52 +61,44 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
                 instance.setValue(option.name(),
                         option.doConvert(option.getValue(), invocationProviders,
                                 instance, aeshContext, validate == CommandLineParser.Mode.VALIDATE));
-            }
-            //TODO: should not be needed since default values should be pushed to values during parsing
-            /*
-            else if (option.getDefaultValues().size() > 0) {
-                instance.setValue(option.name(),
-                        option.doConvert(option.getDefaultValues().get(0),
-                                invocationProviders, instance, aeshContext,
-                                validate));
-            }
-            */
-            else {
+            } else {
                 instance.resetValue(option.name());
             }
         }
-        if ((processedCommand.getArguments() != null && processedCommand.getArguments().getValues().size() > 0)) {
-            String val = processedCommand.getArguments().getValue();
-            if (val != null) {
-                instance.setValue(processedCommand.getArguments().name(),
-                        processedCommand.getArguments().
-                        doConvert(val,
-                                invocationProviders, instance, aeshContext,
-                                validate == CommandLineParser.Mode.VALIDATE));
-            }
-            /*
-            else {
-                instance.setValue(processedCommand.getArguments().name(),
-                        processedCommand.getArguments().
-                        doConvert(processedCommand.getArguments().getValue(),
-                                invocationProviders, instance, aeshContext,
-                                validate));
-            }
-        } else if (processedCommand.getArguments() != null) {
-            // Must be named
-            instance.resetValue(processedCommand.getArguments().name());
-        */
-        }
-        if ((processedCommand.getArgument() != null && processedCommand.getArgument().getValues().size() > 0)) {
-            String val = processedCommand.getArgument().getValue();
-            if (val != null) {
-                instance.setValue(processedCommand.getArgument().name(),
-                        processedCommand.getArgument().
-                        doConvert(val,                                        invocationProviders, instance, aeshContext,
-                                        validate == CommandLineParser.Mode.VALIDATE));
+
+        if (processedCommand.getArguments() != null) {
+            if (processedCommand.getArguments().getValues().size() > 0) {
+                String val = processedCommand.getArguments().getValue();
+                if (val != null) {
+                    instance.setValue(processedCommand.getArguments().name(),
+                            processedCommand.getArguments().
+                            doConvert(val,
+                                    invocationProviders, instance, aeshContext,
+                                    validate == CommandLineParser.Mode.VALIDATE));
+                } else {
+                    instance.resetValue(processedCommand.getArguments().name());
+                }
+            } else {
+                instance.resetValue(processedCommand.getArguments().name());
             }
         }
-     }
+
+        if (processedCommand.getArgument() != null) {
+            if (processedCommand.getArgument().getValues().size() > 0) {
+                String val = processedCommand.getArgument().getValue();
+                if (val != null) {
+                    instance.setValue(processedCommand.getArgument().name(),
+                            processedCommand.getArgument().
+                            doConvert(val, invocationProviders, instance, aeshContext,
+                                    validate == CommandLineParser.Mode.VALIDATE));
+                } else {
+                    instance.resetValue(processedCommand.getArgument().name());
+                }
+            } else {
+                instance.resetValue(processedCommand.getArgument().name());
+            }
+        }
+    }
 
     @Override
     public Object getObject() {
