@@ -24,7 +24,7 @@
    <parent>
       <groupId>org.jboss</groupId>
       <artifactId>jboss-parent</artifactId>
-      <version>14</version>
+      <version>23</version>
       <relativePath />
    </parent>
 
@@ -36,6 +36,12 @@
    <version>0.66.16</version>
    <name>Æsh</name>
    <description>Æsh (Another Extendable SHell)</description>
+  
+   <properties>
+      <maven.compiler.target>1.7</maven.compiler.target>
+      <maven.compiler.source>1.7</maven.compiler.source>
+   </properties>
+  
    <scm>
       <connection>scm:git:git://github.com/aeshell/aesh.git</connection>
       <developerConnection>scm:git:ssh://git@github.com/aeshell/aesh.git</developerConnection>
@@ -61,7 +67,7 @@
       <dependency>
          <groupId>junit</groupId>
          <artifactId>junit</artifactId>
-         <version>4.8.1</version>
+         <version>4.12</version>
          <scope>test</scope>
       </dependency>
    </dependencies>
