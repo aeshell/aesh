@@ -134,7 +134,8 @@ public class POSIXTerminal extends AbstractTerminal {
         return size;
     }
 
-    private int getHeight() {
+    @Override
+    public int getHeight() {
         int height = 0;
         try {
             height = getTerminalProperty("rows");
@@ -150,7 +151,8 @@ public class POSIXTerminal extends AbstractTerminal {
         return height;
     }
 
-    private int getWidth() {
+    @Override
+    public int getWidth() {
         int width = 0;
         try {
             width = getTerminalProperty("columns");

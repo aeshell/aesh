@@ -70,4 +70,8 @@ public interface Terminal extends Closeable {
      * @param output stream
      */
     void changeOutputStream(PrintStream output);
+
+    int getHeight();
+
+    int getWidth();
 }

@@ -142,4 +142,13 @@ public class TestTerminal implements Terminal, Shell {
         outWriter = output;
     }
 
+    @Override
+    public int getHeight() {
+        return 24;
+    }
+
+    @Override
+    public int getWidth() {
+        return 80;
+    }
 }
