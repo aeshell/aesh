@@ -106,6 +106,11 @@ class Executions {
             if (cmd.validator() != null && !cmd.hasOptionWithOverrideRequired()) {
                 cmd.validator().validate(getCommand());
             }
+            if (cmd.getActivator() != null) {
+                if (!cmd.getActivator().isActivated(cmd)) {
+                    throw new CommandException("The command is not available in the current context.");
+                }
+            }
             CommandResult result = executable.execute(getCommandInvocation());
 
             if (getResultHandler() != null) {
