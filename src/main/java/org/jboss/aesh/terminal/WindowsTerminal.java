@@ -105,7 +105,8 @@ public class WindowsTerminal extends AbstractTerminal {
         return input.hasInput();
     }
 
-    private int getHeight() {
+    @Override
+    public int getHeight() {
         int height;
         height = WindowsSupport.getWindowsTerminalHeight();
         ttyPropsLastFetched = System.currentTimeMillis();
@@ -117,7 +118,8 @@ public class WindowsTerminal extends AbstractTerminal {
         return height;
     }
 
-    private int getWidth() {
+    @Override
+    public int getWidth() {
         int width;
         width = WindowsSupport.getWindowsTerminalWidth();
         ttyPropsLastFetched = System.currentTimeMillis();
