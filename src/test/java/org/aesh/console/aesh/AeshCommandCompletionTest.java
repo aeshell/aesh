@@ -178,6 +178,9 @@ public class AeshCommandCompletionTest {
         assertEquals("hidden ", connection.getOutputBuffer());
 
         connection.read(enter.getFirstValue());
+        // Must sleep, otherwise activated will become false before hidden
+        // is executed.
+        Thread.sleep(200);
         connection.clearOutputBuffer();
 
         TestCommandActivator.activated = false;
