@@ -29,7 +29,7 @@ import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 import org.aesh.command.CommandDefinition;
 import org.aesh.console.BaseConsoleTest;
 import org.aesh.command.invocation.CommandInvocationProvider;

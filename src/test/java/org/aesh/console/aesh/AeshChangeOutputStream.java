@@ -12,7 +12,7 @@ import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.ReadlineConsole;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 import org.junit.Ignore;
 import org.junit.Test;
 

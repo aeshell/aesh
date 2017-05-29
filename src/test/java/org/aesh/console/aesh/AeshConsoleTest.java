@@ -43,7 +43,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 import org.junit.Test;
 
 import java.io.File;
@@ -90,7 +90,7 @@ public class AeshConsoleTest {
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
-        connection.read("foo"+Config.getLineSeparator());
+        connection.read("foo"+ Config.getLineSeparator());
         connection.read();
 
         connection.read("ls --files /home:/tmp"+Config.getLineSeparator());

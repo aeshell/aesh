@@ -40,6 +40,6 @@ public class AeshGraphicsConfiguration implements GraphicsConfiguration {
 
     @Override
     public Graphics getGraphics() {
-        return new AeshGraphics(connection.getTerminal(), this);
+        return new AeshGraphics(connection, this);
     }
 }

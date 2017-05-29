@@ -25,7 +25,7 @@ import org.aesh.readline.terminal.Key;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.tty.Capability;
 import org.aesh.terminal.tty.Size;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 
 import java.util.concurrent.CountDownLatch;
 

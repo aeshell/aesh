@@ -36,7 +36,7 @@ import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 import org.junit.Test;
 
 import java.io.IOException;

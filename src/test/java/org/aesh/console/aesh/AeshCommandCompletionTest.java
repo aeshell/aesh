@@ -42,7 +42,7 @@ import org.aesh.readline.ReadlineConsole;
 import org.aesh.readline.terminal.Key;
 import org.aesh.terminal.tty.Size;
 import org.aesh.tty.TestConnection;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 import org.junit.Test;
 
 import java.io.IOException;

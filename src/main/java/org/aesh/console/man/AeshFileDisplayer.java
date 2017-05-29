@@ -25,8 +25,8 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.console.operator.ControlOperator;
 import org.aesh.readline.action.KeyAction;
 import org.aesh.readline.terminal.Key;
-import org.aesh.util.ANSI;
-import org.aesh.util.Config;
+import org.aesh.utils.ANSI;
+import org.aesh.utils.Config;
 import org.aesh.util.LoggerUtil;
 
 import java.io.IOException;

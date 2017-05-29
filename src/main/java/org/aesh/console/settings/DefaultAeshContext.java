@@ -22,7 +22,7 @@ package org.aesh.console.settings;
 import org.aesh.console.AeshContext;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

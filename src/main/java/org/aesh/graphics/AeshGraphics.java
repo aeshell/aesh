@@ -21,10 +21,10 @@ package org.aesh.graphics;
 
 import org.aesh.readline.terminal.formatting.TerminalColor;
 import org.aesh.readline.terminal.formatting.TerminalTextStyle;
-import org.aesh.terminal.Terminal;
+import org.aesh.terminal.Connection;
 import org.aesh.terminal.tty.Capability;
 import org.aesh.terminal.tty.Size;
-import org.aesh.util.ANSI;
+import org.aesh.utils.ANSI;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -34,22 +34,21 @@ public class AeshGraphics implements Graphics {
 
     private static final String CURSOR_DOWN = ANSI.START+"1B"+ANSI.START+"1D";
 
-    private final Terminal terminal;
+    private final Connection connection;
     private final GraphicsConfiguration graphicsConfiguration;
     private TerminalColor currentColor;
     private TerminalTextStyle currentStyle;
 
 
-    AeshGraphics(Terminal terminal, GraphicsConfiguration graphicsConfiguration) {
-        this.terminal = terminal;
+    AeshGraphics(Connection connection, GraphicsConfiguration graphicsConfiguration) {
+        this.connection = connection;
         this.graphicsConfiguration = graphicsConfiguration;
         currentColor = new TerminalColor();
-        terminal.puts(Capability.cursor_invisible);
+        connection.put(Capability.cursor_invisible);
     }
 
     @Override
     public void flush() {
-        terminal.flush();
     }
 
     /**
@@ -58,7 +57,7 @@ public class AeshGraphics implements Graphics {
     @Override
     public void clear() {
         printColor(new TerminalColor());
-        terminal.puts(Capability.clear_screen);
+        connection.put(Capability.clear_screen);
     }
 
     /**
@@ -67,7 +66,7 @@ public class AeshGraphics implements Graphics {
     @Override
     public void clearAndShowCursor() {
         clear();
-        terminal.puts(Capability.cursor_normal);
+        connection.put(Capability.cursor_normal);
     }
 
     @Override
@@ -106,25 +105,25 @@ public class AeshGraphics implements Graphics {
         int dy = y2 -y1;
         for(int i=x1; i < x2; i++) {
             int y = y1 + (dy) * (i - x1)/(dx);
-            terminal.puts(Capability.cursor_address, y, i);
-            terminal.writer().write('x');
+            connection.put(Capability.cursor_address, y, i);
+            connection.write("x");
         }
     }
 
     @Override
     public void drawString(String str, int x, int y) {
         printColor(currentColor);
-        terminal.puts(Capability.cursor_address, y, x);
-        terminal.writer().write(str);
+        connection.put(Capability.cursor_address, y, x);
+        connection.write(str);
     }
 
     @Override
     public void fillRect(int x, int y, int width, int height) {
         printColor(currentColor);
         for(int j=0; j < height; j++) {
-            terminal.puts(Capability.cursor_address, y + j, x);
+            connection.put(Capability.cursor_address, y + j, x);
             for(int i=0; i < width; i++)
-                terminal.writer().write(' ');
+                connection.write(" ");
         }
     }
 
@@ -156,12 +155,12 @@ public class AeshGraphics implements Graphics {
 
     private void printColor(TerminalColor color) {
         if(color != null)
-            terminal.writer().write(color.fullString());
+            connection.write(color.fullString());
     }
 
     private void drawPixel(int x, int y) {
-        terminal.puts(Capability.cursor_address, y, x);
-        terminal.writer().write('x');
+        connection.put(Capability.cursor_address, y, x);
+        connection.write("x");
     }
 
     private void drawHorizontalLine(int x, int y, int width) {
@@ -169,12 +168,12 @@ public class AeshGraphics implements Graphics {
         if(terminalSize.getHeight() > y && terminalSize.getWidth() > y) {
             if(terminalSize.getWidth() < x + width)
                 width = terminalSize.getWidth() - x-1;
-            terminal.puts(Capability.cursor_address, y, x);
+            connection.put(Capability.cursor_address, y, x);
             char[] line = new char[width];
             for(int i=0; i < line.length; i++) {
                 line[i] = (i == 0 || i == line.length - 1) ? 'x' : '-';
             }
-            terminal.writer().write(line);
+            connection.write(new String(line));
         }
     }
 
@@ -183,10 +182,10 @@ public class AeshGraphics implements Graphics {
         if(terminalSize.getHeight() > y && terminalSize.getWidth() > y) {
             if(terminalSize.getHeight() < y + length)
                 length = terminalSize.getHeight() - y-1;
-            terminal.puts(Capability.cursor_address, y, x);
+            connection.put(Capability.cursor_address, y, x);
             for(int i=0; i < length; i++) {
-                terminal.writer().write('|');
-                terminal.writer().write(CURSOR_DOWN);
+                connection.write("|");
+                connection.write(CURSOR_DOWN);
             }
         }
     }

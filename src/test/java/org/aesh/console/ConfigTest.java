@@ -23,7 +23,7 @@ import org.aesh.console.settings.RuntimeSettings;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.editing.EditMode;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 import org.junit.Test;
 
 import java.io.IOException;

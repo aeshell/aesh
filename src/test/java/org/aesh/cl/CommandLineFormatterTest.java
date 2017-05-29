@@ -24,8 +24,8 @@ import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
-import org.aesh.util.ANSI;
-import org.aesh.util.Config;
+import org.aesh.utils.ANSI;
+import org.aesh.utils.Config;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

@@ -36,7 +36,7 @@ import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.readline.Console;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

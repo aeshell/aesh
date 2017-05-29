@@ -33,7 +33,7 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.CommandResult;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 import org.junit.Test;
 
 import java.io.IOException;

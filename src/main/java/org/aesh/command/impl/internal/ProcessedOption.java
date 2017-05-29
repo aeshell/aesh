@@ -33,7 +33,7 @@ import org.aesh.command.validator.OptionValidator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
 import org.aesh.readline.terminal.formatting.TerminalString;
-import org.aesh.util.ANSI;
+import org.aesh.utils.ANSI;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

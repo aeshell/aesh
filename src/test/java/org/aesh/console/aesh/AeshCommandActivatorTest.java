@@ -20,7 +20,7 @@ import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,7 +28,7 @@ import org.junit.Test;
  *
  * @author jdenise@redhat.com
  */
-public class AeschCommandActivatorTest {
+public class AeshCommandActivatorTest {
 
     @Test
     public void testActivatorFail() throws Exception {

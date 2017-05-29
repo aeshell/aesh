@@ -32,7 +32,7 @@ import org.aesh.console.settings.CommandNotFoundHandler;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.CommandResult;

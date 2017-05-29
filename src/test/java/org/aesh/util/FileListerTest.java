@@ -34,6 +34,7 @@ import org.aesh.io.Resource;
 import org.aesh.io.FileResource;
 
 import org.aesh.readline.terminal.formatting.TerminalString;
+import org.aesh.utils.Config;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

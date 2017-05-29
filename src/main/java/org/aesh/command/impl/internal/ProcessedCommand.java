@@ -36,7 +36,7 @@ import java.util.Collections;
 import java.util.List;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.readline.terminal.formatting.TerminalString;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

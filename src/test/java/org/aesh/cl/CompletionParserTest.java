@@ -39,7 +39,7 @@ import org.aesh.console.AeshContext;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 import org.junit.Test;
 
 import java.util.List;

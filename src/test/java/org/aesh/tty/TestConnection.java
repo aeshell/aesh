@@ -21,7 +21,10 @@
 package org.aesh.tty;
 
 import org.aesh.readline.terminal.Key;
+import org.aesh.terminal.Attributes;
+import org.aesh.terminal.BaseDevice;
 import org.aesh.terminal.Connection;
+import org.aesh.terminal.Device;
 import org.aesh.terminal.tty.Capability;
 import org.aesh.terminal.tty.Signal;
 import org.aesh.terminal.tty.Size;
@@ -48,6 +51,7 @@ public class TestConnection implements Connection {
     private StringBuilder bufferBuilder;
     private String out;
     private Size size;
+    private Attributes attributes;
 
     private volatile boolean reading = false;
 
@@ -76,6 +80,8 @@ public class TestConnection implements Connection {
             this.size = new Size(80, 20);
         else
             this.size = size;
+
+        attributes = new Attributes();
     }
 
     public void clearOutputBuffer() {
@@ -92,8 +98,28 @@ public class TestConnection implements Connection {
     }
 
     @Override
-    public String terminalType() {
-        return "fooTerm";
+    public Device device() {
+        return new BaseDevice() {
+            @Override
+            public String type() {
+                return "vt100";
+            }
+
+            @Override
+            public boolean getBooleanCapability(Capability capability) {
+                return false;
+            }
+
+            @Override
+            public Integer getNumericCapability(Capability capability) {
+                return null;
+            }
+
+            @Override
+            public String getStringCapability(Capability capability) {
+                return null;
+            }
+        };
     }
 
     @Override
@@ -188,12 +214,22 @@ public class TestConnection implements Connection {
     }
 
     @Override
-    public Charset inputCharset() {
+    public Attributes getAttributes() {
+        return attributes;
+    }
+
+    @Override
+    public void setAttributes(Attributes attributes) {
+        this.attributes = attributes;
+    }
+
+    @Override
+    public Charset inputEncoding() {
         return Charset.defaultCharset();
     }
 
     @Override
-    public Charset outputCharset() {
+    public Charset outputEncoding() {
         return Charset.defaultCharset();
     }
 

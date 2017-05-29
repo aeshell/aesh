@@ -57,7 +57,6 @@ import org.aesh.readline.terminal.formatting.Color;
 import org.aesh.readline.terminal.formatting.TerminalColor;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.readline.terminal.formatting.TerminalTextStyle;
-import org.aesh.util.ANSI;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -69,7 +68,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import org.aesh.command.CommandException;
-import org.aesh.util.Config;
+import org.aesh.utils.ANSI;
+import org.aesh.utils.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

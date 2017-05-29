@@ -25,7 +25,7 @@ import org.aesh.console.AeshContext;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.Command;

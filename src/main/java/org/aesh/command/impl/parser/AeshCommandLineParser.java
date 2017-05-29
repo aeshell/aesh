@@ -34,7 +34,7 @@ import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedLineIterator;
 import org.aesh.parser.ParsedWord;
-import org.aesh.util.Config;
+import org.aesh.utils.Config;
 
 import java.util.ArrayList;
 import java.util.List;

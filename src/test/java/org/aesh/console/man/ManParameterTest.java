@@ -20,8 +20,8 @@
 package org.aesh.console.man;
 
 import org.aesh.console.man.parser.ManParameter;
-import org.aesh.util.ANSI;
-import org.aesh.util.Config;
+import org.aesh.utils.ANSI;
+import org.aesh.utils.Config;
 import org.junit.Assert;
 import org.junit.Test;
 
