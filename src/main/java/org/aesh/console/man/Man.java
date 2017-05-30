@@ -101,6 +101,11 @@ public class Man extends AeshFileDisplayer {
             return CommandResult.SUCCESS;
         }
 
+        if(manProvider == null) {
+            commandInvocation.getShell().write("No manual provider defined");
+            return CommandResult.SUCCESS;
+        }
+
         InputStream inputStream = manProvider.getManualDocument(manPages.get(0));
         if(inputStream != null) {
             setCommandInvocation(commandInvocation);
