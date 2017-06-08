@@ -48,13 +48,14 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ReadlineConsole implements Console {
+public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private Settings<? extends Command, ? extends CommandInvocation, ? extends ConverterInvocation,
             ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator,
@@ -88,10 +89,12 @@ public class ReadlineConsole implements Console {
     }
 
    public void start() throws IOException {
-        if(connection == null)
-            connection = new TerminalConnection(Charset.defaultCharset(), settings.stdIn(), settings.stdOut());
-
        init();
+
+        if(connection == null)
+            new TerminalConnection(Charset.defaultCharset(), settings.stdIn(), settings.stdOut(), this);
+        else
+            accept(connection);
    }
 
     @Override
@@ -104,6 +107,17 @@ public class ReadlineConsole implements Console {
         return running;
     }
 
+
+    @Override
+    public void accept(Connection connection) {
+        if(this.connection == null)
+            this.connection = connection;
+
+        this.runtime = generateRuntime();
+        read(this.connection, readline);
+        this.connection.openBlocking();
+    }
+
     private void init() {
         completionHandler = new AeshCompletionHandler(context);
         if(prompt == null)
@@ -111,10 +125,6 @@ public class ReadlineConsole implements Console {
         readline = new Readline(EditModeBuilder.builder(settings.mode()).create(), new InMemoryHistory(50),
                 completionHandler);
         running = true;
-        this.runtime = generateRuntime();
-
-        read(connection, readline);
-        connection.openBlocking();
     }
 
     /**
