@@ -164,7 +164,7 @@ public class CompletionParserTest {
         co = new AeshCompleteOperation(aeshContext, "test --complex-value=\'foo\\ bar bar' ", 10);
         clp.complete(co, ip);
         assertEquals(2, co.getFormattedCompletionCandidates().size());
-        assertEquals("foo\\ bar bar", clp.getCommand().complexValue);
+        assertEquals("foo bar bar", clp.getCommand().complexValue);
      }
 
     @Test
