@@ -90,11 +90,11 @@ public class CompletionParserTest {
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test --", 7);
 
         clp.complete(co, ip);
-        assertEquals(4, co.getFormattedCompletionCandidates().size());
+        assertEquals(5, co.getFormattedCompletionCandidates().size());
 
         co = new AeshCompleteOperation(aeshContext, "test --X foo --", 15);
         clp.complete(co, ip);
-        assertEquals(3, co.getFormattedCompletionCandidates().size());
+        assertEquals(4, co.getFormattedCompletionCandidates().size());
         assertEquals("foo", clp.getCommand().X);
 
         co = new AeshCompleteOperation(aeshContext, "test --X foo -", 14);
@@ -147,7 +147,25 @@ public class CompletionParserTest {
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("alse", co.getFormattedCompletionCandidates().get(0));
 
-    }
+        co = new AeshCompleteOperation(aeshContext, "test --com", 10);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("plex-value=", co.getFormattedCompletionCandidates().get(0));
+
+        co = new AeshCompleteOperation(aeshContext, "test --complex-value", 10);
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+        assertTrue(co.hasAppendSeparator());
+
+        co = new AeshCompleteOperation(aeshContext, "test --complex-value=", 10);
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+
+        co = new AeshCompleteOperation(aeshContext, "test --complex-value=\'foo\\ bar bar' ", 10);
+        clp.complete(co, ip);
+        assertEquals(2, co.getFormattedCompletionCandidates().size());
+        assertEquals("foo\\ bar bar", clp.getCommand().complexValue);
+     }
 
     @Test
     public void testNewCompletonParserArgumentInjection() throws Exception {
@@ -204,7 +222,7 @@ public class CompletionParserTest {
 
         co = new AeshCompleteOperation(aeshContext, "test one! --", 16);
         clp2.complete(co, ip);
-        assertEquals(4, co.getFormattedCompletionCandidates().size());
+        assertEquals(5, co.getFormattedCompletionCandidates().size());
 
         co = new AeshCompleteOperation(aeshContext, "test one! --f", 16);
         clp2.complete(co, ip);
@@ -238,7 +256,6 @@ public class CompletionParserTest {
         co = new AeshCompleteOperation(aeshContext, "test -b ", 100);
         clp.complete(co, ip);
         assertEquals(3, co.getFormattedCompletionCandidates().size());
-        assertEquals("--", co.getFormattedCompletionCandidates().get(0));
     }
 
     @Test
@@ -248,7 +265,7 @@ public class CompletionParserTest {
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 100);
 
         clp.complete(co, ip);
-        assertEquals(3, co.getFormattedCompletionCandidates().size());
+        assertEquals(4, co.getFormattedCompletionCandidates().size());
 
     }
 
@@ -289,6 +306,9 @@ public class CompletionParserTest {
 
         @Option(shortName = 'D', description = "define properties", required = true)
         private String define;
+
+        @Option(name = "complex-value", shortName = 'c')
+        private String complexValue;
 
         @Arguments(completer = ParseTestCompleter.class)
         private List<String> arguments;
