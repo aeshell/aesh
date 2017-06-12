@@ -234,6 +234,11 @@ public class CompletionParserTest {
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("AR", co.getFormattedCompletionCandidates().get(0));
+
+        co = new AeshCompleteOperation(aeshContext, "test -b ", 100);
+        clp.complete(co, ip);
+        assertEquals(3, co.getFormattedCompletionCandidates().size());
+        assertEquals("--", co.getFormattedCompletionCandidates().get(0));
     }
 
     @Test
@@ -315,6 +320,9 @@ public class CompletionParserTest {
 
         @OptionList(shortName = 'v', name = "value", description = "enable equal", completer = ValueTestCompleter.class)
         private List<String> values;
+
+        @Option(shortName = 'b', hasValue = false)
+        private boolean bool;
 
         @Option(shortName = 'D', description = "define properties",
                 required = true)
