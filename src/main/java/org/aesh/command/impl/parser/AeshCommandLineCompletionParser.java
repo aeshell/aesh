@@ -205,7 +205,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         if(value == null || currentOption.getEndsWithSeparator())
             value = "";
 
-        if(currentOption.completer() != null &&
+        if(currentOption.completer() != null && currentOption.hasValue() &&
                 currentOption.activator().isActivated(parser.getProcessedCommand())) {
             CompleterInvocation completions =
                     invocationProviders.getCompleterProvider().enhanceCompleterInvocation(

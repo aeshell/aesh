@@ -256,7 +256,17 @@ public class CompletionParserTest {
         co = new AeshCompleteOperation(aeshContext, "test -b ", 100);
         clp.complete(co, ip);
         assertEquals(3, co.getFormattedCompletionCandidates().size());
-    }
+
+        co = new AeshCompleteOperation(aeshContext, "test --bool", 100);
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+        assertTrue(co.hasAppendSeparator());
+
+        co = new AeshCompleteOperation(aeshContext, "test --bool ", 100);
+        clp.complete(co, ip);
+        assertEquals(3, co.getFormattedCompletionCandidates().size());
+        assertTrue(co.getFormattedCompletionCandidates().get(0).startsWith("--"));
+      }
 
     @Test
     public void testArgumentNotRequired() throws Exception {
