@@ -50,6 +50,9 @@ public class TestPopulator1 implements Command {
     @Option(shortName = 'n')
     public int int2;
 
+    @Option(name = "complex-value", shortName = 'c')
+    private String complexValue;
+
     @Arguments(defaultValue = {"foo"})
     public List<String> arguments;
 
@@ -59,6 +62,10 @@ public class TestPopulator1 implements Command {
     */
 
     public TestPopulator1() {
+    }
+
+    public String getComplexValue() {
+        return complexValue;
     }
 
     public String getEqual() {

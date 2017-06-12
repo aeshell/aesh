@@ -122,6 +122,16 @@ public class CommandLinePopulatorTest {
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertEquals("enable2 ", test1.getEqual());
         assertFalse(test1.getEnableX());
+        parser.parse("test -e b -bX");
+        parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertTrue(test1.getEnableX());
+        assertTrue(test1.bar);
+        assertEquals("b", test1.getEqual());
+
+        parser.parse("test -e b --complex-value COMPLEX");
+        parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("b", test1.getEqual());
+        assertEquals("COMPLEX", test1.getComplexValue());
     }
 
     @Test(expected = OptionParserException.class)
