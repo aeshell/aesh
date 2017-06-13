@@ -90,17 +90,19 @@ public class AeshCommandCompletionTest {
         assertEquals("foo --", connection.getOutputBuffer());
 
         connection.read(completeChar.getFirstValue());
-        assertEquals("foo --\n--bar=  --name=  \nfoo --", connection.getOutputBuffer());
+        assertEquals("foo --\n--bar=  --bool  --name=  \nfoo --", connection.getOutputBuffer());
 
         connection.clearOutputBuffer();
-        connection.read("name aslak --bar ");
+        connection.read("name aslak --bar");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("name aslak --bar=", connection.getOutputBuffer());
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("name aslak --bar bar\\ 2", connection.getOutputBuffer());
+        assertEquals("name aslak --bar=bar\\ 2", connection.getOutputBuffer());
 
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("name aslak --bar bar\\ 2\\ 3\\ 4 ", connection.getOutputBuffer());
+        assertEquals("name aslak --bar=bar\\ 2\\ 3\\ 4 ", connection.getOutputBuffer());
 
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
@@ -121,14 +123,14 @@ public class AeshCommandCompletionTest {
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
 
-        connection.read("foo --bar foo ");
+        connection.read("foo --bar foo --n");
         connection.read(completeChar.getFirstValue());
 
         assertEquals("foo --bar foo --name=", connection.getOutputBuffer());
-        connection.read("val --b");
+        connection.read("val --");
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("foo --bar foo --name=val --b", connection.getOutputBuffer());
+        assertEquals("foo --bar foo --name=val --bool ", connection.getOutputBuffer());
 
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
@@ -147,6 +149,12 @@ public class AeshCommandCompletionTest {
         connection.read("foo -n=");
         connection.read(completeChar.getFirstValue());
         assertEquals("foo -n=two ", connection.getOutputBuffer());
+        connection.read(Config.getLineSeparator());
+        connection.clearOutputBuffer();
+
+        connection.read("foo --bool");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("foo --bool ", connection.getOutputBuffer());
 
         console.stop();
     }
@@ -331,25 +339,166 @@ public class AeshCommandCompletionTest {
         console.stop();
      }
 
-    @CommandDefinition(name = "foo", description = "")
-    public static class FooCommand implements Command {
+    /**
+     * CommandTest4 tests that options should not be completed since it is not activated
+     * unless argument is set
+     */
+     @Test
+     public void testCommandTest4() throws IOException, InterruptedException {
+         TestConnection connection = new TestConnection();
 
-        @Option(completer = FooCompletor.class)
-        private String bar;
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(GitCommand.class)
+                 .command(CommandTest4.class)
+                 .create();
 
-        @Option(shortName = 'n', completer = NameTestCompleter.class)
-        private String name;
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
 
-        @Arguments
-        private List<String> arguments;
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("test");
+         connection.read(completeChar.getFirstValue());
+
+         connection.assertBuffer("test ");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test ");
+
+         connection.read("--");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test --");
+         connection.read(Key.BACKSPACE);
+         connection.read(Key.BACKSPACE);
+         connection.clearOutputBuffer();
+         //setting argument value
+         connection.read("BAR ");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("BAR --required=");
+
+         console.stop();
+     }
+
+    /**
+     * CommandTest4 tests that options should not be completed since it is not activated
+     * unless argument is set
+     */
+     @Test
+     public void testCommandTest4B() throws IOException, InterruptedException {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(GitCommand.class)
+                 .command(CommandTest4B.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("test");
+         connection.read(completeChar.getFirstValue());
+
+         connection.assertBuffer("test ");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test --required=");
+
+         connection.read("BAR ");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test --required=BAR ");
+
+         console.stop();
+     }
+
+     @Test
+     public void testCommandTest5() throws IOException, InterruptedException {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(GitCommand.class)
+                 .command(CommandTest5.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("test");
+         connection.read(completeChar.getFirstValue());
+
+         connection.assertBuffer("test ");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test ");
+
+         console.stop();
+     }
+
+    @CommandDefinition(name = "test", description = "")
+    public static class CommandTest4 implements Command {
+
+        @Option(shortName = 'r', activator = Test4Activator.class)
+        private String required;
+
+        @Argument
+        private String arg;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
+    }
 
-        public String getName() {
-            return name;
+    public class Test4Activator implements OptionActivator {
+
+        @Override
+        public boolean isActivated(ProcessedCommand processedCommand) {
+            //needs an argument to be activated
+            return !processedCommand.hasArgumentWithNoValue();
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "")
+    public static class CommandTest4B implements Command {
+
+        @Option(shortName = 'r')
+        private String required;
+
+        @Argument(activator = Test4ActivatorB.class)
+        private String arg;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public class Test4ActivatorB implements OptionActivator {
+        @Override
+        public boolean isActivated(ProcessedCommand processedCommand) {
+            //needs required != null to be activated
+            return (processedCommand.findLongOption("required").getValue() != null);
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "")
+    public static class CommandTest5 implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
         }
     }
 
@@ -380,6 +529,31 @@ public class AeshCommandCompletionTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "foo", description = "")
+    public static class FooCommand implements Command {
+
+        @Option(completer = FooCompletor.class)
+        private String bar;
+
+        @Option(shortName = 'n', completer = NameTestCompleter.class)
+        private String name;
+
+        @Option(shortName = 'b', hasValue = false)
+        private boolean bool;
+
+        @Arguments
+        private List<String> arguments;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+
+        public String getName() {
+            return name;
         }
     }
 

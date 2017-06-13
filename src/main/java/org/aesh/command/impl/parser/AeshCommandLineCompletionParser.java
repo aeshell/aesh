@@ -136,6 +136,21 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 //TODO: fix this
                 //do nothing
             }
+            else if(parser.lastParsedOption().isLongNameUsed() &&
+                    !parser.lastParsedOption().getEndsWithSeparator() &&
+                    !line.spaceAtEnd() &&
+                    parser.lastParsedOption().hasValue()) {
+                completeOperation.addCompletionCandidate("=");
+                completeOperation.setOffset(completeOperation.getCursor());
+                completeOperation.doAppendSeparator(false);
+            }
+            else if(!parser.lastParsedOption().hasValue() &&
+                    !parser.lastParsedOption().getEndsWithSeparator() &&
+                    !line.spaceAtEnd()) {
+                completeOperation.addCompletionCandidate(" ");
+                completeOperation.setOffset(completeOperation.getCursor());
+                completeOperation.doAppendSeparator(false);
+            }
             //complete value
             else {
                 doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
@@ -153,13 +168,19 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                             parser.getProcessedCommand().getArguments() :
                             parser.getProcessedCommand().getArgument();
             //first check if arg is argument, if so check if it already have a value, if so to an option complete
-            if(arg.getOptionType() == OptionType.ARGUMENT && arg.getValue() != null) {
+            if(arg.getOptionType() == OptionType.ARGUMENT &&
+                    (arg.getValue() != null || !arg.activator().isActivated(parser.getProcessedCommand()))) {
                 //list options
                 doListOptions(completeOperation, "");
             }
+            //if arguments, but not activated
+            else if(arg.getOptionType() == OptionType.ARGUMENTS && !arg.activator().isActivated(parser.getProcessedCommand()))
+                //list options
+                doListOptions(completeOperation, "");
             //argument(s)
             else {
-                if (parser.getProcessedCommand().completeStatus().value() != null)
+                if (parser.getProcessedCommand().completeStatus().value() != null &&
+                        parser.getProcessedCommand().completeStatus().value().length() > 0)
                     arg.addValue(parser.getProcessedCommand().completeStatus().value());
                 else
                     //set this to true since we do not want to use previous values in the completion value
@@ -223,6 +244,9 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
             completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
             verifyCompleteValue(completeOperation, completions, value);
+        }
+        else if(!currentOption.hasValue()) {
+            completeOperation.doAppendSeparator(true);
         }
 
         return completeOperation.getCompletionCandidates().size() > 0;

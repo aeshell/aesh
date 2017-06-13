@@ -19,9 +19,11 @@
  */
 package org.aesh.cl;
 
+import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.Command;
@@ -103,7 +105,18 @@ public class CompletionParserTest {
         assertEquals("-", co.getFormattedCompletionCandidates().get(0));
         assertEquals("foo", clp.getCommand().X);
 
+        co = new AeshCompleteOperation(aeshContext, "test --foo", 10);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("=", co.getFormattedCompletionCandidates().get(0));
+
         co = new AeshCompleteOperation(aeshContext, "test --foo ", 10);
+        clp.complete(co, ip);
+        assertEquals(2, co.getFormattedCompletionCandidates().size());
+        assertEquals("true", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("false", co.getFormattedCompletionCandidates().get(1));
+
+         co = new AeshCompleteOperation(aeshContext, "test --foo=", 10);
         clp.complete(co, ip);
         assertEquals(2, co.getFormattedCompletionCandidates().size());
         assertEquals("true", co.getFormattedCompletionCandidates().get(0));
@@ -154,8 +167,8 @@ public class CompletionParserTest {
 
         co = new AeshCompleteOperation(aeshContext, "test --complex-value", 10);
         clp.complete(co, ip);
-        assertEquals(0, co.getFormattedCompletionCandidates().size());
-        assertTrue(co.hasAppendSeparator());
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("=", co.getFormattedCompletionCandidates().get(0));
 
         co = new AeshCompleteOperation(aeshContext, "test --complex-value=", 10);
         clp.complete(co, ip);
@@ -253,20 +266,31 @@ public class CompletionParserTest {
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("AR", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test -b ", 100);
+        co = new AeshCompleteOperation(aeshContext, "test -b ARG --", 100);
         clp.complete(co, ip);
         assertEquals(3, co.getFormattedCompletionCandidates().size());
 
         co = new AeshCompleteOperation(aeshContext, "test --bool", 100);
         clp.complete(co, ip);
-        assertEquals(0, co.getFormattedCompletionCandidates().size());
-        assertTrue(co.hasAppendSeparator());
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals(" ", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test --bool ", 100);
+        co = new AeshCompleteOperation(aeshContext, "test --bool --", 100);
         clp.complete(co, ip);
         assertEquals(3, co.getFormattedCompletionCandidates().size());
         assertTrue(co.getFormattedCompletionCandidates().get(0).startsWith("--"));
-      }
+    }
+
+    @Test
+    public void testParseCompleteObject4() throws Exception {
+        CommandLineParser<ParseCompleteTest4> clp = new AeshCommandContainerBuilder<ParseCompleteTest4>().create(ParseCompleteTest4.class).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 100);
+
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+    }
+
 
     @Test
     public void testArgumentNotRequired() throws Exception {
@@ -275,8 +299,7 @@ public class CompletionParserTest {
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 100);
 
         clp.complete(co, ip);
-        assertEquals(4, co.getFormattedCompletionCandidates().size());
-
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
     }
 
     @Test
@@ -361,6 +384,28 @@ public class CompletionParserTest {
         @Argument(completer = ArgTestCompleter.class)
         private String arg;
     }
+
+    @CommandDefinition(name = "test", description = "a simple test")
+    public class ParseCompleteTest4 extends TestCommand {
+
+        @Option(shortName = 'r', activator = Test4Activator.class)
+        private String required;
+
+        @Argument
+        private String arg;
+
+    }
+
+    public class Test4Activator implements OptionActivator {
+
+        @Override
+        public boolean isActivated(ProcessedCommand processedCommand) {
+            //needs an argument to be activated
+            return !processedCommand.hasArgumentWithNoValue();
+        }
+    }
+
+
 
     @GroupCommandDefinition(name = "group", description = "groups",
             groupCommands = {ParseCompleteGroupChild1.class, ParseCompleteGroupChild2.class})

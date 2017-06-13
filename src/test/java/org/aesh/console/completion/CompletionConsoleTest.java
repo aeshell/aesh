@@ -27,6 +27,7 @@ import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.readline.Prompt;
 import org.aesh.readline.completion.Completion;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -36,13 +37,15 @@ import org.aesh.command.Command;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.readline.terminal.Key;
 import org.aesh.tty.TestConnection;
-import org.junit.Ignore;
+import org.aesh.utils.Config;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@Ignore
 public class CompletionConsoleTest {
 
     @Test
@@ -103,27 +106,19 @@ public class CompletionConsoleTest {
         console.stop();
     }
 
-    /*
     @Test
     public void askDisplayCompletion() throws Exception {
-        Completion completion = new Completion() {
-            @Override
-            public void complete(CompleteOperation co) {
-                if(co.getBuffer().equals("file")) {
-                    for (int i = 0; i < 105; i++) {
-                        co.addCompletionCandidate("file" + i);
-                    }
+        Completion completion = co -> {
+            if(co.getBuffer().equals("file")) {
+                for (int i = 0; i < 105; i++) {
+                    co.addCompletionCandidate("file" + i);
                 }
             }
         };
-
-        PipedOutputStream outputStream = new PipedOutputStream();
-        PipedInputStream pipedInputStream = new PipedInputStream(outputStream);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        TestConnection con = new TestConnection();
 
         Settings settings = SettingsBuilder.builder()
-                .inputStream(pipedInputStream)
-                .outputStream(new PrintStream(byteArrayOutputStream))
+                .connection(con)
                 .logging(true)
                 .build();
 
@@ -131,102 +126,23 @@ public class CompletionConsoleTest {
 
         console.addCompletion(completion);
 
-        console.setConsoleCallback(new CompletionConsoleCallback2(console));
         console.setPrompt(new Prompt("# "));
         console.start();
 
-        try {
-            outputStream.write("file".getBytes());
-            outputStream.write(completeChar.getFirstValue());
-            outputStream.flush();
-            Thread.sleep(200);
+        con.read("file");
+        con.read(Key.CTRL_I);
+        Thread.sleep(200);
 
-            assertEquals("file", console.getBuffer());
-            assertEquals("Display all 105 possibilities? (y or n)", getLastOutputLine(byteArrayOutputStream));
+        assertTrue(con.getOutputBuffer().startsWith("# file"));
+        assertTrue(con.getOutputBuffer().endsWith("Display all 105 possibilities? (y or n)"));
+        con.clearOutputBuffer();
 
-            outputStream.write("n".getBytes());
-            outputStream.flush();
+        con.read("n");
 
-            Thread.sleep(200);
+        Thread.sleep(200);
 
-            assertEquals("file", console.getBuffer());
-        } finally {
-            console.stop();
-        }
+        assertEquals(Config.getLineSeparator()+"# file", con.getOutputBuffer());
+        console.stop();
     }
-
-    String getLastOutputLine(ByteArrayOutputStream os) {
-        String output = new String(os.toByteArray());
-        String[] lines = output.split("\n");
-        return lines[lines.length - 1];
-    }
-
-    class CompletionConsoleCallback extends AeshConsoleCallback {
-        private transient int count = 0;
-        final Console console;
-        final OutputStream outputStream;
-        CompletionConsoleCallback(Console console, OutputStream outputStream) {
-            this.outputStream = outputStream;
-            this.console = console;
-        }
-        @Override
-        public int execute(ConsoleOperation output) throws InterruptedException {
-            if(count == 0) {
-                assertEquals("foobar ", output.getBuffer());
-            }
-            else if(count == 1)
-                assertEquals("barfoo", output.getBuffer());
-            else if(count == 2) {
-                assertEquals("less:", output.getBuffer());
-                console.stop();
-            }
-
-            count++;
-            return 0;
-        }
-    }
-
-    class CompletionConsoleCallback2 extends AeshConsoleCallback {
-        private int count = 0;
-        Console console;
-        CompletionConsoleCallback2(Console console) {
-            this.console = console;
-        }
-        @Override
-        public int execute(ConsoleOperation output) throws InterruptedException {
-            if(count == 0) {
-                assertEquals("less ", output.getBuffer());
-            }
-
-            count++;
-            return 0;
-        }
-    }
-
-    class CompletionConsoleCallback3 extends AeshConsoleCallback {
-        private int count = 0;
-        final Console console;
-        final OutputStream outputStream;
-        CompletionConsoleCallback3(Console console, OutputStream outputStream) {
-            this.outputStream = outputStream;
-            this.console = console;
-        }
-        @Override
-        public int execute(ConsoleOperation output) throws InterruptedException {
-            if(count == 0) {
-                assertEquals("foo", output.getBuffer());
-            }
-            else if(count == 1)
-                assertEquals("barfoo", output.getBuffer());
-            else if(count == 2) {
-                assertEquals("less:", output.getBuffer());
-                console.stop();
-            }
-
-            count++;
-            return 0;
-        }
-    }
-    */
 
 }
