@@ -295,7 +295,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                     if (lastParsedOption != null) {
                         lastParsedOption.parser().parse(iter, lastParsedOption);
                         if(!iter.hasNextWord()) {
-                            if(lastParsedOption.hasValue())
+                            if(lastParsedOption.hasValue() || iter.baseLine().spaceAtEnd())
                                 processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
                             //if the option do not have any value, set missing value status for easier processing
                             else

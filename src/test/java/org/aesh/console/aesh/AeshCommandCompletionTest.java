@@ -365,16 +365,18 @@ public class AeshCommandCompletionTest {
          connection.read(completeChar.getFirstValue());
 
          connection.assertBuffer("test ");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("test ");
-
          connection.read("--");
          connection.read(completeChar.getFirstValue());
          connection.assertBuffer("test --");
          connection.read(Key.BACKSPACE);
          connection.read(Key.BACKSPACE);
          connection.clearOutputBuffer();
-         //setting argument value
+         //argument completion
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer(Config.getLineSeparator()+"one  two  "+Config.getLineSeparator()+"test ");
+         connection.clearOutputBuffer();
+
+        //setting argument value
          connection.read("BAR ");
          connection.read(completeChar.getFirstValue());
          connection.assertBuffer("BAR --required=");
@@ -383,8 +385,8 @@ public class AeshCommandCompletionTest {
      }
 
     /**
-     * CommandTest4 tests that options should not be completed since it is not activated
-     * unless argument is set
+     * CommandTest4B tests that arguments should not be completed since it is not activated
+     * unless option is set
      */
      @Test
      public void testCommandTest4B() throws IOException, InterruptedException {
@@ -412,11 +414,56 @@ public class AeshCommandCompletionTest {
          connection.assertBuffer("test --required=");
 
          connection.read("BAR ");
-         connection.read(completeChar.getFirstValue());
          connection.assertBuffer("test --required=BAR ");
+         connection.clearOutputBuffer();
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer(Config.getLineSeparator()+"one  two  "+Config.getLineSeparator()+"test --required=BAR ");
+         connection.read("three");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer(Config.getLineSeparator()+"one  two  "+Config.getLineSeparator()+"test --required=BAR three_BAR ");
 
          console.stop();
      }
+
+    /**
+     * CommandTest4B tests that arguments should not be completed since it is not activated
+     * unless option is set
+     */
+     @Test
+     public void testCommandTest4C() throws IOException, InterruptedException {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(GitCommand.class)
+                 .command(CommandTest4C.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("test");
+         connection.read(completeChar.getFirstValue());
+
+         connection.assertBuffer("test ");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test --required ");
+         connection.clearOutputBuffer();
+
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer(Config.getLineSeparator()+"one  two  "+Config.getLineSeparator()+"test --required ");
+         connection.read("three");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer(Config.getLineSeparator()+"one  two  "+Config.getLineSeparator()+"test --required three_BAR ");
+
+         console.stop();
+     }
+
 
      @Test
      public void testCommandTest5() throws IOException, InterruptedException {
@@ -452,12 +499,26 @@ public class AeshCommandCompletionTest {
         @Option(shortName = 'r', activator = Test4Activator.class)
         private String required;
 
-        @Argument
+        @Argument(completer = Arg4Completer.class)
         private String arg;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
+        }
+    }
+
+    public class Arg4Completer implements OptionCompleter {
+
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            if(completerInvocation.getGivenCompleteValue() == null ||
+                    completerInvocation.getGivenCompleteValue().length() == 0) {
+                completerInvocation.addCompleterValue("one");
+                completerInvocation.addCompleterValue("two");
+            }
+            else
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"_BAR");
         }
     }
 
@@ -476,7 +537,22 @@ public class AeshCommandCompletionTest {
         @Option(shortName = 'r')
         private String required;
 
-        @Argument(activator = Test4ActivatorB.class)
+        @Argument(activator = Test4ActivatorB.class, completer = Arg4Completer.class)
+        private String arg;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "")
+    public static class CommandTest4C implements Command {
+
+        @Option(shortName = 'r', hasValue = false)
+        private boolean required;
+
+        @Argument(activator = Test4ActivatorB.class, completer = Arg4Completer.class)
         private String arg;
 
         @Override
