@@ -529,6 +529,35 @@ public class AeshCommandCompletionTest {
          console.stop();
      }
 
+     @Test
+     public void testCommandTest7() throws IOException, InterruptedException {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(GitCommand.class)
+                 .command(CommandTest7.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("test --headers={allow-resource-service-restart=true; ");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO ");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO _FOO ");
+         connection.read("} ");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO _FOO } --bar=");
+
+         console.stop();
+     }
 
     @CommandDefinition(name = "test", description = "")
     public static class CommandTest4 implements Command {
@@ -627,6 +656,31 @@ public class AeshCommandCompletionTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "")
+    public static class CommandTest7 implements Command {
+
+        @Option
+        private String bar;
+
+        @Option(completer = HeaderCompleter.class)
+        private String headers;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class HeaderCompleter implements OptionCompleter {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            if(completerInvocation.getGivenCompleteValue().length() > 0)
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"_FOO");
+            else
+                completerInvocation.addCompleterValue("BAR");
         }
     }
 
