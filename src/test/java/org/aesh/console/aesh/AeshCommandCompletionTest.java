@@ -493,6 +493,43 @@ public class AeshCommandCompletionTest {
          console.stop();
      }
 
+     @Test
+     public void testCommandTest6() throws IOException, InterruptedException {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(GitCommand.class)
+                 .command(CommandTest6.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("test");
+         connection.read(completeChar.getFirstValue());
+
+         connection.assertBuffer("test ");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test --bar");
+         connection.clearOutputBuffer();
+         connection.read(completeChar.getFirstValue());
+
+         connection.assertBuffer(Config.getLineSeparator()+"--bar  --barbar  "+Config.getLineSeparator()+"test --bar");
+         connection.clearOutputBuffer();
+         connection.read("b");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("bar ");
+
+         console.stop();
+     }
+
+
     @CommandDefinition(name = "test", description = "")
     public static class CommandTest4 implements Command {
 
@@ -571,6 +608,21 @@ public class AeshCommandCompletionTest {
 
     @CommandDefinition(name = "test", description = "")
     public static class CommandTest5 implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "")
+    public static class CommandTest6 implements Command {
+
+        @Option(hasValue = false)
+        private boolean bar;
+
+        @Option(hasValue = false)
+        private boolean barbar;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {

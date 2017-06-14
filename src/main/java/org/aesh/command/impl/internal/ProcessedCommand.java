@@ -221,7 +221,7 @@ public class ProcessedCommand<C extends Command> {
     public ProcessedOption searchAllOptions(String input) {
         if (input.startsWith("--")) {
             ProcessedOption currentOption = findLongOptionNoActivatorCheck(input.substring(2));
-            if(currentOption == null)
+            if(currentOption == null && input.contains("="))
                 currentOption = startWithLongOptionNoActivatorCheck(input.substring(2));
             if (currentOption != null)
                 currentOption.setLongNameUsed(true);
@@ -326,6 +326,21 @@ public class ProcessedCommand<C extends Command> {
                    (o.name().startsWith(name) && o.getValues().size() == 0)) &&
                    o.activator().isActivated(this))
                names.add(o.getRenderedNameWithDashes());
+        }
+        return names;
+    }
+
+    public List<String> findPossibleLongNames(String name) {
+        if(name.startsWith("--"))
+            name = name.substring(2);
+        List<ProcessedOption> opts = getOptions();
+        List<String> names = new ArrayList<>(opts.size());
+        for (ProcessedOption o : opts) {
+           if(((o.shortName() != null && o.shortName().equals(name) &&
+                   !o.isLongNameUsed() && o.getValues().size() == 0) ||
+                   (o.name().startsWith(name) && o.getValues().size() == 0)) &&
+                   o.activator().isActivated(this))
+               names.add(o.name());
         }
         return names;
     }

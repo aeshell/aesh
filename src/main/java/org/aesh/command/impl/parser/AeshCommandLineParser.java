@@ -293,13 +293,22 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                     ParsedWord word = iter.peekParsedWord();
                     lastParsedOption = processedCommand.searchAllOptions(word.word());
                     if (lastParsedOption != null) {
-                        lastParsedOption.parser().parse(iter, lastParsedOption);
-                        if(!iter.hasNextWord()) {
-                            if(lastParsedOption.hasValue() || iter.baseLine().spaceAtEnd())
-                                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
-                            //if the option do not have any value, set missing value status for easier processing
-                            else
-                                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
+                        //if current word is cursor word, we need to check if the current option name
+                        //might be part of another option name: eg: list and listFolders
+                        if(iter.isNextWordCursorWord() &&
+                                processedCommand.findPossibleLongNames(word.word()).size() > 1) {
+                            processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
+                            iter.pollParsedWord();
+                        }
+                        else {
+                            lastParsedOption.parser().parse(iter, lastParsedOption);
+                            if (!iter.hasNextWord()) {
+                                if (lastParsedOption.hasValue() || iter.baseLine().spaceAtEnd())
+                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
+                                    //if the option do not have any value, set missing value status for easier processing
+                                else
+                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
+                            }
                         }
                     }
                     //got a partial option

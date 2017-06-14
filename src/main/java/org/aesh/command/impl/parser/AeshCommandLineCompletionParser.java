@@ -205,8 +205,9 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
         if(optionNamesWithDash.size() > 1) {
             completeOperation.addCompletionCandidatesTerminalString(optionNamesWithDash);
-            completeOperation.setOffset( completeOperation.getCursor());
-            completeOperation.setIgnoreStartsWith(true);
+            completeOperation.setOffset(completeOperation.getCursor() - value.length());
+            completeOperation.setIgnoreStartsWith(false);
+
         }
         else if(optionNamesWithDash.size() == 1) {
             completeOperation.addCompletionCandidate(optionNamesWithDash.get(0));

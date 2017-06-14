@@ -278,7 +278,7 @@ public class CompletionParserTest {
         co = new AeshCompleteOperation(aeshContext, "test --bool --", 100);
         clp.complete(co, ip);
         assertEquals(3, co.getFormattedCompletionCandidates().size());
-        assertTrue(co.getFormattedCompletionCandidates().get(0).startsWith("--"));
+        assertTrue(co.getCompletionCandidates().get(0).getCharacters().startsWith("--"));
     }
 
     @Test
@@ -320,8 +320,8 @@ public class CompletionParserTest {
         co = new AeshCompleteOperation(aeshContext, "group child2 --", 100);
         clp.complete(co, ip);
         assertEquals(2, co.getFormattedCompletionCandidates().size());
-        assertEquals("--print=", co.getFormattedCompletionCandidates().get(0));
-        assertEquals("--help=", co.getFormattedCompletionCandidates().get(1));
+        assertEquals("--print=", co.getCompletionCandidates().get(0).getCharacters());
+        assertEquals("--help=", co.getCompletionCandidates().get(1).getCharacters());
 
     }
 
