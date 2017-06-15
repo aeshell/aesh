@@ -326,12 +326,19 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                             processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
                         else {
                             //add the value to argument/arguments
-                            if(processedCommand.hasArguments())
+                            if(processedCommand.hasArguments()) {
                                 processedCommand.getArguments().addValue(word.word());
-                            else if(processedCommand.hasArgument())
-                                processedCommand.getArgument().addValue(word.word());
-
-                            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
+                                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
+                            }
+                            else if(processedCommand.hasArgument()) {
+                                if(processedCommand.getArgument().getValue() == null) {
+                                    processedCommand.getArgument().addValue(word.word());
+                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
+                                }
+                                //if we add more than one value to argument we set error status
+                                else
+                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT_ERROR, null));
+                            }
                         }
                         iter.pollParsedWord();
                     }
