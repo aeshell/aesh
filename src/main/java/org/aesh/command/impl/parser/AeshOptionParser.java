@@ -70,7 +70,7 @@ public class AeshOptionParser implements OptionParser {
     private void preProcessOption(ProcessedOption option, ParsedLineIterator iterator) throws OptionParserException {
 
         String word = iterator.peekWord();
-        if(word.contains(" "))
+        if(word.indexOf(" ") < word.indexOf("="))
             word = Parser.switchSpacesToEscapedSpacesInWord(word);
         if(option.isLongNameUsed()) {
             if(word.length()-2 != option.name().length())

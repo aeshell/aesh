@@ -86,7 +86,7 @@ public class CompletionParserTest {
     }
 
     @Test
-    public void testNewCompletonParserOptionInjection() throws Exception {
+    public void testNewCompletionParserOptionInjection() throws Exception {
         CommandLineParser<ParseCompleteTest1> clp = new AeshCommandContainerBuilder<ParseCompleteTest1>().create(ParseCompleteTest1.class).getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test --", 7);
