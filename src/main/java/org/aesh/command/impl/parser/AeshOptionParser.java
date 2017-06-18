@@ -24,6 +24,7 @@ import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.parser.OptionParser;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.parser.ParsedLineIterator;
+import org.aesh.util.Parser;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -69,6 +70,8 @@ public class AeshOptionParser implements OptionParser {
     private void preProcessOption(ProcessedOption option, ParsedLineIterator iterator) throws OptionParserException {
 
         String word = iterator.peekWord();
+        if(word.contains(" "))
+            word = Parser.switchSpacesToEscapedSpacesInWord(word);
         if(option.isLongNameUsed()) {
             if(word.length()-2 != option.name().length())
                 processOption(option, word.substring(2), option.name());

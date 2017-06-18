@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.List;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.readline.terminal.formatting.TerminalString;
+import org.aesh.util.Parser;
 import org.aesh.utils.Config;
 
 /**
@@ -225,6 +226,10 @@ public class ProcessedCommand<C extends Command> {
                 currentOption = startWithLongOptionNoActivatorCheck(input.substring(2));
             if (currentOption != null)
                 currentOption.setLongNameUsed(true);
+            //need to handle spaces in option names
+            else if(Parser.containsNonEscapedSpace(input)) {
+                return searchAllOptions(Parser.switchSpacesToEscapedSpacesInWord(input));
+            }
 
             return currentOption;
         }

@@ -591,6 +591,38 @@ public class AeshCommandCompletionTest {
         console.stop();
     }
 
+    @Test
+    public void testCommandTest9() throws IOException, InterruptedException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(CommandTest9.class)
+                .create();
+
+        Settings settings = SettingsBuilder.builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("test argvalue ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test argvalue --foo\\ bar=");
+        connection.read("F");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test argvalue --foo\\ bar=FOO ");
+        connection.read(Config.getLineSeparator());
+        connection.clearOutputBuffer();
+        connection.read("test --");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test --foo\\ bar=");
+
+        console.stop();
+    }
+
     @CommandDefinition(name = "test", description = "")
     public static class CommandTest4 implements Command {
 
@@ -718,6 +750,33 @@ public class AeshCommandCompletionTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "")
+    public static class CommandTest9 implements Command {
+
+        @Option(name = "foo\\ bar", completer = FooBarCompleter.class)
+        private String bar;
+
+        @Argument
+        private String arg;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class FooBarCompleter implements OptionCompleter {
+
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            if(completerInvocation.getGivenCompleteValue().length() > 0)
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"OO");
+            else
+                completerInvocation.addCompleterValue("BAR");
+
         }
     }
 
