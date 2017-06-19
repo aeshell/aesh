@@ -56,6 +56,7 @@ public class LineParser {
 
     private String text;
     private int cursor = -1;
+    private boolean parseBrackets;
 
     public LineParser input(String text) {
         this.text = text;
@@ -67,9 +68,14 @@ public class LineParser {
         return this;
     }
 
+    public LineParser parseBrackets(boolean doParse) {
+        this.parseBrackets = parseBrackets;
+        return this;
+    }
+
     public ParsedLine parse() {
         if(text != null)
-            return parseLine(text, cursor);
+            return parseLine(text, cursor, parseBrackets);
         else
             return null;
     }
