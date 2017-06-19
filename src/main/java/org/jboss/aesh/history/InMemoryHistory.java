@@ -155,8 +155,11 @@ public class InMemoryHistory extends History {
     private String searchForward(String search) {
         if(lastSearchedId >= size())
             lastSearchedId = 0;
-        else if(lastSearchArgument.equals(search))
+        else if(lastSearchArgument != null && lastSearchArgument.equals(search))
           lastSearchedId++;
+
+        if(lastSearchedId < 0)
+            lastSearchedId = 0;
 
         for(; lastSearchedId < size(); lastSearchedId++ ) {
             if(historyList.get(lastSearchedId).contains(search)) {
