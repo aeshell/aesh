@@ -54,6 +54,26 @@ public class LineParser {
     private int cursorWord = -1;
     private int wordCursor = -1;
 
+    private String text;
+    private int cursor = -1;
+
+    public LineParser input(String text) {
+        this.text = text;
+        return this;
+    }
+
+    public LineParser cursor(int cursor) {
+        this.cursor = cursor;
+        return this;
+    }
+
+    public ParsedLine parse() {
+        if(text != null)
+            return parseLine(text, cursor);
+        else
+            return null;
+    }
+
     /**
      * Split up the text into words, escaped spaces and quotes are handled
      *
