@@ -96,7 +96,14 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
     @Override
     public void complete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders) {
-        ParsedLine line = new LineParser().parseLine(completeOperation.getBuffer(), completeOperation.getCursor(), true);
+
+        complete(completeOperation,
+                new LineParser().parseLine(completeOperation.getBuffer(), completeOperation.getCursor(), true),
+                invocationProviders);
+    }
+
+    @Override
+    public void complete(AeshCompleteOperation completeOperation, ParsedLine line, InvocationProviders invocationProviders) {
         //first parse
         parse(line.iterator(), Mode.COMPLETION);
         //then use completion parser to populate completeOperation

@@ -28,6 +28,7 @@ import org.aesh.command.Command;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
+import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedLineIterator;
 
 import java.util.List;
@@ -56,6 +57,8 @@ public interface CommandLineParser<C extends Command> {
      * @return completion parser created to work on this command
      */
     CommandLineCompletionParser getCompletionParser();
+
+    void complete(AeshCompleteOperation completeOperation, ParsedLine line, InvocationProviders invocationProviders);
 
     List<String> getAllNames();
 

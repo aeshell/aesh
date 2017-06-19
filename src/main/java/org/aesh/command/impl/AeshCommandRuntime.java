@@ -250,9 +250,16 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
         commandResolver.getRegistry().completeCommandName(completeOperation);
         if (completeOperation.getCompletionCandidates().size() < 1) {
 
-            try (CommandContainer commandContainer = commandResolver.resolveCommand(completeOperation.getBuffer())) {
+            ParsedLine parsedLine = new LineParser()
+                    .input(completeOperation.getBuffer())
+                    .cursor(completeOperation.getCursor())
+                    .parseBrackets(true)
+                    .parse();
 
-                commandContainer.getParser().complete(completeOperation, invocationProviders);
+            try (CommandContainer commandContainer = commandResolver.resolveCommand(parsedLine)) {
+
+                commandContainer.getParser()
+                        .complete(completeOperation, parsedLine, invocationProviders);
             }
             catch (CommandLineParserException e) {
                 LOGGER.warning(e.getMessage());

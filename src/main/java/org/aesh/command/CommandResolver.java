@@ -22,6 +22,7 @@ package org.aesh.command;
 
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.parser.ParsedLine;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -31,6 +32,8 @@ public interface CommandResolver<C extends Command> {
     CommandRegistry<C> getRegistry();
 
     CommandContainer<C> resolveCommand(String line) throws CommandNotFoundException;
+
+    CommandContainer<C> resolveCommand(ParsedLine line) throws CommandNotFoundException;
 
     CommandContainer<C> resolveCommand(String name, String line) throws CommandNotFoundException;
 
