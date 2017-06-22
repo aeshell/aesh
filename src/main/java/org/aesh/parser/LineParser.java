@@ -69,7 +69,7 @@ public class LineParser {
     }
 
     public LineParser parseBrackets(boolean doParse) {
-        this.parseBrackets = parseBrackets;
+        this.parseBrackets = doParse;
         return this;
     }
 
