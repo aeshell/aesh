@@ -206,6 +206,7 @@ public class AeshCommandCompletionTest {
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ArgCommand.class)
+                .command(GroupArgCommand.class)
                 .create();
 
          Settings settings = SettingsBuilder.builder()
@@ -243,6 +244,24 @@ public class AeshCommandCompletionTest {
         connection.read("arg --input={foo-bar ");
         connection.read(completeChar.getFirstValue());
         assertEquals("arg --input={foo-bar bArg ", connection.getOutputBuffer());
+
+        connection.read(enter);
+        connection.clearOutputBuffer();
+        connection.read("arg --input={foo-barb");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("arg --input={foo-barbArg ", connection.getOutputBuffer());
+
+        connection.read(enter);
+        connection.clearOutputBuffer();
+        connection.read("arg --input={foo-bar b");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("arg --input={foo-bar bArg ", connection.getOutputBuffer());
+
+        connection.read(enter);
+        connection.clearOutputBuffer();
+        connection.read("group-arg arg2 --input={foo-bar ");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("group-arg arg2 --input={foo-bar bArg ", connection.getOutputBuffer());
 
         connection.read(enter);
         connection.clearOutputBuffer();
@@ -955,6 +974,33 @@ public class AeshCommandCompletionTest {
         }
     }
 
+    @GroupCommandDefinition(name = "group-arg", description = "", groupCommands = {Arg2Command.class})
+    public static class GroupArgCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "arg2", description = "")
+    public static class Arg2Command implements Command {
+
+        @Option
+        private boolean bool;
+
+        @Option(completer = InputTestCompleter.class)
+        private String input;
+
+        @Argument(completer = ArgTestCompleter.class)
+        private String arg;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     @CommandDefinition(name = "arg", description = "")
     public static class ArgCommand implements Command {
 
@@ -1003,7 +1049,14 @@ public class AeshCommandCompletionTest {
     public static class InputTestCompleter implements OptionCompleter {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"bArg");
+            if (completerInvocation.getGivenCompleteValue().equals("{foo-barb") || completerInvocation.getGivenCompleteValue().equals("{foo-bar b")) {
+                completerInvocation.addCompleterValue("bArg");
+                // 1 before the cursor.
+                completerInvocation.setOffset(1);
+            } else {
+
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue() + "bArg");
+            }
         }
     }
 
