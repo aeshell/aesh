@@ -54,10 +54,6 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
     @Override
     public void injectValuesAndComplete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders,
                                         ParsedLine line) {
-        //if the parser is a child, we need to change the line accordingly
-        if(parser.isChild()) {
-            line = new LineParser().parseLine(line.line().substring(line.line().indexOf(parser.getAllNames().get(0))));
-        }
         //first inject values in command
         doInjectValues(invocationProviders, completeOperation.getContext());
 
@@ -74,7 +70,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                             //extra check to make sure that lists are properly parsed
                             if(line.spaceAtEnd() && parser.lastParsedOption().getValueSeparator() == ' ')
                                 parser.lastParsedOption().setEndsWithSeparator(true);
-                            doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
+                            doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption(), selectedWordStatus);
                         }
                         //complete options if there are no arguments, else complete arguments
                         else {
@@ -108,7 +104,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 //need to make sure that the open brackets or quotes negates ends on separators
                 if(selectedWordStatus != ParsedWord.Status.OK)
                     parser.lastParsedOption().setEndsWithSeparator(false);
-                doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
+                doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption(), selectedWordStatus);
             }
         }
         //partial long option name, contains atleast --
@@ -153,7 +149,8 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             }
             //complete value
             else {
-                doCompleteOptionValue(invocationProviders, completeOperation, parser.lastParsedOption());
+                doCompleteOptionValue(invocationProviders, completeOperation,
+                        parser.lastParsedOption(),line.selectedWord() != null ? line.selectedWord().status() : line.lastWord().status());
             }
         }
         //argument
@@ -185,8 +182,9 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 else
                     //set this to true since we do not want to use previous values in the completion value
                     arg.setEndsWithSeparator(true);
+                //for now just default to Status.OK
                 boolean haveCompletion =
-                        doCompleteOptionValue(invocationProviders, completeOperation, arg);
+                        doCompleteOptionValue(invocationProviders, completeOperation, arg, ParsedWord.Status.OK);
 
                 //if there are not completions and argument(s) is not required
                 //lets display options
@@ -221,7 +219,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
     }
 
     private boolean doCompleteOptionValue(InvocationProviders invocationProviders, AeshCompleteOperation completeOperation,
-                                       ProcessedOption currentOption) {
+                                          ProcessedOption currentOption, ParsedWord.Status selectedWordStatus) {
         String value = currentOption.getLastValue();
         //if value is null or ends with a separator
         if(value == null || currentOption.getEndsWithSeparator())
@@ -235,7 +233,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
             currentOption.completer().complete(completions);
             completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-            verifyCompleteValue(completeOperation, completions, value);
+            verifyCompleteValue(completeOperation, completions, value, selectedWordStatus);
         }
         //only try to complete default values if completer is null
         else if(currentOption.getDefaultValues().size() > 0) {
@@ -244,7 +242,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                             new CompleterData(completeOperation.getContext(), value, parser.getCommand()));
             new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
             completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-            verifyCompleteValue(completeOperation, completions, value);
+            verifyCompleteValue(completeOperation, completions, value, selectedWordStatus);
         }
         else if(!currentOption.hasValue()) {
             completeOperation.doAppendSeparator(true);
@@ -255,12 +253,41 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
     private void verifyCompleteValue(AeshCompleteOperation completeOperation,
                                      CompleterInvocation completions,
-                                     String value) {
+                                     String value, ParsedWord.Status selectedWordStatus) {
         //if the contain spaces we need to add the number of spaces to the size
         // of the value.length since they are chopped off during parsing
-        if(value.indexOf(Parser.SPACE_CHAR) > 0) {
-            completeOperation.setOffset( completeOperation.getCursor() -
-                    (value.length() + Parser.findNumberOfSpacesInWord(value)));
+        if(completeOperation.getCompletionCandidates().size() == 1 &&
+                (completeOperation.getCompletionCandidates().get(0).containSpaces()
+                || value.indexOf(' ') > 0)) {
+            //first check for offset
+            if(completions.getOffset() >= 0) {
+                if(completeOperation.getCompletionCandidates().get(0).getCharacters().startsWith(value)
+                        && selectedWordStatus == ParsedWord.Status.OK)
+                    completeOperation.setOffset( completeOperation.getCursor() -
+                            (completions.getOffset() +
+                                    Parser.findNumberOfSpacesInWord(completeOperation.getCompletionCandidates().get(0).getCharacters())));
+                else {
+                    //never escape words where status != OK
+                    if(selectedWordStatus == ParsedWord.Status.OK)
+                        completeOperation.setOffset(completeOperation.getCursor() -
+                                (completions.getOffset() + Parser.findNumberOfSpacesInWord(value)));
+                    else
+                        completeOperation.setOffset(completeOperation.getCursor() - completions.getOffset());
+                }
+            }
+            else {
+                //if we have open quote/brackets there are no escaped spaces
+                if(selectedWordStatus == ParsedWord.Status.OK)
+                    completeOperation.setOffset( completeOperation.getCursor() -
+                            (value.length() + Parser.findNumberOfSpacesInWord(value)));
+                else
+                    completeOperation.setOffset(completeOperation.getCursor() - value.length());
+                //Parser.findNumberOfSpacesInWord(completeOperation.getCompletionCandidates().get(0).getCharacters())));
+            }
+            //always switch spaces to escaped if status == ok
+
+            if(selectedWordStatus == ParsedWord.Status.OK)
+                completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
         }
         else if(completions.getOffset() >= 0)
             completeOperation.setOffset(completeOperation.getCursor() - completions.getOffset());
@@ -268,9 +295,6 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             completeOperation.setOffset(completeOperation.getCursor() - value.length());
 
         if(completions.getCompleterValues().size() == 1) {
-            if (completeOperation.getCompletionCandidates().get(0).containSpaces())
-                completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
-
             completeOperation.doAppendSeparator(completions.isAppendSpace());
         }
         //finally set flags

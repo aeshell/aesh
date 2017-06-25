@@ -1049,7 +1049,8 @@ public class AeshCommandCompletionTest {
     public static class InputTestCompleter implements OptionCompleter {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            if (completerInvocation.getGivenCompleteValue().equals("{foo-barb") || completerInvocation.getGivenCompleteValue().equals("{foo-bar b")) {
+            if (completerInvocation.getGivenCompleteValue().equals("{foo-barb") ||
+                    completerInvocation.getGivenCompleteValue().equals("{foo-bar b")) {
                 completerInvocation.addCompleterValue("bArg");
                 // 1 before the cursor.
                 completerInvocation.setOffset(1);

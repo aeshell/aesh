@@ -181,175 +181,180 @@ public class CompletionParserTest {
      }
 
     @Test
-    public void testNewCompletonParserArgumentInjection() throws Exception {
-        CommandLineParser<ParseCompleteTest2> clp = new AeshCommandContainerBuilder<ParseCompleteTest2>().create(ParseCompleteTest2.class).getParser();
-        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
-        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 5);
+    public void testNewCompletionParserArgumentInjection() throws Exception {
+    CommandLineParser<ParseCompleteTest2> clp = new AeshCommandContainerBuilder<ParseCompleteTest2>().create(ParseCompleteTest2.class).getParser();
+    InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+    AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 5);
 
-        clp.complete(co, ip);
-        assertEquals(4, co.getFormattedCompletionCandidates().size());
+    clp.complete(co, ip);
+    assertEquals(4, co.getFormattedCompletionCandidates().size());
 
-        CommandLineParser<ParseCompleteTest1> clp2 = new AeshCommandContainerBuilder<ParseCompleteTest1>().create(ParseCompleteTest1.class).getParser();
+    CommandLineParser<ParseCompleteTest1> clp2 = new AeshCommandContainerBuilder<ParseCompleteTest1>().create(ParseCompleteTest1.class).getParser();
 
-        co = new AeshCompleteOperation(aeshContext, "test ", 5);
-        clp2.complete(co, ip);
-        assertEquals(2, co.getFormattedCompletionCandidates().size());
-        assertEquals("one!", co.getFormattedCompletionCandidates().get(0));
-        assertEquals("two!", co.getFormattedCompletionCandidates().get(1));
+    co = new AeshCompleteOperation(aeshContext, "test ", 5);
+    clp2.complete(co, ip);
+    assertEquals(2, co.getFormattedCompletionCandidates().size());
+    assertEquals("one!", co.getFormattedCompletionCandidates().get(0));
+    assertEquals("two!", co.getFormattedCompletionCandidates().get(1));
 
-        co = new AeshCompleteOperation(aeshContext, "test o", 6);
-        clp2.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("ne!", co.getFormattedCompletionCandidates().get(0));
+    co = new AeshCompleteOperation(aeshContext, "test o", 6);
+    clp2.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("ne!", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test one! ", 10);
-        clp2.complete(co, ip);
-        assertEquals(2, co.getFormattedCompletionCandidates().size());
-        assertEquals("one!", co.getFormattedCompletionCandidates().get(0));
-        assertEquals("two!", co.getFormattedCompletionCandidates().get(1));
+    co = new AeshCompleteOperation(aeshContext, "test one! ", 10);
+    clp2.complete(co, ip);
+    assertEquals(2, co.getFormattedCompletionCandidates().size());
+    assertEquals("one!", co.getFormattedCompletionCandidates().get(0));
+    assertEquals("two!", co.getFormattedCompletionCandidates().get(1));
 
-        co = new AeshCompleteOperation(aeshContext, "test one! on", 12);
-        clp2.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("e!", co.getFormattedCompletionCandidates().get(0));
+    co = new AeshCompleteOperation(aeshContext, "test one! on", 12);
+    clp2.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("e!", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test --X foo ", 13);
-        clp2.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("BAR!", co.getFormattedCompletionCandidates().get(0));
+    co = new AeshCompleteOperation(aeshContext, "test --X foo ", 13);
+    clp2.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("BAR!", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test --X foo B", 14);
-        clp2.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("AR!", co.getFormattedCompletionCandidates().get(0));
+    co = new AeshCompleteOperation(aeshContext, "test --X foo B", 14);
+    clp2.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("AR!", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test one! bar\\ 2", 14);
-        clp2.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("\\ 3", co.getFormattedCompletionCandidates().get(0));
+    co = new AeshCompleteOperation(aeshContext, "test one! bar", 14);
+    clp2.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("\\ 2\\ 3", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test one! bar\\ 2\\ ", 16);
-        clp2.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("3", co.getFormattedCompletionCandidates().get(0));
+    co = new AeshCompleteOperation(aeshContext, "test one! bar\\ 2", 14);
+    clp2.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("\\ 3", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test one! --", 16);
-        clp2.complete(co, ip);
-        assertEquals(5, co.getFormattedCompletionCandidates().size());
+     co = new AeshCompleteOperation(aeshContext, "test one! bar\\ 2\\ ", 16);
+    clp2.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("3", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test one! --f", 16);
-        clp2.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("oo=", co.getFormattedCompletionCandidates().get(0));
-    }
+    co = new AeshCompleteOperation(aeshContext, "test one! --", 16);
+    clp2.complete(co, ip);
+    assertEquals(5, co.getFormattedCompletionCandidates().size());
 
-
-    @Test
-    public void testParseCompleteObject3() throws Exception {
-        CommandLineParser<ParseCompleteTest3> clp = new AeshCommandContainerBuilder<ParseCompleteTest3>().create(ParseCompleteTest3.class).getParser();
-        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
-        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,", 100);
-
-        clp.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("4", co.getFormattedCompletionCandidates().get(0));
-
-        clp.parse("test -v 1,2,3,4 foo -D=foo1");
-        assertEquals("foo1", clp.getProcessedCommand().findOption("D").getValue());
-        assertEquals("foo", clp.getProcessedCommand().getArgument().getValue());
-
-        clp.parse("test -v 1,2,3,4 foo -D=foo1 foo2");
-        assertTrue(clp.getProcessedCommand().parserExceptions().size() > 0);
-
-        co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,4 -D=foot B", 100);
-        clp.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("AR", co.getFormattedCompletionCandidates().get(0));
-
-        co = new AeshCompleteOperation(aeshContext, "test -b ARG --", 100);
-        clp.complete(co, ip);
-        assertEquals(3, co.getFormattedCompletionCandidates().size());
-
-        co = new AeshCompleteOperation(aeshContext, "test --bool", 100);
-        clp.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals(" ", co.getFormattedCompletionCandidates().get(0));
-
-        co = new AeshCompleteOperation(aeshContext, "test --bool --", 100);
-        clp.complete(co, ip);
-        assertEquals(3, co.getFormattedCompletionCandidates().size());
-        assertTrue(co.getCompletionCandidates().get(0).getCharacters().startsWith("--"));
-    }
-
-    @Test
-    public void testParseCompleteObject4() throws Exception {
-        CommandLineParser<ParseCompleteTest4> clp = new AeshCommandContainerBuilder<ParseCompleteTest4>().create(ParseCompleteTest4.class).getParser();
-        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
-        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 100);
-
-        clp.complete(co, ip);
-        assertEquals(0, co.getFormattedCompletionCandidates().size());
-    }
+    co = new AeshCompleteOperation(aeshContext, "test one! --f", 16);
+    clp2.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("oo=", co.getFormattedCompletionCandidates().get(0));
+}
 
 
-    @Test
-    public void testArgumentNotRequired() throws Exception {
-        CommandLineParser<ParseCompleteTest3> clp = new AeshCommandContainerBuilder<ParseCompleteTest3>().create(ParseCompleteTest3.class).getParser();
-        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
-        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 100);
+@Test
+public void testParseCompleteObject3() throws Exception {
+    CommandLineParser<ParseCompleteTest3> clp = new AeshCommandContainerBuilder<ParseCompleteTest3>().create(ParseCompleteTest3.class).getParser();
+    InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+    AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,", 100);
 
-        clp.complete(co, ip);
-        assertEquals(0, co.getFormattedCompletionCandidates().size());
-    }
+    clp.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("4", co.getFormattedCompletionCandidates().get(0));
 
-    @Test
-    public void testGroupCompletion() throws Exception {
-        CommandLineParser<ParseCompleteGroupTest> clp = new AeshCommandContainerBuilder<ParseCompleteGroupTest>().create(ParseCompleteGroupTest.class).getParser();
-        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
-        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "group child1 --en", 100);
+    clp.parse("test -v 1,2,3,4 foo -D=foo1");
+    assertEquals("foo1", clp.getProcessedCommand().findOption("D").getValue());
+    assertEquals("foo", clp.getProcessedCommand().getArgument().getValue());
 
-        clp.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("able=", co.getFormattedCompletionCandidates().get(0));
+    clp.parse("test -v 1,2,3,4 foo -D=foo1 foo2");
+    assertTrue(clp.getProcessedCommand().parserExceptions().size() > 0);
 
-        co = new AeshCompleteOperation(aeshContext, "group child1 --enable foo ", 100);
-        clp.complete(co, ip);
-        assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("--help=", co.getFormattedCompletionCandidates().get(0));
+    co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,4 -D=foot B", 100);
+    clp.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("AR", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "group child2 --", 100);
-        clp.complete(co, ip);
-        assertEquals(2, co.getFormattedCompletionCandidates().size());
-        assertEquals("--print=", co.getCompletionCandidates().get(0).getCharacters());
-        assertEquals("--help=", co.getCompletionCandidates().get(1).getCharacters());
+    co = new AeshCompleteOperation(aeshContext, "test -b ARG --", 100);
+    clp.complete(co, ip);
+    assertEquals(3, co.getFormattedCompletionCandidates().size());
 
-    }
+    co = new AeshCompleteOperation(aeshContext, "test --bool", 100);
+    clp.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals(" ", co.getFormattedCompletionCandidates().get(0));
 
-    @CommandDefinition(name = "test", description = "a simple test")
-    public class ParseCompleteTest1 extends TestCommand {
+    co = new AeshCompleteOperation(aeshContext, "test --bool --", 100);
+    clp.complete(co, ip);
+    assertEquals(3, co.getFormattedCompletionCandidates().size());
+    assertTrue(co.getCompletionCandidates().get(0).getCharacters().startsWith("--"));
+}
 
-        @Option(name = "X", description = "enable X")
-        private String X;
+@Test
+public void testParseCompleteObject4() throws Exception {
+    CommandLineParser<ParseCompleteTest4> clp = new AeshCommandContainerBuilder<ParseCompleteTest4>().create(ParseCompleteTest4.class).getParser();
+    InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+    AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 100);
 
-        @Option(shortName = 'f', name = "foo", description = "enable foo")
-        private Boolean foo;
+    clp.complete(co, ip);
+    assertEquals(0, co.getFormattedCompletionCandidates().size());
+}
 
-        @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
-        private String equal;
 
-        @Option(shortName = 'D', description = "define properties", required = true)
-        private String define;
+@Test
+public void testArgumentNotRequired() throws Exception {
+    CommandLineParser<ParseCompleteTest3> clp = new AeshCommandContainerBuilder<ParseCompleteTest3>().create(ParseCompleteTest3.class).getParser();
+    InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+    AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 100);
 
-        @Option(name = "complex-value", shortName = 'c')
-        private String complexValue;
+    clp.complete(co, ip);
+    assertEquals(0, co.getFormattedCompletionCandidates().size());
+}
 
-        @Arguments(completer = ParseTestCompleter.class)
-        private List<String> arguments;
+@Test
+public void testGroupCompletion() throws Exception {
+    CommandLineParser<ParseCompleteGroupTest> clp = new AeshCommandContainerBuilder<ParseCompleteGroupTest>().create(ParseCompleteGroupTest.class).getParser();
+    InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+    AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "group child1 --en", 100);
 
-    }
+    clp.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("able=", co.getFormattedCompletionCandidates().get(0));
 
-    @CommandDefinition(name = "test", description = "a simple test")
-    public class ParseCompleteTest2 extends TestCommand {
+    co = new AeshCompleteOperation(aeshContext, "group child1 --enable foo ", 100);
+    clp.complete(co, ip);
+    assertEquals(1, co.getFormattedCompletionCandidates().size());
+    assertEquals("--help=", co.getFormattedCompletionCandidates().get(0));
+
+    co = new AeshCompleteOperation(aeshContext, "group child2 --", 100);
+    clp.complete(co, ip);
+    assertEquals(2, co.getFormattedCompletionCandidates().size());
+    assertEquals("--print=", co.getCompletionCandidates().get(0).getCharacters());
+    assertEquals("--help=", co.getCompletionCandidates().get(1).getCharacters());
+
+}
+
+@CommandDefinition(name = "test", description = "a simple test1")
+public class ParseCompleteTest1 extends TestCommand {
+
+    @Option(name = "X", description = "enable X")
+    private String X;
+
+    @Option(shortName = 'f', name = "foo", description = "enable foo")
+    private Boolean foo;
+
+    @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
+    private String equal;
+
+    @Option(shortName = 'D', description = "define properties", required = true)
+    private String define;
+
+    @Option(name = "complex-value", shortName = 'c')
+    private String complexValue;
+
+    @Arguments(completer = ParseTestCompleter.class)
+    private List<String> arguments;
+
+}
+
+@CommandDefinition(name = "test", description = "a simple test2")
+public class ParseCompleteTest2 extends TestCommand {
 
         @Option(shortName = 'X', description = "enable X")
         private String X;
@@ -365,7 +370,7 @@ public class CompletionParserTest {
         private String define;
     }
 
-    @CommandDefinition(name = "test", description = "a simple test")
+    @CommandDefinition(name = "test", description = "a simple test3")
     public class ParseCompleteTest3 extends TestCommand {
 
         @Option(shortName = 'X', description = "enable X")
@@ -385,7 +390,7 @@ public class CompletionParserTest {
         private String arg;
     }
 
-    @CommandDefinition(name = "test", description = "a simple test")
+    @CommandDefinition(name = "test", description = "a simple test4")
     public class ParseCompleteTest4 extends TestCommand {
 
         @Option(shortName = 'r', activator = Test4Activator.class)
@@ -451,6 +456,9 @@ public class CompletionParserTest {
             }
             else if ("one!".startsWith(completerInvocation.getGivenCompleteValue())) {
                 completerInvocation.addCompleterValue("one!");
+            }
+            else if ("bar".startsWith(completerInvocation.getGivenCompleteValue())) {
+                completerInvocation.addCompleterValue("bar 2 3");
             }
             else if ("bar 2".startsWith(completerInvocation.getGivenCompleteValue())) {
                 completerInvocation.addCompleterValue("bar 2 3");
