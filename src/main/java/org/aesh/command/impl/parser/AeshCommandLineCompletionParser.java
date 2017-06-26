@@ -44,11 +44,9 @@ import java.util.List;
 public class AeshCommandLineCompletionParser<C extends Command> implements CommandLineCompletionParser {
 
     private final AeshCommandLineParser<C> parser;
-    private final LineParser lineParser;
 
     public AeshCommandLineCompletionParser(AeshCommandLineParser<C> parser) {
         this.parser = parser;
-        lineParser = new LineParser();
     }
 
     @Override
