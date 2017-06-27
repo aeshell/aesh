@@ -135,7 +135,11 @@ public class AeshCommandCompletionTest {
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
 
-        connection.read("foo -n");
+        connection.read("foo");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("foo ", connection.getOutputBuffer());
+
+        connection.read("-n");
         connection.read(completeChar.getFirstValue());
         assertEquals("foo -n", connection.getOutputBuffer());
 
@@ -324,7 +328,11 @@ public class AeshCommandCompletionTest {
         connection.read(enter.getFirstValue());
         connection.clearOutputBuffer();
 
-        connection.read("git rebase --");
+        connection.read("git reb");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("git rebase ");
+
+        connection.read("--");
         connection.read(completeChar.getFirstValue());
         connection.assertBuffer("git rebase --force ");
 
@@ -354,6 +362,20 @@ public class AeshCommandCompletionTest {
         connection.read("git commit ");
         connection.read(completeChar.getFirstValue());
         connection.assertBuffer("git commit --all ");
+
+        connection.read(Config.getLineSeparator());
+        connection.clearOutputBuffer();
+
+        connection.read("gi");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("git ");
+        connection.clearOutputBuffer();
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer(Config.getLineSeparator()+"commit  rebase  "+Config.getLineSeparator()+"git ");
+        connection.clearOutputBuffer();
+        connection.read("commit");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("commit ");
 
         console.stop();
      }

@@ -148,6 +148,10 @@ public class ParsedLine {
         return words().get(words.size()-1);
     }
 
+    public int size() {
+        return words().size();
+    }
+
     /**
      * @return a highly specialized iterator to make it easier to parse the input
      */

@@ -25,6 +25,7 @@ import org.aesh.command.Command;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.CommandNotFoundException;
+import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
 
 import java.util.Set;
@@ -90,8 +91,9 @@ public interface CommandRegistry<C extends Command> {
      *
      *
      * @param completeOperation operation
+     * @param parsedLine
      */
-    void completeCommandName(CompleteOperation completeOperation);
+    void completeCommandName(CompleteOperation completeOperation, ParsedLine parsedLine);
 
     /**
      * @return all specified command names

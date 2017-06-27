@@ -27,6 +27,8 @@ import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.command.Command;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
+import org.aesh.parser.LineParser;
+import org.aesh.parser.ParsedLine;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.junit.Test;
 
@@ -50,40 +52,35 @@ public class MutableCommandRegistryTest {
         registry.addCommand(GroupCommand1.class);
 
         AeshCompleteOperation co = new AeshCompleteOperation(null, "fo", 3);
-        registry.completeCommandName(co);
+        ParsedLine parsedLine = new LineParser()
+                .input(co.getBuffer())
+                .cursor(co.getCursor())
+                .parseBrackets(true)
+                .parse();
+        registry.completeCommandName(co, parsedLine);
         assertEquals(1, co.getCompletionCandidates().size());
         assertEquals("foo", co.getCompletionCandidates().get(0).toString());
 
         co = new AeshCompleteOperation(null, "foo", 4);
-        registry.completeCommandName(co);
+        parsedLine = new LineParser()
+                .input(co.getBuffer())
+                .cursor(co.getCursor())
+                .parseBrackets(true)
+                .parse();
+         registry.completeCommandName(co, parsedLine);
         assertEquals(1, co.getCompletionCandidates().size());
         assertEquals("foo", co.getCompletionCandidates().get(0).toString());
 
         co = new AeshCompleteOperation(null, "", 0);
-        registry.completeCommandName(co);
+        parsedLine = new LineParser()
+                .input(co.getBuffer())
+                .cursor(co.getCursor())
+                .parseBrackets(true)
+                .parse();
+        registry.completeCommandName(co, parsedLine);
         assertEquals(4, co.getCompletionCandidates().size());
         assertTrue(co.getCompletionCandidates().contains(new TerminalString("bar", true)));
         assertTrue(co.getCompletionCandidates().contains(new TerminalString("group", true)));
-
-        co = new AeshCompleteOperation(null, "group he", 0);
-        registry.completeCommandName(co);
-        assertEquals(1, co.getCompletionCandidates().size());
-        assertEquals("group help", co.getCompletionCandidates().get(0).toString());
-
-        co = new AeshCompleteOperation(null, "group ", 0);
-        registry.completeCommandName(co);
-        assertEquals(1, co.getCompletionCandidates().size());
-        assertEquals("group help", co.getCompletionCandidates().get(0).toString());
-
-        co = new AeshCompleteOperation(null, "group   ", 0);
-        registry.completeCommandName(co);
-        assertEquals(1, co.getCompletionCandidates().size());
-        assertEquals("group   help", co.getCompletionCandidates().get(0).toString());
-
-        co = new AeshCompleteOperation(null, "group help ", 0);
-        registry.completeCommandName(co);
-        assertEquals(0, co.getCompletionCandidates().size());
-
     }
 
 

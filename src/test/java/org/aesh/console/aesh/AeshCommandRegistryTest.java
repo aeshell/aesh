@@ -30,6 +30,7 @@ import org.aesh.command.container.CommandContainer;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.parser.ParsedLine;
 import org.aesh.readline.ReadlineConsole;
 
 import org.aesh.readline.completion.CompleteOperation;
@@ -63,7 +64,7 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
-            public void completeCommandName(CompleteOperation completeOperation) {
+            public void completeCommandName(CompleteOperation completeOperation, ParsedLine parsedLine) {
             }
 
             @Override
@@ -120,7 +121,7 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
-            public void completeCommandName(CompleteOperation completeOperation) {
+            public void completeCommandName(CompleteOperation completeOperation, ParsedLine parsedLine) {
             }
 
             @Override
@@ -178,7 +179,7 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
-            public void completeCommandName(CompleteOperation completeOperation) {
+            public void completeCommandName(CompleteOperation completeOperation, ParsedLine parsedLine) {
             }
 
             @Override

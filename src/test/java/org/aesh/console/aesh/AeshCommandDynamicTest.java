@@ -33,6 +33,8 @@ import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.command.CommandResult;
 import org.aesh.console.settings.DefaultAeshContext;
+import org.aesh.parser.LineParser;
+import org.aesh.parser.ParsedLine;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
@@ -64,7 +66,12 @@ public class AeshCommandDynamicTest {
 
         ReadlineConsole console = new ReadlineConsole(settings);
         AeshCompleteOperation co = new AeshCompleteOperation(new DefaultAeshContext(), "gr", 2);
-        registry.completeCommandName(co);
+        ParsedLine parsedLine = new LineParser()
+                .input(co.getBuffer())
+                .cursor(co.getCursor())
+                .parseBrackets(true)
+                .parse();
+         registry.completeCommandName(co, parsedLine);
         assertEquals("group", co.getCompletionCandidates().get(0).toString());
         console.start();
 

@@ -291,8 +291,19 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
     private void doParseCompletion(ParsedLineIterator iter) {
         if(!iter.hasNextWord()) {
-            //we list all the options
-            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
+            if(isGroupCommand())
+                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, ""));
+            else {
+                //child commands that ends after its name, must be able to append space
+                if(iter.baseLine().size() == (iter.baseLine().selectedIndex()+1) &&
+                        lastParsedOption == null) {
+                    //append space
+                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.APPEND_SPACE, ""));
+                }
+                //we list all the options
+                else
+                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
+            }
         }
         else {
             while(iter.hasNextWord()) {
@@ -327,9 +338,16 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                         processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.SHORT_OPTION, word.word().substring(1)));
                         iter.pollParsedWord();
                     }
-                    //we're completing arguments
+                    //we're completing arguments or group command names
                     else {
-                        if(iter.isNextWordCursorWord())
+                        //only set group command if nothing else is set
+                        if(lastParsedOption == null && isGroupCommand()) {
+                            if(iter.isNextWordCursorWord())
+                                processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, word.word()));
+                            else
+                                processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, ""));
+                        }
+                        else if(iter.isNextWordCursorWord())
                             processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
                         else {
                             //add the value to argument/arguments

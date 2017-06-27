@@ -26,6 +26,7 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.util.LoggerUtil;
 
@@ -38,7 +39,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.registry.MutableCommandRegistry;
-import org.aesh.util.Parser;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -84,40 +84,23 @@ public class MutableCommandRegistryImpl<C extends Command> implements MutableCom
     }
 
     @Override
-    public void completeCommandName(CompleteOperation co) {
-        List<String> names = new ArrayList<>();
-        for(CommandContainer<C> command : registry.values()) {
-            ProcessedCommand<C> com = command.getParser().getProcessedCommand();
-            if(com.name().startsWith(co.getBuffer()) &&
-                com.getActivator().isActivated(com)) {
-                if(command.getParser().isGroupCommand()) {
-                    LOGGER.info("command is a group command");
-                    //if we dont have any arguments we'll add the child commands as well
-                    if(!com.hasOptions() &&
-                            !com.hasArguments()) {
-                        LOGGER.info("adding add: "+command.getParser().getAllNames());
-                        names.addAll(command.getParser().getAllNames());
-                        co.setIgnoreNonEscapedSpace(true);
-                    }
-                    else
-                        names.add(com.name());
-                }
-                else
-                    names.add(com.name());
-            }
-            else if(command.getParser().isGroupCommand() &&
-                    co.getBuffer().startsWith(com.name()) &&
-                    com.getActivator().isActivated(com)) {
-                String groupLine = Parser.trimInFront( co.getBuffer().substring(com.name().length()));
-                int diff = co.getBuffer().length() - groupLine.length();
-                for(CommandLineParser child : command.getParser().getAllChildParsers()) {
-                    if(child.getProcessedCommand().name().startsWith(groupLine) &&
-                        child.getProcessedCommand().getActivator().isActivated(child.getProcessedCommand()))
-                        names.add(co.getBuffer().substring(0, diff) + child.getProcessedCommand().name());
-                }
+    public void completeCommandName(CompleteOperation co, ParsedLine parsedLine) {
+        if(parsedLine.words().size() == 0) {
+            //add all
+            for(CommandContainer<C> command : registry.values()) {
+                ProcessedCommand<C> com = command.getParser().getProcessedCommand();
+                if (com.getActivator().isActivated(com))
+                    co.addCompletionCandidate(com.name());
             }
         }
-        co.addCompletionCandidates(names);
+        else {
+            for(CommandContainer<C> command : registry.values()) {
+                ProcessedCommand<C> com = command.getParser().getProcessedCommand();
+                if(com.name().startsWith(co.getBuffer()) &&
+                        com.getActivator().isActivated(com))
+                    co.addCompletionCandidate(com.name());
+            }
+        }
     }
 
     @Override

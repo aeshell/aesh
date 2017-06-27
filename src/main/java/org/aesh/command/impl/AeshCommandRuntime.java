@@ -247,22 +247,23 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
 
     @Override
     public void complete(AeshCompleteOperation completeOperation) {
-        commandResolver.getRegistry().completeCommandName(completeOperation);
-        if (completeOperation.getCompletionCandidates().size() < 1) {
+        ParsedLine parsedLine = new LineParser()
+                .input(completeOperation.getBuffer())
+                .cursor(completeOperation.getCursor())
+                .parseBrackets(true)
+                .parse();
 
-            ParsedLine parsedLine = new LineParser()
-                    .input(completeOperation.getBuffer())
-                    .cursor(completeOperation.getCursor())
-                    .parseBrackets(true)
-                    .parse();
+        if(parsedLine.selectedIndex() == 0 || //possible command name
+                parsedLine.line().length() == 0) {
+            commandResolver.getRegistry().completeCommandName(completeOperation, parsedLine);
+        }
+        //commandResolver.getRegistry().completeCommandName(completeOperation);
+        if (completeOperation.getCompletionCandidates().size() < 1) {
 
             try (CommandContainer commandContainer = commandResolver.resolveCommand(parsedLine)) {
 
                 commandContainer.getParser()
                         .complete(completeOperation, parsedLine, invocationProviders);
-            }
-            catch (CommandLineParserException e) {
-                LOGGER.warning(e.getMessage());
             }
             catch (CommandNotFoundException ignored) {
             }

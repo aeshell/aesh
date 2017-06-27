@@ -30,7 +30,6 @@ import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.Command;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.console.AeshContext;
-import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedWord;
 import org.aesh.readline.terminal.formatting.TerminalString;
@@ -154,6 +153,31 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         //argument
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.ARGUMENT)) {
             doProcessArgument(completeOperation, invocationProviders);
+        }
+        //group command
+        else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.GROUP_COMMAND)) {
+            doProcessGroupCommand(completeOperation, parser.getProcessedCommand().completeStatus().value());
+        }
+        //append space after group command
+        else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.APPEND_SPACE)) {
+            completeOperation.addCompletionCandidate(" ");
+            completeOperation.doAppendSeparator(false);
+            completeOperation.setOffset(completeOperation.getCursor());
+        }
+    }
+
+    private void doProcessGroupCommand(AeshCompleteOperation completeOperation, String name) {
+        if(name.length() == 0)
+            for(CommandLineParser clp : parser.getAllChildParsers())
+                completeOperation.addCompletionCandidate(clp.getProcessedCommand().name());
+        else {
+            for (CommandLineParser child : parser.getAllChildParsers()) {
+                if (child.getProcessedCommand().name().startsWith(name) &&
+                        child.getProcessedCommand().getActivator().isActivated(child.getProcessedCommand())) {
+                    completeOperation.addCompletionCandidate(child.getProcessedCommand().name());
+                    completeOperation.setOffset(completeOperation.getCursor()-name.length());
+                }
+            }
         }
     }
 
