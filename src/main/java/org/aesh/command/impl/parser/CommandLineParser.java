@@ -149,6 +149,8 @@ public interface CommandLineParser<C extends Command> {
      */
     void complete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders);
 
+    void doPopulate(ProcessedCommand processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException;
+
     enum Mode {
         COMPLETION, STRICT, VALIDATE, NONE
     }

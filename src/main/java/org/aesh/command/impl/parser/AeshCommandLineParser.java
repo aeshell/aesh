@@ -178,11 +178,16 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
             throw getProcessedCommand().parserExceptions().get(0);
         }
         else {
-            getCommandPopulator().populateObject(processedCommand, invocationProviders, aeshContext, mode);
-            if(isGroupCommand()) {
-                for(CommandLineParser parser : getChildParsers()) {
-                    parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, mode);
-                }
+            doPopulate(processedCommand, invocationProviders, aeshContext, mode);
+       }
+    }
+
+    @Override
+    public void doPopulate(ProcessedCommand processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException {
+        getCommandPopulator().populateObject(processedCommand, invocationProviders, aeshContext, mode);
+        if(isGroupCommand()) {
+            for(CommandLineParser parser : getChildParsers()) {
+                parser.doPopulate(parser.getProcessedCommand(), invocationProviders, aeshContext, mode);
             }
         }
     }

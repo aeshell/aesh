@@ -388,6 +388,38 @@ public class AeshCommandCompletionTest {
         console.stop();
      }
 
+    @Test
+    public void testSuperGroupCommand() throws IOException, InterruptedException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(SuperGitCommand.class)
+                .create();
+
+        Settings settings = SettingsBuilder.builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+        connection.read("su");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("super ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("super git ");
+        connection.clearOutputBuffer();
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer(Config.getLineSeparator()+"commit  rebase  "+Config.getLineSeparator()+"super git ");
+        connection.clearOutputBuffer();
+        connection.read("commit");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("commit ");
+
+        console.stop();
+    }
+
     /**
      * CommandTest4 tests that options should not be completed since it is not activated
      * unless argument is set
@@ -991,6 +1023,19 @@ public class AeshCommandCompletionTest {
             completerInvocation.addCompleterValue("managed");
         }
     }
+
+    @GroupCommandDefinition(name = "super", description = "", groupCommands = {GitCommand.class})
+    public static class SuperGitCommand implements Command {
+
+        @Option(hasValue = false)
+        private boolean help;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 
     @GroupCommandDefinition(name = "git", description = "", groupCommands = {GitCommit.class, GitRebase.class})
     public static class GitCommand implements Command {

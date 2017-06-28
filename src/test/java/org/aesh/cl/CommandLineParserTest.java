@@ -156,7 +156,29 @@ public class CommandLineParserTest {
         assertNull(c1.bar);
         assertEquals("BAR", c2.foo);
         assertEquals("FOO", c2.bar);
+    }
 
+    @Test
+    public void testParseSuperGroupCommand() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser superParser = new AeshCommandContainerBuilder().create(SuperGroupCommandTest.class).getParser();
+        CommandLineParser subSuperParser = superParser.getChildParser("sub");
+
+        ChildTest1 c1 = (ChildTest1) subSuperParser.getChildParser("child1").getCommand();
+        ChildTest2 c2 = (ChildTest2) subSuperParser.getChildParser("child2").getCommand();
+
+        superParser.populateObject("super sub child1 --foo BAR", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("BAR", c1.foo);
+
+        superParser.populateObject("super sub child1 --foo BAR --bar FOO", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("BAR", c1.foo);
+        assertEquals("FOO", c1.bar);
+
+        superParser.populateObject("super sub child2 --foo BAR --bar FOO", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertNull(c1.foo);
+        assertNull(c1.bar);
+        assertEquals("BAR", c2.foo);
+        assertEquals("FOO", c2.bar);
     }
 
     @Test
@@ -336,6 +358,23 @@ public class CommandLineParserTest {
         private boolean help;
 
     }
+
+    @GroupCommandDefinition(name = "super", description = "", groupCommands = {SubSuperGroupCommandTest.class})
+    public class SuperGroupCommandTest extends TestingCommand {
+
+        @Option(hasValue = false)
+        private boolean help;
+
+    }
+
+    @GroupCommandDefinition(name = "sub", description = "", groupCommands = {ChildTest1.class, ChildTest2.class})
+    public class SubSuperGroupCommandTest extends TestingCommand {
+
+        @Option(hasValue = false)
+        private boolean help;
+
+    }
+
 
     public class TestingCommand implements Command {
         @Override
