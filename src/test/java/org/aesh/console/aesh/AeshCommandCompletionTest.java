@@ -245,6 +245,14 @@ public class AeshCommandCompletionTest {
 
         connection.read(enter);
         connection.clearOutputBuffer();
+        connection.read("arg --input 'foo' --bool=false ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("arg --input 'foo' --bool=false ARG ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("arg --input 'foo' --bool=false ARG ");
+
+        connection.read(enter);
+        connection.clearOutputBuffer();
         connection.read("arg --input={foo-bar ");
         connection.read(completeChar.getFirstValue());
         assertEquals("arg --input={foo-bar bArg ", connection.getOutputBuffer());
