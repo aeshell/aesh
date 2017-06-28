@@ -678,7 +678,7 @@ public class AeshCommandCompletionTest {
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ArgCommand.class)
-                .command(GroupArgCommand.class)
+                .command(GitCommand.class)
                 .create();
 
          Settings settings = SettingsBuilder.builder()
@@ -696,6 +696,17 @@ public class AeshCommandCompletionTest {
         connection.clearOutputBuffer();
         connection.read(completeChar.getFirstValue());
         connection.assertBuffer("g --input= ");
+
+        connection.read(enter.getFirstValue());
+        connection.clearOutputBuffer();
+
+        connection.read("git reb --force ");
+        connection.read(Key.CTRL_A);
+        connection.read(Key.META_f);
+        connection.read(Key.META_f);
+        connection.clearOutputBuffer();
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("ase --force ");
 
         console.stop();
 

@@ -308,6 +308,11 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         else {
             while(iter.hasNextWord()) {
                 try {
+                    //first check if we have passed the selected word, if so lets stop
+                    if(iter.baseLine().selectedIndex() > -1 &&
+                            iter.pastCursorWord() &&
+                            processedCommand.completeStatus() != null)
+                        return;
                     ParsedWord word = iter.peekParsedWord();
                     lastParsedOption = processedCommand.searchAllOptions(word.word());
                     if (lastParsedOption != null) {

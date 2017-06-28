@@ -156,7 +156,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         }
         //group command
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.GROUP_COMMAND)) {
-            doProcessGroupCommand(completeOperation, parser.getProcessedCommand().completeStatus().value());
+            doProcessGroupCommand(completeOperation, parser.getProcessedCommand().completeStatus().value(), line);
         }
         //append space after group command
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.APPEND_SPACE)) {
@@ -166,7 +166,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         }
     }
 
-    private void doProcessGroupCommand(AeshCompleteOperation completeOperation, String name) {
+    private void doProcessGroupCommand(AeshCompleteOperation completeOperation, String name, ParsedLine line) {
         if(name.length() == 0)
             for(CommandLineParser clp : parser.getAllChildParsers())
                 completeOperation.addCompletionCandidate(clp.getProcessedCommand().name());
@@ -179,6 +179,8 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 }
             }
         }
+        if(completeOperation.getCompletionCandidates().size() == 1 && !line.cursorAtEnd())
+            completeOperation.doAppendSeparator(false);
     }
 
     private void doProcessArgument(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders) {

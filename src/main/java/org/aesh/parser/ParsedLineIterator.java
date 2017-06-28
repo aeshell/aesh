@@ -187,4 +187,8 @@ public class ParsedLineIterator {
     public ParsedLine baseLine() {
         return parsedLine;
     }
+
+    public boolean pastCursorWord() {
+        return parsedLine.cursor() > -1 && parsedLine.selectedIndex() < word;
+    }
 }
