@@ -672,6 +672,35 @@ public class AeshCommandCompletionTest {
         console.stop();
     }
 
+    @Test
+    public void testCompletionInsideBuffer() throws IOException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(ArgCommand.class)
+                .command(GroupArgCommand.class)
+                .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+        connection.read("arg --input= ");
+        connection.read(Key.CTRL_A);
+        connection.read(Key.META_f);
+        connection.read(Key.BACKSPACE); //buffer should not be:" ar<cursor> --input= "
+        connection.clearOutputBuffer();
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("g --input= ");
+
+        console.stop();
+
+    }
+
     @CommandDefinition(name = "test", description = "")
     public static class CommandTest4 implements Command {
 

@@ -96,9 +96,12 @@ public class MutableCommandRegistryImpl<C extends Command> implements MutableCom
         else {
             for(CommandContainer<C> command : registry.values()) {
                 ProcessedCommand<C> com = command.getParser().getProcessedCommand();
-                if(com.name().startsWith(co.getBuffer()) &&
-                        com.getActivator().isActivated(com))
+                if(com.name().startsWith(parsedLine.selectedWord().word()) &&
+                        com.getActivator().isActivated(com)) {
                     co.addCompletionCandidate(com.name());
+                    if(parsedLine.selectedIndex() < parsedLine.size()-1)
+                        co.doAppendSeparator(false);
+                }
             }
         }
     }
