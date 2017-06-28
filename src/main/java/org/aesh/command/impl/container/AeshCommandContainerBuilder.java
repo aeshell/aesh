@@ -259,7 +259,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
                     .shortName('\u0000')
                     .name("")
                     .description(a.description())
-                    .required(false)
+                    .required(a.required())
                     .valueSeparator(a.valueSeparator())
                     .addAllDefaultValues(a.defaultValue())
                     .type(type)

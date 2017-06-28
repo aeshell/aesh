@@ -71,6 +71,11 @@ public @interface Arguments {
     String[] defaultValue() default {};
 
     /**
+     * Specify if this option is required
+     */
+    boolean required() default false;
+
+    /**
      * Define a converter if the field is a type thats not java.lang and other
      * common types, eg: File,++
      * See ClConverterManager for whats added by default

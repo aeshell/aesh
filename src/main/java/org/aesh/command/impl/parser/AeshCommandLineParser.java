@@ -387,25 +387,34 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand<C> command) {
-        for(ProcessedOption o : command.getOptions())
-            if(o.isRequired() && o.getValue() == null) {
-                boolean found = false;
-                for(ProcessedOption po : command.getOptions()) {
-                    if(po.getValue() != null && po.doOverrideRequired()) {
-                        found = true;
-                        break;
-                    }
-                    /*
-                    else if(po.doOverrideRequired()) {
-                        found = true;
-                        break;
-                    }
-                    */
-                }
-                if(!found)
-                    return new RequiredOptionException("Option: "+o.getDisplayName()+" is required for this command.");
-            }
+        for(ProcessedOption o : command.getOptions()) {
+            if(doCheckForMissingRequiredOption(o))
+                return new RequiredOptionException("Option: "+o.getDisplayName()+" is required for this command.");
+        }
+        if(command.getArgument() != null) {
+            if (doCheckForMissingRequiredOption(command.getArgument()))
+                return new RequiredOptionException("Argument is required for this command.");
+        }
+        else if(command.getArguments() != null)
+            if(doCheckForMissingRequiredOption(command.getArguments()))
+                return new RequiredOptionException("Arguments is required for this command.");
+
         return null;
+    }
+
+    private boolean doCheckForMissingRequiredOption(ProcessedOption o) {
+        if (o.isRequired() && o.getValue() == null) {
+            boolean found = false;
+            for (ProcessedOption po : processedCommand.getOptions()) {
+                if (po.getValue() != null && po.doOverrideRequired()) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                return true;
+        }
+        return false;
     }
 
     @Override

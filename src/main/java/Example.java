@@ -192,7 +192,7 @@ public class Example {
     @CommandDefinition(name = "run", description = "")
     public static class RunCommand implements Command {
 
-        @Arguments
+        @Arguments(required = true)
         private List<Resource> arguments;
 
         @Override

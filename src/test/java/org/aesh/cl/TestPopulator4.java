@@ -46,7 +46,7 @@ public class TestPopulator4 implements Command {
     @OptionGroup(shortName = 'D', description = "define properties")
     private TreeMap<String, Integer> define;
 
-    @Arguments
+    @Arguments(required = true)
     private Set<File> arguments;
 
     public TestPopulator4() {

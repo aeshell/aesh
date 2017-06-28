@@ -29,6 +29,7 @@ import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
+import org.aesh.command.parser.RequiredOptionException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
@@ -356,7 +357,6 @@ public class CommandLinePopulatorTest {
         }
     }
 
-
     @Test
     public void testValidator2() {
         try {
@@ -383,6 +383,22 @@ public class CommandLinePopulatorTest {
         catch (CommandLineParserException | OptionValidatorException e) {
         }
     }
+
+    @Test
+    public void testRequiredArguments() {
+        try {
+            CommandLineParser<TestPopulator4>  parser = new AeshCommandContainerBuilder<TestPopulator4>().create(TestPopulator4.class).getParser();
+            TestPopulator4 test4 = parser.getCommand();
+            AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+            parser.parse("test --veryLong 42");
+            parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+            exception.expect(RequiredOptionException.class);
+        }
+        catch (CommandLineParserException | OptionValidatorException ignored) {
+        }
+
+    }
+
     @Test
     public void testSub() throws Exception {
         CommandLineParser<SubHelp> parser = new AeshCommandContainerBuilder<SubHelp>().create(SubHelp.class).getParser();
