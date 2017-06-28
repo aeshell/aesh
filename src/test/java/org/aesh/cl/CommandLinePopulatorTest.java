@@ -229,11 +229,13 @@ public class CommandLinePopulatorTest {
         assertEquals(2, test3.getBasicMap().size());
         assertTrue(test3.getBasicMap().containsKey("X2"));
         assertEquals("foo", test3.getBasicMap().get("X1"));
-        parser.parse("test -iI1=42 -iI12=43");
+        parser.parse("test -iI12=43 -iI1=41 -iI1=42 -bAF=AB -bFA=BA");
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertNotNull(test3.getIntegerMap());
         assertEquals(2, test3.getIntegerMap().size());
         assertEquals(new Integer("42"), test3.getIntegerMap().get("I1"));
+        assertEquals("BA", test3.getBasicMap().get("FA"));
+        assertEquals("AB", test3.getBasicMap().get("AF"));
         parser.parse("test -iI12");
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         exception.expect(OptionParserException.class);
