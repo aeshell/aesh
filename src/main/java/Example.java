@@ -519,7 +519,7 @@ public class Example {
         }
     }
 
-    @CommandDefinition(name = "child1", description = "")
+    @CommandDefinition(name = "child1", description = "description of child1 command")
     public static class Child1 implements Command {
 
         @Option(description = "set foo")
@@ -537,7 +537,7 @@ public class Example {
         }
     }
 
-    @CommandDefinition(name = "child2", description = "")
+    @CommandDefinition(name = "child2", description = "description of child2 command")
     public static class Child2 implements Command {
         @Option
         private boolean bar;

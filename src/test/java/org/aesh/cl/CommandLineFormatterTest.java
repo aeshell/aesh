@@ -162,8 +162,8 @@ public class CommandLineFormatterTest {
                          "Options:" + Config.getLineSeparator() +
                          "  -h, --help  display help info" + Config.getLineSeparator()
                          + Config.getLineSeparator()+"git commands:"+Config.getLineSeparator()+
-                         "    branch"+Config.getLineSeparator()+
-                         "    rebase"+Config.getLineSeparator(),
+                         "    branch  branching"+Config.getLineSeparator()+
+                         "    rebase  [OPTION...]"+Config.getLineSeparator(),
                  clpGit.printHelp());
 
 

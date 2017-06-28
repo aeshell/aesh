@@ -202,7 +202,11 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                     .append(" commands:")
                     .append(Config.getLineSeparator());
             for (CommandLineParser child : parsers)
-                sb.append("    ").append(child.getProcessedCommand().name()).append(Config.getLineSeparator());
+                sb.append("    ")
+                  .append(child.getProcessedCommand().name())
+                  .append("  ")
+                  .append(child.getProcessedCommand().description())
+                  .append(Config.getLineSeparator());
 
             return sb.toString();
         }
