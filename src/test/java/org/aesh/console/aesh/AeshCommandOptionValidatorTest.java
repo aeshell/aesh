@@ -65,11 +65,9 @@ public class AeshCommandOptionValidatorTest {
 
         console.start();
         connection.read("val --foo yay"+ Config.getLineSeparator());
-        Thread.sleep(50);
         connection.assertBufferEndsWith("VAL"+Config.getLineSeparator());
         connection.clearOutputBuffer();
         connection.read("val --foo doh\\ doh" + Config.getLineSeparator());
-        Thread.sleep(50);
         connection.assertBufferEndsWith("Option value cannot contain spaces"+Config.getLineSeparator());
 
         console.stop();
@@ -95,19 +93,13 @@ public class AeshCommandOptionValidatorTest {
         aeshConsole.start();
 
         connection.read("val --foo yay"+ Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(100);
-        //assertFalse(byteArrayOutputStream.toString().contains("Option value cannot"));
+        connection.assertBuffer("val --foo yay"+Config.getLineSeparator()+"VAL"+Config.getLineSeparator());
 
         connection.read("val --foo yay\\ nay" + Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(100);
-        //assertTrue(byteArrayOutputStream.toString().contains("Option value cannot"));
+        connection.assertBufferEndsWith("Option value cannot contain spaces"+Config.getLineSeparator());
 
         connection.read("int --num 43" + Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(100);
-        //assertTrue(byteArrayOutputStream.toString().contains("Number cannot be higher than 42"));
+        connection.assertBufferEndsWith("Number cannot be higher than 42"+Config.getLineSeparator());
 
          aeshConsole.stop();
     }
@@ -133,25 +125,17 @@ public class AeshCommandOptionValidatorTest {
 
         console.start();
 
-        connection.read("val2 --foo yay"+ Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(100);
-        //assertFalse(byteArrayOutputStream.toString().contains("Option value cannot"));
+        connection.read("val2 --foo yay"+Config.getLineSeparator());
+        connection.assertBuffer("val2 --foo yay"+ Config.getLineSeparator());
 
         connection.read("val2 --foo Doh" + Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(100);
-        //assertTrue(byteArrayOutputStream.toString().contains("NO UPPER"));
+        connection.assertBufferEndsWith("NO UPPER CASE!"+Config.getLineSeparator());
 
         connection.read("val --foo yay\\ nay" + Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(100);
-        //assertTrue(byteArrayOutputStream.toString().contains("Option value cannot"));
+        connection.assertBufferEndsWith("Option value cannot contain spaces"+Config.getLineSeparator());
 
         connection.read("int --num 43" + Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(100);
-        //assertTrue(byteArrayOutputStream.toString().contains("Number cannot be higher than 42"));
+        connection.assertBufferEndsWith("Number cannot be higher than 42"+Config.getLineSeparator());
 
          console.stop();
     }
