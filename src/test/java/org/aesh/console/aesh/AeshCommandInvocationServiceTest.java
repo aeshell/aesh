@@ -148,21 +148,6 @@ class FooCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public int pid() {
-        return commandInvocation.pid();
-    }
-
-    @Override
-    public void putProcessInBackground() {
-        commandInvocation.putProcessInBackground();
-    }
-
-    @Override
-    public void putProcessInForeground() {
-        commandInvocation.putProcessInForeground();
-    }
-
-    @Override
     public void executeCommand(String input) throws CommandNotFoundException,
             CommandLineParserException, OptionValidatorException,
             CommandValidatorException, CommandException, InterruptedException, IOException {

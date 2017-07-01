@@ -98,22 +98,6 @@ public class DefaultCommandInvocation implements CommandInvocation{
         return null;
     }
 
-    // XXX JFDENISE SHOULD BE REMOVED
-    @Override
-    public int pid() {
-        return -1;
-    }
-
-    // XXX JFDENISE SHOULD BE REMOVED
-    @Override
-    public void putProcessInBackground() {
-    }
-
-    // XXX JFDENISE SHOULD BE REMOVED
-    @Override
-    public void putProcessInForeground() {
-    }
-
     @Override
     public void executeCommand(String input) throws CommandNotFoundException,
             CommandLineParserException,

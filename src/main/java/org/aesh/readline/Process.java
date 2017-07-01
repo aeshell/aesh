@@ -93,6 +93,10 @@ public class Process extends Thread implements Consumer<Signal> {
         }
     }
 
+    public Execution<AeshCommandInvocation> execution() {
+        return execution;
+    }
+
     public int pid() {
         return pid;
     }

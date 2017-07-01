@@ -103,24 +103,6 @@ public final class AeshCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public int pid() {
-        //TODO
-        return 0;
-    }
-
-    @Override
-    public void putProcessInBackground() {
-        //TODO
-        //console.putProcessInBackground(pid);
-    }
-
-    @Override
-    public void putProcessInForeground() {
-        //TODO
-        //console.putProcessInForeground(pid);
-    }
-
-    @Override
     public void executeCommand(String input) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,

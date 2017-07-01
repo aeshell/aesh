@@ -198,8 +198,6 @@ public class Example {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
 
-            commandInvocation.putProcessInBackground();
-
             if (arguments != null && arguments.size() > 0 && arguments.get(0).isLeaf()) {
                 try {
                     List<String> script = readScriptFile(arguments.get(0));
