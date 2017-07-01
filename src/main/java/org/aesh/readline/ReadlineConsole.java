@@ -74,6 +74,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     private Readline readline;
     private AeshCompletionHandler completionHandler;
     private CommandRuntime<AeshCommandInvocation> runtime;
+    private ProcessManager processManager;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
 
@@ -121,6 +122,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
         this.runtime = generateRuntime();
         read(this.connection, readline);
+        processManager = new ProcessManager(this);
         this.connection.openBlocking();
     }
 
@@ -133,12 +135,18 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         running = true;
     }
 
+    @Override
+    public void read() {
+        read(connection, readline);
+    }
+
     /**
      * Use {@link Readline} to startBlockingReader a user input and then process it
      *
      * @param conn the tty connection
      * @param readline the readline object
      */
+    @Override
     public void read(final Connection conn, final Readline readline) {
         // Just call readline and get a callback when line is startBlockingReader
         if(!running) {
@@ -166,8 +174,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private void processLine(String line, Connection conn) {
         try {
-            Executor<AeshCommandInvocation> exector = runtime.buildExecutor(line);
-            new Process(conn, this, readline, exector).start();
+            Executor<AeshCommandInvocation> executor = runtime.buildExecutor(line);
+            processManager.execute(executor, conn);
         }
         catch (IllegalArgumentException e) {
             conn.write(line + ": command not found\n");

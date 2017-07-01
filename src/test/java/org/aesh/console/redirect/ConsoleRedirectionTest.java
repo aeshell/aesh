@@ -20,21 +20,43 @@
 package org.aesh.console.redirect;
 
 
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.BaseConsoleTest;
 
-import org.junit.Ignore;
+import org.aesh.console.settings.Settings;
+import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.readline.ReadlineConsole;
+import org.aesh.tty.TestConnection;
+import org.aesh.utils.Config;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermissions;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * TODO: Enable this when we have redirection implemented.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@Ignore
  public class ConsoleRedirectionTest extends BaseConsoleTest {
 
-     /*
     private Path tempDir;
     private static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
+
+    static boolean beforeHasBeenCalled = false;
+    static boolean afterHasBeenCalled = false;
 
     @Before
     public void before() throws IOException {
@@ -42,15 +64,30 @@ import org.junit.Ignore;
     }
 
      @Test
-     public void pipeCommands() throws Throwable {
-         invokeTestConsole(new Setup() {
-             @Override
-             public void call(Console console, OutputStream out) throws IOException {
-                 out.write(("ls | find *. -print" + Config.getLineSeparator()).getBytes());
-             }
-         }, new RedirectionConsoleCallback());
+     public void endOperator() throws Throwable {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(BeforeCommand.class)
+                 .command(AfterCommand.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("before; after"+Config.getLineSeparator());
+         Thread.sleep(50);
+         assertTrue(afterHasBeenCalled);
+         console.stop();
      }
 
+     /*
      @Test
      public void redirectIn() throws Throwable {
          final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_bar2.txt");
@@ -84,7 +121,9 @@ import org.junit.Ignore;
                  }
          );
      }
+     */
 
+     /*
      @Test
      public void redirectIn2() throws Throwable {
          final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_bar3.txt");
@@ -125,6 +164,7 @@ import org.junit.Ignore;
                  }
          );
      }
+     */
 
     public static Path createTempDirectory() throws IOException {
         final Path tmp;
@@ -139,21 +179,23 @@ import org.junit.Ignore;
         return tmp;
     }
 
-     class RedirectionConsoleCallback implements Verify {
-         private int count = 0;
+    @CommandDefinition(name = "before", description = "")
+    public class BeforeCommand implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            beforeHasBeenCalled = true;
+            return CommandResult.SUCCESS;
+        }
+    }
 
-         @Override
-         public int call(Console console, ConsoleOperation output) {
-             if(count == 0) {
-                 assertEquals("ls ", output.getBuffer());
-                 count++;
-             }
-             else if(count == 1) {
-                 assertEquals(" find *. -print", output.getBuffer());
-             }
-             return 0;
-         }
-     }
-     */
+    @CommandDefinition(name = "after", description = "")
+    public class AfterCommand implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            assertTrue(beforeHasBeenCalled);
+            afterHasBeenCalled = true;
+            return CommandResult.SUCCESS;
+        }
+    }
 
 }

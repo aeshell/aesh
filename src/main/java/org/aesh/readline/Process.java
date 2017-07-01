@@ -20,7 +20,6 @@
 package org.aesh.readline;
 
 import org.aesh.command.Execution;
-import org.aesh.command.Executor;
 import org.aesh.command.CommandException;
 import org.aesh.terminal.tty.Signal;
 import org.aesh.utils.Config;
@@ -38,20 +37,18 @@ import java.util.logging.Logger;
 public class Process extends Thread implements Consumer<Signal> {
 
     private final Connection conn;
-    private final Readline readline;
-    private final Console console;
-    private final Executor<AeshCommandInvocation> executor;
+    private final Execution<AeshCommandInvocation> execution;
+    private final ProcessManager manager;
     private volatile boolean running;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(Process.class.getName());
     private int pid;
 
-    public Process(Connection conn, Console console, Readline readline,
-                   Executor<AeshCommandInvocation> executor) {
+    public Process(ProcessManager manager, Connection conn,
+                   Execution<AeshCommandInvocation> execution) {
+        this.manager = manager;
         this.conn = conn;
-        this.console = console;
-        this.readline = readline;
-        this.executor = executor;
+        this.execution = execution;
     }
 
     @Override
@@ -74,9 +71,7 @@ public class Process extends Thread implements Consumer<Signal> {
         pid = (int) Thread.currentThread().getId();
 
         try {
-            for(Execution<AeshCommandInvocation> exec : executor.getExecutions()) {
-               exec.execute();
-            }
+            execution.execute();
         }
         catch (CommandValidatorException | CommandException e) {
             conn.write(e.getMessage()+ Config.getLineSeparator());
@@ -94,13 +89,7 @@ public class Process extends Thread implements Consumer<Signal> {
             if(conn.getStdinHandler() != null)
                 conn.setStdinHandler(null);
 
-            if (console.running()) {
-                // Readline again
-                console.read(conn, readline);
-            }
-            else {
-                conn.close();
-            }
+            manager.processFinished(this);
         }
     }
 

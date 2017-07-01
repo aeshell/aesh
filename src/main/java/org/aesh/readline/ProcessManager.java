@@ -19,29 +19,53 @@
  */
 package org.aesh.readline;
 
-import org.aesh.console.AeshContext;
-import org.aesh.console.settings.Settings;
-import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.Execution;
+import org.aesh.command.Executor;
+import org.aesh.command.impl.invocation.AeshCommandInvocation;
+import org.aesh.terminal.Connection;
+
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ProcessManager {
 
-    private final Settings settings;
-    private final InvocationProviders invocationProviders;
-    private AeshContext context;
-    private final Console console;
-    //private final Connection connection;
+    private Connection conn;
+    private Console console;
+    private Queue<Execution<AeshCommandInvocation>> executionQueue;
 
-
-    public ProcessManager(Settings setting, InvocationProviders invocationProviders, AeshContext context,
-                          Console console) {
-        this.settings = setting;
-        this.invocationProviders = invocationProviders;
-        this.context = context;
+    public ProcessManager(Console console) {
         this.console = console;
+        executionQueue = new ConcurrentLinkedQueue<>();
     }
 
+    public void execute(Executor<AeshCommandInvocation> executor, Connection conn) {
+        this.conn = conn;
+        executionQueue.addAll(executor.getExecutions());
+        executeNext();
+    }
 
+    private Execution<AeshCommandInvocation> next() {
+        return executionQueue.poll();
+    }
+
+    public boolean hasNext() {
+        return !executionQueue.isEmpty();
+    }
+
+    public void processFinished(Process process) {
+        if(hasNext())
+            executeNext();
+        else if(console.running())
+            console.read();
+        else
+            conn.close();
+    }
+
+    public void executeNext() {
+        if(hasNext())
+            new Process(this, conn, next()).start();
+    }
 }
