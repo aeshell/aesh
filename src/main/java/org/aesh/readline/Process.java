@@ -19,16 +19,12 @@
  */
 package org.aesh.readline;
 
-import org.aesh.command.CommandNotFoundException;
-import org.aesh.command.CommandRuntime;
-import org.aesh.command.result.ResultHandler;
+import org.aesh.command.Execution;
+import org.aesh.command.Executor;
 import org.aesh.command.CommandException;
 import org.aesh.terminal.tty.Signal;
 import org.aesh.utils.Config;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
-import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.command.CommandResult;
 import org.aesh.command.impl.invocation.AeshCommandInvocation;
 import org.aesh.terminal.Connection;
 import org.aesh.util.LoggerUtil;
@@ -43,20 +39,19 @@ public class Process extends Thread implements Consumer<Signal> {
 
     private final Connection conn;
     private final Readline readline;
-    private final String line;
     private final Console console;
-    private final CommandRuntime<AeshCommandInvocation> runtime;
+    private final Executor<AeshCommandInvocation> executor;
     private volatile boolean running;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(Process.class.getName());
+    private int pid;
 
     public Process(Connection conn, Console console, Readline readline,
-                   CommandRuntime<AeshCommandInvocation> runtime, String line) {
+                   Executor<AeshCommandInvocation> executor) {
         this.conn = conn;
         this.console = console;
         this.readline = readline;
-        this.runtime = runtime;
-        this.line = line;
+        this.executor = executor;
     }
 
     @Override
@@ -76,27 +71,15 @@ public class Process extends Thread implements Consumer<Signal> {
         // Subscribe to events, in particular Ctrl-C
         conn.setSignalHandler(this);
         running = true;
+        pid = (int) Thread.currentThread().getId();
 
-        CommandResult result;
-        ResultHandler resultHandler = null;
         try {
-            //resultHandler = container.getParser().getProcessedCommand().resultHandler();
-            //CommandContainerResult ccResult = runCommand(container, line);
-            runtime.executeCommand(line);
-
-            //result = ccResult.getCommandResult();
-
-            //if(result == CommandResult.SUCCESS && resultHandler != null)
-            //    resultHandler.onSuccess();
-            //else if(resultHandler != null)
-            //    resultHandler.onFailure(result);
+            for(Execution<AeshCommandInvocation> exec : executor.getExecutions()) {
+               exec.execute();
+            }
         }
-        catch (CommandLineParserException | CommandValidatorException | OptionValidatorException |
-                CommandException e) {
+        catch (CommandValidatorException | CommandException e) {
             conn.write(e.getMessage()+ Config.getLineSeparator());
-        }
-        catch (CommandNotFoundException cnfe) {
-
         }
         catch (InterruptedException e) {
             // Ctlr-C interrupt
@@ -119,5 +102,9 @@ public class Process extends Thread implements Consumer<Signal> {
                 conn.close();
             }
         }
+    }
+
+    public int pid() {
+        return pid;
     }
 }
