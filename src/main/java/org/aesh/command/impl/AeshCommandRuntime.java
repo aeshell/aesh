@@ -75,7 +75,7 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
     private static final Logger LOGGER = Logger.getLogger(AeshCommandRuntime.class.getName());
     private final CommandNotFoundHandler commandNotFoundHandler;
 
-    private final CommandResolver<? extends Command> commandResolver;
+    private final CommandResolver<C> commandResolver;
     private final AeshContext ctx;
     private final CommandInvocationBuilder<CI> commandInvocationBuilder;
 
@@ -205,7 +205,7 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
             CommandValidatorException, IOException {
         List<ParsedLine> lines = new LineParser().parseLine(line, -1, parseBrackets, operators);
         List<Execution<CI>> executions = Executions.buildExecution(lines, this);
-        return new Executor(executions);
+        return new Executor<>(executions);
     }
 
     CI buildCommandInvocation(CommandInvocationConfiguration config) {
@@ -220,14 +220,13 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
             return null;
         }
         String opName = aeshLine.words().get(0).word();
-        CommandContainer container = commandResolver.resolveCommand(opName, commandLine);
+        CommandContainer<C> container = commandResolver.resolveCommand(opName, commandLine);
         if (container == null) {
             throw new CommandNotFoundException("No command handler for '" + opName + "'.");
         }
         container.getParser().parse(aeshLine.iterator(), CommandLineParser.Mode.STRICT);
         if (container.getParser().getProcessedCommand().parserExceptions().size() > 0) {
-            throw new CommandLineParserException("Invalid Command " + commandLine + ". Error: "
-                    + container.getParser().getProcessedCommand().parserExceptions().get(0));
+            throw container.getParser().getProcessedCommand().parserExceptions().get(0);
         }
         container.getParser().parsedCommand().getCommandPopulator().populateObject(container.getParser().parsedCommand().getProcessedCommand(),
                 invocationProviders, getAeshContext(), CommandLineParser.Mode.VALIDATE);

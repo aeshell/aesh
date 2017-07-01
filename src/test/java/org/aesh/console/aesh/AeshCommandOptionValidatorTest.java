@@ -19,6 +19,7 @@
  */
 package org.aesh.console.aesh;
 
+import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.console.AeshContext;
@@ -65,7 +66,7 @@ public class AeshCommandOptionValidatorTest {
 
         console.start();
         connection.read("val --foo yay"+ Config.getLineSeparator());
-        connection.assertBufferEndsWith("VAL"+Config.getLineSeparator());
+        connection.assertBuffer("val --foo yay"+Config.getLineSeparator());
         connection.clearOutputBuffer();
         connection.read("val --foo doh\\ doh" + Config.getLineSeparator());
         connection.assertBufferEndsWith("Option value cannot contain spaces"+Config.getLineSeparator());
@@ -93,7 +94,7 @@ public class AeshCommandOptionValidatorTest {
         aeshConsole.start();
 
         connection.read("val --foo yay"+ Config.getLineSeparator());
-        connection.assertBuffer("val --foo yay"+Config.getLineSeparator()+"VAL"+Config.getLineSeparator());
+        connection.assertBuffer("val --foo yay"+Config.getLineSeparator());
 
         connection.read("val --foo yay\\ nay" + Config.getLineSeparator());
         connection.assertBufferEndsWith("Option value cannot contain spaces"+Config.getLineSeparator());
@@ -105,7 +106,7 @@ public class AeshCommandOptionValidatorTest {
     }
 
     @Test
-    public void testMultipleOptionWithProvidersValidators() throws IOException, InterruptedException {
+    public void testMultipleOptionWithProvidersValidators() throws IOException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -139,6 +140,47 @@ public class AeshCommandOptionValidatorTest {
 
          console.stop();
     }
+
+    @Test
+    public void testRequiredOption() throws IOException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(ValidatorOptionCommand.class)
+                .create();
+
+        Settings settings = SettingsBuilder.builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .validatorInvocationProvider(new TestValidatorInvocationProvider())
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+
+        console.start();
+        connection.read("test argvalue"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("Option: --foo is required for this command."+Config.getLineSeparator());
+
+        console.stop();
+    }
+
+
+    @CommandDefinition(name = "test", description = "")
+    public static class ValidatorOptionCommand implements Command {
+
+        @Option(required = true)
+        private String foo;
+
+        @Argument
+        private String arg;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 
     @CommandDefinition(name = "val", description = "")
     public static class ValCommand implements Command {

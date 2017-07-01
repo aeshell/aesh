@@ -21,7 +21,9 @@ package org.aesh.readline;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
+import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
+import org.aesh.command.Executor;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
@@ -30,6 +32,9 @@ import org.aesh.command.impl.AeshCommandResolver;
 import org.aesh.command.impl.invocation.AeshCommandInvocation;
 import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
@@ -43,6 +48,7 @@ import org.aesh.readline.history.InMemoryHistory;
 import org.aesh.readline.tty.terminal.TerminalConnection;
 import org.aesh.terminal.Connection;
 import org.aesh.util.LoggerUtil;
+import org.aesh.utils.Config;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -159,25 +165,27 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     private void processLine(String line, Connection conn) {
-        //try (CommandContainer container = commandResolver.resolveCommand(line)) {
-            try {
-                new Process(conn, this, readline, runtime, line).start();
-            }
-            catch (IllegalArgumentException e) {
-                conn.write(line + ": command not found\n");
-            }
-            /*
+        try {
+            Executor<AeshCommandInvocation> exector = runtime.buildExecutor(line);
+            new Process(conn, this, readline, exector).start();
+        }
+        catch (IllegalArgumentException e) {
+            conn.write(line + ": command not found\n");
         }
         catch (CommandNotFoundException cnfe) {
             if(settings.commandNotFoundHandler() != null) {
-                settings.commandNotFoundHandler().handleCommandNotFound(line, conn);
+                //TODO: review CommandNotFoundHandler
+                settings.commandNotFoundHandler().handleCommandNotFound(line, new ShellImpl(conn, readline));
             }
             else {
                 conn.write(cnfe.getMessage() + Config.getLineSeparator());
             }
             read(conn, readline);
         }
-        */
+        catch (OptionValidatorException | CommandValidatorException |CommandLineParserException e) {
+            conn.write(e.getMessage() + Config.getLineSeparator());
+            read(conn, readline);
+        }
         catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Got exception while starting new process", e);
             read(conn, readline);
