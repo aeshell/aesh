@@ -142,11 +142,12 @@ public final class AeshCommandInvocation implements CommandInvocation {
                 // XXX JFDENISE, we should throw IOException in interface.
                 throw new RuntimeException(ex);
             }
-        } else {
-            shell.write(msg);
-            if (newLine) {
-                shell.write(Config.getLineSeparator());
-            }
+        }
+        else {
+            if(newLine)
+                shell.writeln(msg);
+            else
+                shell.write(msg);
         }
     }
 

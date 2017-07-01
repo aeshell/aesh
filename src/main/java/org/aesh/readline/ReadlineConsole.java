@@ -253,12 +253,11 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         */
     }
 
-    private CommandRuntime<AeshCommandInvocation> generateRuntime() {
+    private CommandRuntime generateRuntime() {
         return AeshCommandRuntimeBuilder.builder()
                 .settings(settings)
                 .commandInvocationBuilder(new AeshCommandInvocationBuilder(new ShellImpl(connection, readline), this))
                 .build();
     }
-
 
 }

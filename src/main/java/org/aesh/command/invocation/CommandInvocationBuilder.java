@@ -26,6 +26,6 @@ import org.aesh.command.CommandRuntime;
  */
 public interface CommandInvocationBuilder<CI extends CommandInvocation> {
 
-    CommandInvocation build(CommandRuntime<CI> runtime,
+    CI build(CommandRuntime<CI> runtime,
             CommandInvocationConfiguration configuration);
 }
