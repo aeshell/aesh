@@ -20,7 +20,7 @@
 package org.aesh.command.impl.invocation;
 
 import org.aesh.command.CommandRuntime;
-import org.aesh.command.Shell;
+import org.aesh.command.shell.Shell;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.readline.Console;

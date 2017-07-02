@@ -19,7 +19,7 @@
  */
 package org.aesh.console.man;
 
-import org.aesh.command.Shell;
+import org.aesh.command.shell.Shell;
 import org.aesh.command.Command;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.console.operator.ControlOperator;

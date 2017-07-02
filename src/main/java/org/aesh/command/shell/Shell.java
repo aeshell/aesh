@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.aesh.command;
+package org.aesh.command.shell;
 
 import org.aesh.readline.Prompt;
 import org.aesh.readline.terminal.Key;

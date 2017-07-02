@@ -19,7 +19,7 @@
  */
 package org.aesh.console.aesh;
 
-import org.aesh.command.Shell;
+import org.aesh.command.shell.Shell;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.result.ResultHandler;

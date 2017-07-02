@@ -19,7 +19,7 @@
  */
 package org.aesh.console.settings;
 
-import org.aesh.command.Shell;
+import org.aesh.command.shell.Shell;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

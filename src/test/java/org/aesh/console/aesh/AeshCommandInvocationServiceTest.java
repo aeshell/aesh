@@ -20,7 +20,7 @@
 package org.aesh.console.aesh;
 
 import org.aesh.console.AeshContext;
-import org.aesh.command.Shell;
+import org.aesh.command.shell.Shell;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
