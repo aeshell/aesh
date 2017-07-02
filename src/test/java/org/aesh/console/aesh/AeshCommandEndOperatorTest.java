@@ -39,7 +39,6 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 
 /**
- * TODO: Re-enable when command end operator is enabled.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */

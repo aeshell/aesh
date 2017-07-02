@@ -134,13 +134,29 @@ class Executions {
         boolean newParsedLine = false;
         ConfigurationOperator config = null;
         DataProvider dataProvider = null;
+        CommandInvocationConfiguration invocationConfiguration = null;
         List<Execution<CI>> executions = new ArrayList<>();
         for (ParsedLine pl : fullLine) {
             newParsedLine = false;
             while (!newParsedLine) {
                 switch (state) {
                     case NEED_COMMAND: {
-                        processedCommand = runtime.getPopulatedCommand(pl);
+                        try {
+                            processedCommand = runtime.getPopulatedCommand(pl);
+                        }
+                        //if previous line has redirect/append out
+                        // the input line might just be a file
+                        catch(CommandNotFoundException cnfe) {
+                            //lets see if we have previous executions and if they had
+                            // a redirect/append output
+                            if(executions.size() > 1 && invocationConfiguration != null &&
+                                    invocationConfiguration.getOutputRedirection() != null) {
+                                //TODO: create logic to handle when we output to file
+                            }
+                            else
+                                throw cnfe;
+
+                        }
                         state = State.NEED_OPERATOR;
                         break;
                     }
@@ -166,10 +182,10 @@ class Executions {
                                 throw new IllegalArgumentException("Op " + ot + " is not executable");
                             }
                             ExecutableOperator exec = (ExecutableOperator) op;
-                            CommandInvocationConfiguration invocationConfiguration = config == null
+                            invocationConfiguration = config == null
                                     ? new CommandInvocationConfiguration(runtime.getAeshContext(), null,
                                             dataProvider) : config.getConfiguration();
-                            Execution execution = new ExecutionImpl(exec, runtime,
+                            Execution<CI> execution = new ExecutionImpl<>(exec, runtime,
                                     invocationConfiguration, processedCommand);
                             if (exec instanceof DataProvider) {
                                 dataProvider = (DataProvider) exec;
@@ -190,10 +206,10 @@ class Executions {
             // The implicit execution operator is missing.
             ExecutableOperator exec = (ExecutableOperator) buildOperator(OperatorType.NONE,
                     runtime.getAeshContext());
-            CommandInvocationConfiguration invocationConfiguration = config == null
+            invocationConfiguration = config == null
                     ? new CommandInvocationConfiguration(runtime.getAeshContext(), null,
                             dataProvider) : config.getConfiguration();
-            Execution execution = new ExecutionImpl(exec, runtime, invocationConfiguration, processedCommand);
+            Execution<CI> execution = new ExecutionImpl<>(exec, runtime, invocationConfiguration, processedCommand);
             executions.add(execution);
         }
         return executions;
