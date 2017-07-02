@@ -57,7 +57,6 @@ class Executions {
 
         private final ExecutableOperator executable;
         private final ProcessedCommand<? extends Command> cmd;
-        private T invocation;
         private final CommandInvocationConfiguration invocationConfiguration;
         private final AeshCommandRuntime<? extends Command, T> runtime;
         public ExecutionImpl(ExecutableOperator executable,
@@ -73,10 +72,7 @@ class Executions {
 
         @Override
         public T getCommandInvocation() {
-            if (invocation == null) {
-                invocation = runtime.buildCommandInvocation(invocationConfiguration);
-            }
-            return invocation;
+            return runtime.buildCommandInvocation(invocationConfiguration);
         }
 
         /**

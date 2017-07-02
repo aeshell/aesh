@@ -46,6 +46,7 @@ public final class AeshCommandInvocation implements CommandInvocation {
     private final Shell shell;
     private final CommandRuntime<AeshCommandInvocation> runtime;
     private final CommandInvocationConfiguration config;
+
     public AeshCommandInvocation(Console console, Shell shell,
             CommandRuntime<AeshCommandInvocation> runtime,
             CommandInvocationConfiguration config) {
