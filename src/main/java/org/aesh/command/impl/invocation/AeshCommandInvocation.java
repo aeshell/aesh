@@ -22,6 +22,7 @@ package org.aesh.command.impl.invocation;
 
 import java.io.IOException;
 import org.aesh.command.CommandRuntime;
+import org.aesh.command.impl.shell.ShellOutputDelegate;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.validator.CommandValidatorException;
@@ -31,12 +32,10 @@ import org.aesh.console.AeshContext;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
-import org.aesh.command.impl.operator.OutputDelegate;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.readline.Console;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
-import org.aesh.utils.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -51,9 +50,16 @@ public final class AeshCommandInvocation implements CommandInvocation {
             CommandRuntime<AeshCommandInvocation> runtime,
             CommandInvocationConfiguration config) {
         this.console = console;
-        this.shell = shell;
         this.runtime = runtime;
         this.config = config;
+        //if we have output redirection, use output delegate
+        if (getConfiguration().getOutputRedirection() != null) {
+            this.shell = new ShellOutputDelegate(shell,
+                    getConfiguration().getOutputRedirection());
+        }
+        //use default shell for no redirections
+        else
+            this.shell = shell;
     }
 
     @Override
@@ -122,33 +128,12 @@ public final class AeshCommandInvocation implements CommandInvocation {
 
    @Override
    public void print(String msg) {
-       print(msg, false);
+       shell.write(msg);
    }
 
     @Override
     public void println(String msg) {
-        print(msg, true);
-    }
-
-    private void print(String msg, boolean newLine) {
-        if (getConfiguration().getOutputRedirection() != null) {
-            OutputDelegate output = getConfiguration().getOutputRedirection();
-            try {
-                output.write(msg);
-                if (newLine) {
-                    output.write(Config.getLineSeparator());
-                }
-            } catch (IOException ex) {
-                // XXX JFDENISE, we should throw IOException in interface.
-                throw new RuntimeException(ex);
-            }
-        }
-        else {
-            if(newLine)
-                shell.writeln(msg);
-            else
-                shell.write(msg);
-        }
+        shell.writeln(msg);
     }
 
     @Override
