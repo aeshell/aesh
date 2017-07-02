@@ -350,6 +350,8 @@ public class LineParserTest {
          assertEquals("foo", lines.get(0).words().get(0).word());
          assertEquals("foo ", lines.get(0).line());
          assertEquals(OperatorType.PIPE, lines.get(0).operator());
+         assertEquals(-1, lines.get(0).cursor());
+         assertEquals(-1, lines.get(0).selectedIndex());
          assertEquals("bar", lines.get(1).words().get(0).word());
          assertEquals(OperatorType.NONE, lines.get(1).operator());
 
@@ -366,12 +368,18 @@ public class LineParserTest {
          assertEquals("foo", lines.get(0).words().get(0).word());
          assertEquals("value1", lines.get(0).words().get(2).word());
          assertEquals("foo --option1 value1 ", lines.get(0).line());
+         assertEquals(19, lines.get(0).cursor());
+         assertEquals(2, lines.get(0).selectedIndex());
          assertEquals(OperatorType.REDIRECT_OUT, lines.get(0).operator());
          assertEquals("bar", lines.get(1).words().get(0).word());
          assertEquals("ba ra", lines.get(1).words().get(2).word());
          assertEquals(OperatorType.END, lines.get(1).operator());
+         assertEquals(-1, lines.get(1).cursor());
+         assertEquals(-1, lines.get(1).selectedIndex());
          assertEquals("car!", lines.get(2).words().get(0).word());
          assertEquals(OperatorType.NONE, lines.get(2).operator());
+         assertEquals(-1, lines.get(2).cursor());
+         assertEquals(-1, lines.get(2).selectedIndex());
 
          lines = lineParser.parseLine("foo --option1 value1 >> bar -o \"ba ra\"&&car! ", 27, true, operators);
          assertEquals("foo", lines.get(0).words().get(0).word());

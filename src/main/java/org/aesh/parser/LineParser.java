@@ -23,6 +23,7 @@ package org.aesh.parser;
 import org.aesh.command.operator.OperatorType;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -57,6 +58,7 @@ public class LineParser {
     private String text;
     private int cursor = -1;
     private boolean parseBrackets;
+    private EnumSet<OperatorType> operators;
 
     public LineParser input(String text) {
         this.text = text;
@@ -73,9 +75,21 @@ public class LineParser {
         return this;
     }
 
+    public LineParser operators(EnumSet<OperatorType> operators) {
+        this.operators = operators;
+        return this;
+    }
+
     public ParsedLine parse() {
         if(text != null)
             return parseLine(text, cursor, parseBrackets);
+        else
+            return null;
+    }
+
+    public List<ParsedLine> parseWithOperators() {
+        if(text != null && operators != null)
+            return parseLine(text, cursor, parseBrackets, operators);
         else
             return null;
     }
@@ -138,7 +152,7 @@ public class LineParser {
             prev = c;
             index++;
         }
-        return endOfLineProcessing(text, cursor);
+        return endOfLineProcessing(text, cursor, 0);
    }
 
    public List<ParsedLine> parseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets, Set<OperatorType> operators) {
@@ -201,7 +215,9 @@ public class LineParser {
                     }
 
                     lines.add(
-                            new ParsedLine(text.substring(startIndex, index), textList, cursor, cursorWord, wordCursor, ParserStatus.OK, "", currentOperator));
+                            new ParsedLine(text.substring(startIndex, index), textList,
+                                    startIndex <= cursor && cursor <= index ? cursor : -1,
+                                    cursorWord, wordCursor, ParserStatus.OK, "", currentOperator));
 
                     cursorWord = -1;
                     wordCursor = -1;
@@ -225,7 +241,7 @@ public class LineParser {
             }
 
             if(builder.length() > 0 || !textList.isEmpty())
-                lines.add(endOfLineProcessing(text.substring(startIndex, index), cursor));
+                lines.add(endOfLineProcessing(text.substring(startIndex, index), cursor, startIndex));
         }
 
         return lines;
@@ -246,7 +262,7 @@ public class LineParser {
         return OperatorType.matches(operators, text, index);
     }
 
-    private ParsedLine endOfLineProcessing(String text, int cursor) {
+    private ParsedLine endOfLineProcessing(String text, int cursor, int startIndex) {
         // if the escape was the last char, add it to the builder
         if (haveEscape)
             builder.append(BACK_SLASH);
@@ -273,7 +289,9 @@ public class LineParser {
         else if (haveSingleQuote || haveDoubleQuote || haveCurlyBracket)
             status = ParserStatus.UNCLOSED_QUOTE;
 
-        return new ParsedLine(text, textList, cursor, cursorWord, wordCursor, status, "", OperatorType.NONE);
+        return new ParsedLine(text, textList,
+                startIndex <= cursor && cursor <= index ? cursor : -1,
+                cursorWord, wordCursor, status, "", OperatorType.NONE);
     }
 
     private void handleCurlyEnd(char c) {
