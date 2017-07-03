@@ -161,7 +161,8 @@ class Executions {
                         }
                         if (ot.isConfiguration() && ot.hasArgument()) {
                             state = State.NEED_ARGUMENT;
-                        } else {
+                        }
+                        else {
                             // The operator must be an executor one
                             if (!(op instanceof ExecutableOperator)) {
                                 throw new IllegalArgumentException("Op " + ot + " is not executable");

@@ -34,16 +34,20 @@ import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 /**
  * TODO: Enable this when we have redirection implemented.
@@ -61,6 +65,11 @@ import static org.junit.Assert.assertTrue;
     @Before
     public void before() throws IOException {
         tempDir = createTempDirectory();
+    }
+
+    @After
+    public void after() throws IOException {
+        Files.delete(tempDir);
     }
 
      @Test
@@ -86,6 +95,37 @@ import static org.junit.Assert.assertTrue;
          assertTrue(afterHasBeenCalled);
          console.stop();
      }
+
+     @Test
+     public void redirectOutOperator() throws Throwable {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(FooCommand.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection.txt");
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("foo > "+foo.getCanonicalPath()+Config.getLineSeparator());
+         Thread.sleep(50);
+         console.stop();
+
+         //lets make sure that foo has been read
+         List<String> input = Files.readAllLines(foo.toPath());
+         assertEquals("some", input.get(0));
+         assertEquals("text", input.get(1));
+
+         Files.delete(foo.toPath());
+     }
+
 
      /*
      @Test
@@ -198,4 +238,13 @@ import static org.junit.Assert.assertTrue;
         }
     }
 
+    @CommandDefinition(name = "foo", description = "")
+    public class FooCommand implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            commandInvocation.println("some");
+            commandInvocation.print("text");
+            return CommandResult.SUCCESS;
+        }
+    }
 }
