@@ -55,14 +55,14 @@ class Executions {
 
     private static class ExecutionImpl<T extends CommandInvocation> implements Execution<T> {
 
-        private final ExecutableOperator executable;
-        private final ProcessedCommand<? extends Command> cmd;
+        private final ExecutableOperator<T> executable;
+        private final ProcessedCommand<? extends Command<T>> cmd;
         private final CommandInvocationConfiguration invocationConfiguration;
         private final AeshCommandRuntime<? extends Command, T> runtime;
-        public ExecutionImpl(ExecutableOperator executable,
+        public ExecutionImpl(ExecutableOperator<T> executable,
                 AeshCommandRuntime<? extends Command, T> runtime,
                 CommandInvocationConfiguration invocationConfiguration,
-                ProcessedCommand<? extends Command> cmd) {
+                ProcessedCommand<? extends Command<T>> cmd) {
             this.executable = executable;
             this.runtime = runtime;
             this.invocationConfiguration = invocationConfiguration;
@@ -127,11 +127,11 @@ class Executions {
     }
 
     static <CI extends CommandInvocation> List<Execution<CI>> buildExecution(List<ParsedLine> fullLine,
-            AeshCommandRuntime<? extends Command, CI> runtime)
+            AeshCommandRuntime<? extends Command<CI>, CI> runtime)
             throws CommandNotFoundException, CommandLineParserException, OptionValidatorException, IOException {
         State state = State.NEED_COMMAND;
-        ProcessedCommand<? extends Command> processedCommand = null;
-        boolean newParsedLine = false;
+        ProcessedCommand<? extends Command<CI>> processedCommand = null;
+        boolean newParsedLine;
         ConfigurationOperator config = null;
         DataProvider dataProvider = null;
         CommandInvocationConfiguration invocationConfiguration = null;
@@ -181,7 +181,7 @@ class Executions {
                             if (!(op instanceof ExecutableOperator)) {
                                 throw new IllegalArgumentException("Op " + ot + " is not executable");
                             }
-                            ExecutableOperator exec = (ExecutableOperator) op;
+                            ExecutableOperator<CI> exec = (ExecutableOperator) op;
                             invocationConfiguration = config == null
                                     ? new CommandInvocationConfiguration(runtime.getAeshContext(), null,
                                             dataProvider) : config.getConfiguration();
@@ -209,7 +209,7 @@ class Executions {
             invocationConfiguration = config == null
                     ? new CommandInvocationConfiguration(runtime.getAeshContext(), null,
                             dataProvider) : config.getConfiguration();
-            Execution<CI> execution = new ExecutionImpl<>(exec, runtime, invocationConfiguration, processedCommand);
+            Execution<CI> execution = new ExecutionImpl<CI>(exec, runtime, invocationConfiguration, processedCommand);
             executions.add(execution);
         }
         return executions;

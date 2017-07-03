@@ -65,7 +65,7 @@ import org.aesh.command.operator.OperatorType;
  *
  * @author jdenise@redhat.com
  */
-public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
+public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocation>
         implements CommandRuntime<CI>, CommandRegistry.CommandRegistrationListener {
 
     private final CommandRegistry<C> registry;
