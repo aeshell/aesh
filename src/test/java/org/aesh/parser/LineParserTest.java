@@ -401,10 +401,16 @@ public class LineParserTest {
          lines = lineParser.parseLine(" :read-resource", 15, true, operators);
          assertEquals(":read-resource", lines.get(0).words().get(0).word());
 
-         // Still failing.
          lines = lineParser.parseLine("foo get >> test1.txt; foo get >> test1.txt", 19, true, operators);
          assertEquals("foo", lines.get(0).words().get(0).word());
          assertEquals("test1.txt", lines.get(1).words().get(0).word());
          assertEquals("foo", lines.get(2).words().get(0).word());
+
+
+         lines = lineParser.parseLine("foo > a", 7, true, operators);
+         assertEquals("foo", lines.get(0).words().get(0).word());
+         assertEquals("a", lines.get(1).words().get(0).word());
+         assertEquals("a", lines.get(1).selectedWord().word());
+
        }
 }

@@ -152,7 +152,7 @@ public class LineParser {
             prev = c;
             index++;
         }
-        return endOfLineProcessing(text, cursor, 0);
+        return endOfLineProcessing(text, cursor, 0, text.length());
    }
 
    public List<ParsedLine> parseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets, Set<OperatorType> operators) {
@@ -241,7 +241,7 @@ public class LineParser {
             }
 
             if(builder.length() > 0 || !textList.isEmpty())
-                lines.add(endOfLineProcessing(text.substring(startIndex, index), cursor, startIndex));
+                lines.add(endOfLineProcessing(text.substring(startIndex, index), cursor, startIndex, text.length()));
         }
 
         return lines;
@@ -262,7 +262,8 @@ public class LineParser {
         return OperatorType.matches(operators, text, index);
     }
 
-    private ParsedLine endOfLineProcessing(String text, int cursor, int startIndex) {
+    private ParsedLine endOfLineProcessing(String text, int cursor,
+                                           int startIndex, int totalTextLength) {
         // if the escape was the last char, add it to the builder
         if (haveEscape)
             builder.append(BACK_SLASH);
@@ -276,7 +277,7 @@ public class LineParser {
                 textList.add(new ParsedWord(builder.toString(), index - builder.length()));
         }
 
-        if (cursor == text.length() &&
+        if (cursor == totalTextLength &&
                 (prev != SPACE_CHAR || (haveEscape || isQuoted()))) {
             cursorWord = textList.size() - 1;
             if (textList.size() > 0)
