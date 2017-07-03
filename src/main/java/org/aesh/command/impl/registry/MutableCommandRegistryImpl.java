@@ -99,6 +99,7 @@ public class MutableCommandRegistryImpl<C extends Command> implements MutableCom
                 if(com.name().startsWith(parsedLine.selectedWord().word()) &&
                         com.getActivator().isActivated(com)) {
                     co.addCompletionCandidate(com.name());
+                    co.setOffset(co.getCursor()-parsedLine.selectedWord().word().length());
                     if(parsedLine.selectedIndex() < parsedLine.size()-1)
                         co.doAppendSeparator(false);
                 }

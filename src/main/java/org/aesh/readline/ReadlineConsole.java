@@ -32,6 +32,7 @@ import org.aesh.command.impl.AeshCommandResolver;
 import org.aesh.command.impl.invocation.AeshCommandInvocation;
 import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
@@ -53,6 +54,7 @@ import org.aesh.utils.Config;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -91,7 +93,6 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         context = new DefaultAeshContext();
         if(settings.connection() != null)
             this.connection = settings.connection();
-
 
     }
 
@@ -257,6 +258,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         return AeshCommandRuntimeBuilder.builder()
                 .settings(settings)
                 .commandInvocationBuilder(new AeshCommandInvocationBuilder(new ShellImpl(connection, readline), this))
+                .operators(EnumSet.allOf(OperatorType.class))
                 .build();
     }
 

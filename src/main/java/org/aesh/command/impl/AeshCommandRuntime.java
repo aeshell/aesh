@@ -246,12 +246,44 @@ public class AeshCommandRuntime<C extends Command, CI extends CommandInvocation>
 
     @Override
     public void complete(AeshCompleteOperation completeOperation) {
+        if(operators.isEmpty())
+            simpleComplete(completeOperation);
+        else {
+            completeWithOperators(completeOperation);
+        }
+    }
+
+    private void completeWithOperators(AeshCompleteOperation completeOperation) {
+        List<ParsedLine> lines = new LineParser()
+                .input(completeOperation.getBuffer())
+                .cursor(completeOperation.getCursor())
+                .parseBrackets(true)
+                .operators(operators)
+                .parseWithOperators();
+
+        if(!lines.isEmpty()) {
+            for (ParsedLine line : lines) {
+                if (line.cursor() > 0) {
+                    doSimpleComplete(completeOperation, line);
+                    return;
+                }
+            }
+            //we should not end up here, but if we do, use the last line
+            doSimpleComplete(completeOperation, lines.get(lines.size() - 1));
+        }
+    }
+
+    private void simpleComplete(AeshCompleteOperation completeOperation) {
         ParsedLine parsedLine = new LineParser()
                 .input(completeOperation.getBuffer())
                 .cursor(completeOperation.getCursor())
                 .parseBrackets(true)
                 .parse();
 
+        doSimpleComplete(completeOperation, parsedLine);
+    }
+
+    private void doSimpleComplete(AeshCompleteOperation completeOperation, ParsedLine parsedLine) {
         if(parsedLine.selectedIndex() == 0 || //possible command name
                 parsedLine.line().length() == 0) {
             commandResolver.getRegistry().completeCommandName(completeOperation, parsedLine);

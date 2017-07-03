@@ -741,7 +741,34 @@ public class AeshCommandCompletionTest {
         connection.assertBuffer("ase --force ");
 
         console.stop();
+    }
 
+    @Test
+    public void testWithEndOperator() throws IOException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(ArgCommand.class)
+                .command(GitCommand.class)
+                .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+        connection.read("arg --input=foo; a");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("arg --input=foo; arg ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("arg --input=foo; arg ARG ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("arg --input=foo; arg ARG --");
+
+        console.stop();
     }
 
     @CommandDefinition(name = "test", description = "")
