@@ -141,22 +141,7 @@ class Executions {
             while (!newParsedLine) {
                 switch (state) {
                     case NEED_COMMAND: {
-                        try {
-                            processedCommand = runtime.getPopulatedCommand(pl);
-                        }
-                        //if previous line has redirect/append out
-                        // the input line might just be a file
-                        catch(CommandNotFoundException cnfe) {
-                            //lets see if we have previous executions and if they had
-                            // a redirect/append output
-                            if(executions.size() > 1 && invocationConfiguration != null &&
-                                    invocationConfiguration.getOutputRedirection() != null) {
-                                //TODO: create logic to handle when we output to file
-                            }
-                            else
-                                throw cnfe;
-
-                        }
+                        processedCommand = runtime.getPopulatedCommand(pl);
                         state = State.NEED_OPERATOR;
                         break;
                     }
