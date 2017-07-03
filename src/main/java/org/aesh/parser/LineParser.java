@@ -216,7 +216,7 @@ public class LineParser {
 
                     lines.add(
                             new ParsedLine(text.substring(startIndex, index), textList,
-                                    startIndex <= cursor && cursor <= index ? cursor : -1,
+                                    startIndex <= cursor && cursor <= index ? cursor-startIndex : -1,
                                     cursorWord, wordCursor, ParserStatus.OK, "", currentOperator));
 
                     cursorWord = -1;
@@ -240,7 +240,7 @@ public class LineParser {
                 }
             }
 
-            if(builder.length() > 0 || !textList.isEmpty())
+            if(builder.length() > 0 || !textList.isEmpty() || startIndex < index)
                 lines.add(endOfLineProcessing(text.substring(startIndex, index), cursor, startIndex, text.length()));
         }
 
@@ -291,7 +291,7 @@ public class LineParser {
             status = ParserStatus.UNCLOSED_QUOTE;
 
         return new ParsedLine(text, textList,
-                startIndex <= cursor && cursor <= index ? cursor : -1,
+                startIndex <= cursor && cursor <= index ? cursor-startIndex : -1,
                 cursorWord, wordCursor, status, "", OperatorType.NONE);
     }
 

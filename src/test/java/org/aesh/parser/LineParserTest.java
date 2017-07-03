@@ -105,6 +105,11 @@ public class LineParserTest {
         assertEquals(0, line.cursor());
         assertEquals("", line.selectedWord().word());
 
+        line = lineParser.parseLine(" ", 1);
+        assertEquals(-1, line.wordCursor());
+        assertEquals(1, line.cursor());
+        assertEquals("", line.selectedWord().word());
+
         line = lineParser.parseLine("   foo bar\\ baz 12345 ", 5);
         assertEquals("foo", line.words().get(0).word());
         assertEquals("bar baz", line.words().get(1).word());
@@ -406,11 +411,14 @@ public class LineParserTest {
          assertEquals("test1.txt", lines.get(1).words().get(0).word());
          assertEquals("foo", lines.get(2).words().get(0).word());
 
-
          lines = lineParser.parseLine("foo > a", 7, true, operators);
          assertEquals("foo", lines.get(0).words().get(0).word());
          assertEquals("a", lines.get(1).words().get(0).word());
          assertEquals("a", lines.get(1).selectedWord().word());
+
+         lines = lineParser.parseLine("foo > ", 6, true, operators);
+         assertEquals("foo", lines.get(0).words().get(0).word());
+         assertEquals(1, lines.get(1).cursor());
 
        }
 }
