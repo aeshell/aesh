@@ -22,7 +22,6 @@ package org.aesh.console.man;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.Command;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.console.operator.ControlOperator;
 import org.aesh.readline.action.KeyAction;
 import org.aesh.readline.terminal.Key;
 import org.aesh.utils.ANSI;
@@ -52,7 +51,6 @@ public abstract class AeshFileDisplayer implements Command {
     private List<Integer> searchLines;
     private static final Logger LOGGER = LoggerUtil.getLogger(AeshFileDisplayer.class.getName());
     private CommandInvocation commandInvocation;
-    private ControlOperator operation;
     private boolean stop;
 
     public AeshFileDisplayer() {
@@ -66,10 +64,6 @@ public abstract class AeshFileDisplayer implements Command {
 
     protected CommandInvocation getCommandInvocation() {
         return commandInvocation;
-    }
-
-    protected void setControlOperator(ControlOperator operator) {
-        this.operation = operator;
     }
 
     protected Shell getShell() {
@@ -86,6 +80,7 @@ public abstract class AeshFileDisplayer implements Command {
         topVisibleRowCache = -1;
         stop = false;
 
+        /* TODO: review this:
         if(operation.isRedirectionOut()) {
             int count=0;
             for(String line : this.page.getLines()) {
@@ -98,6 +93,7 @@ public abstract class AeshFileDisplayer implements Command {
             afterDetach();
         }
         else {
+        */
             if(!page.hasData()) {
                 getShell().write("error: input is null...");
                 afterDetach();
@@ -112,11 +108,11 @@ public abstract class AeshFileDisplayer implements Command {
 
                 processInput();
             }
-        }
+        //}
     }
 
     protected void afterDetach() throws IOException {
-        if(!operation.isRedirectionOut())
+        //if(!operation.isRedirectionOut())
             getShell().write(ANSI.MAIN_BUFFER);
 
         page.clear();
