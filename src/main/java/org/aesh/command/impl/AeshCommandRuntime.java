@@ -55,10 +55,12 @@ import org.aesh.command.invocation.CommandInvocationProvider;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.settings.CommandNotFoundHandler;
+import org.aesh.io.filter.AllResourceFilter;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.command.Execution;
 import org.aesh.command.operator.OperatorType;
+import org.aesh.util.FileLister;
 
 /**
  * Implementation of the Command processor.
@@ -262,15 +264,34 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
                 .parseWithOperators();
 
         if(!lines.isEmpty()) {
-            for (ParsedLine line : lines) {
-                if (line.cursor() > 0) {
-                    doSimpleComplete(completeOperation, line);
-                    return;
+            for(int i=0; i < lines.size(); i++) {
+                if (lines.get(i).cursor() > 0) {
+                    if(i == 0) {
+                        doSimpleComplete(completeOperation, lines.get(i));
+                        return;
+                    }
+                    //we need to check the previous line
+                    //if it is redirect/append out we should use a file completer
+                    else {
+                        if(lines.get(i-1).operator() == OperatorType.REDIRECT_OUT ||
+                                lines.get(i-1).operator() == OperatorType.APPEND_OUT) {
+                            //do file completion
+                            new FileLister(lines.get(i).selectedWord().word(), completeOperation.getContext().getCurrentWorkingDirectory(), new AllResourceFilter())
+                                    .findMatchingDirectories(completeOperation);
+                            return;
+                        }
+                        else {
+                            doSimpleComplete(completeOperation, lines.get(i));
+                            return;
+                        }
+                    }
                 }
             }
             //we should not end up here, but if we do, use the last line
             doSimpleComplete(completeOperation, lines.get(lines.size() - 1));
         }
+        simpleComplete(completeOperation);
+
     }
 
     private void simpleComplete(AeshCompleteOperation completeOperation) {
