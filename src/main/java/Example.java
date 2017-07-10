@@ -501,7 +501,7 @@ public class Example {
     }
 
     @GroupCommandDefinition(name = "group", description = "This is a group command",
-            groupCommands = {Child1.class, Child2.class})
+            groupCommands = {Base.class, Rebase.class})
     public static class GroupCommand implements Command {
 
         @Option(hasValue = false, description = "display this help option")
@@ -517,8 +517,8 @@ public class Example {
         }
     }
 
-    @CommandDefinition(name = "child1", description = "description of child1 command")
-    public static class Child1 implements Command {
+    @CommandDefinition(name = "base", description = "description of base command")
+    public static class Base implements Command {
 
         @Option(description = "set foo")
         private String foo;
@@ -535,8 +535,8 @@ public class Example {
         }
     }
 
-    @CommandDefinition(name = "child2", description = "description of child2 command")
-    public static class Child2 implements Command {
+    @CommandDefinition(name = "rebase", description = "description of rebase command")
+    public static class Rebase implements Command {
         @Option
         private boolean bar;
 
