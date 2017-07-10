@@ -168,8 +168,10 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
     private void doProcessGroupCommand(AeshCompleteOperation completeOperation, String name, ParsedLine line) {
         if(name.length() == 0) {
-            for (CommandLineParser clp : parser.getAllChildParsers())
-                completeOperation.addCompletionCandidate(clp.getProcessedCommand().name());
+            for (CommandLineParser clp : parser.getAllChildParsers()) {
+                if(clp.getProcessedCommand().getActivator().isActivated(clp.getProcessedCommand()))
+                    completeOperation.addCompletionCandidate(clp.getProcessedCommand().name());
+            }
             if(completeOperation.getCompletionCandidates().size() == 1)
                 completeOperation.setOffset(completeOperation.getCursor());
         }
