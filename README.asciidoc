@@ -13,21 +13,21 @@ The master branch is fairly stable atm and the plan is to not change anything bi
 We have released a snapshot version of 1.0 if you are eager to test. Just add this to your 'pom.xml':
 
 [source,xml]
----
+----
 <dependency>
   <groupId>org.aesh</groupId>
   <artifactId>aesh</artifactId>
   <version>1.0-SNAPSHOT</version>
 </dependency>
----
+----
 
 'build.gradle' file.
 [source]
----
+----
 dependencies {
     compile group: 'org.aesh', name: 'aesh', version: '1.0-SNAPSHOT'
 }
----
+----
 
 Features:
 ---------
