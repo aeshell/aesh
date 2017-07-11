@@ -3,19 +3,48 @@
 
 image:https://travis-ci.org/aeshell/aesh.svg?branch=master["Build Status", link="https://travis-ci.org/aeshell/aesh"]
 
-Æsh is a Java library for handling console input with the goal to support most GNU Readline features.
+Æsh is a Java library to easily create commands through a well defined API. Æsh will take care of all the parsing and injection for your commands. Æsh uses the project 'aesh-readline' for it's terminal/readline integration.
 
 IMPORTANT:
 ---------
 
-ATM we're doing some restructuring of the project. ÆSH is being split into two modules. The new module focusing on terminal handling is called æsh-readline (https://github.com/aeshell/aesh-readline). Æsh itself will consume æsh-readline and focus specifically on Command creation, line parsing, etc. We're really excited about æsh-readline and it's API and we think this will be a very good move for Æsh.
+We're now heading into the final stages before we'll tag an 1.0-alpha release. 
+The master branch is fairly stable atm and the plan is to not change anything big in the upcoming weeks.
+We have released a snapshot version of 1.0 if you are eager to test. Just add this to your 'pom.xml':
 
-The development is happening in branch 'readline2', fixes to the 0.66 release is happening in the '0.66.+' branch.
+---
+<dependency>
+  <groupId>org.aesh</groupId>
+  <artifactId>aesh</artifactId>
+  <version>1.0-SNAPSHOT</version>
+</dependency>
+---
 
-The plan is to have the 'readline2' branch merged into 'master' before christmas.
+'build.gradle' file.
+---
+dependencies {
+    compile group: 'org.aesh', name: 'aesh', version: '1.0-SNAPSHOT'
+}
+---
 
 Features:
 ---------
+
+Æsh is a library to easily create commands. We recommend using annotations as the default way of
+adding metadata for your commands, but we also have a builder API if that is preferred.
+Some of our features:
+- *Easy to use API to create everything from simple to advanced commands*
+- *Supports different types of options (list, group, single) and arguments*
+- *Builtin completors for default values, booleans and files*
+- *Supports multiple hierarcy of sub commands eg: git rebase/pull/++*
+- *All option values and arguments are automatically injected during execution*
+- *Possible to add custom validators, activators, completors, converters, 
+  renderers and parsers*
+- *Automatically generates help/info text based on the metadata provided*
+- *Can add and remove commands during runtime*
+- *++++*
+
+All the readline functionality included in 'aesh-readline', eg:
 - *Line editing*
 - *History (search, persistence)*
 - *Completion*
@@ -37,6 +66,8 @@ How to build:
 *** Windows: gradlew.bat
 *** Linux: gradlew
 
+- We also have a pom.xml included for you maven users out there.
+
 Æsh Developer List:
 -------------------
 https://groups.google.com/forum/#!forum/aesh-dev
@@ -45,112 +76,44 @@ To get going:
 -------------
 [source,java]
 ----
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.console.settings.Settings;
+import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.readline.ReadlineConsole;
+
 import java.io.IOException;
 
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.AeshConsoleCallback;
-import ConsoleOperation;
-import org.jboss.aesh.console.Prompt;
-import SettingsBuilder;
-
-public class Example {
-
-    public static void main(String[] args) throws IOException {
-
-        final Console console = new Console(new SettingsBuilder().create());
-        console.setPrompt(new Prompt("[aesh]$ "));
-
-        console.setConsoleCallback(new AeshConsoleCallback() {
-            @Override
-            public int execute(ConsoleOperation output) {
-                console.getShell().out().println("======>\"" + output.getBuffer());
-                if (output.getBuffer().equals("quit")) {
-                    try {
-                        console.stop();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                return 0;
-            }
-        });
+public class SimpleExample {
+    public static void main(String[] args) throws CommandLineParserException, IOException {
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(ExitCommand.class)
+                .create();
+        Settings settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .build();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt("[simple@aesh]$ ");
         console.start();
+    }
+
+    @CommandDefinition(name = "exit", description = "exit the program", aliases = {"quit"})
+    public static class ExitCommand implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            commandInvocation.stop();
+            return CommandResult.SUCCESS;
+        }
     }
 }
 ----
 [source,java]
 
-Keys that are mapped by default in Æsh
---------------------------------------
-Note: C equals Control and M is Meta/Alt
 
-EMACS Mode
-----------
-* Move back one char : C-b or left arrow
-* Move forward one char : C-f or right arrow
-* Delete the character left of cursor : backspace
-* Delete the character on cursor : C-d
-* Undo : C-_ or C-x C-u
-* Move to the start of the line : C-a or home
-* Move to the end of the line : C-e or end
-* Move forward a word, where a word is composed of letters and digits : M-f
-* Move backward a word : M-b
-* Previous line : up arrow
-* Next line : down arrow
-* Clear the screen, reprinting the current line at the top : C-l
-* Delete next word to the right of cursor : M-d
-* Complete : tab
-* Kill the text from the current cursor position to the end of the line : C-k
-* Kill from the cursor to the end of the current word, or, if between words, to the end of the next word : M-d
-* Kill from the cursor to the previous whitespace : C-w
-* Yank the most recently killed text back into the buffer at the cursor : C-y
-* Search backward in the history for a particular string : C-r
-* Search forward in the history for a particular string : C-s
-* Switch to VI editing mode: M-C-j
-
-
-VI Mode
--------
-In command mode: About every vi command is supported, here's a few:
-
-* Move back one char : h
-* Move forward one char : l
-* Delete the character left of cursor : X
-* Delete the character on cursor : x
-* Undo : u
-* Move to the start of the line : 0
-* Move to the end of the line : $
-* Move forward a word, where a word is composed of letters and digits : w
-* Move backward a word : b
-* Previous line : k
-* Next line : n
-* Clear the screen, reprinting the current line at the top : C-l
-* Delete next word to the right of cursor : dw
-* Kill the text from the current cursor position to the end of the line : D and d$
-* Kill from the cursor to the end of the current word, or, if between words, to the end of the next word : db
-* Kill from the cursor to the previous whitespace : dB
-* Yank the most recently killed text back into the buffer at the cursor : p (after cursor), P (before cursor)
-* Add text into yank buffer : y + movement action
-* Enable change mode : c
-* Repeat previous action : .
-* \+++ (read a vi manual)
-
-In edit mode:
-
-* Search backward in the history for a particular string : C-r
-* Search forward in the history for a particular string : C-s
-* Delete the character left of cursor : backspace
-
-Supported runtime properties:
------------------------------
-* aesh.terminal : specify Terminal object
-* aesh.editmode : specify either VI or EMACS edit mode
-* aesh.readinputrc : specify if Æsh should read settings from inputrc
-* aesh.inputrc : specify the inputrc file (must exist)
-* aesh.historyfile : specify the history file (must exist)
-* aesh.historypersistent : specify if Æsh should persist history file on exit
-* aesh.historydisabled : specify if history should be disabled
-* aesh.historysize : specify the maximum size of the history file
-* aesh.logging : specify if logging should be enabled
-* aesh.logfile : specify the log file
-* aesh.disablecompletion : specify if completion should be disabled
