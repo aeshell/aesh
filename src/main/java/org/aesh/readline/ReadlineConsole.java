@@ -43,6 +43,7 @@ import org.aesh.command.container.CommandContainer;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.AeshCompletionHandler;
 import org.aesh.console.settings.DefaultAeshContext;
+import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.completion.Completion;
 import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.readline.history.InMemoryHistory;
@@ -86,7 +87,10 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator,
             ? extends CommandActivator> settings) {
         LoggerUtil.doLog();
-        this.settings = settings;
+        if(settings == null)
+            this.settings = SettingsBuilder.builder().build();
+        else
+            this.settings = settings;
         commandResolver = new AeshCommandResolver<>(settings.commandRegistry());
 
         addCompletion(new AeshCompletion());
@@ -208,7 +212,14 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     @Override
     public void setPrompt(Prompt prompt) {
-        this.prompt = prompt;
+        if(prompt != null)
+            this.prompt = prompt;
+    }
+
+    @Override
+    public void setPrompt(String prompt) {
+        if(prompt != null)
+            this.prompt = new Prompt(prompt);
     }
 
     @Override

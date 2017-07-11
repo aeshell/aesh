@@ -42,4 +42,6 @@ public interface Console {
     void read(Connection conn, Readline readline);
 
     void read();
+
+    void setPrompt(String s);
 }
