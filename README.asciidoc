@@ -35,6 +35,7 @@ Features:
 Æsh is a library to easily create commands. We recommend using annotations as the default way of
 adding metadata for your commands, but we also have a builder API if that is preferred.
 Some of our features:
+
 - *Easy to use API to create everything from simple to advanced commands*
 - *Supports different types of options (list, group, single) and arguments*
 - *Builtin completors for default values, booleans and files*
@@ -47,6 +48,7 @@ Some of our features:
 - *++++*
 
 All the readline functionality included in 'aesh-readline', eg:
+
 - *Line editing*
 - *History (search, persistence)*
 - *Completion*
