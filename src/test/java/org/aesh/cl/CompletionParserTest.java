@@ -328,7 +328,22 @@ public class CompletionParserTest {
         assertEquals("--print=", co.getCompletionCandidates().get(0).getCharacters());
         assertEquals("--help=", co.getCompletionCandidates().get(1).getCharacters());
 
-    }
+        co = new AeshCompleteOperation(aeshContext, "group xx ", 100);
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+
+        co = new AeshCompleteOperation(aeshContext, "group xx yy ", 100);
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+
+        co = new AeshCompleteOperation(aeshContext, "group xx yy", 100);
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+
+        co = new AeshCompleteOperation(aeshContext, "group xx", 100);
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+     }
 
     @CommandDefinition(name = "test", description = "a simple test1")
     public class ParseCompleteTest1 extends TestCommand {

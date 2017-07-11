@@ -242,8 +242,20 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                     || processedCommand.getAliases().contains(command)) {
                 if(isGroupCommand() && iterator.hasNextWord()) {
                    CommandLineParser<C> clp = getChildParser(iterator.peekWord());
-                    if(clp == null)
-                        doParse(iterator, mode);
+                    if(clp == null) {
+                        //if the user have written garbage in the next word, we need to check
+                        // eg: group GARBAGE <tab>
+                        if(iterator.isNextWordCursorWord() ||
+                                iterator.peekWord().startsWith("--") || iterator.peekWord().startsWith("-"))
+                            doParse(iterator, mode);
+                        else {
+                            processedCommand.addParserException(new CommandLineParserException("Wrong input for group command."));
+                            if(mode == Mode.COMPLETION) {
+                                parsedCommand = true;
+                                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.INVALID_INPUT, ""));
+                            }
+                        }
+                    }
                     //we have a group command
                     else {
                         //remove the child name
@@ -358,7 +370,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                         if(lastParsedOption == null && isGroupCommand()) {
                             if(iter.isNextWordCursorWord())
                                 processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, word.word()));
-                            else
+                            else if(iter.baseLine().cursorAtEnd() && iter.baseLine().spaceAtEnd())
                                 processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, ""));
                         }
                         else if(iter.isNextWordCursorWord())
