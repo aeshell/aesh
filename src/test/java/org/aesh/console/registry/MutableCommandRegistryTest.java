@@ -23,6 +23,7 @@ import org.aesh.command.option.Option;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.command.Command;
 import org.aesh.command.CommandResult;
@@ -43,7 +44,7 @@ import static org.junit.Assert.assertTrue;
 public class MutableCommandRegistryTest {
 
     @Test
-    public void testFindCommandNames() {
+    public void testFindCommandNames() throws CommandLineParserException {
 
         MutableCommandRegistryImpl registry = new MutableCommandRegistryImpl();
         registry.addCommand(Command1.class);

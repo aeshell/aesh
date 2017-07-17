@@ -63,7 +63,9 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public void addChildParser(CommandLineParser<C> commandLineParser) {
+    public void addChildParser(CommandLineParser<C> commandLineParser) throws CommandLineParserException {
+        if(processedCommand.hasArgument() || processedCommand.hasArguments())
+            throw new CommandLineParserException("Group commands can not have arguments defined");
         if(childParsers == null)
             childParsers = new ArrayList<>();
         commandLineParser.setChild(true);

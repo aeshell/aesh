@@ -26,6 +26,7 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.util.LoggerUtil;
@@ -118,17 +119,17 @@ public class MutableCommandRegistryImpl<C extends Command> implements MutableCom
     }
 
     @Override
-    public void addCommand(C command) {
+    public void addCommand(C command) throws CommandLineParserException {
         putIntoRegistry(getBuilder().create(command));
     }
 
     @Override
-    public void addCommand(Class<C> command) {
+    public void addCommand(Class<C> command) throws CommandLineParserException {
         putIntoRegistry(getBuilder().create(command));
     }
 
     @Override
-    public void addAllCommands(List<C> commands) {
+    public void addAllCommands(List<C> commands) throws CommandLineParserException {
         if(commands != null) {
             for(C command : commands)
                 addCommand(command);

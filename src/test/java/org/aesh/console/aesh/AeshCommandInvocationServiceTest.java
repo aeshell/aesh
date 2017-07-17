@@ -53,7 +53,7 @@ import org.aesh.command.invocation.CommandInvocationConfiguration;
 public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
 
     @Test
-    public void testCommandInvocationExtension() throws IOException, InterruptedException {
+    public void testCommandInvocationExtension() throws IOException, InterruptedException, CommandLineParserException {
 
         TestConnection connection = new TestConnection();
 

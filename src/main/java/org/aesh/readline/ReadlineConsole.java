@@ -24,19 +24,13 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.AeshCommandResolver;
 import org.aesh.command.impl.invocation.AeshCommandInvocation;
 import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
-import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.command.container.CommandContainer;
@@ -66,9 +60,7 @@ import java.util.logging.Logger;
  */
 public class ReadlineConsole implements Console, Consumer<Connection> {
 
-    private Settings<? extends Command, ? extends CommandInvocation, ? extends ConverterInvocation,
-            ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator,
-            ? extends CommandActivator> settings;
+    private Settings settings;
     private Prompt prompt;
     private List<Completion> completions;
     private Connection connection;
@@ -83,9 +75,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private volatile boolean running = false;
 
-    public ReadlineConsole(Settings<? extends Command, ? extends CommandInvocation, ? extends ConverterInvocation,
-            ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator,
-            ? extends CommandActivator> settings) {
+    public ReadlineConsole(Settings settings) {
         LoggerUtil.doLog();
         if(settings == null)
             this.settings = SettingsBuilder.builder().build();

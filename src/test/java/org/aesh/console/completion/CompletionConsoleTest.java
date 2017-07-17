@@ -51,13 +51,13 @@ public class CompletionConsoleTest {
     @Test
     public void completionWithOptions() throws IOException, InterruptedException, CommandLineParserException {
 
-        final ProcessedCommand param = new ProcessedCommandBuilder().name("less")
+        final ProcessedCommand<Command> param = new ProcessedCommandBuilder<>().name("less")
                 .description("less --options <files>")
                 .create();
 
         param.addOption(ProcessedOptionBuilder.builder().shortName('f').name("foo").hasValue(true).type(String.class).build());
 
-        final CommandLineParser<Command> parser = new AeshCommandLineParser(param);
+        final CommandLineParser<Command> parser = new AeshCommandLineParser<>(param);
         final StringBuilder builder = new StringBuilder();
 
         Completion completion = co -> {

@@ -68,7 +68,7 @@ public interface CommandLineParser<C extends Command> {
      */
     CommandLineParser<C> getChildParser(String name);
 
-    void addChildParser(CommandLineParser<C> childParser);
+    void addChildParser(CommandLineParser<C> childParser) throws CommandLineParserException;
 
     /**
      * @return all the child parser

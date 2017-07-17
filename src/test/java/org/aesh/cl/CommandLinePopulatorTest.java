@@ -19,6 +19,7 @@
  */
 package org.aesh.cl;
 
+import org.aesh.command.Command;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -285,9 +286,9 @@ public class CommandLinePopulatorTest {
     @Test
     public void testSimpleObjectsBuilder() throws Exception {
         TestPopulator1A test1 = new TestPopulator1A();
-        ProcessedCommandBuilder commandBuilder = new ProcessedCommandBuilder<>()
+        ProcessedCommandBuilder<Command> commandBuilder = new ProcessedCommandBuilder<>()
                 .name("test")
-                .populator(new AeshCommandPopulator(test1))
+                .populator(new AeshCommandPopulator<>(test1))
                 .description("a simple test");
         commandBuilder
                 .addOption(ProcessedOptionBuilder.builder().name("XX").description("enable X").fieldName("enableX")
@@ -299,7 +300,7 @@ public class CommandLinePopulatorTest {
                 .addOption(ProcessedOptionBuilder.builder().shortName('i').name("int1").fieldName("int1").type(Integer.class).build())
                 .addOption(ProcessedOptionBuilder.builder().shortName('n').fieldName("int2").type(int.class).addDefaultValue("12345").build());
 
-        CommandLineParser parser =  new AeshCommandLineParser( commandBuilder.create());
+        CommandLineParser<Command> parser =  new AeshCommandLineParser<>( commandBuilder.create());
 
         //TestPopulator1A test1 = (TestPopulator1A) parser.getCommandPopulator().getObject();
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
@@ -380,7 +381,7 @@ public class CommandLinePopulatorTest {
             exception.expect(OptionValidatorException.class);
 
         }
-        catch (CommandLineParserException | OptionValidatorException e) {
+        catch (CommandLineParserException | OptionValidatorException ignored) {
         }
     }
 
@@ -388,7 +389,7 @@ public class CommandLinePopulatorTest {
     public void testRequiredArguments() {
         try {
             CommandLineParser<TestPopulator4>  parser = new AeshCommandContainerBuilder<TestPopulator4>().create(TestPopulator4.class).getParser();
-            TestPopulator4 test4 = parser.getCommand();
+            parser.getCommand();
             AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
             parser.parse("test --veryLong 42");
             parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
@@ -418,52 +419,52 @@ public class CommandLinePopulatorTest {
 
     @Test
     public void testMyOptionWithValue() throws Exception {
-        ProcessedCommand<?> cmd = buildCommandLineOptions();
+        ProcessedCommand<Command> cmd = buildCommandLineOptions();
         parseArgLine(cmd, "mycmd --myoption value --abc 123");
-        assert cmd.findLongOption("abc").getValue().equals("123") : "bad abc value";
+        assert "123".equals(cmd.findLongOption("abc").getValue()) : "bad abc value";
         assert "value".equals(cmd.findLongOption("myoption").getValue()) : "bad myoption value";
     }
 
     @Test(expected = OptionParserException.class)
     public void testMyOptionWithoutValue() throws Exception {
-        ProcessedCommand<?> cmd = buildCommandLineOptions();
+        ProcessedCommand<Command> cmd = buildCommandLineOptions();
         parseArgLine(cmd, "mycmd --myoption --abc 23");
-        assert cmd.findLongOption("abc").getValue().equals("23") : "bad abc value";
+        assert "23".equals(cmd.findLongOption("abc").getValue()) : "bad abc value";
         assert cmd.findLongOption("myoption").getValue() == null : "bad myoption value";
     }
 
     @Test
     public void testNoMyOption() throws Exception {
-        ProcessedCommand<?> cmd = buildCommandLineOptions();
+        ProcessedCommand<Command> cmd = buildCommandLineOptions();
         parseArgLine(cmd, "mycmd --abc 123");
         //assert cl.hasOption("abc") : "Should have abc";
         //assert "123".equals(cl.getOptionValue("abc")) : "bad abc value";
         //assert !cl.hasOption("myoption") : "Should not have myoption";
-        assert cmd.findLongOption("abc").getValue().equals("123") : "bad abc value";
+        assert "123".equals(cmd.findLongOption("abc").getValue()) : "bad abc value";
         assert cmd.findLongOption("myoption").getValue() == null : "bad myoption value";
     }
 
     // specify --myoption at the end of the cmdline
     @Test
     public void testMyOptionAtEndWithValue() throws Exception {
-        ProcessedCommand<?> cmd = buildCommandLineOptions();
+        ProcessedCommand<Command> cmd = buildCommandLineOptions();
         parseArgLine(cmd, "mycmd --abc 123 --myoption value");
-        assert cmd.findLongOption("abc").getValue().equals("123") : "bad abc value";
+        assert "123".equals(cmd.findLongOption("abc").getValue()) : "bad abc value";
         assert "value".equals(cmd.findLongOption("myoption").getValue()) : "bad myoption value";
     }
 
     // specify --myoption at the end of the cmdline
     @Test(expected = OptionParserException.class)
     public void testMyOptionAtEndWithoutValue() throws Exception {
-        ProcessedCommand<?> cmd = buildCommandLineOptions();
+        ProcessedCommand<Command> cmd = buildCommandLineOptions();
         parseArgLine(cmd, "mycmd --abc 123 --myoption");
-        assert cmd.findLongOption("abc").getValue().equals("123") : "bad abc value";
+        assert "123".equals(cmd.findLongOption("abc").getValue()) : "bad abc value";
         assert cmd.findLongOption("myoption").getValue() == null : "bad myoption value";
     }
 
-    public void parseArgLine(ProcessedCommand<?> options, String argLine) throws Exception {
+    private void parseArgLine(ProcessedCommand<Command> options, String argLine) throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser<?> parser = new CommandLineParserBuilder().processedCommand(options).create();
+        CommandLineParser<Command> parser = new CommandLineParserBuilder<>().processedCommand(options).create();
         parser.populateObject(argLine, invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
 
         if (options.parserExceptions().size() > 0) {
@@ -472,8 +473,8 @@ public class CommandLinePopulatorTest {
     }
 
 
-    private ProcessedCommand<?> buildCommandLineOptions() throws Exception {
-        ProcessedCommandBuilder cmd = new ProcessedCommandBuilder();
+    private ProcessedCommand<Command> buildCommandLineOptions() throws Exception {
+        ProcessedCommandBuilder<Command> cmd = new ProcessedCommandBuilder<>();
 
         cmd.name("mycmd");
 

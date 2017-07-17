@@ -61,26 +61,13 @@ import java.util.Map;
 public class AeshCommandContainerBuilder<C extends Command> implements CommandContainerBuilder<C> {
 
     @Override
-    public CommandContainer<C> create(C command) {
-        try {
-            return doGenerateCommandLineParser(command);
-        }
-        catch (CommandLineParserException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public CommandContainer<C> create(C command) throws CommandLineParserException {
+        return doGenerateCommandLineParser(command);
     }
 
     @Override
-    public CommandContainer<C> create(Class<C> command) {
-        try {
-            return doGenerateCommandLineParser(ReflectionUtil.newInstance(command));
-        }
-
-        catch (CommandLineParserException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public CommandContainer<C> create(Class<C> command) throws CommandLineParserException {
+        return doGenerateCommandLineParser(ReflectionUtil.newInstance(command));
     }
 
     private AeshCommandContainer<C> doGenerateCommandLineParser(C commandObject) throws CommandLineParserException {

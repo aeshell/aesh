@@ -22,6 +22,7 @@ package org.aesh.console.aesh;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.option.Option;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
@@ -47,7 +48,7 @@ import static org.junit.Assert.assertEquals;
 public class AeshCommandResultHandlerTest {
 
     @Test
-    public void testResultHandler() throws IOException, InterruptedException {
+    public void testResultHandler() throws IOException, InterruptedException, CommandLineParserException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()

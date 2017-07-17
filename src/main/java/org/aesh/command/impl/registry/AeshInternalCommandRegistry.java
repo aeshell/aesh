@@ -23,6 +23,7 @@ package org.aesh.command.impl.registry;
 import org.aesh.command.Command;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.parser.CommandLineParserException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +38,7 @@ public class AeshInternalCommandRegistry {
 
     private final Map<String, CommandContainer> registry = new HashMap<String, CommandContainer>();
 
-    public void addCommand(Command command) {
+    public void addCommand(Command command) throws CommandLineParserException {
         putIntoRegistry(new AeshCommandContainerBuilder().create(command));
     }
 

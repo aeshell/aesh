@@ -33,10 +33,12 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.Command;
 import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.console.AeshContext;
 import org.aesh.console.settings.SettingsBuilder;
 import org.junit.Test;
@@ -139,8 +141,7 @@ public class CommandLineParserTest {
     public void testParseGroupCommand() throws Exception {
 
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser parser = new AeshCommandContainerBuilder().create(GroupCommandTest.class).getParser();
-        GroupCommandTest g1 = (GroupCommandTest) parser.getCommand();
+        CommandLineParser<? extends Command> parser = new AeshCommandContainerBuilder<GroupCommandTest>().create(GroupCommandTest.class).getParser();
         ChildTest1 c1 = (ChildTest1) parser.getChildParser("child1").getCommand();
         ChildTest2 c2 = (ChildTest2) parser.getChildParser("child2").getCommand();
 
@@ -161,7 +162,7 @@ public class CommandLineParserTest {
     @Test
     public void testParseSuperGroupCommand() throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser superParser = new AeshCommandContainerBuilder().create(SuperGroupCommandTest.class).getParser();
+        CommandLineParser<? extends Command> superParser = new AeshCommandContainerBuilder<SuperGroupCommandTest>().create(SuperGroupCommandTest.class).getParser();
         CommandLineParser subSuperParser = superParser.getChildParser("sub");
 
         ChildTest1 c1 = (ChildTest1) subSuperParser.getChildParser("child1").getCommand();
@@ -255,6 +256,11 @@ public class CommandLineParserTest {
         parser.populateObject("subhelp --foo bar -h", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertEquals("bar", subHelp.foo);
         assertTrue(subHelp.getHelp());
+    }
+
+    @Test(expected = CommandLineParserException.class)
+    public void testInitializeGroupCommandWithArgument() throws Exception {
+        new AeshCommandContainerBuilder<GroupFailCommand>().create(GroupFailCommand.class);
     }
 
     @CommandDefinition(name = "test", description = "a simple test", aliases = {"toto"})
@@ -407,4 +413,21 @@ public class CommandLineParserTest {
         }
 
     }
+
+    @GroupCommandDefinition(name = "groupfail", description = "", groupCommands = {ChildTest1.class})
+    public class GroupFailCommand implements Command {
+
+        @Option
+        private String foo;
+
+        @Argument
+        private String bar;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+
+    }
+
 }

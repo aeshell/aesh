@@ -20,6 +20,7 @@
 package org.aesh.command.container;
 
 import org.aesh.command.Command;
+import org.aesh.command.parser.CommandLineParserException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -27,7 +28,7 @@ import org.aesh.command.Command;
  */
 public interface CommandContainerBuilder<C extends Command> {
 
-    CommandContainer<C> create(C command);
+    CommandContainer<C> create(C command) throws CommandLineParserException;
 
-    CommandContainer<C> create(Class<C> command);
+    CommandContainer<C> create(Class<C> command) throws CommandLineParserException;
 }

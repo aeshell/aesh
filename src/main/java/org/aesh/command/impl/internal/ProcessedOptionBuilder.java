@@ -40,6 +40,7 @@ import org.aesh.util.ReflectionUtil;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -148,8 +149,8 @@ public class ProcessedOptionBuilder {
         return apply(c -> c.isProperty = isProperty);
     }
 
-    public ProcessedOptionBuilder hasMultipleValues(boolean hasMultipleValues) {
-        return apply(c -> c.hasMultipleValues = hasMultipleValues);
+    public ProcessedOptionBuilder hasMultipleValues(boolean multipleValues) {
+        return apply(c -> c.hasMultipleValues = multipleValues);
     }
 
     public ProcessedOptionBuilder addDefaultValue(String defaultValue) {
@@ -161,10 +162,9 @@ public class ProcessedOptionBuilder {
     }
 
     public ProcessedOptionBuilder addAllDefaultValues(String[] defaultValues) {
-        for(String s : defaultValues)
-            this.defaultValues.add(s);
-        return this;
+        return apply(c -> c.defaultValues.addAll(Arrays.asList(defaultValues)));
     }
+
     public ProcessedOptionBuilder valueSeparator(char valueSeparator) {
         return apply(c -> c.valueSeparator = valueSeparator);
     }
@@ -311,7 +311,7 @@ public class ProcessedOptionBuilder {
         if(type == null)
             throw new OptionParserException("Type must be defined to build an Option");
 
-        if((shortName == Character.MIN_VALUE) && name.equals("") &&
+        if((shortName == Character.MIN_VALUE) && "".equals(name) &&
                 optionType != OptionType.ARGUMENTS && optionType != OptionType.ARGUMENT) {
             throw new OptionParserException("Either shortName or name must be set.");
         }

@@ -23,6 +23,7 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
@@ -30,16 +31,20 @@ import org.aesh.graphics.Graphics;
 import org.aesh.graphics.GraphicsConfiguration;
 
 import org.aesh.command.CommandException;
+import org.aesh.readline.Prompt;
+import org.aesh.readline.ReadlineConsole;
 import org.aesh.readline.terminal.Key;
 import org.aesh.readline.terminal.formatting.Color;
 import org.aesh.readline.terminal.formatting.TerminalColor;
+
+import java.io.IOException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class AeshGraphicsExample {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws CommandLineParserException, IOException {
         SettingsBuilder builder = SettingsBuilder.builder().logging(true);
         builder.enableMan(true);
 
@@ -52,14 +57,10 @@ public class AeshGraphicsExample {
                 .commandRegistry(registry)
                 .build();
 
-        /*
-        AeshConsole aeshConsole = new AeshConsoleBuilder()
-                .settings(settings)
-                .prompt(new Prompt("[aesh@rules]$ "))
-                .build();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt("[aesh@rules]$ "));
 
-        aeshConsole.start();
-        */
+        console.start();
     }
 
     @CommandDefinition(name="exit", description = "exit the program")

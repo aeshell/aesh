@@ -21,6 +21,7 @@ package org.aesh.console.aesh;
 
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.console.AeshContext;
 import org.aesh.command.invocation.CommandInvocation;
@@ -49,7 +50,7 @@ import org.aesh.command.CommandException;
 public class AeshCommandOptionValidatorTest {
 
     @Test
-    public void testOptionValidator() throws IOException, InterruptedException {
+    public void testOptionValidator() throws IOException, InterruptedException, CommandLineParserException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -75,7 +76,7 @@ public class AeshCommandOptionValidatorTest {
     }
 
     @Test
-    public void testMultipleOptionValidators() throws IOException, InterruptedException {
+    public void testMultipleOptionValidators() throws IOException, InterruptedException, CommandLineParserException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -106,7 +107,7 @@ public class AeshCommandOptionValidatorTest {
     }
 
     @Test
-    public void testMultipleOptionWithProvidersValidators() throws IOException {
+    public void testMultipleOptionWithProvidersValidators() throws IOException, CommandLineParserException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -142,7 +143,7 @@ public class AeshCommandOptionValidatorTest {
     }
 
     @Test
-    public void testRequiredOption() throws IOException {
+    public void testRequiredOption() throws IOException, CommandLineParserException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()

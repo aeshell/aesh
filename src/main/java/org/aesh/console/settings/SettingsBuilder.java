@@ -211,7 +211,7 @@ public class SettingsBuilder {
         return apply(c -> c.settings.setOptionActivatorProvider(optionActivatorProvider));
     }
 
-    public SettingsBuilder commandRegistry(CommandRegistry<? extends Command> commandRegistry) {
+    public SettingsBuilder commandRegistry(CommandRegistry commandRegistry) {
         return apply(c -> c.settings.setCommandRegistry(commandRegistry));
     }
 

@@ -26,6 +26,7 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.Command;
+import org.aesh.command.parser.CommandLineParserException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -69,7 +70,7 @@ public class AeshCommandContainer<C extends Command> extends DefaultCommandConta
 
     }
 
-    public void addChild(CommandContainer<C> commandContainer) {
+    public void addChild(CommandContainer<C> commandContainer) throws CommandLineParserException {
         getParser().addChildParser(commandContainer.getParser());
     }
 

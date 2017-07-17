@@ -26,6 +26,7 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
@@ -47,7 +48,7 @@ public class AeshCommandEndOperatorTest {
     private static int counter = 0;
 
     @Test
-    public void testEnd() throws IOException, InterruptedException {
+    public void testEnd() throws IOException, InterruptedException, CommandLineParserException {
         TestConnection connection = new TestConnection();
 
          CommandRegistry registry = new AeshCommandRegistryBuilder()

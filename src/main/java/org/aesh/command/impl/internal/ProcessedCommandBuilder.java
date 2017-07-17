@@ -64,7 +64,7 @@ public class ProcessedCommandBuilder<C extends Command> {
     }
 
     public ProcessedCommandBuilder<C> aliases(List<String> aliases) {
-        this.aliases = aliases == null ? Collections.<String>emptyList()
+        this.aliases = aliases == null ? Collections.emptyList()
                 : Collections.unmodifiableList(aliases);
         return this;
     }

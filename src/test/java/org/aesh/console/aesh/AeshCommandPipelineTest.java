@@ -21,6 +21,7 @@ package org.aesh.console.aesh;
 
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.command.CommandDefinition;
@@ -43,7 +44,7 @@ import static org.junit.Assert.assertEquals;
 public class AeshCommandPipelineTest {
 
     @Test
-    public void testPipeline() throws InterruptedException, IOException {
+    public void testPipeline() throws InterruptedException, IOException, CommandLineParserException {
         TestConnection connection = new TestConnection();
 
         FooCommand foo = new FooCommand();

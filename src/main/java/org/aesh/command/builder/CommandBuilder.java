@@ -49,13 +49,13 @@ public class CommandBuilder {
     private String name;
     private String description;
     private Command command;
-    private CommandValidator<?> validator;
+    private CommandValidator<Command> validator;
     private ResultHandler resultHandler;
     private ProcessedOption argument;
     private List<ProcessedOption> options;
     private List<CommandBuilder> children;
     private CommandLineParserException parserException;
-    private CommandPopulator<?, ? extends Command> populator;
+    private CommandPopulator<Object, Command> populator;
     private List<String> aliases;
 
     public CommandBuilder() {
@@ -87,17 +87,17 @@ public class CommandBuilder {
         return this;
     }
 
-    public CommandBuilder validator(CommandValidator<?> commandValidator) {
+    public CommandBuilder validator(CommandValidator<Command> commandValidator) {
         this.validator = commandValidator;
         return this;
     }
 
-    public CommandBuilder validator(Class<? extends CommandValidator> commandValidator) {
+    public CommandBuilder validator(Class<CommandValidator<Command>> commandValidator) {
         this.validator = ReflectionUtil.newInstance(commandValidator);
         return this;
     }
 
-    public CommandBuilder populator(CommandPopulator<?, ? extends Command> populator) {
+    public CommandBuilder populator(CommandPopulator<Object, Command> populator) {
         this.populator = populator;
         return this;
     }
@@ -107,7 +107,7 @@ public class CommandBuilder {
         return this;
     }
 
-    public CommandBuilder resultHandler(Class<? extends ResultHandler> resultHandler) {
+    public CommandBuilder resultHandler(Class<ResultHandler> resultHandler) {
         this.resultHandler = ReflectionUtil.newInstance(resultHandler);
         return this;
     }
@@ -169,11 +169,11 @@ public class CommandBuilder {
         }
     }
 
-    private AeshCommandLineParser createParser() throws CommandLineParserException {
+    private AeshCommandLineParser<Command> createParser() throws CommandLineParserException {
         if(command == null)
             throw new CommandLineParserException("Command object is null, cannot build command");
-        ProcessedCommand processedCommand = createProcessedCommand();
-        AeshCommandLineParser parser = new AeshCommandLineParser<>(processedCommand);
+        ProcessedCommand<Command> processedCommand = createProcessedCommand();
+        AeshCommandLineParser<Command> parser = new AeshCommandLineParser<>(processedCommand);
         if(children != null) {
             for(CommandBuilder builder : children) {
                 parser.addChildParser(builder.createParser());
@@ -182,8 +182,8 @@ public class CommandBuilder {
         return parser;
     }
 
-    private ProcessedCommand createProcessedCommand() throws CommandLineParserException {
-        return new ProcessedCommandBuilder()
+    private ProcessedCommand<Command> createProcessedCommand() throws CommandLineParserException {
+        return new ProcessedCommandBuilder<>()
                 .name(name)
                 .aliases(aliases)
                 .command(command)
