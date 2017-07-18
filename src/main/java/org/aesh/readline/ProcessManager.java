@@ -23,7 +23,9 @@ import org.aesh.command.Execution;
 import org.aesh.command.Executor;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.terminal.Connection;
+import org.aesh.utils.Config;
 
+import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -51,17 +53,43 @@ public class ProcessManager {
         return executionQueue.poll();
     }
 
+    private Execution<? extends CommandInvocation> peek() {
+        return executionQueue.peek();
+    }
+
     public boolean hasNext() {
         return !executionQueue.isEmpty();
     }
 
     public void processFinished(Process process) {
-        if(hasNext())
+
+        boolean haveOperatorInput = false;
+        //first check any operators
+        if( process.execution().getCommandInvocation().getConfiguration() != null &&
+                process.execution().getCommandInvocation().getConfiguration().getOutputRedirection() != null) {
+            try {
+                process.execution().getCommandInvocation().getConfiguration().getOutputRedirection().close();
+                haveOperatorInput = true;
+            }
+            catch (IOException e) {
+                conn.write("Aesh: "+e.getLocalizedMessage()+": No such file or directory"+ Config.getLineSeparator());
+            }
+        }
+
+        if(hasNext()) {
+            //if we have any operator input, we should see if we could inject it
+            if(haveOperatorInput)
+                injectOperatorData();
             executeNext();
+        }
         else if(console.running())
             console.read();
         else
             conn.close();
+    }
+
+    private void injectOperatorData() {
+        //might need to add a method on Execution since it has the ProcessedCommand
     }
 
     public void executeNext() {

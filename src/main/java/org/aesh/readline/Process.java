@@ -28,7 +28,6 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.terminal.Connection;
 import org.aesh.util.LoggerUtil;
 
-import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -73,20 +72,12 @@ public class Process extends Thread implements Consumer<Signal> {
 
         try {
             execution.execute();
-            //check if we have operators that needs to be called
-            if( execution.getCommandInvocation().getConfiguration() != null &&
-                    execution.getCommandInvocation().getConfiguration().getOutputRedirection() != null) {
-                execution.getCommandInvocation().getConfiguration().getOutputRedirection().close();
-            }
         }
         catch (CommandValidatorException | CommandException e) {
             conn.write(e.getMessage()+ Config.getLineSeparator());
         }
         catch (InterruptedException e) {
             // Ctlr-C interrupt
-        }
-        catch (IOException e) {
-            conn.write("Aesh: "+e.getLocalizedMessage()+": No such file or directory"+Config.getLineSeparator());
         }
         catch (Exception e) {
             e.printStackTrace();
