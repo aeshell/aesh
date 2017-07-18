@@ -30,17 +30,35 @@ import org.aesh.util.Parser;
 public abstract class OutputDelegate {
 
     private BufferedWriter writer;
+    private IOException exception;
+
     protected OutputDelegate() {
     }
 
     protected abstract BufferedWriter buildWriter() throws IOException;
 
-    public void write(String msg) throws IOException {
-        msg = Parser.stripAwayAnsiCodes(msg);
-        if (writer == null) {
-            writer = buildWriter();
+    public void write(String msg) {
+        try {
+            msg = Parser.stripAwayAnsiCodes(msg);
+            if (writer == null && exception == null) {
+                writer = buildWriter();
+            }
+            //if we have a writer, write
+            if(writer != null) {
+                writer.append(msg);
+                writer.flush();
+            }
         }
-        writer.append(msg);
-        writer.flush();
+        catch (IOException e) {
+            exception = e;
+        }
     }
+
+    public void close() throws IOException {
+        if(writer != null)
+            writer.close();
+        else if(exception != null)
+            throw exception;
+    }
+
 }

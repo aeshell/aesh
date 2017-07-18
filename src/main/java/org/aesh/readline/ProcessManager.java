@@ -21,7 +21,7 @@ package org.aesh.readline;
 
 import org.aesh.command.Execution;
 import org.aesh.command.Executor;
-import org.aesh.command.impl.invocation.AeshCommandInvocation;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.terminal.Connection;
 
 import java.util.Queue;
@@ -34,20 +34,20 @@ public class ProcessManager {
 
     private Connection conn;
     private Console console;
-    private Queue<Execution<AeshCommandInvocation>> executionQueue;
+    private Queue<Execution<? extends CommandInvocation>> executionQueue;
 
     public ProcessManager(Console console) {
         this.console = console;
         executionQueue = new ConcurrentLinkedQueue<>();
     }
 
-    public void execute(Executor<AeshCommandInvocation> executor, Connection conn) {
+    public void execute(Executor<? extends CommandInvocation> executor, Connection conn) {
         this.conn = conn;
         executionQueue.addAll(executor.getExecutions());
         executeNext();
     }
 
-    private Execution<AeshCommandInvocation> next() {
+    private Execution<? extends CommandInvocation> next() {
         return executionQueue.poll();
     }
 

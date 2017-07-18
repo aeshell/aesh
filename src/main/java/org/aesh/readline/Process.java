@@ -21,13 +21,14 @@ package org.aesh.readline;
 
 import org.aesh.command.Execution;
 import org.aesh.command.CommandException;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.terminal.tty.Signal;
 import org.aesh.utils.Config;
 import org.aesh.command.validator.CommandValidatorException;
-import org.aesh.command.impl.invocation.AeshCommandInvocation;
 import org.aesh.terminal.Connection;
 import org.aesh.util.LoggerUtil;
 
+import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -37,7 +38,7 @@ import java.util.logging.Logger;
 public class Process extends Thread implements Consumer<Signal> {
 
     private final Connection conn;
-    private final Execution<AeshCommandInvocation> execution;
+    private final Execution<? extends CommandInvocation> execution;
     private final ProcessManager manager;
     private volatile boolean running;
 
@@ -45,7 +46,7 @@ public class Process extends Thread implements Consumer<Signal> {
     private int pid;
 
     public Process(ProcessManager manager, Connection conn,
-                   Execution<AeshCommandInvocation> execution) {
+                   Execution<? extends CommandInvocation> execution) {
         this.manager = manager;
         this.conn = conn;
         this.execution = execution;
@@ -72,12 +73,20 @@ public class Process extends Thread implements Consumer<Signal> {
 
         try {
             execution.execute();
+            //check if we have operators that needs to be called
+            if( execution.getCommandInvocation().getConfiguration() != null &&
+                    execution.getCommandInvocation().getConfiguration().getOutputRedirection() != null) {
+                execution.getCommandInvocation().getConfiguration().getOutputRedirection().close();
+            }
         }
         catch (CommandValidatorException | CommandException e) {
             conn.write(e.getMessage()+ Config.getLineSeparator());
         }
         catch (InterruptedException e) {
             // Ctlr-C interrupt
+        }
+        catch (IOException e) {
+            conn.write("Aesh: "+e.getLocalizedMessage()+": No such file or directory"+Config.getLineSeparator());
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -93,7 +102,7 @@ public class Process extends Thread implements Consumer<Signal> {
         }
     }
 
-    public Execution<AeshCommandInvocation> execution() {
+    public Execution<? extends CommandInvocation> execution() {
         return execution;
     }
 

@@ -8,8 +8,6 @@ import org.aesh.terminal.tty.Size;
 import org.aesh.util.Parser;
 import org.aesh.utils.Config;
 
-import java.io.IOException;
-
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
@@ -24,13 +22,7 @@ public class ShellOutputDelegate implements Shell {
     }
 
     private void doWrite(String out) {
-        try {
-            output.write(out);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to write to buffer", e);
-        }
+        output.write(out);
     }
 
     @Override

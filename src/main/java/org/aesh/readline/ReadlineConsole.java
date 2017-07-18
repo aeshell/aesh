@@ -25,8 +25,8 @@ import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
 import org.aesh.command.impl.AeshCommandResolver;
-import org.aesh.command.impl.invocation.AeshCommandInvocation;
 import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
@@ -68,7 +68,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     private AeshContext context;
     private Readline readline;
     private AeshCompletionHandler completionHandler;
-    private CommandRuntime<AeshCommandInvocation> runtime;
+    private CommandRuntime<? extends CommandInvocation> runtime;
     private ProcessManager processManager;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
@@ -169,7 +169,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private void processLine(String line, Connection conn) {
         try {
-            Executor<AeshCommandInvocation> executor = runtime.buildExecutor(line);
+            Executor<? extends CommandInvocation> executor = runtime.buildExecutor(line);
             processManager.execute(executor, conn);
         }
         catch (IllegalArgumentException e) {
@@ -255,7 +255,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         */
     }
 
-    private CommandRuntime generateRuntime() {
+    private CommandRuntime<? extends CommandInvocation> generateRuntime() {
         return AeshCommandRuntimeBuilder.builder()
                 .settings(settings)
                 .commandInvocationBuilder(new AeshCommandInvocationBuilder(new ShellImpl(connection, readline), this))
