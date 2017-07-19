@@ -369,7 +369,7 @@ public final class ProcessedOption {
             else if(optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
                 if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
                     if(Set.class.isAssignableFrom(field.getType())) {
-                        Set tmpSet = new HashSet<Object>();
+                        Set tmpSet = new HashSet<>();
                         if(values.size() > 0) {
                             for(String in : values)
                                 tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
@@ -436,7 +436,7 @@ public final class ProcessedOption {
         this.ansiMode = ansiMode;
     }
 
-    private <String, T> Map<String, T> newHashMap() {
+    private <S, T> Map<S, T> newHashMap() {
         return new HashMap<>();
     }
 

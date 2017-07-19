@@ -34,7 +34,10 @@ import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
 import org.junit.Test;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 import static org.junit.Assert.assertEquals;
 
@@ -76,6 +79,7 @@ public class AeshCommandPipelineTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.println("hello");
+            commandInvocation.println("aesh");
             return CommandResult.SUCCESS;
         }
     }
@@ -90,6 +94,10 @@ public class AeshCommandPipelineTest {
                 if (commandInvocation.getConfiguration().getPipedData().available() > 0) {
                     counter++;
                 }
+                BufferedReader reader = new BufferedReader(new InputStreamReader(commandInvocation.getConfiguration().getPipedData()));
+
+                assertEquals("hello", reader.readLine());
+                assertEquals("aesh", reader.readLine());
             } catch (IOException ex) {
                 throw new CommandException(ex);
             }
