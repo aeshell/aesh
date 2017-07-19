@@ -25,7 +25,7 @@ apply plugin: 'signing'
 apply plugin: 'application'
 apply plugin: 'checkstyle'
 
-group = 'org.jboss.aesh'
+group = 'org.aesh'
 archivesBaseName = 'aesh'
 version = '1.0-SNAPSHOT'
 
