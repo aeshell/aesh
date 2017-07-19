@@ -21,6 +21,7 @@ package org.aesh.console.aesh;
 
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Argument;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
@@ -29,6 +30,7 @@ import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.Command;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.CommandResult;
+import org.aesh.io.Resource;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
@@ -37,7 +39,6 @@ import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 
 import static org.junit.Assert.assertEquals;
 
@@ -54,6 +55,7 @@ public class AeshCommandPipelineTest {
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(PipeCommand.class)
+                .command(BarCommand.class)
                 .command(foo)
                 .create();
 
@@ -70,6 +72,10 @@ public class AeshCommandPipelineTest {
         connection.read("pipe | foo" + Config.getLineSeparator());
         Thread.sleep(100);
         assertEquals(1, foo.getCounter());
+
+        connection.read("pipe | bar" + Config.getLineSeparator());
+        Thread.sleep(100);
+
         console.stop();
     }
 
@@ -108,4 +114,31 @@ public class AeshCommandPipelineTest {
             return counter;
         }
     }
+
+    @CommandDefinition(name = "bar", description = "")
+    public static class BarCommand implements Command {
+        private int counter = 0;
+
+        @Argument
+        Resource arg;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(arg.read()));
+                assertEquals("hello", reader.readLine());
+                assertEquals("aesh", reader.readLine());
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return CommandResult.SUCCESS;
+        }
+
+        public int getCounter() {
+            return counter;
+        }
+    }
+
 }

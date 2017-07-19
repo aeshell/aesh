@@ -32,6 +32,7 @@ import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
+import org.aesh.io.PipelineResource;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.utils.ANSI;
 
@@ -367,46 +368,17 @@ public final class ProcessedOption {
                 }
             }
             else if(optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
-                if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
-                    if(Set.class.isAssignableFrom(field.getType())) {
-                        Set tmpSet = new HashSet<>();
-                        if(values.size() > 0) {
-                            for(String in : values)
-                                tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
-                        }
-                        else if(defaultValues.size() > 0) {
-                            for(String in : defaultValues)
-                                tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
-                        }
+                Collection tmpSet = initializeCollection(field);
+                if(values.size() > 0) {
+                    for(String in : values)
+                        tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
+                }
+                else if(defaultValues.size() > 0) {
+                    for(String in : defaultValues)
+                        tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
+                }
 
-                        field.set(instance, tmpSet);
-                    }
-                    else if(List.class.isAssignableFrom(field.getType())) {
-                        List tmpList = new ArrayList();
-                        if(values.size() > 0) {
-                            for(String in : values)
-                                tmpList.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
-                        }
-                        else if(defaultValues.size() > 0) {
-                            for(String in : defaultValues)
-                                tmpList.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
-                        }
-                        field.set(instance, tmpList);
-                    }
-                    //todo: should support more that List/Set
-                }
-                else {
-                    Collection tmpInstance = (Collection) field.getType().newInstance();
-                    if(values.size() > 0) {
-                        for(String in : values)
-                            tmpInstance.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
-                    }
-                    else if(defaultValues.size() > 0) {
-                        for(String in : defaultValues)
-                            tmpInstance.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
-                    }
-                    field.set(instance, tmpInstance);
-                }
+                field.set(instance, tmpSet);
             }
             else if(optionType == OptionType.GROUP) {
                 if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
@@ -426,6 +398,40 @@ public final class ProcessedOption {
         catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InstantiationException e) {
             e.printStackTrace();
         }
+    }
+
+    private Collection initializeCollection(Field field) throws IllegalAccessException, InstantiationException {
+        if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
+            if(Set.class.isAssignableFrom(field.getType()))
+                return  new HashSet<>();
+            else if(List.class.isAssignableFrom(field.getType()))
+                return new ArrayList();
+            else
+                return null;
+        }
+        else
+            return (Collection) field.getType().newInstance();
+    }
+
+    public void injectResource(PipelineResource resource, Object instance) {
+        try {
+            Field field = getField(instance.getClass(), fieldName);
+            if(!Modifier.isPublic(field.getModifiers()))
+                field.setAccessible(true);
+
+            if(optionType == OptionType.ARGUMENT) {
+                field.set(instance, resource);
+            }
+            else {
+                Collection set = initializeCollection(field);
+                if(set != null)
+                    set.add(resource);
+            }
+
+        } catch (NoSuchFieldException | IllegalAccessException | InstantiationException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void updateInvocationProviders(InvocationProviders invocationProviders) {

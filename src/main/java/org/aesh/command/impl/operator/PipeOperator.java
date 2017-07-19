@@ -20,7 +20,6 @@
 package org.aesh.command.impl.operator;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

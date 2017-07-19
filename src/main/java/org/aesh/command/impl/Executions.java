@@ -29,6 +29,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.Executable;
 import org.aesh.command.Execution;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.operator.AppendOutputRedirectionOperator;
 import org.aesh.command.impl.operator.EndOperator;
 import org.aesh.command.impl.operator.OutputRedirectionOperator;
@@ -44,6 +45,8 @@ import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
+import org.aesh.io.PipelineResource;
+import org.aesh.io.Resource;
 import org.aesh.parser.ParsedLine;
 import org.aesh.command.validator.CommandValidatorException;
 
@@ -117,6 +120,25 @@ class Executions {
                 }
             }
             return result;
+        }
+
+        @Override
+        public void updateInjectedArgumentWithPipelinedData(PipelineResource resource) {
+            ProcessedOption arg = checkProcessedCommandForResourceArgument();
+            if(arg != null)
+                arg.injectResource(resource, cmd.getCommand());
+        }
+
+        private ProcessedOption checkProcessedCommandForResourceArgument() {
+            if(cmd.hasArguments() &&
+                    Resource.class.isAssignableFrom(cmd.getArguments().type())) {
+                return cmd.getArguments();
+            }
+            else if(cmd.hasArgument() &&
+                    Resource.class.isAssignableFrom(cmd.getArgument().type())) {
+                return cmd.getArgument();
+            }
+            return null;
         }
     }
 

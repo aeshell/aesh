@@ -55,9 +55,9 @@ public abstract class OutputDelegate {
     }
 
     public void close() throws IOException {
-        if(writer != null)
-            writer.close();
-        else if(exception != null)
+        //if(writer != null)
+        //    writer.close();
+        if(exception != null)
             throw exception;
     }
 

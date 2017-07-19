@@ -22,6 +22,7 @@ package org.aesh.command;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.io.PipelineResource;
 
 /**
  * Contains an execution content.
@@ -40,4 +41,6 @@ public interface Execution<T extends CommandInvocation> {
 
     CommandResult execute() throws CommandException, CommandValidatorException,
             InterruptedException;
+
+    void updateInjectedArgumentWithPipelinedData(PipelineResource resource);
 }
