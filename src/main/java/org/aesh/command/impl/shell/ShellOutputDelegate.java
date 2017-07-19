@@ -41,6 +41,11 @@ public class ShellOutputDelegate implements Shell {
     }
 
     @Override
+    public void write(char out) {
+        output.write(String.valueOf(out));
+    }
+
+    @Override
     public String readLine() throws InterruptedException {
         return delegate.readLine();
     }

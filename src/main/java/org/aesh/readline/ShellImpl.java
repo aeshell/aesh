@@ -58,6 +58,11 @@ class ShellImpl implements Shell {
     }
 
     @Override
+    public void write(char out) {
+       connection.stdoutHandler().accept(new int[]{out});
+    }
+
+    @Override
     public String readLine() throws InterruptedException {
         return readLine(new Prompt(""));
     }

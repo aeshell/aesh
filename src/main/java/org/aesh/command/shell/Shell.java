@@ -45,6 +45,11 @@ public interface Shell {
     void write(int[] out);
 
     /**
+     * @param out write out to the output stream
+     */
+    void write(char out);
+
+    /**
      * Blocking call which will return when user press the "enter" key
      * @return input line
      */

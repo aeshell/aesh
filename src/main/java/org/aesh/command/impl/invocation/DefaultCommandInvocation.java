@@ -151,6 +151,11 @@ public class DefaultCommandInvocation implements CommandInvocation{
         }
 
         @Override
+        public void write(char out) {
+            System.out.println(out);
+        }
+
+        @Override
         public String readLine() throws InterruptedException {
             return null;
         }
