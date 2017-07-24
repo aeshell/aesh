@@ -259,6 +259,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         return AeshCommandRuntimeBuilder.builder()
                 .settings(settings)
                 .commandInvocationBuilder(new AeshCommandInvocationBuilder(new ShellImpl(connection, readline), this))
+                .aeshContext(context)
                 .operators(EnumSet.allOf(OperatorType.class))
                 .build();
     }
