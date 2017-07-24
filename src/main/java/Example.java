@@ -133,7 +133,7 @@ public class Example {
                     }
                 });
                 */
-       CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
                 .command(fooCommand.create())
                 .command(HiddenCommand.class)
@@ -141,6 +141,7 @@ public class Example {
                 .command(TestConsoleCommand.class)
                 .command(PromptCommand.class)
                 .command(RunCommand.class)
+                .command(ClearCommand.class)
                 .command(GroupCommand.class)
                 //example on how to build a command with a simple lambda
                 .command(new CommandBuilder().name("quit").command(commandInvocation -> {
@@ -353,6 +354,16 @@ public class Example {
                         commandInvocation.getShell().writeln(f.toString());
                 }
             }
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "clear", description = "")
+    public static class ClearCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            commandInvocation.getShell().clear();
             return CommandResult.SUCCESS;
         }
     }
