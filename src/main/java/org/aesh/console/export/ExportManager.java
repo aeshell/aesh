@@ -104,7 +104,7 @@ public class ExportManager {
             String value = getVariable(key);
 
             if (value == null)
-                return "";
+                return null;
 
             if (value.indexOf(DOLLAR) == -1)
                 return value;
@@ -152,7 +152,7 @@ public class ExportManager {
 
     private String parseValue(String value) {
         if (value == null)
-            return "";
+            return null;
 
         if (value.indexOf(DOLLAR) == -1) {
             return value;
@@ -183,7 +183,7 @@ public class ExportManager {
                 }
                 return group2;
             }
-            return "";
+            return null;
         }
 
         Matcher matcher = variablePattern.matcher(value);
@@ -210,7 +210,7 @@ public class ExportManager {
             }
             return group1 + group3;
         }
-        return "";
+        return null;
     }
 
     public String listAllVariables() {

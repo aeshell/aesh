@@ -42,12 +42,7 @@ public class ExportCompletion implements Completion {
     @Override
     public void complete(CompleteOperation completeOperation) {
 
-        if(completeOperation.getBuffer() == null || completeOperation.getBuffer().length() < 1) {
-            completeOperation.addCompletionCandidate(EXPORT);
-        }
-        else if(EXPORT.startsWith(completeOperation.getBuffer()))
-            completeOperation.addCompletionCandidate(EXPORT);
-        else if(EXPORT_SPACE.equals(completeOperation.getBuffer()) ||
+        if(EXPORT_SPACE.equals(completeOperation.getBuffer()) ||
                 EXPORT.equals(completeOperation.getBuffer().trim())) {
             completeOperation.addCompletionCandidates(exportManager.getAllNamesWithEquals());
             completeOperation.setOffset(completeOperation.getCursor());
