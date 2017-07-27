@@ -45,8 +45,8 @@ public class ParserGeneratorTest {
     @Test
     public void testClassGenerator() throws CommandLineParserException {
 
-        Test1 test1 = new Test1();
-        CommandLineParser<Test1> parser = new AeshCommandContainerBuilder<Test1>().create(test1).getParser();
+        Test1<CommandInvocation> test1 = new Test1<>();
+        CommandLineParser<Test1<CommandInvocation>> parser = new AeshCommandContainerBuilder<Test1<CommandInvocation>,CommandInvocation>().create(test1).getParser();
 
         assertEquals("a simple test", parser.getProcessedCommand().description());
         List<ProcessedOption> options = parser.getProcessedCommand().getOptions();
@@ -59,14 +59,14 @@ public class ParserGeneratorTest {
         assertEquals("bar", options.get(2).name());
         assertFalse(options.get(2).hasValue());
 
-        Test2 test2 = new Test2();
-        CommandLineParser<Test2> parser2 = new AeshCommandContainerBuilder<Test2>().create(test2).getParser();
+        Test2<CommandInvocation> test2 = new Test2<>();
+        CommandLineParser<Test2<CommandInvocation>> parser2 = new AeshCommandContainerBuilder<Test2<CommandInvocation>,CommandInvocation>().create(test2).getParser();
         assertEquals("more [options] file...", parser2.getProcessedCommand().description());
         options = parser2.getProcessedCommand().getOptions();
         assertEquals("d", options.get(0).shortName());
         assertEquals("V", options.get(1).shortName());
 
-        CommandLineParser<Test3> parser3 = new AeshCommandContainerBuilder<Test3>().create(Test3.class).getParser();
+        CommandLineParser<Test3<CommandInvocation>> parser3 = new AeshCommandContainerBuilder<Test3<CommandInvocation>,CommandInvocation>().create(new Test3<>()).getParser();
         options = parser3.getProcessedCommand().getOptions();
         assertEquals("t", options.get(0).shortName());
         assertEquals("e", options.get(1).shortName());
@@ -74,7 +74,7 @@ public class ParserGeneratorTest {
     }
 
     @CommandDefinition(name = "test", description = "a simple test")
-    public class Test1 implements Command {
+    public class Test1<CI extends CommandInvocation> implements Command<CI> {
         @Option(shortName = 'f', name = "foo", description = "enable foo")
         private String foo;
 
@@ -85,13 +85,13 @@ public class ParserGeneratorTest {
         private Boolean bar;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
 
     @CommandDefinition(name = "test", description = "more [options] file...")
-    public class Test2 implements Command {
+    public class Test2<CI extends CommandInvocation> implements Command<CI> {
 
         @Option(shortName = 'd', description = "display help instead of ring bell")
         private String display;
@@ -100,13 +100,13 @@ public class ParserGeneratorTest {
         private String version;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
 
     @CommandDefinition(name = "test", description = "more [options] file...")
-    public class Test3 implements Command {
+    public class Test3<CI extends CommandInvocation> implements Command<CI> {
 
         @Option(shortName = 't', name = "target", description = "target directory")
         private String target;
@@ -115,7 +115,7 @@ public class ParserGeneratorTest {
         private String test;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }

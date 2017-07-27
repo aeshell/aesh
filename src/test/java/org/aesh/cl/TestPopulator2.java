@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 @CommandDefinition(name = "test", description = "a simple test")
-public class TestPopulator2 implements Command {
+public class TestPopulator2<CI extends CommandInvocation> implements Command<CI> {
 
     @OptionList(shortName = 'b')
     private Set<String> basicSet;
@@ -63,7 +63,7 @@ public class TestPopulator2 implements Command {
     }
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+    public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
         return CommandResult.SUCCESS;
     }
 }

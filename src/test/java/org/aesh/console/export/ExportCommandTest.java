@@ -61,36 +61,29 @@ public class ExportCommandTest {
 
         connection.read("exp");
         connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("export ");
         //outputStream.flush();
-        Thread.sleep(100);
-        //assertEquals("export ", ((AeshConsoleImpl) console).getBuffer());
 
 
         connection.read("FOO=/tmp"+ Config.getLineSeparator());
-        connection.read("export"+Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(100);
-        //assertTrue(byteArrayOutputStream.toString().contains("FOO=/tmp"));
+        connection.clearOutputBuffer();
+        connection.read("export ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("export FOO=/tmp");
 
         connection.read("export BAR=$F");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
-        Thread.sleep(100);
-        //assertEquals("export BAR=$FOO ", ((AeshConsoleImpl) console).getBuffer());
+        connection.assertBuffer("export bar=$FOO");
 
         connection.read(backSpace.getFirstValue());
         connection.read(":/opt"+Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(100);
         connection.read("export"+Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(400);
+        connection.assertBufferEndsWith("BAR=/tmp:/opt");
         //assertTrue(byteArrayOutputStream.toString().contains("BAR=/tmp:/opt"));
 
+        connection.clearOutputBuffer();
         connection.read("$");
         connection.read(completeChar.getFirstValue());
-        //outputStream.flush();
-        Thread.sleep(400);
         //assertTrue(byteArrayOutputStream.toString().contains("$FOO"));
         //assertTrue(byteArrayOutputStream.toString().contains("$BAR"));
 

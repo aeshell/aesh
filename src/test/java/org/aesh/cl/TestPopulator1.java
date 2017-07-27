@@ -30,7 +30,7 @@ import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 
 @CommandDefinition(name = "test", description = "a simple test")
-public class TestPopulator1 implements Command {
+public class TestPopulator1<CI extends CommandInvocation> implements Command<CI> {
 
     @Option(shortName = 'X', name = "X", description = "enable X", hasValue = false)
     private Boolean enableX;
@@ -81,7 +81,7 @@ public class TestPopulator1 implements Command {
     }
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+    public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
         return CommandResult.SUCCESS;
     }
 }

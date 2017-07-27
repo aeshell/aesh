@@ -40,7 +40,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 @CommandDefinition(name = "test", description = "a simple test")
-public class TestPopulator5 implements Command {
+public class TestPopulator5 implements Command<CommandInvocation> {
 
     @Option(shortName = 'v', validator = LongOptionValidator.class)
     private Long veryLong;

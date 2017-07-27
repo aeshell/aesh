@@ -28,6 +28,7 @@ import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
 import org.aesh.command.parser.RequiredOptionException;
@@ -74,7 +75,7 @@ public class CommandLinePopulatorTest {
 
     @Test
     public void testSimpleObjects() throws Exception {
-        CommandLineParser<TestPopulator1> parser = new AeshCommandContainerBuilder<TestPopulator1>().create(TestPopulator1.class).getParser();
+        CommandLineParser<TestPopulator1<CommandInvocation>> parser = new AeshCommandContainerBuilder<TestPopulator1<CommandInvocation>, CommandInvocation>().create(new TestPopulator1<>()).getParser();
 
         TestPopulator1 test1 = parser.getCommand();
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
@@ -138,7 +139,7 @@ public class CommandLinePopulatorTest {
 
     @Test(expected = OptionParserException.class)
     public void testListObjects() throws Exception {
-        CommandLineParser<TestPopulator2> parser = new AeshCommandContainerBuilder<TestPopulator2>().create(TestPopulator2.class).getParser();
+        CommandLineParser<TestPopulator2<CommandInvocation>> parser = new AeshCommandContainerBuilder<TestPopulator2<CommandInvocation>, CommandInvocation>().create(new TestPopulator2<>()).getParser();
         TestPopulator2 test2 = parser.getCommand();
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         parser.parse("test -b s1,s2,s3,s4");
@@ -209,7 +210,7 @@ public class CommandLinePopulatorTest {
 
     @Test
     public void testListObjects2() throws Exception {
-        CommandLineParser<TestPopulator5> parser = new AeshCommandContainerBuilder<TestPopulator5>().create(TestPopulator5.class).getParser();
+        CommandLineParser<TestPopulator5> parser = new AeshCommandContainerBuilder<TestPopulator5, CommandInvocation>().create(new TestPopulator5()).getParser();
         TestPopulator5 test5 = parser.getCommand();
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         parser.parse("test --strings foo1 --bar ");
@@ -220,8 +221,8 @@ public class CommandLinePopulatorTest {
 
     @Test(expected = OptionParserException.class)
     public void testGroupObjects() throws Exception {
-        CommandLineParser<TestPopulator3> parser = new AeshCommandContainerBuilder<TestPopulator3>().create(TestPopulator3.class).getParser();
-        TestPopulator3 test3 = parser.getCommand();
+        CommandLineParser<TestPopulator3<CommandInvocation>> parser = new AeshCommandContainerBuilder<TestPopulator3<CommandInvocation>, CommandInvocation>().create(new TestPopulator3<>()).getParser();
+        TestPopulator3<CommandInvocation> test3 = parser.getCommand();
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         parser.parse("test -bX1=foo -bX2=bar");
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
@@ -249,7 +250,7 @@ public class CommandLinePopulatorTest {
 
     @Test
     public void testArguments() throws Exception {
-        CommandLineParser<TestPopulator4>  parser = new AeshCommandContainerBuilder<TestPopulator4>().create(TestPopulator4.class).getParser();
+        CommandLineParser<TestPopulator4<CommandInvocation>> parser = new AeshCommandContainerBuilder<TestPopulator4<CommandInvocation>, CommandInvocation>().create(new TestPopulator4<>()).getParser();
         TestPopulator4 test4 =  parser.getCommand();
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         parser.parse("test test2.txt test4.txt");
@@ -324,7 +325,7 @@ public class CommandLinePopulatorTest {
 
     @Test
     public void testCustomConverter() throws Exception {
-        CommandLineParser<TestPopulator5>  parser = new AeshCommandContainerBuilder<TestPopulator5>().create(TestPopulator5.class).getParser();
+        CommandLineParser<TestPopulator5> parser = new AeshCommandContainerBuilder<TestPopulator5, CommandInvocation>().create(new TestPopulator5()).getParser();
         TestPopulator5 test5 = parser.getCommand();
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         parser.parse("test test2.txt test4.txt");
@@ -343,7 +344,7 @@ public class CommandLinePopulatorTest {
     @Test(expected = OptionValidatorException.class)
     public void testValidator() throws OptionValidatorException {
         try {
-            CommandLineParser<TestPopulator5>  parser = new AeshCommandContainerBuilder<TestPopulator5>().create(TestPopulator5.class).getParser();
+            CommandLineParser<TestPopulator5> parser = new AeshCommandContainerBuilder<TestPopulator5, CommandInvocation>().create(new TestPopulator5()).getParser();
             TestPopulator5 test5 = parser.getCommand();
             AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
             parser.parse("test -v 42");
@@ -361,7 +362,7 @@ public class CommandLinePopulatorTest {
     @Test
     public void testValidator2() {
         try {
-            CommandLineParser<TestPopulator5>  parser = new AeshCommandContainerBuilder<TestPopulator5>().create(TestPopulator5.class).getParser();
+            CommandLineParser<TestPopulator5> parser = new AeshCommandContainerBuilder<TestPopulator5, CommandInvocation>().create(new TestPopulator5()).getParser();
             TestPopulator5 test5 = parser.getCommand();
             AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
             parser.parse("test --longs 42;43;44 -v 42");
@@ -388,7 +389,7 @@ public class CommandLinePopulatorTest {
     @Test
     public void testRequiredArguments() {
         try {
-            CommandLineParser<TestPopulator4>  parser = new AeshCommandContainerBuilder<TestPopulator4>().create(TestPopulator4.class).getParser();
+            CommandLineParser<TestPopulator4<CommandInvocation>> parser = new AeshCommandContainerBuilder<TestPopulator4<CommandInvocation>, CommandInvocation>().create(new TestPopulator4<>()).getParser();
             parser.getCommand();
             AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
             parser.parse("test --veryLong 42");
@@ -402,7 +403,7 @@ public class CommandLinePopulatorTest {
 
     @Test
     public void testSub() throws Exception {
-        CommandLineParser<SubHelp> parser = new AeshCommandContainerBuilder<SubHelp>().create(SubHelp.class).getParser();
+        CommandLineParser<SubHelp<CommandInvocation>> parser = new AeshCommandContainerBuilder<SubHelp<CommandInvocation>, CommandInvocation>().create(new SubHelp<>()).getParser();
 
         SubHelp test1 = parser.getCommand();
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();

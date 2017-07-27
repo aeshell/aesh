@@ -22,15 +22,16 @@ package org.aesh.command.registry;
 import java.util.List;
 import org.aesh.command.Command;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 
 /**
  *
  * @author jdenise@redhat.com
  */
-public interface MutableCommandRegistry<C extends Command> extends CommandRegistry<C> {
+public interface MutableCommandRegistry<C extends Command<CI>,CI extends CommandInvocation> extends CommandRegistry<C,CI> {
 
-    void addCommand(CommandContainer<C> container);
+    void addCommand(CommandContainer<C,CI> container);
 
     void addCommand(C command) throws CommandLineParserException;
 
@@ -38,7 +39,7 @@ public interface MutableCommandRegistry<C extends Command> extends CommandRegist
 
     void addAllCommands(List<C> commands) throws CommandLineParserException;
 
-    void addAllCommandContainers(List<CommandContainer<C>> commands);
+    void addAllCommandContainers(List<CommandContainer<C,CI>> commands);
 
     void removeCommand(String name);
 }

@@ -26,7 +26,7 @@ import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.AeshCommandRuntime;
-import org.aesh.command.impl.invocation.DefaultCommandInvocationBuilder;
+import org.aesh.command.impl.invocation.DefaultCommandInvocation;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
@@ -62,7 +62,7 @@ public class AeshCommandRuntimeBuilder {
 
     private static final EnumSet<OperatorType> NO_OPERATORS = EnumSet.noneOf(OperatorType.class);
 
-    private CommandRegistry<? extends Command> registry;
+    private CommandRegistry<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> registry;
     private CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider;
     private CommandNotFoundHandler commandNotFoundHandler;
     private CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider;
@@ -71,7 +71,7 @@ public class AeshCommandRuntimeBuilder {
     private OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider;
     private CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider;
     private AeshContext ctx;
-    private CommandInvocationBuilder<? extends CommandInvocation> commandInvocationBuilder;
+    private CommandInvocationBuilder<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> commandInvocationBuilder;
 
     private boolean parseBrackets;
     private EnumSet<OperatorType> operators;
@@ -93,7 +93,7 @@ public class AeshCommandRuntimeBuilder {
         return this;
     }
 
-    public AeshCommandRuntimeBuilder commandRegistry(CommandRegistry<? extends Command> registry) {
+    public AeshCommandRuntimeBuilder commandRegistry(CommandRegistry<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> registry) {
         this.registry = registry;
         return this;
     }
@@ -131,7 +131,7 @@ public class AeshCommandRuntimeBuilder {
         return apply(c -> c.commandActivatorProvider = commandActivatorProvider);
     }
 
-    public AeshCommandRuntimeBuilder commandInvocationBuilder(CommandInvocationBuilder<? extends CommandInvocation> commandInvocationBuilder) {
+    public AeshCommandRuntimeBuilder commandInvocationBuilder(CommandInvocationBuilder<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> commandInvocationBuilder) {
         return apply(c -> c.commandInvocationBuilder = commandInvocationBuilder);
     }
 
@@ -186,7 +186,7 @@ public class AeshCommandRuntimeBuilder {
         }
 
         if(commandInvocationBuilder == null)
-            commandInvocationBuilder = new DefaultCommandInvocationBuilder();
+            commandInvocationBuilder = (CommandInvocationBuilder) (runtime, configuration) -> new DefaultCommandInvocation<>(runtime, configuration);
 
         if (ctx == null) {
             ctx = new DefaultAeshContext();

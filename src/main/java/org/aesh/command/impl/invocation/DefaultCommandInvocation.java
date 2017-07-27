@@ -20,6 +20,8 @@
 package org.aesh.command.impl.invocation;
 
 import java.io.IOException;
+
+import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
@@ -39,16 +41,16 @@ import org.aesh.terminal.tty.Size;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class DefaultCommandInvocation implements CommandInvocation{
+public class DefaultCommandInvocation<C extends Command<DefaultCommandInvocation>> implements CommandInvocation{
 
 
     private final Shell shell = new DefaultShell();
 
-    private final CommandRuntime<DefaultCommandInvocation> processor;
+    private final CommandRuntime<C,DefaultCommandInvocation> processor;
 
     private final CommandInvocationConfiguration config;
 
-    public DefaultCommandInvocation(CommandRuntime<DefaultCommandInvocation> processor, CommandInvocationConfiguration config) {
+    public DefaultCommandInvocation(CommandRuntime<C, DefaultCommandInvocation> processor, CommandInvocationConfiguration config) {
         this.processor = processor;
         this.config = config;
     }

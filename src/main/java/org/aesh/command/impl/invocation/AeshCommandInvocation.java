@@ -21,6 +21,8 @@
 package org.aesh.command.impl.invocation;
 
 import java.io.IOException;
+
+import org.aesh.command.Command;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.impl.shell.ShellOutputDelegate;
 import org.aesh.command.parser.CommandLineParserException;
@@ -40,15 +42,15 @@ import org.aesh.readline.action.KeyAction;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public final class AeshCommandInvocation implements CommandInvocation {
+public final class AeshCommandInvocation<C extends Command<AeshCommandInvocation>> implements CommandInvocation {
 
     private final Console console;
     private final Shell shell;
-    private final CommandRuntime<AeshCommandInvocation> runtime;
+    private final CommandRuntime<C,AeshCommandInvocation> runtime;
     private final CommandInvocationConfiguration config;
 
     public AeshCommandInvocation(Console console, Shell shell,
-            CommandRuntime<AeshCommandInvocation> runtime,
+            CommandRuntime<C,AeshCommandInvocation> runtime,
             CommandInvocationConfiguration config) {
         this.console = console;
         this.runtime = runtime;

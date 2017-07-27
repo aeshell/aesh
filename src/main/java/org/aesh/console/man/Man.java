@@ -52,7 +52,7 @@ public class Man extends AeshFileDisplayer {
     private final List<String> manPages;
 
     private final ManFileParser fileParser;
-    private CommandRegistry<? extends Command> registry;
+    private CommandRegistry<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> registry;
     private final ManProvider manProvider;
 
     public Man(ManProvider manProvider) {
@@ -62,7 +62,7 @@ public class Man extends AeshFileDisplayer {
         fileParser = new ManFileParser();
     }
 
-    public void setRegistry(CommandRegistry<? extends Command> registry) {
+    public void setRegistry(CommandRegistry<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> registry) {
         this.registry = registry;
     }
 

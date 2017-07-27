@@ -34,12 +34,12 @@ import org.aesh.parser.ParsedLine;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public abstract class DefaultCommandContainer<C extends Command> implements CommandContainer<C> {
+public abstract class DefaultCommandContainer<C extends Command<CI>, CI extends CommandInvocation> implements CommandContainer<C,CI> {
 
     @Override
     public CommandContainerResult executeCommand(ParsedLine line, InvocationProviders invocationProviders,
                                                  AeshContext aeshContext,
-                                                 CommandInvocation commandInvocation)
+                                                 CI commandInvocation)
             throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException {
 
         getParser().parse(line.iterator(), CommandLineParser.Mode.STRICT);
@@ -48,7 +48,7 @@ public abstract class DefaultCommandContainer<C extends Command> implements Comm
 
     private CommandContainerResult executeCommand(InvocationProviders invocationProviders,
             AeshContext aeshContext,
-            CommandInvocation commandInvocation)
+            CI commandInvocation)
             throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException {
 
         getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);

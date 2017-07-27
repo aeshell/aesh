@@ -39,7 +39,7 @@ import org.aesh.parser.ParsedLine;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandContainer<C extends Command> extends AutoCloseable {
+public interface CommandContainer<C extends Command<CI>,CI extends CommandInvocation> extends AutoCloseable {
 
     /**
      * @return parser generated from Command
@@ -64,7 +64,7 @@ public interface CommandContainer<C extends Command> extends AutoCloseable {
 
     CommandContainerResult executeCommand(ParsedLine line, InvocationProviders invocationProviders,
                                           AeshContext aeshContext,
-                                          CommandInvocation commandInvocation)
+                                          CI commandInvocation)
             throws CommandLineParserException, OptionValidatorException,
             CommandValidatorException, CommandException, InterruptedException;
 

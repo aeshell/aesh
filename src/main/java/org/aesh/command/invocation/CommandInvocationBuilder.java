@@ -19,13 +19,14 @@
  */
 package org.aesh.command.invocation;
 
+import org.aesh.command.Command;
 import org.aesh.command.CommandRuntime;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandInvocationBuilder<CI extends CommandInvocation> {
+public interface CommandInvocationBuilder<C extends Command<CI>,CI extends CommandInvocation> {
 
-    CI build(CommandRuntime<CI> runtime,
+    CI build(CommandRuntime<C,CI> runtime,
             CommandInvocationConfiguration configuration);
 }

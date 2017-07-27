@@ -24,6 +24,7 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandResolver;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
@@ -31,32 +32,32 @@ import org.aesh.parser.ParsedLine;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandResolver<C extends Command> implements CommandResolver<C> {
+public class AeshCommandResolver<C extends Command<CI>,CI extends CommandInvocation> implements CommandResolver<C,CI> {
 
-    private CommandRegistry<C> registry;
+    private CommandRegistry<C,CI> registry;
     private LineParser lineParser;
 
-    public AeshCommandResolver(CommandRegistry<C> commandRegistry) {
+    public AeshCommandResolver(CommandRegistry<C,CI> commandRegistry) {
         this.registry = commandRegistry;
         lineParser = new LineParser();
     }
 
-    public CommandRegistry<C> getRegistry() {
+    public CommandRegistry<C,CI> getRegistry() {
         return registry;
     }
 
     @Override
-    public CommandContainer<C> resolveCommand(String line) throws CommandNotFoundException {
+    public CommandContainer<C,CI> resolveCommand(String line) throws CommandNotFoundException {
         return getCommand(lineParser.parseLine(line), line);
     }
 
     @Override
-    public CommandContainer<C> resolveCommand(ParsedLine line) throws CommandNotFoundException {
+    public CommandContainer<C,CI> resolveCommand(ParsedLine line) throws CommandNotFoundException {
         return getCommand(line, line.line());
     }
 
     @Override
-    public CommandContainer<C> resolveCommand(String name, String line) throws CommandNotFoundException {
+    public CommandContainer<C,CI> resolveCommand(String name, String line) throws CommandNotFoundException {
         return getCommand(name, line);
     }
 
@@ -69,7 +70,7 @@ public class AeshCommandResolver<C extends Command> implements CommandResolver<C
      * @return command
      * @throws CommandNotFoundException
      */
-    private CommandContainer<C> getCommand(ParsedLine aeshLine, String line) throws CommandNotFoundException {
+    private CommandContainer<C,CI> getCommand(ParsedLine aeshLine, String line) throws CommandNotFoundException {
         return getCommand(aeshLine.words().get(0).word(), line);
     }
 
@@ -83,7 +84,7 @@ public class AeshCommandResolver<C extends Command> implements CommandResolver<C
      * @return command
      * @throws CommandNotFoundException
      */
-    private CommandContainer<C> getCommand(String commandName, String line) throws CommandNotFoundException {
+    private CommandContainer<C,CI> getCommand(String commandName, String line) throws CommandNotFoundException {
         try {
             return registry.getCommand(commandName, line);
         }

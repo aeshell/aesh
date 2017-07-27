@@ -20,15 +20,16 @@
 package org.aesh.command.container;
 
 import org.aesh.command.Command;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  * @author <a href="mailto:danielsoro@gmail.com>Daniel Cunha (soro)</a>
  */
-public interface CommandContainerBuilder<C extends Command> {
+public interface CommandContainerBuilder<C extends Command<CI>, CI extends CommandInvocation> {
 
-    CommandContainer<C> create(C command) throws CommandLineParserException;
+    CommandContainer<C,CI> create(C command) throws CommandLineParserException;
 
-    CommandContainer<C> create(Class<C> command) throws CommandLineParserException;
+    CommandContainer<C,CI> create(Class<C> command) throws CommandLineParserException;
 }

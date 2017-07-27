@@ -35,7 +35,7 @@ import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
 
 @CommandDefinition(name = "test", description = "a simple test")
-public class TestPopulator4 implements Command {
+public class TestPopulator4<CI extends CommandInvocation> implements Command<CI> {
 
     @Option
     private Long veryLong;
@@ -65,7 +65,7 @@ public class TestPopulator4 implements Command {
     }
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+    public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
         return CommandResult.SUCCESS;
     }
 }

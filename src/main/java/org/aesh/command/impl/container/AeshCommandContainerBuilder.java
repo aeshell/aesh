@@ -37,6 +37,7 @@ import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.Command;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
@@ -58,19 +59,19 @@ import java.util.Map;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandContainerBuilder<C extends Command> implements CommandContainerBuilder<C> {
+public class AeshCommandContainerBuilder<C extends Command<CI>, CI extends CommandInvocation> implements CommandContainerBuilder<C,CI> {
 
     @Override
-    public CommandContainer<C> create(C command) throws CommandLineParserException {
+    public CommandContainer<C,CI> create(C command) throws CommandLineParserException {
         return doGenerateCommandLineParser(command);
     }
 
     @Override
-    public CommandContainer<C> create(Class<C> command) throws CommandLineParserException {
+    public CommandContainer<C,CI> create(Class<C> command) throws CommandLineParserException {
         return doGenerateCommandLineParser(ReflectionUtil.newInstance(command));
     }
 
-    private AeshCommandContainer<C> doGenerateCommandLineParser(C commandObject) throws CommandLineParserException {
+    private AeshCommandContainer<C,CI> doGenerateCommandLineParser(C commandObject) throws CommandLineParserException {
         Class<C> clazz = (Class<C>) commandObject.getClass();
         CommandDefinition command = clazz.getAnnotation(CommandDefinition.class);
         if(command != null) {
@@ -106,7 +107,7 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
 
             processCommand(processedGroupCommand, clazz);
 
-            AeshCommandContainer<C> groupContainer;
+            AeshCommandContainer<C,CI> groupContainer;
 
             groupContainer = new AeshCommandContainer<>(
                     new CommandLineParserBuilder<C>()
@@ -290,8 +291,8 @@ public class AeshCommandContainerBuilder<C extends Command> implements CommandCo
         }
     }
 
-   public static void parseAndPopulate(Command instance, String input) throws CommandLineParserException, OptionValidatorException {
-        AeshCommandContainerBuilder<Command> builder = new AeshCommandContainerBuilder<>();
+   public static void parseAndPopulate(Command<CommandInvocation> instance, String input) throws CommandLineParserException, OptionValidatorException {
+        AeshCommandContainerBuilder<Command<CommandInvocation>,CommandInvocation> builder = new AeshCommandContainerBuilder<>();
         CommandLineParser cl = builder.doGenerateCommandLineParser(instance).getParser();
         InvocationProviders invocationProviders = new AeshInvocationProviders(
                 new AeshConverterInvocationProvider(),

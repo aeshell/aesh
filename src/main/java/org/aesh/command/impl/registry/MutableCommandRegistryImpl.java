@@ -26,6 +26,7 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
@@ -44,23 +45,23 @@ import org.aesh.command.registry.MutableCommandRegistry;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class MutableCommandRegistryImpl<C extends Command> implements MutableCommandRegistry<C> {
+public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends CommandInvocation> implements MutableCommandRegistry<C,CI> {
 
-    private final Map<String, CommandContainer<C>> registry = new HashMap<>();
-    private final Map<String, CommandContainer<C>> aliases = new HashMap<>();
+    private final Map<String, CommandContainer<C,CI>> registry = new HashMap<>();
+    private final Map<String, CommandContainer<C,CI>> aliases = new HashMap<>();
 
-    private CommandContainerBuilder<C> containerBuilder;
+    private CommandContainerBuilder<C,CI> containerBuilder;
 
     private final List<CommandRegistrationListener> listeners = new ArrayList<>();
 
-    public void setCommandContainerBuilder(CommandContainerBuilder<C> containerBuilder) {
+    public void setCommandContainerBuilder(CommandContainerBuilder<C,CI> containerBuilder) {
         this.containerBuilder = containerBuilder;
     }
 
     private static final Logger LOGGER = LoggerUtil.getLogger(MutableCommandRegistryImpl.class.getName());
 
     @Override
-    public CommandContainer<C> getCommand(String name, String line) throws CommandNotFoundException {
+    public CommandContainer<C,CI> getCommand(String name, String line) throws CommandNotFoundException {
         if(registry.containsKey(name))
             return registry.get(name);
         //group command
@@ -88,14 +89,14 @@ public class MutableCommandRegistryImpl<C extends Command> implements MutableCom
     public void completeCommandName(CompleteOperation co, ParsedLine parsedLine) {
         if(parsedLine.words().size() == 0) {
             //add all
-            for(CommandContainer<C> command : registry.values()) {
+            for(CommandContainer<C,CI> command : registry.values()) {
                 ProcessedCommand<C> com = command.getParser().getProcessedCommand();
                 if (com.getActivator().isActivated(com))
                     co.addCompletionCandidate(com.name());
             }
         }
         else {
-            for(CommandContainer<C> command : registry.values()) {
+            for(CommandContainer<C,CI> command : registry.values()) {
                 ProcessedCommand<C> com = command.getParser().getProcessedCommand();
                 if(com.name().startsWith(parsedLine.selectedWord().word()) &&
                         com.getActivator().isActivated(com)) {
@@ -114,7 +115,7 @@ public class MutableCommandRegistryImpl<C extends Command> implements MutableCom
     }
 
     @Override
-    public void addCommand(CommandContainer<C> container) {
+    public void addCommand(CommandContainer<C,CI> container) {
         putIntoRegistry(container);
     }
 
@@ -137,14 +138,14 @@ public class MutableCommandRegistryImpl<C extends Command> implements MutableCom
     }
 
     @Override
-    public void addAllCommandContainers(List<CommandContainer<C>> commands) {
+    public void addAllCommandContainers(List<CommandContainer<C,CI>> commands) {
         if(commands != null) {
-            for(CommandContainer<C> command : commands)
+            for(CommandContainer<C,CI> command : commands)
                 addCommand(command);
         }
     }
 
-    private void putIntoRegistry(CommandContainer<C> commandContainer) {
+    private void putIntoRegistry(CommandContainer<C,CI> commandContainer) {
         if (!commandContainer.haveBuildError()
                 && !contains(commandContainer.getParser().getProcessedCommand())) {
             registry.put(commandContainer.getParser().getProcessedCommand().name(),
@@ -184,14 +185,14 @@ public class MutableCommandRegistryImpl<C extends Command> implements MutableCom
         }
     }
 
-    private CommandContainerBuilder<C> getBuilder() {
+    private CommandContainerBuilder<C,CI> getBuilder() {
         if(containerBuilder == null)
             containerBuilder = new AeshCommandContainerBuilder<>();
         return containerBuilder;
     }
 
     @Override
-    public CommandContainer<C> getCommandByAlias(String alias) throws CommandNotFoundException {
+    public CommandContainer<C,CI> getCommandByAlias(String alias) throws CommandNotFoundException {
         if (aliases.containsKey(alias)) {
             return aliases.get(alias);
         } else {

@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 @CommandDefinition(name = "test", description = "a simple test")
-public class TestPopulator3 implements Command {
+public class TestPopulator3<CI extends CommandInvocation> implements Command<CI> {
 
     @OptionGroup(shortName = 'b')
     private Map<String, String> basicMap;
@@ -50,7 +50,7 @@ public class TestPopulator3 implements Command {
     }
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+    public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
         return CommandResult.SUCCESS;
     }
 }

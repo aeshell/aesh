@@ -25,6 +25,7 @@ import org.aesh.command.Command;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
 
@@ -35,7 +36,7 @@ import java.util.Set;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandRegistry<C extends Command> {
+public interface CommandRegistry<C extends Command<CI>,CI extends CommandInvocation> {
 
     /**
      * Command registration actions.
@@ -71,7 +72,7 @@ public interface CommandRegistry<C extends Command> {
      * @param line current terminal buffer line
      * @return the matching CommandContainer's name
      */
-    CommandContainer<C> getCommand(String name, String line) throws CommandNotFoundException;
+    CommandContainer<C,CI> getCommand(String name, String line) throws CommandNotFoundException;
 
     /**
      *
@@ -84,7 +85,7 @@ public interface CommandRegistry<C extends Command> {
      * @param alias command alias
      * @return the matching CommandContainer's alias
      */
-    CommandContainer<C> getCommandByAlias(String alias) throws CommandNotFoundException;
+    CommandContainer<C,CI> getCommandByAlias(String alias) throws CommandNotFoundException;
 
     /**
      * Based on input, find all commands that match or partly match

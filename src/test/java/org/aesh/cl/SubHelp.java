@@ -27,13 +27,13 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.option.Option;
 
 @CommandDefinition(name = "subhelp", description = "a simple help")
-public class SubHelp extends HelpPopulator implements Command {
+public class SubHelp<CI extends CommandInvocation> extends HelpPopulator implements Command<CI> {
 
     @Option(shortName = 'e', name = "equal", description = "enable equal")
     public String equal;
 
     @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+    public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
         return CommandResult.SUCCESS;
     }
 }

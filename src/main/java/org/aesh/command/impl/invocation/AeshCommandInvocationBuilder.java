@@ -19,6 +19,7 @@
  */
 package org.aesh.command.impl.invocation;
 
+import org.aesh.command.Command;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.invocation.CommandInvocationBuilder;
@@ -28,7 +29,7 @@ import org.aesh.readline.Console;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<AeshCommandInvocation> {
+public class AeshCommandInvocationBuilder<C extends Command<AeshCommandInvocation>> implements CommandInvocationBuilder<C,AeshCommandInvocation> {
 
     private final Shell shell;
     private final Console console;
@@ -39,8 +40,8 @@ public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<Ae
     }
 
     @Override
-    public AeshCommandInvocation build(CommandRuntime<AeshCommandInvocation> runtime,
-            CommandInvocationConfiguration config) {
-        return new AeshCommandInvocation(console, shell, runtime, config);
+    public AeshCommandInvocation build(CommandRuntime<C, AeshCommandInvocation> runtime, CommandInvocationConfiguration config) {
+        return new AeshCommandInvocation<>(console, shell, runtime, config);
     }
+
 }

@@ -89,6 +89,7 @@ public class AeshCommandRegistryTest {
         Settings settings = SettingsBuilder.builder()
                 .commandRegistry(registry)
                 .connection(connection)
+                .enableExport(false)
                 .logging(true)
                 .build();
 
@@ -147,6 +148,7 @@ public class AeshCommandRegistryTest {
                 .connection(connection)
                 .commandRegistry(registry)
                 .setPersistExport(false)
+                .enableExport(false)
                 .logging(true)
                 .build();
 
@@ -204,6 +206,7 @@ public class AeshCommandRegistryTest {
          Settings settings = SettingsBuilder.builder()
                  .commandRegistry(registry)
                  .connection(connection)
+                 .enableExport(false)
                  .logging(true)
                  .build();
 

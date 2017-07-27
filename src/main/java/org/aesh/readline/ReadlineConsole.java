@@ -24,16 +24,26 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.AeshCommandResolver;
 import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.MutableCommandRegistry;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.console.export.ExportCommand;
+import org.aesh.console.export.ExportCompletion;
+import org.aesh.console.export.ExportManager;
+import org.aesh.console.export.ExportPreProcessor;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.AeshCompletionHandler;
 import org.aesh.console.settings.DefaultAeshContext;
@@ -51,7 +61,9 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,33 +72,57 @@ import java.util.logging.Logger;
  */
 public class ReadlineConsole implements Console, Consumer<Connection> {
 
-    private Settings settings;
+    private Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation,
+        ? extends ConverterInvocation, ? extends CompleterInvocation,
+        ? extends ValidatorInvocation, ? extends OptionActivator,
+        ? extends CommandActivator> settings;
     private Prompt prompt;
     private List<Completion> completions;
     private Connection connection;
-    private AeshCommandResolver<? extends Command> commandResolver;
+    private AeshCommandResolver<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> commandResolver;
     private AeshContext context;
     private Readline readline;
     private AeshCompletionHandler completionHandler;
-    private CommandRuntime<? extends CommandInvocation> runtime;
+    private CommandRuntime<? extends Command<?extends CommandInvocation>,? extends CommandInvocation> runtime;
     private ProcessManager processManager;
+    private ExportManager exportManager;
+    private static List<Function<String, Optional<String>>> preProcessors = new ArrayList<>();
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
 
     private volatile boolean running = false;
 
-    public ReadlineConsole(Settings settings) {
+    public ReadlineConsole(Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation,
+        ? extends ConverterInvocation, ? extends CompleterInvocation,
+        ? extends ValidatorInvocation, ? extends OptionActivator,
+        ? extends CommandActivator> givenSettings) {
         LoggerUtil.doLog();
-        if(settings == null)
-            this.settings = SettingsBuilder.builder().build();
+        if(givenSettings == null)
+            settings = SettingsBuilder.builder().build();
         else
-            this.settings = settings;
+            settings = givenSettings;
         commandResolver = new AeshCommandResolver<>(settings.commandRegistry());
 
         addCompletion(new AeshCompletion());
         context = new DefaultAeshContext();
         if(settings.connection() != null)
-            this.connection = settings.connection();
+            connection = settings.connection();
+
+        //enabling export
+        if(this.settings.exportEnabled()) {
+            exportManager = new ExportManager(settings.exportFile(), settings.exportUsesSystemEnvironment());
+            preProcessors.add(new ExportPreProcessor(exportManager));
+            completions.add(new ExportCompletion(exportManager));
+            if(commandResolver.getRegistry() != null &&
+                    commandResolver.getRegistry() instanceof MutableCommandRegistry) {
+                try {
+                    ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new ExportCommand(exportManager));
+                }
+                catch (CommandLineParserException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
     }
 
@@ -164,7 +200,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             //else line is empty
             else
                read(conn, readline);
-        }, completions);
+        }, completions, preProcessors);
     }
 
     private void processLine(String line, Connection conn) {
@@ -255,7 +291,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         */
     }
 
-    private CommandRuntime<? extends CommandInvocation> generateRuntime() {
+    private CommandRuntime<? extends Command<? extends CommandInvocation>,? extends CommandInvocation> generateRuntime() {
         return AeshCommandRuntimeBuilder.builder()
                 .settings(settings)
                 .commandInvocationBuilder(new AeshCommandInvocationBuilder(new ShellImpl(connection, readline), this))

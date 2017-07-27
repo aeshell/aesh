@@ -50,7 +50,7 @@ import org.aesh.terminal.Connection;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface Settings<C extends Command, CI extends CommandInvocation,
+public interface Settings<C extends Command<CI>, CI extends CommandInvocation,
         CI3 extends ConverterInvocation, CI2 extends CompleterInvocation,
         VI extends ValidatorInvocation, OA extends OptionActivator,
         CA extends CommandActivator> extends Cloneable {
@@ -245,7 +245,7 @@ public interface Settings<C extends Command, CI extends CommandInvocation,
     /**
      * @return get command registry
      */
-    CommandRegistry<C> commandRegistry();
+    CommandRegistry<C,CI> commandRegistry();
 
     /**
      *
