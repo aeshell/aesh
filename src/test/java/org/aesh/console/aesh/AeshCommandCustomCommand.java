@@ -114,7 +114,7 @@ class CustomCommand implements Command {
 
     private CustomPopulator populator;
 
-    public CustomCommand(CustomPopulator populator) {
+    CustomCommand(CustomPopulator populator) {
         this.populator = populator;
     }
 
@@ -130,7 +130,7 @@ class CustomPopulator implements CommandPopulator<Object, Command> {
     private Map<String, String> values;
     private List<String> arguments;
 
-    public CustomPopulator() {
+    CustomPopulator() {
         values = new HashMap<>();
         arguments = new ArrayList<>();
     }

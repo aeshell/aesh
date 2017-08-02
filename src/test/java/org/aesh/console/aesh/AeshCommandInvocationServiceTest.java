@@ -98,7 +98,7 @@ class FooCommandInvocation implements CommandInvocation {
 
     private final CommandInvocation commandInvocation;
 
-    public FooCommandInvocation(CommandInvocation commandInvocation) {
+    FooCommandInvocation(CommandInvocation commandInvocation) {
         this.commandInvocation = commandInvocation;
     }
 

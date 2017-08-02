@@ -53,7 +53,7 @@ public abstract class AeshFileDisplayer implements Command {
     private CommandInvocation commandInvocation;
     private boolean stop;
 
-    public AeshFileDisplayer() {
+    AeshFileDisplayer() {
         stop = false;
     }
 
@@ -429,7 +429,7 @@ public abstract class AeshFileDisplayer implements Command {
         number = new StringBuilder();
     }
 
-    private static enum Background {
+    private enum Background {
         NORMAL,
         INVERSE
     }

@@ -33,19 +33,19 @@ public class TerminalPage {
     private List<String> lines;
     private FileParser fileParser;
 
-    public TerminalPage(FileParser fileParser, int columns) throws IOException {
+    TerminalPage(FileParser fileParser, int columns) throws IOException {
        this.fileParser = fileParser;
         lines = fileParser.loadPage(columns);
     }
 
-    public String getLine(int num) {
+    String getLine(int num) {
         if(num < lines.size())
             return lines.get(num);
         else
             return "";
     }
 
-    public List<Integer> findWord(String word) {
+    List<Integer> findWord(String word) {
         List<Integer> wordLines = new ArrayList<Integer>();
         for(int i=0; i < lines.size();i++) {
             if(lines.get(i).contains(word))
@@ -74,7 +74,7 @@ public class TerminalPage {
         lines.clear();
     }
 
-    public static enum Search {
+    public enum Search {
         SEARCHING,
         RESULT,
         NOT_FOUND,

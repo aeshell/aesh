@@ -69,11 +69,11 @@ public class ReflectionUtilTest {
         Foo4 foo4 = ReflectionUtil.newInstance(Foo4.class);
     }
 
-    public class Foo1 {
+    class Foo1 {
 
     }
 
-    public static class Foo2 {
+    static class Foo2 {
 
     }
 
@@ -82,21 +82,21 @@ public class ReflectionUtilTest {
     }
 
     class Foo4 {
-        public Foo4(String x, String y) {
+        Foo4(String x, String y) {
 
         }
     }
 
     class Foo5 {
-        public Foo5() {
+        Foo5() {
 
         }
 
-        public Foo5(String x) {
+        Foo5(String x) {
 
         }
 
-        public Foo5(String x, String y) {
+        Foo5(String x, String y) {
 
         }
     }

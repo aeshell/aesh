@@ -19,6 +19,7 @@
  */
 package org.aesh.console.export;
 
+import org.aesh.command.export.ExportManager;
 import org.aesh.utils.Config;
 import org.junit.Test;
 
@@ -84,7 +85,7 @@ public class ExportManagerTest {
         ExportManager exportManager =
             new ExportManager(new File(Config.getTmpDir()+Config.getPathSeparator()+"aesh_variable_test"));
         assertEquals("", exportManager.getValue("$FOO3"));
-        assertEquals("", exportManager.getValue("FOO3"));
+        assertEquals(null, exportManager.getValue("FOO3"));
 
     }
 

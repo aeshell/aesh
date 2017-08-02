@@ -37,7 +37,7 @@ class ShellImpl implements Shell {
     private Connection connection;
     private Readline readline;
 
-    public ShellImpl(Connection connection, Readline readline) {
+    ShellImpl(Connection connection, Readline readline) {
         this.connection = connection;
         this.readline = readline;
     }

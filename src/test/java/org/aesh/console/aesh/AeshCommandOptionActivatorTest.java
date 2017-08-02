@@ -136,7 +136,7 @@ public class AeshCommandOptionActivatorTest {
     private static class FooContext {
         private String context;
 
-        public FooContext(String context) {
+        FooContext(String context) {
             this.context = context;
         }
 

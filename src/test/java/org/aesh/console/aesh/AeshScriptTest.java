@@ -128,7 +128,7 @@ public class AeshScriptTest {
 
         private final CommandResultHandler resultHandler;
 
-        public RunCommand(CommandResultHandler resultHandler) {
+        RunCommand(CommandResultHandler resultHandler) {
             this.resultHandler = resultHandler;
         }
 

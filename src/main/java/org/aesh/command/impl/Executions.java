@@ -62,7 +62,7 @@ class Executions {
         private final ProcessedCommand<? extends Command<T>> cmd;
         private final CommandInvocationConfiguration invocationConfiguration;
         private final AeshCommandRuntime<? extends Command, T> runtime;
-        public ExecutionImpl(ExecutableOperator<T> executable,
+        ExecutionImpl(ExecutableOperator<T> executable,
                 AeshCommandRuntime<? extends Command, T> runtime,
                 CommandInvocationConfiguration invocationConfiguration,
                 ProcessedCommand<? extends Command<T>> cmd) {

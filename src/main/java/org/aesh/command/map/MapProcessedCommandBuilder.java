@@ -37,8 +37,7 @@ import java.util.List;
 
 public class MapProcessedCommandBuilder {
 
-    private static final ProcessedOptionProvider EMPTY_PROVIDER
-            = new ProcessedOptionProvider() {
+    private static final ProcessedOptionProvider EMPTY_PROVIDER = new ProcessedOptionProvider() {
         @Override
         public List<ProcessedOption> getOptions(List<ProcessedOption> options) {
             return Collections.emptyList();
@@ -48,7 +47,7 @@ public class MapProcessedCommandBuilder {
         private final ProcessedOptionProvider provider;
         private List<ProcessedOption> currentOptions;
 
-        public MapProcessedCommand(String name,
+        MapProcessedCommand(String name,
                 List<String> aliases,
                 MapCommand command,
                 String description,
