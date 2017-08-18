@@ -53,7 +53,7 @@ public abstract class AeshFileDisplayer implements Command {
     private CommandInvocation commandInvocation;
     private boolean stop;
 
-    AeshFileDisplayer() {
+    public AeshFileDisplayer() {
         stop = false;
     }
 

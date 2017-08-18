@@ -38,14 +38,14 @@ public class TerminalPage {
         lines = fileParser.loadPage(columns);
     }
 
-    String getLine(int num) {
+    public String getLine(int num) {
         if(num < lines.size())
             return lines.get(num);
         else
             return "";
     }
 
-    List<Integer> findWord(String word) {
+    public List<Integer> findWord(String word) {
         List<Integer> wordLines = new ArrayList<Integer>();
         for(int i=0; i < lines.size();i++) {
             if(lines.get(i).contains(word))
