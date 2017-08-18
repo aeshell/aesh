@@ -70,6 +70,7 @@ public class ExportCommandTest {
         /*
         connection.read("export ");
         connection.read(completeChar.getFirstValue());
+<<<<<<< cef4ecfc490470246f731b4281e5b47d38a42984
         connection.assertBuffer("export FOO=");
         */
 
@@ -81,6 +82,23 @@ public class ExportCommandTest {
         connection.read(":/opt"+Config.getLineSeparator());
         //connection.read("export"+Config.getLineSeparator());
 //        connection.assertBufferEndsWith("BAR=/tmp:/opt");
+        connection.assertBuffer("export FOO= ");
+        connection.read(backSpace);
+        connection.read(backSpace);
+        connection.read(backSpace);
+        connection.read(backSpace);
+        connection.read(backSpace);
+
+        connection.read("BAR=$F");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBufferEndsWith("BAR=$FOO ");
+
+        connection.read(backSpace.getFirstValue());
+        connection.read(":/opt"+Config.getLineSeparator());
+        connection.clearOutputBuffer();
+        connection.read("$B");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("$BAR ");
         //assertTrue(byteArrayOutputStream.toString().contains("BAR=/tmp:/opt"));
 
         connection.clearOutputBuffer();
@@ -91,11 +109,14 @@ public class ExportCommandTest {
 
         connection.read("B");
         connection.read(completeChar.getFirstValue());
-        connection.assertBufferEndsWith("$BAR ");
-        connection.clearOutputBuffer();
+
+        //outputStream.flush();
+        //assertEquals("$BAR ", ((AeshConsoleImpl) console).getBuffer());
 
         connection.read(Config.getLineSeparator());
-        connection.assertBufferEndsWith("Command: named /tmp:/opt was not found."+Config.getLineSeparator());
+        //outputStream.flush();
+
+        //assertTrue(byteArrayOutputStream.toString().contains("/tmp:/opt"));
 
         console.stop();
     }
