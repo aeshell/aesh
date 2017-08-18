@@ -70,7 +70,6 @@ public class ExportCommandTest {
         /*
         connection.read("export ");
         connection.read(completeChar.getFirstValue());
-<<<<<<< cef4ecfc490470246f731b4281e5b47d38a42984
         connection.assertBuffer("export FOO=");
         */
 
@@ -80,21 +79,7 @@ public class ExportCommandTest {
 
         connection.read(backSpace.getFirstValue());
         connection.read(":/opt"+Config.getLineSeparator());
-        //connection.read("export"+Config.getLineSeparator());
-//        connection.assertBufferEndsWith("BAR=/tmp:/opt");
-        connection.assertBuffer("export FOO= ");
-        connection.read(backSpace);
-        connection.read(backSpace);
-        connection.read(backSpace);
-        connection.read(backSpace);
-        connection.read(backSpace);
 
-        connection.read("BAR=$F");
-        connection.read(completeChar.getFirstValue());
-        connection.assertBufferEndsWith("BAR=$FOO ");
-
-        connection.read(backSpace.getFirstValue());
-        connection.read(":/opt"+Config.getLineSeparator());
         connection.clearOutputBuffer();
         connection.read("$B");
         connection.read(completeChar.getFirstValue());
