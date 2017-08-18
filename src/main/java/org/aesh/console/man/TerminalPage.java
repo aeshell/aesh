@@ -33,7 +33,7 @@ public class TerminalPage {
     private List<String> lines;
     private FileParser fileParser;
 
-    TerminalPage(FileParser fileParser, int columns) throws IOException {
+    public TerminalPage(FileParser fileParser, int columns) throws IOException {
        this.fileParser = fileParser;
         lines = fileParser.loadPage(columns);
     }
