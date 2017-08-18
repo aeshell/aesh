@@ -32,6 +32,7 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.operator.AppendOutputRedirectionOperator;
 import org.aesh.command.impl.operator.EndOperator;
+import org.aesh.command.impl.operator.InputRedirectionOperator;
 import org.aesh.command.impl.operator.OutputRedirectionOperator;
 import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.invocation.CommandInvocation;
@@ -129,6 +130,18 @@ class Executions {
                 arg.injectResource(resource, cmd.getCommand());
         }
 
+        @Override
+        public boolean hasRedirectIn() {
+            return invocationConfiguration.getInputRedirection() != null;
+        }
+
+        @Override
+        public void updateInjectedArgumentWithRedirectedInData() {
+            ProcessedOption arg = checkProcessedCommandForResourceArgument();
+            if(arg != null)
+                arg.injectResource(new PipelineResource(invocationConfiguration.getInputRedirection().read()), cmd.getCommand());
+        }
+
         private ProcessedOption checkProcessedCommandForResourceArgument() {
             if(cmd.hasArguments() &&
                     Resource.class.isAssignableFrom(cmd.getArguments().type())) {
@@ -191,8 +204,8 @@ class Executions {
                             }
                             ExecutableOperator<CI> exec = (ExecutableOperator) op;
                             invocationConfiguration = config == null
-                                    ? new CommandInvocationConfiguration(runtime.getAeshContext(), null,
-                                            dataProvider) : config.getConfiguration();
+                                    ? new CommandInvocationConfiguration(runtime.getAeshContext(), dataProvider)
+                                    : config.getConfiguration();
                             Execution<CI> execution = new ExecutionImpl<>(exec, runtime,
                                     invocationConfiguration, processedCommand);
                             if (exec instanceof DataProvider) {
@@ -215,8 +228,8 @@ class Executions {
             ExecutableOperator exec = (ExecutableOperator) buildOperator(OperatorType.NONE,
                     runtime.getAeshContext());
             invocationConfiguration = config == null
-                    ? new CommandInvocationConfiguration(runtime.getAeshContext(), null,
-                            dataProvider) : config.getConfiguration();
+                    ? new CommandInvocationConfiguration(runtime.getAeshContext(), dataProvider)
+                    : config.getConfiguration();
             Execution<CI> execution = new ExecutionImpl<CI>(exec, runtime, invocationConfiguration, processedCommand);
             executions.add(execution);
         }
@@ -240,6 +253,9 @@ class Executions {
             }
             case PIPE: {
                 return new PipeOperator(context);
+            }
+            case REDIRECT_IN: {
+                return new InputRedirectionOperator(context);
             }
         }
         throw new IllegalArgumentException("Unsupported operator " + op);

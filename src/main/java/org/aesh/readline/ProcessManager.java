@@ -95,7 +95,10 @@ public class ProcessManager {
     }
 
     public void executeNext() {
-        if(hasNext())
+        if(hasNext()) {
+            if(peek().hasRedirectIn())
+                peek().updateInjectedArgumentWithRedirectedInData();
             new Process(this, conn, next()).start();
+        }
     }
 }

@@ -26,11 +26,13 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Argument;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.BaseConsoleTest;
 
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.io.Resource;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
@@ -38,13 +40,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -126,6 +133,75 @@ import static org.junit.Assert.assertEquals;
          Files.delete(foo.toPath());
      }
 
+     @Test
+     public void redirectInOperator() throws Throwable {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(BarCommand.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_in.txt");
+         PrintWriter writer = new PrintWriter(foo, "UTF-8");
+         writer.print("foo bar");
+         writer.close();
+
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("bar < "+foo.getCanonicalPath()+Config.getLineSeparator());
+         Thread.sleep(50);
+
+         connection.assertBufferEndsWith("foo bar"+Config.getLineSeparator());
+
+         console.stop();
+
+         //lets make sure that foo has been read
+         Files.delete(foo.toPath());
+     }
+
+
+     /*
+     @Test
+     public void redirectInAndPipeOperator() throws Throwable {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(BarCommand.class)
+                 .command(ManCommand.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_in.txt");
+         PrintWriter writer = new PrintWriter(foo, "UTF-8");
+         writer.print("FOO BAR");
+         writer.close();
+
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("bar < "+foo.getCanonicalPath()+" | man"+Config.getLineSeparator() );
+         Thread.sleep(50);
+
+         connection.assertBufferEndsWith("FOO BAR"+Config.getLineSeparator());
+
+         console.stop();
+
+         //lets make sure that foo has been read
+         Files.delete(foo.toPath());
+     }
+     */
 
      /*
      @Test
@@ -247,4 +323,53 @@ import static org.junit.Assert.assertEquals;
             return CommandResult.SUCCESS;
         }
     }
+
+    @CommandDefinition(name = "bar", description = "")
+    public class BarCommand implements Command {
+
+        @Argument
+        private Resource arg;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            if(arg != null) {
+                try {
+                    String result = new BufferedReader(new InputStreamReader(arg.read()))
+                            .lines().collect(Collectors.joining("\n"));
+
+                    commandInvocation.println(result);
+                    return CommandResult.SUCCESS;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+            return CommandResult.FAILURE;
+        }
+    }
+
+    @CommandDefinition(name = "man", description = "")
+    public class ManCommand implements Command {
+
+        @Argument
+        private Resource arg;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            if(arg != null) {
+                try {
+                    String result = new BufferedReader(new InputStreamReader(arg.read()))
+                            .lines().collect(Collectors.joining("\n"));
+
+                    commandInvocation.println(result);
+                    return CommandResult.SUCCESS;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+            return CommandResult.FAILURE;
+        }
+    }
+
+
+
 }

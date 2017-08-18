@@ -43,4 +43,8 @@ public interface Execution<T extends CommandInvocation> {
             InterruptedException;
 
     void updateInjectedArgumentWithPipelinedData(PipelineResource resource);
+
+    boolean hasRedirectIn();
+
+    void updateInjectedArgumentWithRedirectedInData();
 }

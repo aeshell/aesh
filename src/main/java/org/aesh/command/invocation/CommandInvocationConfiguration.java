@@ -22,6 +22,7 @@ package org.aesh.command.invocation;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import org.aesh.command.impl.operator.DataProvider;
+import org.aesh.command.impl.operator.InputDelegate;
 import org.aesh.command.impl.operator.OutputDelegate;
 import org.aesh.console.AeshContext;
 
@@ -36,25 +37,48 @@ public class CommandInvocationConfiguration {
     private static final DataProvider EMPTY_DATA_PROVIDER = () -> {
         return EMPTY_INPUT;
     };
-    private final OutputDelegate delegate;
-    private final AeshContext context;
-    private final DataProvider dataProvider;
+    private OutputDelegate outputDelegate;
+    private AeshContext context;
+    private DataProvider dataProvider;
+    private InputDelegate inputDelegate;
+
     public CommandInvocationConfiguration(AeshContext context) {
-        this(context, null, null);
-    }
-
-    public CommandInvocationConfiguration(AeshContext context, OutputDelegate delegate) {
-        this(context, delegate, null);
-    }
-
-    public CommandInvocationConfiguration(AeshContext context, OutputDelegate delegate, DataProvider dataProvider) {
         this.context = context;
-        this.delegate = delegate;
+    }
+
+    public CommandInvocationConfiguration(AeshContext context, OutputDelegate outputDelegate) {
+        this(context, outputDelegate, null);
+    }
+
+    public CommandInvocationConfiguration(AeshContext context, DataProvider dataProvider) {
+        this.context = context;
+        this.dataProvider = dataProvider;
+    }
+
+    public CommandInvocationConfiguration(AeshContext context, OutputDelegate outputDelegate, DataProvider dataProvider) {
+        this.context = context;
+        this.outputDelegate = outputDelegate;
         this.dataProvider = dataProvider == null ? EMPTY_DATA_PROVIDER : dataProvider;
     }
 
+    public CommandInvocationConfiguration(AeshContext context, InputDelegate inputDelegate) {
+        this.context = context;
+        this.inputDelegate = inputDelegate;
+        this.dataProvider =  EMPTY_DATA_PROVIDER;
+    }
+
+    public CommandInvocationConfiguration(AeshContext context, InputDelegate inputDelegate, DataProvider dataProvider) {
+        this.context = context;
+        this.inputDelegate = inputDelegate;
+        this.dataProvider = dataProvider == null ? EMPTY_DATA_PROVIDER : dataProvider;
+    }
+
+    public InputDelegate getInputRedirection() {
+        return inputDelegate;
+    }
+
     public OutputDelegate getOutputRedirection() {
-        return delegate;
+        return outputDelegate;
     }
 
     public AeshContext getAeshContext() {
