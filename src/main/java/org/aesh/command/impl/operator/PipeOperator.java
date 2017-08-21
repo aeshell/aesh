@@ -54,7 +54,7 @@ public class PipeOperator extends EndOperator implements
     @Override
     public CommandInvocationConfiguration getConfiguration() throws IOException {
         if (config == null) {
-            config = new CommandInvocationConfiguration(context, new OutputDelegateImpl(), this);
+            config = new CommandInvocationConfiguration(context, new OutputDelegateImpl(), null);
         }
         return config;
     }

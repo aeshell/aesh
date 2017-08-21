@@ -43,7 +43,7 @@ public class CommandInvocationConfiguration {
     private InputDelegate inputDelegate;
 
     public CommandInvocationConfiguration(AeshContext context) {
-        this.context = context;
+        this(context, null, null, null);
     }
 
     public CommandInvocationConfiguration(AeshContext context, OutputDelegate outputDelegate) {
@@ -51,26 +51,26 @@ public class CommandInvocationConfiguration {
     }
 
     public CommandInvocationConfiguration(AeshContext context, DataProvider dataProvider) {
+        this(context, null, null, dataProvider);
+    }
+
+    public CommandInvocationConfiguration(AeshContext context, OutputDelegate outputDelegate, InputDelegate inputDelegate, DataProvider dataProvider) {
         this.context = context;
-        this.dataProvider = dataProvider;
+        this.outputDelegate = outputDelegate;
+        this.inputDelegate = inputDelegate;
+        this.dataProvider = dataProvider == null ? EMPTY_DATA_PROVIDER : dataProvider;
     }
 
     public CommandInvocationConfiguration(AeshContext context, OutputDelegate outputDelegate, DataProvider dataProvider) {
-        this.context = context;
-        this.outputDelegate = outputDelegate;
-        this.dataProvider = dataProvider == null ? EMPTY_DATA_PROVIDER : dataProvider;
+        this(context, outputDelegate, null, dataProvider);
     }
 
     public CommandInvocationConfiguration(AeshContext context, InputDelegate inputDelegate) {
-        this.context = context;
-        this.inputDelegate = inputDelegate;
-        this.dataProvider =  EMPTY_DATA_PROVIDER;
+        this(context, null, inputDelegate, null);
     }
 
     public CommandInvocationConfiguration(AeshContext context, InputDelegate inputDelegate, DataProvider dataProvider) {
-        this.context = context;
-        this.inputDelegate = inputDelegate;
-        this.dataProvider = dataProvider == null ? EMPTY_DATA_PROVIDER : dataProvider;
+        this(context, null, inputDelegate, dataProvider);
     }
 
     public InputDelegate getInputRedirection() {

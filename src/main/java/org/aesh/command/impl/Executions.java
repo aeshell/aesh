@@ -40,6 +40,7 @@ import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.impl.operator.ConfigurationOperator;
 import org.aesh.command.impl.operator.DataProvider;
 import org.aesh.command.impl.operator.ExecutableOperator;
+import org.aesh.command.impl.operator.InputDelegate;
 import org.aesh.command.impl.operator.Operator;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
@@ -169,6 +170,7 @@ class Executions {
         boolean newParsedLine;
         ConfigurationOperator config = null;
         DataProvider dataProvider = null;
+        InputDelegate inDelegate = null;
         CommandInvocationConfiguration invocationConfiguration = null;
         List<Execution<CI>> executions = new ArrayList<>();
         for (ParsedLine pl : fullLine) {
@@ -192,6 +194,12 @@ class Executions {
                         OperatorType ot = pl.operator();
                         Operator op = buildOperator(pl.operator(), runtime.getAeshContext());
                         if (ot.isConfiguration()) {
+                            if (config != null) { // input provider prior to an output consumer.
+                                if(config.getConfiguration().getInputRedirection() == null) {
+                                    throw new IllegalArgumentException("Invalid operators structure");
+                                }
+                                inDelegate = config.getConfiguration().getInputRedirection();
+                            }
                             config = (ConfigurationOperator) op;
                         }
                         if (ot.isConfiguration() && ot.hasArgument()) {
@@ -205,7 +213,10 @@ class Executions {
                             ExecutableOperator<CI> exec = (ExecutableOperator) op;
                             invocationConfiguration = config == null
                                     ? new CommandInvocationConfiguration(runtime.getAeshContext(), dataProvider)
-                                    : config.getConfiguration();
+                                    : new CommandInvocationConfiguration(runtime.getAeshContext(),
+                                            config.getConfiguration().getOutputRedirection(),
+                                            inDelegate == null ? config.getConfiguration().getInputRedirection() : inDelegate,
+                                            dataProvider);
                             Execution<CI> execution = new ExecutionImpl<>(exec, runtime,
                                     invocationConfiguration, processedCommand);
                             if (exec instanceof DataProvider) {
@@ -215,6 +226,7 @@ class Executions {
                             }
                             executions.add(execution);
                             config = null;
+                            inDelegate = null;
                             state = State.NEED_COMMAND;
                         }
                         newParsedLine = true;

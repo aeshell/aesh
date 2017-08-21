@@ -84,7 +84,7 @@ public class ProcessManager {
             //if we have any operator input, we should see if we could inject it
             if(haveOperatorInput) {
                 peek().updateInjectedArgumentWithPipelinedData(new PipelineResource(
-                        process.execution().getCommandInvocation().getConfiguration().getPipedData()));
+                        peek().getCommandInvocation().getConfiguration().getPipedData()));
             }
             executeNext();
         }

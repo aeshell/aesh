@@ -134,6 +134,37 @@ import static org.junit.Assert.assertEquals;
      }
 
      @Test
+     public void pipeRedirectOutOperator() throws Throwable {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(DisplayCommand.class)
+                 .command(PrintCommand.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_out.txt");
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("display hello_aesh" + " | print > " + foo.getCanonicalPath() +Config.getLineSeparator() );
+         Thread.sleep(50);
+
+         console.stop();
+
+         //lets make sure that foo has been read
+         List<String> input = Files.readAllLines(foo.toPath());
+         assertEquals("hello_aesh", input.get(0));
+
+         Files.delete(foo.toPath());
+     }
+
+     @Test
      public void redirectInOperator() throws Throwable {
          TestConnection connection = new TestConnection();
 
@@ -166,8 +197,6 @@ import static org.junit.Assert.assertEquals;
          Files.delete(foo.toPath());
      }
 
-
-     /*
      @Test
      public void redirectInAndPipeOperator() throws Throwable {
          TestConnection connection = new TestConnection();
@@ -201,7 +230,76 @@ import static org.junit.Assert.assertEquals;
          //lets make sure that foo has been read
          Files.delete(foo.toPath());
      }
-     */
+
+     @Test
+     public void redirectInPipeAndRedirectOutOperator() throws Throwable {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(BarCommand.class)
+                 .command(ManCommand.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+
+         final File fooOut = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_out.txt");
+         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_in.txt");
+         PrintWriter writer = new PrintWriter(foo, "UTF-8");
+         writer.print("FOO BAR");
+         writer.close();
+
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("bar < "+foo.getCanonicalPath()+" | man > "+ fooOut.getCanonicalPath() + Config.getLineSeparator() );
+         Thread.sleep(50);
+
+         console.stop();
+
+         //lets make sure that foo has been read
+         Files.delete(foo.toPath());
+         List<String> output = Files.readAllLines(fooOut.toPath());
+         assertEquals("FOO BAR", output.get(0));
+         Files.delete(fooOut.toPath());
+     }
+
+     @Test
+     public void redirectInAndRedirectOutOperator() throws Throwable {
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder()
+                 .command(BarCommand.class)
+                 .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .build();
+         final File fooOut = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_out.txt");
+         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_in.txt");
+         PrintWriter writer = new PrintWriter(foo, "UTF-8");
+         writer.print("FOO BAR");
+         writer.close();
+
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+
+         connection.read("bar < "+foo.getCanonicalPath()+" > "+fooOut.getCanonicalPath()+Config.getLineSeparator() );
+         Thread.sleep(50);
+
+         console.stop();
+
+         //lets make sure that foo has been read
+         Files.delete(foo.toPath());
+         List<String> output = Files.readAllLines(fooOut.toPath());
+         assertEquals("FOO BAR", output.get(0));
+         Files.delete(fooOut.toPath());
+     }
 
      /*
      @Test
@@ -370,6 +468,31 @@ import static org.junit.Assert.assertEquals;
         }
     }
 
+     @CommandDefinition(name = "print", description = "")
+     public static class PrintCommand implements Command {
 
+         @Override
+         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+             BufferedReader reader = new BufferedReader(new InputStreamReader(commandInvocation.getConfiguration().getPipedData()));
+             reader.lines().forEach(str -> commandInvocation.print(str));
+             return CommandResult.SUCCESS;
+         }
+     }
+
+     @CommandDefinition(name = "display", description = "")
+     public class DisplayCommand implements Command {
+
+         @Argument
+         private String arg;
+
+         @Override
+         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+             if (arg != null) {
+                 commandInvocation.println(arg);
+                 return CommandResult.SUCCESS;
+             }
+             return CommandResult.FAILURE;
+         }
+     }
 
 }
