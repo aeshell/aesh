@@ -22,11 +22,7 @@ package org.aesh.readline;
 import org.aesh.command.Execution;
 import org.aesh.command.Executor;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.io.PipelineResource;
 import org.aesh.terminal.Connection;
-import org.aesh.utils.Config;
-
-import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -63,29 +59,7 @@ public class ProcessManager {
     }
 
     public void processFinished(Process process) {
-
-        boolean haveOperatorInput = false;
-        //first check any operators
-        if(process.execution().getCommandInvocation().getConfiguration() != null) {
-            //we have redirection out
-           if(process.execution().getCommandInvocation().getConfiguration().getOutputRedirection() != null) {
-               try {
-                   if(process.execution().getCommandInvocation().getConfiguration().getPipedData() != null) {
-                       haveOperatorInput = true;
-                   }
-                   process.execution().getCommandInvocation().getConfiguration().getOutputRedirection().close();
-               } catch (IOException e) {
-                   conn.write("Aesh: " + e.getLocalizedMessage() + ": No such file or directory" + Config.getLineSeparator());
-               }
-           }
-        }
-
         if(hasNext()) {
-            //if we have any operator input, we should see if we could inject it
-            if(haveOperatorInput) {
-                peek().updateInjectedArgumentWithPipelinedData(new PipelineResource(
-                        peek().getCommandInvocation().getConfiguration().getPipedData()));
-            }
             executeNext();
         }
         else if(console.running())
@@ -96,8 +70,6 @@ public class ProcessManager {
 
     public void executeNext() {
         if(hasNext()) {
-            if(peek().hasRedirectIn())
-                peek().updateInjectedArgumentWithRedirectedInData();
             new Process(this, conn, next()).start();
         }
     }

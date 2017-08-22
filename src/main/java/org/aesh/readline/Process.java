@@ -81,7 +81,7 @@ public class Process extends Thread implements Consumer<Signal> {
         }
         catch (Exception e) {
             e.printStackTrace();
-         }
+        }
         finally {
             running = false;
             if(conn.getSignalHandler() != null)
