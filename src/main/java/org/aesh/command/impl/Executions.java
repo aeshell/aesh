@@ -112,32 +112,54 @@ class Executions {
                     throw new CommandException("The command is not available in the current context.");
                 }
             }
-            CommandResult result = executable.execute(getCommandInvocation());
 
-            if (getResultHandler() != null) {
-                if (result == null || result.equals(CommandResult.SUCCESS)) {
-                    getResultHandler().onSuccess();
-                } else {
-                    getResultHandler().onFailure(result);
+            if (hasRedirectIn()) {
+                updateInjectedArgumentWithRedirectedInData();
+                if (invocationConfiguration.getPipedData() != null) {
+                    throw new CommandException("Can't inject both from input and pipe operators");
+                }
+            }
+
+            if (invocationConfiguration.getPipedData() != null) {
+                updateInjectedArgumentWithPipelinedData(new PipelineResource(invocationConfiguration.getPipedData()));
+                if (hasRedirectIn()) {
+                    throw new CommandException("Can't inject both from input and pipe operators");
+                }
+            }
+
+            CommandResult result = null;
+            try {
+                result = executable.execute(getCommandInvocation());
+                if (getResultHandler() != null) {
+                    if (result == null || result.equals(CommandResult.SUCCESS)) {
+                        getResultHandler().onSuccess();
+                    } else {
+                        getResultHandler().onFailure(result);
+                    }
+                }
+            } finally {
+                if (invocationConfiguration.getOutputRedirection() != null) {
+                    try {
+                        invocationConfiguration.getOutputRedirection().close();
+                    } catch (IOException ex) {
+                        throw new CommandException(ex);
+                    }
                 }
             }
             return result;
         }
 
-        @Override
-        public void updateInjectedArgumentWithPipelinedData(PipelineResource resource) {
+        private void updateInjectedArgumentWithPipelinedData(PipelineResource resource) {
             ProcessedOption arg = checkProcessedCommandForResourceArgument();
             if(arg != null)
                 arg.injectResource(resource, cmd.getCommand());
         }
 
-        @Override
-        public boolean hasRedirectIn() {
+        private boolean hasRedirectIn() {
             return invocationConfiguration.getInputRedirection() != null;
         }
 
-        @Override
-        public void updateInjectedArgumentWithRedirectedInData() {
+        private void updateInjectedArgumentWithRedirectedInData() {
             ProcessedOption arg = checkProcessedCommandForResourceArgument();
             if(arg != null)
                 arg.injectResource(new PipelineResource(invocationConfiguration.getInputRedirection().read()), cmd.getCommand());

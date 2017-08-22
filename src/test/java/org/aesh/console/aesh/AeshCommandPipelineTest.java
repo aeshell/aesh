@@ -75,7 +75,7 @@ public class AeshCommandPipelineTest {
 
         connection.read("pipe | bar" + Config.getLineSeparator());
         Thread.sleep(100);
-
+        connection.assertBufferEndsWith("hello aesh"+Config.getLineSeparator());
         console.stop();
     }
 
@@ -126,8 +126,7 @@ public class AeshCommandPipelineTest {
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             try {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(arg.read()));
-                assertEquals("hello", reader.readLine());
-                assertEquals("aesh", reader.readLine());
+                commandInvocation.println(reader.readLine() + " " + reader.readLine());
             }
             catch (IOException e) {
                 e.printStackTrace();
