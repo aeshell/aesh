@@ -28,6 +28,7 @@ import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.export.ExportChangeListener;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationProvider;
 import org.aesh.command.validator.ValidatorInvocation;
@@ -278,4 +279,6 @@ public interface Settings<C extends Command<CI>, CI extends CommandInvocation,
     Object clone();
 
     InvocationProviders<CA, CI3, CI2, VI, OA> invocationProviders();
+
+    ExportChangeListener exportListener();
 }

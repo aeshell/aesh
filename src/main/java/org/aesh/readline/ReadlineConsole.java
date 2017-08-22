@@ -110,7 +110,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
         //enabling export
         if(this.settings.exportEnabled()) {
-            exportManager = new ExportManager(settings.exportFile(), settings.exportUsesSystemEnvironment());
+            exportManager = new ExportManager(settings.exportFile(), settings.exportUsesSystemEnvironment(), settings.exportListener());
             preProcessors.add(new ExportPreProcessor(exportManager));
             completions.add(new ExportCompletion(exportManager));
             if(commandResolver.getRegistry() != null &&

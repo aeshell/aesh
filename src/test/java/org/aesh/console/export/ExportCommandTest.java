@@ -19,6 +19,7 @@
  */
 package org.aesh.console.export;
 
+import org.aesh.command.export.ExportChangeListener;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.settings.Settings;
@@ -31,6 +32,9 @@ import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
 import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -105,5 +109,38 @@ public class ExportCommandTest {
 
         console.stop();
     }
+
+     @Test
+    public void testExportListener() throws IOException, InterruptedException {
+
+         final boolean[] listenerCalled = {false};
+         ExportChangeListener listener = (name, value) -> {
+             assertEquals("FOO", name);
+             assertEquals("bar", value);
+             listenerCalled[0] = true;
+         };
+
+         TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = new AeshCommandRegistryBuilder().create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .setPersistExport(false)
+                 .mode(EditMode.Mode.EMACS)
+                 .readInputrc(false)
+                 .logging(true)
+                 .exportListener(listener)
+                 .build();
+
+         ReadlineConsole console = new ReadlineConsole(settings);
+         console.start();
+         connection.read("export FOO=bar"+Config.getLineSeparator());
+         console.stop();
+         Thread.sleep(50);
+         assertTrue(listenerCalled[0]);
+     }
+
 
 }

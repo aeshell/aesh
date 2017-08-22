@@ -53,17 +53,26 @@ public class ExportManager {
 
     private final File exportFile;
     private final boolean exportUsesSystemEnvironment;
+    private final ExportChangeListener listener;
 
     public ExportManager(File exportFile) {
-        this(exportFile, false);
+        this(exportFile, false, null);
     }
 
+    public ExportManager(File exportFile, ExportChangeListener listener) {
+        this(exportFile, false, listener);
+    }
     public ExportManager(File exportFile, boolean exportUsesSystemEnvironment) {
+        this(exportFile, exportUsesSystemEnvironment, null);
+    }
+
+    public ExportManager(File exportFile, boolean exportUsesSystemEnvironment, ExportChangeListener listener) {
         this.exportFile = exportFile;
         this.exportUsesSystemEnvironment = exportUsesSystemEnvironment;
         variables = new HashMap<>();
         if (exportFile.isFile())
             readVariablesFromFile();
+        this.listener = listener;
     }
 
     private void readVariablesFromFile() {
@@ -88,6 +97,8 @@ public class ExportManager {
                 value = value.replace(String.valueOf(DOLLAR + name), variables.get(name));
             }
             variables.put(name, value);
+            if(listener != null)
+                listener.exportChange(name, value);
             return null;
         }
         return "export: usage: export [name[=value] ...]";

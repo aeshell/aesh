@@ -24,6 +24,7 @@ import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.export.ExportChangeListener;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.invocation.CommandInvocation;
@@ -248,6 +249,10 @@ public class SettingsBuilder {
 
     public SettingsBuilder enableOperatorParser(boolean enabled) {
         return apply(c -> c.settings.enableOperatorParser(enabled));
+    }
+
+    public SettingsBuilder exportListener(ExportChangeListener listener) {
+        return apply(c -> c.settings.setExportListener(listener));
     }
 
     public Settings<? extends Command<? extends CommandInvocation>,? extends CommandInvocation,

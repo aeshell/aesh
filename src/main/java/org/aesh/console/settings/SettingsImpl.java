@@ -24,6 +24,7 @@ import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.export.ExportChangeListener;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationProvider;
 import org.aesh.command.validator.ValidatorInvocation;
@@ -101,6 +102,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     private ManProvider manProvider;
     private Connection connection;
     private InvocationProviders<CA, CI3, CI2, VI, OA> invocationProviders;
+    private ExportChangeListener exportListener;
 
     SettingsImpl() {
     }
@@ -146,6 +148,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
         setManProvider(baseSettings.manProvider());
         setConnection(baseSettings.connection());
         setInvocationProviders(baseSettings.invocationProviders());
+        setExportListener(baseSettings.exportListener());
     }
 
     public void resetToDefaults() {
@@ -726,6 +729,15 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     @Override
     public InvocationProviders<CA, CI3, CI2, VI, OA> invocationProviders() {
         return invocationProviders;
+    }
+
+    @Override
+    public ExportChangeListener exportListener() {
+        return exportListener;
+    }
+
+    public void setExportListener(ExportChangeListener listener) {
+        this.exportListener = listener;
     }
 
     public void setConnection(Connection connection) {
