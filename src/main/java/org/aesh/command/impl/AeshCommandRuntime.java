@@ -150,7 +150,8 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
             }
             throw cmd;
         }
-        for (Execution exec : executor.getExecutions()) {
+        Execution exec = null;
+        while ((exec = executor.getNextExecution()) != null) {
             try {
                 resultHandler = exec.getResultHandler();
                 exec.execute();

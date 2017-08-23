@@ -242,7 +242,7 @@ public class TestConnection implements Connection {
     }
 
     public void assertBufferEndsWith(String expected) {
-        assertTrue(bufferBuilder.toString().endsWith(expected));
+        assertTrue(bufferBuilder.toString(), bufferBuilder.toString().endsWith(expected));
     }
 
      public void read(int... data) {
