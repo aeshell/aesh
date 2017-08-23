@@ -19,12 +19,9 @@
  */
 package org.aesh.readline;
 
-import org.aesh.command.Execution;
 import org.aesh.command.Executor;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.terminal.Connection;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -32,30 +29,20 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class ProcessManager {
 
     private Connection conn;
-    private Console console;
-    private Queue<Execution<? extends CommandInvocation>> executionQueue;
-
+    private final Console console;
+    private Executor<? extends CommandInvocation> executor;
     public ProcessManager(Console console) {
         this.console = console;
-        executionQueue = new ConcurrentLinkedQueue<>();
     }
 
     public void execute(Executor<? extends CommandInvocation> executor, Connection conn) {
         this.conn = conn;
-        executionQueue.addAll(executor.getExecutions());
+        this.executor = executor;
         executeNext();
     }
 
-    private Execution<? extends CommandInvocation> next() {
-        return executionQueue.poll();
-    }
-
-    private Execution<? extends CommandInvocation> peek() {
-        return executionQueue.peek();
-    }
-
     public boolean hasNext() {
-        return !executionQueue.isEmpty();
+        return executor.hasNext();
     }
 
     public void processFinished(Process process) {
@@ -70,7 +57,7 @@ public class ProcessManager {
 
     public void executeNext() {
         if(hasNext()) {
-            new Process(this, conn, next()).start();
+            new Process(this, conn, executor.getNextExecution()).start();
         }
     }
 }

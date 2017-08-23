@@ -40,4 +40,6 @@ public interface Execution<T extends CommandInvocation> {
 
     CommandResult execute() throws CommandException, CommandValidatorException,
             InterruptedException;
+
+    CommandResult getResult();
 }

@@ -37,8 +37,8 @@ public enum OperatorType {
     APPEND_OUT_ERROR("2>>", true, true),
     REDIRECT_OUT_ALL("2>&1", true, true),
     AMP("&", true, true),
-    AND("&&", true, true),
-    OR("||", true, true),
+    AND("&&"),
+    OR("||"),
     NONE("");
 
     private final String value;

@@ -20,12 +20,15 @@
 package org.aesh.command;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.validator.CommandValidatorException;
 
 /**
- * Contains the list of Execution to execute.
+ * Contains the list of Execution to execute and the logic to deal with
+ * operators.
  *
  * @author jdenise@redhat.com
  */
@@ -33,18 +36,66 @@ public class Executor<T extends CommandInvocation> {
 
     private final List<Execution<T>> executions;
 
+    private final Set<Execution<T>> skip = new HashSet<>();
     public Executor(List<Execution<T>> executions) {
         this.executions = Collections.unmodifiableList(executions);
     }
 
     public void execute() throws CommandException, CommandValidatorException, InterruptedException {
-
-        for (Execution<T> exec : executions) {
+        Execution<T> exec;
+        while ((exec = getNextExecution()) != null) {
             exec.execute();
         }
     }
 
     public List<Execution<T>> getExecutions() {
         return executions;
+    }
+
+    public boolean hasNext() {
+        return getNextExecution() != null;
+    }
+
+    public Execution<T> getNextExecution() {
+        if (executions.isEmpty()) {
+            return null;
+        }
+
+        int index = 0;
+        // Retrieve the first non executed non skip execution.
+        for (Execution<T> execution : executions) {
+            if (execution.getResult() == null && !skip.contains(execution)) {
+                break;
+            }
+            index += 1;
+        }
+
+        //that is the first one, just return it
+        if (index == 0) {
+            return executions.get(index);
+        }
+        // no more to execute
+        if (index == executions.size()) {
+            return null;
+        }
+        // We need the result of the last executed command. It will be conveyed
+        // to the next command to execute.
+        //The last executed one is at index - n; n being the number of skip.
+        int n = 1;
+        while (executions.get(index - n).getResult() == null) {
+            n += 1;
+        }
+        int i = index - 1;
+        CommandResult lastResult = executions.get(index - n).getResult();
+        while (i < executions.size() - 1) {
+            Execution exec = executions.get(i);
+            if (exec.getExecutable().canExecuteNext(lastResult)) {
+                return executions.get(i + 1);
+            } else {
+                i += 1;
+                skip.add(executions.get(i));
+            }
+        }
+        return null;
     }
 }

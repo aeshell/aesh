@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2016 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2017 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -17,20 +17,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.command;
+package org.aesh.command.impl.operator;
 
+import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
 
 /**
- * The base interface of commands and operators.
  *
  * @author jdenise@redhat.com
  */
-public interface Executable<T extends CommandInvocation> {
+public class OrOperator<T extends CommandInvocation> extends EndOperator<T> {
 
-    CommandResult execute(T ic) throws CommandException, InterruptedException;
-
-    default boolean canExecuteNext(CommandResult result) {
-        return true;
+    @Override
+    public boolean canExecuteNext(CommandResult result) {
+        return result.isFailure();
     }
 }

@@ -30,6 +30,7 @@ import org.aesh.command.Executable;
 import org.aesh.command.Execution;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.operator.AndOperator;
 import org.aesh.command.impl.operator.AppendOutputRedirectionOperator;
 import org.aesh.command.impl.operator.EndOperator;
 import org.aesh.command.impl.operator.InputRedirectionOperator;
@@ -42,6 +43,7 @@ import org.aesh.command.impl.operator.DataProvider;
 import org.aesh.command.impl.operator.ExecutableOperator;
 import org.aesh.command.impl.operator.InputDelegate;
 import org.aesh.command.impl.operator.Operator;
+import org.aesh.command.impl.operator.OrOperator;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.result.ResultHandler;
@@ -64,6 +66,7 @@ class Executions {
         private final ProcessedCommand<? extends Command<T>> cmd;
         private final CommandInvocationConfiguration invocationConfiguration;
         private final AeshCommandRuntime<? extends Command, T> runtime;
+        private CommandResult result;
         ExecutionImpl(ExecutableOperator<T> executable,
                 AeshCommandRuntime<? extends Command, T> runtime,
                 CommandInvocationConfiguration invocationConfiguration,
@@ -127,7 +130,6 @@ class Executions {
                 }
             }
 
-            CommandResult result = null;
             try {
                 result = executable.execute(getCommandInvocation());
                 if (getResultHandler() != null) {
@@ -137,6 +139,16 @@ class Executions {
                         getResultHandler().onFailure(result);
                     }
                 }
+                if (result == null) {
+                    result = CommandResult.SUCCESS;
+                }
+            } catch (CommandException ex) {
+                result = CommandResult.FAILURE;
+                throw ex;
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                result = CommandResult.FAILURE;
+                throw ex;
             } finally {
                 if (invocationConfiguration.getOutputRedirection() != null) {
                     try {
@@ -175,6 +187,16 @@ class Executions {
                 return cmd.getArgument();
             }
             return null;
+        }
+
+        /**
+         * Returns the CommandResult or null if not executed.
+         *
+         * @return
+         */
+        @Override
+        public CommandResult getResult() {
+            return result;
         }
     }
 
@@ -290,6 +312,12 @@ class Executions {
             }
             case REDIRECT_IN: {
                 return new InputRedirectionOperator(context);
+            }
+            case AND: {
+                return new AndOperator();
+            }
+            case OR: {
+                return new OrOperator();
             }
         }
         throw new IllegalArgumentException("Unsupported operator " + op);
