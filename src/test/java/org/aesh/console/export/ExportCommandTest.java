@@ -137,9 +137,9 @@ public class ExportCommandTest {
          ReadlineConsole console = new ReadlineConsole(settings);
          console.start();
          connection.read("export FOO=bar"+Config.getLineSeparator());
-         console.stop();
          Thread.sleep(50);
          assertTrue(listenerCalled[0]);
+         console.stop();
      }
 
 
