@@ -225,7 +225,7 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
         String opName = aeshLine.words().get(0).word();
         CommandContainer<C,CI> container = commandResolver.resolveCommand(opName, commandLine);
         if (container == null) {
-            throw new CommandNotFoundException("No command handler for '" + opName + "'.");
+            throw new CommandNotFoundException("No command handler for '" + opName + "'.", opName);
         }
         container.getParser().parse(aeshLine.iterator(), CommandLineParser.Mode.STRICT);
         if (container.getParser().getProcessedCommand().parserExceptions().size() > 0) {
