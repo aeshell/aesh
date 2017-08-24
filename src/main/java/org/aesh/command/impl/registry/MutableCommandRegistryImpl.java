@@ -70,17 +70,17 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
             if(registry.containsKey(names[0])) {
                 return registry.get(names[0]);
             }
-            throw new CommandNotFoundException("Command: "+names[0]+" was not found.");
+            throw new CommandNotFoundException("Command: " + names[0] + " was not found.", names[0]);
         }
         else
-            throw new CommandNotFoundException("Command: "+name+" was not found.");
+            throw new CommandNotFoundException("Command: " + name + " was not found.", name);
     }
 
     @Override
     public List<CommandLineParser<C>> getChildCommandParsers(String parent) throws CommandNotFoundException {
         CommandContainer c = getCommand(parent, "");
         if (c == null) {
-            throw new CommandNotFoundException("Command: " + parent + " was not found.");
+            throw new CommandNotFoundException("Command: " + parent + " was not found.", parent);
         }
         return Collections.unmodifiableList(c.getParser().getAllChildParsers());
     }
@@ -196,7 +196,7 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
         if (aliases.containsKey(alias)) {
             return aliases.get(alias);
         } else {
-            throw new CommandNotFoundException("Command: named " + alias + " was not found.");
+            throw new CommandNotFoundException("Command: named " + alias + " was not found.", alias);
         }
     }
 

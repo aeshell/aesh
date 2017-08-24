@@ -25,7 +25,14 @@ package org.aesh.command;
  */
 public class CommandNotFoundException extends Exception {
 
-    public CommandNotFoundException(String s) {
-        super(s);
+    private final String cmdName;
+
+    public CommandNotFoundException(String msg, String cmdName) {
+        super(msg);
+        this.cmdName = cmdName;
+    }
+
+    public String getCommandName() {
+        return cmdName;
     }
 }
