@@ -178,7 +178,12 @@ public class CompletionParserTest {
         clp.complete(co, ip);
         assertEquals(2, co.getFormattedCompletionCandidates().size());
         assertEquals("foo bar bar", clp.getCommand().complexValue);
-     }
+
+        co = new AeshCompleteOperation(aeshContext, "test XX", 10);
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+
+    }
 
     @Test
     public void testNewCompletionParserArgumentInjection() throws Exception {
