@@ -37,7 +37,6 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.CommandResult;
 import org.aesh.tty.TestConnection;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -52,7 +51,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * TODO: As CommandInvocation.executeCommand(String) is not implemented atm, this is ignored for now.
  *
  * the idea of this test is to show how aesh could work reading a script file.
  * this impl will only accept "foo" commands,
@@ -66,7 +64,6 @@ import static org.junit.Assert.assertTrue;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@Ignore
 public class AeshScriptTest {
 
     private static CountDownLatch counter = new CountDownLatch(3);
@@ -103,11 +100,11 @@ public class AeshScriptTest {
 
         connection.read("run");
         connection.read(Config.getLineSeparator());
-        //outputStream.flush();
 
         counter.await(1, TimeUnit.SECONDS);
 
         assertEquals(0, counter.getCount());
+        console.stop();
     }
 
     private List<String> readScriptFile() throws IOException {
@@ -136,12 +133,11 @@ public class AeshScriptTest {
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
 
             try {
-                //            commandInvocation.putProcessInBackground();
 
                 List<String> script = readScriptFile();
 
                 for (String line : script) {
-                    commandInvocation.executeCommand(line + Config.getLineSeparator());
+                    commandInvocation.executeCommand(line);
                 }
 
                 return CommandResult.SUCCESS;

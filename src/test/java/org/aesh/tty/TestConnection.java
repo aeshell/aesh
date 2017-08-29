@@ -175,7 +175,8 @@ public class TestConnection implements Connection {
     @Override
     public void close() {
         reading = false;
-        closeHandler.accept(null);
+        if(closeHandler != null)
+            closeHandler.accept(null);
     }
 
     @Override

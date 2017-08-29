@@ -26,7 +26,6 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.helper.ManProvider;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -37,7 +36,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@Ignore
 public class AeshManProviderTest {
 
     @Test
