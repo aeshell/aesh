@@ -234,6 +234,11 @@ public class TestConnection implements Connection {
         return Charset.defaultCharset();
     }
 
+    @Override
+    public boolean supportsAnsi() {
+        return true;
+    }
+
     public void assertLine(String expected) {
         assertEquals(expected, out);
     }
