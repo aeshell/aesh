@@ -38,7 +38,6 @@ import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.console.helper.InterruptHook;
 import org.aesh.console.helper.ManProvider;
 import org.aesh.io.Resource;
 import org.aesh.readline.editing.EditMode;
@@ -157,10 +156,6 @@ public class SettingsBuilder {
 
     public SettingsBuilder quitHandler(QuitHandler quitHandler) {
         return apply(c -> c.settings.setQuitHandler(quitHandler));
-    }
-
-    public SettingsBuilder interruptHook(InterruptHook interruptHook) {
-        return apply(c -> c.settings.setInterruptHook(interruptHook));
     }
 
     public SettingsBuilder parseOperators(boolean parseOperators) {

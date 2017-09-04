@@ -124,15 +124,7 @@ public class Example {
                 .setExecuteFileAtStart(new FileResource(
                         Config.getHomeDir()+Config.getPathSeparator()+".aeshrc"))
                 .readInputrc(false);
-                /*
-                .interruptHook(new InterruptHook() {
-                    @Override
-                    public void handleInterrupt(Console console) {
-                        console.getShell().out().println("^C");
-                        console.clearBufferAndDisplayPrompt();
-                    }
-                });
-                */
+
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
                 .command(fooCommand.create())

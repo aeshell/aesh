@@ -40,7 +40,6 @@ import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.console.helper.InterruptHook;
 import org.aesh.console.helper.ManProvider;
 import org.aesh.io.Resource;
 import org.aesh.readline.editing.EditMode;
@@ -160,11 +159,6 @@ public interface Settings<C extends Command<CI>, CI extends CommandInvocation,
      * Get quit handler
      */
     QuitHandler quitHandler();
-
-    /**
-     * Get interrupt hook
-     */
-    InterruptHook interruptHook();
 
     /**
      * Is operator parser enabled

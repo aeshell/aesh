@@ -19,7 +19,6 @@
  */
 package org.aesh.readline;
 
-import org.aesh.readline.AeshContext;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
 import org.aesh.utils.Config;

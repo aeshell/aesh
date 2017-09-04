@@ -38,7 +38,6 @@ import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.console.helper.InterruptHook;
 import org.aesh.io.FileResource;
 import org.aesh.readline.DefaultAeshContext;
 import org.aesh.readline.editing.EditMode;
@@ -81,7 +80,6 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     private File aliasFile;
     private boolean aliasEnabled = true;
     private boolean persistAlias = true;
-    private InterruptHook interruptHook = null;
     private boolean enableOperatorParser = true;
     private boolean manEnabled = true;
     private AeshContext aeshContext;
@@ -128,7 +126,6 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
         setAliasEnabled(baseSettings.aliasEnabled());
         setPersistAlias(baseSettings.persistAlias());
         setQuitHandler(baseSettings.quitHandler());
-        setInterruptHook(baseSettings.interruptHook());
         enableOperatorParser(baseSettings.operatorParserEnabled());
         setManEnabled(baseSettings.manEnabled());
         setAeshContext(baseSettings.aeshContext());
@@ -517,15 +514,6 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     @Override
     public QuitHandler quitHandler() {
         return quitHandler;
-    }
-
-    public void setInterruptHook(InterruptHook hook) {
-        interruptHook = hook;
-    }
-
-    @Override
-    public InterruptHook interruptHook() {
-        return interruptHook;
     }
 
     public void enableOperatorParser(boolean enable) {
