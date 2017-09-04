@@ -20,6 +20,7 @@
 package org.aesh.console.settings;
 
 import org.aesh.command.Command;
+import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;

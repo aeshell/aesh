@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.aesh.command.Command;
+import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;

@@ -54,7 +54,7 @@ import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.invocation.CommandInvocationProvider;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.console.settings.CommandNotFoundHandler;
+import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.io.filter.AllResourceFilter;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;

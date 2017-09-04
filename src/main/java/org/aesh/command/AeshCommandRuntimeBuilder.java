@@ -45,7 +45,6 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.console.settings.CommandNotFoundHandler;
 import org.aesh.readline.DefaultAeshContext;
 import org.aesh.console.settings.Settings;
 

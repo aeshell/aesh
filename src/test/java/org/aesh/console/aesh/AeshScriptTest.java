@@ -28,7 +28,7 @@ import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.console.settings.CommandNotFoundHandler;
+import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;
