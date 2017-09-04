@@ -29,7 +29,7 @@ import java.util.List;
 
 import org.aesh.comparators.PosixFileNameComparator;
 import org.aesh.complete.AeshCompleteOperation;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.io.Resource;
 import org.aesh.io.FileResource;
 

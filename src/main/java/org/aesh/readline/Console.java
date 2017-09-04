@@ -20,7 +20,6 @@
 package org.aesh.readline;
 
 import org.aesh.terminal.Connection;
-import org.aesh.console.AeshContext;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

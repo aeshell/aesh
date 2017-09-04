@@ -23,7 +23,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 
 /**
  * Output to a file.

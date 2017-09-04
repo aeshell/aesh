@@ -21,7 +21,7 @@ package org.aesh.console.aesh;
 
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.console.settings.Settings;

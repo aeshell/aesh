@@ -21,7 +21,7 @@
 package org.aesh.command.impl.validator;
 
 import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

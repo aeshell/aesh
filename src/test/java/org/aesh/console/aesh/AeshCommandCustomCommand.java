@@ -30,7 +30,7 @@ import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.Command;
 import org.aesh.command.CommandResult;

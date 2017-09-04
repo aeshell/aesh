@@ -48,7 +48,7 @@ import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.io.PipelineResource;
 import org.aesh.io.Resource;
 import org.aesh.parser.ParsedLine;

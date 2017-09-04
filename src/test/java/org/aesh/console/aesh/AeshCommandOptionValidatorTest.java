@@ -23,7 +23,7 @@ import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.OptionValidator;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;

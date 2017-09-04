@@ -20,6 +20,7 @@
 package org.aesh.console;
 
 import org.aesh.complete.AeshCompleteOperation;
+import org.aesh.readline.AeshContext;
 import org.aesh.readline.completion.CompletionHandler;
 
 /**

@@ -30,7 +30,7 @@ import org.aesh.command.impl.invocation.DefaultCommandInvocation;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.command.impl.activator.AeshCommandActivatorProvider;
 import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
 import org.aesh.command.activator.CommandActivatorProvider;
@@ -46,7 +46,7 @@ import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.settings.CommandNotFoundHandler;
-import org.aesh.console.settings.DefaultAeshContext;
+import org.aesh.readline.DefaultAeshContext;
 import org.aesh.console.settings.Settings;
 
 import java.util.function.Consumer;

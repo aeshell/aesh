@@ -33,7 +33,7 @@ import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;

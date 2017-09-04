@@ -25,7 +25,7 @@ import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;

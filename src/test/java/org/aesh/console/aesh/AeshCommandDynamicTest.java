@@ -32,7 +32,7 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.settings.Settings;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.command.CommandResult;
-import org.aesh.console.settings.DefaultAeshContext;
+import org.aesh.readline.DefaultAeshContext;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.ReadlineConsole;

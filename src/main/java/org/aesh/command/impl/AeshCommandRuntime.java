@@ -41,7 +41,7 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.complete.AeshCompleteOperation;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.impl.activator.AeshOptionActivatorProvider;

@@ -30,7 +30,7 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.Executor;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;

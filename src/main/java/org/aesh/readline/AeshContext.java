@@ -17,41 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.console.settings;
+package org.aesh.readline;
 
-import org.aesh.console.AeshContext;
-import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
-import org.aesh.utils.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class DefaultAeshContext implements AeshContext {
+public interface AeshContext {
 
-    private Resource cwd;
+    Resource getCurrentWorkingDirectory();
 
-    public DefaultAeshContext() {
-        this(new FileResource("").newInstance(Config.getUserDir()));
-    }
-
-    public DefaultAeshContext(Resource cwd) {
-        if(cwd != null && (!cwd.isLeaf() && cwd.exists()))
-            this.cwd = cwd;
-        else
-            throw new IllegalArgumentException("Current working directory must be a directory");
-    }
-
-    @Override
-    public Resource getCurrentWorkingDirectory() {
-        return cwd;
-    }
-
-    @Override
-    public void setCurrentWorkingDirectory(Resource cwd) {
-        if(!cwd.isLeaf())
-            this.cwd = cwd;
-        else
-            throw new IllegalArgumentException("Current working directory must be a directory");
-    }
+    void setCurrentWorkingDirectory(Resource cwd);
 }

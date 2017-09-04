@@ -32,7 +32,7 @@ import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
 import org.aesh.readline.terminal.Key;

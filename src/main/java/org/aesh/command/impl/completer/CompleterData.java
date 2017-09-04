@@ -20,7 +20,7 @@
 
 package org.aesh.command.impl.completer;
 
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.command.Command;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.readline.terminal.formatting.TerminalString;

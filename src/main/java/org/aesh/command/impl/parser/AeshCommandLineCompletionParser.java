@@ -29,7 +29,7 @@ import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.Command;
 import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedWord;
 import org.aesh.readline.terminal.formatting.TerminalString;

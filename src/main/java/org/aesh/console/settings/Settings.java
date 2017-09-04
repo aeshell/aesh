@@ -32,7 +32,7 @@ import org.aesh.command.export.ExportChangeListener;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationProvider;
 import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.console.AeshContext;
+import org.aesh.readline.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivatorProvider;
