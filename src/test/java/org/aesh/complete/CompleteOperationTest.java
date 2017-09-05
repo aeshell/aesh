@@ -20,9 +20,7 @@
 package org.aesh.complete;
 
 import org.aesh.readline.AeshContext;
-import org.aesh.io.FileResource;
-import org.aesh.io.Resource;
-import org.aesh.utils.Config;
+import org.aesh.readline.DefaultAeshContext;
 import org.junit.Test;
 
 import java.util.List;
@@ -34,15 +32,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class CompleteOperationTest {
 
-    private final AeshContext aeshContext = new AeshContext() {
-        @Override
-        public Resource getCurrentWorkingDirectory() {
-            return new FileResource(Config.getUserDir());
-        }
-        @Override
-        public void setCurrentWorkingDirectory(Resource cwd) {
-        }
-    };
+    private final AeshContext aeshContext = new DefaultAeshContext();
 
     @Test
     public void testGetFormattedCompletionCandidates() {

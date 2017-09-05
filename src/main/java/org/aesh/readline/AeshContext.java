@@ -21,12 +21,38 @@ package org.aesh.readline;
 
 import org.aesh.io.Resource;
 
+import java.util.Set;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface AeshContext {
 
+    /**
+     * The current working directory.
+     * It is up to the running cli to keep the cwd updated to the correct value
+     *
+     * @return cwd
+     */
     Resource getCurrentWorkingDirectory();
 
+    /**
+     * Set the current working directory
+     * @param cwd cwd
+     */
     void setCurrentWorkingDirectory(Resource cwd);
+
+    /**
+     * If export is enabled this will return a set of all the
+     * variable keys
+     *
+     * @return set of exported variable keys
+     */
+    Set<String> exportedVariableNames();
+
+    /**
+     * @param key variable key
+     * @return value of the variable key if it is defined, else null
+     */
+    String exportedVariable(String key);
 }

@@ -19,8 +19,14 @@
  */
 package org.aesh.console.export;
 
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
 import org.aesh.command.export.ExportChangeListener;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
@@ -45,11 +51,14 @@ public class ExportCommandTest {
     private final Key backSpace =  Key.BACKSPACE;
 
     @Test
-    public void testExportCompletionAndCommand() throws IOException, InterruptedException {
+    public void testExportCompletionAndCommand() throws IOException, InterruptedException, CommandLineParserException {
 
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder().create();
+        CommandRegistry registry =
+                new AeshCommandRegistryBuilder()
+                .command(FooCommand.class)
+                .create();
 
         Settings settings = SettingsBuilder.builder()
                 .connection(connection)
@@ -105,6 +114,8 @@ public class ExportCommandTest {
         connection.read(Config.getLineSeparator());
         //outputStream.flush();
 
+        connection.read("foo"+Config.getLineSeparator());
+
         //assertTrue(byteArrayOutputStream.toString().contains("/tmp:/opt"));
 
         console.stop();
@@ -142,5 +153,14 @@ public class ExportCommandTest {
          console.stop();
      }
 
+     @CommandDefinition(name = "foo", description = "")
+     public static class FooCommand implements Command {
+
+         @Override
+         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+             assertEquals("/tmp", commandInvocation.getConfiguration().getAeshContext().exportedVariable("FOO"));
+             return CommandResult.SUCCESS;
+         }
+     }
 
 }

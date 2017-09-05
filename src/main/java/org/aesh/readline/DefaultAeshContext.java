@@ -19,9 +19,13 @@
  */
 package org.aesh.readline;
 
+import org.aesh.command.export.ExportManager;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
 import org.aesh.utils.Config;
+
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -29,17 +33,30 @@ import org.aesh.utils.Config;
 public class DefaultAeshContext implements AeshContext {
 
     private Resource cwd;
+    private final ExportManager exportManager;
 
     public DefaultAeshContext() {
-        this(new FileResource("").newInstance(Config.getUserDir()));
+        this(new FileResource("").newInstance(Config.getUserDir()), null);
     }
 
     public DefaultAeshContext(Resource cwd) {
+        this(cwd, null);
+    }
+
+    public DefaultAeshContext(Resource cwd, ExportManager exportManager) {
         if(cwd != null && (!cwd.isLeaf() && cwd.exists()))
             this.cwd = cwd;
         else
             throw new IllegalArgumentException("Current working directory must be a directory");
+
+        this.exportManager = exportManager;
     }
+
+    public DefaultAeshContext(ExportManager exportManager) {
+        this(new FileResource("").newInstance(Config.getUserDir()), exportManager);
+    }
+
+
 
     @Override
     public Resource getCurrentWorkingDirectory() {
@@ -52,5 +69,22 @@ public class DefaultAeshContext implements AeshContext {
             this.cwd = cwd;
         else
             throw new IllegalArgumentException("Current working directory must be a directory");
+    }
+
+    @Override
+    public Set<String> exportedVariableNames() {
+        if(exportManager != null)
+            return exportManager.keys();
+        else
+            return Collections.emptySet();
+
+    }
+
+    @Override
+    public String exportedVariable(String key) {
+        if(exportManager != null)
+            return exportManager.getValue(key);
+        else
+            return null;
     }
 }

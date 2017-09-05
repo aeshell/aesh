@@ -39,9 +39,7 @@ import org.aesh.command.option.OptionList;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.io.FileResource;
-import org.aesh.io.Resource;
-import org.aesh.utils.Config;
+import org.aesh.readline.DefaultAeshContext;
 import org.junit.Test;
 
 import java.util.List;
@@ -56,16 +54,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class CompletionParserTest {
 
-    private final AeshContext aeshContext = new AeshContext() {
-        @Override
-        public Resource getCurrentWorkingDirectory() {
-            return new FileResource(Config.getUserDir());
-        }
-
-        @Override
-        public void setCurrentWorkingDirectory(Resource cwd) {
-        }
-    };
+    private final AeshContext aeshContext = new DefaultAeshContext();
 
     @Test
     public void testNewCompletionParser() throws Exception {

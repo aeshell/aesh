@@ -26,10 +26,10 @@ import java.io.IOException;
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.readline.AeshContext;
+import org.aesh.readline.DefaultAeshContext;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.utils.Config;
 import org.aesh.io.FileResource;
-import org.aesh.io.Resource;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -43,21 +43,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class FileOptionCompleterTest {
 
-    private final AeshContext aeshContext = new AeshContext() {
-        private Resource cwd;
-        @Override
-        public Resource getCurrentWorkingDirectory() {
-            if(cwd == null)
-                cwd = new FileResource(Config.getUserDir());
-            return cwd;
-        }
-        @Override
-        public void setCurrentWorkingDirectory(Resource cwd) {
-            if(!cwd.isDirectory())
-                throw new IllegalArgumentException("Current working directory must be a directory");
-            this.cwd = cwd;
-        }
-    };
+    private final AeshContext aeshContext = new DefaultAeshContext();
 
     @Test(expected = IllegalArgumentException.class)
     public void testCompleterIllegalBaseDir() throws IOException {

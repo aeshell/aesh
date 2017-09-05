@@ -102,7 +102,6 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         commandResolver = new AeshCommandResolver<>(settings.commandRegistry());
 
         addCompletion(new AeshCompletion());
-        context = new DefaultAeshContext();
         if(settings.connection() != null)
             connection = settings.connection();
 
@@ -121,6 +120,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                 }
             }
         }
+
+        context = new DefaultAeshContext(exportManager);
 
     }
 

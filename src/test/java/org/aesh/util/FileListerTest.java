@@ -33,6 +33,7 @@ import org.aesh.readline.AeshContext;
 import org.aesh.io.Resource;
 import org.aesh.io.FileResource;
 
+import org.aesh.readline.DefaultAeshContext;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.utils.Config;
 import org.junit.After;
@@ -45,15 +46,7 @@ import org.junit.Test;
 public class FileListerTest {
     private Resource workingDir;
     private static final String PATH_SEPARATOR = Config.getPathSeparator();
-    private final AeshContext aeshContext = new AeshContext() {
-        @Override
-        public Resource getCurrentWorkingDirectory() {
-            return new FileResource(Config.getUserDir());
-        }
-        @Override
-        public void setCurrentWorkingDirectory(Resource cwd) {
-        }
-    };
+    private final AeshContext aeshContext = new DefaultAeshContext();
 
     @Before
     public void before() throws IOException {
