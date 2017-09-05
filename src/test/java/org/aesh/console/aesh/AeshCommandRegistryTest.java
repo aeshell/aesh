@@ -28,8 +28,8 @@ import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.console.settings.Settings;
-import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.ReadlineConsole;
 

@@ -41,7 +41,7 @@ import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
 import org.aesh.command.impl.completer.AeshCompleterInvocationProvider;
 import org.aesh.command.impl.converter.AeshConverterInvocationProvider;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
-import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.parser.CommandLineParserException;
 import org.junit.Rule;
 import org.junit.Test;

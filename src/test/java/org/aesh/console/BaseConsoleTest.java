@@ -27,8 +27,8 @@ import java.util.Queue;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.aesh.console.settings.Settings;
-import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.utils.Config;

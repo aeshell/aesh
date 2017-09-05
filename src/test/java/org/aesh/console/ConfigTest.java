@@ -19,9 +19,9 @@
  */
 package org.aesh.console;
 
-import org.aesh.console.settings.RuntimeSettings;
-import org.aesh.console.settings.Settings;
-import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.command.settings.RuntimeSettings;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.utils.Config;
 import org.junit.Test;

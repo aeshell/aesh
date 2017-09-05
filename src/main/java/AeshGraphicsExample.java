@@ -25,8 +25,8 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.console.settings.Settings;
-import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.graphics.Graphics;
 import org.aesh.graphics.GraphicsConfiguration;
 

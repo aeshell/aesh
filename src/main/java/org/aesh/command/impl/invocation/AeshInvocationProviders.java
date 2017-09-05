@@ -26,7 +26,7 @@ import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.console.settings.Settings;
+import org.aesh.command.settings.Settings;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

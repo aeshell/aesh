@@ -40,7 +40,7 @@ import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.readline.AeshContext;
-import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.command.settings.SettingsBuilder;
 import org.junit.Test;
 
 import java.util.List;

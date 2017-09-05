@@ -46,7 +46,7 @@ import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.readline.DefaultAeshContext;
-import org.aesh.console.settings.Settings;
+import org.aesh.command.settings.Settings;
 
 import java.util.function.Consumer;
 import org.aesh.command.operator.OperatorType;

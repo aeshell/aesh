@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package org.aesh.console.settings;
+package org.aesh.command.settings;
 
 /**
  * <code>FileAccessPermission</code> defines file access permission like readable, writable.

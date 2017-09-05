@@ -19,8 +19,8 @@
  */
 package org.aesh.console.aesh;
 
-import org.aesh.console.settings.Settings;
-import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.helper.ManProvider;

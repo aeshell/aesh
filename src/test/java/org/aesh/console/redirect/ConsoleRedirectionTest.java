@@ -30,8 +30,8 @@ import org.aesh.command.option.Argument;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.console.BaseConsoleTest;
 
-import org.aesh.console.settings.Settings;
-import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.io.Resource;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;

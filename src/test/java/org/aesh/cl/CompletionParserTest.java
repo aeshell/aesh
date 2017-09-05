@@ -38,7 +38,7 @@ import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionList;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.readline.AeshContext;
-import org.aesh.console.settings.SettingsBuilder;
+import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
 import org.aesh.utils.Config;
