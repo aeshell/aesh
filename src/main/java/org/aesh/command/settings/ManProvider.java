@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.console.helper;
+package org.aesh.command.settings;
 
 import java.io.InputStream;
 

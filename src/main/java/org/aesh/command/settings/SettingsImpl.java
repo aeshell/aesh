@@ -32,7 +32,6 @@ import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.console.helper.ManProvider;
 import org.aesh.io.Resource;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.activator.CommandActivatorProvider;

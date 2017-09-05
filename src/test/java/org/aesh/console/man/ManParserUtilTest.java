@@ -19,7 +19,7 @@
  */
 package org.aesh.console.man;
 
-import org.aesh.console.man.parser.ManParserUtil;
+import org.aesh.command.man.parser.ManParserUtil;
 import org.aesh.utils.ANSI;
 import org.junit.Test;
 

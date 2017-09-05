@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.console.man;
+package org.aesh.command.man;
 
 import org.aesh.command.shell.Shell;
 import org.aesh.command.Command;

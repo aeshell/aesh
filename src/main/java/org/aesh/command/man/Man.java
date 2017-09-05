@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.console.man;
+package org.aesh.command.man;
 
 import org.aesh.command.Command;
 import org.aesh.command.completer.OptionCompleter;
@@ -25,8 +25,8 @@ import org.aesh.command.CommandException;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.console.helper.ManProvider;
-import org.aesh.console.man.parser.ManFileParser;
+import org.aesh.command.settings.ManProvider;
+import org.aesh.command.man.parser.ManFileParser;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;

@@ -17,9 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.console.man.parser;
+package org.aesh.command.man.parser;
 
-import org.aesh.console.man.FileParser;
+import org.aesh.command.man.FileParser;
 import org.aesh.utils.Config;
 
 import java.io.BufferedReader;

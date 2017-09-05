@@ -21,7 +21,7 @@ package org.aesh.console.man;
 
 import org.aesh.utils.ANSI;
 import org.aesh.utils.Config;
-import org.aesh.console.man.parser.ManSection;
+import org.aesh.command.man.parser.ManSection;
 import org.junit.Test;
 
 import java.util.ArrayList;

@@ -19,7 +19,8 @@
  */
 package org.aesh.console.man;
 
-import org.aesh.console.man.parser.ManFileParser;
+import org.aesh.command.man.TerminalPage;
+import org.aesh.command.man.parser.ManFileParser;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
