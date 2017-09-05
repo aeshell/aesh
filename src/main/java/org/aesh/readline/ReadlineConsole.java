@@ -181,6 +181,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         if(!running) {
             LOGGER.info("not running, returning");
             conn.close();
+            if(settings.quitHandler() != null)
+                settings.quitHandler().quit();
             return;
         }
         LOGGER.info("calling readline.readline");
