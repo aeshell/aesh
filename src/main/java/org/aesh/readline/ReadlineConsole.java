@@ -44,7 +44,7 @@ import org.aesh.command.export.ExportCompletion;
 import org.aesh.command.export.ExportManager;
 import org.aesh.command.export.ExportPreProcessor;
 import org.aesh.console.settings.Settings;
-import org.aesh.console.AeshCompletionHandler;
+import org.aesh.command.impl.completer.AeshCompletionHandler;
 import org.aesh.console.settings.SettingsBuilder;
 import org.aesh.readline.completion.Completion;
 import org.aesh.readline.editing.EditModeBuilder;

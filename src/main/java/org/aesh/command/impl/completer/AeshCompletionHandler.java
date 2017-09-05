@@ -17,14 +17,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.console;
+package org.aesh.command.impl.completer;
 
-import org.aesh.terminal.tty.Signal;
+import org.aesh.complete.AeshCompleteOperation;
+import org.aesh.readline.AeshContext;
+import org.aesh.readline.completion.CompletionHandler;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface InputProcessorInterruptHook {
+public class AeshCompletionHandler extends CompletionHandler<AeshCompleteOperation> {
 
-    void handleInterrupt(Signal signal);
+    private final AeshContext aeshContext;
+
+    public AeshCompletionHandler(AeshContext aeshContext) {
+        this.aeshContext = aeshContext;
+    }
+
+    @Override
+    public AeshCompleteOperation createCompleteOperation(String buffer, int cursor) {
+        return new AeshCompleteOperation(aeshContext, buffer, cursor);
+    }
+
 }
