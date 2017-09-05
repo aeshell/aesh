@@ -177,31 +177,28 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
      */
     @Override
     public void read(final Connection conn, final Readline readline) {
+        if(running) {
+            readline.readline(conn, prompt, line -> {
+                // Ctrl-D
+                if (line == null) {
+                    conn.write("logout\n").close();
+                    return;
+                }
+
+                if (line.trim().length() > 0)
+                    processLine(line, conn);
+                else
+                    read(conn, readline);
+            }, completions, preProcessors);
+        }
         // Just call readline and get a callback when line is startBlockingReader
-        if(!running) {
+        else {
             LOGGER.info("not running, returning");
             conn.close();
-            if(settings.quitHandler() != null)
+            if (settings.quitHandler() != null)
                 settings.quitHandler().quit();
-            return;
         }
-        LOGGER.info("calling readline.readline");
-        readline.readline(conn, prompt, line -> {
-            // Ctrl-D
-            if (line == null) {
-                //((TerminalConnection) conn).stop();
-                conn.write("logout\n").close();
-                return;
-            }
-            LOGGER.info("got: " + line);
-
-            if(line.trim().length() > 0)
-                processLine(line, conn);
-            //else line is empty
-            else
-               read(conn, readline);
-        }, completions, preProcessors);
-    }
+     }
 
     private void processLine(String line, Connection conn) {
         try {
