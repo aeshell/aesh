@@ -337,6 +337,19 @@ public class CompletionParserTest {
         assertEquals(0, co.getFormattedCompletionCandidates().size());
      }
 
+    @Test
+    public void testSpaceQuoteCompletion() throws Exception {
+        CommandLineParser<ParseSpaceTest<CommandInvocation>> clp = new AeshCommandContainerBuilder<ParseSpaceTest<CommandInvocation>, CommandInvocation>().create(new ParseSpaceTest<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test \"", 100);
+
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("foo bar", co.getFormattedCompletionCandidates().get(0));
+
+
+    }
+
     @CommandDefinition(name = "test", description = "a simple test1")
     public class ParseCompleteTest1<CI extends CommandInvocation> extends TestCommand<CI> {
 
@@ -493,6 +506,29 @@ public class CompletionParserTest {
             if(completerInvocation.getGivenCompleteValue() != null &&
                     completerInvocation.getGivenCompleteValue().length() > 0)
                 completerInvocation.addCompleterValue("BAR");
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "a simple test4")
+    public class ParseSpaceTest<CI extends CommandInvocation> extends TestCommand<CI> {
+
+        @Option(shortName = 'r', activator = Test4Activator.class)
+        private String required;
+
+        @Argument(completer = SpaceArgumentCompleter.class)
+        private String arg;
+    }
+
+    public class SpaceArgumentCompleter implements OptionCompleter<CompleterInvocation> {
+
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            if(completerInvocation.getGivenCompleteValue() == null ||
+                    completerInvocation.getGivenCompleteValue().length() == 0)
+                completerInvocation.addCompleterValue("foo bar");
+
+            else if("foo ".startsWith(completerInvocation.getGivenCompleteValue()))
+                completerInvocation.addCompleterValue("foo bar");
         }
     }
 }

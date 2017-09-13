@@ -29,6 +29,7 @@ import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
+import org.aesh.parser.ParserStatus;
 import org.aesh.readline.AeshContext;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
@@ -321,7 +322,11 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                 if(iter.baseLine().size() == (iter.baseLine().selectedIndex()+1) &&
                         lastParsedOption == null) {
                     //append space
-                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.APPEND_SPACE, ""));
+                    if(iter.baseLine().status() == ParserStatus.OK)
+                        processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.APPEND_SPACE, ""));
+                    //we have unclosed quote, lets parse it as an argument
+                    else
+                        processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, ""));
                 }
                 //we list all the options
                 else

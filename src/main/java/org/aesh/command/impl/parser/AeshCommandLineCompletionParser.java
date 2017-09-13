@@ -29,6 +29,7 @@ import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.Command;
 import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.parser.ParserStatus;
 import org.aesh.readline.AeshContext;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedWord;
@@ -74,7 +75,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                             if(parser.getProcessedCommand().hasArguments() ||
                                     parser.getProcessedCommand().hasArgumentWithNoValue()) {
                                 //complete arguments
-                                doProcessArgument(completeOperation, invocationProviders);
+                                doProcessArgument(completeOperation, invocationProviders, line);
                             }
                             else {
                                 //list options
@@ -89,7 +90,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                         //ParsedWord lastWord = line.selectedWord();
                         //if(lastWord != null)
                         //    parser.getProcessedCommand().getArguments().addValue(lastWord.word());
-                        doProcessArgument(completeOperation, invocationProviders);
+                        doProcessArgument(completeOperation, invocationProviders, line);
                     }
                     else
                         doListOptions(completeOperation, "");
@@ -152,7 +153,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         }
         //argument
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.ARGUMENT)) {
-            doProcessArgument(completeOperation, invocationProviders);
+            doProcessArgument(completeOperation, invocationProviders, line);
         }
         //group command
         else if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.GROUP_COMMAND)) {
@@ -188,7 +189,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             completeOperation.doAppendSeparator(false);
     }
 
-    private void doProcessArgument(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders) {
+    private void doProcessArgument(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders, ParsedLine line) {
            ProcessedOption arg =
                     parser.getProcessedCommand().hasArguments() ?
                             parser.getProcessedCommand().getArguments() :
@@ -212,8 +213,16 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                     //set this to true since we do not want to use previous values in the completion value
                     arg.setEndsWithSeparator(true);
                 //for now just default to Status.OK
-                boolean haveCompletion =
-                        doCompleteOptionValue(invocationProviders, completeOperation, arg, ParsedWord.Status.OK);
+                boolean haveCompletion = false;
+
+                if(parser.getProcessedCommand().completeStatus().value() != null)
+                    haveCompletion = doCompleteOptionValue(invocationProviders, completeOperation, arg,
+                            line.selectedWord().status());
+                else {
+                    //if status is ok, we send ok. if not we'll send open quote for now
+                    haveCompletion = doCompleteOptionValue(invocationProviders, completeOperation, arg,
+                            line.status() == ParserStatus.OK ? ParsedWord.Status.OK : ParsedWord.Status.OPEN_QUOTE);
+                }
 
                 //if there are not completions and argument(s) is not required
                 //lets display options
