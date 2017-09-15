@@ -58,6 +58,6 @@ public class ParsedWord {
     }
 
     public enum Status {
-        OK, OPEN_BRACKET, OPEN_QUOTE
+        OK, OPEN_BRACKET, OPEN_QUOTE, OPEN_DOUBLE_QUOTE
     }
 }

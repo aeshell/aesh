@@ -616,6 +616,7 @@ public class AeshCommandCompletionTest {
          CommandRegistry registry = new AeshCommandRegistryBuilder()
                  .command(GitCommand.class)
                  .command(CommandTest7.class)
+                 .command(CommandTest7a.class)
                  .create();
 
          Settings settings = SettingsBuilder.builder()
@@ -635,6 +636,14 @@ public class AeshCommandCompletionTest {
          connection.read("} ");
          connection.read(completeChar.getFirstValue());
          connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO _FOO } --bar=");
+
+         connection.read(Config.getLineSeparator());
+         connection.clearOutputBuffer();
+
+         connection.read("test2 \"");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test2 \" as if ");
+
 
          console.stop();
      }
@@ -878,6 +887,18 @@ public class AeshCommandCompletionTest {
 
         @Option(completer = HeaderCompleter.class)
         private String headers;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test2", description = "")
+    public static class CommandTest7a implements Command {
+
+        @Argument(completer = ArgumentQuoteCompleter.class)
+        private String arg;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
@@ -1202,6 +1223,16 @@ public class AeshCommandCompletionTest {
         }
     }
 
+    public static class ArgumentQuoteCompleter implements OptionCompleter {
+
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            if(completerInvocation.getGivenCompleteValue().length() == 0)
+                completerInvocation.addCompleterValue(" as if");
+            else
+                completerInvocation.addCompleterValue(" as off");
+        }
+    }
 
 
 }

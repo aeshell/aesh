@@ -215,7 +215,8 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                 //for now just default to Status.OK
                 boolean haveCompletion = false;
 
-                if(parser.getProcessedCommand().completeStatus().value() != null)
+                if(parser.getProcessedCommand().completeStatus().value() != null &&
+                        parser.getProcessedCommand().completeStatus().value().length() > 0)
                     haveCompletion = doCompleteOptionValue(invocationProviders, completeOperation, arg,
                             line.selectedWord().status());
                 else {

@@ -346,8 +346,6 @@ public class CompletionParserTest {
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("foo bar", co.getFormattedCompletionCandidates().get(0));
-
-
     }
 
     @CommandDefinition(name = "test", description = "a simple test1")
