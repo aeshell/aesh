@@ -644,6 +644,11 @@ public class AeshCommandCompletionTest {
          connection.read(completeChar.getFirstValue());
          connection.assertBuffer("test2 \" as if ");
 
+         /* TODO: for now we do not support this
+         connection.read("\"");
+         connection.read(completeChar.getFirstValue());
+         connection.assertBuffer("test2 \" as if \"as off ");
+         */
 
          console.stop();
      }
