@@ -359,15 +359,15 @@ public class FileLister {
             for (Resource file : path.list(fileFilter)) {
                 if (rest == null || rest.length() == 0)
                     if (!file.isLeaf())
-                        fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()) + Config.getPathSeparator());
+                        fileNames.add(file.getName() + Config.getPathSeparator());
                     else
-                        fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
+                        fileNames.add(file.getName());
                 else {
                     if (file.getName().startsWith(rest)) {
                         if (!file.isLeaf())
-                            fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()) + Config.getPathSeparator());
+                            fileNames.add(file.getName() + Config.getPathSeparator());
                         else
-                            fileNames.add(Parser.switchSpacesToEscapedSpacesInWord(file.getName()));
+                            fileNames.add(file.getName());
                     }
                 }
             }
