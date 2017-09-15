@@ -27,7 +27,6 @@ import static org.aesh.constants.AeshConstants.STAR;
 import static org.aesh.constants.AeshConstants.WILDCARD;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
@@ -53,7 +52,7 @@ public class FileLister {
     private String rest;
     private String lastDir;
     private ResourceFilter fileFilter;
-    private Comparator fileComparator;
+    private Comparator<String> fileComparator;
 
     private static Logger LOGGER = LoggerUtil.getLogger(FileLister.class.getName());
 
@@ -68,7 +67,7 @@ public class FileLister {
         setFileFilter(new AllResourceFilter());
     }
 
-    public FileLister(String token, Resource cwd, Comparator comparator) {
+    public FileLister(String token, Resource cwd, Comparator<String> comparator) {
         this(token, cwd);
         this.fileComparator = comparator;
     }
@@ -78,7 +77,7 @@ public class FileLister {
         setFileFilter(filter);
     }
 
-    public FileLister(String token, Resource cwd, ResourceFilter filter, Comparator fileComparator) {
+    public FileLister(String token, Resource cwd, ResourceFilter filter, Comparator<String> fileComparator) {
         this(token, cwd, filter);
         this.fileComparator = fileComparator;
     }
@@ -90,7 +89,7 @@ public class FileLister {
     /**
      * findMatchingDirectories will try to populate the CompleteOperation object based on it initial params.
      *
-     * @param completion
+     * @param completion completion
      */
     public void findMatchingDirectories(CompleteOperation completion) {
         completion.doAppendSeparator(false);
@@ -355,7 +354,7 @@ public class FileLister {
     }
 
     private List<String> listDirectory(Resource path, String rest) {
-        List<String> fileNames = new ArrayList<String>();
+        List<String> fileNames = new ArrayList<>();
         if (path != null && !path.isLeaf()) {
             for (Resource file : path.list(fileFilter)) {
                 if (rest == null || rest.length() == 0)
@@ -376,7 +375,7 @@ public class FileLister {
 
         if (fileComparator == null)
             fileComparator = new PosixFileNameComparator();
-        Collections.sort(fileNames, fileComparator);
+        fileNames.sort(fileComparator);
         return fileNames;
     }
 
