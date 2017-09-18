@@ -685,6 +685,7 @@ public class AeshCommandCompletionTest {
         console.stop();
     }
 
+    //make sure we complete options if argument completer is not returning anything
     @Test
     public void testCommandTest9() throws IOException, InterruptedException, CommandLineParserException {
         TestConnection connection = new TestConnection();
@@ -713,6 +714,30 @@ public class AeshCommandCompletionTest {
         connection.read("test --");
         connection.read(completeChar.getFirstValue());
         connection.assertBuffer("test --foo\\ bar=");
+
+        console.stop();
+    }
+
+    @Test
+    public void testCommandTest10() throws IOException, InterruptedException, CommandLineParserException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(CommandTest10.class)
+                .create();
+
+        Settings settings = SettingsBuilder.builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("test ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test --bar=");
 
         console.stop();
     }
@@ -930,6 +955,21 @@ public class AeshCommandCompletionTest {
     public static class CommandTest9 implements Command {
 
         @Option(name = "foo\\ bar", completer = FooBarCompleter.class)
+        private String bar;
+
+        @Argument
+        private String arg;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "")
+    public static class CommandTest10 implements Command {
+
+        @Option
         private String bar;
 
         @Argument

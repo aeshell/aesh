@@ -227,8 +227,8 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
                 //if there are not completions and argument(s) is not required
                 //lets display options
-                if(!haveCompletion && !arg.isRequired() && arg.getValue() != null &&
-                        parser.getProcessedCommand().completeStatus().value() == null) {
+                if(!haveCompletion && !arg.isRequired() && arg.getValue() == null &&
+                        parser.getProcessedCommand().completeStatus().value().length() == 0) {
                     doListOptions(completeOperation, "");
                 }
             }
