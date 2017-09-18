@@ -55,7 +55,7 @@ public class AeshOptionParser implements OptionParser {
                     return;
                 }
             }
-            if(option.hasValue() && option.getValue() == null)
+            if(option.hasValue() && (option.getValue() == null || option.getValue().length() == 0))
                 throw new OptionParserException("Option "+option.name()+" was specified, but no value was given.");
         }
     }

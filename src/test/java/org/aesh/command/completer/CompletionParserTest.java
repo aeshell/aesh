@@ -103,7 +103,7 @@ public class CompletionParserTest {
         assertEquals("true", co.getFormattedCompletionCandidates().get(0));
         assertEquals("false", co.getFormattedCompletionCandidates().get(1));
 
-         co = new AeshCompleteOperation(aeshContext, "test --foo=", 10);
+        co = new AeshCompleteOperation(aeshContext, "test --foo=", 10);
         clp.complete(co, ip);
         assertEquals(2, co.getFormattedCompletionCandidates().size());
         assertEquals("true", co.getFormattedCompletionCandidates().get(0));

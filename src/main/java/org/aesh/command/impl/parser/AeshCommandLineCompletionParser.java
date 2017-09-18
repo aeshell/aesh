@@ -132,7 +132,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             }
             else if(parser.lastParsedOption().isLongNameUsed() &&
                     !parser.lastParsedOption().getEndsWithSeparator() &&
-                    !line.spaceAtEnd() &&
+                    !line.spaceAtEnd() && !line.selectedWord().word().endsWith("=") &&
                     parser.lastParsedOption().hasValue()) {
                 completeOperation.addCompletionCandidate("=");
                 completeOperation.setOffset(completeOperation.getCursor());
