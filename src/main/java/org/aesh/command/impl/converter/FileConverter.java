@@ -28,8 +28,29 @@ import java.io.File;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class FileConverter implements Converter<File, ConverterInvocation> {
+
     @Override
     public File convert(ConverterInvocation input) {
-        return new File(input.getInput());
+        return new File(translatePath(input.getAeshContext().getCurrentWorkingDirectory().getAbsolutePath(), input.getInput()));
     }
+
+    public static String translatePath(String cwd, String path) {
+        String translated;
+        // special character: ~ maps to the user's home directory
+        if (path.startsWith("~" + File.separator)) {
+            translated = System.getProperty("user.home") + path.substring(1);
+        } else if (path.startsWith("~")) {
+            String userName = path.substring(1);
+            translated = new File(new File(System.getProperty("user.home")).getParent(),
+                    userName).getAbsolutePath();
+            // Keep the path separator in translated or add one if no user home specified
+            translated = userName.isEmpty() || path.endsWith(File.separator) ? translated + File.separator : translated;
+        } else if (!new File(path).isAbsolute()) {
+            translated = cwd + File.separator + path;
+        } else {
+            translated = path;
+        }
+        return translated;
+    }
+
 }

@@ -134,8 +134,8 @@ public class FileOptionCompleterTest {
         data = new CompleterData(aeshContext, "ch", null);
         completer.complete(data);
         assertNotNull(data.getCompleterValues());
-        assertEquals(1, data.getCompleterValues().size());
-        assertEquals(child.getName(), data.getCompleterValues().get(0).getCharacters());
+        assertEquals(2, data.getCompleterValues().size());
+        assertEquals(new TerminalString(child.getName() + Config.getPathSeparator(), true), data.getCompleterValues().get(0));
 
         data = new CompleterData(aeshContext, "child", null);
         completer.complete(data);

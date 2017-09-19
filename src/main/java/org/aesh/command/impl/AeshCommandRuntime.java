@@ -56,12 +56,14 @@ import org.aesh.command.invocation.CommandInvocationProvider;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.command.CommandNotFoundHandler;
-import org.aesh.io.filter.AllResourceFilter;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.command.Execution;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.impl.completer.CompleterData;
+import org.aesh.command.impl.completer.FileOptionCompleter;
+import org.aesh.command.impl.parser.AeshCommandLineCompletionParser;
 import org.aesh.command.operator.OperatorType;
-import org.aesh.util.FileLister;
 
 /**
  * Implementation of the Command processor.
@@ -278,8 +280,16 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
                         if(lines.get(i-1).operator() == OperatorType.REDIRECT_OUT ||
                                 lines.get(i-1).operator() == OperatorType.APPEND_OUT) {
                             //do file completion
-                            new FileLister(lines.get(i).selectedWord().word(), completeOperation.getContext().getCurrentWorkingDirectory(), new AllResourceFilter())
-                                    .findMatchingDirectories(completeOperation);
+                            FileOptionCompleter completer = new FileOptionCompleter();
+                            CompleterInvocation invocation
+                                    = new CompleterData(completeOperation.getContext(),
+                                            lines.get(i).selectedWord().word(), null);
+                            completer.complete(invocation);
+                            completeOperation.addCompletionCandidatesTerminalString(invocation.getCompleterValues());
+                            AeshCommandLineCompletionParser.verifyCompleteValue(completeOperation,
+                                    invocation,
+                                    lines.get(i).selectedWord().word(),
+                                    lines.get(i).selectedWord().status());
                             return;
                         }
                         else {
