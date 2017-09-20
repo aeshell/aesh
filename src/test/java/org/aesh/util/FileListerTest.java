@@ -19,22 +19,22 @@
  */
 package org.aesh.util;
 
+import org.aesh.impl.util.FileLister;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.aesh.comparators.PosixFileNameComparator;
-import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.readline.AeshContext;
 import org.aesh.io.Resource;
 import org.aesh.io.FileResource;
 
 import org.aesh.readline.DefaultAeshContext;
-import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.utils.Config;
 import org.junit.After;
 import org.junit.Before;
@@ -65,68 +65,53 @@ public class FileListerTest {
     public void testFileNameStartingWithDotCompletion() throws IOException {
         Files.createFile(new File(workingDir.toString()+Config.getPathSeparator()+".testfile").toPath());
 
-        AeshCompleteOperation completion = new AeshCompleteOperation(aeshContext, "cd .", 2);
-        new FileLister("", workingDir).findMatchingDirectories(completion);
-
-        List<TerminalString> candidates = completion.getCompletionCandidates();
+        List<String> candidates = new ArrayList<>();
+        new FileLister("", workingDir).findMatchingDirectories(candidates);
         assertEquals(1, candidates.size());
-        assertEquals(".testfile", candidates.get(0).getCharacters());
-
-        completion = new AeshCompleteOperation(aeshContext, ".", 1);
-        new FileLister("", workingDir).findMatchingDirectories(completion);
-
-        candidates = completion.getCompletionCandidates();
-        assertEquals(1, candidates.size());
-        assertEquals(".testfile", candidates.get(0).getCharacters());
+        assertEquals(".testfile", candidates.get(0));
     }
 
     @Test
     public void testFullCompletionWithSingleSubdirectory() {
         new File(workingDir.toString(), "child").mkdir();
-        AeshCompleteOperation completion = new AeshCompleteOperation(aeshContext, "cd ", 2);
-        new FileLister("", workingDir).findMatchingDirectories(completion);
+        List<String> candidates = new ArrayList<>();
+        new FileLister("", workingDir).findMatchingDirectories(candidates);
 
-        List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(1, candidates.size());
-        assertEquals("child"+Config.getPathSeparator(), candidates.get(0).getCharacters());
+        assertEquals("child" + Config.getPathSeparator(), candidates.get(0));
     }
 
     @Test
     public void testPartialCompletionWithSingleSubdirectory() {
         new File(workingDir.toString(), "child").mkdir();
-        AeshCompleteOperation completion = new AeshCompleteOperation(aeshContext, "cd ch", 2);
-        new FileLister("ch", workingDir).findMatchingDirectories(completion);
+        List<String> candidates = new ArrayList<>();
+        new FileLister("ch", workingDir).findMatchingDirectories(candidates);
 
-        List<TerminalString> candidates = completion.getCompletionCandidates();
         assertEquals(1, candidates.size());
-        assertEquals("child"+Config.getPathSeparator(), candidates.get(0).getCharacters());
+        assertEquals("child" + Config.getPathSeparator(), candidates.get(0));
     }
 
     @Test
     public void testFullCompletionWithMultipleSubdirectory() {
         new File(workingDir.toString(), "child").mkdir();
         new File(workingDir.toString(), "child2").mkdir();
-        AeshCompleteOperation completion = new AeshCompleteOperation(aeshContext, "cd ", 2);
-        new FileLister("", workingDir).findMatchingDirectories(completion);
-
-        List<TerminalString> candidates = completion.getCompletionCandidates();
+        List<String> candidates = new ArrayList<>();
+        new FileLister("", workingDir).findMatchingDirectories(candidates);
         assertEquals(2, candidates.size());
         assertTrue("child"+Config.getPathSeparator(),
-                candidates.contains(new TerminalString("child"+Config.getPathSeparator(), true)));
+                candidates.contains("child" + Config.getPathSeparator()));
         assertTrue("child2"+Config.getPathSeparator(),
-                candidates.contains(new TerminalString("child2"+Config.getPathSeparator(), true)));
+                candidates.contains("child2" + Config.getPathSeparator()));
     }
 
     @Test
     public void testPartialCompletionWithMultipleSubdirectory() {
         new File(workingDir.toString(), "child").mkdir();
         new File(workingDir.toString(), "child2").mkdir();
-        AeshCompleteOperation completion = new AeshCompleteOperation(aeshContext, "cd ch", 4);
-        new FileLister("ch", workingDir).findMatchingDirectories(completion);
-
-        List<TerminalString> candidates = completion.getCompletionCandidates();
-        assertEquals(1, candidates.size());
-        assertEquals("child", candidates.get(0).getCharacters());
+        List<String> candidates = new ArrayList<>();
+        new FileLister("ch", workingDir).findMatchingDirectories(candidates);
+        assertEquals(2, candidates.size());
+        assertEquals("child/", candidates.get(0));
     }
 
     @Test
@@ -136,11 +121,10 @@ public class FileListerTest {
         new File(test, "main2").mkdir();
         new File(test, "test2").mkdir();
 
-        AeshCompleteOperation completion = new AeshCompleteOperation(aeshContext, "cd test"+Config.getPathSeparator(), 2);
-        new FileLister("test"+Config.getPathSeparator(), workingDir).findMatchingDirectories(completion);
-        List<TerminalString> candidates = completion.getCompletionCandidates();
+        List<String> candidates = new ArrayList<>();
+        new FileLister("test" + Config.getPathSeparator(), workingDir).findMatchingDirectories(candidates);
         assertEquals(2, candidates.size());
-        assertEquals("main2"+Config.getPathSeparator(), candidates.get(0).getCharacters());
+        assertEquals("main2" + Config.getPathSeparator(), candidates.get(0));
 
     }
 
@@ -149,11 +133,10 @@ public class FileListerTest {
         File test = new File(workingDir.toString(), "test");
         test.mkdir();
 
-        AeshCompleteOperation completion = new AeshCompleteOperation(aeshContext, "cd test", 2);
-        new FileLister("test", workingDir).findMatchingDirectories(completion);
-        List<TerminalString> candidates = completion.getCompletionCandidates();
+        List<String> candidates = new ArrayList<>();
+        new FileLister("test", workingDir).findMatchingDirectories(candidates);
         assertEquals(1, candidates.size());
-        assertEquals("test" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+        assertEquals("test" + Config.getPathSeparator(), candidates.get(0));
     }
 
     @Test
@@ -162,12 +145,11 @@ public class FileListerTest {
         test.mkdir();
         File child = new File(test, "child");
         child.mkdir();
-
-        AeshCompleteOperation completion = new AeshCompleteOperation(aeshContext, "cd test123"+PATH_SEPARATOR+"child", 2);
-        new FileLister("test123"+PATH_SEPARATOR+"child", workingDir).findMatchingDirectories(completion);
-        List<TerminalString> candidates = completion.getCompletionCandidates();
+        List<String> candidates = new ArrayList<>();
+        int offset = new FileLister("test123" + PATH_SEPARATOR + "child", workingDir).findMatchingDirectories(candidates);
+        assertEquals(8, offset);
         assertEquals(1, candidates.size());
-        assertEquals("test123"+PATH_SEPARATOR+"child" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+        assertEquals("child" + Config.getPathSeparator(), candidates.get(0));
         child.delete();
         test.delete();
     }
@@ -177,14 +159,11 @@ public class FileListerTest {
         final File workingDir = new File(System.getProperty("java.io.tmpdir"));
         File test = new File(workingDir, "test123");
         test.mkdir();
-
-        AeshCompleteOperation completion = new AeshCompleteOperation(aeshContext, "cd "+PATH_SEPARATOR+
-                System.getProperty("java.io.tmpdir")+PATH_SEPARATOR+"test123", 2);
+        List<String> candidates = new ArrayList<>();
         new FileLister("test123", new FileResource(workingDir)).
-                findMatchingDirectories(completion);
-        List<TerminalString> candidates = completion.getCompletionCandidates();
+                findMatchingDirectories(candidates);
         assertEquals(1, candidates.size());
-        assertEquals("test123" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+        assertEquals("test123" + Config.getPathSeparator(), candidates.get(0));
 
         delete(new FileResource(test), true);
     }
@@ -195,13 +174,12 @@ public class FileListerTest {
         new File(workingDir.getAbsolutePath(), "bb").mkdir();
         new File(workingDir.getAbsolutePath(), "bbb").mkdir();
 
-        AeshCompleteOperation completion = new AeshCompleteOperation(aeshContext, "cd b", 4);
-        new FileLister("b", workingDir).findMatchingDirectories(completion);
-        List<TerminalString> candidates = completion.getCompletionCandidates();
+        List<String> candidates = new ArrayList<>();
+        new FileLister("b", workingDir).findMatchingDirectories(candidates);
         assertEquals(3, candidates.size());
-        assertEquals("b" + Config.getPathSeparator(), candidates.get(0).getCharacters());
-        assertEquals("bb" + Config.getPathSeparator(), candidates.get(1).getCharacters());
-        assertEquals("bbb" + Config.getPathSeparator(), candidates.get(2).getCharacters());
+        assertEquals("b" + Config.getPathSeparator(), candidates.get(0));
+        assertEquals("bb" + Config.getPathSeparator(), candidates.get(1));
+        assertEquals("bbb" + Config.getPathSeparator(), candidates.get(2));
     }
 
     @Test
@@ -211,12 +189,11 @@ public class FileListerTest {
 
         new File(workingDir.toString(), "prefixdir").mkdir();
 
-        AeshCompleteOperation completion = new AeshCompleteOperation(aeshContext, "cd prefix", 9);
-        new FileLister("prefix", workingDir).findMatchingDirectories(completion);
-        List<TerminalString> candidates = completion.getCompletionCandidates();
+        List<String> candidates = new ArrayList<>();
+        new FileLister("prefix", workingDir).findMatchingDirectories(candidates);
 
         assertEquals(1, candidates.size());
-        assertEquals("prefixdir" + Config.getPathSeparator(), candidates.get(0).getCharacters());
+        assertEquals("prefixdir" + Config.getPathSeparator(), candidates.get(0));
 
         delete(new FileResource(workingDirFile), false);
     }

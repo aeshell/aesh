@@ -17,17 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.aesh.command.impl.completer;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.aesh.command.completer.OptionCompleter;
-import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.io.Resource;
 import org.aesh.io.filter.AllResourceFilter;
 import org.aesh.io.filter.ResourceFilter;
-import org.aesh.util.FileLister;
-import org.aesh.readline.completion.CompleteOperation;
+import org.aesh.impl.util.FileLister;
 
 /**
  * Completes {@link Resource} objects
@@ -50,31 +49,21 @@ public class FileOptionCompleter implements OptionCompleter<CompleterInvocation>
     }
 
     @Override
-    public void complete(CompleterInvocation completerData) {
+    public void complete(CompleterInvocation completerInvocation) {
+        List<String> candidates = new ArrayList<>();
+        int cursor = new FileLister(completerInvocation.getGivenCompleteValue(),
+                completerInvocation.getAeshContext().getCurrentWorkingDirectory()).
+                findMatchingDirectories(candidates);
+        boolean appendSpace = false;
+        if (candidates.size() == 1) {
+            if (completerInvocation.getGivenCompleteValue().endsWith(candidates.get(0))) {
+                appendSpace = true;
+            }
 
-        CompleteOperation completeOperation =
-                new AeshCompleteOperation(completerData.getAeshContext(), completerData.getGivenCompleteValue(), 0);
-        if (completerData.getGivenCompleteValue() == null)
-            new FileLister("", completerData.getAeshContext().getCurrentWorkingDirectory(), filter)
-                    .findMatchingDirectories(completeOperation);
-        else
-            new FileLister(completerData.getGivenCompleteValue(),
-                    completerData.getAeshContext().getCurrentWorkingDirectory(), filter)
-                    .findMatchingDirectories(completeOperation);
-
-        if (completeOperation.getCompletionCandidates().size() > 1) {
-            completeOperation.removeEscapedSpacesFromCompletionCandidates();
         }
-
-        completerData.setCompleterValuesTerminalString(completeOperation.getCompletionCandidates());
-        if (completerData.getGivenCompleteValue() != null && completerData.getCompleterValues().size() == 1) {
-            completerData.setAppendSpace(completeOperation.hasAppendSeparator());
-        }
-
-        if(completeOperation.doIgnoreOffset())
-            completerData.setIgnoreOffset(completeOperation.doIgnoreOffset());
-
-        completerData.setIgnoreStartsWith(true);
+        completerInvocation.addAllCompleterValues(candidates);
+        completerInvocation.setOffset(completerInvocation.getGivenCompleteValue().length() - cursor);
+        completerInvocation.setAppendSpace(appendSpace);
     }
 
     public ResourceFilter getFilter() {

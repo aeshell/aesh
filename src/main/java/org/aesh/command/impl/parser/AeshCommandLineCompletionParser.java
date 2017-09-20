@@ -34,9 +34,9 @@ import org.aesh.readline.AeshContext;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedWord;
 import org.aesh.readline.terminal.formatting.TerminalString;
-import org.aesh.util.Parser;
 
 import java.util.List;
+import org.aesh.util.Parser;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -291,50 +291,35 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
         return completeOperation.getCompletionCandidates().size() > 0;
     }
 
-    private void verifyCompleteValue(AeshCompleteOperation completeOperation,
-                                     CompleterInvocation completions,
-                                     String value, ParsedWord.Status selectedWordStatus) {
-        //if the contain spaces we need to add the number of spaces to the size
-        // of the value.length since they are chopped off during parsing
-        if(completeOperation.getCompletionCandidates().size() == 1 &&
-                (completeOperation.getCompletionCandidates().get(0).containSpaces()
-                || value.indexOf(' ') > 0)) {
-            //first check for offset
-            if(completions.getOffset() >= 0) {
-                if(completeOperation.getCompletionCandidates().get(0).getCharacters().startsWith(value)
-                        && selectedWordStatus == ParsedWord.Status.OK)
-                    completeOperation.setOffset( completeOperation.getCursor() -
-                            (completions.getOffset() +
-                                    Parser.findNumberOfSpacesInWord(completeOperation.getCompletionCandidates().get(0).getCharacters())));
-                else {
-                    //never escape words where status != OK
-                    if(selectedWordStatus == ParsedWord.Status.OK)
-                        completeOperation.setOffset(completeOperation.getCursor() -
-                                (completions.getOffset() + Parser.findNumberOfSpacesInWord(value)));
-                    else
-                        completeOperation.setOffset(completeOperation.getCursor() - completions.getOffset());
-                }
-            }
-            else {
-                //if we have open quote/brackets there are no escaped spaces
-                if(selectedWordStatus == ParsedWord.Status.OK)
-                    completeOperation.setOffset( completeOperation.getCursor() -
-                            (value.length() + Parser.findNumberOfSpacesInWord(value)));
-                else
-                    completeOperation.setOffset(completeOperation.getCursor() - value.length());
-                //Parser.findNumberOfSpacesInWord(completeOperation.getCompletionCandidates().get(0).getCharacters())));
-            }
-            //always switch spaces to escaped if status == ok
+    public static void verifyCompleteValue(AeshCompleteOperation completeOperation,
+            CompleterInvocation completions,
+            String value, ParsedWord.Status selectedWordStatus) {
 
-            if(selectedWordStatus == ParsedWord.Status.OK)
-                completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
+        if (completions.getOffset() >= 0) {
+            // We must remove the number of spaces present in the candidate to inline
+            // only for the part in between the offset and the end.
+            int numberSpaces = 0;
+            if (selectedWordStatus == ParsedWord.Status.OK
+                    && completions.getCompleterValues().size() == 1) {
+                numberSpaces = Parser.
+                        findNumberOfSpacesInWord(value.substring(value.length() - completions.getOffset(), value.length()));
+            }
+            completeOperation.setOffset(completeOperation.getCursor() - completions.getOffset() - numberSpaces);
+        } else {
+            // value doesn't contain escape, we need to substract them only if no quote nor bracket.
+            // In there are some quote or bracket then selectedWordStatus != ParsedWord.Status.OK
+            completeOperation.setOffset(completeOperation.getCursor() - value.length()
+                    - (selectedWordStatus == ParsedWord.Status.OK ? Parser.findNumberOfSpacesInWord(value) : 0));
         }
-        else if(completions.getOffset() >= 0)
-            completeOperation.setOffset(completeOperation.getCursor() - completions.getOffset());
-        else
-            completeOperation.setOffset(completeOperation.getCursor() - value.length());
 
-        if(completions.getCompleterValues().size() == 1) {
+        // Escape spaces if no bracket nor quote
+        if (selectedWordStatus == ParsedWord.Status.OK
+                && completeOperation.getCompletionCandidates().size() == 1
+                && (completeOperation.getCompletionCandidates().get(0).containSpaces())) {
+            completeOperation.getCompletionCandidates().get(0).switchSpacesToEscapedSpaces();
+        }
+
+        if (completions.getCompleterValues().size() == 1) {
             completeOperation.doAppendSeparator(completions.isAppendSpace());
         }
         //finally set flags

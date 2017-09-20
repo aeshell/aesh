@@ -258,7 +258,7 @@ public class CommandLinePopulatorTest {
 
         assertNotNull(test4.getArguments());
         assertEquals(2, test4.getArguments().size());
-        assertTrue(test4.getArguments().contains(new File("test2.txt")));
+        assertTrue(test4.getArguments().toString(), test4.getArguments().contains(new File(aeshContext.getCurrentWorkingDirectory().getAbsolutePath(), "test2.txt")));
     }
 
     @Test(expected = OptionParserException.class)
