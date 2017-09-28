@@ -420,5 +420,15 @@ public class LineParserTest {
          assertEquals("foo", lines.get(0).words().get(0).word());
          assertEquals(1, lines.get(1).cursor());
 
+         lines = lineParser.parseLine("foo {> 123}", 10, true, operators);
+         assertEquals("foo", lines.get(0).words().get(0).word());
+         assertEquals("{> 123}", lines.get(0).words().get(1).word());
+         assertEquals(1, lines.size());
+
+         lines = lineParser.parseLine("foo '> 123'", 10, true, operators);
+         assertEquals("foo", lines.get(0).words().get(0).word());
+         assertEquals("> 123", lines.get(0).words().get(1).word());
+         assertEquals(1, lines.size());
+
        }
 }
