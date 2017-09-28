@@ -430,5 +430,13 @@ public class LineParserTest {
          assertEquals("> 123", lines.get(0).words().get(1).word());
          assertEquals(1, lines.size());
 
+         lines = lineParser.parseLine("/x=y:op(arg={\"xxx\"=> true}) > res", 20, true, operators);
+         assertEquals("/x=y:op(arg={\"xxx\"=> true})", lines.get(0).words().get(0).word());
+         assertEquals(OperatorType.REDIRECT_OUT, lines.get(0).operator());
+         assertEquals("res", lines.get(1).words().get(0).word());
+
+         lines = lineParser.parseLine("/x=y:op(arg={'xxx'=> true}) > res", 20, true, operators);
+         assertEquals("/x=y:op(arg={'xxx'=> true})", lines.get(0).words().get(0).word());
+         assertEquals(OperatorType.REDIRECT_OUT, lines.get(0).operator());
        }
 }

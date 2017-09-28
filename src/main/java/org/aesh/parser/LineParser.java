@@ -341,6 +341,8 @@ public class LineParser {
         }
         else if(haveSingleQuote)
             builder.append(c);
+        else if(haveCurlyBracket)
+            builder.append(c);
         else
             haveDoubleQuote = true;
     }
@@ -360,6 +362,8 @@ public class LineParser {
         else if(haveDoubleQuote) {
             builder.append(c);
         }
+        else if(haveCurlyBracket)
+            builder.append(c);
         else
             haveSingleQuote = true;
     }
