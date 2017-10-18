@@ -208,7 +208,8 @@ public class LineParser {
                         textList.add(new ParsedWord(builder.toString(), index-builder.length()));
                         builder = new StringBuilder();
                     }
-                    if (cursor == text.length()) {
+                    //we know we have an operator so we need to subtract one char
+                    if (cursor == text.length()-1) {
                         cursorWord = textList.size() - 1;
                         if(textList.size() > 0)
                             wordCursor = textList.get(textList.size() - 1).word().length();
@@ -223,6 +224,16 @@ public class LineParser {
                     wordCursor = -1;
                     startIndex = index + currentOperator.value().length();
                     textList = new ArrayList<>();
+
+                    //if we end on an operator and cursor == text.length, add another empty line
+                    if(index+currentOperator.value().length() == text.length() && cursor == text.length()) {
+                        textList.add(new ParsedWord("", index));
+                        lines.add(new ParsedLine(text, textList, 0,
+                                0, 0, ParserStatus.OK, "", OperatorType.NONE));
+
+                        //we know we're at the end so we can return
+                        return lines;
+                    }
                 }
                 else
                     builder.append(c);

@@ -809,6 +809,33 @@ public class AeshCommandCompletionTest {
         console.stop();
     }
 
+    @Test
+    public void testCompletionWithEndOperator() throws IOException, CommandLineParserException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(ArgCommand.class)
+                .command(GitCommand.class)
+                .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .enableOperatorParser(true)
+                 .enableExport(false)
+                 .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+        connection.read("arg;");
+        connection.clearOutputBuffer();
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer(Config.getLineSeparator()+"arg  git  "+Config.getLineSeparator()+"arg;");
+
+        console.stop();
+    }
+
     @CommandDefinition(name = "test", description = "")
     public static class CommandTest4 implements Command {
 

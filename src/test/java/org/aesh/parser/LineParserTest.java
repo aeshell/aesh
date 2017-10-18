@@ -438,5 +438,12 @@ public class LineParserTest {
          lines = lineParser.parseLine("/x=y:op(arg={'xxx'=> true}) > res", 20, true, operators);
          assertEquals("/x=y:op(arg={'xxx'=> true})", lines.get(0).words().get(0).word());
          assertEquals(OperatorType.REDIRECT_OUT, lines.get(0).operator());
+
+         lines = lineParser.parseLine("cmd;", 4, true, operators);
+         assertEquals("cmd", lines.get(0).words().get(0).word());
+         assertEquals(OperatorType.END, lines.get(0).operator());
+         assertEquals("", lines.get(1).words().get(0).word());
+         assertEquals("", lines.get(1).selectedWord().word());
        }
+
 }

@@ -45,6 +45,10 @@ public class ParsedWord {
         this.status = status;
     }
 
+    /**
+     * The specific index this word have relative to the complete line
+     * @return lineIndex
+     */
     public int lineIndex() {
         return lineIndex;
     }
