@@ -17,14 +17,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.command.impl.converter;
+package org.aesh.converter;
 
 import org.aesh.command.converter.Converter;
 import org.aesh.io.Resource;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import org.aesh.command.impl.converter.BooleanConverter;
+import org.aesh.command.impl.converter.ByteConverter;
+import org.aesh.command.impl.converter.CharacterConverter;
+import org.aesh.command.impl.converter.DoubleConverter;
+import org.aesh.command.impl.converter.FileConverter;
+import org.aesh.command.impl.converter.FileResourceConverter;
+import org.aesh.command.impl.converter.FloatConverter;
+import org.aesh.command.impl.converter.IntegerConverter;
+import org.aesh.command.impl.converter.LongConverter;
+import org.aesh.command.impl.converter.ShortConverter;
+import org.aesh.command.impl.converter.StringConverter;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -74,6 +87,14 @@ public class CLConverterManager {
 
     public Converter getConverter(Class clazz) {
         return converters.get(clazz);
+    }
+
+    public void setConverter(Class<?> clazz, Converter converter) {
+        converters.put(clazz, converter);
+    }
+
+    public Set<Class> getConvertedTypes() {
+        return Collections.unmodifiableSet(converters.keySet());
     }
 
 }
