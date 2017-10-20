@@ -26,7 +26,7 @@ import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.command.impl.completer.NullOptionCompleter;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
-import org.aesh.command.impl.converter.CLConverterManager;
+import org.aesh.converter.CLConverterManager;
 import org.aesh.command.impl.converter.NullConverter;
 import org.aesh.command.impl.parser.AeshOptionParser;
 import org.aesh.command.parser.OptionParserException;
