@@ -19,14 +19,15 @@
  */
 package org.aesh.command.impl.completer;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.OptionCompleter;
+import org.aesh.impl.util.FileLister;
 import org.aesh.io.Resource;
 import org.aesh.io.filter.AllResourceFilter;
 import org.aesh.io.filter.ResourceFilter;
-import org.aesh.impl.util.FileLister;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Completes {@link Resource} objects
@@ -59,7 +60,6 @@ public class FileOptionCompleter implements OptionCompleter<CompleterInvocation>
             if (completerInvocation.getGivenCompleteValue().endsWith(candidates.get(0))) {
                 appendSpace = true;
             }
-
         }
         completerInvocation.addAllCompleterValues(candidates);
         completerInvocation.setOffset(completerInvocation.getGivenCompleteValue().length() - cursor);

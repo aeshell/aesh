@@ -19,23 +19,24 @@
  */
 package org.aesh.command.completer;
 
-import org.aesh.command.GroupCommandDefinition;
-import org.aesh.command.option.Argument;
-import org.aesh.command.option.Option;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
-import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.CommandResult;
+import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Argument;
+import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.option.Arguments;
-import org.aesh.command.CommandDefinition;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.CommandResult;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.readline.terminal.Key;
@@ -46,7 +47,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
-import org.aesh.command.activator.CommandActivator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -805,33 +805,6 @@ public class AeshCommandCompletionTest {
         connection.assertBuffer("arg --input=foo; arg ARG ");
         connection.read(completeChar.getFirstValue());
         connection.assertBuffer("arg --input=foo; arg ARG --");
-
-        console.stop();
-    }
-
-    @Test
-    public void testCompletionWithEndOperator() throws IOException, CommandLineParserException {
-        TestConnection connection = new TestConnection();
-
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(ArgCommand.class)
-                .command(GitCommand.class)
-                .create();
-
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .enableOperatorParser(true)
-                 .enableExport(false)
-                 .build();
-
-        ReadlineConsole console = new ReadlineConsole(settings);
-        console.start();
-        connection.read("arg;");
-        connection.clearOutputBuffer();
-        connection.read(completeChar.getFirstValue());
-        connection.assertBuffer(Config.getLineSeparator()+"arg  git  "+Config.getLineSeparator()+"arg;");
 
         console.stop();
     }

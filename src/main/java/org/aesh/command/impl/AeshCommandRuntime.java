@@ -19,51 +19,51 @@
  */
 package org.aesh.command.impl;
 
+import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.CommandNotFoundHandler;
+import org.aesh.command.CommandResolver;
+import org.aesh.command.CommandResult;
+import org.aesh.command.CommandRuntime;
+import org.aesh.command.Execution;
+import org.aesh.command.Executor;
+import org.aesh.command.activator.CommandActivatorProvider;
+import org.aesh.command.activator.OptionActivatorProvider;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.CompleterInvocationProvider;
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.converter.ConverterInvocationProvider;
+import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
+import org.aesh.command.impl.completer.CompleterData;
+import org.aesh.command.impl.completer.FileOptionCompleter;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.invocation.AeshInvocationProviders;
+import org.aesh.command.impl.parser.AeshCommandLineCompletionParser;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocationBuilder;
+import org.aesh.command.invocation.CommandInvocationConfiguration;
+import org.aesh.command.invocation.CommandInvocationProvider;
+import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.operator.OperatorType;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.result.ResultHandler;
+import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.command.validator.ValidatorInvocationProvider;
+import org.aesh.complete.AeshCompleteOperation;
+import org.aesh.parser.LineParser;
+import org.aesh.parser.ParsedLine;
+import org.aesh.parser.ParserStatus;
+import org.aesh.readline.AeshContext;
+
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.aesh.command.CommandRuntime;
-import org.aesh.command.Command;
-import org.aesh.command.CommandException;
-import org.aesh.command.CommandNotFoundException;
-import org.aesh.command.CommandResolver;
-import org.aesh.command.CommandResult;
-import org.aesh.command.Executor;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.invocation.CommandInvocationBuilder;
-import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.result.ResultHandler;
-import org.aesh.command.validator.CommandValidatorException;
-import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.complete.AeshCompleteOperation;
-import org.aesh.parser.ParserStatus;
-import org.aesh.readline.AeshContext;
-import org.aesh.command.impl.invocation.AeshInvocationProviders;
-import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
-import org.aesh.command.activator.CommandActivatorProvider;
-import org.aesh.command.activator.OptionActivatorProvider;
-import org.aesh.command.completer.CompleterInvocationProvider;
-import org.aesh.command.container.CommandContainer;
-import org.aesh.command.converter.ConverterInvocationProvider;
-import org.aesh.command.invocation.CommandInvocationConfiguration;
-import org.aesh.command.invocation.CommandInvocationProvider;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.command.CommandNotFoundHandler;
-import org.aesh.parser.LineParser;
-import org.aesh.parser.ParsedLine;
-import org.aesh.command.Execution;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.impl.completer.CompleterData;
-import org.aesh.command.impl.completer.FileOptionCompleter;
-import org.aesh.command.impl.parser.AeshCommandLineCompletionParser;
-import org.aesh.command.operator.OperatorType;
 
 /**
  * Implementation of the Command processor.
@@ -269,7 +269,7 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
 
         if(!lines.isEmpty()) {
             for(int i=0; i < lines.size(); i++) {
-                if (lines.get(i).cursor() > 0) {
+                if (lines.get(i).cursor() > -1) {
                     if(i == 0) {
                         doSimpleComplete(completeOperation, lines.get(i));
                         return;
