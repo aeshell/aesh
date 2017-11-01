@@ -416,6 +416,11 @@ public class LineParserTest {
          assertEquals("a", lines.get(1).words().get(0).word());
          assertEquals("a", lines.get(1).selectedWord().word());
 
+         lines = lineParser.parseLine("foo>a", 5, true, operators);
+         assertEquals("foo", lines.get(0).words().get(0).word());
+         assertEquals("a", lines.get(1).words().get(0).word());
+         assertEquals("a", lines.get(1).selectedWord().word());
+
          lines = lineParser.parseLine("foo > ", 6, true, operators);
          assertEquals("foo", lines.get(0).words().get(0).word());
          assertEquals(1, lines.get(1).cursor());
