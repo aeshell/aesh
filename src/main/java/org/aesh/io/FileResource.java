@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.StandardCopyOption;
@@ -49,6 +50,12 @@ public class FileResource implements Resource {
         if(file == null)
             throw new IllegalArgumentException("file argument cant be null");
         this.file = file;
+    }
+
+    public FileResource(Path file) {
+        if(file == null)
+            throw new IllegalArgumentException("file argument cant be null");
+        this.file = file.toFile();
     }
 
     public FileResource(String file) {
