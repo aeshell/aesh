@@ -110,6 +110,52 @@ public class AeshCommandOperatorCompletionTest {
          console.stop();
      }
 
+
+    @Test
+    public void testCompletionWithPipeOperator() throws IOException, CommandLineParserException {
+        TestConnection connection = new TestConnection(new Size(400, 80));
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(ArgCommand.class)
+                .command(FooCommand.class)
+                .create();
+
+         Settings settings = SettingsBuilder.builder()
+                 .logging(true)
+                 .connection(connection)
+                 .commandRegistry(registry)
+                 .enableOperatorParser(true)
+                 .enableExport(false)
+                 .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+        connection.read("arg|");
+        connection.clearOutputBuffer();
+        connection.read("f");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("foo ");
+        connection.read("--bo");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("foo --bool=");
+        connection.read("tr");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("foo --bool=true ");
+        connection.read("--i");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("foo --bool=true --input=");
+        connection.read("foo ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("foo --bool=true --input=foo ARG ");
+        connection.read(Key.ENTER);
+        connection.clearOutputBuffer();
+        connection.read("arg | ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("arg | "+Config.getLineSeparator()+"arg  foo  "+Config.getLineSeparator()+"arg | ");
+
+        console.stop();
+    }
+
     @CommandDefinition(name = "foo", description = "")
     public static class FooCommand implements Command {
 
