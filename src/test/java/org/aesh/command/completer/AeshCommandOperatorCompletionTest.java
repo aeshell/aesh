@@ -153,6 +153,11 @@ public class AeshCommandOperatorCompletionTest {
         connection.read(completeChar.getFirstValue());
         connection.assertBuffer("arg | "+Config.getLineSeparator()+"arg  foo  "+Config.getLineSeparator()+"arg | ");
 
+        connection.read("foo");
+        connection.clearOutputBuffer();
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer(" ");
+
         console.stop();
     }
 
