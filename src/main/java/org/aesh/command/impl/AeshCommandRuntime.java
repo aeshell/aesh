@@ -277,8 +277,7 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
                     //we need to check the previous line
                     //if it is redirect/append out we should use a file completer
                     else {
-                        if(lines.get(i-1).operator() == OperatorType.REDIRECT_OUT ||
-                                lines.get(i-1).operator() == OperatorType.APPEND_OUT) {
+                        if(OperatorType.isAppendOrRedirectInOrOut(lines.get(i-1).operator())) {
                             //do file completion
                             FileOptionCompleter completer = new FileOptionCompleter();
                             CompleterInvocation invocation

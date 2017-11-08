@@ -80,6 +80,12 @@ public enum OperatorType {
         return false;
     }
 
+    public static boolean isAppendOrRedirectInOrOut(OperatorType type) {
+        return type == APPEND_OUT || type == REDIRECT_OUT || type == REDIRECT_IN ||
+                type == REDIRECT_OUT_ALL || type == REDIRECT_OUT_ERROR ||
+                type == APPEND_OUT_ERROR;
+    }
+
     public static OperatorType matches(Set<OperatorType> operators, String text, int index) {
         OperatorType found = OperatorType.NONE;
         for(OperatorType operator : operators) {
