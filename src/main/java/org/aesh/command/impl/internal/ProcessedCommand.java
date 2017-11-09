@@ -19,42 +19,42 @@
  */
 package org.aesh.command.impl.internal;
 
+import org.aesh.command.Command;
+import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.activator.NullCommandActivator;
 import org.aesh.command.impl.parser.CompleteStatus;
+import org.aesh.command.impl.populator.AeshCommandPopulator;
+import org.aesh.command.impl.result.NullResultHandler;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.populator.CommandPopulator;
-import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
-import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.Command;
-import org.aesh.command.impl.populator.AeshCommandPopulator;
+import org.aesh.readline.terminal.formatting.TerminalString;
+import org.aesh.util.Parser;
+import org.aesh.utils.Config;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.readline.terminal.formatting.TerminalString;
-import org.aesh.util.Parser;
-import org.aesh.utils.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class ProcessedCommand<C extends Command> {
 
-    private String name;
-    private String description;
-    private CommandValidator validator;
-    private ResultHandler resultHandler = new NullResultHandler();
-    private CommandPopulator<Object, C> populator;
+    private final String name;
+    private final String description;
+    private final CommandValidator validator;
+    private final ResultHandler resultHandler;
+    private final CommandPopulator<Object, C> populator;
     private CommandActivator activator;
 
     private List<ProcessedOption> options;
     private ProcessedOption arguments;
     private ProcessedOption argument;
-    private C command;
+    private final C command;
     private final List<String> aliases;
     private List<CommandLineParserException> parserExceptions;
     private CompleteStatus completeStatus;
@@ -65,11 +65,14 @@ public class ProcessedCommand<C extends Command> {
                             ProcessedOption arguments, List<ProcessedOption> options,
                             ProcessedOption argument,
                             CommandPopulator<Object, C> populator, CommandActivator activator) throws OptionParserException {
-        setName(name);
-        setDescription(description);
+        this.name = name;
+        this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
         this.validator = validator;
-        this.resultHandler = resultHandler;
+        if(resultHandler != null)
+            this.resultHandler = resultHandler;
+        else
+            this.resultHandler = new NullResultHandler();
         this.arguments = arguments;
         this.argument = argument;
         if(argument != null && arguments != null)
@@ -123,16 +126,8 @@ public class ProcessedCommand<C extends Command> {
         return name;
     }
 
-    private void setName(String name) {
-        this.name = name;
-    }
-
     public String description() {
         return description;
-    }
-
-    private void setDescription(String description) {
-        this.description = description;
     }
 
     public CommandValidator validator() {
