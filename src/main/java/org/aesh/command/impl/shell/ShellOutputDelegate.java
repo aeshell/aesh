@@ -26,12 +26,12 @@ public class ShellOutputDelegate implements Shell {
     }
 
     @Override
-    public void write(String out) {
+    public void write(String out, boolean paging) {
         doWrite(out);
     }
 
     @Override
-    public void writeln(String out) {
+    public void writeln(String out, boolean paging) {
         doWrite(out+ Config.getLineSeparator());
     }
 

@@ -152,13 +152,13 @@ class FooCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public void print(String msg) {
-        commandInvocation.print(msg);
+    public void print(String msg, boolean paging) {
+        commandInvocation.print(msg, paging);
     }
 
     @Override
-    public void println(String msg) {
-        commandInvocation.println(msg);
+    public void println(String msg, boolean paging) {
+        commandInvocation.println(msg, paging);
     }
 
     public String getFoo() {

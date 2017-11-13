@@ -130,12 +130,30 @@ public interface CommandInvocation {
     * Print a message on console
     * @param msg
     */
-    void print(String msg);
+    default void print(String msg) {
+        print(msg, false);
+    }
 
     /**
      * Print a new line with a message on console;
      * @param msg
      */
-    void println(String msg);
+    default void println(String msg) {
+        println(msg, false);
+    }
+
+    /**
+    * Print a message on console
+    * @param msg
+     * @param paging true to pause output for long content
+    */
+    void print(String msg, boolean paging);
+
+    /**
+     * Print a new line with a message on console;
+     * @param msg
+     * @param paging true to pause output for long content
+     */
+    void println(String msg, boolean paging);
 
 }
