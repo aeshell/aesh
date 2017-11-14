@@ -20,7 +20,7 @@
 
 package org.aesh.command.activator;
 
-import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ParsedCommand;
 
 /**
  * @author jdenise@redhat.com
@@ -33,6 +33,7 @@ public interface CommandActivator {
      * displayed if this method return false.
      *
      * @return
+     * @param command
      */
-    boolean isActivated(ProcessedCommand command);
+    boolean isActivated(ParsedCommand command);
 }

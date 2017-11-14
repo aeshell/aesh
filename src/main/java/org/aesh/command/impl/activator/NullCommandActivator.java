@@ -20,15 +20,15 @@
 
 package org.aesh.command.impl.activator;
 
-import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.impl.internal.ParsedCommand;
 
 /**
  * @author jdenise@redhat.com
  */
 public class NullCommandActivator implements CommandActivator {
     @Override
-    public boolean isActivated(ProcessedCommand command) {
+    public boolean isActivated(ParsedCommand command) {
         return true;
     }
 }

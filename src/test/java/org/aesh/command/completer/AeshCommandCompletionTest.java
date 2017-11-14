@@ -26,6 +26,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
@@ -1007,7 +1008,7 @@ public class AeshCommandCompletionTest {
 
         static boolean activated;
         @Override
-        public boolean isActivated(ProcessedCommand cmd) {
+        public boolean isActivated(ParsedCommand cmd) {
             return activated;
         }
     }

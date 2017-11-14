@@ -20,14 +20,17 @@
 
 package org.aesh.command.impl.registry;
 
-import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundException;
-import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.container.CommandContainerBuilder;
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.ParsedCommand;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.MutableCommandRegistry;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.util.LoggerUtil;
@@ -39,8 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.registry.MutableCommandRegistry;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -91,7 +92,7 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
             //add all
             for(CommandContainer<C,CI> command : registry.values()) {
                 ProcessedCommand<C> com = command.getParser().getProcessedCommand();
-                if (com.getActivator().isActivated(com))
+                if (com.getActivator().isActivated(new ParsedCommand(com)))
                     co.addCompletionCandidate(com.name());
             }
         }
@@ -99,7 +100,7 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
             for(CommandContainer<C,CI> command : registry.values()) {
                 ProcessedCommand<C> com = command.getParser().getProcessedCommand();
                 if(com.name().startsWith(parsedLine.selectedWord().word()) &&
-                        com.getActivator().isActivated(com)) {
+                        com.getActivator().isActivated(new ParsedCommand(com))) {
                     co.addCompletionCandidate(com.name());
                     co.setOffset(co.getCursor()-parsedLine.selectedWord().word().length());
                     if(parsedLine.selectedIndex() < parsedLine.size()-1)

@@ -23,7 +23,7 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
@@ -71,7 +71,7 @@ public class AeshCommandActivatorTest {
     public static class NotActived implements CommandActivator {
 
         @Override
-        public boolean isActivated(ProcessedCommand command) {
+        public boolean isActivated(ParsedCommand command) {
             return false;
         }
 

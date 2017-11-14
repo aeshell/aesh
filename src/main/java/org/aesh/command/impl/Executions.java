@@ -19,40 +19,42 @@
  */
 package org.aesh.command.impl;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Executable;
 import org.aesh.command.Execution;
+import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.operator.AndOperator;
 import org.aesh.command.impl.operator.AppendOutputRedirectionOperator;
+import org.aesh.command.impl.operator.ConfigurationOperator;
+import org.aesh.command.impl.operator.DataProvider;
 import org.aesh.command.impl.operator.EndOperator;
+import org.aesh.command.impl.operator.ExecutableOperator;
+import org.aesh.command.impl.operator.InputDelegate;
 import org.aesh.command.impl.operator.InputRedirectionOperator;
+import org.aesh.command.impl.operator.Operator;
+import org.aesh.command.impl.operator.OrOperator;
 import org.aesh.command.impl.operator.OutputRedirectionOperator;
 import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
-import org.aesh.command.impl.operator.ConfigurationOperator;
-import org.aesh.command.impl.operator.DataProvider;
-import org.aesh.command.impl.operator.ExecutableOperator;
-import org.aesh.command.impl.operator.InputDelegate;
-import org.aesh.command.impl.operator.Operator;
-import org.aesh.command.impl.operator.OrOperator;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.result.ResultHandler;
+import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.readline.AeshContext;
 import org.aesh.io.PipelineResource;
 import org.aesh.io.Resource;
 import org.aesh.parser.ParsedLine;
-import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.readline.AeshContext;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -111,7 +113,7 @@ class Executions {
                 cmd.validator().validate(getCommand());
             }
             if (cmd.getActivator() != null) {
-                if (!cmd.getActivator().isActivated(cmd)) {
+                if (!cmd.getActivator().isActivated(new ParsedCommand(cmd))) {
                     throw new CommandException("The command is not available in the current context.");
                 }
             }

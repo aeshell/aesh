@@ -17,37 +17,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import org.aesh.command.option.Arguments;
+
+import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
-import org.aesh.command.option.Option;
-import org.aesh.command.option.OptionList;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.builder.CommandBuilder;
-import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
-import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.renderer.OptionRenderer;
-import org.aesh.command.validator.OptionValidator;
-import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.readline.AeshContext;
-import org.aesh.command.shell.Shell;
-import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
-import org.aesh.command.Command;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionList;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.CommandResult;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.command.validator.ValidatorInvocationProvider;
+import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.settings.ManProvider;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.shell.Shell;
+import org.aesh.command.validator.OptionValidator;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
+import org.aesh.readline.AeshContext;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.readline.action.KeyAction;
@@ -57,6 +60,8 @@ import org.aesh.readline.terminal.formatting.Color;
 import org.aesh.readline.terminal.formatting.TerminalColor;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.readline.terminal.formatting.TerminalTextStyle;
+import org.aesh.utils.ANSI;
+import org.aesh.utils.Config;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -67,9 +72,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import org.aesh.command.CommandException;
-import org.aesh.utils.ANSI;
-import org.aesh.utils.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -168,7 +170,7 @@ public class Example {
 
     private static class HideActivator implements CommandActivator {
         @Override
-        public boolean isActivated(ProcessedCommand command) {
+        public boolean isActivated(ParsedCommand command) {
             return false;
         }
     }
