@@ -129,14 +129,14 @@ public final class AeshCommandInvocation<C extends Command<AeshCommandInvocation
     }
 
 
-   @Override
-   public void print(String msg) {
-       shell.write(msg);
-   }
+    @Override
+    public void print(String msg, boolean page) {
+        shell.write(msg, page);
+    }
 
     @Override
-    public void println(String msg) {
-        shell.writeln(msg);
+    public void println(String msg, boolean page) {
+        shell.writeln(msg, page);
     }
 
     @Override

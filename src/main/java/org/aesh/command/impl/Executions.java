@@ -254,6 +254,9 @@ class Executions {
                             if (!(op instanceof ExecutableOperator)) {
                                 throw new IllegalArgumentException("Op " + ot + " is not executable");
                             }
+                            if (processedCommand == null) {
+                                throw new IllegalArgumentException("Invalid command line, command is missing.");
+                            }
                             ExecutableOperator<CI> exec = (ExecutableOperator) op;
                             invocationConfiguration = config == null
                                     ? new CommandInvocationConfiguration(runtime.getAeshContext(), dataProvider)

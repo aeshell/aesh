@@ -32,12 +32,30 @@ public interface Shell {
     /**
      * @param out write out to the output stream
      */
-    void write(String out);
+    default void write(String out) {
+        write(out, false);
+    }
 
     /**
      * @param out write out to the output stream including a line separator at the end
      */
-    void writeln(String out);
+    default void writeln(String out) {
+        writeln(out, false);
+    }
+
+    /**
+    * Print a message on console
+    * @param msg
+     * @param paging True means that output longer than terminal height should be paused.
+    */
+    void write(String msg, boolean paging);
+
+    /**
+     * Print a new line with a message on console;
+     * @param msg
+     * @param paging True means that output longer than terminal height should be paused.
+     */
+    void writeln(String msg, boolean paging);
 
     /**
      * @param out write out to the output stream

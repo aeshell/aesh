@@ -112,13 +112,13 @@ public class DefaultCommandInvocation<C extends Command<DefaultCommandInvocation
     }
 
     @Override
-    public void print(String msg) {
-        shell.write(msg);
+    public void print(String msg, boolean paging) {
+        shell.write(msg, paging);
     }
 
     @Override
-    public void println(String msg) {
-        shell.writeln(msg);
+    public void println(String msg, boolean paging) {
+        shell.writeln(msg, paging);
     }
 
     @Override
@@ -138,12 +138,12 @@ public class DefaultCommandInvocation<C extends Command<DefaultCommandInvocation
     private static class DefaultShell implements Shell {
 
         @Override
-        public void write(String out) {
+        public void write(String out, boolean paging) {
             System.out.print(out);
         }
 
         @Override
-        public void writeln(String out) {
+        public void writeln(String out, boolean paging) {
             System.out.println(out);
         }
 

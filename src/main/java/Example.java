@@ -135,6 +135,7 @@ public class Example {
                 .command(RunCommand.class)
                 .command(ClearCommand.class)
                 .command(GroupCommand.class)
+                .command(LongOutputCommand.class)
                 //example on how to build a command with a simple lambda
                 .command(new CommandBuilder().name("quit").command(commandInvocation -> {
                     commandInvocation.stop();
@@ -356,6 +357,26 @@ public class Example {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.getShell().clear();
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "long-output", description = "")
+    public static class LongOutputCommand implements Command {
+
+        @Option(hasValue = false)
+        private boolean prompt;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < commandInvocation.getShell().size().getHeight() * 2; i++) {
+                builder.append("A sentence to say " + i + " time how long this content is." + Config.getLineSeparator());
+            }
+            commandInvocation.getShell().writeln(builder.toString(), true);
+            if (prompt) {
+                commandInvocation.inputLine(new Prompt("What was the name of your first pet?: "));
+            }
             return CommandResult.SUCCESS;
         }
     }

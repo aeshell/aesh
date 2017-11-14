@@ -90,6 +90,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private volatile boolean running = false;
 
+    private ShellImpl shell;
+
     public ReadlineConsole(Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation,
         ? extends ConverterInvocation, ? extends CompleterInvocation,
         ? extends ValidatorInvocation, ? extends OptionActivator,
@@ -178,6 +180,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
      */
     @Override
     public void read(final Connection conn, final Readline readline) {
+        // In case there is some collected ouput from previous command execution
+        shell.printCollectedOutput();
+
         if(running) {
             readline.readline(conn, prompt, line -> {
                 // Ctrl-D
@@ -186,9 +191,10 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                     return;
                 }
 
-                if (line.trim().length() > 0)
+                if (line.trim().length() > 0) {
+                    shell.startCollectOutput();
                     processLine(line, conn);
-                else
+                } else
                     read(conn, readline);
             }, completions, preProcessors);
         }
@@ -290,9 +296,10 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     private CommandRuntime<? extends Command<? extends CommandInvocation>,? extends CommandInvocation> generateRuntime() {
+        shell = new ShellImpl(connection, readline);
         return AeshCommandRuntimeBuilder.builder()
                 .settings(settings)
-                .commandInvocationBuilder(new AeshCommandInvocationBuilder(new ShellImpl(connection, readline), this))
+                .commandInvocationBuilder(new AeshCommandInvocationBuilder(shell, this))
                 .aeshContext(context)
                 .operators(EnumSet.allOf(OperatorType.class))
                 .build();
