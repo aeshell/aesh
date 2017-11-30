@@ -1,5 +1,7 @@
 package org.aesh.command.impl.internal;
 
+import org.aesh.command.Command;
+
 public class ParsedCommand {
 
     private final ProcessedCommand processedCommand;
@@ -15,5 +17,9 @@ public class ParsedCommand {
         else
             return null;
 
+    }
+
+    public Command getCommand() {
+        return processedCommand.getCommand();
     }
 }
