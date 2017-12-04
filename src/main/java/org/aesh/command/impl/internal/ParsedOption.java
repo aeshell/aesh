@@ -9,10 +9,17 @@ public class ParsedOption {
     }
 
     public String value() {
-        return processedOption.getValue();
+        if(processedOption != null)
+            return processedOption.getValue();
+        else
+            return null;
     }
 
     public String name() {
-        return processedOption.name();
+        if(processedOption != null)
+            return processedOption.name();
+        else
+            return null;
+
     }
 }
