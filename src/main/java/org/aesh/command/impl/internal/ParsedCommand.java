@@ -38,7 +38,11 @@ public class ParsedCommand {
     }
 
     public ParsedOption findLongOptionNoActivatorCheck(String name) {
-        return new ParsedOption(processedCommand.findLongOptionNoActivatorCheck(name));
+        ProcessedOption processedOption = processedCommand.findLongOptionNoActivatorCheck(name);
+        if(processedOption != null)
+            return new ParsedOption(processedOption);
+        else
+            return null;
     }
 
 }
