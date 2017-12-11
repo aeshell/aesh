@@ -20,7 +20,7 @@
 
 package org.aesh.command.impl.activator;
 
-import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.activator.OptionActivator;
 
 /**
@@ -28,7 +28,7 @@ import org.aesh.command.activator.OptionActivator;
  */
 public class NullActivator implements OptionActivator {
     @Override
-    public boolean isActivated(ProcessedCommand processedCommand) {
+    public boolean isActivated(ParsedCommand parsedCommand) {
         return true;
     }
 }

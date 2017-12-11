@@ -19,21 +19,22 @@
  */
 package org.aesh.command.validator;
 
-import org.aesh.command.option.Option;
-import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.settings.Settings;
+import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.OptionCompleter;
-import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.OptionCompleter;
+import org.aesh.command.impl.internal.ParsedCommand;
+import org.aesh.command.impl.internal.ParsedOption;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
-import org.aesh.command.Command;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Option;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.CommandResult;
+import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
@@ -41,7 +42,6 @@ import org.aesh.utils.Config;
 import org.junit.Test;
 
 import java.io.IOException;
-import org.aesh.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -186,9 +186,9 @@ public class AeshCommandValidatorTest {
 
     public static class RebaseTestActivator implements OptionActivator {
         @Override
-        public boolean isActivated(ProcessedCommand processedCommand) {
-            ProcessedOption option = processedCommand.findLongOption("force");
-            return option != null && option.getValue() != null && option.getValue().equals("true");
+        public boolean isActivated(ParsedCommand parsedCommand) {
+            ParsedOption option = parsedCommand.findLongOption("force");
+            return option != null && option.value() != null && option.value().equals("true");
         }
     }
 }

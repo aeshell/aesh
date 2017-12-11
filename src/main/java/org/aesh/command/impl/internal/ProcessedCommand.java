@@ -193,7 +193,7 @@ public class ProcessedCommand<C extends Command> {
         for (ProcessedOption option : getOptions())
             if(option.shortName() != null &&
                     option.shortName().equals(name) &&
-                    option.activator().isActivated(this))
+                    option.activator().isActivated(new ParsedCommand(this)))
                 return option;
 
         return null;
@@ -247,7 +247,7 @@ public class ProcessedCommand<C extends Command> {
         for (ProcessedOption option : getOptions())
             if(option.name() != null &&
                     option.name().equals(name) &&
-                    option.activator().isActivated(this))
+                    option.activator().isActivated(new ParsedCommand(this)))
                 return option;
 
         return null;
@@ -264,7 +264,7 @@ public class ProcessedCommand<C extends Command> {
     public ProcessedOption startWithOption(String name) {
         for (ProcessedOption option : getOptions())
             if(option.shortName() != null && name.startsWith(option.shortName()) &&
-                    option.activator().isActivated(this))
+                    option.activator().isActivated(new ParsedCommand(this)))
                 return option;
 
         return null;
@@ -273,7 +273,7 @@ public class ProcessedCommand<C extends Command> {
     public ProcessedOption startWithLongOption(String name) {
         for (ProcessedOption option : getOptions())
             if(name.startsWith(option.name()) &&
-                    option.activator().isActivated(this))
+                    option.activator().isActivated(new ParsedCommand(this)))
                 return option;
 
         return null;
@@ -310,7 +310,7 @@ public class ProcessedCommand<C extends Command> {
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
             if(o.getValues().size() == 0 &&
-                    o.activator().isActivated(this))
+                    o.activator().isActivated(new ParsedCommand(this)))
                 names.add(o.getRenderedNameWithDashes());
         }
 
@@ -324,7 +324,7 @@ public class ProcessedCommand<C extends Command> {
            if(((o.shortName() != null && o.shortName().equals(name) &&
                    !o.isLongNameUsed() && o.getValues().size() == 0) ||
                    (o.name().startsWith(name) && o.getValues().size() == 0)) &&
-                   o.activator().isActivated(this))
+                   o.activator().isActivated(new ParsedCommand(this)))
                names.add(o.getRenderedNameWithDashes());
         }
         return names;
@@ -339,7 +339,7 @@ public class ProcessedCommand<C extends Command> {
            if(((o.shortName() != null && o.shortName().equals(name) &&
                    !o.isLongNameUsed() && o.getValues().size() == 0) ||
                    (o.name().startsWith(name) && o.getValues().size() == 0)) &&
-                   o.activator().isActivated(this))
+                   o.activator().isActivated(new ParsedCommand(this)))
                names.add(o.name());
         }
         return names;

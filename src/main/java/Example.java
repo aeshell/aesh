@@ -29,8 +29,7 @@ import org.aesh.command.builder.CommandBuilder;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.impl.internal.ParsedCommand;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.internal.ParsedOption;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -490,9 +489,9 @@ public class Example {
     public static class BarActivator implements OptionActivator {
 
         @Override
-        public boolean isActivated(ProcessedCommand processedCommand) {
-            ProcessedOption bar = processedCommand.findLongOption("bar");
-            return bar != null && bar.getValue() != null;
+        public boolean isActivated(ParsedCommand parsedCommand) {
+            ParsedOption bar = parsedCommand.findLongOption("bar");
+            return bar != null && bar.value() != null;
         }
     }
 

@@ -19,13 +19,14 @@
  */
 package org.aesh.command.activator;
 
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.CommandDefinition;
-import org.aesh.command.option.Option;
-import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
+import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
@@ -36,7 +37,6 @@ import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
 import java.io.IOException;
-import org.aesh.command.CommandException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -126,7 +126,7 @@ public class AeshCommandOptionActivatorTest {
         }
 
         @Override
-        public boolean isActivated(ProcessedCommand processedCommand) {
+        public boolean isActivated(ParsedCommand parsedCommand) {
             return (context.getContext().equals("foo"));
         }
     }

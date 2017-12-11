@@ -20,7 +20,7 @@
 
 package org.aesh.command.activator;
 
-import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ParsedCommand;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -32,8 +32,8 @@ public interface OptionActivator {
      * Eg: While completing options this option will not be
      * displayed if this method return false.
      *
-     * @param processedCommand command
+     * @param parsedCommand command
      * @return false if option is not activated
      */
-    boolean isActivated(ProcessedCommand processedCommand);
+    boolean isActivated(ParsedCommand parsedCommand);
 }

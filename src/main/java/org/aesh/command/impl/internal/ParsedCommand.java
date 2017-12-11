@@ -19,18 +19,18 @@ public class ParsedCommand {
 
     }
 
-    public Command getCommand() {
+    public Command command() {
         return processedCommand.getCommand();
     }
 
-    public ParsedOption getArgument() {
+    public ParsedOption argument() {
         if(processedCommand.hasArgument())
             return new ParsedOption(processedCommand.getArgument());
         else
             return null;
     }
 
-    public ParsedOption getArguments() {
+    public ParsedOption arguments() {
         if(processedCommand.hasArguments())
             return new ParsedOption(processedCommand.getArguments());
         else

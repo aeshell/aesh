@@ -197,12 +197,12 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                             parser.getProcessedCommand().getArgument();
             //first check if arg is argument, if so check if it already have a value, if so to an option complete
             if(arg.getOptionType() == OptionType.ARGUMENT &&
-                    (arg.getValue() != null || !arg.activator().isActivated(parser.getProcessedCommand()))) {
+                    (arg.getValue() != null || !arg.activator().isActivated(new ParsedCommand(parser.getProcessedCommand())))) {
                 //list options
                 doListOptions(completeOperation, "");
             }
             //if arguments, but not activated
-            else if(arg.getOptionType() == OptionType.ARGUMENTS && !arg.activator().isActivated(parser.getProcessedCommand()))
+            else if(arg.getOptionType() == OptionType.ARGUMENTS && !arg.activator().isActivated(new ParsedCommand(parser.getProcessedCommand())))
                 //list options
                 doListOptions(completeOperation, "");
             //argument(s)
@@ -267,7 +267,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
             value = "";
 
         if(currentOption.completer() != null && currentOption.hasValue() &&
-                currentOption.activator().isActivated(parser.getProcessedCommand())) {
+                currentOption.activator().isActivated(new ParsedCommand(parser.getProcessedCommand()))) {
             CompleterInvocation completions =
                     invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
                             new CompleterData(completeOperation.getContext(), value, parser.getCommand()));

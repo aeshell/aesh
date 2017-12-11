@@ -19,29 +19,29 @@
  */
 package org.aesh.command.completer;
 
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.impl.container.AeshCommandContainerBuilder;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.ParsedCommand;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionList;
+import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.readline.AeshContext;
-import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.DefaultAeshContext;
 import org.junit.Test;
 
 import java.util.List;
-import org.aesh.command.CommandException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -422,9 +422,9 @@ public class CompletionParserTest {
     public class Test4Activator implements OptionActivator {
 
         @Override
-        public boolean isActivated(ProcessedCommand processedCommand) {
+        public boolean isActivated(ParsedCommand parsedCommand) {
             //needs an argument to be activated
-            return !processedCommand.hasArgumentWithNoValue();
+            return parsedCommand.argument() != null && parsedCommand.argument().value() != null;
         }
     }
 

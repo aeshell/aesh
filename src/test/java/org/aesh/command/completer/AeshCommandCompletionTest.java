@@ -27,8 +27,7 @@ import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.impl.internal.ParsedCommand;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.internal.ParsedOption;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
@@ -842,9 +841,9 @@ public class AeshCommandCompletionTest {
     public class Test4Activator implements OptionActivator {
 
         @Override
-        public boolean isActivated(ProcessedCommand processedCommand) {
+        public boolean isActivated(ParsedCommand parsedCommand) {
             //needs an argument to be activated
-            return !processedCommand.hasArgumentWithNoValue();
+            return parsedCommand.argument() != null && parsedCommand.argument().value() != null;
         }
     }
 
@@ -880,9 +879,9 @@ public class AeshCommandCompletionTest {
 
     public class Test4ActivatorB implements OptionActivator {
         @Override
-        public boolean isActivated(ProcessedCommand processedCommand) {
+        public boolean isActivated(ParsedCommand parsedCommand) {
             //needs required != null to be activated
-            return (processedCommand.findLongOption("required").getValue() != null);
+            return (parsedCommand.findLongOption("required").value() != null);
         }
     }
 
@@ -1101,9 +1100,9 @@ public class AeshCommandCompletionTest {
     public static class ContainerActivator implements OptionActivator {
 
         @Override
-        public boolean isActivated(ProcessedCommand processedCommand) {
-            ProcessedOption container = processedCommand.findLongOption("container");
-            return container != null && container.getValue() != null;
+        public boolean isActivated(ParsedCommand parsedCommand) {
+            ParsedOption container = parsedCommand.findLongOption("container");
+            return container != null && container.value() != null;
         }
     }
 
@@ -1229,9 +1228,9 @@ public class AeshCommandCompletionTest {
 
     public static class RebaseTestActivator implements OptionActivator {
         @Override
-        public boolean isActivated(ProcessedCommand processedCommand) {
-            ProcessedOption option = processedCommand.findLongOption("force");
-            return option != null && option.getValue() != null && option.getValue().equals("true");
+        public boolean isActivated(ParsedCommand parsedCommand) {
+            ParsedOption option = parsedCommand.findLongOption("force");
+            return option != null && option.value() != null && option.value().equals("true");
         }
     }
 
