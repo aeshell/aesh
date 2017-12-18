@@ -280,13 +280,17 @@ public class ProcessedCommand<C extends Command> {
     }
 
     public ProcessedOption startWithLongOptionNoActivatorCheck(String name) {
+        ProcessedOption longestMatch = null;
         for (ProcessedOption option : getOptions()) {
             if (name.startsWith(option.name())) {
-                return option;
+                if (longestMatch == null) {
+                    longestMatch = option;
+                } else if (option.name().length() > longestMatch.name().length()) {
+                    longestMatch = option;
+                }
             }
         }
-
-        return null;
+        return longestMatch;
     }
 
    public void clear() {
