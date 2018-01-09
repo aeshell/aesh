@@ -27,7 +27,7 @@ apply plugin: 'checkstyle'
 
 group = 'org.aesh'
 archivesBaseName = 'aesh'
-version = '1.0-Alpha2'
+version = '1.0-Alpha3'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
@@ -69,7 +69,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.aesh', name: 'aesh-readline', version: '1.2'
+    compile group: 'org.aesh', name: 'aesh-readline', version: '1.3'
     testCompile 'junit:junit:4.12'
 }
 

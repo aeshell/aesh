@@ -33,7 +33,7 @@
    <groupId>org.aesh</groupId>
    <artifactId>aesh</artifactId>
    <packaging>jar</packaging>
-   <version>1.0-Alpha2</version>
+   <version>1.0-Alpha3</version>
    <name>Æsh</name>
    <description>Æsh (Another Extendable SHell)</description>
    <scm>
@@ -55,7 +55,7 @@
       <dependency>
          <groupId>org.aesh</groupId>
          <artifactId>aesh-readline</artifactId>
-         <version>1.2</version>
+         <version>1.3</version>
       </dependency>
 
       <dependency>
