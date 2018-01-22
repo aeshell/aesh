@@ -123,7 +123,7 @@ public class LineParser {
                 handleSpace(c);
             }
             else if (c == BACK_SLASH) {
-                if (haveEscape || ternaryQuote) {
+                if (haveEscape || ternaryQuote || haveDoubleQuote || haveSingleQuote) {
                     builder.append(c);
                     haveEscape = false;
                 }
@@ -178,7 +178,7 @@ public class LineParser {
                     handleSpace(c);
                 }
                 else if (c == BACK_SLASH) {
-                    if (haveEscape || ternaryQuote) {
+                    if (haveEscape || ternaryQuote || haveDoubleQuote || haveSingleQuote) {
                         builder.append(c);
                         haveEscape = false;
                     }

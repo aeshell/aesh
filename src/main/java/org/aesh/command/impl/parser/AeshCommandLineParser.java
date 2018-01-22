@@ -287,15 +287,21 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                         lastParsedOption.parser().parse(iter, lastParsedOption);
                     }
                     else {
-                        if (processedCommand.hasArguments()) {
+                        // invalid short names and long names should be rejected.
+                        if (word.word().startsWith("-")) {
+                            if (word.word().startsWith("--") || word.word().length() == 2) {
+                                processedCommand.addParserException(
+                                        new OptionParserException("The option " + word.word()
+                                                + " is unknown."));
+                            }
+                        } else if (processedCommand.hasArguments()) {
                             processedCommand.getArguments().addValue(word.word());
-                        }
-                        else if(processedCommand.hasArgumentWithNoValue())
+                        } else if (processedCommand.hasArgumentWithNoValue()) {
                             processedCommand.getArgument().addValue(word.word());
-                        else {
+                        } else {
                             processedCommand.addParserException(
-                                    new OptionParserException("A value " + word.word() +
-                                            " was given as an argument, but the command do not support it."));
+                                    new OptionParserException("A value " + word.word()
+                                            + " was given as an argument, but the command do not support it."));
                         }
                         iter.pollParsedWord();
                     }
