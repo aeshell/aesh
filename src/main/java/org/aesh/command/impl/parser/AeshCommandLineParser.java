@@ -294,7 +294,8 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                                         new OptionParserException("The option " + word.word()
                                                 + " is unknown."));
                             }
-                        } else if (processedCommand.hasArguments()) {
+                        }
+                        if (processedCommand.hasArguments()) {
                             processedCommand.getArguments().addValue(word.word());
                         } else if (processedCommand.hasArgumentWithNoValue()) {
                             processedCommand.getArgument().addValue(word.word());
