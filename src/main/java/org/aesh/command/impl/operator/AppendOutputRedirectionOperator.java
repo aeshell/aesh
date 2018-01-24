@@ -33,7 +33,7 @@ public class AppendOutputRedirectionOperator implements ConfigurationOperator {
         @Override
         protected BufferedWriter buildWriter(File f) throws IOException {
             return Files.newBufferedWriter(f.toPath(), StandardCharsets.UTF_8,
-                    StandardOpenOption.APPEND);
+                    StandardOpenOption.APPEND, StandardOpenOption.CREATE);
         }
     }
 
