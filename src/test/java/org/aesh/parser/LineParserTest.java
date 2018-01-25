@@ -190,6 +190,29 @@ public class LineParserTest {
         line = lineParser.parseLine("-s \'redirectUris=[\"http://localhost:8080/blah/*\"]\'");
         assertEquals("-s", line.words().get(0).word());
         assertEquals("redirectUris=[\"http://localhost:8080/blah/*\"]", line.words().get(1).word());
+
+        line = lineParser.parseLine("\"baz\\ 12345\"");
+        assertEquals(line.words().toString(), "baz\\ 12345", line.words().get(0).word());
+
+        line = lineParser.parseLine("\"\\\"String with double quotes\\\"\"");
+        assertEquals(line.words().toString(), 1, line.words().size());
+        assertEquals(line.words().toString(), "\\\"String with double quotes\\\"", line.words().get(0).word());
+
+        // A word and a word containing only a double quote.
+        line = lineParser.parseLine("\"\\\"String with double quotes\"\\\"");
+        assertEquals(line.words().toString(), 2, line.words().size());
+        assertEquals(line.words().toString(), "\\\"String with double quotes", line.words().get(0).word());
+        assertEquals(line.words().toString(), "\"", line.words().get(1).word());
+
+        line = lineParser.parseLine("'\\'String with single quotes\\''");
+        assertEquals(line.words().toString(), 1, line.words().size());
+        assertEquals(line.words().toString(), "\\'String with single quotes\\'", line.words().get(0).word());
+
+        // A word and a word containing only a single quote.
+        line = lineParser.parseLine("'\\'String with single quotes'\\'");
+        assertEquals(line.words().toString(), 2, line.words().size());
+        assertEquals(line.words().toString(), "\\'String with single quotes", line.words().get(0).word());
+        assertEquals(line.words().toString(), "'", line.words().get(1).word());
     }
 
     @Test

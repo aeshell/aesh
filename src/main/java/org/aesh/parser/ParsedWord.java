@@ -64,4 +64,9 @@ public class ParsedWord {
     public enum Status {
         OK, OPEN_BRACKET, OPEN_QUOTE, OPEN_DOUBLE_QUOTE
     }
+
+    @Override
+    public String toString() {
+        return word;
+    }
 }
