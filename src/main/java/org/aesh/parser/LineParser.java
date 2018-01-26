@@ -326,6 +326,14 @@ public class LineParser {
     }
 
     private void handleDoubleQuote(char c) {
+        //already quoted and prev is escape, just add the quote
+        if (ternaryQuote || haveDoubleQuote || haveSingleQuote) {
+            if (prev == BACK_SLASH) {
+                builder.append(c);
+                return;
+            }
+        }
+
         if (haveEscape || (ternaryQuote && prev != DOUBLE_QUOTE)) {
             builder.append(c);
             haveEscape = false;
@@ -359,6 +367,13 @@ public class LineParser {
     }
 
     private void handleSingleQuote(char c) {
+        //already quoted and prev is escape, just add the quote
+        if (ternaryQuote || haveDoubleQuote || haveSingleQuote) {
+            if (prev == BACK_SLASH) {
+                builder.append(c);
+                return;
+            }
+        }
         if (haveEscape || ternaryQuote) {
             builder.append(c);
             haveEscape = false;
