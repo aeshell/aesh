@@ -27,7 +27,7 @@ apply plugin: 'checkstyle'
 
 group = 'org.aesh'
 archivesBaseName = 'aesh'
-version = '1.0-Alpha5'
+version = '1.0'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
