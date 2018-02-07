@@ -64,6 +64,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.aesh.readline.history.FileHistory;
+import org.aesh.readline.history.History;
+import org.aesh.util.FileAccessPermission;
 
 /**
  * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -89,13 +92,11 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
 
     private volatile boolean running = false;
+    private History history;
 
     private ShellImpl shell;
 
-    public ReadlineConsole(Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation,
-        ? extends ConverterInvocation, ? extends CompleterInvocation,
-        ? extends ValidatorInvocation, ? extends OptionActivator,
-        ? extends CommandActivator> givenSettings) {
+    public ReadlineConsole(Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation, ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator, ? extends CommandActivator> givenSettings) {
         LoggerUtil.doLog();
         if(givenSettings == null)
             settings = SettingsBuilder.builder().build();
@@ -139,6 +140,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     @Override
     public void stop() {
         running = false;
+        if (history != null) {
+            history.stop();
+        }
     }
 
     @Override
@@ -162,7 +166,13 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         completionHandler = new AeshCompletionHandler(context);
         if(prompt == null)
             prompt = new Prompt("");
-        readline = new Readline(EditModeBuilder.builder(settings.mode()).create(), new InMemoryHistory(50),
+        if (settings.historyPersistent()) {
+            history = new FileHistory(settings.historyFile(), settings.historySize(),
+                    buildPermission(settings.historyFilePermission()), settings.logging());
+        } else {
+            history = new InMemoryHistory(settings.historySize());
+        }
+        readline = new Readline(EditModeBuilder.builder(settings.mode()).create(), history,
                 completionHandler);
         running = true;
     }
@@ -278,6 +288,20 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         if(this.completions == null)
             this.completions = new ArrayList<>();
         this.completions.addAll(completions);
+    }
+
+    private FileAccessPermission buildPermission(org.aesh.command.settings.FileAccessPermission historyFilePermission) {
+        if (historyFilePermission == null) {
+            return null;
+        }
+        FileAccessPermission perm = new FileAccessPermission();
+        perm.setExecutable(historyFilePermission.isExecutable());
+        perm.setExecutableOwnerOnly(historyFilePermission.isExecutableOwnerOnly());
+        perm.setReadable(historyFilePermission.isReadable());
+        perm.setReadableOwnerOnly(historyFilePermission.isReadableOwnerOnly());
+        perm.setWritable(historyFilePermission.isWritable());
+        perm.setWritableOwnerOnly(historyFilePermission.isWritableOwnerOnly());
+        return perm;
     }
 
     class AeshCompletion implements Completion<AeshCompleteOperation> {
