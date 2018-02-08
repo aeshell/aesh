@@ -250,6 +250,18 @@ public class SettingsBuilder {
         return apply(c -> c.settings.setExportListener(listener));
     }
 
+    public SettingsBuilder echoCtrl(boolean echo) {
+        return apply(c -> c.settings.echoCtrl(echo));
+    }
+
+    public SettingsBuilder redrawPromptOnInterrupt(boolean redraw) {
+        return apply(c -> c.settings.redrawPromptOnInterrupt(redraw));
+    }
+
+    public SettingsBuilder setInterruptHandler(Consumer<Void> consumer) {
+        return apply(c -> c.settings.setInterruptHandler(consumer));
+    }
+
     public Settings<? extends Command<? extends CommandInvocation>,? extends CommandInvocation,
             ? extends ConverterInvocation, ? extends CompleterInvocation,
             ? extends ValidatorInvocation, ? extends OptionActivator,
