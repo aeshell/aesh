@@ -288,7 +288,7 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
                             AeshCommandLineCompletionParser.verifyCompleteValue(completeOperation,
                                     invocation,
                                     lines.get(i).selectedWord().word(),
-                                    lines.get(i).selectedWord().status());
+                                    lines.get(i).selectedWord().status(), null);
                             return;
                         }
                         else {

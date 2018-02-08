@@ -60,7 +60,7 @@ public class ProcessedOptionBuilder {
     private boolean required = false;
     private boolean isProperty = false;
     private boolean hasMultipleValues = false;
-    private char valueSeparator = ',';
+    private char valueSeparator = ' ';
     private OptionType optionType;
     private Converter converter;
     private String fieldName;

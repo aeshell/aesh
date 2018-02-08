@@ -72,6 +72,7 @@ public class BuilderTest {
 
         pb.addOption(
                 ProcessedOptionBuilder.builder().description("values").name("values").shortName('a')
+                        .valueSeparator(',')
                         .hasMultipleValues(true).type(String.class).build());
 
         pb.arguments(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)

@@ -251,6 +251,17 @@ public class CompletionParserTest {
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("4", co.getFormattedCompletionCandidates().get(0));
 
+        co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,4", 100);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("", co.getFormattedCompletionCandidates().get(0));
+        assertEquals(',', co.getSeparator());
+
+        co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,4 -", 100);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("-", co.getFormattedCompletionCandidates().get(0));
+
         clp.parse("test -v 1,2,3,4 foo -D=foo1");
         assertEquals("foo1", clp.getProcessedCommand().findOption("D").getValue());
         assertEquals("foo", clp.getProcessedCommand().getArgument().getValue());
@@ -419,6 +430,26 @@ public class CompletionParserTest {
 
     }
 
+    @CommandDefinition(name = "test", description = "a simple test3")
+    public class ParseCompleteTest5<CI extends CommandInvocation> extends TestCommand<CI> {
+
+        @Option(shortName = 'X', description = "enable X")
+        private String X;
+
+        @OptionList(shortName = 'v', name = "value", valueSeparator = ':')
+        private List<String> values;
+
+        @Option(shortName = 'b', hasValue = false)
+        private boolean bool;
+
+        @Option(shortName = 'D', description = "define properties",
+                required = true)
+        private String define;
+
+        @Argument(completer = ArgTestCompleter.class)
+        private String arg;
+    }
+
     public class Test4Activator implements OptionActivator {
 
         @Override
@@ -491,8 +522,11 @@ public class CompletionParserTest {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
             ParseCompleteTest3 test3 = (ParseCompleteTest3) completerInvocation.getCommand();
-            if(test3.values != null)
-                completerInvocation.addCompleterValue(String.valueOf(test3.values.size()+1));
+            if(completerInvocation.getGivenCompleteValue() != null &&
+                    completerInvocation.getGivenCompleteValue().length() > 0)
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue());
+            else if(test3.values != null)
+                completerInvocation.addCompleterValue(String.valueOf(test3.values.size() + 1));
             else
                 completerInvocation.addCompleterValue("1");
         }

@@ -274,7 +274,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
             currentOption.completer().complete(completions);
             completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-            verifyCompleteValue(completeOperation, completions, value, selectedWordStatus);
+            verifyCompleteValue(completeOperation, completions, value, selectedWordStatus, currentOption);
         }
         //only try to complete default values if completer is null
         else if(currentOption.getDefaultValues().size() > 0) {
@@ -283,7 +283,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                             new CompleterData(completeOperation.getContext(), value, parser.getCommand()));
             new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
             completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
-            verifyCompleteValue(completeOperation, completions, value, selectedWordStatus);
+            verifyCompleteValue(completeOperation, completions, value, selectedWordStatus, currentOption);
         }
         else if(!currentOption.hasValue()) {
             completeOperation.doAppendSeparator(true);
@@ -294,7 +294,7 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
     public static void verifyCompleteValue(AeshCompleteOperation completeOperation,
             CompleterInvocation completions,
-            String value, ParsedWord.Status selectedWordStatus) {
+            String value, ParsedWord.Status selectedWordStatus, ProcessedOption currentOption) {
 
         if (completions.getOffset() >= 0) {
             // We must remove the number of spaces present in the candidate to inline
@@ -322,6 +322,8 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
         if (completions.getCompleterValues().size() == 1) {
             completeOperation.doAppendSeparator(completions.isAppendSpace());
+            if(currentOption != null)
+                completeOperation.setSeparator(currentOption.getValueSeparator());
         }
         //finally set flags
         completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
