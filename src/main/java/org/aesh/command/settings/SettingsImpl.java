@@ -50,6 +50,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.function.Consumer;
 
 /**
  * Settings object that is parsed when Console is initialized.
@@ -102,6 +103,9 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     private Connection connection;
     private InvocationProviders<CA, CI3, CI2, VI, OA> invocationProviders;
     private ExportChangeListener exportListener;
+    private boolean redrawPrompt = true;
+    private boolean echoCtrl = true;
+    private Consumer<Void> interruptHandler;
 
     SettingsImpl() {
     }
@@ -147,6 +151,9 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
         setConnection(baseSettings.connection());
         setInvocationProviders(baseSettings.invocationProviders());
         setExportListener(baseSettings.exportListener());
+        echoCtrl(baseSettings.isEchoCtrl());
+        redrawPromptOnInterrupt(baseSettings.isRedrawPromptOnInterrupt());
+        setInterruptHandler(baseSettings.getInterruptHandler());
     }
 
     public void resetToDefaults() {
@@ -735,5 +742,35 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
 
     public void setInvocationProviders(InvocationProviders<CA, CI3, CI2, VI, OA> invocationProviders) {
         this.invocationProviders = invocationProviders;
+    }
+
+    @Override
+    public void echoCtrl(boolean echoCtrl) {
+        this.echoCtrl = echoCtrl;
+    }
+
+    @Override
+    public boolean isEchoCtrl() {
+        return echoCtrl;
+    }
+
+    @Override
+    public void setInterruptHandler(Consumer interruptHandler) {
+        this.interruptHandler = interruptHandler;
+    }
+
+    @Override
+    public Consumer getInterruptHandler() {
+        return interruptHandler;
+    }
+
+    @Override
+    public void redrawPromptOnInterrupt(boolean redrawPrompt) {
+        this.redrawPrompt = redrawPrompt;
+    }
+
+    @Override
+    public boolean isRedrawPromptOnInterrupt() {
+        return redrawPrompt;
     }
 }

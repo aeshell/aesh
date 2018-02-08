@@ -57,6 +57,7 @@ import org.aesh.utils.Config;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +67,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.aesh.readline.history.FileHistory;
 import org.aesh.readline.history.History;
+import org.aesh.terminal.Attributes;
+import org.aesh.terminal.tty.Signal;
 import org.aesh.util.FileAccessPermission;
 
 /**
@@ -96,7 +99,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private ShellImpl shell;
 
-    public ReadlineConsole(Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation, ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator, ? extends CommandActivator> givenSettings) {
+   private final EnumMap<ReadlineFlag, Integer> readlineFlags = new EnumMap<>(ReadlineFlag.class);
+
+   public ReadlineConsole(Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation, ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator, ? extends CommandActivator> givenSettings) {
         LoggerUtil.doLog();
         if(givenSettings == null)
             settings = SettingsBuilder.builder().build();
@@ -124,6 +129,10 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             }
         }
 
+        if (!this.settings.isRedrawPromptOnInterrupt()) {
+            readlineFlags.put(ReadlineFlag.NO_PROMPT_REDRAW_ON_INTR, Integer.MAX_VALUE);
+        }
+
         context = new DefaultAeshContext(exportManager);
 
     }
@@ -137,12 +146,21 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             accept(connection);
    }
 
+    private void doStop(boolean closeConnection) {
+        if (running) {
+            running = false;
+            if (history != null) {
+                history.stop();
+            }
+            if (connection != null && closeConnection) {
+                connection.close();
+            }
+        }
+    }
+
     @Override
     public void stop() {
-        running = false;
-        if (history != null) {
-            history.stop();
-        }
+        doStop(true);
     }
 
     @Override
@@ -156,6 +174,21 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         if(this.connection == null)
             this.connection = connection;
 
+        connection.setCloseHandler((Void t) -> {
+            connection.write(Config.getLineSeparator());
+            doStop(false);
+        });
+        if(!settings.isEchoCtrl()) {
+            // Do not display ^C
+            Attributes attr = connection.getAttributes();
+            attr.setLocalFlag(Attributes.LocalFlag.ECHOCTL, false);
+            connection.setAttributes(attr);
+        }
+        connection.setSignalHandler((Signal t) -> {
+            if(settings.getInterruptHandler() != null) {
+                settings.getInterruptHandler().accept(null);
+            }
+        });
         this.runtime = generateRuntime();
         read(this.connection, readline);
         processManager = new ProcessManager(this);
@@ -206,7 +239,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                     processLine(line, conn);
                 } else
                     read(conn, readline);
-            }, completions, preProcessors);
+            }, completions, preProcessors, history, null, readlineFlags);
         }
         // Just call readline and get a callback when line is startBlockingReader
         else {

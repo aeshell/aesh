@@ -22,6 +22,7 @@ package org.aesh.command.settings;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.function.Consumer;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundHandler;
@@ -275,4 +276,17 @@ public interface Settings<C extends Command<CI>, CI extends CommandInvocation,
     InvocationProviders<CA, CI3, CI2, VI, OA> invocationProviders();
 
     ExportChangeListener exportListener();
+
+    void echoCtrl(boolean echo);
+
+    boolean isEchoCtrl();
+
+    void setInterruptHandler(Consumer<Void> handler);
+
+    Consumer<Void> getInterruptHandler();
+
+    void redrawPromptOnInterrupt(boolean redraw);
+
+    boolean isRedrawPromptOnInterrupt();
+
 }
