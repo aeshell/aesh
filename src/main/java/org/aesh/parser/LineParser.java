@@ -198,7 +198,13 @@ public class LineParser {
                     handleCurlyEnd(c);
                 }
                 else if (haveEscape) {
-                    builder.append(BACK_SLASH);
+                    //Escaping an operator?
+                    if (!isQuoted()
+                            && (currentOperator = matchesOperators(operators, text, index)) != OperatorType.NONE) {
+                    // Do not add the \ that was a way to escape an operator.
+                    } else {
+                        builder.append(BACK_SLASH);
+                    }
                     builder.append(c);
                     haveEscape = false;
                 }
