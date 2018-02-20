@@ -148,6 +148,13 @@ public class ParsedLine {
         return words().get(words.size()-1);
     }
 
+    public ParsedWord firstWord() {
+        if(words.size() > 0 )
+            return words.get(0);
+        else
+            return new ParsedWord("", 0);
+    }
+
     public int size() {
         return words().size();
     }

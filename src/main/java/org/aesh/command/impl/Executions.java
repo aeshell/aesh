@@ -232,7 +232,7 @@ class Executions {
                         if (config == null) {
                             throw new IllegalArgumentException("Invalid " + pl.line());
                         }
-                        config.setArgument(pl.line().trim());
+                        config.setArgument(pl.firstWord().word());
                         state = State.NEED_OPERATOR;
                         break;
                     }

@@ -474,4 +474,21 @@ public class LineParserTest {
          assertEquals("", lines.get(1).selectedWord().word());
        }
 
+    @Test
+    public void testParseEscapedCharacters() {
+        assertEquals("mkdir", parseLine("mkdir He\\|lo").get(0).word());
+        assertEquals("Try to escape |", "He|lo", parseLine("mkdir He\\|lo").get(1).word());
+        assertEquals("Try to escape ;", "He;lo", parseLine("mkdir He\\;lo").get(1).word());
+        assertEquals("Try to escape \\","He\\lo", parseLine("mkdir He\\\\lo").get(1).word());
+        assertEquals("Try to escape normal char","He\\lo", parseLine("mkdir He\\lo").get(1).word());
+        assertEquals("Try to escape normal char","He\\-o", parseLine("mkdir He\\-o").get(1).word());
+    }
+
+    List<ParsedWord> parseLine(String line) {
+        LineParser lineParser = new LineParser();
+        EnumSet<OperatorType> operators = EnumSet.allOf(OperatorType.class);
+
+        return lineParser.parseLine(line, -1, false, operators).get(0).words();
+    }
+
 }
