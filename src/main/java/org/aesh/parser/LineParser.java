@@ -59,6 +59,8 @@ public class LineParser {
     private int cursor = -1;
     private boolean parseBrackets;
     private EnumSet<OperatorType> operators;
+    private OperatorType currentOperator;
+    private int startIndex;
 
     public LineParser input(String text) {
         this.text = text;
@@ -111,9 +113,15 @@ public class LineParser {
     public ParsedLine parseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets) {
         //first reset all values
         reset();
-        if(cursor > text.length())
+        if (cursor > text.length())
             cursor = text.length();
-        for (char c : text.toCharArray()) {
+        return doParseLine(text, cursor, parseCurlyAndSquareBrackets);
+    }
+
+    private ParsedLine doParseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets) {
+        char c;
+        for(index=0; index < text.length();) {
+            c = text.charAt(index);
             //if the previous char was a space, there is no word "connected" to cursor
             if(cursor == index && (prev != SPACE_CHAR || haveEscape)) {
                 cursorWord = textList.size();
@@ -143,9 +151,7 @@ public class LineParser {
                 handleCurlyEnd(c);
             }
             else if (haveEscape) {
-                builder.append(BACK_SLASH);
-                builder.append(c);
-                haveEscape = false;
+                handleEscape(c);
             }
             else
                 builder.append(c);
@@ -156,110 +162,97 @@ public class LineParser {
    }
 
    public List<ParsedLine> parseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets, Set<OperatorType> operators) {
+       if (operators == null || operators.size() == 0) {
+           List<ParsedLine> lines = new ArrayList<>();
+           lines.add(parseLine(text, cursor, parseCurlyAndSquareBrackets));
+           return lines;
+       }
+       else {
+           //first reset all values
+           reset();
+           currentOperator = null;
+           startIndex = 0;
+           return doParseLine(text, cursor, parseCurlyAndSquareBrackets, operators);
+       }
+   }
+
+    private List<ParsedLine> doParseLine(String text, int cursor, boolean parseCurlyAndSquareBrackets, Set<OperatorType> operators) {
         List<ParsedLine> lines = new ArrayList<>();
-        if(operators == null || operators.size() == 0) {
-            lines.add(parseLine(text, cursor, parseCurlyAndSquareBrackets));
-        }
-        else {
-            //first reset all values
-            reset();
-            OperatorType currentOperator = null;
-            int startIndex = 0;
-            char c;
-            //for (char c : text.toCharArray()) {
-            for(index=0; index < text.length();) {
-                c = text.charAt(index);
-                //if the previous char was a space, there is no word "connected" to cursor
-                if(cursor == index && (prev != SPACE_CHAR || haveEscape)) {
-                    cursorWord = textList.size();
-                    wordCursor = builder.length();
-                }
-                if (c == SPACE_CHAR) {
-                    handleSpace(c);
-                }
-                else if (c == BACK_SLASH) {
-                    if (haveEscape || ternaryQuote || haveDoubleQuote || haveSingleQuote) {
-                        builder.append(c);
-                        haveEscape = false;
-                    }
-                    else
-                        haveEscape = true;
-                }
-                else if (c == SINGLE_QUOTE) {
-                    handleSingleQuote(c);
-                }
-                else if (c == DOUBLE_QUOTE) {
-                    handleDoubleQuote(c);
-                }
-                else if (parseCurlyAndSquareBrackets && (c == CURLY_START || c == PARENTHESIS_START)) {
-                    handleCurlyStart(c);
-                }
-                else if (parseCurlyAndSquareBrackets && (c == CURLY_END || c == PARENTHESIS_END) && haveCurlyBracket) {
-                    handleCurlyEnd(c);
-                }
-                else if (haveEscape) {
-                    //Escaping an operator?
-                    if (!isQuoted()
-                            && (currentOperator = matchesOperators(operators, text, index)) != OperatorType.NONE) {
-                    // Do not add the \ that was a way to escape an operator.
-                    } else {
-                        builder.append(BACK_SLASH);
-                    }
+        char c;
+        for(index=0; index < text.length();) {
+            c = text.charAt(index);
+            //if the previous char was a space, there is no word "connected" to cursor
+            if(cursor == index && (prev != SPACE_CHAR || haveEscape)) {
+                cursorWord = textList.size();
+                wordCursor = builder.length();
+            }
+            if (c == SPACE_CHAR) {
+                handleSpace(c);
+            }
+            else if (c == BACK_SLASH) {
+                if (haveEscape || ternaryQuote || haveDoubleQuote || haveSingleQuote) {
                     builder.append(c);
                     haveEscape = false;
                 }
-                else if(!haveEscape && !isQuoted() &&
-                        (currentOperator = matchesOperators(operators, text, index)) != OperatorType.NONE) {
-                    if (builder.length() > 0) {
-                        textList.add(new ParsedWord(builder.toString(), index-builder.length()));
-                        builder = new StringBuilder();
-                    }
-                    //we know we have an operator so we need to subtract one char
-                    if (cursor == text.length()-1) {
-                        cursorWord = textList.size() - 1;
-                        if(textList.size() > 0)
-                            wordCursor = textList.get(textList.size() - 1).word().length();
-                    }
-
-                    lines.add(
-                            new ParsedLine(text.substring(startIndex, index), textList,
-                                    startIndex <= cursor && cursor <= index ? cursor-startIndex : -1,
-                                    cursorWord, wordCursor, ParserStatus.OK, "", currentOperator));
-
-                    cursorWord = -1;
-                    wordCursor = -1;
-                    startIndex = index + currentOperator.value().length();
-                    textList = new ArrayList<>();
-
-                    //if we end on an operator and cursor == text.length, add another empty line
-                    if(index+currentOperator.value().length() == text.length() && cursor == text.length()) {
-                        textList.add(new ParsedWord("", index));
-                        lines.add(new ParsedLine(text, textList, 0,
-                                0, 0, ParserStatus.OK, "", OperatorType.NONE));
-
-                        //we know we're at the end so we can return
-                        return lines;
-                    }
-                }
                 else
-                    builder.append(c);
-
-                //if current operator is set, we need to handle index/prev specially
-                if (currentOperator != null && currentOperator != OperatorType.NONE) {
-                   index = index + currentOperator.value().length();
-                   prev = text.charAt(index-1);
-                   //we need to reset operator
-                   currentOperator = OperatorType.NONE;
+                    haveEscape = true;
+            }
+            else if (c == SINGLE_QUOTE) {
+                handleSingleQuote(c);
+            }
+            else if (c == DOUBLE_QUOTE) {
+                handleDoubleQuote(c);
+            }
+            else if (parseCurlyAndSquareBrackets && (c == CURLY_START || c == PARENTHESIS_START)) {
+                handleCurlyStart(c);
+            }
+            else if (parseCurlyAndSquareBrackets && (c == CURLY_END || c == PARENTHESIS_END) && haveCurlyBracket) {
+                handleCurlyEnd(c);
+            }
+            else if (haveEscape) {
+                //Escaping an operator?
+                if (!isQuoted()
+                        && (currentOperator = matchesOperators(operators, text, index)) != OperatorType.NONE) {
+                    // Do not add the \ that was a way to escape an operator.
                 }
                 else {
-                    prev = c;
-                    index++;
+                    builder.append(BACK_SLASH);
+                }
+                builder.append(c);
+                haveEscape = false;
+            }
+            else if(!haveEscape && !isQuoted() &&
+                    (currentOperator = matchesOperators(operators, text, index)) != OperatorType.NONE) {
+                handleFoundOperator(lines, text,cursor);
+
+                //if we end on an operator and cursor == text.length, add another empty line
+                if(index+currentOperator.value().length() == text.length() && cursor == text.length()) {
+                    textList.add(new ParsedWord("", index));
+                    lines.add(new ParsedLine(text, textList, 0,
+                            0, 0, ParserStatus.OK, "", OperatorType.NONE));
+
+                    //we know we're at the end so we can return
+                    return lines;
                 }
             }
+            else
+                builder.append(c);
 
-            if(builder.length() > 0 || !textList.isEmpty() || startIndex < index)
-                lines.add(endOfLineProcessing(text.substring(startIndex, index), cursor, startIndex, text.length()));
+            //if current operator is set, we need to handle index/prev specially
+            if (currentOperator != null && currentOperator != OperatorType.NONE) {
+                index = index + currentOperator.value().length();
+                prev = text.charAt(index-1);
+                //we need to reset operator
+                currentOperator = OperatorType.NONE;
+            }
+            else {
+                prev = c;
+                index++;
+            }
         }
+
+        if(builder.length() > 0 || !textList.isEmpty() || startIndex < index)
+            lines.add(endOfLineProcessing(text.substring(startIndex, index), cursor, startIndex, text.length()));
 
         return lines;
     }
@@ -345,31 +338,33 @@ public class LineParser {
             haveEscape = false;
         }
         else if (haveDoubleQuote) {
-            if (!ternaryQuote && prev == DOUBLE_QUOTE)
-                ternaryQuote = true;
-            else if (ternaryQuote && prev == DOUBLE_QUOTE) {
-                if (builder.length() > 0) {
-                    builder.deleteCharAt(builder.length() - 1);
-                    textList.add(new ParsedWord(builder.toString(), index-builder.length()));
-                    builder = new StringBuilder();
-                }
-                haveDoubleQuote = false;
-                ternaryQuote = false;
-            }
-            else {
-                if (builder.length() > 0) {
-                    textList.add(new ParsedWord(builder.toString(), index-builder.length()));
-                    builder = new StringBuilder();
-                }
-                haveDoubleQuote = false;
-            }
+            handleHaveDoubleQuote();
         }
-        else if(haveSingleQuote)
-            builder.append(c);
-        else if(haveCurlyBracket)
+        else if(haveSingleQuote || haveCurlyBracket)
             builder.append(c);
         else
             haveDoubleQuote = true;
+    }
+
+    private void handleHaveDoubleQuote() {
+        if (!ternaryQuote && prev == DOUBLE_QUOTE)
+            ternaryQuote = true;
+        else if (ternaryQuote && prev == DOUBLE_QUOTE) {
+            if (builder.length() > 0) {
+                builder.deleteCharAt(builder.length() - 1);
+                textList.add(new ParsedWord(builder.toString(), index-builder.length()));
+                builder = new StringBuilder();
+            }
+            haveDoubleQuote = false;
+            ternaryQuote = false;
+        }
+        else {
+            if (builder.length() > 0) {
+                textList.add(new ParsedWord(builder.toString(), index-builder.length()));
+                builder = new StringBuilder();
+            }
+            haveDoubleQuote = false;
+        }
     }
 
     private void handleSingleQuote(char c) {
@@ -412,6 +407,35 @@ public class LineParser {
             textList.add(new ParsedWord(builder.toString(), index-builder.length()));
             builder = new StringBuilder();
         }
+    }
+
+    private void handleFoundOperator(List<ParsedLine> lines, String text, int cursor) {
+        if (builder.length() > 0) {
+            textList.add(new ParsedWord(builder.toString(), index-builder.length()));
+            builder = new StringBuilder();
+        }
+        //we know we have an operator so we need to subtract one char
+        if (cursor == text.length()-1) {
+            cursorWord = textList.size() - 1;
+            if(textList.size() > 0)
+                wordCursor = textList.get(textList.size() - 1).word().length();
+        }
+
+        lines.add(
+                new ParsedLine(text.substring(startIndex, index), textList,
+                        startIndex <= cursor && cursor <= index ? cursor-startIndex : -1,
+                        cursorWord, wordCursor, ParserStatus.OK, "", currentOperator));
+
+        cursorWord = -1;
+        wordCursor = -1;
+        startIndex = index + currentOperator.value().length();
+        textList = new ArrayList<>();
+    }
+
+    private void handleEscape(char c) {
+        builder.append(BACK_SLASH);
+        builder.append(c);
+        haveEscape = false;
     }
 
     private void reset() {
