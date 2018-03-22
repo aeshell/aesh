@@ -1,4 +1,4 @@
-package examples;/*
+/*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
@@ -17,6 +17,7 @@ package examples;/*
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package examples;
 
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.Command;
