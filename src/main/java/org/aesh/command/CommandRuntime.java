@@ -28,7 +28,7 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.util.Parser;
+import org.aesh.readline.util.Parser;
 
 /**
  * An Aesh Command processor.

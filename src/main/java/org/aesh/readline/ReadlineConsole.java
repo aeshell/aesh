@@ -51,7 +51,7 @@ import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.readline.history.InMemoryHistory;
 import org.aesh.readline.tty.terminal.TerminalConnection;
 import org.aesh.terminal.Connection;
-import org.aesh.util.LoggerUtil;
+import org.aesh.readline.util.LoggerUtil;
 import org.aesh.utils.Config;
 
 import java.io.IOException;
@@ -69,7 +69,7 @@ import org.aesh.readline.history.FileHistory;
 import org.aesh.readline.history.History;
 import org.aesh.terminal.Attributes;
 import org.aesh.terminal.tty.Signal;
-import org.aesh.util.FileAccessPermission;
+import org.aesh.readline.util.FileAccessPermission;
 
 /**
  * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

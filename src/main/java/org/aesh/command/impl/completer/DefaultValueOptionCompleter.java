@@ -22,7 +22,7 @@ package org.aesh.command.impl.completer;
 
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
-import org.aesh.util.Parser;
+import org.aesh.readline.util.Parser;
 
 import java.util.List;
 

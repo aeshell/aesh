@@ -28,7 +28,7 @@ import org.aesh.terminal.Device;
 import org.aesh.terminal.tty.Capability;
 import org.aesh.terminal.tty.Signal;
 import org.aesh.terminal.tty.Size;
-import org.aesh.util.Parser;
+import org.aesh.readline.util.Parser;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;

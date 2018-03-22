@@ -24,7 +24,7 @@ import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.parser.OptionParser;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.parser.ParsedLineIterator;
-import org.aesh.util.Parser;
+import org.aesh.readline.util.Parser;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

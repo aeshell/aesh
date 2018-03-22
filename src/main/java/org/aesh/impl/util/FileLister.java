@@ -26,8 +26,8 @@ import java.util.logging.Logger;
 import org.aesh.command.impl.converter.FileConverter;
 
 import org.aesh.io.Resource;
-import org.aesh.util.LoggerUtil;
-import org.aesh.util.Parser;
+import org.aesh.readline.util.LoggerUtil;
+import org.aesh.readline.util.Parser;
 import org.aesh.utils.Config;
 
 /**

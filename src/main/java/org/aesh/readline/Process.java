@@ -26,7 +26,7 @@ import org.aesh.terminal.tty.Signal;
 import org.aesh.utils.Config;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.terminal.Connection;
-import org.aesh.util.LoggerUtil;
+import org.aesh.readline.util.LoggerUtil;
 
 import java.util.function.Consumer;
 import java.util.logging.Logger;
