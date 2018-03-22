@@ -121,6 +121,12 @@ public class AeshCommandContainerBuilder<C extends Command<CI>, CI extends Comma
                         groupContainer.addChild(doGenerateCommandLineParser(sub));
                     }
                 }
+                List<CommandContainer<C, CI>> parsedCommands = ((GroupCommand) commandObject).getParsedCommands();
+                if (parsedCommands != null) {
+                    for (CommandContainer<C, CI> sub : parsedCommands) {
+                        groupContainer.addChild(sub);
+                    }
+                }
             } else {
                 for (Class<? extends Command> groupClazz : groupCommand.groupCommands()) {
                     Command groupInstance = ReflectionUtil.newInstance(groupClazz);
