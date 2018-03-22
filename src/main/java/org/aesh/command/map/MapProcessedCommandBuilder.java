@@ -75,6 +75,13 @@ public class MapProcessedCommandBuilder {
             }
             return allOptions;
         }
+
+        @Override
+        public void clear() {
+            MapCommand cmd = getCommand();
+            cmd.resetAll();
+            super.clear();
+        }
     }
 
     public interface ProcessedOptionProvider {

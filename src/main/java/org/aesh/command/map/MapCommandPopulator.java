@@ -21,6 +21,8 @@
  */
 package org.aesh.command.map;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -39,23 +41,33 @@ import org.aesh.command.parser.CommandLineParserException;
  *
  * @author jdenise@redhat.com
  */
-class MapCommandPopulator implements CommandPopulator<Object, Command> {
+public class MapCommandPopulator implements CommandPopulator<Object, Command> {
 
-    private final MapCommand instance;
+    private final MapCommand<?> instance;
+    private final Map<String, String> unknownOptions = new HashMap<>();
 
-    MapCommandPopulator(MapCommand instance) {
+    MapCommandPopulator(MapCommand<?> instance) {
         Objects.requireNonNull(instance);
         this.instance = instance;
     }
 
     @Override
     public void populateObject(ProcessedCommand<Command> processedCommand,
-                               InvocationProviders invocationProviders,
-                               AeshContext aeshContext, CommandLineParser.Mode validate)
+            InvocationProviders invocationProviders,
+            AeshContext aeshContext, CommandLineParser.Mode validate)
             throws CommandLineParserException, OptionValidatorException {
         if (processedCommand.parserExceptions().size() > 0) {
             throw processedCommand.parserExceptions().get(0);
         }
+
+        // Populate with unknown ones first.
+        // Unknown are options passed prior the option provider
+        // was able to compute the set.
+        for (String name : unknownOptions.keySet()) {
+            instance.setValue(name, unknownOptions.get(name));
+        }
+        unknownOptions.clear();
+
         for (ProcessedOption option : processedCommand.getOptions()) {
             if (option.getValue() != null) {
                 instance.setValue(option.name(),
@@ -103,5 +115,21 @@ class MapCommandPopulator implements CommandPopulator<Object, Command> {
     @Override
     public Object getObject() {
         return instance;
+    }
+
+    public void addUnknownOption(String opt) {
+        if (opt.startsWith("--")) {
+            opt = opt.substring(2);
+        } else if (opt.startsWith("-")) {
+            opt = opt.substring(1);
+        }
+        int i = opt.indexOf("=");
+        String name = opt;
+        String value = null;
+        if (i > 0) {
+            name = opt.substring(0, i);
+            value = opt.substring(i + 1);
+        }
+        unknownOptions.put(name, value);
     }
 }

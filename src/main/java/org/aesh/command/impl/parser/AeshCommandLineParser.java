@@ -39,6 +39,8 @@ import org.aesh.utils.Config;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.aesh.command.map.MapCommand;
+import org.aesh.command.map.MapCommandPopulator;
 
 /**
  * A simple command line parser.
@@ -287,15 +289,27 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                         lastParsedOption.parser().parse(iter, lastParsedOption);
                     }
                     else {
-                        // invalid short names and long names should be rejected.
+                        // Unknown commands are possible with a dynamic command (MapCommand)
+                        // In this case we shouldn't validate the option and pass it down to
+                        // the populator for Map injection.
+                        boolean unknown = false;
                         if (word.word().startsWith("-")) {
                             if (word.word().startsWith("--") || word.word().length() == 2) {
-                                processedCommand.addParserException(
-                                        new OptionParserException("The option " + word.word()
-                                                + " is unknown."));
+                                // invalid short names and long names should be rejected.
+                                if (!(processedCommand.getCommand() instanceof MapCommand)) {
+                                    processedCommand.addParserException(
+                                            new OptionParserException("The option " + word.word()
+                                                    + " is unknown."));
+                                } else {
+                                    unknown = true;
+                                }
                             }
                         }
-                        if (processedCommand.hasArguments()) {
+                        if (unknown) {
+                            // Pass down the option directly to the populator.
+                            MapCommandPopulator pop = (MapCommandPopulator) processedCommand.getCommandPopulator();
+                            pop.addUnknownOption(word.word());
+                        } else if (processedCommand.hasArguments()) {
                             processedCommand.getArguments().addValue(word.word());
                         } else if (processedCommand.hasArgumentWithNoValue()) {
                             processedCommand.getArgument().addValue(word.word());

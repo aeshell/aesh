@@ -5,7 +5,7 @@ import org.aesh.command.shell.Shell;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.terminal.Key;
 import org.aesh.terminal.tty.Size;
-import org.aesh.util.Parser;
+import org.aesh.readline.util.Parser;
 import org.aesh.utils.Config;
 
 /**

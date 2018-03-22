@@ -26,7 +26,7 @@ import org.aesh.readline.action.KeyAction;
 import org.aesh.readline.terminal.Key;
 import org.aesh.utils.ANSI;
 import org.aesh.utils.Config;
-import org.aesh.util.LoggerUtil;
+import org.aesh.readline.util.LoggerUtil;
 
 import java.io.IOException;
 import java.util.List;

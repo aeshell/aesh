@@ -58,4 +58,8 @@ public abstract class MapCommand<T extends CommandInvocation> implements Command
     public Map<String, Object> getValues() {
         return Collections.unmodifiableMap(values);
     }
+
+    void resetAll() {
+        values.clear();
+    }
 }

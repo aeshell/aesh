@@ -32,7 +32,7 @@ import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
 import org.aesh.readline.terminal.formatting.TerminalString;
-import org.aesh.util.Parser;
+import org.aesh.readline.util.Parser;
 import org.aesh.utils.Config;
 
 import java.util.ArrayList;

@@ -33,7 +33,7 @@ import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.MutableCommandRegistry;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
-import org.aesh.util.LoggerUtil;
+import org.aesh.readline.util.LoggerUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
