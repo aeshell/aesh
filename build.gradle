@@ -47,7 +47,7 @@ targetCompatibility = JavaVersion.VERSION_1_8
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'Aesh', 'Implementation-Version': version, 'Main-Class': 'AeshExample'
+        attributes 'Implementation-Title': 'Aesh', 'Implementation-Version': version, 'Main-Class': 'example.AeshExample'
     }
 }
 
@@ -69,11 +69,11 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.aesh', name: 'aesh-readline', version: '1.3'
+    compile group: 'org.aesh', name: 'aesh-readline', version: '1.6'
     testCompile 'junit:junit:4.12'
 }
 
-mainClassName = "Example"
+mainClassName = "examples.Example"
 
 install.dependsOn 'check'
 
