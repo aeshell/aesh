@@ -68,16 +68,6 @@ public class MapCommandPopulator implements CommandPopulator<Object, Command> {
         }
         unknownOptions.clear();
 
-        for (ProcessedOption option : processedCommand.getOptions()) {
-            if (option.getValue() != null) {
-                instance.setValue(option.name(),
-                        option.doConvert(option.getValue(), invocationProviders,
-                                instance, aeshContext, validate == CommandLineParser.Mode.VALIDATE));
-            } else {
-                instance.resetValue(option.name());
-            }
-        }
-
         if (processedCommand.getArguments() != null) {
             if (processedCommand.getArguments().getValues().size() > 0) {
                 String val = processedCommand.getArguments().getValue();
@@ -87,6 +77,9 @@ public class MapCommandPopulator implements CommandPopulator<Object, Command> {
                             doConvert(val,
                                     invocationProviders, instance, aeshContext,
                                     validate == CommandLineParser.Mode.VALIDATE));
+                } else if (processedCommand.getArguments().getDefaultValues().size() > 0) {
+                    instance.setValue(processedCommand.getArgument().name(),
+                            processedCommand.getArgument().getDefaultValues().get(0));
                 } else {
                     instance.resetValue(processedCommand.getArguments().name());
                 }
@@ -103,11 +96,26 @@ public class MapCommandPopulator implements CommandPopulator<Object, Command> {
                             processedCommand.getArgument().
                             doConvert(val, invocationProviders, instance, aeshContext,
                                     validate == CommandLineParser.Mode.VALIDATE));
+                } else if (processedCommand.getArgument().getDefaultValues().size() > 0) {
+                    instance.setValue(processedCommand.getArgument().name(),
+                            processedCommand.getArgument().getDefaultValues().get(0));
                 } else {
                     instance.resetValue(processedCommand.getArgument().name());
                 }
             } else {
                 instance.resetValue(processedCommand.getArgument().name());
+            }
+        }
+
+        for (ProcessedOption option : processedCommand.getOptions()) {
+            if (option.getValue() != null) {
+                instance.setValue(option.name(),
+                        option.doConvert(option.getValue(), invocationProviders,
+                                instance, aeshContext, validate == CommandLineParser.Mode.VALIDATE));
+            } else if (option.getDefaultValues().size() > 0) {
+                instance.setValue(option.name(), option.getDefaultValues().get(0));
+            } else {
+                instance.resetValue(option.name());
             }
         }
     }
