@@ -114,6 +114,7 @@ class Executions {
             }
             if (cmd.getActivator() != null) {
                 if (!cmd.getActivator().isActivated(new ParsedCommand(cmd))) {
+                    result = CommandResult.FAILURE;
                     throw new CommandException("The command is not available in the current context.");
                 }
             }
@@ -121,6 +122,7 @@ class Executions {
             if (hasRedirectIn()) {
                 updateInjectedArgumentWithRedirectedInData();
                 if (invocationConfiguration.getPipedData() != null) {
+                    result = CommandResult.FAILURE;
                     throw new CommandException("Can't inject both from input and pipe operators");
                 }
             }
@@ -128,6 +130,7 @@ class Executions {
             if (invocationConfiguration.getPipedData() != null) {
                 updateInjectedArgumentWithPipelinedData(new PipelineResource(invocationConfiguration.getPipedData()));
                 if (hasRedirectIn()) {
+                    result = CommandResult.FAILURE;
                     throw new CommandException("Can't inject both from input and pipe operators");
                 }
             }

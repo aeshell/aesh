@@ -436,6 +436,12 @@ public class ProcessedCommand<C extends Command> {
     public void updateInvocationProviders(InvocationProviders invocationProviders) {
         for (ProcessedOption option : getOptions())
             option.updateInvocationProviders(invocationProviders);
+        if (argument != null) {
+            argument.updateInvocationProviders(invocationProviders);
+        }
+        if (arguments != null) {
+            arguments.updateInvocationProviders(invocationProviders);
+        }
         activator = invocationProviders.getCommandActivatorProvider().enhanceCommandActivator(activator);
     }
 
