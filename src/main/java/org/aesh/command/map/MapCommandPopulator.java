@@ -21,7 +21,9 @@
  */
 package org.aesh.command.map;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -66,23 +68,22 @@ public class MapCommandPopulator implements CommandPopulator<Object, Command> {
         for (String name : unknownOptions.keySet()) {
             instance.setValue(name, unknownOptions.get(name));
         }
-        unknownOptions.clear();
 
         if (processedCommand.getArguments() != null) {
             if (processedCommand.getArguments().getValues().size() > 0) {
-                String val = processedCommand.getArguments().getValue();
-                if (val != null) {
-                    instance.setValue(processedCommand.getArguments().name(),
-                            processedCommand.getArguments().
-                            doConvert(val,
-                                    invocationProviders, instance, aeshContext,
-                                    validate == CommandLineParser.Mode.VALIDATE));
-                } else if (processedCommand.getArguments().getDefaultValues().size() > 0) {
-                    instance.setValue(processedCommand.getArgument().name(),
-                            processedCommand.getArgument().getDefaultValues().get(0));
-                } else {
-                    instance.resetValue(processedCommand.getArguments().name());
+                List tmpSet = new ArrayList();
+                for (String in : processedCommand.getArguments().getValues()) {
+                    tmpSet.add(processedCommand.getArguments().doConvert(in, invocationProviders,
+                            instance, aeshContext, validate == CommandLineParser.Mode.VALIDATE));
                 }
+                instance.setValue(processedCommand.getArguments().name(), tmpSet);
+            } else if (processedCommand.getArguments().getDefaultValues().size() > 0) {
+                List tmpSet = new ArrayList();
+                for (String in : processedCommand.getArguments().getDefaultValues()) {
+                    tmpSet.add(processedCommand.getArguments().doConvert(in, invocationProviders,
+                            instance, aeshContext, validate == CommandLineParser.Mode.VALIDATE));
+                }
+                instance.setValue(processedCommand.getArguments().name(), tmpSet);
             } else {
                 instance.resetValue(processedCommand.getArguments().name());
             }
@@ -108,16 +109,20 @@ public class MapCommandPopulator implements CommandPopulator<Object, Command> {
         }
 
         for (ProcessedOption option : processedCommand.getOptions()) {
-            if (option.getValue() != null) {
-                instance.setValue(option.name(),
-                        option.doConvert(option.getValue(), invocationProviders,
-                                instance, aeshContext, validate == CommandLineParser.Mode.VALIDATE));
-            } else if (option.getDefaultValues().size() > 0) {
-                instance.setValue(option.name(), option.getDefaultValues().get(0));
-            } else {
-                instance.resetValue(option.name());
+            // Do not erase the value that would have been set as an unknown option.
+            if (!unknownOptions.containsKey(option.name())) {
+                if (option.getValue() != null) {
+                    instance.setValue(option.name(),
+                            option.doConvert(option.getValue(), invocationProviders,
+                                    instance, aeshContext, validate == CommandLineParser.Mode.VALIDATE));
+                } else if (option.getDefaultValues().size() > 0) {
+                    instance.setValue(option.name(), option.getDefaultValues().get(0));
+                } else {
+                    instance.resetValue(option.name());
+                }
             }
         }
+        unknownOptions.clear();
     }
 
     @Override

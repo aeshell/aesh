@@ -226,11 +226,26 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
                             line.status() == ParserStatus.OK ? ParsedWord.Status.OK : ParsedWord.Status.OPEN_QUOTE);
                 }
 
-                //if there are not completions and argument(s) is not required
-                //lets display options
-                if(!haveCompletion && !arg.isRequired() && arg.getValue() == null &&
-                        parser.getProcessedCommand().completeStatus().value().length() == 0) {
-                    doListOptions(completeOperation, "");
+                /*
+                We have 2 cases in which we do display options:
+                - we don't have completion candidates
+                - the arg has a completer
+                - we are not completing an argument value
+                - whatever the fact that the arg is required or not
+                or
+                - we don't have completion candidates
+                - arg is not required
+                - we are not completing an argument value
+
+                So if arg is required and has no completer, the options will be not proposed
+                user will have to enter something.
+                 */
+                if (!haveCompletion) {
+                    if ((arg.completer() != null || !arg.isRequired())
+                            && (parser.getProcessedCommand().completeStatus().value() == null
+                            || parser.getProcessedCommand().completeStatus().value().length() == 0)) {
+                        doListOptions(completeOperation, "");
+                    }
                 }
             }
     }
