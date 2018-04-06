@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+~ JBoss, Home of Professional Open Source
+~ Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+~ as indicated by the @authors tag. All rights reserved.
+~ See the copyright.txt in the distribution for a
+~ full listing of individual contributors.
+~
+~ Licensed under the Apache License, Version 2.0 (the "License");
+~ you may not use this file except in compliance with the License.
+~ You may obtain a copy of the License at
+~ http://www.apache.org/licenses/LICENSE-2.0
+~ Unless required by applicable law or agreed to in writing, software
+~ distributed under the License is distributed on an "AS IS" BASIS,
+~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~ See the License for the specific language governing permissions and
+~ limitations under the License.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <!-- Parent -->
+    <parent>
+        <groupId>org.aesh</groupId>
+        <artifactId>aesh-all</artifactId>
+        <version>1.2-SNAPSHOT</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>aesh-examples</artifactId>
+    <packaging>jar</packaging>
+    <name>Æsh Examples</name>
+    <description>Æsh (Another Extendable SHell) Examples</description>
+    <scm>
+        <connection>scm:git:git://github.com/aeshell/aesh.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/aeshell/aesh.git</developerConnection>
+        <url>https://github.com/aeshell/aesh/tree/master</url>
+    </scm>
+
+    <!-- Licenses -->
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+   
+    <developers>
+        <developer>
+            <name>Jean-Francois Denise</name>
+            <email>jdenise@redhat.com</email>
+            <organization>Red Hat</organization>
+            <organizationUrl>http://www.redhat.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Ståle Pedersen</name>
+            <email>spederse@redhat.com</email>
+            <organization>Red Hat</organization>
+            <organizationUrl>http://www.redhat.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <properties>
+      <version.org.slf4j>1.7.12</version.org.slf4j>
+      <netty.version>4.0.31.Final</netty.version>
+      <jackson.version>2.6.1</jackson.version>
+
+      <!-- maven-compiler-plugin -->
+      <maven.compiler.target>1.8</maven.compiler.target>
+      <maven.compiler.source>1.8</maven.compiler.source>
+    </properties>
+
+
+    <dependencies>
+      <dependency>
+         <groupId>org.aesh</groupId>
+         <artifactId>aesh</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.aesh</groupId>
+         <artifactId>aesh-readline</artifactId>
+         <version>1.6</version>
+      </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <trimStackTrace>false</trimStackTrace>
+                    <includes>
+                        <include>**/*TestCase.java</include>
+                        <include>**/*Test.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>examples.Example</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-shade-plugin</artifactId>
+              <executions>
+                <execution>
+                  <phase>package</phase>
+                  <goals>
+                    <goal>shade</goal>
+                  </goals>
+                  <configuration>
+                    <artifactSet>
+                      <excludes>
+                        <exclude>org.fusesource.jansi:jansi</exclude>
+                        <exclude>org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-depchain</exclude>
+                        <exclude>junit:junit</exclude>
+                      </excludes>
+                    </artifactSet>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.17</version>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>           
+                        <configuration>
+                          <configLocation>${project.basedir}/../config/checkstyle/checkstyle.xml</configLocation>
+                            <consoleOutput>true</consoleOutput>
+                            <failsOnError>true</failsOnError>
+                            <linkXRef>false</linkXRef>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                        </configuration>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-deploy-plugin</artifactId>
+              <configuration>
+                <skip>true</skip>
+              </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
