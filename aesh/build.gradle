@@ -150,5 +150,5 @@ uploadArchives {
 
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.7'
+    gradleVersion = '4.0.1'
 }
