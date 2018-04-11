@@ -36,6 +36,10 @@ public class AeshCommandRegistryBuilder {
 
     private final MutableCommandRegistryImpl commandRegistry;
 
+    public static AeshCommandRegistryBuilder builder() {
+        return new AeshCommandRegistryBuilder();
+    }
+
     public AeshCommandRegistryBuilder() {
         commandRegistry = new MutableCommandRegistryImpl();
     }
