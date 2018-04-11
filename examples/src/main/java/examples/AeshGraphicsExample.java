@@ -19,26 +19,29 @@
  */
 package examples;
 
-import org.aesh.command.CommandDefinition;
 import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.graphics.AeshGraphicsConfiguration;
 import org.aesh.graphics.Graphics;
 import org.aesh.graphics.GraphicsConfiguration;
-
-import org.aesh.command.CommandException;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.readline.terminal.Key;
 import org.aesh.readline.terminal.formatting.Color;
 import org.aesh.readline.terminal.formatting.TerminalColor;
+import org.aesh.readline.tty.terminal.TerminalConnection;
+import org.aesh.terminal.Connection;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -49,17 +52,22 @@ public class AeshGraphicsExample {
         SettingsBuilder builder = SettingsBuilder.builder().logging(true);
         builder.enableMan(true);
 
+        TerminalConnection connection = new TerminalConnection(Charset.defaultCharset(), System.in, System.out, null);
+
         CommandRegistry registry = new AeshCommandRegistryBuilder()
                 .command(ExitCommand.class)
-                .command(new GraphicsCommand())
+                .command(new GraphicsCommand(connection))
                 .create();
 
         Settings settings = builder
                 .commandRegistry(registry)
+                .connection(connection)
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt("[aesh@rules]$ "));
+
+        console.read();
 
         console.start();
     }
@@ -77,11 +85,16 @@ public class AeshGraphicsExample {
     @CommandDefinition(name = "gfx", description = "")
     public static class GraphicsCommand implements Command {
 
+        public GraphicsCommand(Connection connection) {
+            gc = new AeshGraphicsConfiguration(connection);
+        }
+
+        private final GraphicsConfiguration gc;
         private CommandInvocation invocation;
         private Graphics g;
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) {
             invocation = commandInvocation;
             invocation.getShell().enableAlternateBuffer();
             doGfx();
@@ -103,7 +116,6 @@ public class AeshGraphicsExample {
 
         private void doGfx() {
             try {
-                GraphicsConfiguration gc = null; //new AeshGraphicsConfiguration(invocation.getShell());
                 g = gc.getGraphics();
 
                 g.setColor(new TerminalColor(Color.BLUE, Color.DEFAULT));

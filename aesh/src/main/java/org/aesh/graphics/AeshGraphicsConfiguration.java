@@ -19,7 +19,7 @@
  */
 package org.aesh.graphics;
 
-import org.aesh.readline.tty.terminal.TerminalConnection;
+import org.aesh.terminal.Connection;
 import org.aesh.terminal.tty.Size;
 
 /**
@@ -27,9 +27,9 @@ import org.aesh.terminal.tty.Size;
  */
 public class AeshGraphicsConfiguration implements GraphicsConfiguration {
 
-    private final TerminalConnection connection;
+    private final Connection connection;
 
-    public AeshGraphicsConfiguration(TerminalConnection connection) {
+    public AeshGraphicsConfiguration(Connection connection) {
         this.connection = connection;
     }
 
