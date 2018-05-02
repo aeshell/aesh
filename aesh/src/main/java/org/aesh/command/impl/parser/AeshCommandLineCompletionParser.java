@@ -264,7 +264,10 @@ public class AeshCommandLineCompletionParser<C extends Command> implements Comma
 
         }
         else if(optionNamesWithDash.size() == 1) {
-            completeOperation.addCompletionCandidate(optionNamesWithDash.get(0));
+            if(optionNamesWithDash.get(0).isFormatted())
+                completeOperation.addCompletionCandidate(new TerminalString(optionNamesWithDash.get(0).getCharacters(), true));
+            else
+                completeOperation.addCompletionCandidate(optionNamesWithDash.get(0));
             //we should always have -- at the end here so always subtract 2
             completeOperation.setOffset( completeOperation.getCursor() - value.length());
             //do not append separator, we do that in the getOptionLongNames

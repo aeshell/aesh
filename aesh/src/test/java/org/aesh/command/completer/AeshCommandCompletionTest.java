@@ -35,11 +35,16 @@ import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.readline.terminal.Key;
+import org.aesh.readline.terminal.formatting.CharacterType;
+import org.aesh.readline.terminal.formatting.Color;
+import org.aesh.readline.terminal.formatting.TerminalColor;
+import org.aesh.readline.terminal.formatting.TerminalTextStyle;
 import org.aesh.terminal.tty.Size;
 import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
@@ -158,6 +163,33 @@ public class AeshCommandCompletionTest {
         connection.read("foo --bool");
         connection.read(completeChar.getFirstValue());
         assertEquals("foo --bool ", connection.getOutputBuffer());
+
+        console.stop();
+    }
+
+    @Test
+    public void testCompletionWithFormatting() throws IOException, CommandLineParserException {
+        TestConnection connection = new TestConnection(false);
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(FooFormattedCommand.class)
+                .create();
+
+        Settings settings = SettingsBuilder.builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
+
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt(""));
+        console.start();
+        connection.clearOutputBuffer();
+
+        connection.read("foo --b");
+        connection.read(completeChar.getFirstValue());
+        assertEquals("foo --bar=", connection.getOutputBuffer());
 
         console.stop();
     }
@@ -1055,6 +1087,44 @@ public class AeshCommandCompletionTest {
 
         public String getName() {
             return name;
+        }
+    }
+
+    @CommandDefinition(name = "foo", description = "")
+    public static class FooFormattedCommand implements Command {
+
+        @Option(renderer = BarOptionRenderer.class, completer = FooCompletor.class)
+        private String bar;
+
+        @Option(shortName = 'n', completer = NameTestCompleter.class)
+        private String name;
+
+        @Arguments
+        private List<String> arguments;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
+    public static class BarOptionRenderer implements OptionRenderer {
+
+         private TerminalColor color = new TerminalColor(Color.DEFAULT, Color.DEFAULT);
+         private TerminalTextStyle bold = new TerminalTextStyle(CharacterType.BOLD);
+
+        @Override
+        public TerminalColor getColor() {
+            return color;
+        }
+
+        @Override
+        public TerminalTextStyle getTextType() {
+            return bold;
         }
     }
 
