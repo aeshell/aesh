@@ -24,7 +24,7 @@ apply plugin: 'maven'
 
 group = 'org.aesh'
 archivesBaseName = 'aesh-examples'
-version = '1.2-SNAPSHOT'
+version = '1.5-SNAPSHOT'
 
 
 
@@ -44,7 +44,7 @@ test {
 }
 
 dependencies {
-    compile group: 'org.aesh', name: 'aesh', version: '1.2-SNAPSHOT'
+    compile group: 'org.aesh', name: 'aesh', version: '1.8-SNAPSHOT'
 }
 
 install.dependsOn 'check'
