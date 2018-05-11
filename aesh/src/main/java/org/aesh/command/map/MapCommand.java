@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.Command;
+import org.aesh.parser.ParsedLine;
 
 /**
  *
@@ -57,6 +58,10 @@ public abstract class MapCommand<T extends CommandInvocation> implements Command
 
     public Map<String, Object> getValues() {
         return Collections.unmodifiableMap(values);
+    }
+
+    public boolean checkForRequiredOptions(ParsedLine pl) {
+        return true;
     }
 
     void resetAll() {

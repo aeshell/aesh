@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aesh.command.map.MapCommand;
 import org.aesh.command.map.MapCommandPopulator;
+import org.aesh.command.map.MapProcessedCommandBuilder.MapProcessedCommand;
 
 /**
  * A simple command line parser.
@@ -327,6 +328,12 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                 processedCommand.addParserException(ope);
             }
             if (mode == Mode.STRICT) {
+                if (processedCommand instanceof MapProcessedCommand) {
+                    MapCommand mc = (MapCommand) processedCommand.getCommand();
+                    if (!mc.checkForRequiredOptions(iter.baseLine())) {
+                        return;
+                    }
+                }
                 RequiredOptionException re = checkForMissingRequiredOptions(processedCommand);
                 if (re != null)
                     processedCommand.addParserException(re);

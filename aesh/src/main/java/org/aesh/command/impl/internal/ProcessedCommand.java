@@ -294,8 +294,7 @@ public class ProcessedCommand<C extends Command> {
     }
 
    public void clear() {
-       for (ProcessedOption processedOption : getOptions())
-           processedOption.clear();
+       clearOptions();
        if(arguments != null)
            arguments.clear();
        if(argument != null)
@@ -303,6 +302,12 @@ public class ProcessedCommand<C extends Command> {
 
        parserExceptions.clear();
        completeStatus = null;
+    }
+
+    protected void clearOptions() {
+        for (ProcessedOption processedOption : getOptions()) {
+            processedOption.clear();
+        }
     }
 
     /**
@@ -434,8 +439,7 @@ public class ProcessedCommand<C extends Command> {
     }
 
     public void updateInvocationProviders(InvocationProviders invocationProviders) {
-        for (ProcessedOption option : getOptions())
-            option.updateInvocationProviders(invocationProviders);
+        updateOptionsInvocationProviders(invocationProviders);
         if (argument != null) {
             argument.updateInvocationProviders(invocationProviders);
         }
@@ -443,6 +447,12 @@ public class ProcessedCommand<C extends Command> {
             arguments.updateInvocationProviders(invocationProviders);
         }
         activator = invocationProviders.getCommandActivatorProvider().enhanceCommandActivator(activator);
+    }
+
+    protected void updateOptionsInvocationProviders(InvocationProviders invocationProviders) {
+        for (ProcessedOption option : getOptions()) {
+            option.updateInvocationProviders(invocationProviders);
+        }
     }
 
     public void addParserException(CommandLineParserException exception) {
