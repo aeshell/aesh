@@ -80,20 +80,18 @@ public abstract class AeshFileDisplayer implements Command {
         topVisibleRowCache = -1;
         stop = false;
 
-        /* TODO: review this:
-        if(operation.isRedirectionOut()) {
-            int count=0;
-            for(String line : this.page.getLines()) {
-                getShell().write(line);
+        if(commandInvocation.getConfiguration().hasOutputRedirection()) {
+            int count = 0;
+            for (String line : this.page.getLines()) {
+                commandInvocation.print(line);
                 count++;
-                if(count < this.page.size())
-                    getShell().write(Config.getLineSeparator());
+                if (count < this.page.size())
+                    commandInvocation.print(Config.getLineSeparator());
             }
-
-            afterDetach();
+            page.clear();
         }
         else {
-        */
+
             if(!page.hasData()) {
                 getShell().write("error: input is null...");
                 afterDetach();
@@ -108,11 +106,11 @@ public abstract class AeshFileDisplayer implements Command {
 
                 processInput();
             }
-        //}
+        }
     }
 
-    protected void afterDetach() throws IOException {
-        //if(!operation.isRedirectionOut())
+    protected void afterDetach() {
+        if(!commandInvocation.getConfiguration().hasOutputRedirection())
             getShell().write(ANSI.MAIN_BUFFER);
 
         page.clear();
