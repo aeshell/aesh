@@ -82,4 +82,16 @@ public class CommandInvocationConfiguration {
     public BufferedInputStream getPipedData() {
         return dataProvider == null ? null : dataProvider.getData();
     }
+
+    public boolean hasOutputRedirection() {
+        return getOutputRedirection() != null;
+    }
+
+    public boolean hasInputRedirection() {
+        return getInputRedirection() != null;
+    }
+
+    public boolean hasPipedData() {
+        return getPipedData() != null;
+    }
 }
