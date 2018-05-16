@@ -175,7 +175,6 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             this.connection = connection;
 
         connection.setCloseHandler((Void t) -> {
-            connection.write(Config.getLineSeparator());
             doStop(false);
         });
         if(!settings.isEchoCtrl()) {
