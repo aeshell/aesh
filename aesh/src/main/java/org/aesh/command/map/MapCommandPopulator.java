@@ -34,7 +34,7 @@ import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.Command;
+import org.aesh.command.map.MapProcessedCommandBuilder.MapProcessedCommand;
 import org.aesh.command.parser.CommandLineParserException;
 
 /**
@@ -43,7 +43,7 @@ import org.aesh.command.parser.CommandLineParserException;
  *
  * @author jdenise@redhat.com
  */
-public class MapCommandPopulator implements CommandPopulator<Object, Command> {
+public class MapCommandPopulator implements CommandPopulator<Object, MapCommand> {
 
     private final MapCommand<?> instance;
     private final Map<String, String> unknownOptions = new HashMap<>();
@@ -54,7 +54,7 @@ public class MapCommandPopulator implements CommandPopulator<Object, Command> {
     }
 
     @Override
-    public void populateObject(ProcessedCommand<Command> processedCommand,
+    public void populateObject(ProcessedCommand<MapCommand> processedCommand,
             InvocationProviders invocationProviders,
             AeshContext aeshContext, CommandLineParser.Mode validate)
             throws CommandLineParserException, OptionValidatorException {
@@ -108,7 +108,10 @@ public class MapCommandPopulator implements CommandPopulator<Object, Command> {
             }
         }
 
-        for (ProcessedOption option : processedCommand.getOptions()) {
+        // At this point, if no dynamic options have been retrieved it means
+        // that no dynamic options have been provided, so no need to compute the set now.
+        MapProcessedCommand mpc = (MapProcessedCommand) processedCommand;
+        for (ProcessedOption option : mpc.getCurrentOptions()) {
             // Do not erase the value that would have been set as an unknown option.
             if (!unknownOptions.containsKey(option.name())) {
                 if (option.getValue() != null) {

@@ -34,6 +34,9 @@ import org.aesh.command.impl.validator.NullCommandValidator;
 import org.aesh.util.ReflectionUtil;
 import org.aesh.command.parser.CommandLineParserException;
 import java.util.List;
+import org.aesh.command.impl.internal.ParsedCommand;
+import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.readline.util.Parser;
 
 public class MapProcessedCommandBuilder {
 
@@ -43,10 +46,13 @@ public class MapProcessedCommandBuilder {
             return Collections.emptyList();
         }
     };
-    private static class MapProcessedCommand extends ProcessedCommand<MapCommand> {
+
+    public static class MapProcessedCommand extends ProcessedCommand<MapCommand> {
+
         private final ProcessedOptionProvider provider;
         private List<ProcessedOption> currentOptions;
-
+        private final boolean initialized;
+        private final boolean lookup;
         MapProcessedCommand(String name,
                 List<String> aliases,
                 MapCommand command,
@@ -58,18 +64,127 @@ public class MapProcessedCommandBuilder {
                 ProcessedOption argument,
                 CommandPopulator populator,
                 ProcessedOptionProvider provider,
-                CommandActivator activator) throws OptionParserException {
+                CommandActivator activator,
+                boolean lookup) throws OptionParserException {
             super(name, aliases, command, description, validator, resultHandler, arguments,
                     options, argument, populator, activator);
+            initialized = true;
             this.provider = provider == null ? EMPTY_PROVIDER : provider;
+            this.lookup = lookup;
         }
 
         @Override
+        protected void updateOptionsInvocationProviders(InvocationProviders invocationProviders) {
+            //Only update static options.
+            for (ProcessedOption option : super.getOptions()) {
+                option.updateInvocationProviders(invocationProviders);
+            }
+        }
+        @Override
         public List<ProcessedOption> getOptions() {
+            if (!initialized) {
+                return super.getOptions();
+            }
+            return getOptions(true);
+        }
+
+        @Override
+        public ProcessedOption searchAllOptions(String input) {
+            if (!initialized) {
+                return super.searchAllOptions(input);
+            }
+            if (lookup && completeStatus() == null) {
+                return null;
+            }
+            if (input.startsWith("--")) {
+                ProcessedOption currentOption = null;
+                if (input.contains("=")) {
+                    String optName = input.substring(2, input.indexOf("="));
+                    currentOption = findLongOptionNoActivatorCheck(optName);
+                } else {
+                    currentOption = startWithLongOptionNoActivatorCheck(input.substring(2));
+                }
+                if (currentOption != null) {
+                    currentOption.setLongNameUsed(true);
+                } //need to handle spaces in option names
+                else if (Parser.containsNonEscapedSpace(input)) {
+                    return searchAllOptions(Parser.switchSpacesToEscapedSpacesInWord(input));
+                }
+
+                return currentOption;
+            } else {
+                return super.searchAllOptions(input);
+            }
+        }
+
+        @Override
+        public ProcessedOption findLongOption(String name) {
+            if (!initialized) {
+                return super.findLongOption(name);
+            }
+            if (lookup && completeStatus() == null) {
+                return null;
+            }
+            for (ProcessedOption option : getOptions(false)) {
+                if (option.name() != null
+                        && option.name().equals(name)
+                        && option.activator().isActivated(new ParsedCommand(this))) {
+                    return option;
+                }
+            }
+            for (ProcessedOption option : getOptions(true)) {
+                if (option.name() != null
+                        && option.name().equals(name)
+                        && option.activator().isActivated(new ParsedCommand(this))) {
+                    return option;
+                }
+            }
+            return null;
+        }
+        @Override
+        public ProcessedOption findLongOptionNoActivatorCheck(String name) {
+            if (!initialized) {
+                return super.findLongOptionNoActivatorCheck(name);
+            }
+            if (lookup && completeStatus() == null) {
+                return null;
+            }
+            // First check in parent (static options).
+            for (ProcessedOption option : super.getOptions()) {
+                if (option.name() != null && option.name().equals(name)) {
+                    return option;
+                }
+            }
+
+            // Then in dynamics
+            for (ProcessedOption option : provider.getOptions(currentOptions)) {
+                if (option.name() != null && option.name().equals(name)) {
+                    return option;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public void clearOptions() {
+            for (ProcessedOption processedOption : getCurrentOptions()) {
+                processedOption.clear();
+            }
+        }
+
+        List<ProcessedOption> getCurrentOptions() {
+            List<ProcessedOption> allOptions = new ArrayList<>(super.getOptions());
+            if (currentOptions != null) {
+                allOptions.addAll(currentOptions);
+            }
+            return allOptions;
+        }
+
+        public List<ProcessedOption> getOptions(boolean dynamic) {
             List<ProcessedOption> allOptions = new ArrayList<>(super.getOptions());
             // During super construction, properties are retrieved. In this case
             // provider is not already set.
-            if (provider != null) {
+            if (provider != null && dynamic) {
                 currentOptions = provider.getOptions(currentOptions);
                 allOptions.addAll(currentOptions);
             }
@@ -100,9 +215,15 @@ public class MapProcessedCommandBuilder {
     private MapCommand command;
     private List<String> aliases;
     private CommandActivator activator;
+    private boolean lookup;
 
     public MapProcessedCommandBuilder() {
         options = new ArrayList<>();
+    }
+
+    public MapProcessedCommandBuilder lookupAtCompletionOnly(boolean lookup) {
+        this.lookup = lookup;
+        return this;
     }
 
     public MapProcessedCommandBuilder name(String name) {
@@ -210,7 +331,7 @@ public class MapProcessedCommandBuilder {
         return this;
     }
 
-    public ProcessedCommand create() throws CommandLineParserException {
+    public MapProcessedCommand create() throws CommandLineParserException {
         if (name == null || name.length() < 1) {
             throw new CommandLineParserException("The parameter name must be defined");
         }
@@ -238,6 +359,7 @@ public class MapProcessedCommandBuilder {
                 argument,
                 populator,
                 provider,
-                activator);
+                activator,
+                lookup);
     }
 }
