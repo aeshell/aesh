@@ -6,13 +6,21 @@ import org.junit.Test;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 public class AnnotationDetectorTest {
 
     @Test
     public void testAnnotationDetector() {
-        AnnotationDetector detector = new AnnotationDetector(new AnnotationReporter());
+        AnnotationReporter reporter = new AnnotationReporter();
+        AnnotationDetector detector = new AnnotationDetector(reporter);
         try {
-            detector.detect();
+            detector.detect("org.aesh.command.foo");
+            assertFalse(reporter.foundManCommand);
+
+            detector.detect("org.aesh.command.man");
+            assertTrue(reporter.foundManCommand);
         } catch (IOException e) {
             e.printStackTrace();
         }
