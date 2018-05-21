@@ -107,20 +107,6 @@ import java.util.Set;
  */
 public final class AnnotationDetector {
 
-    /**
-     * {@code Reporter} is the base interface, used to report the detected annotations.
-     * Every category of annotations (i.e. Type, Field and Method) has its own specialized
-     * interface. This enables an efficient way of reporting the detected annotations.
-     */
-    public interface Reporter extends org.aesh.io.scanner.Reporter {
-
-        /**
-         * Return the {@code Annotation} classes which must be reported (all other
-         * annotations are skipped).
-         */
-        Class<? extends Annotation>[] annotations();
-
-    }
 
     /**
      * A {@code Reporter} for type annotations.

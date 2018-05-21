@@ -19,8 +19,20 @@
  */
 package org.aesh.io.scanner;
 
+import java.lang.annotation.Annotation;
+
 /**
+ * {@code Reporter} is the base interface, used to report the detected annotations.
+ * Every category of annotations (i.e. Type, Field and Method) has its own specialized
+ * interface. This enables an efficient way of reporting the detected annotations.
+ *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface Reporter {
+    /**
+     * Return the {@code Annotation} classes which must be reported (all other
+     * annotations are skipped).
+     */
+    Class<? extends Annotation>[] annotations();
+
 }
