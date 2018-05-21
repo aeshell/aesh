@@ -262,6 +262,10 @@ public class SettingsBuilder {
         return apply(c -> c.settings.setInterruptHandler(consumer));
     }
 
+    public SettingsBuilder setScanForCommandPackages(String... packages) {
+        return apply(c -> c.settings.setScanForCommandPackages(packages));
+    }
+
     public Settings<? extends Command<? extends CommandInvocation>,? extends CommandInvocation,
             ? extends ConverterInvocation, ? extends CompleterInvocation,
             ? extends ValidatorInvocation, ? extends OptionActivator,

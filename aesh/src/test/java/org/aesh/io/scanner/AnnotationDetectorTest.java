@@ -43,9 +43,8 @@ public class AnnotationDetectorTest {
 
         @Override
         public Class<? extends Annotation>[] annotations() {
-            CommandDefinition commandDefinition;
             try {
-                return new Class[]{ Class.forName("org.aesh.command.CommandDefinition")};
+                return new Class[]{ Class.forName(CommandDefinition.class.getCanonicalName())};
             }
             catch (ClassNotFoundException e) {
                 return null;

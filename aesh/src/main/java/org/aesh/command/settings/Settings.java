@@ -19,32 +19,32 @@
  */
 package org.aesh.command.settings;
 
+import org.aesh.command.Command;
+import org.aesh.command.CommandNotFoundHandler;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.CommandActivatorProvider;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.activator.OptionActivatorProvider;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.CompleterInvocationProvider;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.converter.ConverterInvocationProvider;
+import org.aesh.command.export.ExportChangeListener;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocationProvider;
+import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.command.validator.ValidatorInvocationProvider;
+import org.aesh.io.Resource;
+import org.aesh.readline.AeshContext;
+import org.aesh.readline.editing.EditMode;
+import org.aesh.terminal.Connection;
+
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.function.Consumer;
-
-import org.aesh.command.Command;
-import org.aesh.command.CommandNotFoundHandler;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
-import org.aesh.command.export.ExportChangeListener;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.invocation.CommandInvocationProvider;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.readline.AeshContext;
-import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.activator.CommandActivatorProvider;
-import org.aesh.command.activator.OptionActivatorProvider;
-import org.aesh.command.completer.CompleterInvocationProvider;
-import org.aesh.command.converter.ConverterInvocationProvider;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.io.Resource;
-import org.aesh.readline.editing.EditMode;
-import org.aesh.terminal.Connection;
 
 /**
  * Object thats define all tunable settings used by Console
@@ -289,4 +289,7 @@ public interface Settings<C extends Command<CI>, CI extends CommandInvocation,
 
     boolean isRedrawPromptOnInterrupt();
 
+    void setScanForCommandPackages(String... packages);
+
+    String[] getScanForCommandPackages();
 }
