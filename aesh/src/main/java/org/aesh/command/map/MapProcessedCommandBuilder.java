@@ -35,6 +35,8 @@ import org.aesh.util.ReflectionUtil;
 import org.aesh.command.parser.CommandLineParserException;
 import java.util.List;
 import org.aesh.command.impl.internal.ParsedCommand;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.parser.CommandLineParser.Mode;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.readline.util.Parser;
 
@@ -53,6 +55,7 @@ public class MapProcessedCommandBuilder {
         private List<ProcessedOption> currentOptions;
         private final boolean initialized;
         private final boolean lookup;
+        private Mode mode;
         MapProcessedCommand(String name,
                 List<String> aliases,
                 MapCommand command,
@@ -93,7 +96,7 @@ public class MapProcessedCommandBuilder {
             if (!initialized) {
                 return super.searchAllOptions(input);
             }
-            if (lookup && completeStatus() == null) {
+            if (lookup && !Mode.COMPLETION.equals(mode)) {
                 return null;
             }
             if (input.startsWith("--")) {
@@ -122,7 +125,7 @@ public class MapProcessedCommandBuilder {
             if (!initialized) {
                 return super.findLongOption(name);
             }
-            if (lookup && completeStatus() == null) {
+            if (lookup && !Mode.COMPLETION.equals(mode)) {
                 return null;
             }
             for (ProcessedOption option : getOptions(false)) {
@@ -146,7 +149,7 @@ public class MapProcessedCommandBuilder {
             if (!initialized) {
                 return super.findLongOptionNoActivatorCheck(name);
             }
-            if (lookup && completeStatus() == null) {
+            if (lookup && !Mode.COMPLETION.equals(mode)) {
                 return null;
             }
             // First check in parent (static options).
@@ -194,8 +197,13 @@ public class MapProcessedCommandBuilder {
         @Override
         public void clear() {
             MapCommand cmd = getCommand();
+            mode = null;
             cmd.resetAll();
             super.clear();
+        }
+
+        public void setMode(CommandLineParser.Mode mode) {
+            this.mode = mode;
         }
     }
 

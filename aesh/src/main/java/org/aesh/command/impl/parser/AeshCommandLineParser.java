@@ -342,6 +342,9 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     private void doParseCompletion(ParsedLineIterator iter) {
+        if (processedCommand instanceof MapProcessedCommand) {
+            ((MapProcessedCommand) processedCommand).setMode(Mode.COMPLETION);
+        }
         if(!iter.hasNextWord()) {
             if(isGroupCommand())
                 processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, ""));
@@ -374,8 +377,8 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                     if (lastParsedOption != null) {
                         //if current word is cursor word, we need to check if the current option name
                         //might be part of another option name: eg: list and listFolders
-                        if(iter.isNextWordCursorWord() &&
-                                processedCommand.findPossibleLongNames(word.word()).size() > 1) {
+                        if (iter.isNextWordCursorWord() && !word.word().contains("=")
+                                && processedCommand.findPossibleLongNames(word.word()).size() > 1) {
                             processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
                             iter.pollParsedWord();
                         }
