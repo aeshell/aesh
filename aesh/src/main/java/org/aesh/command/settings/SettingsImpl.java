@@ -106,6 +106,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     private boolean redrawPrompt = true;
     private boolean echoCtrl = true;
     private Consumer<Void> interruptHandler;
+    private String[] scanPackages;
 
     SettingsImpl() {
     }
@@ -154,6 +155,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
         echoCtrl(baseSettings.isEchoCtrl());
         redrawPromptOnInterrupt(baseSettings.isRedrawPromptOnInterrupt());
         setInterruptHandler(baseSettings.getInterruptHandler());
+        setScanForCommandPackages(baseSettings.getScanForCommandPackages());
     }
 
     public void resetToDefaults() {
@@ -772,5 +774,15 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     @Override
     public boolean isRedrawPromptOnInterrupt() {
         return redrawPrompt;
+    }
+
+    @Override
+    public void setScanForCommandPackages(String... packages) {
+        this.scanPackages = packages;
+    }
+
+    @Override
+    public String[] getScanForCommandPackages() {
+        return scanPackages;
     }
 }

@@ -36,6 +36,7 @@ import org.aesh.command.export.ExportPreProcessor;
 import org.aesh.command.impl.AeshCommandResolver;
 import org.aesh.command.impl.completer.AeshCompletionHandler;
 import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
+import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
@@ -46,6 +47,8 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.complete.AeshCompleteOperation;
+import org.aesh.io.scanner.AnnotationDetector;
+import org.aesh.io.scanner.CommandDefinitionReporter;
 import org.aesh.readline.completion.Completion;
 import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.readline.history.FileHistory;
@@ -107,7 +110,11 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             settings = SettingsBuilder.builder().build();
         else
             settings = givenSettings;
-        commandResolver = new AeshCommandResolver<>(settings.commandRegistry());
+
+        if(settings.getScanForCommandPackages() == null || settings.getScanForCommandPackages().length == 0)
+            commandResolver = new AeshCommandResolver<>(settings.commandRegistry());
+        else
+            commandResolver = getCommandResolverThroughScan();
 
         addCompletion(new AeshCompletion());
         if(settings.connection() != null)
@@ -137,7 +144,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     }
 
-   public void start() throws IOException {
+    public void start() throws IOException {
        init();
 
         if(connection == null)
@@ -334,6 +341,26 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         perm.setWritable(historyFilePermission.isWritable());
         perm.setWritableOwnerOnly(historyFilePermission.isWritableOwnerOnly());
         return perm;
+    }
+
+    private AeshCommandResolver<? extends Command<? extends CommandInvocation>,? extends CommandInvocation> getCommandResolverThroughScan() {
+        MutableCommandRegistry<Command<CommandInvocation>, CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+
+        CommandDefinitionReporter reporter = new CommandDefinitionReporter();
+        AnnotationDetector detector = new AnnotationDetector(reporter);
+        try {
+            detector.detect(settings.getScanForCommandPackages());
+            for(String command : reporter.getCommands())
+                registry.addCommand((Class<Command<CommandInvocation>>) Class.forName(command));
+        }
+        catch (IOException e) {
+            LOGGER.log(Level.WARNING, "AnnotationDetector failed to scan for CommandDefinition annotations", e);
+        }
+        catch (ClassNotFoundException | CommandLineParserException e) {
+            LOGGER.log(Level.WARNING, "Failed to load CommandDefinition class.", e);
+        }
+
+        return new AeshCommandResolver<>(registry);
     }
 
     class AeshCompletion implements Completion<AeshCompleteOperation> {
