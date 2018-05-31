@@ -6,7 +6,7 @@ jdk:
 env:
    - TERM=dumb
 
-before_install: ./gradlew clean
+script: "mvn test -B"
 
 notifications:
   irc: chat.freenode.net#aesh
