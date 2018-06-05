@@ -157,6 +157,13 @@ public class AeshCommandOperatorCompletionTest {
         connection.clearOutputBuffer();
         connection.read(completeChar.getFirstValue());
         connection.assertBuffer(" ");
+        connection.read(Key.ENTER);
+        connection.clearOutputBuffer();
+        connection.read("|");
+        connection.read(Key.LEFT);
+        connection.clearOutputBuffer();
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("\narg  foo  \n|");
 
         console.stop();
     }
