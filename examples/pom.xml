@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.aesh</groupId>
         <artifactId>aesh-all</artifactId>
-        <version>1.5</version>
+        <version>1.6-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -82,7 +82,7 @@
       <dependency>
          <groupId>org.aesh</groupId>
          <artifactId>aesh-readline</artifactId>
-         <version>1.8</version>
+         <version>${readline.version}</version>
       </dependency>
     </dependencies>
 
