@@ -28,4 +28,10 @@ public enum ParserStatus {
     DOUBLE_UNCLOSED_QUOTE,
     REQUIRED_OPTION_MISSING,
     ARGUMENTS_GIVE_NONE_DEFINED,
+    EMPTY_BEFORE_OPERATOR,
+    EMPTY_AFTER_OPERATOR;
+
+    public static boolean okForCompletion(ParserStatus status) {
+        return status == OK || status == EMPTY_AFTER_OPERATOR || status == EMPTY_BEFORE_OPERATOR;
+    }
 }

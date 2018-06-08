@@ -401,7 +401,15 @@ public class LineParserTest {
     public void testOperatorParsing() {
          Set<OperatorType> operators = EnumSet.allOf(OperatorType.class);
          LineParser lineParser = new LineParser();
-         List<ParsedLine> lines = lineParser.parseLine("foo | bar", 19, true, operators);
+
+         List<ParsedLine> lines = lineParser.parseLine("|", 19, true, operators);
+         assertFalse(lines.get(0).hasWords());
+         assertEquals(ParserStatus.EMPTY_BEFORE_OPERATOR, lines.get(0).status());
+         assertEquals(OperatorType.PIPE, lines.get(0).operator());
+         assertEquals("aesh: syntax error near unexpected token \'|\'", lines.get(0).errorMessage());
+         assertEquals(-1, lines.get(0).cursor());
+
+         lines = lineParser.parseLine("foo | bar", 19, true, operators);
 
          assertEquals("foo", lines.get(0).words().get(0).word());
          assertEquals("foo ", lines.get(0).line());

@@ -159,6 +159,10 @@ public class ParsedLine {
         return words().size();
     }
 
+    public boolean hasWords() {
+        return words().size() > 0;
+    }
+
     /**
      * @return a highly specialized iterator to make it easier to parse the input
      */

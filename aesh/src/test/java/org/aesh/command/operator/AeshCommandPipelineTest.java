@@ -79,6 +79,35 @@ public class AeshCommandPipelineTest {
         console.stop();
     }
 
+
+    @Test
+    public void testEmptyBeforeOperator() throws InterruptedException, IOException, CommandLineParserException {
+        TestConnection connection = new TestConnection();
+
+        FooCommand foo = new FooCommand();
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(PipeCommand.class)
+                .command(BarCommand.class)
+                .command(foo)
+                .create();
+
+        Settings settings = SettingsBuilder.builder()
+                .connection(connection)
+                .enableOperatorParser(true)
+                .commandRegistry(registry)
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("&&" + Config.getLineSeparator());
+        Thread.sleep(100);
+        connection.assertBufferEndsWith("aesh: syntax error near unexpected token \'&&\'"+Config.getLineSeparator());
+        console.stop();
+    }
+
     @CommandDefinition(name ="pipe", description = "")
     public static class PipeCommand implements Command {
 

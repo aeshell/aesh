@@ -417,9 +417,17 @@ public class LineParser {
     }
 
     private void handleFoundOperator(List<ParsedLine> lines, String text, int cursor) {
+        ParserStatus parserStatus = ParserStatus.OK;
+        String errorMessage = "";
         if (builder.length() > 0) {
             textList.add(new ParsedWord(builder.toString(), index-builder.length()));
             builder = new StringBuilder();
+        }
+        //if textList.size == 0, we have an empty line before the operator
+        else if(textList.size() == 0){
+            if(!currentOperator.equals(OperatorType.NONE))
+                parserStatus = ParserStatus.EMPTY_BEFORE_OPERATOR;
+            errorMessage = "aesh: syntax error near unexpected token \'"+currentOperator.value()+'\'';
         }
         //we know we have an operator so we need to subtract one char
         if (cursor == text.length()-1) {
@@ -431,7 +439,7 @@ public class LineParser {
         lines.add(
                 new ParsedLine(text.substring(startIndex, index), textList,
                         startIndex <= cursor && cursor <= index ? cursor-startIndex : -1,
-                        cursorWord, wordCursor, ParserStatus.OK, "", currentOperator));
+                        cursorWord, wordCursor, parserStatus, errorMessage, currentOperator));
 
         cursorWord = -1;
         wordCursor = -1;

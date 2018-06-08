@@ -328,7 +328,7 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
 
     private void doSimpleComplete(AeshCompleteOperation completeOperation, ParsedLine parsedLine) {
         if((parsedLine.selectedIndex() == 0 || //possible command name
-                parsedLine.words().size() == 0) && parsedLine.status() == ParserStatus.OK) {
+                parsedLine.words().size() == 0) && ParserStatus.okForCompletion(parsedLine.status())) {
             commandResolver.getRegistry().completeCommandName(completeOperation, parsedLine);
         }
         if (completeOperation.getCompletionCandidates().size() < 1) {

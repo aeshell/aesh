@@ -252,6 +252,8 @@ class Executions {
         List<Execution<CI>> executions = new ArrayList<>();
         for (ParsedLine pl : fullLine) {
             newParsedLine = false;
+            if(!pl.hasWords())
+                throw new CommandLineParserException(pl.errorMessage());
             while (!newParsedLine) {
                 switch (state) {
                     case NEED_COMMAND: {
