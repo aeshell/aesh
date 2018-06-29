@@ -18,23 +18,24 @@ import org.aesh.readline.terminal.Key;
 import org.aesh.terminal.tty.Size;
 import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.logging.Logger;
 
 public class AeshCommandOperatorCompletionTest {
 
-    private static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
-
     private final Key completeChar =  Key.CTRL_I;
 
     private static Logger LOGGER = Logger.getLogger(AeshCommandOperatorCompletionTest.class.getName());
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
     public void testCompletionWithEndOperator() throws IOException, CommandLineParserException {
@@ -80,7 +81,7 @@ public class AeshCommandOperatorCompletionTest {
                  .enableExport(false)
                  .build();
 
-         final Path tempDir = createTempDirectory();
+         final Path tempDir = temporaryFolder.getRoot().toPath();
          final File fooOut = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_out.txt");
          Files.write(fooOut.toPath(), "first line".getBytes());
 
@@ -103,9 +104,6 @@ public class AeshCommandOperatorCompletionTest {
          connection.read("arg>");
          connection.read(completeChar);
          connection.assertBufferEndsWith(fooOut.getName());
-
-         Files.delete(fooOut.toPath());
-         Files.delete(tempDir);
 
          console.stop();
      }
@@ -160,10 +158,10 @@ public class AeshCommandOperatorCompletionTest {
         connection.read(Key.ENTER);
         connection.clearOutputBuffer();
         connection.read("|");
-        connection.read(Key.LEFT);
+        connection.read(Key.LEFT_2);
         connection.clearOutputBuffer();
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("\narg  foo  \n|");
+        connection.assertBuffer(String.format("%1$sarg  foo  %1$s|", Config.getLineSeparator()));
 
         console.stop();
     }
@@ -231,19 +229,5 @@ public class AeshCommandOperatorCompletionTest {
             }
         }
     }
-
-    private Path createTempDirectory() throws IOException {
-        final Path tmp;
-        if(Config.isOSPOSIXCompatible())
-            tmp = Files.createTempDirectory("temp"+Long.toString(System.nanoTime()), fileAttribute);
-        else {
-            tmp = Files.createTempDirectory("temp" + Long.toString(System.nanoTime()));
-        }
-
-        tmp.toFile().deleteOnExit();
-
-        return tmp;
-    }
-
 
 }

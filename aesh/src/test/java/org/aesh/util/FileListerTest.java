@@ -106,12 +106,12 @@ public class FileListerTest {
 
     @Test
     public void testPartialCompletionWithMultipleSubdirectory() {
-        new File(workingDir.toString(), "child").mkdir();
+        new File(workingDir.toString(), "child1").mkdir();
         new File(workingDir.toString(), "child2").mkdir();
         List<String> candidates = new ArrayList<>();
         new FileLister("ch", workingDir).findMatchingDirectories(candidates);
         assertEquals(2, candidates.size());
-        assertEquals("child/", candidates.get(0));
+        assertEquals("child1" + Config.getPathSeparator(), candidates.get(0));
     }
 
     @Test

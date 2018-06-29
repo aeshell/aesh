@@ -135,7 +135,8 @@ public class FileOptionCompleterTest {
         completer.complete(data);
         assertNotNull(data.getCompleterValues());
         assertEquals(2, data.getCompleterValues().size());
-        assertEquals(new TerminalString(child.getName() + Config.getPathSeparator(), true), data.getCompleterValues().get(0));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child.getName() + Config.getPathSeparator(), true)));
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child2.getName() + Config.getPathSeparator(), true)));
 
         data = new CompleterData(aeshContext, "child", null);
         completer.complete(data);

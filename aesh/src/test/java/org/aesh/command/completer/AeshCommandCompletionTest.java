@@ -94,7 +94,7 @@ public class AeshCommandCompletionTest {
         assertEquals("foo --", connection.getOutputBuffer());
 
         connection.read(completeChar.getFirstValue());
-        assertEquals("foo --\n--bar=  --bool  --name=  \nfoo --", connection.getOutputBuffer());
+        assertEquals(String.format("foo --%1$s--bar=  --bool  --name=  %1$sfoo --", Config.getLineSeparator()), connection.getOutputBuffer());
 
         connection.clearOutputBuffer();
         connection.read("name aslak --bar");
