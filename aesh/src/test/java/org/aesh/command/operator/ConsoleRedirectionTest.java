@@ -36,9 +36,9 @@ import org.aesh.io.Resource;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -63,21 +63,12 @@ import static org.junit.Assert.assertEquals;
  */
  public class ConsoleRedirectionTest extends BaseConsoleTest {
 
-    private Path tempDir;
+    @Rule
+    public TemporaryFolder tempDir = new TemporaryFolder();
     private static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
 
     static boolean beforeHasBeenCalled = false;
     static boolean afterHasBeenCalled = false;
-
-    @Before
-    public void before() throws IOException {
-        tempDir = createTempDirectory();
-    }
-
-    @After
-    public void after() throws IOException {
-        Files.delete(tempDir);
-    }
 
      @Test
      public void endOperator() throws Throwable {
@@ -117,7 +108,7 @@ import static org.junit.Assert.assertEquals;
                  .commandRegistry(registry)
                  .build();
 
-         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection.txt");
+         final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection.txt");
          ReadlineConsole console = new ReadlineConsole(settings);
          console.start();
 
@@ -148,7 +139,7 @@ import static org.junit.Assert.assertEquals;
                  .commandRegistry(registry)
                  .build();
 
-         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_out.txt");
+         final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_out.txt");
          ReadlineConsole console = new ReadlineConsole(settings);
          console.start();
 
@@ -178,7 +169,7 @@ import static org.junit.Assert.assertEquals;
                  .commandRegistry(registry)
                  .build();
 
-         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_in.txt");
+         final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_in.txt");
          PrintWriter writer = new PrintWriter(foo, "UTF-8");
          writer.print("foo bar");
          writer.close();
@@ -192,9 +183,6 @@ import static org.junit.Assert.assertEquals;
          connection.assertBufferEndsWith("foo bar"+Config.getLineSeparator());
 
          console.stop();
-
-         //lets make sure that foo has been read
-         Files.delete(foo.toPath());
      }
 
      @Test
@@ -212,7 +200,7 @@ import static org.junit.Assert.assertEquals;
                  .commandRegistry(registry)
                  .build();
 
-         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_in.txt");
+         final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_in.txt");
          PrintWriter writer = new PrintWriter(foo, "UTF-8");
          writer.print("FOO BAR");
          writer.close();
@@ -226,9 +214,6 @@ import static org.junit.Assert.assertEquals;
          connection.assertBufferEndsWith("FOO BAR"+Config.getLineSeparator());
 
          console.stop();
-
-         //lets make sure that foo has been read
-         Files.delete(foo.toPath());
      }
 
      @Test
@@ -246,8 +231,8 @@ import static org.junit.Assert.assertEquals;
                  .commandRegistry(registry)
                  .build();
 
-         final File fooOut = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_out.txt");
-         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_in.txt");
+         final File fooOut = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_out.txt");
+         final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_in.txt");
          PrintWriter writer = new PrintWriter(foo, "UTF-8");
          writer.print("FOO BAR");
          writer.close();
@@ -261,10 +246,8 @@ import static org.junit.Assert.assertEquals;
          console.stop();
 
          //lets make sure that foo has been read
-         Files.delete(foo.toPath());
          List<String> output = Files.readAllLines(fooOut.toPath());
          assertEquals("FOO BAR", output.get(0));
-         Files.delete(fooOut.toPath());
      }
 
      @Test
@@ -280,8 +263,8 @@ import static org.junit.Assert.assertEquals;
                  .connection(connection)
                  .commandRegistry(registry)
                  .build();
-         final File fooOut = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_out.txt");
-         final File foo = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_in.txt");
+         final File fooOut = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_out.txt");
+         final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_in.txt");
          PrintWriter writer = new PrintWriter(foo, "UTF-8");
          writer.print("FOO BAR");
          writer.close();
@@ -295,10 +278,8 @@ import static org.junit.Assert.assertEquals;
          console.stop();
 
          //lets make sure that foo has been read
-         Files.delete(foo.toPath());
          List<String> output = Files.readAllLines(fooOut.toPath());
          assertEquals("FOO BAR", output.get(0));
-         Files.delete(fooOut.toPath());
      }
 
      /*
