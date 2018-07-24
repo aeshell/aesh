@@ -3,10 +3,5 @@ language: java
 jdk:
   - oraclejdk8
 
-env:
-   - TERM=dumb
-
-script: "mvn test -B"
-
 notifications:
   irc: chat.freenode.net#aesh
