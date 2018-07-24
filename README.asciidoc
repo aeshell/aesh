@@ -17,7 +17,7 @@ We have released a snapshot version of 1.0 if you are eager to test. Just add th
 <dependency>
   <groupId>org.aesh</groupId>
   <artifactId>aesh</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.7</version>
 </dependency>
 ----
 
@@ -65,12 +65,7 @@ All the readline functionality included in 'aesh-readline', eg:
 
 How to build:
 -------------
-- Æsh uses Gradle (http://gradle.org) as its build tool.
-** When you start a Gradle build via the wrapper [gradlew], Gradle will be automatically downloaded and used to run the build
-*** Windows: gradlew.bat
-*** Linux: gradlew
-
-- We also have a pom.xml included for you maven users out there.
+- Æsh uses Maven (http://maven.apache.org) as its build tool.
 
 Æsh Developer List:
 -------------------
