@@ -261,9 +261,6 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             Executor<? extends CommandInvocation> executor = runtime.buildExecutor(line);
             processManager.execute(executor, conn);
         }
-        catch (IllegalArgumentException e) {
-            conn.write(line + ": command not found\n");
-        }
         catch (CommandNotFoundException cnfe) {
             if(settings.commandNotFoundHandler() != null) {
                 //TODO: review CommandNotFoundHandler
@@ -274,8 +271,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             }
             read(conn, readline);
         }
-        catch (OptionValidatorException | CommandValidatorException |CommandLineParserException e) {
-            conn.write(e.getMessage() + Config.getLineSeparator());
+        catch (IllegalArgumentException | OptionValidatorException |
+                CommandValidatorException | CommandLineParserException e) {
+            conn.write(e.getMessage()+Config.getLineSeparator());
             read(conn, readline);
         }
         catch (Exception e) {
