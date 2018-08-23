@@ -100,11 +100,8 @@ public class MapProcessedCommandBuilder {
                 return null;
             }
             if (input.startsWith("--")) {
-                ProcessedOption currentOption = null;
-                if (input.contains("=")) {
-                    String optName = input.substring(2, input.indexOf("="));
-                    currentOption = findLongOptionNoActivatorCheck(optName);
-                } else {
+                ProcessedOption currentOption = findLongOptionNoActivatorCheck(input.substring(2));
+                if (currentOption == null && input.contains("=")) {
                     currentOption = startWithLongOptionNoActivatorCheck(input.substring(2));
                 }
                 if (currentOption != null) {
@@ -153,14 +150,14 @@ public class MapProcessedCommandBuilder {
                 return null;
             }
             // First check in parent (static options).
-            for (ProcessedOption option : super.getOptions()) {
+            for (ProcessedOption option : getOptions(false)) {
                 if (option.name() != null && option.name().equals(name)) {
                     return option;
                 }
             }
 
             // Then in dynamics
-            for (ProcessedOption option : provider.getOptions(currentOptions)) {
+            for (ProcessedOption option : getOptions(true)) {
                 if (option.name() != null && option.name().equals(name)) {
                     return option;
                 }
