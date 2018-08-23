@@ -185,7 +185,9 @@ public class MapProcessedCommandBuilder {
             // During super construction, properties are retrieved. In this case
             // provider is not already set.
             if (provider != null && dynamic) {
-                currentOptions = provider.getOptions(currentOptions);
+                if (currentOptions == null || currentOptions.isEmpty()) {
+                    currentOptions = provider.getOptions(currentOptions);
+                }
                 allOptions.addAll(currentOptions);
             }
             return allOptions;
@@ -197,6 +199,8 @@ public class MapProcessedCommandBuilder {
             mode = null;
             cmd.resetAll();
             super.clear();
+            // null after the currentOptions have been cleared by the super.clear();
+            currentOptions = null;
         }
 
         public void setMode(CommandLineParser.Mode mode) {

@@ -29,6 +29,7 @@ import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.map.MapProcessedCommandBuilder.MapProcessedCommand;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
@@ -64,6 +65,18 @@ public class MapCommandTest {
         private List<ProcessedOption> options = Collections.emptyList();
         @Override
         public List<ProcessedOption> getOptions(List<ProcessedOption> currentOptions) {
+            return options;
+        }
+    }
+
+    static class DynamicOptionsCountProvider implements MapProcessedCommandBuilder.ProcessedOptionProvider {
+
+        private int count = 0;
+        private List<ProcessedOption> options = Collections.emptyList();
+
+        @Override
+        public List<ProcessedOption> getOptions(List<ProcessedOption> currentOptions) {
+            count += 1;
             return options;
         }
     }
@@ -391,6 +404,93 @@ public class MapCommandTest {
         assertFalse(cmd.contains("opt-dyn1-withvalue"));
         assertFalse(cmd.contains("opt-dyn2-withvalue"));
         assertFalse(cmd.contains("opt-dyn3-novalue"));
+    }
+
+    @Test
+    public void clearedOptionTest() throws Exception {
+        TestConnection connection = new TestConnection(false);
+
+        // Build dynamic command.
+        DynCommand1 cmd = new DynCommand1();
+        DynamicOptionsCountProvider provider = new DynamicOptionsCountProvider();
+        provider.options = getOptions();
+
+        MapProcessedCommandBuilder builder = new MapProcessedCommandBuilder();
+        builder.command(cmd);
+        builder.lookupAtCompletionOnly(false);
+        builder.name("dyn1");
+        builder.optionProvider(provider);
+        MapProcessedCommand processedCmd = builder.create();
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(processedCmd)
+                .create();
+
+        Settings settings = SettingsBuilder.builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt(""));
+        console.start();
+
+        connection.clearOutputBuffer();
+        connection.read("dyn1 --opt-dyn1-withvalue=");
+        // Execute command provising XXX value.
+        connection.read(Config.getLineSeparator());
+        connection.clearOutputBuffer();
+        Thread.sleep(200);
+        ProcessedOption opt = processedCmd.findLongOption("opt-dyn1-withvalue");
+        assertEquals("", opt.getValue());
+        assertEquals(1, opt.getValues().size());
+
+        connection.clearOutputBuffer();
+        connection.read("dyn1 --opt-dyn1-withvalue=XXX");
+        // Execute command provising XXX value.
+        connection.read(Config.getLineSeparator());
+        connection.clearOutputBuffer();
+        Thread.sleep(200);
+        opt = processedCmd.findLongOption("opt-dyn1-withvalue");
+        assertEquals("XXX", opt.getValue());
+        assertEquals(1, opt.getValues().size());
+
+    }
+
+    @Test
+    public void optionRetrievalTest() throws Exception {
+        TestConnection connection = new TestConnection(false);
+
+        // Build dynamic command.
+        DynCommand1 cmd = new DynCommand1();
+        DynamicOptionsCountProvider provider = new DynamicOptionsCountProvider();
+        provider.options = getOptions();
+
+        MapProcessedCommandBuilder builder = new MapProcessedCommandBuilder();
+        builder.command(cmd);
+        // Retrieve dynamic options during completion.
+        builder.lookupAtCompletionOnly(true);
+        builder.name("dyn1");
+        builder.optionProvider(provider);
+
+        CommandRegistry registry = new AeshCommandRegistryBuilder()
+                .command(builder.create())
+                .create();
+
+        Settings settings = SettingsBuilder.builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt(""));
+        console.start();
+
+        connection.clearOutputBuffer();
+        connection.read("dyn1 --");
+        connection.read(completeChar.getFirstValue());
+        assertEquals(provider.count, 1);
     }
 
     private static List<ProcessedOption> getOptionsRequired() throws OptionParserException {
