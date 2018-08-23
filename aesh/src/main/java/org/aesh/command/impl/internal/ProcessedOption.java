@@ -78,9 +78,10 @@ public final class ProcessedOption {
     private OptionParser parser;
     private boolean cursorOption = false;
     private boolean cursorValue = false;
+    private boolean askIfNotSet = false;
 
     public ProcessedOption(char shortName, String name, String description,
-                           String argument, boolean required, char valueSeparator,
+                           String argument, boolean required, char valueSeparator, boolean askIfNotSet,
                            List<String> defaultValue, Class<?> type, String fieldName,
                            OptionType optionType, Converter converter, OptionCompleter completer,
                            OptionValidator optionValidator,
@@ -103,6 +104,7 @@ public final class ProcessedOption {
         this.completer = completer;
         this.validator = optionValidator;
         this.activator = activator;
+        this.askIfNotSet = askIfNotSet;
         if(parser != null)
             this.parser = parser;
         else
@@ -252,6 +254,10 @@ public final class ProcessedOption {
 
     public boolean getEndsWithSeparator() {
         return endsWithSeparator;
+    }
+
+    public boolean askIfNotSet() {
+        return askIfNotSet;
     }
 
     public void clear() {

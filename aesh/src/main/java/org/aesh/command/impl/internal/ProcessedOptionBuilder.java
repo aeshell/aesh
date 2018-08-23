@@ -71,6 +71,7 @@ public class ProcessedOptionBuilder {
     private OptionRenderer renderer;
     private boolean overrideRequired;
     private OptionParser parser;
+    private boolean askIfNotSet = false;
 
     private ProcessedOptionBuilder() {
         defaultValues = new ArrayList<>();
@@ -135,6 +136,10 @@ public class ProcessedOptionBuilder {
      */
     public ProcessedOptionBuilder required(boolean required) {
         return apply(c -> c.required = required);
+    }
+
+    public ProcessedOptionBuilder askIfNotSet(boolean askIfNotSet) {
+        return apply(c -> c.askIfNotSet = askIfNotSet);
     }
 
     public ProcessedOptionBuilder fieldName(String fieldName) {
@@ -332,7 +337,7 @@ public class ProcessedOptionBuilder {
         //    renderer = new NullOptionRenderer();
 
         return new ProcessedOption(shortName, name, description, argument, required,
-                valueSeparator, defaultValues, type, fieldName, optionType, converter,
+                valueSeparator, askIfNotSet, defaultValues, type, fieldName, optionType, converter,
                 completer, validator, activator, renderer, parser, overrideRequired);
     }
 }

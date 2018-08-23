@@ -75,6 +75,13 @@ public @interface Argument {
     boolean overrideRequired() default false;
 
     /**
+     * When set to true æsh will automatically prompt the user to type in a value
+     * before the command executes.
+     * If a default value has been set, it will override this setting.
+     */
+    boolean askIfNotSet() default false;
+
+    /**
      * Define a converter if the field is a type thats not java.lang and other
      * common types, eg: File,++
      * See ClConverterManager for whats added by default

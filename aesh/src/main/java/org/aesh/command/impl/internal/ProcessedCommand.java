@@ -103,7 +103,7 @@ public class ProcessedCommand<C extends Command> {
 
     public void addOption(ProcessedOption opt) throws OptionParserException {
         this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
-                opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
+                opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(),
                 opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(), opt.converter(),
                 opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(), opt.parser(), opt.doOverrideRequired()));
 
@@ -113,7 +113,7 @@ public class ProcessedCommand<C extends Command> {
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
         for(ProcessedOption opt : options) {
             this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
-                    opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(),
+                    opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(),
                     opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(),
                     opt.converter(), opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(),
                     opt.parser(), opt.doOverrideRequired()));
