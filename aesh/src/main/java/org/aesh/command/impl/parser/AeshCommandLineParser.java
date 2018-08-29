@@ -503,6 +503,9 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         }
         //else find the parsed command and clear that one
         else {
+            if(processedCommand != null)
+                processedCommand.clear();
+
             CommandLineParser parsed = parsedCommand();
             if (parsed != null)
                 parsed.clear();
