@@ -38,6 +38,7 @@ import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.AeshCommandLineCompletionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
@@ -237,6 +238,15 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
         container.getParser().parsedCommand().getCommandPopulator().populateObject(container.getParser().parsedCommand().getProcessedCommand(),
                 invocationProviders, getAeshContext(), CommandLineParser.Mode.VALIDATE);
         return container.getParser().parsedCommand().getProcessedCommand();
+    }
+
+    void populateAskedOption(ProcessedOption option) {
+        try {
+            option.injectValueIntoField(option.parent().getCommand(), invocationProviders, getAeshContext(), false);
+        }
+        catch(OptionValidatorException e) {
+            LOGGER.log(Level.WARNING, "Trying to inject value: "+option.getValue()+", into option: "+option.name()+" failed", e);
+        }
     }
 
     @Override

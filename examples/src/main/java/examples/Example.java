@@ -135,6 +135,7 @@ public class Example {
                 .command(TestConsoleCommand.class)
                 .command(PromptCommand.class)
                 .command(RunCommand.class)
+                .command(AskCommand.class)
                 .command(ClearCommand.class)
                 .command(GroupCommand.class)
                 .command(LongOutputCommand.class)
@@ -349,6 +350,26 @@ public class Example {
                         commandInvocation.getShell().writeln(f.toString());
                 }
             }
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "ask", description = "")
+    public static class AskCommand implements Command {
+
+        @Option(askIfNotSet = true)
+        private String path;
+
+        @Arguments(askIfNotSet = true)
+        private List<String> args;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+
+            commandInvocation.println("path is set to: "+path);
+            if(args != null && args.size() > 0)
+            commandInvocation.println("args[0] is: "+args.get(0));
+
             return CommandResult.SUCCESS;
         }
     }

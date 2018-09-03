@@ -148,6 +148,7 @@ public class ProcessedCommand<C extends Command> {
 
     public void setArguments(ProcessedOption arguments) {
         this.arguments = arguments;
+        this.arguments.setParent(this);
     }
 
     public CommandPopulator<Object, C> getCommandPopulator() {
@@ -355,6 +356,32 @@ public class ProcessedCommand<C extends Command> {
     }
 
     /**
+     * @return returns true if the command has any options with askIfNotSet to true
+     * and its value is not set.
+     */
+    public boolean hasAskIfNotSet() {
+        for(ProcessedOption opt : getOptions()) {
+            if(opt.askIfNotSet() && opt.hasValue() && opt.getValues().isEmpty() && !opt.hasDefaultValue())
+                return true;
+        }
+        return false;
+    }
+
+    public List<ProcessedOption> getAllAskIfNotSet() {
+       List<ProcessedOption>  options = new ArrayList<>();
+        for(ProcessedOption opt : getOptions()) {
+            if(opt.askIfNotSet() && opt.hasValue() && opt.getValues().isEmpty() && !opt.hasDefaultValue())
+                options.add(opt);
+        }
+        if(argument != null && argument.askIfNotSet() && argument.hasValue() && argument.getValues().isEmpty() && !argument.hasDefaultValue())
+            options.add(argument);
+        if(arguments != null && arguments.askIfNotSet() && arguments.hasValue() && arguments.getValues().isEmpty() && !arguments.hasDefaultValue())
+            options.add(arguments);
+
+        return options;
+    }
+
+    /**
      * Returns a description String based on the defined command and options.
      * Useful when printing "help" info etc.
      *
@@ -488,6 +515,7 @@ public class ProcessedCommand<C extends Command> {
 
     public void setArgument(ProcessedOption arg) {
         this.argument = arg;
+        this.argument.setParent(this);
     }
 
     public ProcessedOption getArgument() {

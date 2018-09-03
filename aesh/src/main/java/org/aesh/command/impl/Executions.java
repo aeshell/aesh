@@ -25,6 +25,7 @@ import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Executable;
 import org.aesh.command.Execution;
+import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
@@ -51,6 +52,7 @@ import org.aesh.io.PipelineResource;
 import org.aesh.io.Resource;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.AeshContext;
+import org.aesh.readline.Prompt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -132,6 +134,25 @@ class Executions {
                 if (hasRedirectIn()) {
                     result = CommandResult.FAILURE;
                     throw new CommandException("Can't inject both from input and pipe operators");
+                }
+            }
+
+            if(cmd.hasAskIfNotSet()) {
+                for(ProcessedOption option : cmd.getAllAskIfNotSet()) {
+                    try {
+                        if(option.getOptionType().equals(OptionType.ARGUMENT) ||
+                                   option.getOptionType().equals(OptionType.ARGUMENTS))
+                            option.addValue(getCommandInvocation().getShell().readLine(
+                                    new Prompt("Argument(s) is not set, please provide a value: ")));
+                        else
+                            option.addValue(getCommandInvocation().getShell().readLine(
+                                    new Prompt("Option "+option.name()+", is not set, please provide a value: ")));
+
+                        runtime.populateAskedOption(option);
+                    }
+                    catch(InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 

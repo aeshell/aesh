@@ -56,9 +56,8 @@ public final class AeshCommandInvocation<C extends Command<AeshCommandInvocation
         this.runtime = runtime;
         this.config = config;
         //if we have output redirection, use output delegate
-        if (getConfiguration().getOutputRedirection() != null) {
-            this.shell = new ShellOutputDelegate(shell,
-                    getConfiguration().getOutputRedirection());
+        if (getConfiguration() != null && getConfiguration().getOutputRedirection() != null) {
+            this.shell = new ShellOutputDelegate(shell, getConfiguration().getOutputRedirection());
         }
         //use default shell for no redirections
         else

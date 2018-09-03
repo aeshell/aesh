@@ -437,7 +437,6 @@ public final class ProcessedOption {
         } catch (NoSuchFieldException | IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
         }
-
     }
 
     public void updateInvocationProviders(InvocationProviders invocationProviders) {
