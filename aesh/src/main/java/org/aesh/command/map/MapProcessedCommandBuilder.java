@@ -92,6 +92,16 @@ public class MapProcessedCommandBuilder {
         }
 
         @Override
+        public boolean hasAskIfNotSet() {
+            for (ProcessedOption opt : getOptions(false)) {
+                if (opt.askIfNotSet() && opt.hasValue() && opt.getValues().isEmpty() && !opt.hasDefaultValue()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
         public ProcessedOption searchAllOptions(String input) {
             if (!initialized) {
                 return super.searchAllOptions(input);
