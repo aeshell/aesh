@@ -107,7 +107,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     private boolean echoCtrl = true;
     private Consumer<Void> interruptHandler;
     private String[] scanPackages;
-
+    private boolean enableSearchPaging;
     SettingsImpl() {
     }
 
@@ -156,6 +156,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
         redrawPromptOnInterrupt(baseSettings.isRedrawPromptOnInterrupt());
         setInterruptHandler(baseSettings.getInterruptHandler());
         setScanForCommandPackages(baseSettings.getScanForCommandPackages());
+        setEnableSearchInPaging(baseSettings.enableSearchInPaging());
     }
 
     public void resetToDefaults() {
@@ -784,5 +785,15 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     @Override
     public String[] getScanForCommandPackages() {
         return scanPackages;
+    }
+
+    @Override
+    public void setEnableSearchInPaging(boolean enable) {
+        enableSearchPaging = enable;
+    }
+
+    @Override
+    public boolean enableSearchInPaging() {
+        return enableSearchPaging;
     }
 }

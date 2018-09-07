@@ -123,6 +123,7 @@ public class Example {
                 .enableMan(true)
                 .enableAlias(true)
                 .enableExport(true)
+                .enableSearchInPaging(true)
                 .setExecuteFileAtStart(new FileResource(
                         Config.getHomeDir()+Config.getPathSeparator()+".aeshrc"))
                 .readInputrc(false);
@@ -139,6 +140,7 @@ public class Example {
                 .command(ClearCommand.class)
                 .command(GroupCommand.class)
                 .command(LongOutputCommand.class)
+                .command(ReadlineCommand.class)
                 //example on how to build a command with a simple lambda
                 .command(new CommandBuilder().name("quit").command(commandInvocation -> {
                     commandInvocation.stop();
@@ -438,6 +440,27 @@ public class Example {
                 shell.writeln(Config.getLineSeparator()+"you chickened out!!");
         }
 
+    }
+
+    @CommandDefinition(name = "readline", description = "")
+    public static class ReadlineCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            String msg;
+            try {
+                msg = commandInvocation.inputLine(new Prompt("Type something:"));
+            } catch (InterruptedException e) {
+                commandInvocation.println("Interrupted!");
+                return CommandResult.FAILURE;
+            }
+            if (msg == null) {
+                commandInvocation.println("Exit expected, leaving");
+            } else {
+                commandInvocation.println("Typed message:" + msg);
+            }
+            return CommandResult.SUCCESS;
+        }
     }
 
     public static class LessCompleter implements OptionCompleter {

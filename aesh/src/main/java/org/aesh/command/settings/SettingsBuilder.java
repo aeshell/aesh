@@ -266,6 +266,10 @@ public class SettingsBuilder {
         return apply(c -> c.settings.setScanForCommandPackages(packages));
     }
 
+    public SettingsBuilder enableSearchInPaging(boolean enable) {
+        return apply(c -> c.settings.setEnableSearchInPaging(enable));
+    }
+
     public Settings<? extends Command<? extends CommandInvocation>,? extends CommandInvocation,
             ? extends ConverterInvocation, ? extends CompleterInvocation,
             ? extends ValidatorInvocation, ? extends OptionActivator,

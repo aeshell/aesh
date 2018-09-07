@@ -292,4 +292,8 @@ public interface Settings<C extends Command<CI>, CI extends CommandInvocation,
     void setScanForCommandPackages(String... packages);
 
     String[] getScanForCommandPackages();
+
+    void setEnableSearchInPaging(boolean enable);
+
+    boolean enableSearchInPaging();
 }
