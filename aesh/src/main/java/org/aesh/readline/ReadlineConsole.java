@@ -377,7 +377,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     private CommandRuntime<? extends Command<? extends CommandInvocation>,? extends CommandInvocation> generateRuntime() {
-        shell = new ShellImpl(connection, readline);
+        shell = new ShellImpl(connection, readline, settings.enableSearchInPaging());
         return AeshCommandRuntimeBuilder.builder()
                 .settings(settings)
                 .commandInvocationBuilder(new AeshCommandInvocationBuilder(shell, this))
