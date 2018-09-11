@@ -67,11 +67,20 @@ public class LineParserTest {
     @Test
     public void testFindClosestWholeWordToCursor() {
         LineParser lineParser = new LineParser();
-        assertEquals("foo", lineParser.parseLine("ls  foo bar", 6).selectedWord().word());
+        ParsedLine line = lineParser.parseLine("ls  foo bar", 6);
+        assertEquals("foo", line.selectedWord().word());
+        assertFalse(line.isCursorAtEndOfSelectedWord());
 
         assertEquals("", lineParser.parseLine(" ", 1).selectedWord().word());
-        assertEquals("foo", lineParser.parseLine("foo bar", 1).selectedWord().word());
-        assertEquals("foo", lineParser.parseLine("foo bar", 3).selectedWord().word());
+
+        line = lineParser.parseLine("foo bar", 1);
+        assertEquals("foo", line.selectedWord().word());
+        assertFalse(line.isCursorAtEndOfSelectedWord());
+
+        line = lineParser.parseLine("foo bar", 3);
+        assertEquals("foo", line.selectedWord().word());
+        assertTrue(line.isCursorAtEndOfSelectedWord());
+
         assertEquals("foobar", lineParser.parseLine("foobar", 6).selectedWord().word());
         assertEquals("foobar", lineParser.parseLine("foobar", 2).selectedWord().word());
         assertEquals("", lineParser.parseLine("ls  ", 3).selectedWord().word());
@@ -79,7 +88,9 @@ public class LineParserTest {
         assertEquals("o", lineParser.parseLine("ls o org/jboss/aeshell/Shell.class", 4).selectedWord().word());
         assertEquals("", lineParser.parseLine("ls  org/jboss/aeshell/Shell.class", 3).selectedWord().word());
 
-        assertEquals("foo", lineParser.parseLine("foo bar foo", 3).selectedWord().word());
+        line = lineParser.parseLine("foo bar foo", 3);
+        assertEquals("foo", line.selectedWord().word());
+        assertTrue(line.isCursorAtEndOfSelectedWord());
     }
 
     @Test

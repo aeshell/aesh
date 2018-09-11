@@ -184,6 +184,10 @@ public class ParsedLine {
                     originalInput.charAt(originalInput.length()-1) == ' ');
     }
 
+    public boolean isCursorAtEndOfSelectedWord() {
+        return cursor() == (selectedWord().lineIndex()+selectedWord().word().length());
+    }
+
     @Override
     public String toString() {
         return "ParsedLine{" +

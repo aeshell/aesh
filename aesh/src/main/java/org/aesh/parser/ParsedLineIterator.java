@@ -184,7 +184,11 @@ public class ParsedLineIterator {
         return word == parsedLine.selectedIndex();
     }
 
-    public ParsedLine baseLine() {
+    public boolean isCurrentWordCursorWord() {
+        return (word -1) == parsedLine.selectedIndex();
+    }
+
+   public ParsedLine baseLine() {
         return parsedLine;
     }
 
