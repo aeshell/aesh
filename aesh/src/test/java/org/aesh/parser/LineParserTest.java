@@ -121,6 +121,17 @@ public class LineParserTest {
         assertEquals(1, line.cursor());
         assertEquals("", line.selectedWord().word());
 
+        line = lineParser.parseLine("123", 2);
+        assertEquals(2, line.wordCursor());
+        assertEquals(2, line.cursor());
+        assertEquals("123", line.selectedWord().word());
+
+        line = lineParser.parseLine("1\\ ", 2);
+        assertEquals(2, line.wordCursor());
+        assertEquals(2, line.cursor());
+        assertEquals("1 ", line.selectedWord().word());
+
+
         line = lineParser.parseLine("   foo bar\\ baz 12345 ", 5);
         assertEquals("foo", line.words().get(0).word());
         assertEquals("bar baz", line.words().get(1).word());
@@ -146,13 +157,19 @@ public class LineParserTest {
         assertEquals("cd", line.words().get(0).word());
         assertEquals("A ", line.words().get(1).word());
         assertEquals("A ", line.selectedWord().word());
-        assertEquals(1, line.wordCursor());
+        assertEquals(2, line.wordCursor());
 
         line = lineParser.parseLine("cd A\\", 4);
         assertEquals("cd", line.words().get(0).word());
         assertEquals("A\\", line.words().get(1).word());
         assertEquals("A\\", line.selectedWord().word());
         assertEquals(1, line.wordCursor());
+
+        line = lineParser.parseLine("test one! bar\\ 2", 15);
+        assertEquals(2, line.selectedIndex());
+
+        line = lineParser.parseLine("test one! bar\\ 2\\ ", 17);
+        assertEquals(2, line.selectedIndex());
 
         line = lineParser.parseLine("ls --files /tmp/A\\ ");
         assertEquals("ls", line.words().get(0).word());

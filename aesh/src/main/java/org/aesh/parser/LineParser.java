@@ -125,10 +125,13 @@ public class LineParser {
             //if the previous char was a space, there is no word "connected" to cursor
             if(cursor == index && (prev != SPACE_CHAR || haveEscape)) {
                 cursorWord = textList.size();
-                wordCursor = builder.length();
+                if(haveEscape) //if we have escape the builder is shorter than cursor
+                    wordCursor = builder.length()+1;
+                else
+                    wordCursor = builder.length();
             }
             if (c == SPACE_CHAR) {
-                handleSpace(c);
+                c = handleSpace(c);
             }
             else if (c == BACK_SLASH) {
                 if (haveEscape || ternaryQuote || haveDoubleQuote || haveSingleQuote) {
@@ -187,7 +190,7 @@ public class LineParser {
                 wordCursor = builder.length();
             }
             if (c == SPACE_CHAR) {
-                handleSpace(c);
+                c = handleSpace(c);
             }
             else if (c == BACK_SLASH) {
                 if (haveEscape || ternaryQuote || haveDoubleQuote || haveSingleQuote) {
@@ -395,10 +398,12 @@ public class LineParser {
             haveSingleQuote = true;
     }
 
-    private void handleSpace(char c) {
+    private char handleSpace(char c) {
         if (haveEscape) {
             builder.append(c);
             haveEscape = false;
+            //since we escape it, we need to set it to a different value other than space
+            c = NULL_CHAR;
         }
         else if (haveSingleQuote || haveDoubleQuote || haveCurlyBracket) {
             builder.append(c);
@@ -407,6 +412,8 @@ public class LineParser {
             textList.add(new ParsedWord(builder.toString(), index-builder.length()));
             builder = new StringBuilder();
         }
+
+        return c;
     }
 
     private void handleFoundOperator(List<ParsedLine> lines, String text, int cursor) {
