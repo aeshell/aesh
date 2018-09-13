@@ -791,24 +791,24 @@ public class AeshCommandCompletionTest {
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
-        connection.read("arg --input= ");
+        connection.read("arg --input=foo");
         connection.read(Key.CTRL_A);
         connection.read(Key.META_f);
         connection.read(Key.BACKSPACE); //buffer should not be:" ar<cursor> --input= "
         connection.clearOutputBuffer();
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("g --input= ");
+        connection.assertBuffer("g --input=foo  --input=foo");
 
         connection.read(enter.getFirstValue());
         connection.clearOutputBuffer();
 
-        connection.read("git reb --force ");
+        connection.read("git reb --force");
         connection.read(Key.CTRL_A);
         connection.read(Key.META_f);
         connection.read(Key.META_f);
         connection.clearOutputBuffer();
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("ase --force ");
+        connection.assertBuffer("ase --force  --force");
 
         console.stop();
     }

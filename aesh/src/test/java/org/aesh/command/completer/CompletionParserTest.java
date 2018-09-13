@@ -92,7 +92,7 @@ public class CompletionParserTest {
         assertEquals("-", co.getFormattedCompletionCandidates().get(0));
         assertEquals("foo", clp.getCommand().X);
 
-        co = new AeshCompleteOperation(aeshContext, "test --foo", 10);
+        co = new AeshCompleteOperation(aeshContext, "test --foo", 9);
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("=", co.getFormattedCompletionCandidates().get(0));
@@ -109,7 +109,7 @@ public class CompletionParserTest {
         assertEquals("true", co.getFormattedCompletionCandidates().get(0));
         assertEquals("false", co.getFormattedCompletionCandidates().get(1));
 
-        co = new AeshCompleteOperation(aeshContext, "test -f ", 10);
+        co = new AeshCompleteOperation(aeshContext, "test -f ", 7);
         clp.complete(co, ip);
         assertEquals(2, co.getFormattedCompletionCandidates().size());
         assertEquals("true", co.getFormattedCompletionCandidates().get(0));
@@ -131,13 +131,13 @@ public class CompletionParserTest {
         assertEquals("true", co.getFormattedCompletionCandidates().get(0));
         assertEquals("false", co.getFormattedCompletionCandidates().get(1));
 
-        co = new AeshCompleteOperation(aeshContext, "test -f=", 10);
+        co = new AeshCompleteOperation(aeshContext, "test -f=", 7);
         clp.complete(co, ip);
         assertEquals(2, co.getFormattedCompletionCandidates().size());
         assertEquals("true", co.getFormattedCompletionCandidates().get(0));
         assertEquals("false", co.getFormattedCompletionCandidates().get(1));
 
-        co = new AeshCompleteOperation(aeshContext, "test --foo=f", 10);
+        co = new AeshCompleteOperation(aeshContext, "test --foo=f", 12);
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("alse", co.getFormattedCompletionCandidates().get(0));
@@ -152,21 +152,25 @@ public class CompletionParserTest {
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("plex-value=", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test --complex-value", 10);
+        co = new AeshCompleteOperation(aeshContext, "test --complex-value", 20);
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("=", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test --complex-value=", 10);
+        co = new AeshCompleteOperation(aeshContext, "test --complex-value=", 21);
         clp.complete(co, ip);
         assertEquals(0, co.getFormattedCompletionCandidates().size());
 
-        co = new AeshCompleteOperation(aeshContext, "test --complex-value=\'foo\\ bar bar' ", 10);
+        co = new AeshCompleteOperation(aeshContext, "test --complex-value=\'foo\\ bar bar' ", 36);
         clp.complete(co, ip);
         assertEquals(2, co.getFormattedCompletionCandidates().size());
         assertEquals("foo\\ bar bar", clp.getCommand().complexValue);
 
         co = new AeshCompleteOperation(aeshContext, "test XX", 10);
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+
+        co = new AeshCompleteOperation(aeshContext, "test -e=foo", 10);
         clp.complete(co, ip);
         assertEquals(0, co.getFormattedCompletionCandidates().size());
 
@@ -215,17 +219,17 @@ public class CompletionParserTest {
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("AR!", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test one! bar", 14);
+        co = new AeshCompleteOperation(aeshContext, "test one! bar", 13);
         clp2.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("\\ 2\\ 3", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test one! bar\\ 2", 14);
+        co = new AeshCompleteOperation(aeshContext, "test one! bar\\ 2", 15);
         clp2.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("\\ 3", co.getFormattedCompletionCandidates().get(0));
 
-        co = new AeshCompleteOperation(aeshContext, "test one! bar\\ 2\\ ", 16);
+        co = new AeshCompleteOperation(aeshContext, "test one! bar\\ 2\\ ", 17);
         clp2.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("3", co.getFormattedCompletionCandidates().get(0));
