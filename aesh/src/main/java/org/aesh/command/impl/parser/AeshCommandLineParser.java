@@ -365,12 +365,12 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
             }
         }
         else {
-            while(iter.hasNextWord()) {
-                try {
+            try {
+                while(iter.hasNextWord()) {
                     //first check if we have passed the selected word, if so lets stop
                     if(iter.baseLine().selectedIndex() > -1 &&
-                            iter.pastCursorWord() &&
-                            processedCommand.completeStatus() != null)
+                               iter.pastCursorWord() &&
+                               processedCommand.completeStatus() != null)
                         return;
                     ParsedWord word = iter.peekParsedWord();
                     lastParsedOption = processedCommand.searchAllOptions(word.word());
@@ -378,7 +378,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                         //if current word is cursor word, we need to check if the current option name
                         //might be part of another option name: eg: list and listFolders
                         if (iter.isNextWordCursorWord() && !word.word().contains("=")
-                                && processedCommand.findPossibleLongNames(word.word()).size() > 1) {
+                                    && processedCommand.findPossibleLongNames(word.word()).size() > 1) {
                             processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
                             iter.pollParsedWord();
                         }
@@ -432,11 +432,11 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                         iter.pollParsedWord();
                     }
                 }
-                catch (OptionParserException e) {
-                    //TODO: needs to be improved
-                    //ignored for now
-                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
-                }
+            }
+            catch (OptionParserException e) {
+                //TODO: needs to be improved
+                //ignored for now
+                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
             }
         }
     }
