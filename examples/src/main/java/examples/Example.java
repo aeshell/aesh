@@ -251,7 +251,7 @@ public class Example {
     public static class TestConsoleCommand implements Command {
 
         @Option(hasValue = false, required = true)
-        private boolean bar;
+        private boolean verbose;
 
         @Option(hasValue = false)
         private boolean barbar;

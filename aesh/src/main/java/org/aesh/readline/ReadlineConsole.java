@@ -234,16 +234,11 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
         if(running) {
             readline.readline(conn, prompt, line -> {
-                // Ctrl-D
-                if (line == null) {
-                    conn.write("logout\n").close();
-                    return;
-                }
-
-                if (line.trim().length() > 0) {
+                if (line != null && line.trim().length() > 0) {
                     shell.startCollectOutput();
                     processLine(line, conn);
-                } else
+                }
+                else
                     read(conn, readline);
             }, completions, preProcessors, history, null, readlineFlags);
         }
