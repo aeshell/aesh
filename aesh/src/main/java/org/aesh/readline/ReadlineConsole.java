@@ -104,8 +104,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
    private final EnumMap<ReadlineFlag, Integer> readlineFlags = new EnumMap<>(ReadlineFlag.class);
 
-   public ReadlineConsole(Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation, ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator, ? extends CommandActivator> givenSettings) {
-        LoggerUtil.doLog();
+    public ReadlineConsole(Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation, ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator, ? extends CommandActivator> givenSettings) {
         if(givenSettings == null)
             settings = SettingsBuilder.builder().build();
         else

@@ -210,6 +210,7 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
     public Executor<CI> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException, OptionValidatorException,
             CommandValidatorException, IOException {
+        LOGGER.fine("Command: " + line);
         List<ParsedLine> lines = new LineParser().parseLine(line, -1, parseBrackets, operators);
         List<Execution<CI>> executions = Executions.buildExecution(lines, this);
         return new Executor<>(executions);
