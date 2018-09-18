@@ -89,6 +89,7 @@ public class AeshCommandRegistryTest {
                 .commandRegistry(registry)
                 .connection(connection)
                 .enableExport(false)
+                .enableAlias(false)
                 .logging(true)
                 .build();
 
@@ -148,6 +149,7 @@ public class AeshCommandRegistryTest {
                 .commandRegistry(registry)
                 .setPersistExport(false)
                 .enableExport(false)
+                .enableAlias(false)
                 .logging(true)
                 .build();
 
@@ -206,6 +208,7 @@ public class AeshCommandRegistryTest {
                  .commandRegistry(registry)
                  .connection(connection)
                  .enableExport(false)
+                 .enableAlias(false)
                  .logging(true)
                  .build();
 

@@ -26,6 +26,7 @@ import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.alias.AliasCommand;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.converter.ConverterInvocation;
@@ -49,6 +50,9 @@ import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.io.scanner.AnnotationDetector;
 import org.aesh.io.scanner.CommandDefinitionReporter;
+import org.aesh.readline.alias.AliasCompletion;
+import org.aesh.readline.alias.AliasManager;
+import org.aesh.readline.alias.AliasPreProcessor;
 import org.aesh.readline.completion.Completion;
 import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.readline.history.FileHistory;
@@ -79,6 +83,7 @@ import java.util.logging.Logger;
  */
 public class ReadlineConsole implements Console, Consumer<Connection> {
 
+    private AliasManager aliasManager;
     private Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation,
         ? extends ConverterInvocation, ? extends CompleterInvocation,
         ? extends ValidatorInvocation, ? extends OptionActivator,
@@ -132,6 +137,25 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                 catch (CommandLineParserException e) {
                     e.printStackTrace();
                 }
+            }
+        }
+       if(this.settings.aliasEnabled()) {
+           try {
+               aliasManager = new AliasManager(settings.aliasFile(), settings.persistAlias());
+               preProcessors.add(new AliasPreProcessor(aliasManager));
+               completions.add(new AliasCompletion(aliasManager));
+               if(commandResolver.getRegistry() != null &&
+                          commandResolver.getRegistry() instanceof MutableCommandRegistry) {
+                   try {
+                       ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new AliasCommand(aliasManager));
+                   }
+                   catch (CommandLineParserException e) {
+                       e.printStackTrace();
+                   }
+               }
+           }
+           catch(IOException e) {
+                e.printStackTrace();
             }
         }
 
