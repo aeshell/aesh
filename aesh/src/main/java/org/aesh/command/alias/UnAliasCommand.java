@@ -54,12 +54,10 @@ public class UnAliasCommand implements Command<CommandInvocation> {
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
         if(arguments == null || arguments.size() == 0) {
-            String out = manager.printAllAliases();
-            if(out != null && out.length() > 0)
-                commandInvocation.println(out);
+            commandInvocation.println(manager.unaliasUsage());
         }
         else if(arguments.size() == 1) {
-            String out = manager.parseAlias("unalias " + arguments.get(0));
+            String out = manager.removeAlias("unalias " + arguments.get(0));
             if(out != null && out.length() > 0)
                 commandInvocation.println(out);
         }
