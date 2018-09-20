@@ -41,7 +41,7 @@ public class Executor<T extends CommandInvocation> {
         this.executions = Collections.unmodifiableList(executions);
     }
 
-    public void execute() throws CommandException, CommandValidatorException, InterruptedException {
+    public void execute() throws CommandException, CommandValidatorException, InterruptedException, RuntimeException {
         Execution<T> exec;
         while ((exec = getNextExecution()) != null) {
             exec.execute();

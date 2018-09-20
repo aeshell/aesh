@@ -29,6 +29,7 @@ import org.aesh.terminal.Connection;
 import org.aesh.readline.util.LoggerUtil;
 
 import java.util.function.Consumer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -82,7 +83,8 @@ public class Process extends Thread implements Consumer<Signal> {
             // Ctlr-C interrupt
         }
         catch (Exception e) {
-            e.printStackTrace();
+            conn.write(e.getMessage()+ Config.getLineSeparator());
+            LOGGER.log(Level.WARNING, "Uncaught exception when executing the command: "+execution.getCommand().toString(), e);
         }
         finally {
             running = false;

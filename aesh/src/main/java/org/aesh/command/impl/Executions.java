@@ -168,14 +168,21 @@ class Executions {
                 if (result == null) {
                     result = CommandResult.SUCCESS;
                 }
-            } catch (CommandException ex) {
+            }
+            catch (CommandException ex) {
                 result = CommandResult.FAILURE;
                 throw ex;
-            } catch (InterruptedException ex) {
+            }
+            catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
                 result = CommandResult.FAILURE;
                 throw ex;
-            } finally {
+            }
+            catch(Exception e) {
+                result = CommandResult.FAILURE;
+                throw new RuntimeException(e);
+            }
+            finally {
                 if (invocationConfiguration.getOutputRedirection() != null) {
                     try {
                         invocationConfiguration.getOutputRedirection().close();
