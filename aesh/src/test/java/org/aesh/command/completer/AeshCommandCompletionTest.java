@@ -75,6 +75,7 @@ public class AeshCommandCompletionTest {
 
         Settings settings = SettingsBuilder.builder()
                 .logging(true)
+                .enableAlias(false)
                 .connection(connection)
                 .commandRegistry(registry)
                 .build();
@@ -824,6 +825,7 @@ public class AeshCommandCompletionTest {
 
          Settings settings = SettingsBuilder.builder()
                  .logging(true)
+                 .enableAlias(false)
                  .connection(connection)
                  .commandRegistry(registry)
                  .build();

@@ -72,6 +72,11 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
+            public boolean contains(String commandName) {
+                return false;
+            }
+
+            @Override
             public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
                 return Collections.emptyList();
             }
@@ -128,6 +133,11 @@ public class AeshCommandRegistryTest {
             @Override
             public Set<String> getAllCommandNames() {
                 return null;
+            }
+
+            @Override
+            public boolean contains(String commandName) {
+                return false;
             }
 
             @Override
@@ -190,7 +200,12 @@ public class AeshCommandRegistryTest {
                 return new HashSet<>();
            }
 
-            @Override
+           @Override
+           public boolean contains(String commandName) {
+               return false;
+           }
+
+           @Override
             public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
                 return Collections.emptyList();
            }

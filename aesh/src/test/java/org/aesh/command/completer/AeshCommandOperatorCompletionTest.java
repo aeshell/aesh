@@ -52,6 +52,7 @@ public class AeshCommandOperatorCompletionTest {
                  .commandRegistry(registry)
                  .enableOperatorParser(true)
                  .enableExport(false)
+                 .enableAlias(false)
                  .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -79,6 +80,7 @@ public class AeshCommandOperatorCompletionTest {
                  .commandRegistry(registry)
                  .enableOperatorParser(true)
                  .enableExport(false)
+                 .enableAlias(false)
                  .build();
 
          final Path tempDir = temporaryFolder.getRoot().toPath();
@@ -124,6 +126,7 @@ public class AeshCommandOperatorCompletionTest {
                  .commandRegistry(registry)
                  .enableOperatorParser(true)
                  .enableExport(false)
+                 .enableAlias(false)
                  .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);

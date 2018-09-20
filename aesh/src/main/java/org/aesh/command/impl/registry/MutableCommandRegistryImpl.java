@@ -146,6 +146,14 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
         }
     }
 
+    @Override
+    public boolean contains(String commandName) {
+        if (registry.containsKey(commandName) || aliases.containsKey(commandName))
+            return true;
+
+        return false;
+    }
+
     private void putIntoRegistry(CommandContainer<C,CI> commandContainer) {
         if (!commandContainer.haveBuildError()
                 && !contains(commandContainer.getParser().getProcessedCommand())) {
@@ -172,6 +180,8 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
         }
         return false;
     }
+
+
 
     @Override
     public void removeCommand(String name) {

@@ -100,4 +100,6 @@ public interface CommandRegistry<C extends Command<CI>,CI extends CommandInvocat
      * @return all specified command names
      */
     Set<String> getAllCommandNames();
+
+    boolean contains(String commandName);
 }
