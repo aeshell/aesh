@@ -40,6 +40,7 @@ import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.io.FileResource;
 import org.aesh.readline.DefaultAeshContext;
+import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.terminal.Connection;
@@ -108,6 +109,8 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     private Consumer<Void> interruptHandler;
     private String[] scanPackages;
     private boolean enableSearchPaging;
+    private AliasManager aliasManager;
+
     SettingsImpl() {
     }
 
@@ -157,6 +160,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
         setInterruptHandler(baseSettings.getInterruptHandler());
         setScanForCommandPackages(baseSettings.getScanForCommandPackages());
         setEnableSearchInPaging(baseSettings.enableSearchInPaging());
+        setAliasManager(baseSettings.aliasManager());
     }
 
     public void resetToDefaults() {
@@ -176,6 +180,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
         disableCompletion = false;
         setQuitHandler(null);
         setAliasEnabled(true);
+        aliasManager = null;
     }
 
     /**
@@ -515,6 +520,15 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     @Override
     public boolean persistAlias() {
         return persistAlias;
+    }
+
+    @Override
+    public AliasManager aliasManager() {
+        return aliasManager;
+    }
+
+    public void setAliasManager(AliasManager aliasManager) {
+        this.aliasManager = aliasManager;
     }
 
     public void setQuitHandler(QuitHandler qh) {

@@ -143,7 +143,10 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         }
        if(this.settings.aliasEnabled()) {
            try {
-               aliasManager = new AeshAliasManager(settings.aliasFile(), settings.persistAlias(), commandResolver.getRegistry());
+               if(this.settings.aliasManager() != null)
+                   aliasManager = this.settings.aliasManager();
+               else
+                   aliasManager = new AeshAliasManager(settings.aliasFile(), settings.persistAlias(), commandResolver.getRegistry());
                preProcessors.add(new AliasPreProcessor(aliasManager));
                completions.add(new AliasCompletion(aliasManager, false));
                if(commandResolver.getRegistry() != null &&

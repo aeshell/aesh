@@ -38,6 +38,7 @@ import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.io.Resource;
 import org.aesh.readline.AeshContext;
+import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.terminal.Connection;
 
@@ -155,6 +156,14 @@ public interface Settings<C extends Command<CI>, CI extends CommandInvocation,
      * Is alias persisted
      */
     boolean persistAlias();
+
+    /**
+     * If a custom AliasManager is needed, this will be used
+     * Note: Only set this if you know what you're doing.
+     *
+     * @return custom AliasManager
+     */
+    AliasManager aliasManager();
 
     /**
      * Get quit handler

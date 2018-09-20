@@ -40,6 +40,7 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.io.Resource;
+import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.terminal.Connection;
 import org.aesh.readline.util.LoggerUtil;
@@ -152,6 +153,10 @@ public class SettingsBuilder {
 
     public SettingsBuilder persistAlias(boolean persistAlias) {
         return apply(c -> c.settings.setPersistAlias(persistAlias));
+    }
+
+    public SettingsBuilder aliasManager(AliasManager aliasManager) {
+        return apply(c -> c.settings.setAliasManager(aliasManager));
     }
 
     public SettingsBuilder quitHandler(QuitHandler quitHandler) {
