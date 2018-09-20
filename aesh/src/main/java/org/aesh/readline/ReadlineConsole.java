@@ -26,7 +26,9 @@ import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.alias.AeshAliasManager;
 import org.aesh.command.alias.AliasCommand;
+import org.aesh.command.alias.UnAliasCommand;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.converter.ConverterInvocation;
@@ -141,13 +143,14 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         }
        if(this.settings.aliasEnabled()) {
            try {
-               aliasManager = new AliasManager(settings.aliasFile(), settings.persistAlias());
+               aliasManager = new AeshAliasManager(settings.aliasFile(), settings.persistAlias(), commandResolver.getRegistry());
                preProcessors.add(new AliasPreProcessor(aliasManager));
-               completions.add(new AliasCompletion(aliasManager));
+               completions.add(new AliasCompletion(aliasManager, false));
                if(commandResolver.getRegistry() != null &&
                           commandResolver.getRegistry() instanceof MutableCommandRegistry) {
                    try {
                        ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new AliasCommand(aliasManager));
+                       ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new UnAliasCommand(aliasManager));
                    }
                    catch (CommandLineParserException e) {
                        e.printStackTrace();

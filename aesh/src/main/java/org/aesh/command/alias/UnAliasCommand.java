@@ -35,8 +35,8 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-@CommandDefinition(name = "alias", aliases = {"unalias"}, description = "")
-public class AliasCommand implements Command<AeshCommandInvocation>{
+@CommandDefinition(name = "unalias", description = "")
+public class UnAliasCommand implements Command<AeshCommandInvocation> {
 
    @Option(shortName = 'p', hasValue = false, description = "display help information")
     private boolean print;
@@ -47,7 +47,7 @@ public class AliasCommand implements Command<AeshCommandInvocation>{
 
     private final AliasManager manager;
 
-    public AliasCommand(AliasManager manager) {
+    public UnAliasCommand(AliasManager manager) {
         this.manager = manager;
     }
 
@@ -63,7 +63,7 @@ public class AliasCommand implements Command<AeshCommandInvocation>{
                 commandInvocation.println(out);
         }
         else if(arguments.size() == 1) {
-            String out = manager.parseAlias("alias " + arguments.get(0));
+            String out = manager.parseAlias("unalias " + arguments.get(0));
             if(out != null && out.length() > 0)
                 commandInvocation.println(out);
         }
