@@ -25,7 +25,7 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
-import org.aesh.command.impl.invocation.AeshCommandInvocation;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Arguments;
 import org.aesh.readline.alias.AliasManager;
 
@@ -35,7 +35,7 @@ import java.util.List;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 @CommandDefinition(name = "unalias", description = "remove an alias")
-public class UnAliasCommand implements Command<AeshCommandInvocation> {
+public class UnAliasCommand implements Command<CommandInvocation> {
 
     @Arguments(completer = AliasCompletor.class)
     private List<String> arguments;
@@ -52,7 +52,7 @@ public class UnAliasCommand implements Command<AeshCommandInvocation> {
     }
 
     @Override
-    public CommandResult execute(AeshCommandInvocation commandInvocation) throws CommandException, InterruptedException {
+    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
         if(arguments == null || arguments.size() == 0) {
             String out = manager.printAllAliases();
             if(out != null && out.length() > 0)

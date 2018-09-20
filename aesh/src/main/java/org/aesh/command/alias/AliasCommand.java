@@ -25,7 +25,7 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
-import org.aesh.command.impl.invocation.AeshCommandInvocation;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.readline.alias.AliasManager;
@@ -36,7 +36,7 @@ import java.util.List;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 @CommandDefinition(name = "alias", aliases = {"unalias"}, description = "")
-public class AliasCommand implements Command<AeshCommandInvocation>{
+public class AliasCommand implements Command<CommandInvocation>{
 
    @Option(shortName = 'p', hasValue = false, description = "display help information")
     private boolean print;
@@ -56,7 +56,7 @@ public class AliasCommand implements Command<AeshCommandInvocation>{
     }
 
     @Override
-    public CommandResult execute(AeshCommandInvocation commandInvocation) throws CommandException, InterruptedException {
+    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
         if(print || arguments == null || arguments.size() == 0) {
             String out = manager.printAllAliases();
             if(out != null && out.length() > 0)
