@@ -191,6 +191,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             if (connection != null && closeConnection) {
                 connection.close();
             }
+            if(aliasManager != null && settings.persistAlias())
+                aliasManager.persist();
         }
     }
 
