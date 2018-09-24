@@ -101,5 +101,16 @@ public interface CommandRegistry<C extends Command<CI>,CI extends CommandInvocat
      */
     Set<String> getAllCommandNames();
 
-    boolean contains(String commandName);
+    default boolean contains(String commandName) {
+        if (getAllCommandNames().contains(commandName))
+            return true;
+        try {
+            if(getCommandByAlias(commandName) != null)
+                return true;
+        }
+        catch(CommandNotFoundException e) {
+            return false;
+        }
+        return false;
+    }
 }
