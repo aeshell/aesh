@@ -32,7 +32,7 @@
     <groupId>org.aesh</groupId>
     <artifactId>aesh-all</artifactId>
     <packaging>pom</packaging>
-    <version>1.8-SNAPSHOT</version>
+    <version>1.8</version>
     <name>Æsh All</name>
     <description>Æsh (Another Extendable SHell) All</description>
     <scm>
@@ -58,7 +58,7 @@
       <!-- maven-compiler-plugin -->
       <maven.compiler.target>1.8</maven.compiler.target>
       <maven.compiler.source>1.8</maven.compiler.source>
-      <readline.version>1.11-SNAPSHOT</readline.version>
+      <readline.version>1.11</readline.version>
     </properties>
  
     <developers>
