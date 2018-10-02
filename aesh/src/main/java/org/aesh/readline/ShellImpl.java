@@ -72,7 +72,7 @@ class ShellImpl implements Shell {
     @Override
     public void writeln(String msg, boolean page) {
         if (connection.supportsAnsi() && page) {
-            pagingSupport.addContent(msg);
+            pagingSupport.addContent(msg + Config.getLineSeparator());
         } else {
             connection.write(msg + Config.getLineSeparator());
         }
