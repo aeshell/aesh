@@ -115,6 +115,8 @@ class ShellImpl implements Shell {
 
     @Override
     public Key read() throws InterruptedException {
+        printCollectedOutput();
+        pagingSupport.reset();
         ActionDecoder decoder = new ActionDecoder();
         final Key[] key = {null};
         CountDownLatch latch = new CountDownLatch(1);
