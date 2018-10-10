@@ -117,12 +117,15 @@ public class AeshOptionParser implements OptionParser {
             processList(option, rest);
         }
         else if (!rest.contains(EQUALS)) {
-            // we might have two or more options in a group
-            // if so, we only allow options (boolean) without value
+            // Either we have two or more boolean options in a group
+            // or the value is appended without the EQUALS
             if (rest.length() > 0 && !option.isLongNameUsed()) {
-                //first we add the first option
-                if(!option.hasValue()) {
-                    option.setLongNameUsed(false);
+                option.setLongNameUsed(false);
+                if (option.hasValue()) {
+                    doAddValueToOption(option, rest);
+                    return;
+                } else  {
+                    // we add the first option
                     option.addValue("true");
                 }
 

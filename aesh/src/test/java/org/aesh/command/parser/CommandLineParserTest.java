@@ -111,6 +111,11 @@ public class CommandLineParserTest {
         assertEquals("bar", p1.equal);
         assertEquals("g", p1.define.get("f"));
         assertEquals("/tmp/file.txt ", p1.arguments.get(0));
+
+        parser.populateObject("test -ebar -Df=g /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("bar", p1.equal);
+        assertEquals("g", p1.define.get("f"));
+        assertEquals("/tmp/file.txt", p1.arguments.get(0));
     }
 
     @Test
