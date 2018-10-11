@@ -267,6 +267,16 @@ public class CommandLineParserTest {
         new AeshCommandContainerBuilder<GroupFailCommand<CommandInvocation>, CommandInvocation>().create(new GroupFailCommand<>());
     }
 
+    @Test
+    public void testDoubleDash() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<Parser4Test<CommandInvocation>> parser = new AeshCommandContainerBuilder<Parser4Test<CommandInvocation>, CommandInvocation>().create(new Parser4Test<>()).getParser();
+        Parser4Test p4 = parser.getCommand();
+
+        parser.populateObject("test -- foo", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("foo", p4.arguments.get(0));
+    }
+
     @CommandDefinition(name = "test", description = "a simple test", aliases = {"toto"})
     public class Parser1Test<CI extends CommandInvocation> extends TestingCommand<CI> {
 

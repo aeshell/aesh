@@ -242,6 +242,17 @@ public class CompletionParserTest {
         clp2.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
         assertEquals("oo=", co.getFormattedCompletionCandidates().get(0));
+
+        co = new AeshCompleteOperation(aeshContext, "test --X foo -- ", 20);
+        clp2.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("BAR!", co.getFormattedCompletionCandidates().get(0));
+
+        co = new AeshCompleteOperation(aeshContext, "test --X foo -- --", 22);
+        clp2.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("--", clp2.getProcessedCommand().getArguments().getValue());
+
     }
 
 

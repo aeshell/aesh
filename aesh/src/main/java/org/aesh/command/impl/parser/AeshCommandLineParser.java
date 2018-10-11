@@ -283,45 +283,53 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
             doParseCompletion(iter);
         else {
             try {
+                boolean argumentMarker = false;
                 while (iter.hasNextWord()) {
                     ParsedWord word = iter.peekParsedWord();
-                    lastParsedOption = processedCommand.searchAllOptions(word.word());
-                    if (lastParsedOption != null) {
-                        lastParsedOption.parser().parse(iter, lastParsedOption);
-                    }
-                    else {
-                        // Unknown commands are possible with a dynamic command (MapCommand)
-                        // In this case we shouldn't validate the option and pass it down to
-                        // the populator for Map injection.
-                        boolean unknown = false;
-                        if (word.word().startsWith("-")) {
-                            if (word.word().startsWith("--") || word.word().length() == 2) {
-                                // invalid short names and long names should be rejected.
-                                if (!(processedCommand.getCommand() instanceof MapCommand)) {
-                                    processedCommand.addParserException(
-                                            new OptionParserException("The option " + word.word()
-                                                    + " is unknown."));
-                                } else {
-                                    unknown = true;
-                                }
-                            }
-                        }
-                        if (unknown) {
-                            // Pass down the option directly to the populator.
-                            MapCommandPopulator pop = (MapCommandPopulator) processedCommand.getCommandPopulator();
-                            pop.addUnknownOption(word.word());
-                        } else if (processedCommand.hasArguments()) {
-                            processedCommand.getArguments().addValue(word.word());
-                        } else if (processedCommand.hasArgumentWithNoValue()) {
-                            processedCommand.getArgument().addValue(word.word());
-                        } else {
-                            processedCommand.addParserException(
-                                    new OptionParserException("A value " + word.word()
-                                            + " was given as an argument, but the command do not support it."));
-                        }
+                    if(argumentMarker) {
+                        setArgStatus(word.word());
                         iter.pollParsedWord();
                     }
-
+                    else {
+                        lastParsedOption = processedCommand.searchAllOptions(word.word());
+                        if(lastParsedOption != null) {
+                            lastParsedOption.parser().parse(iter, lastParsedOption);
+                        }
+                        else {
+                            //if we have a -- and its not at the end of the line it is used as a
+                            //marker to signal that all the values after it are arguments, so we will ignore this
+                            if(word.word().equals("--") && !iter.isNextWordCursorWord()) {
+                                argumentMarker = true;
+                            }
+                            else {
+                                // Unknown commands are possible with a dynamic command (MapCommand)
+                                // In this case we shouldn't validate the option and pass it down to
+                                // the populator for Map injection.
+                                boolean unknown = false;
+                                if(word.word().startsWith("-")) {
+                                    if(word.word().startsWith("--") || word.word().length() == 2) {
+                                        // invalid short names and long names should be rejected.
+                                        if(!(processedCommand.getCommand() instanceof MapCommand)) {
+                                            processedCommand.addParserException(
+                                                    new OptionParserException("The option " + word.word()
+                                                                                      + " is unknown."));
+                                        } else {
+                                            unknown = true;
+                                        }
+                                    }
+                                }
+                                if(unknown) {
+                                    // Pass down the option directly to the populator.
+                                    MapCommandPopulator pop = (MapCommandPopulator) processedCommand.getCommandPopulator();
+                                    pop.addUnknownOption(word.word());
+                                }
+                                else {
+                                    setArgStatus(word.word());
+                                }
+                            }
+                            iter.pollParsedWord();
+                        }
+                    }
                 }
             }
             catch (OptionParserException ope) {
@@ -338,6 +346,19 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                 if (re != null)
                     processedCommand.addParserException(re);
             }
+        }
+    }
+
+    private void setArgStatus(String word) {
+        if (processedCommand.hasArguments()) {
+            processedCommand.getArguments().addValue(word);
+        }
+        else if (processedCommand.hasArgumentWithNoValue()) {
+            processedCommand.getArgument().addValue(word);
+        }
+        else {
+            processedCommand.addParserException(
+                    new OptionParserException("A value " + word + " was given as an argument, but the command do not support it."));
         }
     }
 
@@ -366,6 +387,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         }
         else {
             try {
+                boolean argumentMarker = false; //argumentMarker is set to true if we have found "--" inside the line
                 while(iter.hasNextWord()) {
                     //first check if we have passed the selected word, if so lets stop
                     if(iter.baseLine().selectedIndex() > -1 &&
@@ -373,71 +395,86 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                                processedCommand.completeStatus() != null)
                         return;
                     ParsedWord word = iter.peekParsedWord();
-                    lastParsedOption = processedCommand.searchAllOptions(word.word());
-                    if (lastParsedOption != null) {
-                        //if current word is cursor word, we need to check if the current option name
-                        //might be part of another option name: eg: list and listFolders
-                        if (iter.isNextWordCursorWord() && !word.word().contains("=")
-                                    && processedCommand.findPossibleLongNames(word.word()).size() > 1) {
-                            processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
+                    //first check if argumentMarker has been set
+                    if(argumentMarker) {
+                        setCompletionArgStatus(word.word());
+                        iter.pollParsedWord();
+                    }
+                    else {
+                        lastParsedOption = processedCommand.searchAllOptions(word.word());
+                        if(lastParsedOption != null) {
+                            //if current word is cursor word, we need to check if the current option name
+                            //might be part of another option name: eg: list and listFolders
+                            if(iter.isNextWordCursorWord() && !word.word().contains("=")
+                                       && processedCommand.findPossibleLongNames(word.word()).size() > 1) {
+                                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
+                                iter.pollParsedWord();
+                            } else {
+                                lastParsedOption.parser().parse(iter, lastParsedOption);
+                                if(!iter.hasNextWord()) {
+                                    if(lastParsedOption.hasValue() || iter.baseLine().spaceAtEnd())
+                                        processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
+                                        //if the option do not have any value, set missing value status for easier processing
+                                    else
+                                        processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
+                                }
+                            }
+                        }
+                        //if we have -- that stands alone it's a marker for separation of options and arguments
+                        else if(word.word().equals("--") && !iter.isNextWordCursorWord()) {
+                            argumentMarker = true;
                             iter.pollParsedWord();
                         }
+                        //got a partial option
+                        else if(word.word().startsWith("--")) {
+                            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
+                            iter.pollParsedWord();
+                        } else if(word.word().startsWith("-")) {
+                            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.SHORT_OPTION, word.word().substring(1)));
+                            iter.pollParsedWord();
+                        }
+                        //we're completing arguments or group command names
                         else {
-                            lastParsedOption.parser().parse(iter, lastParsedOption);
-                            if (!iter.hasNextWord()) {
-                                if (lastParsedOption.hasValue() || iter.baseLine().spaceAtEnd())
-                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
-                                    //if the option do not have any value, set missing value status for easier processing
-                                else
-                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
+                            //only set group command if nothing else is set
+                            if(lastParsedOption == null && isGroupCommand()) {
+                                if(iter.isNextWordCursorWord())
+                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, word.word()));
+                                else if(iter.baseLine().cursorAtEnd() && iter.baseLine().spaceAtEnd())
+                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, ""));
+                            } else if(iter.isNextWordCursorWord())
+                                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
+                            else {
+                                setCompletionArgStatus(word.word());
                             }
+                            iter.pollParsedWord();
                         }
-                    }
-                    //got a partial option
-                    else if(word.word().startsWith("--")) {
-                        processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
-                        iter.pollParsedWord();
-                    }
-                    else if(word.word().startsWith("-")) {
-                        processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.SHORT_OPTION, word.word().substring(1)));
-                        iter.pollParsedWord();
-                    }
-                    //we're completing arguments or group command names
-                    else {
-                        //only set group command if nothing else is set
-                        if(lastParsedOption == null && isGroupCommand()) {
-                            if(iter.isNextWordCursorWord())
-                                processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, word.word()));
-                            else if(iter.baseLine().cursorAtEnd() && iter.baseLine().spaceAtEnd())
-                                processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, ""));
-                        }
-                        else if(iter.isNextWordCursorWord())
-                            processedCommand.setCompleteStatus( new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
-                        else {
-                            //add the value to argument/arguments
-                            if(processedCommand.hasArguments()) {
-                                processedCommand.getArguments().addValue(word.word());
-                                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
-                            }
-                            else if(processedCommand.hasArgument()) {
-                                if(processedCommand.getArgument().getValue() == null) {
-                                    processedCommand.getArgument().addValue(word.word());
-                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
-                                }
-                                //if we add more than one value to argument we set error status
-                                else
-                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT_ERROR, null));
-                            }
-                        }
-                        iter.pollParsedWord();
                     }
                 }
+                if(argumentMarker && processedCommand.completeStatus() == null)
+                    setCompletionArgStatus(null);
             }
             catch (OptionParserException e) {
                 //TODO: needs to be improved
                 //ignored for now
                 processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
             }
+        }
+    }
+
+    private void setCompletionArgStatus(String word) {
+        //add the value to argument/arguments
+        if(processedCommand.hasArguments()) {
+            processedCommand.getArguments().addValue(word);
+            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
+        }
+        else if(processedCommand.hasArgument()) {
+            if(processedCommand.getArgument().getValue() == null) {
+                processedCommand.getArgument().addValue(word);
+                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
+            }
+            //if we add more than one value to argument we set error status
+            else
+                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT_ERROR, null));
         }
     }
 
