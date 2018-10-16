@@ -314,6 +314,15 @@ public class CompletionParserTest {
         assertEquals(0, co.getFormattedCompletionCandidates().size());
     }
 
+    @Test
+    public void testParseCompleteObject6() throws Exception {
+        CommandLineParser<ParseCompleteTest6<CommandInvocation>> clp = new AeshCommandContainerBuilder<ParseCompleteTest6<CommandInvocation>, CommandInvocation>().create(new ParseCompleteTest6<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test foo bar", 100);
+
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+    }
 
     @Test
     public void testArgumentNotRequired() throws Exception {
@@ -459,6 +468,16 @@ public class CompletionParserTest {
 
         @Option(shortName = 'D', description = "define properties",
                 required = true)
+        private String define;
+
+        @Argument(completer = ArgTestCompleter.class)
+        private String arg;
+    }
+
+    @CommandDefinition(name = "test", description = "a simple test6")
+    public class ParseCompleteTest6<CI extends CommandInvocation> extends TestCommand<CI> {
+
+        @Option(description = "define properties")
         private String define;
 
         @Argument(completer = ArgTestCompleter.class)
