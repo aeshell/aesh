@@ -36,7 +36,6 @@ import org.aesh.terminal.Attributes;
 class ShellImpl implements Shell {
 
     private Connection connection;
-    private Readline readline;
     private final PagingSupport pagingSupport;
 
     ShellImpl(Connection connection, Readline readline) {
@@ -45,7 +44,6 @@ class ShellImpl implements Shell {
 
     ShellImpl(Connection connection, Readline readline, boolean search) {
         this.connection = connection;
-        this.readline = readline;
         pagingSupport = new PagingSupport(connection, readline, search);
     }
 
@@ -99,6 +97,7 @@ class ShellImpl implements Shell {
         pagingSupport.reset();
         final String[] out = {null};
         CountDownLatch latch = new CountDownLatch(1);
+        Readline readline = new Readline();
         readline.readline(connection, prompt, event -> {
             out[0] = event;
             latch.countDown();

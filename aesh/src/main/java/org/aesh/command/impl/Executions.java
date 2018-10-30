@@ -151,7 +151,7 @@ class Executions {
                         runtime.populateAskedOption(option);
                     }
                     catch(InterruptedException e) {
-                        e.printStackTrace();
+                        //input was interrupted, ignore it
                     }
                 }
             }
