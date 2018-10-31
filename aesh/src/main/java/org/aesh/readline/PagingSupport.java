@@ -379,12 +379,16 @@ public class PagingSupport {
 
     private final History searchHistory = new InMemoryHistory();
     private Paging paging;
-    private boolean interrupted;
     private final Connection connection;
     private final Readline readline;
     private StringBuilder outputCollector;
     private final boolean search;
 
+    public PagingSupport(Connection connection, boolean search) {
+        this(connection, null, search);
+    }
+
+    @Deprecated
     public PagingSupport(Connection connection, Readline readline, boolean search) {
         this.connection = connection;
         this.readline = readline;
@@ -423,7 +427,7 @@ public class PagingSupport {
     }
 
     private Readline getReadline() {
-        return readline;
+        return readline == null ? new Readline() : readline;
     }
 
     private StringBuilder getOutputCollector() {
@@ -655,11 +659,9 @@ public class PagingSupport {
     private String readPattern() throws InterruptedException, IOException {
         CountDownLatch latch = new CountDownLatch(1);
         String[] out = new String[1];
-        interrupted = false;
         // We need to set the interrupt SignalHandler to be aware of the interrupt
         Consumer<Signal> prevHandler = getConnection().getSignalHandler();
         getConnection().setSignalHandler((signal) -> {
-            interrupted = true;
             prevHandler.accept(signal);
             switch (signal) {
                 case INT: {
@@ -680,7 +682,7 @@ public class PagingSupport {
         // then an exception has been thrown and we are not reaching this point.
         // Throws interruptedException and not take into account the returned null
         // value.
-        if (interrupted) {
+        if (out[0] == null) {
             throw new InterruptedException();
         }
         return out[0];

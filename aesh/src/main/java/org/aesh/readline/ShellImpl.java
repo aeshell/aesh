@@ -38,13 +38,13 @@ class ShellImpl implements Shell {
     private Connection connection;
     private final PagingSupport pagingSupport;
 
-    ShellImpl(Connection connection, Readline readline) {
-        this(connection, readline, false);
+    ShellImpl(Connection connection) {
+        this(connection, false);
     }
 
-    ShellImpl(Connection connection, Readline readline, boolean search) {
+    ShellImpl(Connection connection, boolean search) {
         this.connection = connection;
-        pagingSupport = new PagingSupport(connection, readline, search);
+        pagingSupport = new PagingSupport(connection, search);
     }
 
     void startCollectOutput() {

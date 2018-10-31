@@ -290,7 +290,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         catch (CommandNotFoundException cnfe) {
             if(settings.commandNotFoundHandler() != null) {
                 //TODO: review CommandNotFoundHandler
-                settings.commandNotFoundHandler().handleCommandNotFound(line, new ShellImpl(conn, readline));
+                settings.commandNotFoundHandler().handleCommandNotFound(line, new ShellImpl(conn));
             }
             else {
                 conn.write(cnfe.getMessage() + Config.getLineSeparator());
@@ -403,7 +403,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     private CommandRuntime<? extends Command<? extends CommandInvocation>,? extends CommandInvocation> generateRuntime() {
-        shell = new ShellImpl(connection, readline, settings.enableSearchInPaging());
+        shell = new ShellImpl(connection, settings.enableSearchInPaging());
         return AeshCommandRuntimeBuilder.builder()
                 .settings(settings)
                 .commandInvocationBuilder(new AeshCommandInvocationBuilder(shell, this))
