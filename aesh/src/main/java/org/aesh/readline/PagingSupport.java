@@ -310,6 +310,7 @@ public class PagingSupport {
             } else {
                 jumpIndex = -1;
             }
+            lastScrolledLines = lines.size();
             resetScreen();
             while (inWorkflow() && !needPrompt()) {
                 printCurrentLine();
