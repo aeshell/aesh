@@ -77,8 +77,9 @@ public class CommandLineParserTest {
         assertEquals("bar", p1.equal);
         assertEquals("/tmp/file.txt", p1.arguments.get(0));
 
-        parser.populateObject("test -f -e=bar -Df=g /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        parser.populateObject("test -c10 -f -e=bar -Df=g /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertTrue(p1.foo);
+        assertEquals(10, p1.connection);
         assertEquals("bar", p1.equal);
         assertEquals("/tmp/file.txt", p1.arguments.get(0));
         assertEquals("g", p1.define.get("f"));
@@ -119,6 +120,60 @@ public class CommandLineParserTest {
     }
 
     @Test
+    public void testParseCommandLine1SNoSpace() throws Exception {
+
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<Parser1Test<CommandInvocation>> parser = new AeshCommandContainerBuilder<Parser1Test<CommandInvocation>,CommandInvocation>().create(new Parser1Test<>()).getParser();
+
+        parser.populateObject("test -f -ebar -Df=g /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        Parser1Test p1 = parser.getCommand();
+
+        assertTrue(p1.foo);
+        assertEquals("bar", p1.equal);
+        assertEquals("/tmp/file.txt", p1.arguments.get(0));
+
+        parser.populateObject("test -f -ebar -Df=g /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertTrue(p1.foo);
+        assertEquals("bar", p1.equal);
+        assertEquals("/tmp/file.txt", p1.arguments.get(0));
+        assertEquals("g", p1.define.get("f"));
+
+        parser.populateObject("test -Dg=f /tmp/file.txt -ebar foo bar", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertFalse(p1.foo);
+        assertEquals("f", p1.define.get("g"));
+        assertEquals("bar", p1.equal);
+        assertEquals("/tmp/file.txt", p1.arguments.get(0));
+        assertEquals("foo", p1.arguments.get(1));
+        assertEquals("bar", p1.arguments.get(2));
+
+        parser.populateObject("test -ebeer -DXms=128m -DXmx=512m --X /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("beer", p1.equal);
+        assertEquals("/tmp/file.txt", p1.arguments.get(0));
+        assertTrue(p1.enableX);
+
+        assertEquals("128m", p1.define.get("Xms"));
+        assertEquals("512m", p1.define.get("Xmx"));
+
+        parser.populateObject("test --equal \"bar bar2\" -DXms=\"128g \" -DXmx=512g\\ m /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("bar bar2", p1.equal);
+
+        assertEquals("128g ", p1.define.get("Xms"));
+        assertEquals("512g m", p1.define.get("Xmx"));
+
+        parser.populateObject("test -fX -ebar -Df=g /tmp/file.txt\\ ", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertTrue(p1.foo);
+        assertTrue(p1.enableX);
+        assertEquals("bar", p1.equal);
+        assertEquals("g", p1.define.get("f"));
+        assertEquals("/tmp/file.txt ", p1.arguments.get(0));
+
+        parser.populateObject("test -ebar -Df=g /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("bar", p1.equal);
+        assertEquals("g", p1.define.get("f"));
+        assertEquals("/tmp/file.txt", p1.arguments.get(0));
+    }
+
+    @Test
     public void testParseCommandLine2() throws Exception {
 
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
@@ -139,7 +194,16 @@ public class CommandLineParserTest {
         assertEquals("/tmp/bah.txt", p2.arguments.get(1));
 
         assertTrue(parser.getProcessedCommand().parserExceptions().isEmpty());
-    }
+
+        parser.populateObject("test -Vverbose -dfalse -bcom.bar.Bar.class /tmp/file\\ foo.txt /tmp/bah.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("verbose", p2.version);
+        assertEquals("false", p2.display);
+        assertEquals("com.bar.Bar.class", p2.bar);
+        assertEquals("/tmp/file foo.txt", p2.arguments.get(0));
+        assertEquals("/tmp/bah.txt", p2.arguments.get(1));
+
+        assertTrue(parser.getProcessedCommand().parserExceptions().isEmpty());
+     }
 
     @Test
     public void testParseGroupCommand() throws Exception {
@@ -288,6 +352,9 @@ public class CommandLineParserTest {
 
         @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
         private String equal;
+
+        @Option(shortName = 'c')
+        private int connection;
 
         @OptionGroup(shortName = 'D', description = "define properties", required = true)
         private Map<String,String> define;
