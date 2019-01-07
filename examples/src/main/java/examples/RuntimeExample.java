@@ -24,12 +24,25 @@ public class RuntimeExample {
               .commandRegistry(AeshCommandRegistryBuilder.builder().command(TestConsoleCommand.class).create())
               .build();
 
-      String input = "test --bar FOO";
+        StringBuilder sb = new StringBuilder("test ");
+        if (args.length == 1) {
+            sb.append(args[0]);
+        }
+        else {
+            for (String arg : args) {
+                if (arg.indexOf(' ') >= 0) {
+                    sb.append('"').append(arg).append("\" ");
+                } else {
+                    sb.append(arg).append(' ');
+                }
+            }
+        }
+
         try {
-            runtime.executeCommand(input);
+            runtime.executeCommand(sb.toString());
         }
         catch (CommandNotFoundException  e) {
-            System.out.println("Command not found: "+input);
+            System.out.println("Command not found: "+sb.toString());
 
         }
         catch (OptionValidatorException | CommandException | CommandValidatorException | IOException | InterruptedException e) {
@@ -45,7 +58,7 @@ public class RuntimeExample {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
-            commandInvocation.print("bar is: "+bar);
+            commandInvocation.println("bar is: "+bar);
 
             return CommandResult.SUCCESS;
         }
