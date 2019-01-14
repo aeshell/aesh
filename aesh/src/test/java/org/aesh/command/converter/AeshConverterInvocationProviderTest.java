@@ -20,7 +20,7 @@
 package org.aesh.command.converter;
 
 import org.aesh.command.option.Option;
-import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
@@ -47,7 +47,7 @@ import static org.junit.Assert.assertTrue;
 public class AeshConverterInvocationProviderTest {
 
     @Test
-    public void testConverterInvocationProvider() throws IOException, InterruptedException, CommandLineParserException {
+    public void testConverterInvocationProvider() throws IOException, InterruptedException, CommandRegistryException {
 
         TestConnection connection = new TestConnection();
 

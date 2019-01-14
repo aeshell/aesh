@@ -39,6 +39,7 @@ import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionList;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.settings.ManProvider;
 import org.aesh.command.settings.Settings;
@@ -78,7 +79,7 @@ import java.util.List;
  */
 public class Example {
 
-    public static void main(String[] args) throws CommandLineParserException, IOException {
+    public static void main(String[] args) throws CommandLineParserException, IOException, CommandRegistryException {
 
         CommandBuilder fooCommand = new CommandBuilder()
                 .name("foo")

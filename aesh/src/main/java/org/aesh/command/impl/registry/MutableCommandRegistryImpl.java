@@ -30,6 +30,7 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.registry.MutableCommandRegistry;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
@@ -121,17 +122,27 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
     }
 
     @Override
-    public void addCommand(C command) throws CommandLineParserException {
-        putIntoRegistry(getBuilder().create(command));
+    public void addCommand(C command) throws CommandRegistryException {
+        try {
+            putIntoRegistry(getBuilder().create(command));
+        }
+        catch(CommandLineParserException e) {
+            throw new CommandRegistryException(e.getMessage(), e.getCause());
+        }
     }
 
     @Override
-    public void addCommand(Class<C> command) throws CommandLineParserException {
-        putIntoRegistry(getBuilder().create(command));
+    public void addCommand(Class<C> command) throws CommandRegistryException {
+        try {
+            putIntoRegistry(getBuilder().create(command));
+        }
+        catch(CommandLineParserException e) {
+            throw new CommandRegistryException(e.getMessage(), e.getCause());
+        }
     }
 
     @Override
-    public void addAllCommands(List<C> commands) throws CommandLineParserException {
+    public void addAllCommands(List<C> commands) throws CommandRegistryException {
         if(commands != null) {
             for(C command : commands)
                 addCommand(command);

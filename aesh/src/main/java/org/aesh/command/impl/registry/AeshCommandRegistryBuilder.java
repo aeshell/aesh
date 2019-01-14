@@ -26,8 +26,8 @@ import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.container.AeshCommandContainer;
 import org.aesh.command.container.CommandContainer;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -49,12 +49,12 @@ public class AeshCommandRegistryBuilder {
         return this;
     }
 
-    public AeshCommandRegistryBuilder command(Class<? extends Command> command) throws CommandLineParserException {
+    public AeshCommandRegistryBuilder command(Class<? extends Command> command) throws CommandRegistryException {
         commandRegistry.addCommand(command);
         return this;
     }
 
-    public AeshCommandRegistryBuilder commands(Class<? extends Command>... commands) throws CommandLineParserException {
+    public AeshCommandRegistryBuilder commands(Class<? extends Command>... commands) throws CommandRegistryException {
         for (Class<? extends Command> c : commands) {
             commandRegistry.addCommand(c);
         }
@@ -77,7 +77,7 @@ public class AeshCommandRegistryBuilder {
         return this;
     }
 
-    public AeshCommandRegistryBuilder command(Command command) throws CommandLineParserException {
+    public AeshCommandRegistryBuilder command(Command command) throws CommandRegistryException {
         commandRegistry.addCommand(command);
         return this;
     }

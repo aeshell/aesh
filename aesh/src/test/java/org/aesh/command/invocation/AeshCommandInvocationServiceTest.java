@@ -19,6 +19,7 @@
  */
 package org.aesh.command.invocation;
 
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.Command;
@@ -50,7 +51,7 @@ import org.aesh.command.CommandNotFoundException;
 public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
 
     @Test
-    public void testCommandInvocationExtension() throws IOException, InterruptedException, CommandLineParserException {
+    public void testCommandInvocationExtension() throws IOException, InterruptedException, CommandRegistryException {
 
         TestConnection connection = new TestConnection();
 

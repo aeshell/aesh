@@ -21,7 +21,7 @@ package org.aesh.command.validator;
 
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
-import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.settings.Settings;
@@ -46,7 +46,7 @@ import org.aesh.command.CommandException;
 public class AeshCommandOptionValidatorTest {
 
     @Test
-    public void testOptionValidator() throws IOException, InterruptedException, CommandLineParserException {
+    public void testOptionValidator() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -72,7 +72,7 @@ public class AeshCommandOptionValidatorTest {
     }
 
     @Test
-    public void testMultipleOptionValidators() throws IOException, InterruptedException, CommandLineParserException {
+    public void testMultipleOptionValidators() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -103,7 +103,7 @@ public class AeshCommandOptionValidatorTest {
     }
 
     @Test
-    public void testMultipleOptionWithProvidersValidators() throws IOException, CommandLineParserException {
+    public void testMultipleOptionWithProvidersValidators() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -139,7 +139,7 @@ public class AeshCommandOptionValidatorTest {
     }
 
     @Test
-    public void testRequiredOption() throws IOException, CommandLineParserException {
+    public void testRequiredOption() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()

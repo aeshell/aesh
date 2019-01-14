@@ -8,8 +8,8 @@ import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.io.FileResource;
@@ -38,7 +38,7 @@ public class AeshCommandOperatorCompletionTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
-    public void testCompletionWithEndOperator() throws IOException, CommandLineParserException {
+    public void testCompletionWithEndOperator() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection(new Size(400, 80));
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -66,7 +66,7 @@ public class AeshCommandOperatorCompletionTest {
     }
 
      @Test
-    public void testCompletionWithRedirectOutOperator() throws IOException, CommandLineParserException {
+    public void testCompletionWithRedirectOutOperator() throws IOException, CommandRegistryException {
          TestConnection connection = new TestConnection();
 
          CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -112,7 +112,7 @@ public class AeshCommandOperatorCompletionTest {
 
 
     @Test
-    public void testCompletionWithPipeOperator() throws IOException, CommandLineParserException {
+    public void testCompletionWithPipeOperator() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection(new Size(400, 80));
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()

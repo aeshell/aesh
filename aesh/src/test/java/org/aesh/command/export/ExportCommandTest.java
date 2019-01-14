@@ -25,8 +25,8 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.editing.EditMode;
@@ -50,7 +50,7 @@ public class ExportCommandTest {
     private final Key backSpace =  Key.BACKSPACE;
 
     @Test
-    public void testExportCompletionAndCommand() throws IOException, InterruptedException, CommandLineParserException {
+    public void testExportCompletionAndCommand() throws IOException, CommandRegistryException {
 
         TestConnection connection = new TestConnection();
 

@@ -23,8 +23,8 @@ import java.io.IOException;
 
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;
@@ -64,7 +64,7 @@ public class AeshCommandPasteTest {
     }
 
     @Test
-    public void testPasteWhileACommandIsRunning() throws IOException, InterruptedException, CommandLineParserException {
+    public void testPasteWhileACommandIsRunning() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = new AeshCommandRegistryBuilder()

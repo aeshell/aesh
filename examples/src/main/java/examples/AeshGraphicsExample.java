@@ -21,12 +21,11 @@ package examples;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
-import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.graphics.AeshGraphicsConfiguration;
@@ -48,7 +47,7 @@ import java.nio.charset.Charset;
  */
 public class AeshGraphicsExample {
 
-    public static void main(String[] args) throws CommandLineParserException, IOException {
+    public static void main(String[] args) throws CommandRegistryException, IOException {
         SettingsBuilder builder = SettingsBuilder.builder().logging(true);
         builder.enableMan(true);
 
@@ -76,7 +75,7 @@ public class AeshGraphicsExample {
     public static class ExitCommand implements Command {
 
         @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+        public CommandResult execute(CommandInvocation commandInvocation) {
             commandInvocation.stop();
             return CommandResult.SUCCESS;
         }

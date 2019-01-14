@@ -19,6 +19,7 @@
  */
 package org.aesh.command;
 
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -64,7 +65,7 @@ public class AeshScriptTest {
     private static CountDownLatch counter = new CountDownLatch(3);
 
     @Test
-    public void scriptPoc() throws IOException, CommandLineParserException, InterruptedException {
+    public void scriptPoc() throws IOException, CommandLineParserException, InterruptedException, CommandRegistryException {
 
         TestConnection connection = new TestConnection();
 

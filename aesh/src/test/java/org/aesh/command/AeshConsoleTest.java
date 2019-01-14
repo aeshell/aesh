@@ -24,6 +24,7 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.readline.AeshContext;
@@ -55,7 +56,7 @@ public class AeshConsoleTest {
 
 
     @Test
-    public void testAeshConsole() throws IOException, InterruptedException, CommandLineParserException {
+    public void testAeshConsole() throws IOException, InterruptedException, CommandLineParserException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
         ProcessedCommand fooCommand = new ProcessedCommandBuilder()

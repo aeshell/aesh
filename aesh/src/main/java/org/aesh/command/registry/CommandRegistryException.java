@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2017 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -19,26 +19,16 @@
  */
 package org.aesh.command.registry;
 
-import java.util.List;
-import org.aesh.command.Command;
-import org.aesh.command.container.CommandContainer;
-import org.aesh.command.invocation.CommandInvocation;
-
 /**
- *
- * @author jdenise@redhat.com
+ * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface MutableCommandRegistry<C extends Command<CI>,CI extends CommandInvocation> extends CommandRegistry<C,CI> {
+public class CommandRegistryException extends Exception {
 
-    void addCommand(CommandContainer<C,CI> container);
+    public CommandRegistryException(String msg) {
+        super(msg);
+    }
 
-    void addCommand(C command) throws CommandRegistryException;
-
-    void addCommand(Class<C> command) throws CommandRegistryException;
-
-    void addAllCommands(List<C> commands) throws CommandRegistryException;
-
-    void addAllCommandContainers(List<CommandContainer<C,CI>> commands);
-
-    void removeCommand(String name);
+    public CommandRegistryException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
 }

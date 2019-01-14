@@ -20,7 +20,7 @@
 package org.aesh.command;
 
 import org.aesh.command.option.Option;
-import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.validator.CommandValidator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
@@ -43,7 +43,7 @@ import static org.junit.Assert.fail;
 public class AeshCommandOverrideRequiredTest {
 
     @Test
-    public void testOverrideRequired() throws IOException, InterruptedException, CommandLineParserException {
+    public void testOverrideRequired() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()

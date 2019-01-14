@@ -22,7 +22,7 @@ package org.aesh.command.operator;
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
-import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.CommandDefinition;
@@ -48,7 +48,7 @@ import static org.junit.Assert.assertEquals;
 public class AeshCommandPipelineTest {
 
     @Test
-    public void testPipeline() throws InterruptedException, IOException, CommandLineParserException {
+    public void testPipeline() throws InterruptedException, IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
         FooCommand foo = new FooCommand();
@@ -81,7 +81,7 @@ public class AeshCommandPipelineTest {
 
 
     @Test
-    public void testEmptyBeforeOperator() throws InterruptedException, IOException, CommandLineParserException {
+    public void testEmptyBeforeOperator() throws InterruptedException, IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
         FooCommand foo = new FooCommand();

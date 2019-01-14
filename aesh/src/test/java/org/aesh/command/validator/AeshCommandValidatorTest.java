@@ -32,8 +32,8 @@ import org.aesh.command.impl.internal.ParsedOption;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;
@@ -52,7 +52,7 @@ import static org.junit.Assert.assertTrue;
 public class AeshCommandValidatorTest {
 
     @Test
-    public void testCommandValidator() throws IOException, InterruptedException, CommandLineParserException {
+    public void testCommandValidator() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()
@@ -77,7 +77,7 @@ public class AeshCommandValidatorTest {
     }
 
     @Test
-    public void testGroupCommandValidator() throws IOException, InterruptedException, CommandLineParserException {
+    public void testGroupCommandValidator() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()

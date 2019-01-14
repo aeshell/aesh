@@ -43,6 +43,7 @@ import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.registry.MutableCommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
@@ -136,7 +137,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                 try {
                     ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new ExportCommand(exportManager));
                 }
-                catch (CommandLineParserException e) {
+                catch (CommandRegistryException e) {
                     e.printStackTrace();
                 }
             }
@@ -155,7 +156,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                        ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new AliasCommand(aliasManager));
                        ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new UnAliasCommand(aliasManager));
                    }
-                   catch (CommandLineParserException e) {
+                   catch (CommandRegistryException e) {
                        e.printStackTrace();
                    }
                }
@@ -380,7 +381,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         catch (IOException e) {
             LOGGER.log(Level.WARNING, "AnnotationDetector failed to scan for CommandDefinition annotations", e);
         }
-        catch (ClassNotFoundException | CommandLineParserException e) {
+        catch (ClassNotFoundException | CommandRegistryException e) {
             LOGGER.log(Level.WARNING, "Failed to load CommandDefinition class.", e);
         }
 

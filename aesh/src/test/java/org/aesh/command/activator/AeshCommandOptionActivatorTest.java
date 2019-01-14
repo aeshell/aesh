@@ -27,8 +27,8 @@ import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.ReadlineConsole;
@@ -44,7 +44,7 @@ import java.io.IOException;
 public class AeshCommandOptionActivatorTest {
 
     @Test
-    public void testOptionActivator() throws IOException, InterruptedException, CommandLineParserException {
+    public void testOptionActivator() throws IOException, InterruptedException, CommandRegistryException {
 
         TestConnection connection = new TestConnection();
         TestOptionValidatorProvider validatorProvider = new TestOptionValidatorProvider(new FooContext("bar"));

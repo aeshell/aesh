@@ -11,6 +11,7 @@ import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 
@@ -18,7 +19,7 @@ import java.io.IOException;
 
 public class RuntimeExample {
 
-    public static void main(String[] args) throws CommandLineParserException {
+    public static void main(String[] args) throws CommandLineParserException, CommandRegistryException {
       CommandRuntime runtime = AeshCommandRuntimeBuilder
               .builder()
               .commandRegistry(AeshCommandRegistryBuilder.builder().command(TestConsoleCommand.class).create())

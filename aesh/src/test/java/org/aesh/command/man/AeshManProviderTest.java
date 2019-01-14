@@ -39,7 +39,7 @@ import static org.junit.Assert.assertNotNull;
 public class AeshManProviderTest {
 
     @Test
-    public void testManProvider() throws IOException, InterruptedException {
+    public void testManProvider() throws IOException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = new AeshCommandRegistryBuilder()
