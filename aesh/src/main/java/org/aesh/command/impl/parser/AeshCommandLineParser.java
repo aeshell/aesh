@@ -255,7 +255,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                                 iterator.peekWord().startsWith("--") || iterator.peekWord().startsWith("-"))
                             doParse(iterator, mode);
                         else {
-                            processedCommand.addParserException(new CommandLineParserException("Wrong input for group command."));
+                            processedCommand.addParserException(new CommandLineParserException(command+" '"+iterator.peekWord()+"' is not a "+command+" command. See '"+command+" --help'."));
                             if(mode == Mode.COMPLETION) {
                                 parsedCommand = true;
                                 processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.INVALID_INPUT, ""));
