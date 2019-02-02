@@ -22,6 +22,7 @@ package org.aesh.util.completer;
 import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.utils.Config;
 
 import static org.aesh.utils.Config.getLineSeparator;
@@ -41,7 +42,7 @@ public class FileCompleterGenerator {
      * @param command
      * @return
      */
-    public String generateCompeterFile(CommandLineParser<Command> command) {
+    public String generateCompeterFile(CommandLineParser<Command<CommandInvocation>> command) {
          StringBuilder out = new StringBuilder();
 
         out.append(generateHeader(command.getProcessedCommand().name()));
@@ -61,7 +62,7 @@ public class FileCompleterGenerator {
         return out.toString();
     }
 
-    private String generateMainCompletion(CommandLineParser<Command> command) {
+    private String generateMainCompletion(CommandLineParser<Command<CommandInvocation>> command) {
         StringBuilder main = new StringBuilder();
         main.append("function _complete_").append(command.getProcessedCommand().name().toLowerCase()).append(" {").append(getLineSeparator());
         if(command.isGroupCommand()) {
@@ -81,7 +82,7 @@ public class FileCompleterGenerator {
         return main.toString();
     }
 
-    private String generateCommand(CommandLineParser<Command> command) {
+    private String generateCommand(CommandLineParser<Command<CommandInvocation>> command) {
         StringBuilder builder = new StringBuilder();
         builder.append("function _command_").append(command.getProcessedCommand().name().toLowerCase()).append(" {").append(getLineSeparator());
         builder.append(generateDefaultCompletionVariables());
@@ -124,7 +125,7 @@ public class FileCompleterGenerator {
         return builder.toString();
     }
 
-    private String generateCompletionValues(CommandLineParser<Command> command) {
+    private String generateCompletionValues(CommandLineParser<Command<CommandInvocation>> command) {
         StringBuilder builder = new StringBuilder();
         for(ProcessedOption option : command.getProcessedCommand().getOptions()) {
             if(option.hasValue()) {
