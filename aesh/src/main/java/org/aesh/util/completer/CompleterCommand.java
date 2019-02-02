@@ -65,10 +65,8 @@ public class CompleterCommand implements Command<CommandInvocation> {
                 }
         }
 
-
         return CommandResult.SUCCESS;
     }
-
 
     private Class<Command<CommandInvocation>> loadCommand(String commandName) {
         try {
