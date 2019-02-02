@@ -26,7 +26,6 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
-import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
@@ -34,8 +33,6 @@ import org.aesh.command.parser.CommandLineParserException;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
@@ -69,7 +66,6 @@ public class CompleterCommand implements Command<CommandInvocation> {
                         Files.write(Paths.get(container.getParser().getProcessedCommand().name().toLowerCase()+"_complete.bash"),
                                 completerGenerator.generateCompeterFile(container.getParser()).getBytes(), StandardOpenOption.WRITE);
 
-                        container.getParser().getProcessedCommand();
                     }
                     catch(CommandLineParserException e) {
                         e.printStackTrace();
