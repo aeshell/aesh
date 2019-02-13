@@ -60,7 +60,7 @@ public class CommandLineFormatterTest {
                 .processedCommand(pb.create())
                 .create();
 
-        assertEquals("Usage: man [OPTION...]"+ Config.getLineSeparator()+
+        assertEquals("Usage: man" + Config.getLineSeparator() + "[OPTION...]"+ Config.getLineSeparator()+
                         Config.getLineSeparator()+
                         "Options:"+ Config.getLineSeparator()+
                         "  -d, --debug    emit debugging messages"+Config.getLineSeparator()+
@@ -103,7 +103,7 @@ public class CommandLineFormatterTest {
 
         CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
 
-        assertEquals("Usage: man [OPTION...]"+ Config.getLineSeparator()+
+        assertEquals("Usage: man" + Config.getLineSeparator() + "[OPTION...]"+ Config.getLineSeparator()+
                         Config.getLineSeparator()+
                         "Options:"+ Config.getLineSeparator()+
                         "  -d, --debug            emit debugging messages"+Config.getLineSeparator()+
@@ -157,7 +157,7 @@ public class CommandLineFormatterTest {
         clpGit.addChildParser(clpBranch);
         clpGit.addChildParser(clpRebase);
 
-         assertEquals("Usage: git [OPTION...]" + Config.getLineSeparator() +
+         assertEquals("Usage: git" + Config.getLineSeparator() + "[OPTION...]" + Config.getLineSeparator() +
                          Config.getLineSeparator() +
                          "Options:" + Config.getLineSeparator() +
                          "  -h, --help  display help info" + Config.getLineSeparator()
