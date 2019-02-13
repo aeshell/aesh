@@ -407,7 +407,7 @@ public class ProcessedCommand<C extends Command> {
             sb.append(Config.getLineSeparator()).append("Argument:").append(Config.getLineSeparator());
             sb.append(argument.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
         }
-        return "Usage: "+ name()+" "+ description()+ Config.getLineSeparator()+sb.toString();
+        return "Usage: "+ name()+ Config.getLineSeparator() + description()+ Config.getLineSeparator()+sb.toString();
     }
 
     @Override
