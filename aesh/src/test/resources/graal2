@@ -1,0 +1,28 @@
+[
+  {
+    "name" : class org.aesh.util.graal.GraalReflectionFileGeneratorTest$TestCommand2",
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true,
+    "fields" : [
+      { "name" : "help" },
+      { "name" : "override" },
+      { "name" : "test" },
+    ]
+  },
+  {
+    "name" : "org.aesh.command.impl.parser.AeshOptionParser", 
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  },
+  {
+    "name" : "org.aesh.command.impl.completer.BooleanOptionCompleter", 
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true
+  }
+]
