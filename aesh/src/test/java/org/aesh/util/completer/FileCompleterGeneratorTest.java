@@ -56,7 +56,7 @@ public class FileCompleterGeneratorTest {
     private CommandLineParser getParser(Class clazz) {
         //Class<Command<CommandInvocation>> clazz = loadCommand(command);
         if (clazz != null) {
-            CommandContainerBuilder<Command<CommandInvocation>, CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+            CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
             try {
                 CommandContainer container = builder.create(clazz);
                 return container.getParser();

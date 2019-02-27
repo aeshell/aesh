@@ -53,9 +53,9 @@ public class GraalReflectionCommand implements Command  {
         else {
             Class<Command<CommandInvocation>> clazz = loadCommand(command);
             if(clazz != null) {
-                CommandContainerBuilder<Command<CommandInvocation>, CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+                CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
                 try {
-                    CommandContainer<Command<CommandInvocation>, CommandInvocation> container = builder.create(clazz);
+                    CommandContainer<CommandInvocation> container = builder.create(clazz);
 
                     GraalReflectionFileGenerator graalFileGenerator = new GraalReflectionFileGenerator();
                     Files.write(Paths.get(container.getParser().getProcessedCommand().name().toLowerCase()+"_reflection.json"),

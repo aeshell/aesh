@@ -19,7 +19,6 @@
  */
 package org.aesh.util.completer;
 
-import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;

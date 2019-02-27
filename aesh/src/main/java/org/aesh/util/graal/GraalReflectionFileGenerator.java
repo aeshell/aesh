@@ -31,11 +31,11 @@ public class GraalReflectionFileGenerator {
     private boolean fileOption = false;
     private boolean hasOptions = false;
 
-    public String generateReflection(CommandLineParser<Command<CommandInvocation>> parser) {
+    public String generateReflection(CommandLineParser<CommandInvocation> parser) {
         StringBuilder builder = new StringBuilder("[").append(getLineSeparator());
         parseCommand(parser.getProcessedCommand(), builder);
         if(parser.isGroupCommand())
-            for(CommandLineParser<Command<CommandInvocation>> child : parser.getAllChildParsers()) {
+            for(CommandLineParser<CommandInvocation> child : parser.getAllChildParsers()) {
                 builder.append("  },").append(getLineSeparator());
                 parseCommand(child.getProcessedCommand(), builder);
             }
@@ -47,12 +47,12 @@ public class GraalReflectionFileGenerator {
         return builder.append(getLineSeparator()).append("]").toString();
     }
 
-    private void parseCommand(ProcessedCommand<Command<CommandInvocation>> command, StringBuilder builder) {
+    private void parseCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, StringBuilder builder) {
         builder.append("  {").append(getLineSeparator());
         appendCommand(command, builder);
     }
 
-    private void appendOptions(ProcessedCommand<Command<CommandInvocation>> command, StringBuilder builder) {
+    private void appendOptions(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, StringBuilder builder) {
         builder.append("  },").append(getLineSeparator());
         builder.append("  {").append(getLineSeparator())
                 .append("    \"name\" : \"org.aesh.command.impl.parser.AeshOptionParser\", ").append(getLineSeparator());
@@ -81,7 +81,7 @@ public class GraalReflectionFileGenerator {
                 .append("    \"allPublicMethods\" : true");
     }
 
-    private void appendCommand(ProcessedCommand<Command<CommandInvocation>> command, StringBuilder builder) {
+    private void appendCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, StringBuilder builder) {
         builder.append("    \"name\" : ").append(command.getCommand().getClass().toString()).append("\",").append(getLineSeparator());
         appendDefaults(builder);
 
