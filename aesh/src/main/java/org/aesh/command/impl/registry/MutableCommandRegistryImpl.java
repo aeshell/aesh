@@ -34,7 +34,6 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.registry.MutableCommandRegistry;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
-import org.aesh.readline.util.LoggerUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,28 +41,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends CommandInvocation> implements MutableCommandRegistry<C,CI> {
+public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements MutableCommandRegistry<CI> {
 
-    private final Map<String, CommandContainer<C,CI>> registry = new HashMap<>();
-    private final Map<String, CommandContainer<C,CI>> aliases = new HashMap<>();
+    private final Map<String, CommandContainer<CI>> registry = new HashMap<>();
+    private final Map<String, CommandContainer<CI>> aliases = new HashMap<>();
 
-    private CommandContainerBuilder<C,CI> containerBuilder;
+    private CommandContainerBuilder<CI> containerBuilder;
 
     private final List<CommandRegistrationListener> listeners = new ArrayList<>();
 
-    public void setCommandContainerBuilder(CommandContainerBuilder<C,CI> containerBuilder) {
+    public void setCommandContainerBuilder(CommandContainerBuilder<CI> containerBuilder) {
         this.containerBuilder = containerBuilder;
     }
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(MutableCommandRegistryImpl.class.getName());
-
     @Override
-    public CommandContainer<C,CI> getCommand(String name, String line) throws CommandNotFoundException {
+    public CommandContainer<CI> getCommand(String name, String line) throws CommandNotFoundException {
         if(registry.containsKey(name))
             return registry.get(name);
         //group command
@@ -79,8 +75,8 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
     }
 
     @Override
-    public List<CommandLineParser<C>> getChildCommandParsers(String parent) throws CommandNotFoundException {
-        CommandContainer c = getCommand(parent, "");
+    public List<CommandLineParser<CI>> getChildCommandParsers(String parent) throws CommandNotFoundException {
+        CommandContainer<CI> c = getCommand(parent, "");
         if (c == null) {
             throw new CommandNotFoundException("Command: " + parent + " was not found.", parent);
         }
@@ -91,15 +87,15 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
     public void completeCommandName(CompleteOperation co, ParsedLine parsedLine) {
         if(parsedLine.words().size() == 0) {
             //add all
-            for(CommandContainer<C,CI> command : registry.values()) {
-                ProcessedCommand<C> com = command.getParser().getProcessedCommand();
+            for(CommandContainer<CI> command : registry.values()) {
+                ProcessedCommand<? extends Command<CI>, CI> com = command.getParser().getProcessedCommand();
                 if (com.getActivator().isActivated(new ParsedCommand(com)))
                     co.addCompletionCandidate(com.name());
             }
         }
         else {
-            for(CommandContainer<C,CI> command : registry.values()) {
-                ProcessedCommand<C> com = command.getParser().getProcessedCommand();
+            for(CommandContainer<CI> command : registry.values()) {
+                ProcessedCommand<? extends Command<CI>, CI> com = command.getParser().getProcessedCommand();
                 if(com.name().startsWith(parsedLine.selectedWord().word()) &&
                         com.getActivator().isActivated(new ParsedCommand(com))) {
                     co.addCompletionCandidate(com.name());
@@ -117,12 +113,12 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
     }
 
     @Override
-    public void addCommand(CommandContainer<C,CI> container) {
+    public void addCommand(CommandContainer<CI> container) {
         putIntoRegistry(container);
     }
 
     @Override
-    public void addCommand(C command) throws CommandRegistryException {
+    public void addCommand(Command command) throws CommandRegistryException {
         try {
             putIntoRegistry(getBuilder().create(command));
         }
@@ -132,7 +128,7 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
     }
 
     @Override
-    public void addCommand(Class<C> command) throws CommandRegistryException {
+    public void addCommand(Class<Command> command) throws CommandRegistryException {
         try {
             putIntoRegistry(getBuilder().create(command));
         }
@@ -142,35 +138,33 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
     }
 
     @Override
-    public void addAllCommands(List<C> commands) throws CommandRegistryException {
+    public void addAllCommands(List<Command> commands) throws CommandRegistryException {
         if(commands != null) {
-            for(C command : commands)
+            for(Command command : commands)
                 addCommand(command);
         }
     }
 
     @Override
-    public void addAllCommandContainers(List<CommandContainer<C,CI>> commands) {
+    public void addAllCommandContainers(List<CommandContainer<CI>> commands) {
         if(commands != null) {
-            for(CommandContainer<C,CI> command : commands)
+            for(CommandContainer<CI> command : commands)
                 addCommand(command);
         }
     }
 
     @Override
     public boolean contains(String commandName) {
-        if (registry.containsKey(commandName) || aliases.containsKey(commandName))
-            return true;
+        return registry.containsKey(commandName) || aliases.containsKey(commandName);
 
-        return false;
     }
 
-    private void putIntoRegistry(CommandContainer<C,CI> commandContainer) {
+    private void putIntoRegistry(CommandContainer<CI> commandContainer) {
         if (!commandContainer.haveBuildError()
                 && !contains(commandContainer.getParser().getProcessedCommand())) {
             registry.put(commandContainer.getParser().getProcessedCommand().name(),
                     commandContainer);
-            ProcessedCommand<?> command = commandContainer.getParser().
+            ProcessedCommand<? extends Command<CI>, CI> command = commandContainer.getParser().
                     getProcessedCommand();
             for (String alias : command.getAliases()) {
                 aliases.put(alias, commandContainer);
@@ -180,7 +174,7 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
         }
     }
 
-    private boolean contains(ProcessedCommand<?> command) {
+    private boolean contains(ProcessedCommand<? extends Command<CI>, CI> command) {
         if (registry.containsKey(command.name())) {
             return true;
         }
@@ -197,9 +191,8 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
     @Override
     public void removeCommand(String name) {
         if (registry.containsKey(name)) {
-            CommandContainer container = registry.remove(name);
-            ProcessedCommand<?> command = container.getParser().
-                    getProcessedCommand();
+            CommandContainer<CI> container = registry.remove(name);
+            ProcessedCommand<? extends Command<CI>, CI> command = container.getParser().getProcessedCommand();
             for (String alias : command.getAliases()) {
                 aliases.remove(alias);
             }
@@ -207,14 +200,14 @@ public class MutableCommandRegistryImpl<C extends Command<CI>,CI extends Command
         }
     }
 
-    private CommandContainerBuilder<C,CI> getBuilder() {
+    private CommandContainerBuilder<CI> getBuilder() {
         if(containerBuilder == null)
             containerBuilder = new AeshCommandContainerBuilder<>();
         return containerBuilder;
     }
 
     @Override
-    public CommandContainer<C,CI> getCommandByAlias(String alias) throws CommandNotFoundException {
+    public CommandContainer<CI> getCommandByAlias(String alias) throws CommandNotFoundException {
         if (aliases.containsKey(alias)) {
             return aliases.get(alias);
         } else {

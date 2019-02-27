@@ -19,13 +19,13 @@
  */
 package org.aesh.command.impl.parser;
 
-import org.aesh.command.Command;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.DefaultValueOptionCompleter;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.OptionValidatorException;
@@ -42,11 +42,11 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandLineCompletionParser<C extends Command> implements CommandLineCompletionParser {
+public class AeshCommandLineCompletionParser<CI extends CommandInvocation> implements CommandLineCompletionParser {
 
-    private final AeshCommandLineParser<C> parser;
+    private final AeshCommandLineParser<CI> parser;
 
-    public AeshCommandLineCompletionParser(AeshCommandLineParser<C> parser) {
+    public AeshCommandLineCompletionParser(AeshCommandLineParser<CI> parser) {
         this.parser = parser;
     }
 

@@ -28,17 +28,17 @@ import org.aesh.command.invocation.CommandInvocation;
  *
  * @author jdenise@redhat.com
  */
-public interface MutableCommandRegistry<C extends Command<CI>,CI extends CommandInvocation> extends CommandRegistry<C,CI> {
+public interface MutableCommandRegistry<CI extends CommandInvocation> extends CommandRegistry<CI> {
 
-    void addCommand(CommandContainer<C,CI> container);
+    void addCommand(CommandContainer<CI> container);
 
-    void addCommand(C command) throws CommandRegistryException;
+    void addCommand(Command command) throws CommandRegistryException;
 
-    void addCommand(Class<C> command) throws CommandRegistryException;
+    void addCommand(Class<Command> command) throws CommandRegistryException;
 
-    void addAllCommands(List<C> commands) throws CommandRegistryException;
+    void addAllCommands(List<Command> commands) throws CommandRegistryException;
 
-    void addAllCommandContainers(List<CommandContainer<C,CI>> commands);
+    void addAllCommandContainers(List<CommandContainer<CI>> commands);
 
     void removeCommand(String name);
 }

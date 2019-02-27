@@ -19,8 +19,10 @@
  */
 package org.aesh.command.builder;
 
+import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
@@ -38,7 +40,8 @@ public class CommandLineFormatterTest {
 
     @Test
     public void formatter() throws CommandLineParserException {
-        ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("man").description("[OPTION...]");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb =
+                ProcessedCommandBuilder.builder().name("man").description("[OPTION...]");
 
         pb.addOption(
                 ProcessedOptionBuilder.builder()
@@ -56,7 +59,7 @@ public class CommandLineFormatterTest {
                         .type(String.class)
                         .build());
 
-        CommandLineParser clp = new CommandLineParserBuilder()
+        CommandLineParser clp = CommandLineParserBuilder.builder()
                 .processedCommand(pb.create())
                 .create();
 
@@ -70,7 +73,8 @@ public class CommandLineFormatterTest {
 
     @Test
     public void formatter2() throws CommandLineParserException {
-        ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("man").description("[OPTION...]");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb =
+                ProcessedCommandBuilder.builder().name("man").description("[OPTION...]");
 
         pb.addOption(
                 ProcessedOptionBuilder.builder()
@@ -101,7 +105,7 @@ public class CommandLineFormatterTest {
                         .build());
 
 
-        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
+        CommandLineParser clp = CommandLineParserBuilder.builder().processedCommand(pb.create()).create();
 
         assertEquals("Usage: man" + Config.getLineSeparator() + "[OPTION...]"+ Config.getLineSeparator()+
                         Config.getLineSeparator()+
@@ -117,7 +121,8 @@ public class CommandLineFormatterTest {
 
     @Test
     public void groupFormatter() throws CommandLineParserException {
-        ProcessedCommandBuilder git = new ProcessedCommandBuilder().name("git").description("[OPTION...]");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> git =
+                ProcessedCommandBuilder.builder().name("git").description("[OPTION...]");
         git.addOption(
                 ProcessedOptionBuilder.builder()
                         .shortName('h')
@@ -127,7 +132,8 @@ public class CommandLineFormatterTest {
                         .build()
         );
 
-        ProcessedCommandBuilder rebase = new ProcessedCommandBuilder().name("rebase").description("[OPTION...]");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> rebase =
+                ProcessedCommandBuilder.builder().name("rebase").description("[OPTION...]");
         rebase.addOption(
                 ProcessedOptionBuilder.builder()
                         .shortName('f')
@@ -138,7 +144,8 @@ public class CommandLineFormatterTest {
                         .build()
         );
 
-        ProcessedCommandBuilder branch = new ProcessedCommandBuilder().name("branch").description("branching");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> branch =
+                ProcessedCommandBuilder.builder().name("branch").description("branching");
         branch.addOption(
                 ProcessedOptionBuilder.builder()
                         .shortName('b')
@@ -150,9 +157,9 @@ public class CommandLineFormatterTest {
         );
 
 
-        CommandLineParser clpGit = new CommandLineParserBuilder().processedCommand(git.create()).create();
-        CommandLineParser clpBranch = new CommandLineParserBuilder().processedCommand(branch.create()).create();
-        CommandLineParser clpRebase = new CommandLineParserBuilder().processedCommand(rebase.create()).create();
+        CommandLineParser<CommandInvocation> clpGit = CommandLineParserBuilder.builder().processedCommand(git.create()).create();
+        CommandLineParser<CommandInvocation> clpBranch = CommandLineParserBuilder.builder().processedCommand(branch.create()).create();
+        CommandLineParser<CommandInvocation> clpRebase = CommandLineParserBuilder.builder().processedCommand(rebase.create()).create();
 
         clpGit.addChildParser(clpBranch);
         clpGit.addChildParser(clpRebase);

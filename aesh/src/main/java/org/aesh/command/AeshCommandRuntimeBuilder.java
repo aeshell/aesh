@@ -55,14 +55,14 @@ import org.aesh.command.operator.OperatorType;
  *
  * @author jdenise@redhat.com
  */
-public class AeshCommandRuntimeBuilder {
+public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
 
     public static final EnumSet<OperatorType> ALL_OPERATORS = EnumSet.allOf(OperatorType.class);
 
     private static final EnumSet<OperatorType> NO_OPERATORS = EnumSet.noneOf(OperatorType.class);
 
-    private CommandRegistry<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> registry;
-    private CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider;
+    private CommandRegistry<CI> registry;
+    private CommandInvocationProvider<CI> commandInvocationProvider;
     private CommandNotFoundHandler commandNotFoundHandler;
     private CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider;
     private ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider;
@@ -70,7 +70,7 @@ public class AeshCommandRuntimeBuilder {
     private OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider;
     private CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider;
     private AeshContext ctx;
-    private CommandInvocationBuilder<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> commandInvocationBuilder;
+    private CommandInvocationBuilder<CI> commandInvocationBuilder;
 
     private boolean parseBrackets;
     private EnumSet<OperatorType> operators;
@@ -78,67 +78,67 @@ public class AeshCommandRuntimeBuilder {
     private AeshCommandRuntimeBuilder() {
     }
 
-    public static AeshCommandRuntimeBuilder builder() {
-        return new AeshCommandRuntimeBuilder();
+    public static <T extends CommandInvocation> AeshCommandRuntimeBuilder<T> builder() {
+        return new AeshCommandRuntimeBuilder<>();
     }
 
-    public AeshCommandRuntimeBuilder parseBrackets(boolean parseBrackets) {
+    public AeshCommandRuntimeBuilder<CI> parseBrackets(boolean parseBrackets) {
         this.parseBrackets = parseBrackets;
         return this;
     }
 
-    public AeshCommandRuntimeBuilder operators(EnumSet<OperatorType> operators) {
+    public AeshCommandRuntimeBuilder<CI> operators(EnumSet<OperatorType> operators) {
         this.operators = operators;
         return this;
     }
 
-    public AeshCommandRuntimeBuilder commandRegistry(CommandRegistry<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> registry) {
+    public AeshCommandRuntimeBuilder<CI> commandRegistry(CommandRegistry<CI> registry) {
         this.registry = registry;
         return this;
     }
 
-    private AeshCommandRuntimeBuilder apply(Consumer<AeshCommandRuntimeBuilder> consumer) {
+    private AeshCommandRuntimeBuilder<CI> apply(Consumer<AeshCommandRuntimeBuilder> consumer) {
         consumer.accept(this);
         return this;
     }
 
-    public AeshCommandRuntimeBuilder commandInvocationProvider(CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider) {
+    public AeshCommandRuntimeBuilder<CI> commandInvocationProvider(CommandInvocationProvider<CI> commandInvocationProvider) {
         return apply(c -> c.commandInvocationProvider = commandInvocationProvider);
     }
 
-    public AeshCommandRuntimeBuilder commandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
+    public AeshCommandRuntimeBuilder<CI> commandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
         return apply(c -> c.commandNotFoundHandler = commandNotFoundHandler);
     }
 
-    public AeshCommandRuntimeBuilder completerInvocationProvider(CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider) {
+    public AeshCommandRuntimeBuilder<CI> completerInvocationProvider(CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider) {
         return apply(c -> c.completerInvocationProvider = completerInvocationProvider);
     }
 
-    public AeshCommandRuntimeBuilder converterInvocationProvider(ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider) {
+    public AeshCommandRuntimeBuilder<CI> converterInvocationProvider(ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider) {
         return apply(c -> c.converterInvocationProvider = converterInvocationProvider);
     }
 
-    public AeshCommandRuntimeBuilder validatorInvocationProvider(ValidatorInvocationProvider<? extends ValidatorInvocation> validatorInvocationProvider) {
+    public AeshCommandRuntimeBuilder<CI> validatorInvocationProvider(ValidatorInvocationProvider<? extends ValidatorInvocation> validatorInvocationProvider) {
         return apply(c -> c.validatorInvocationProvider = validatorInvocationProvider);
     }
 
-    public AeshCommandRuntimeBuilder optionActivatorProvider(OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider) {
+    public AeshCommandRuntimeBuilder<CI> optionActivatorProvider(OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider) {
         return apply(c -> c.optionActivatorProvider = optionActivatorProvider);
     }
 
-    public AeshCommandRuntimeBuilder commandActivatorProvider(CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider) {
+    public AeshCommandRuntimeBuilder<CI> commandActivatorProvider(CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider) {
         return apply(c -> c.commandActivatorProvider = commandActivatorProvider);
     }
 
-    public AeshCommandRuntimeBuilder commandInvocationBuilder(CommandInvocationBuilder<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> commandInvocationBuilder) {
+    public AeshCommandRuntimeBuilder<CI> commandInvocationBuilder(CommandInvocationBuilder commandInvocationBuilder) {
         return apply(c -> c.commandInvocationBuilder = commandInvocationBuilder);
     }
 
-    public AeshCommandRuntimeBuilder aeshContext(AeshContext ctx) {
+    public AeshCommandRuntimeBuilder<CI> aeshContext(AeshContext ctx) {
         return apply(c -> c.ctx = ctx);
     }
 
-    public AeshCommandRuntimeBuilder settings(Settings<? extends Command, ? extends CommandInvocation,
+    public AeshCommandRuntimeBuilder<CI> settings(Settings<? extends CommandInvocation,
             ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation,
             ? extends OptionActivator, ? extends CommandActivator> settings) {
         return apply(c -> {
@@ -155,13 +155,14 @@ public class AeshCommandRuntimeBuilder {
         });
     }
 
-    public CommandRuntime build() {
+    @SuppressWarnings("unchecked")
+    public CommandRuntime<CI> build() {
         if (registry == null) {
             registry = new MutableCommandRegistryImpl<>();
         }
 
         if (commandInvocationProvider == null) {
-            commandInvocationProvider = new AeshCommandInvocationProvider();
+            commandInvocationProvider = new AeshCommandInvocationProvider<>();
         }
 
         if (completerInvocationProvider == null) {
@@ -185,7 +186,7 @@ public class AeshCommandRuntimeBuilder {
         }
 
         if(commandInvocationBuilder == null)
-            commandInvocationBuilder = (CommandInvocationBuilder) (runtime, configuration) -> new DefaultCommandInvocation<>(runtime, configuration);
+            commandInvocationBuilder = (CommandInvocationBuilder) DefaultCommandInvocation::new;
 
         if (ctx == null) {
             ctx = new DefaultAeshContext();
@@ -195,7 +196,7 @@ public class AeshCommandRuntimeBuilder {
             operators = NO_OPERATORS;
         }
 
-        return new AeshCommandRuntime(ctx, registry, commandInvocationProvider,
+        return new AeshCommandRuntime<>(ctx, registry, commandInvocationProvider,
                         commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
                 validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider,
                 commandInvocationBuilder, parseBrackets, operators);

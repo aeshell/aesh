@@ -19,7 +19,6 @@
  */
 package org.aesh.command.settings;
 
-import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.CommandActivatorProvider;
@@ -52,7 +51,7 @@ import java.util.function.Consumer;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface Settings<C extends Command<CI>, CI extends CommandInvocation,
+public interface Settings<CI extends CommandInvocation,
         CI3 extends ConverterInvocation, CI2 extends CompleterInvocation,
         VI extends ValidatorInvocation, OA extends OptionActivator,
         CA extends CommandActivator> extends Cloneable {
@@ -250,7 +249,7 @@ public interface Settings<C extends Command<CI>, CI extends CommandInvocation,
     /**
      * @return get command registry
      */
-    CommandRegistry<C,CI> commandRegistry();
+    CommandRegistry<CI> commandRegistry();
 
     /**
      *

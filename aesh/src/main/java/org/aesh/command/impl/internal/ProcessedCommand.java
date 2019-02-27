@@ -25,6 +25,7 @@ import org.aesh.command.impl.activator.NullCommandActivator;
 import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
 import org.aesh.command.impl.result.NullResultHandler;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.parser.OptionParserException;
@@ -42,13 +43,13 @@ import java.util.List;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class ProcessedCommand<C extends Command> {
+public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocation> {
 
     private final String name;
     private final String description;
     private final CommandValidator validator;
     private final ResultHandler resultHandler;
-    private final CommandPopulator<Object, C> populator;
+    private final CommandPopulator<Object,CI> populator;
     private CommandActivator activator;
 
     private List<ProcessedOption> options;
@@ -64,7 +65,7 @@ public class ProcessedCommand<C extends Command> {
                             ResultHandler resultHandler,
                             ProcessedOption arguments, List<ProcessedOption> options,
                             ProcessedOption argument,
-                            CommandPopulator<Object, C> populator, CommandActivator activator) throws OptionParserException {
+                            CommandPopulator<Object,CI> populator, CommandActivator activator) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
@@ -151,7 +152,7 @@ public class ProcessedCommand<C extends Command> {
         this.arguments.setParent(this);
     }
 
-    public CommandPopulator<Object, C> getCommandPopulator() {
+    public CommandPopulator<Object, CI> getCommandPopulator() {
         return populator;
     }
 

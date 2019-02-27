@@ -71,25 +71,25 @@ import java.util.logging.Logger;
  *
  * @author jdenise@redhat.com
  */
-public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocation>
-        implements CommandRuntime<C,CI>, CommandRegistry.CommandRegistrationListener {
+public class AeshCommandRuntime<CI extends CommandInvocation>
+        implements CommandRuntime<CI>, CommandRegistry.CommandRegistrationListener {
 
-    private final CommandRegistry<C,CI> registry;
+    private final CommandRegistry<CI> registry;
     private final CommandInvocationProvider<CI> commandInvocationProvider;
     private final InvocationProviders invocationProviders;
 
     private static final Logger LOGGER = Logger.getLogger(AeshCommandRuntime.class.getName());
     private final CommandNotFoundHandler commandNotFoundHandler;
 
-    private final CommandResolver<C,CI> commandResolver;
+    private final CommandResolver<CI> commandResolver;
     private final AeshContext ctx;
-    private final CommandInvocationBuilder<C,CI> commandInvocationBuilder;
+    private final CommandInvocationBuilder<CI> commandInvocationBuilder;
 
     private final boolean parseBrackets;
     private final EnumSet<OperatorType> operators;
 
     public AeshCommandRuntime(AeshContext ctx,
-            CommandRegistry<C,CI> registry,
+            CommandRegistry<CI> registry,
             CommandInvocationProvider<CI> commandInvocationProvider,
             CommandNotFoundHandler commandNotFoundHandler,
             CompleterInvocationProvider completerInvocationProvider,
@@ -97,7 +97,7 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
             ValidatorInvocationProvider validatorInvocationProvider,
             OptionActivatorProvider optionActivatorProvider,
             CommandActivatorProvider commandActivatorProvider,
-            CommandInvocationBuilder<C,CI> commandInvocationBuilder,
+            CommandInvocationBuilder<CI> commandInvocationBuilder,
             boolean parseBrackets,
             EnumSet<OperatorType> operators) {
         this.ctx = ctx;
@@ -116,7 +116,7 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
     }
 
     @Override
-    public CommandRegistry<C,CI> getCommandRegistry() {
+    public CommandRegistry<CI> getCommandRegistry() {
         return registry;
     }
 
@@ -126,7 +126,7 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
     }
 
     @Override
-    public CommandInvocationBuilder<C,CI> commandInvocationBuilder() {
+    public CommandInvocationBuilder<CI> commandInvocationBuilder() {
         return commandInvocationBuilder;
     }
 
@@ -195,8 +195,8 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
     }
 
     private void updateCommand(String commandName) throws CommandNotFoundException {
-        ProcessedCommand cmd = registry.getCommand(commandName, "").getParser().getProcessedCommand();
-        List<? extends CommandLineParser<C>> childParsers = registry.getChildCommandParsers(commandName);
+        ProcessedCommand<Command<CI>, CI> cmd = registry.getCommand(commandName, "").getParser().getProcessedCommand();
+        List<CommandLineParser<CI>> childParsers = registry.getChildCommandParsers(commandName);
         if (!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
             //we have a custom OptionActivatorProvider, and need to process all options
             cmd.updateInvocationProviders(invocationProviders);
@@ -221,14 +221,14 @@ public class AeshCommandRuntime<C extends Command<CI>, CI extends CommandInvocat
                 enhanceCommandInvocation(commandInvocationBuilder.build(this, config));
     }
 
-    ProcessedCommand<C> getPopulatedCommand(ParsedLine aeshLine) throws CommandNotFoundException,
+    ProcessedCommand<Command<CI>, CI> getPopulatedCommand(ParsedLine aeshLine) throws CommandNotFoundException,
             CommandLineParserException, OptionValidatorException {
         String commandLine = aeshLine.line();
         if (aeshLine.words().isEmpty()) {
             return null;
         }
         String opName = aeshLine.words().get(0).word();
-        CommandContainer<C,CI> container = commandResolver.resolveCommand(opName, commandLine);
+        CommandContainer<CI> container = commandResolver.resolveCommand(opName, commandLine);
         if (container == null) {
             throw new CommandNotFoundException("No command handler for '" + opName + "'.", opName);
         }

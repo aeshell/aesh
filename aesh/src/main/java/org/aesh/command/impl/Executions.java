@@ -62,19 +62,20 @@ import java.util.List;
  *
  * @author jdenise@redhat.com
  */
+@SuppressWarnings("unchecked")
 class Executions {
 
     private static class ExecutionImpl<T extends CommandInvocation> implements Execution<T> {
 
         private final ExecutableOperator<T> executable;
-        private final ProcessedCommand<? extends Command<T>> cmd;
+        private final ProcessedCommand<? extends Command<T>, T> cmd;
         private final CommandInvocationConfiguration invocationConfiguration;
-        private final AeshCommandRuntime<? extends Command, T> runtime;
+        private final AeshCommandRuntime<T> runtime;
         private CommandResult result;
         ExecutionImpl(ExecutableOperator<T> executable,
-                AeshCommandRuntime<? extends Command, T> runtime,
+                AeshCommandRuntime<T> runtime,
                 CommandInvocationConfiguration invocationConfiguration,
-                ProcessedCommand<? extends Command<T>> cmd) {
+                ProcessedCommand<? extends Command<T>, T> cmd) {
             this.executable = executable;
             this.runtime = runtime;
             this.invocationConfiguration = invocationConfiguration;
@@ -186,7 +187,8 @@ class Executions {
                 if (invocationConfiguration.getOutputRedirection() != null) {
                     try {
                         invocationConfiguration.getOutputRedirection().close();
-                    } catch (IOException ex) {
+                    }
+                    catch (IOException ex) {
                         throw new CommandException(ex);
                     }
                 }
@@ -240,15 +242,15 @@ class Executions {
     }
 
     static <CI extends CommandInvocation> List<Execution<CI>> buildExecution(List<ParsedLine> fullLine,
-            AeshCommandRuntime<? extends Command<CI>, CI> runtime)
+            AeshCommandRuntime<CI> runtime)
             throws CommandNotFoundException, CommandLineParserException, OptionValidatorException, IOException {
         State state = State.NEED_COMMAND;
-        ProcessedCommand<? extends Command<CI>> processedCommand = null;
+        ProcessedCommand<? extends Command<CI>, CI> processedCommand = null;
         boolean newParsedLine;
         ConfigurationOperator config = null;
         DataProvider dataProvider = null;
         InputDelegate inDelegate = null;
-        CommandInvocationConfiguration invocationConfiguration = null;
+        CommandInvocationConfiguration invocationConfiguration;
         List<Execution<CI>> executions = new ArrayList<>();
         for (ParsedLine pl : fullLine) {
             newParsedLine = false;

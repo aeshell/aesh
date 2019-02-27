@@ -22,6 +22,7 @@ package org.aesh.command.populator;
 
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.readline.AeshContext;
@@ -31,7 +32,7 @@ import org.aesh.command.Command;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandPopulator<T, C extends Command> {
+public interface CommandPopulator<T, CI extends CommandInvocation> {
 
     /**
      * Populate a Command instance with the values parsed from a command line
@@ -41,7 +42,7 @@ public interface CommandPopulator<T, C extends Command> {
      * @param mode based on rules given to the parser
      * @throws CommandLineParserException
      */
-    void populateObject(ProcessedCommand<C> processedCommand, InvocationProviders invocationProviders,
+    void populateObject(ProcessedCommand<Command<CI>,CI> processedCommand, InvocationProviders invocationProviders,
                         AeshContext aeshContext, CommandLineParser.Mode mode) throws CommandLineParserException, OptionValidatorException;
 
     /**

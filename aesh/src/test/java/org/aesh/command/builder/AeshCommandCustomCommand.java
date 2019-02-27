@@ -19,6 +19,10 @@
  */
 package org.aesh.command.builder;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
@@ -30,6 +34,7 @@ import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.Command;
@@ -63,17 +68,19 @@ public class AeshCommandCustomCommand {
 
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(createBuilder())
-                .create();
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                                                              .command(createBuilder())
+                                                              .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .commandRegistry(registry)
-                .connection(connection)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .commandRegistry(registry)
+                        .connection(connection)
+                        .logging(true)
+                        .build();
 
-         ReadlineConsole console = new ReadlineConsole(settings);
+        ReadlineConsole console = new ReadlineConsole(settings);
 
         console.start();
 
@@ -84,12 +91,12 @@ public class AeshCommandCustomCommand {
         console.stop();
     }
 
-    private CommandContainer createBuilder() throws CommandLineParserException {
+    private CommandContainer<CommandInvocation> createBuilder() throws CommandLineParserException {
 
         CustomPopulator populator = new CustomPopulator();
 
-        ProcessedCommand processedCommand =
-                new ProcessedCommandBuilder()
+        ProcessedCommand<CustomCommand, CommandInvocation> processedCommand =
+                ProcessedCommandBuilder.<CustomCommand,CommandInvocation>builder()
                         .name("foo")
                         .description("this is foo")
                         .populator(populator)
@@ -101,16 +108,16 @@ public class AeshCommandCustomCommand {
                         )
                         .create();
 
-        CommandLineParser parser = new CommandLineParserBuilder()
+        CommandLineParser<CommandInvocation> parser = CommandLineParserBuilder.<CustomCommand, CommandInvocation>builder()
                 .processedCommand(processedCommand)
                 .create();
 
-        return new AeshCommandContainer(processedCommand);
+        return new AeshCommandContainer<>(parser);
     }
 }
 
 
-class CustomCommand implements Command {
+class CustomCommand implements Command<CommandInvocation> {
 
     private CustomPopulator populator;
 
@@ -125,7 +132,7 @@ class CustomCommand implements Command {
     }
 }
 
-class CustomPopulator implements CommandPopulator<Object, Command> {
+class CustomPopulator implements CommandPopulator<Object, CommandInvocation> {
 
     private Map<String, String> values;
     private List<String> arguments;
@@ -166,7 +173,7 @@ class CustomPopulator implements CommandPopulator<Object, Command> {
     }
 
     @Override
-    public void populateObject(ProcessedCommand<Command> processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, CommandLineParser.Mode validate) throws CommandLineParserException {
+    public void populateObject(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, CommandLineParser.Mode validate) throws CommandLineParserException {
         if(processedCommand.parserExceptions().size() > 0)
             throw processedCommand.parserExceptions().get(0);
         for(ProcessedOption option : processedCommand.getOptions()) {

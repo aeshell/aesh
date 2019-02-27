@@ -42,7 +42,7 @@ public class FileCompleterGenerator {
      * @param command
      * @return
      */
-    public String generateCompeterFile(CommandLineParser<Command<CommandInvocation>> command) {
+    public String generateCompeterFile(CommandLineParser<CommandInvocation> command) {
          StringBuilder out = new StringBuilder();
 
         out.append(generateHeader(command.getProcessedCommand().name()));
@@ -62,7 +62,7 @@ public class FileCompleterGenerator {
         return out.toString();
     }
 
-    private String generateMainCompletion(CommandLineParser<Command<CommandInvocation>> command) {
+    private String generateMainCompletion(CommandLineParser<CommandInvocation> command) {
         StringBuilder main = new StringBuilder();
         main.append("function _complete_").append(command.getProcessedCommand().name().toLowerCase()).append(" {").append(getLineSeparator());
         if(command.isGroupCommand()) {
@@ -82,7 +82,7 @@ public class FileCompleterGenerator {
         return main.toString();
     }
 
-    private String generateCommand(CommandLineParser<Command<CommandInvocation>> command) {
+    private String generateCommand(CommandLineParser<CommandInvocation> command) {
         StringBuilder builder = new StringBuilder();
         builder.append("function _command_").append(command.getProcessedCommand().name().toLowerCase()).append(" {").append(getLineSeparator());
         builder.append(generateDefaultCompletionVariables());
@@ -125,7 +125,7 @@ public class FileCompleterGenerator {
         return builder.toString();
     }
 
-    private String generateCompletionValues(CommandLineParser<Command<CommandInvocation>> command) {
+    private String generateCompletionValues(CommandLineParser<CommandInvocation> command) {
         StringBuilder builder = new StringBuilder();
         for(ProcessedOption option : command.getProcessedCommand().getOptions()) {
             if(option.hasValue()) {

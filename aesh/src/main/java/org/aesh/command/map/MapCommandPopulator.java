@@ -27,14 +27,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.map.MapProcessedCommandBuilder.MapProcessedCommand;
 import org.aesh.command.parser.CommandLineParserException;
 
 /**
@@ -43,18 +44,18 @@ import org.aesh.command.parser.CommandLineParserException;
  *
  * @author jdenise@redhat.com
  */
-public class MapCommandPopulator implements CommandPopulator<Object, MapCommand> {
+public class MapCommandPopulator<O extends Object, CI extends CommandInvocation> implements CommandPopulator<O, CI> {
 
-    private final MapCommand<?> instance;
+    private final MapCommand<CI> instance;
     private final Map<String, String> unknownOptions = new HashMap<>();
 
-    MapCommandPopulator(MapCommand<?> instance) {
+    MapCommandPopulator(MapCommand<CI> instance) {
         Objects.requireNonNull(instance);
         this.instance = instance;
     }
 
     @Override
-    public void populateObject(ProcessedCommand<MapCommand> processedCommand,
+    public void populateObject(ProcessedCommand<Command<CI>, CI> processedCommand,
             InvocationProviders invocationProviders,
             AeshContext aeshContext, CommandLineParser.Mode validate)
             throws CommandLineParserException, OptionValidatorException {
@@ -71,14 +72,14 @@ public class MapCommandPopulator implements CommandPopulator<Object, MapCommand>
 
         if (processedCommand.getArguments() != null) {
             if (processedCommand.getArguments().getValues().size() > 0) {
-                List tmpSet = new ArrayList();
+                List<Object> tmpSet = new ArrayList<>();
                 for (String in : processedCommand.getArguments().getValues()) {
                     tmpSet.add(processedCommand.getArguments().doConvert(in, invocationProviders,
                             instance, aeshContext, validate == CommandLineParser.Mode.VALIDATE));
                 }
                 instance.setValue(processedCommand.getArguments().name(), tmpSet);
             } else if (processedCommand.getArguments().getDefaultValues().size() > 0) {
-                List tmpSet = new ArrayList();
+                List<Object> tmpSet = new ArrayList<>();
                 for (String in : processedCommand.getArguments().getDefaultValues()) {
                     tmpSet.add(processedCommand.getArguments().doConvert(in, invocationProviders,
                             instance, aeshContext, validate == CommandLineParser.Mode.VALIDATE));
@@ -110,7 +111,8 @@ public class MapCommandPopulator implements CommandPopulator<Object, MapCommand>
 
         // At this point, if no dynamic options have been retrieved it means
         // that no dynamic options have been provided, so no need to compute the set now.
-        MapProcessedCommand mpc = (MapProcessedCommand) processedCommand;
+        @SuppressWarnings("unchecked")
+        MapProcessedCommand<CommandInvocation> mpc = (MapProcessedCommand) processedCommand;
         for (ProcessedOption option : mpc.getCurrentOptions()) {
             // Do not erase the value that would have been set as an unknown option.
             if (!unknownOptions.containsKey(option.name())) {
@@ -129,8 +131,9 @@ public class MapCommandPopulator implements CommandPopulator<Object, MapCommand>
     }
 
     @Override
-    public Object getObject() {
-        return instance;
+    @SuppressWarnings("unchecked")
+    public O getObject() {
+        return (O) instance;
     }
 
     public void addUnknownOption(String opt) {

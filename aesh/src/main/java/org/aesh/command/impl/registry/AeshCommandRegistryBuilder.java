@@ -26,63 +26,65 @@ import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.container.AeshCommandContainer;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandRegistryBuilder {
+@SuppressWarnings("unchecked")
+public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
 
-    private final MutableCommandRegistryImpl commandRegistry;
+    private final MutableCommandRegistryImpl<CI> commandRegistry;
 
-    public static AeshCommandRegistryBuilder builder() {
-        return new AeshCommandRegistryBuilder();
+    public static <T extends CommandInvocation> AeshCommandRegistryBuilder<T> builder() {
+        return new AeshCommandRegistryBuilder<>();
     }
 
-    public AeshCommandRegistryBuilder() {
-        commandRegistry = new MutableCommandRegistryImpl();
+    private AeshCommandRegistryBuilder() {
+        commandRegistry = new MutableCommandRegistryImpl<>();
     }
 
-    public AeshCommandRegistryBuilder containerBuilder(CommandContainerBuilder builder) {
+    public AeshCommandRegistryBuilder<CI> containerBuilder(CommandContainerBuilder<CI> builder) {
         commandRegistry.setCommandContainerBuilder(builder);
         return this;
     }
 
-    public AeshCommandRegistryBuilder command(Class<? extends Command> command) throws CommandRegistryException {
-        commandRegistry.addCommand(command);
+    public AeshCommandRegistryBuilder<CI> command(Class<? extends Command> command) throws CommandRegistryException {
+        commandRegistry.addCommand((Class<Command>) command);
         return this;
     }
 
-    public AeshCommandRegistryBuilder commands(Class<? extends Command>... commands) throws CommandRegistryException {
+    public AeshCommandRegistryBuilder<CI> commands(Class<? extends Command>... commands) throws CommandRegistryException {
         for (Class<? extends Command> c : commands) {
-            commandRegistry.addCommand(c);
+            commandRegistry.addCommand((Class<Command>) c);
         }
         return this;
     }
 
-    public AeshCommandRegistryBuilder command(ProcessedCommand processedCommand) {
-        commandRegistry.addCommand(new AeshCommandContainer(processedCommand));
+    public AeshCommandRegistryBuilder<CI> command(ProcessedCommand<Command<CI>, CI> processedCommand) {
+        commandRegistry.addCommand(new AeshCommandContainer<>(processedCommand));
         return this;
     }
 
-    public AeshCommandRegistryBuilder command(CommandContainer commandContainer) {
+    public AeshCommandRegistryBuilder<CI> command(CommandContainer commandContainer) {
         commandRegistry.addCommand(commandContainer);
         return this;
     }
 
 
-    public AeshCommandRegistryBuilder command(CommandLineParser parser) {
-        commandRegistry.addCommand(new AeshCommandContainer(parser));
+    public AeshCommandRegistryBuilder<CI> command(CommandLineParser<CI> parser) {
+        commandRegistry.addCommand(new AeshCommandContainer<>(parser));
         return this;
     }
 
-    public AeshCommandRegistryBuilder command(Command command) throws CommandRegistryException {
+    public AeshCommandRegistryBuilder<CI> command(Command command) throws CommandRegistryException {
         commandRegistry.addCommand(command);
         return this;
     }
 
-    public CommandRegistry create() {
+    public CommandRegistry<CI> create() {
         return commandRegistry;
     }
 

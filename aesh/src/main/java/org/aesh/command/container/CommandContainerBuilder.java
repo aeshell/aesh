@@ -27,9 +27,9 @@ import org.aesh.command.parser.CommandLineParserException;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  * @author <a href="mailto:danielsoro@gmail.com>Daniel Cunha (soro)</a>
  */
-public interface CommandContainerBuilder<C extends Command<CI>, CI extends CommandInvocation> {
+public interface CommandContainerBuilder<CI extends CommandInvocation> {
 
-    CommandContainer<C,CI> create(C command) throws CommandLineParserException;
+    CommandContainer<CI> create(Command command) throws CommandLineParserException;
 
-    CommandContainer<C,CI> create(Class<C> command) throws CommandLineParserException;
+    CommandContainer<CI> create(Class<? extends Command> command) throws CommandLineParserException;
 }

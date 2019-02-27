@@ -23,6 +23,7 @@ import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.readline.AeshContext;
@@ -36,7 +37,7 @@ import java.lang.reflect.Modifier;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandPopulator<O extends Object, C extends Command> implements CommandPopulator<O, C> {
+public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation> implements CommandPopulator<O, CI> {
 
     private final O instance;
 
@@ -49,10 +50,10 @@ public class AeshCommandPopulator<O extends Object, C extends Command> implement
      * If any parser errors are detected it will throw an exception
      * @param processedCommand command line
      * @param mode do validation or not
-     * @throws CommandLineParserException
+     * @throws CommandLineParserException any incorrectness in the parser will abort the populate
      */
     @Override
-    public void populateObject(ProcessedCommand<C> processedCommand, InvocationProviders invocationProviders,
+    public void populateObject(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders,
                                AeshContext aeshContext, CommandLineParser.Mode mode)
             throws CommandLineParserException, OptionValidatorException {
         if(processedCommand.parserExceptions().size() > 0 && mode == CommandLineParser.Mode.VALIDATE)

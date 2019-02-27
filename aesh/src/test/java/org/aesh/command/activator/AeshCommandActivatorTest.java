@@ -23,12 +23,15 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
@@ -46,15 +49,17 @@ public class AeshCommandActivatorTest {
     public void testActivatorFail() throws Exception {
         TestConnection connection = new TestConnection(false);
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .logging(true)
-                .connection(connection)
-                .commandRegistry(registry)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 

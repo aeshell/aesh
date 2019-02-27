@@ -26,9 +26,9 @@ import org.aesh.command.invocation.CommandInvocationProvider;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandInvocationProvider implements CommandInvocationProvider<CommandInvocation> {
+public class AeshCommandInvocationProvider<CI extends CommandInvocation> implements CommandInvocationProvider<CI> {
     @Override
-    public CommandInvocation enhanceCommandInvocation(CommandInvocation commandInvocation) {
-        return commandInvocation;
+    public CI enhanceCommandInvocation(CommandInvocation commandInvocation) {
+        return (CI) commandInvocation;
     }
 }

@@ -19,6 +19,10 @@
  */
 package org.aesh.command;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.registry.CommandRegistryException;
@@ -28,6 +32,7 @@ import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
@@ -47,15 +52,17 @@ public class AeshCommandResultHandlerTest {
     public void testResultHandler() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
                 .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .commandRegistry(registry)
-                 .connection(connection)
-                .logging(true)
-                .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .commandRegistry(registry)
+                         .connection(connection)
+                         .logging(true)
+                         .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

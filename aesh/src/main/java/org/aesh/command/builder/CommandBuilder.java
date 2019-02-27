@@ -22,6 +22,7 @@ package org.aesh.command.builder;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.validator.CommandValidator;
@@ -44,87 +45,91 @@ import java.util.List;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  */
-public class CommandBuilder {
+public class CommandBuilder<C extends Command> {
 
     private String name;
     private String description;
-    private Command command;
-    private CommandValidator<Command> validator;
+    private C command;
+    private CommandValidator<C> validator;
     private ResultHandler resultHandler;
     private ProcessedOption argument;
     private List<ProcessedOption> options;
     private List<CommandBuilder> children;
     private CommandLineParserException parserException;
-    private CommandPopulator<Object, Command> populator;
+    private CommandPopulator<Object, CommandInvocation> populator;
     private List<String> aliases;
 
-    public CommandBuilder() {
+    private CommandBuilder() {
     }
 
-    public CommandBuilder name(String name) {
+    public static <T extends Command> CommandBuilder<T> builder() {
+        return new CommandBuilder<>();
+    }
+
+    public CommandBuilder<C> name(String name) {
         this.name = name;
         return this;
     }
 
-    public CommandBuilder aliases(List<String> aliases) {
-        this.aliases = aliases == null ? Collections.<String>emptyList()
+    public CommandBuilder<C> aliases(List<String> aliases) {
+        this.aliases = aliases == null ? Collections.emptyList()
                 : Collections.unmodifiableList(aliases);
         return this;
     }
 
-    public CommandBuilder description(String description) {
+    public CommandBuilder<C> description(String description) {
         this.description = description;
         return this;
     }
 
-    public CommandBuilder command(Command command) {
+    public CommandBuilder<C> command(C command) {
         this.command = command;
         return this;
     }
 
-    public CommandBuilder command(Class<? extends Command> command) {
+    public CommandBuilder<C> command(Class<C> command) {
         this.command = ReflectionUtil.newInstance(command);
         return this;
     }
 
-    public CommandBuilder validator(CommandValidator<Command> commandValidator) {
+    public CommandBuilder<C> validator(CommandValidator<C> commandValidator) {
         this.validator = commandValidator;
         return this;
     }
 
-    public CommandBuilder validator(Class<CommandValidator<Command>> commandValidator) {
+    public CommandBuilder<C> validator(Class<CommandValidator<C>> commandValidator) {
         this.validator = ReflectionUtil.newInstance(commandValidator);
         return this;
     }
 
-    public CommandBuilder populator(CommandPopulator<Object, Command> populator) {
+    public CommandBuilder<C> populator(CommandPopulator<Object, CommandInvocation> populator) {
         this.populator = populator;
         return this;
     }
 
-    public CommandBuilder resultHandler(ResultHandler resultHandler) {
+    public CommandBuilder<C> resultHandler(ResultHandler resultHandler) {
         this.resultHandler = resultHandler;
         return this;
     }
 
-    public CommandBuilder resultHandler(Class<ResultHandler> resultHandler) {
+    public CommandBuilder<C> resultHandler(Class<ResultHandler> resultHandler) {
         this.resultHandler = ReflectionUtil.newInstance(resultHandler);
         return this;
     }
 
-    public CommandBuilder argument(ProcessedOption argument) {
+    public CommandBuilder<C> argument(ProcessedOption argument) {
         this.argument = argument;
         return this;
     }
 
-    public CommandBuilder addOption(ProcessedOption option) {
+    public CommandBuilder<C> addOption(ProcessedOption option) {
         if(options == null)
             options = new ArrayList<>();
         options.add(option);
         return this;
     }
 
-    public CommandBuilder addOption(ProcessedOptionBuilder option) {
+    public CommandBuilder<C> addOption(ProcessedOptionBuilder option) {
         if(options == null)
             options = new ArrayList<>();
         try {
@@ -136,28 +141,28 @@ public class CommandBuilder {
         return this;
     }
 
-    public CommandBuilder addOptions(List<ProcessedOption> options) {
+    public CommandBuilder<C> addOptions(List<ProcessedOption> options) {
         if(this.options == null)
             this.options = new ArrayList<>();
         this.options.addAll(options);
         return this;
     }
 
-    public CommandBuilder addChild(CommandBuilder child) {
+    public CommandBuilder<C> addChild(CommandBuilder child) {
         if(children == null)
             children = new ArrayList<>();
         this.children.add(child);
         return this;
     }
 
-    public CommandBuilder addChildren(List<CommandBuilder> children) {
+    public CommandBuilder<C> addChildren(List<CommandBuilder> children) {
         if(this.children == null)
             this.children = new ArrayList<>();
         this.children.addAll(children);
         return this;
     }
 
-    public CommandContainer create() {
+    public CommandContainer<CommandInvocation> create() {
         try {
             if(parserException != null) {
                 return new AeshCommandContainer<>(parserException.getMessage());
@@ -169,11 +174,12 @@ public class CommandBuilder {
         }
     }
 
-    private AeshCommandLineParser<Command> createParser() throws CommandLineParserException {
+    @SuppressWarnings("unchecked")
+    private AeshCommandLineParser<CommandInvocation> createParser() throws CommandLineParserException {
         if(command == null)
             throw new CommandLineParserException("Command object is null, cannot build command");
-        ProcessedCommand<Command> processedCommand = createProcessedCommand();
-        AeshCommandLineParser<Command> parser = new AeshCommandLineParser<>(processedCommand);
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processedCommand = createProcessedCommand();
+        AeshCommandLineParser<CommandInvocation> parser = new AeshCommandLineParser<>(processedCommand);
         if(children != null) {
             for(CommandBuilder builder : children) {
                 parser.addChildParser(builder.createParser());
@@ -182,8 +188,9 @@ public class CommandBuilder {
         return parser;
     }
 
-    private ProcessedCommand<Command> createProcessedCommand() throws CommandLineParserException {
-        return new ProcessedCommandBuilder<>()
+    @SuppressWarnings("unchecked")
+    private ProcessedCommand<Command<CommandInvocation>, CommandInvocation> createProcessedCommand() throws CommandLineParserException {
+        return ProcessedCommandBuilder.builder()
                 .name(name)
                 .aliases(aliases)
                 .command(command)

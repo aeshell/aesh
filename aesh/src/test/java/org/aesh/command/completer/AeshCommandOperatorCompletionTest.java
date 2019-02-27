@@ -4,6 +4,9 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
@@ -12,6 +15,7 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.io.FileResource;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.readline.terminal.Key;
@@ -26,13 +30,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.logging.Logger;
 
 public class AeshCommandOperatorCompletionTest {
 
     private final Key completeChar =  Key.CTRL_I;
-
-    private static Logger LOGGER = Logger.getLogger(AeshCommandOperatorCompletionTest.class.getName());
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -41,19 +42,21 @@ public class AeshCommandOperatorCompletionTest {
     public void testCompletionWithEndOperator() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection(new Size(400, 80));
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ArgCommand.class)
                 .command(FooCommand.class)
                 .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .enableOperatorParser(true)
-                 .enableExport(false)
-                 .enableAlias(false)
-                 .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .enableOperatorParser(true)
+                        .enableExport(false)
+                        .enableAlias(false)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -69,19 +72,21 @@ public class AeshCommandOperatorCompletionTest {
     public void testCompletionWithRedirectOutOperator() throws IOException, CommandRegistryException {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(ArgCommand.class)
                  .command(FooCommand.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .enableOperatorParser(true)
-                 .enableExport(false)
-                 .enableAlias(false)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .enableOperatorParser(true)
+                         .enableExport(false)
+                         .enableAlias(false)
+                         .build();
 
          final Path tempDir = temporaryFolder.getRoot().toPath();
          final File fooOut = new File(tempDir.toFile()+Config.getPathSeparator()+"foo_redirection_out.txt");
@@ -115,19 +120,21 @@ public class AeshCommandOperatorCompletionTest {
     public void testCompletionWithPipeOperator() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection(new Size(400, 80));
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ArgCommand.class)
                 .command(FooCommand.class)
                 .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .enableOperatorParser(true)
-                 .enableExport(false)
-                 .enableAlias(false)
-                 .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .enableOperatorParser(true)
+                        .enableExport(false)
+                        .enableAlias(false)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

@@ -57,9 +57,9 @@ public class CompleterCommand implements Command<CommandInvocation> {
         else {
                 Class<Command<CommandInvocation>> clazz = loadCommand(command);
                 if(clazz != null) {
-                    CommandContainerBuilder<Command<CommandInvocation>, CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+                    CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
                     try {
-                        CommandContainer<Command<CommandInvocation>, CommandInvocation> container = builder.create(clazz);
+                        CommandContainer<CommandInvocation> container = builder.create(clazz);
 
                         FileCompleterGenerator completerGenerator = new FileCompleterGenerator();
 

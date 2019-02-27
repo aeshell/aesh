@@ -22,6 +22,7 @@ package org.aesh.command.builder;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.validator.NullCommandValidator;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.OptionType;
@@ -40,7 +41,7 @@ public class BuilderTest {
 
     @Test
     public void testBuilder() throws CommandLineParserException {
-        ProcessedCommandBuilder pb = new ProcessedCommandBuilder();
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder();
         pb.name("foo").description("foo is bar");
         pb.addOption(
                 ProcessedOptionBuilder.builder().description("filename given").shortName('f').name("filename")
@@ -48,7 +49,7 @@ public class BuilderTest {
         pb.argument(ProcessedOptionBuilder.builder().shortName('\u0000').name("")
                 .description("argument!!").type(Integer.class).optionType(OptionType.ARGUMENT).hasValue(true).build());
 
-        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
+        CommandLineParser clp = CommandLineParserBuilder.builder().processedCommand(pb.create()).create();
 
         clp.parse("foo -f test1.txt baAar");
         assertEquals("test1.txt", clp.getProcessedCommand().findOption("f").getValue());
@@ -58,7 +59,7 @@ public class BuilderTest {
     @Test
     public void testBuilder2() throws CommandLineParserException {
 
-        ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("less").description("less is more");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder().name("less").description("less is more");
         pb.addOption(
                 ProcessedOptionBuilder.builder().description("version").shortName('V').name("version")
                         .hasValue(false).required(true).type(String.class).build());
@@ -78,7 +79,7 @@ public class BuilderTest {
         pb.arguments(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENTS).type(String.class).build());
 
-        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
+        CommandLineParser clp = CommandLineParserBuilder.builder().processedCommand(pb.create()).create();
 
         clp.parse("less -V test1.txt");
         assertEquals("true", clp.getProcessedCommand().findOption("V").getValue());
@@ -94,7 +95,7 @@ public class BuilderTest {
 
     @Test
     public void testBuilder3() throws CommandLineParserException {
-        ProcessedCommandBuilder pb = new ProcessedCommandBuilder().name("less").description("less is more");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder().name("less").description("less is more");
         pb.addOption(
                 ProcessedOptionBuilder.builder()
                         .description("version")
@@ -116,7 +117,7 @@ public class BuilderTest {
         pb.arguments(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENTS).type(String.class).build());
 
-        CommandLineParser clp = new CommandLineParserBuilder().processedCommand(pb.create()).create();
+        CommandLineParser clp = CommandLineParserBuilder.builder().processedCommand(pb.create()).create();
 
         assertEquals("version", clp.getProcessedCommand().findOption("v").name());
         assertEquals("verbose", clp.getProcessedCommand().findOption("e").name());
@@ -129,8 +130,8 @@ public class BuilderTest {
 
     @Test
     public void testParameterInt() throws CommandLineParserException {
-        ProcessedCommand<Command> processedCommand =
-                new ProcessedCommandBuilder()
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processedCommand =
+                ProcessedCommandBuilder.builder()
                         .name("foo")
                         .description("")
                         .validator(NullCommandValidator.class)

@@ -19,9 +19,14 @@
  */
 package org.aesh.command.builder;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.parser.OptionParserException;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
@@ -39,8 +44,6 @@ import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
 import org.junit.Test;
 
-import java.util.HashMap;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -52,11 +55,12 @@ public class AeshCommandDynamicTest {
     public void testDynamic() throws Exception {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
                 .command(createGroupCommand().create())
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation,
+                        ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder.builder()
                 .connection(connection)
                 .commandRegistry(registry)
                 .logging(true)
@@ -81,13 +85,13 @@ public class AeshCommandDynamicTest {
         console.stop();
     }
 
-    private CommandBuilder createGroupCommand() throws OptionParserException {
-        CommandBuilder builder = new CommandBuilder()
+    private CommandBuilder<GroupCommand> createGroupCommand() throws OptionParserException {
+        return CommandBuilder.<GroupCommand>builder()
                 .name("group")
                 .description("")
                 .addOption(ProcessedOptionBuilder.builder().name("bar").type(Boolean.class).build())
                 .addChild(
-                        new CommandBuilder()
+                        CommandBuilder.<Child1Command>builder()
                                 .name("child1")
                                 .description("")
                                 .command(new Child1Command())
@@ -98,8 +102,6 @@ public class AeshCommandDynamicTest {
                                         .type(String.class)
                                         .hasValue(true)))
                 .command(new GroupCommand());
-
-        return builder;
     }
 
 
@@ -121,49 +123,6 @@ public class AeshCommandDynamicTest {
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             assertEquals("BAR", foo);
             return CommandResult.SUCCESS;
-        }
-    }
-
-
-    public class CommandAdapter implements Command<CommandInvocation> {
-
-        private String name;
-
-        private HashMap<String, String> fields;
-
-        public CommandAdapter(String name, HashMap<String, String> fields) {
-            this.name = name;
-            this.fields = fields;
-        }
-
-        @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-
-            StringBuilder builder = new StringBuilder();
-            commandInvocation.println("creating data packet we're sending over the wire:");
-            for(String key : fields.keySet()) {
-                if(fields.get(key) != null) {
-                    if(builder.length() > 0)
-                        builder.append(Config.getLineSeparator());
-                    builder.append(key).append(": ").append(fields.get(key));
-                }
-            }
-
-            commandInvocation.println("Sending: " + builder.toString());
-            return CommandResult.SUCCESS;
-        }
-
-        public String getField(String fieldName) {
-            return fields.get(fieldName);
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void clearValues() {
-            for(String key : fields.keySet())
-                fields.put(key, null);
         }
     }
 

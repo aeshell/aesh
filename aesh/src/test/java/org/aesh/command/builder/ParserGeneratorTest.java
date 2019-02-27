@@ -46,7 +46,7 @@ public class ParserGeneratorTest {
     public void testClassGenerator() throws CommandLineParserException {
 
         Test1<CommandInvocation> test1 = new Test1<>();
-        CommandLineParser<Test1<CommandInvocation>> parser = new AeshCommandContainerBuilder<Test1<CommandInvocation>,CommandInvocation>().create(test1).getParser();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(test1).getParser();
 
         assertEquals("a simple test", parser.getProcessedCommand().description());
         List<ProcessedOption> options = parser.getProcessedCommand().getOptions();
@@ -60,13 +60,13 @@ public class ParserGeneratorTest {
         assertFalse(options.get(2).hasValue());
 
         Test2<CommandInvocation> test2 = new Test2<>();
-        CommandLineParser<Test2<CommandInvocation>> parser2 = new AeshCommandContainerBuilder<Test2<CommandInvocation>,CommandInvocation>().create(test2).getParser();
+        CommandLineParser<CommandInvocation> parser2 = new AeshCommandContainerBuilder<>().create(test2).getParser();
         assertEquals("more [options] file...", parser2.getProcessedCommand().description());
         options = parser2.getProcessedCommand().getOptions();
         assertEquals("d", options.get(0).shortName());
         assertEquals("V", options.get(1).shortName());
 
-        CommandLineParser<Test3<CommandInvocation>> parser3 = new AeshCommandContainerBuilder<Test3<CommandInvocation>,CommandInvocation>().create(new Test3<>()).getParser();
+        CommandLineParser<CommandInvocation> parser3 = new AeshCommandContainerBuilder<>().create(new Test3<>()).getParser();
         options = parser3.getProcessedCommand().getOptions();
         assertEquals("t", options.get(0).shortName());
         assertEquals("e", options.get(1).shortName());

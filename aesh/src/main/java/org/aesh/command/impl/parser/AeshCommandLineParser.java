@@ -20,7 +20,9 @@
 package org.aesh.command.impl.parser;
 
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.map.MapProcessedCommand;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.parser.RequiredOptionException;
@@ -41,7 +43,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aesh.command.map.MapCommand;
 import org.aesh.command.map.MapCommandPopulator;
-import org.aesh.command.map.MapProcessedCommandBuilder.MapProcessedCommand;
 
 /**
  * A simple command line parser.
@@ -51,23 +52,23 @@ import org.aesh.command.map.MapProcessedCommandBuilder.MapProcessedCommand;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandLineParser<C extends Command> implements CommandLineParser<C> {
+public class AeshCommandLineParser<CI extends CommandInvocation> implements CommandLineParser<CI> {
 
-    private final ProcessedCommand<C> processedCommand;
-    private List<CommandLineParser<C>> childParsers;
+    private final ProcessedCommand<Command<CI>, CI> processedCommand;
+    private List<CommandLineParser<CI>> childParsers;
     private boolean isChild = false;
     private ProcessedOption lastParsedOption;
     private boolean parsedCommand = false;
     private final LineParser lineParser;
     private CompleteStatus completeStatus;
 
-    public AeshCommandLineParser(ProcessedCommand<C> processedCommand) {
+    public AeshCommandLineParser(ProcessedCommand<Command<CI>, CI> processedCommand) {
         this.processedCommand = processedCommand;
         lineParser = new LineParser();
     }
 
     @Override
-    public void addChildParser(CommandLineParser<C> commandLineParser) throws CommandLineParserException {
+    public void addChildParser(CommandLineParser<CI> commandLineParser) throws CommandLineParserException {
         if(processedCommand.hasArgument() || processedCommand.hasArguments())
             throw new CommandLineParserException("Group commands can not have arguments defined");
         if(childParsers == null)
@@ -76,7 +77,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         childParsers.add(commandLineParser);
     }
 
-    public List<CommandLineParser<C>> getChildParsers() {
+    public List<CommandLineParser<CI>> getChildParsers() {
         return childParsers;
     }
 
@@ -86,12 +87,12 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public CommandLineParser<C> parsedCommand() {
+    public CommandLineParser<CI> parsedCommand() {
         if(parsedCommand)
             return this;
         else if(isGroupCommand()) {
-            CommandLineParser<C> correct;
-            for(CommandLineParser<C> child : childParsers) {
+            CommandLineParser<CI> correct;
+            for(CommandLineParser<CI> child : childParsers) {
                 correct = child.parsedCommand();
                 if(correct != null)
                     return correct;
@@ -119,7 +120,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     @Override
     public List<String> getAllNames() {
         if (isGroupCommand()) {
-            List<CommandLineParser<C>> parsers = getChildParsers();
+            List<CommandLineParser<CI>> parsers = getChildParsers();
             List<String> names = new ArrayList<>(parsers.size());
             for (CommandLineParser child : parsers) {
                 names.add(processedCommand.name()+" "+child.getProcessedCommand().name());
@@ -138,10 +139,10 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public CommandLineParser<C> getChildParser(String name) {
+    public CommandLineParser<CI> getChildParser(String name) {
         if(!isGroupCommand())
             return null;
-        for (CommandLineParser clp : getChildParsers()) {
+        for (CommandLineParser<CI> clp : getChildParsers()) {
             if(clp.getProcessedCommand().name().equals(name))
                 return clp;
         }
@@ -149,7 +150,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public List<CommandLineParser<C>> getAllChildParsers() {
+    public List<CommandLineParser<CI>> getAllChildParsers() {
         if(isGroupCommand())
             return getChildParsers();
         else
@@ -157,22 +158,22 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public ProcessedCommand<C> getProcessedCommand() {
+    public ProcessedCommand<Command<CI>, CI> getProcessedCommand() {
         return processedCommand;
     }
 
     @Override
-    public C getCommand() {
+    public Command<CI> getCommand() {
         return processedCommand.getCommand();
     }
 
     @Override
     public CommandLineCompletionParser getCompletionParser() {
-        return new AeshCommandLineCompletionParser(this);
+        return new AeshCommandLineCompletionParser<>(this);
     }
 
     @Override
-    public CommandPopulator<Object, C> getCommandPopulator() {
+    public CommandPopulator<Object, CI> getCommandPopulator() {
         return processedCommand.getCommandPopulator();
     }
 
@@ -189,10 +190,10 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     @Override
-    public void doPopulate(ProcessedCommand processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException {
+    public void doPopulate(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException {
         getCommandPopulator().populateObject(processedCommand, invocationProviders, aeshContext, mode);
         if(isGroupCommand()) {
-            for(CommandLineParser parser : getChildParsers()) {
+            for(CommandLineParser<CI> parser : getChildParsers()) {
                 parser.doPopulate(parser.getProcessedCommand(), invocationProviders, aeshContext, mode);
             }
         }
@@ -204,7 +205,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
      */
     @Override
     public String printHelp() {
-        List<CommandLineParser<C>> parsers = getChildParsers();
+        List<CommandLineParser<CI>> parsers = getChildParsers();
         if (parsers != null && parsers.size() > 0) {
             StringBuilder sb = new StringBuilder();
             sb.append(processedCommand.printHelp())
@@ -247,7 +248,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
             if (processedCommand.name().equals(command)
                     || processedCommand.getAliases().contains(command)) {
                 if(isGroupCommand() && iterator.hasNextWord()) {
-                   CommandLineParser<C> clp = getChildParser(iterator.peekWord());
+                   CommandLineParser<CI> clp = getChildParser(iterator.peekWord());
                     if(clp == null) {
                         //if the user have written garbage in the next word, we need to check
                         // eg: group GARBAGE <tab>
@@ -336,8 +337,9 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
                 processedCommand.addParserException(ope);
             }
             if (mode == Mode.STRICT) {
-                if (processedCommand instanceof MapProcessedCommand) {
-                    MapCommand mc = (MapCommand) processedCommand.getCommand();
+                ProcessedCommand copy = processedCommand;
+                if (copy instanceof MapProcessedCommand) {
+                    MapCommand mc = (MapCommand) copy.getCommand();
                     if (!mc.checkForRequiredOptions(iter.baseLine())) {
                         return;
                     }
@@ -363,8 +365,9 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
     }
 
     private void doParseCompletion(ParsedLineIterator iter) {
-        if (processedCommand instanceof MapProcessedCommand) {
-            ((MapProcessedCommand) processedCommand).setMode(Mode.COMPLETION);
+        ProcessedCommand copy = processedCommand;
+        if (copy instanceof MapProcessedCommand) {
+            ((MapProcessedCommand) copy).setMode(Mode.COMPLETION);
         }
         if(!iter.hasNextWord()) {
             if(isGroupCommand())
@@ -483,7 +486,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
         }
     }
 
-    private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand<C> command) {
+    private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand<? extends Command<CI>, CI> command) {
         for(ProcessedOption o : command.getOptions()) {
             if(doCheckForMissingRequiredOption(o))
                 return new RequiredOptionException("Option: "+o.getDisplayName()+" is required for this command.");
@@ -556,7 +559,7 @@ public class AeshCommandLineParser<C extends Command> implements CommandLinePars
 
     @Override
     public boolean isGroupCommand() {
-        List<CommandLineParser<C>> parsers = getChildParsers();
+        List<CommandLineParser<CI>> parsers = getChildParsers();
         return parsers != null && parsers.size() > 0;
     }
 

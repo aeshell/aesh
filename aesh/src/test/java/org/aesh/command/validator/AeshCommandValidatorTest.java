@@ -24,9 +24,11 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ParsedOption;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
@@ -43,7 +45,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -55,15 +56,17 @@ public class AeshCommandValidatorTest {
     public void testCommandValidator() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .commandRegistry(registry)
-                .connection(connection)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .commandRegistry(registry)
+                        .connection(connection)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -80,15 +83,17 @@ public class AeshCommandValidatorTest {
     public void testGroupCommandValidator() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(GitCommand.class)
                 .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .logging(true)
-                 .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -101,7 +106,7 @@ public class AeshCommandValidatorTest {
     }
 
     @CommandDefinition(name = "foo", description = "blah", validator = FooCommandValidator.class)
-    public static class FooCommand implements Command {
+    public static class FooCommand implements Command<CommandInvocation> {
 
         @Option(shortName = 'l')
         private int low;
@@ -137,7 +142,7 @@ public class AeshCommandValidatorTest {
     }
 
     @CommandDefinition(name = "commit", description = "", validator = GitCommitValidator.class)
-    public static class GitCommit implements Command {
+    public static class GitCommit implements Command<CommandInvocation> {
 
         @Option(shortName = 'a', hasValue = false)
         private boolean all;
@@ -154,7 +159,7 @@ public class AeshCommandValidatorTest {
     public class GitCommitValidator implements CommandValidator<GitCommit> {
         @Override
         public void validate(GitCommit command) throws CommandValidatorException {
-            if(command.all == false && command.message == null)
+            if(!command.all && command.message == null)
                 throw new CommandValidatorException("Either all or message must be set");
         }
     }
@@ -178,7 +183,7 @@ public class AeshCommandValidatorTest {
 
             @Override
             public void complete(CompleterInvocation completerInvocation) {
-                assertEquals(true, ((GitRebase) completerInvocation.getCommand()).force);
+                assertTrue(((GitRebase) completerInvocation.getCommand()).force);
                 completerInvocation.addCompleterValue("barFOO");
             }
         }

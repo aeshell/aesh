@@ -19,7 +19,12 @@
  */
 package org.aesh.command.invocation;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.registry.CommandRegistryException;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.Command;
@@ -31,7 +36,6 @@ import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
 import org.aesh.utils.Config;
 import org.aesh.command.CommandDefinition;
-import org.aesh.command.BaseConsoleTest;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.CommandResult;
 import org.aesh.readline.ReadlineConsole;
@@ -48,18 +52,20 @@ import org.aesh.command.CommandNotFoundException;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandInvocationServiceTest extends BaseConsoleTest {
+public class AeshCommandInvocationServiceTest {
 
     @Test
     public void testCommandInvocationExtension() throws IOException, InterruptedException, CommandRegistryException {
 
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry<FooCommandInvocation> registry = AeshCommandRegistryBuilder.<FooCommandInvocation>builder()
                 .command(new BarCommand())
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
+        Settings<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings = SettingsBuilder.<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator>builder()
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
@@ -92,11 +98,11 @@ class BarCommand implements Command<FooCommandInvocation> {
 }
 
 
-class FooCommandInvocation implements CommandInvocation {
+class FooCommandInvocation<CI extends CommandInvocation> implements CommandInvocation {
 
-    private final CommandInvocation commandInvocation;
+    private final CommandInvocation<CI> commandInvocation;
 
-    FooCommandInvocation(CommandInvocation commandInvocation) {
+    FooCommandInvocation(CommandInvocation<CI> commandInvocation) {
         this.commandInvocation = commandInvocation;
     }
 
@@ -167,7 +173,7 @@ class FooCommandInvocation implements CommandInvocation {
     }
 
     @Override
-    public Executor<? extends CommandInvocation> buildExecutor(String line) throws CommandNotFoundException,
+    public Executor<CI> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException {
         return commandInvocation.buildExecutor(line);
     }
@@ -178,7 +184,8 @@ class FooCommandInvocation implements CommandInvocation {
     }
 }
 
-class FooCommandInvocationProvider implements CommandInvocationProvider<FooCommandInvocation> {
+@SuppressWarnings("unchecked")
+class FooCommandInvocationProvider implements CommandInvocationProvider<CommandInvocation> {
     @Override
     public FooCommandInvocation enhanceCommandInvocation(CommandInvocation commandInvocation) {
         return new FooCommandInvocation(commandInvocation);

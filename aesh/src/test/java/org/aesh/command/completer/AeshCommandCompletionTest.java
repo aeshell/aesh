@@ -26,6 +26,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ParsedOption;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
@@ -38,6 +39,7 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.readline.terminal.Key;
@@ -69,16 +71,18 @@ public class AeshCommandCompletionTest {
     public void testCompletion() throws Exception {
         TestConnection connection = new TestConnection(false);
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .logging(true)
-                .enableAlias(false)
-                .connection(connection)
-                .commandRegistry(registry)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .enableAlias(false)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
 
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -172,16 +176,17 @@ public class AeshCommandCompletionTest {
     public void testCompletionWithFormatting() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection(false);
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooFormattedCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .logging(true)
-                .connection(connection)
-                .commandRegistry(registry)
-                .build();
-
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
@@ -199,17 +204,19 @@ public class AeshCommandCompletionTest {
     public void testCommandActivator() throws Exception {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(TotoCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .connection(connection)
-                //.inputStream(pipedInputStream)
-                //.outputStream(new PrintStream(byteArrayOutputStream))
-                .logging(true)
-                .commandRegistry(registry)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .connection(connection)
+                        //.inputStream(pipedInputStream)
+                        //.outputStream(new PrintStream(byteArrayOutputStream))
+                        .logging(true)
+                        .commandRegistry(registry)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
@@ -240,16 +247,18 @@ public class AeshCommandCompletionTest {
     public void testCompletionArgument() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ArgCommand.class)
                 .command(GroupArgCommand.class)
                 .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -320,15 +329,17 @@ public class AeshCommandCompletionTest {
     public void testRequiredAndActivatorOption() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection(new Size(200,20));
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ArqCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .logging(true)
-                .connection(connection)
-                .commandRegistry(registry)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
@@ -347,15 +358,17 @@ public class AeshCommandCompletionTest {
     public void testGroupCommand() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(GitCommand.class)
                 .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -421,18 +434,20 @@ public class AeshCommandCompletionTest {
      }
 
     @Test
-    public void testSuperGroupCommand() throws IOException, InterruptedException, CommandRegistryException {
+    public void testSuperGroupCommand() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(SuperGitCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .logging(true)
-                .connection(connection)
-                .commandRegistry(registry)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -457,19 +472,21 @@ public class AeshCommandCompletionTest {
      * unless argument is set
      */
      @Test
-     public void testCommandTest4() throws IOException, InterruptedException, CommandRegistryException {
+     public void testCommandTest4() throws IOException, CommandRegistryException {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(GitCommand.class)
                  .command(CommandTest4.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          ReadlineConsole console = new ReadlineConsole(settings);
          console.start();
@@ -502,19 +519,21 @@ public class AeshCommandCompletionTest {
      * unless option is set
      */
      @Test
-     public void testCommandTest4B() throws IOException, InterruptedException, CommandRegistryException {
+     public void testCommandTest4B() throws IOException, CommandRegistryException {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(GitCommand.class)
                  .command(CommandTest4B.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          ReadlineConsole console = new ReadlineConsole(settings);
          console.start();
@@ -543,19 +562,21 @@ public class AeshCommandCompletionTest {
      * unless option is set
      */
      @Test
-     public void testCommandTest4C() throws IOException, InterruptedException, CommandRegistryException {
+     public void testCommandTest4C() throws IOException, CommandRegistryException {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(GitCommand.class)
                  .command(CommandTest4C.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          ReadlineConsole console = new ReadlineConsole(settings);
          console.start();
@@ -582,16 +603,18 @@ public class AeshCommandCompletionTest {
      public void testCommandTest5() throws IOException, CommandRegistryException {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(GitCommand.class)
                  .command(CommandTest5.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          ReadlineConsole console = new ReadlineConsole(settings);
          console.start();
@@ -610,16 +633,18 @@ public class AeshCommandCompletionTest {
      public void testCommandTest6() throws IOException, CommandRegistryException {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(GitCommand.class)
                  .command(CommandTest6.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          ReadlineConsole console = new ReadlineConsole(settings);
          console.start();
@@ -646,17 +671,19 @@ public class AeshCommandCompletionTest {
      public void testCommandTest7() throws IOException, CommandRegistryException {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(GitCommand.class)
                  .command(CommandTest7.class)
                  .command(CommandTest7a.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          ReadlineConsole console = new ReadlineConsole(settings);
          console.start();
@@ -690,15 +717,17 @@ public class AeshCommandCompletionTest {
     public void testCommandTest8() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(CommandTest8.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .logging(true)
-                .connection(connection)
-                .commandRegistry(registry)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -723,15 +752,17 @@ public class AeshCommandCompletionTest {
     public void testCommandTest9() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(CommandTest9.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .logging(true)
-                .connection(connection)
-                .commandRegistry(registry)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -755,15 +786,17 @@ public class AeshCommandCompletionTest {
     public void testCommandTest10() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(CommandTest10.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .logging(true)
-                .connection(connection)
-                .commandRegistry(registry)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -779,16 +812,18 @@ public class AeshCommandCompletionTest {
     public void testCompletionInsideBuffer() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ArgCommand.class)
                 .command(GitCommand.class)
                 .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -818,17 +853,19 @@ public class AeshCommandCompletionTest {
     public void testWithEndOperator() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ArgCommand.class)
                 .command(GitCommand.class)
                 .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .enableAlias(false)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .enableAlias(false)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -1055,22 +1092,10 @@ public class AeshCommandCompletionTest {
         }
     }
 
-    @CommandDefinition(name = "bar", description = "")
-    public static class BarCommand implements Command {
-
-        @Option(completer = FooCompletor.class)
-        private String bar;
-
-        @Override
-        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            return CommandResult.SUCCESS;
-        }
-    }
-
     @CommandDefinition(name = "foo", description = "")
     public static class FooCommand implements Command {
 
-        @Option(completer = FooCompletor.class)
+        @Option(completer = FooCompleter.class)
         private String bar;
 
         @Option(shortName = 'n', completer = NameTestCompleter.class)
@@ -1095,7 +1120,7 @@ public class AeshCommandCompletionTest {
     @CommandDefinition(name = "foo", description = "")
     public static class FooFormattedCommand implements Command {
 
-        @Option(renderer = BarOptionRenderer.class, completer = FooCompletor.class)
+        @Option(renderer = BarOptionRenderer.class, completer = FooCompleter.class)
         private String bar;
 
         @Option(shortName = 'n', completer = NameTestCompleter.class)
@@ -1130,7 +1155,7 @@ public class AeshCommandCompletionTest {
         }
     }
 
-    public static class FooCompletor implements OptionCompleter {
+    public static class FooCompleter implements OptionCompleter {
 
         @Override
         public void complete(CompleterInvocation completerData) {
@@ -1183,7 +1208,7 @@ public class AeshCommandCompletionTest {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
             if(completerInvocation.getGivenCompleteValue() == null ||
-                    completerInvocation.getGivenCompleteValue() == "")
+                       completerInvocation.getGivenCompleteValue().equals(""))
             completerInvocation.addCompleterValue("managed");
         }
     }
@@ -1202,7 +1227,7 @@ public class AeshCommandCompletionTest {
 
 
     @GroupCommandDefinition(name = "git", description = "", groupCommands = {GitCommit.class, GitRebase.class})
-    public static class GitCommand implements Command {
+    public static class GitCommand implements Command<CommandInvocation> {
 
         @Option(hasValue = false)
         private boolean help;
@@ -1214,7 +1239,7 @@ public class AeshCommandCompletionTest {
     }
 
     @CommandDefinition(name = "commit", description = "")
-    public static class GitCommit implements Command {
+    public static class GitCommit implements Command<CommandInvocation> {
 
         @Option(shortName = 'a', hasValue = false)
         private boolean all;
@@ -1226,7 +1251,7 @@ public class AeshCommandCompletionTest {
     }
 
     @CommandDefinition(name = "rebase", description = "")
-    public static class GitRebase implements Command {
+    public static class GitRebase implements Command<CommandInvocation> {
 
         @Option(hasValue = false)
         private boolean force;
@@ -1247,7 +1272,7 @@ public class AeshCommandCompletionTest {
 
             @Override
             public void complete(CompleterInvocation completerInvocation) {
-                assertEquals(true, ((GitRebase) completerInvocation.getCommand()).force);
+                assertTrue(((GitRebase) completerInvocation.getCommand()).force);
                 completerInvocation.addCompleterValue("barFOO");
             }
         }
@@ -1263,7 +1288,7 @@ public class AeshCommandCompletionTest {
     }
 
     @CommandDefinition(name = "arg2", description = "")
-    public static class Arg2Command implements Command {
+    public static class Arg2Command implements Command<CommandInvocation> {
 
         @Option
         private boolean bool;

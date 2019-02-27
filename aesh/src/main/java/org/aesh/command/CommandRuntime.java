@@ -35,14 +35,14 @@ import org.aesh.readline.util.Parser;
  *
  * @author jdenise@redhat.com
  */
-public interface CommandRuntime<C extends Command<CI>,CI extends CommandInvocation> {
+public interface CommandRuntime<CI extends CommandInvocation> {
 
     /**
      * The registry in which commands are registered.
      *
      * @return
      */
-    CommandRegistry<C,CI> getCommandRegistry();
+    CommandRegistry<CI> getCommandRegistry();
 
     /**
      * Build an Executor from a command line.
@@ -103,7 +103,7 @@ public interface CommandRuntime<C extends Command<CI>,CI extends CommandInvocati
         }
     }
 
-    CommandInvocationBuilder<C,CI> commandInvocationBuilder();
+    CommandInvocationBuilder<CI> commandInvocationBuilder();
 
     void complete(AeshCompleteOperation completeOperation);
 }

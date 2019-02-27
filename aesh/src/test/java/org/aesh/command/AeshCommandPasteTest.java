@@ -21,12 +21,17 @@ package org.aesh.command;
 
 import java.io.IOException;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
@@ -43,15 +48,17 @@ public class AeshCommandPasteTest {
     public void testPaste() throws IOException, InterruptedException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder().create();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder().create();
 
-        Settings settings = SettingsBuilder.builder()
-                .connection(connection)
-                .commandRegistry(registry)
-                .setPersistExport(false)
-                .persistHistory(false)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .setPersistExport(false)
+                        .persistHistory(false)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -67,17 +74,19 @@ public class AeshCommandPasteTest {
     public void testPasteWhileACommandIsRunning() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .connection(connection)
-                .commandRegistry(registry)
-                .setPersistExport(false)
-                .persistHistory(false)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .setPersistExport(false)
+                        .persistHistory(false)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

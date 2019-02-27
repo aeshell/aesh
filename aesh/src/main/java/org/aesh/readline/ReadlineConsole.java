@@ -87,18 +87,18 @@ import java.util.logging.Logger;
 public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private AliasManager aliasManager;
-    private Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation,
+    private Settings<? extends CommandInvocation,
         ? extends ConverterInvocation, ? extends CompleterInvocation,
         ? extends ValidatorInvocation, ? extends OptionActivator,
         ? extends CommandActivator> settings;
     private Prompt prompt;
     private List<Completion> completions;
     private Connection connection;
-    private AeshCommandResolver<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> commandResolver;
+    private AeshCommandResolver<? extends CommandInvocation> commandResolver;
     private AeshContext context;
     private Readline readline;
     private AeshCompletionHandler completionHandler;
-    private CommandRuntime<? extends Command<?extends CommandInvocation>,? extends CommandInvocation> runtime;
+    private CommandRuntime<? extends CommandInvocation> runtime;
     private ProcessManager processManager;
     private ExportManager exportManager;
     private static List<Function<String, Optional<String>>> preProcessors = new ArrayList<>();
@@ -112,7 +112,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
    private final EnumMap<ReadlineFlag, Integer> readlineFlags = new EnumMap<>(ReadlineFlag.class);
 
-    public ReadlineConsole(Settings<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation, ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator, ? extends CommandActivator> givenSettings) {
+    public ReadlineConsole(Settings<? extends CommandInvocation, ? extends ConverterInvocation,
+                                           ? extends CompleterInvocation, ? extends ValidatorInvocation,
+                                           ? extends OptionActivator, ? extends CommandActivator> givenSettings) {
         if(givenSettings == null)
             settings = SettingsBuilder.builder().build();
         else
@@ -368,15 +370,18 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         return perm;
     }
 
-    private AeshCommandResolver<? extends Command<? extends CommandInvocation>,? extends CommandInvocation> getCommandResolverThroughScan() {
-        MutableCommandRegistry<Command<CommandInvocation>, CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+    private AeshCommandResolver<? extends CommandInvocation> getCommandResolverThroughScan() {
+        MutableCommandRegistry<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
 
         CommandDefinitionReporter reporter = new CommandDefinitionReporter();
         AnnotationDetector detector = new AnnotationDetector(reporter);
         try {
             detector.detect(settings.getScanForCommandPackages());
-            for(String command : reporter.getCommands())
-                registry.addCommand((Class<Command<CommandInvocation>>) Class.forName(command));
+            for(String command : reporter.getCommands()) {
+                //registry.addCommand(Class.forName(command));
+                final Class<Command> clazz = (Class<Command>) Class.forName(command);
+                registry.addCommand(clazz);
+            }
         }
         catch (IOException e) {
             LOGGER.log(Level.WARNING, "AnnotationDetector failed to scan for CommandDefinition annotations", e);
@@ -403,7 +408,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         */
     }
 
-    private CommandRuntime<? extends Command<? extends CommandInvocation>,? extends CommandInvocation> generateRuntime() {
+    private CommandRuntime<? extends CommandInvocation> generateRuntime() {
         shell = new ShellImpl(connection, settings.enableSearchInPaging());
         return AeshCommandRuntimeBuilder.builder()
                 .settings(settings)

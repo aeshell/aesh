@@ -23,9 +23,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.parser.OptionParserException;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.result.ResultHandler;
@@ -34,195 +33,10 @@ import org.aesh.command.impl.validator.NullCommandValidator;
 import org.aesh.util.ReflectionUtil;
 import org.aesh.command.parser.CommandLineParserException;
 import java.util.List;
-import org.aesh.command.impl.internal.ParsedCommand;
-import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.CommandLineParser.Mode;
-import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.readline.util.Parser;
 
-public class MapProcessedCommandBuilder {
+public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
 
-    private static final ProcessedOptionProvider EMPTY_PROVIDER = new ProcessedOptionProvider() {
-        @Override
-        public List<ProcessedOption> getOptions(List<ProcessedOption> options) {
-            return Collections.emptyList();
-        }
-    };
-
-    public static class MapProcessedCommand extends ProcessedCommand<MapCommand> {
-
-        private final ProcessedOptionProvider provider;
-        private List<ProcessedOption> currentOptions;
-        private final boolean initialized;
-        private final boolean lookup;
-        private Mode mode;
-        MapProcessedCommand(String name,
-                List<String> aliases,
-                MapCommand command,
-                String description,
-                CommandValidator validator,
-                ResultHandler resultHandler,
-                ProcessedOption arguments,
-                List<ProcessedOption> options,
-                ProcessedOption argument,
-                CommandPopulator populator,
-                ProcessedOptionProvider provider,
-                CommandActivator activator,
-                boolean lookup) throws OptionParserException {
-            super(name, aliases, command, description, validator, resultHandler, arguments,
-                    options, argument, populator, activator);
-            initialized = true;
-            this.provider = provider == null ? EMPTY_PROVIDER : provider;
-            this.lookup = lookup;
-        }
-
-        @Override
-        protected void updateOptionsInvocationProviders(InvocationProviders invocationProviders) {
-            //Only update static options.
-            for (ProcessedOption option : super.getOptions()) {
-                option.updateInvocationProviders(invocationProviders);
-            }
-        }
-        @Override
-        public List<ProcessedOption> getOptions() {
-            if (!initialized) {
-                return super.getOptions();
-            }
-            return getOptions(true);
-        }
-
-        @Override
-        public boolean hasAskIfNotSet() {
-            for (ProcessedOption opt : getOptions(false)) {
-                if (opt.askIfNotSet() && opt.hasValue() && opt.getValues().isEmpty() && !opt.hasDefaultValue()) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public ProcessedOption searchAllOptions(String input) {
-            if (!initialized) {
-                return super.searchAllOptions(input);
-            }
-            if (lookup && !Mode.COMPLETION.equals(mode)) {
-                return null;
-            }
-            if (input.startsWith("--")) {
-                ProcessedOption currentOption = findLongOptionNoActivatorCheck(input.substring(2));
-                if (currentOption == null && input.contains("=")) {
-                    currentOption = startWithLongOptionNoActivatorCheck(input.substring(2));
-                }
-                if (currentOption != null) {
-                    currentOption.setLongNameUsed(true);
-                } //need to handle spaces in option names
-                else if (Parser.containsNonEscapedSpace(input)) {
-                    return searchAllOptions(Parser.switchSpacesToEscapedSpacesInWord(input));
-                }
-
-                return currentOption;
-            } else {
-                return super.searchAllOptions(input);
-            }
-        }
-
-        @Override
-        public ProcessedOption findLongOption(String name) {
-            if (!initialized) {
-                return super.findLongOption(name);
-            }
-            if (lookup && !Mode.COMPLETION.equals(mode)) {
-                return null;
-            }
-            for (ProcessedOption option : getOptions(false)) {
-                if (option.name() != null
-                        && option.name().equals(name)
-                        && option.activator().isActivated(new ParsedCommand(this))) {
-                    return option;
-                }
-            }
-            for (ProcessedOption option : getOptions(true)) {
-                if (option.name() != null
-                        && option.name().equals(name)
-                        && option.activator().isActivated(new ParsedCommand(this))) {
-                    return option;
-                }
-            }
-            return null;
-        }
-        @Override
-        public ProcessedOption findLongOptionNoActivatorCheck(String name) {
-            if (!initialized) {
-                return super.findLongOptionNoActivatorCheck(name);
-            }
-            if (lookup && !Mode.COMPLETION.equals(mode)) {
-                return null;
-            }
-            // First check in parent (static options).
-            for (ProcessedOption option : getOptions(false)) {
-                if (option.name() != null && option.name().equals(name)) {
-                    return option;
-                }
-            }
-
-            // Then in dynamics
-            for (ProcessedOption option : getOptions(true)) {
-                if (option.name() != null && option.name().equals(name)) {
-                    return option;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public void clearOptions() {
-            for (ProcessedOption processedOption : getCurrentOptions()) {
-                processedOption.clear();
-            }
-        }
-
-        List<ProcessedOption> getCurrentOptions() {
-            List<ProcessedOption> allOptions = new ArrayList<>(super.getOptions());
-            if (currentOptions != null) {
-                allOptions.addAll(currentOptions);
-            }
-            return allOptions;
-        }
-
-        public List<ProcessedOption> getOptions(boolean dynamic) {
-            List<ProcessedOption> allOptions = new ArrayList<>(super.getOptions());
-            // During super construction, properties are retrieved. In this case
-            // provider is not already set.
-            if (provider != null && dynamic) {
-                if (currentOptions == null || currentOptions.isEmpty()) {
-                    currentOptions = provider.getOptions(currentOptions);
-                }
-                allOptions.addAll(currentOptions);
-            }
-            return allOptions;
-        }
-
-        @Override
-        public void clear() {
-            MapCommand cmd = getCommand();
-            mode = null;
-            cmd.resetAll();
-            super.clear();
-            // null after the currentOptions have been cleared by the super.clear();
-            currentOptions = null;
-        }
-
-        public void setMode(CommandLineParser.Mode mode) {
-            this.mode = mode;
-        }
-    }
-
-    public interface ProcessedOptionProvider {
-
-        List<ProcessedOption> getOptions(List<ProcessedOption> currentOptions);
-    }
-    private ProcessedOptionProvider provider;
+    private MapProcessedOptionProvider provider;
     private String name;
     private String description;
     private CommandValidator<?> validator;
@@ -236,52 +50,56 @@ public class MapProcessedCommandBuilder {
     private CommandActivator activator;
     private boolean lookup;
 
-    public MapProcessedCommandBuilder() {
+    private MapProcessedCommandBuilder() {
         options = new ArrayList<>();
     }
 
-    public MapProcessedCommandBuilder lookupAtCompletionOnly(boolean lookup) {
+    public static <T extends CommandInvocation> MapProcessedCommandBuilder<T> builder() {
+        return new MapProcessedCommandBuilder<>();
+    }
+
+    public MapProcessedCommandBuilder<CI> lookupAtCompletionOnly(boolean lookup) {
         this.lookup = lookup;
         return this;
     }
 
-    public MapProcessedCommandBuilder name(String name) {
+    public MapProcessedCommandBuilder<CI> name(String name) {
         this.name = name;
         return this;
     }
 
-    public MapProcessedCommandBuilder name(List<String> aliases) {
+    public MapProcessedCommandBuilder<CI> name(List<String> aliases) {
         this.aliases = aliases == null ? Collections.<String>emptyList()
                 : Collections.unmodifiableList(aliases);
         return this;
     }
 
-    public MapProcessedCommandBuilder description(String usage) {
+    public MapProcessedCommandBuilder<CI> description(String usage) {
         this.description = usage;
         return this;
     }
 
-    public MapProcessedCommandBuilder optionProvider(ProcessedOptionProvider provider) {
+    public MapProcessedCommandBuilder<CI> optionProvider(MapProcessedOptionProvider provider) {
         this.provider = provider;
         return this;
     }
 
-    public MapProcessedCommandBuilder arguments(ProcessedOption arguments) {
+    public MapProcessedCommandBuilder<CI> arguments(ProcessedOption arguments) {
         this.arguments = arguments;
         return this;
     }
 
-    public MapProcessedCommandBuilder argument(ProcessedOption argument) {
+    public MapProcessedCommandBuilder<CI> argument(ProcessedOption argument) {
         this.argument = argument;
         return this;
     }
 
-    public MapProcessedCommandBuilder validator(CommandValidator<?> validator) {
+    public MapProcessedCommandBuilder<CI> validator(CommandValidator<?> validator) {
         this.validator = validator;
         return this;
     }
 
-    public MapProcessedCommandBuilder validator(Class<? extends CommandValidator> validator) {
+    public MapProcessedCommandBuilder<CI> validator(Class<? extends CommandValidator> validator) {
         this.validator = initValidator(validator);
         return this;
     }
@@ -294,7 +112,7 @@ public class MapProcessedCommandBuilder {
         }
     }
 
-    public MapProcessedCommandBuilder resultHandler(Class<? extends ResultHandler> resultHandler) {
+    public MapProcessedCommandBuilder<CI> resultHandler(Class<? extends ResultHandler> resultHandler) {
         this.resultHandler = initResultHandler(resultHandler);
         return this;
     }
@@ -307,7 +125,7 @@ public class MapProcessedCommandBuilder {
         }
     }
 
-    public MapProcessedCommandBuilder resultHandler(ResultHandler resultHandler) {
+    public MapProcessedCommandBuilder<CI> resultHandler(ResultHandler resultHandler) {
         this.resultHandler = resultHandler;
         return this;
     }
@@ -318,39 +136,39 @@ public class MapProcessedCommandBuilder {
      * @param populator
      * @return
      */
-    public MapProcessedCommandBuilder populator(CommandPopulator populator) {
+    public MapProcessedCommandBuilder<CI> populator(CommandPopulator populator) {
         this.populator = populator;
         return this;
     }
 
-    public MapProcessedCommandBuilder command(MapCommand command) {
+    public MapProcessedCommandBuilder<CI> command(MapCommand command) {
         this.command = command;
         return this;
     }
 
-    public MapProcessedCommandBuilder command(Class<? extends MapCommand> command) {
+    public MapProcessedCommandBuilder<CI> command(Class<? extends MapCommand> command) {
         this.command = ReflectionUtil.newInstance(command);
         return this;
     }
 
-    public MapProcessedCommandBuilder addOption(ProcessedOption option) {
+    public MapProcessedCommandBuilder<CI> addOption(ProcessedOption option) {
         this.options.add(option);
         return this;
     }
 
-    public MapProcessedCommandBuilder addOptions(List<ProcessedOption> options) {
+    public MapProcessedCommandBuilder<CI> addOptions(List<ProcessedOption> options) {
         if (options != null) {
             this.options.addAll(options);
         }
         return this;
     }
 
-    public MapProcessedCommandBuilder activator(CommandActivator activator) {
+    public MapProcessedCommandBuilder<CI> activator(CommandActivator activator) {
         this.activator = activator;
         return this;
     }
 
-    public MapProcessedCommand create() throws CommandLineParserException {
+    public MapProcessedCommand<CI> create() throws CommandLineParserException {
         if (name == null || name.length() < 1) {
             throw new CommandLineParserException("The parameter name must be defined");
         }
@@ -367,7 +185,7 @@ public class MapProcessedCommandBuilder {
             populator = new MapCommandPopulator(command);
         }
 
-        return new MapProcessedCommand(name,
+        return new MapProcessedCommand<>(name,
                 aliases,
                 command,
                 description,

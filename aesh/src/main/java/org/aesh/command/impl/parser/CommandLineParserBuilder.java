@@ -21,24 +21,29 @@ package org.aesh.command.impl.parser;
 
 import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.invocation.CommandInvocation;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class CommandLineParserBuilder<C extends Command> {
+public class CommandLineParserBuilder<C extends Command<CI>,CI extends CommandInvocation> {
 
-    private ProcessedCommand<C> param;
+    private ProcessedCommand<C, CI> param;
 
-    public CommandLineParserBuilder() {
+    private CommandLineParserBuilder() {
     }
 
-    public CommandLineParserBuilder<C> processedCommand(ProcessedCommand<C> param) {
+    public static <T extends Command<I>, I extends CommandInvocation> CommandLineParserBuilder<T,I> builder() {
+        return new CommandLineParserBuilder<>();
+    }
+
+    public CommandLineParserBuilder<C,CI> processedCommand(ProcessedCommand<C, CI> param) {
         this.param = param;
         return this;
     }
 
-    public CommandLineParser<C> create() throws IllegalArgumentException {
-        return new AeshCommandLineParser<>(param);
+    public CommandLineParser<CI> create() throws IllegalArgumentException {
+        return new AeshCommandLineParser<>((ProcessedCommand<Command<CI>, CI>) param);
     }
 
 }

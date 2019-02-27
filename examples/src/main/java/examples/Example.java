@@ -29,6 +29,7 @@ import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.builder.CommandBuilder;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ParsedOption;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
@@ -42,7 +43,6 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.settings.ManProvider;
-import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.OptionValidator;
@@ -81,7 +81,7 @@ public class Example {
 
     public static void main(String[] args) throws CommandLineParserException, IOException, CommandRegistryException {
 
-        CommandBuilder fooCommand = new CommandBuilder()
+        CommandBuilder<FooCommand> fooCommand = CommandBuilder.<FooCommand>builder()
                 .name("foo")
                 .description("fooing")
                 .addOption(ProcessedOptionBuilder.builder()
@@ -99,37 +99,7 @@ public class Example {
                         .build())
                 .command(FooCommand.class);
 
-                /*
-        ProcessedCommand fooCommand = new ProcessedCommandBuilder()
-                .name("foo")
-                .description("fooing")
-                .addOption(new ProcessedOptionBuilder()
-                        .name("bar")
-                        .addDefaultValue("en 1 0")
-                        .addDefaultValue("to 2 0")
-                        .fieldName("bar")
-                        .type(String.class)
-                        .renderer(new BlueBoldRenderer())
-                        .build())
-                .addOption(new ProcessedOptionBuilder()
-                        .name("foo")
-                        .fieldName("foo")
-                        .type(String.class)
-                        .build())
-                .build();
-                */
-
-        SettingsBuilder builder = SettingsBuilder.builder()
-                .logging(true)
-                .enableMan(true)
-                .enableAlias(true)
-                .enableExport(true)
-                .enableSearchInPaging(true)
-                .setExecuteFileAtStart(new FileResource(
-                        Config.getHomeDir()+Config.getPathSeparator()+".aeshrc"))
-                .readInputrc(false);
-
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ExitCommand.class)
                 .command(fooCommand.create())
                 .command(HiddenCommand.class)
@@ -143,19 +113,29 @@ public class Example {
                 .command(LongOutputCommand.class)
                 .command(ReadlineCommand.class)
                 //example on how to build a command with a simple lambda
-                .command(new CommandBuilder().name("quit").command(commandInvocation -> {
+                .command(CommandBuilder.builder().name("quit").command(commandInvocation -> {
                     commandInvocation.stop();
                     return CommandResult.SUCCESS;
                 }).create())
                 .create();
 
-        Settings settings = builder
-                .commandRegistry(registry)
-                .manProvider(new ManProviderExample())
-                .validatorInvocationProvider(new ExampleValidatorInvocationProvider())
-                .build();
 
-        ReadlineConsole console = new ReadlineConsole(settings);
+        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                               OptionActivator, CommandActivator> builder =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .enableMan(true)
+                        .enableAlias(true)
+                        .enableExport(true)
+                        .enableSearchInPaging(true)
+                        .setExecuteFileAtStart(new FileResource(
+                                Config.getHomeDir()+Config.getPathSeparator()+".aeshrc"))
+                        .readInputrc(false)
+                        .commandRegistry(registry)
+                        .manProvider(new ManProviderExample())
+                        .validatorInvocationProvider(new ExampleValidatorInvocationProvider());
+
+        ReadlineConsole console = new ReadlineConsole(builder.build());
         console.setPrompt(new Prompt(new TerminalString("[aesh@rules]$ ",
                         new TerminalColor(Color.GREEN, Color.DEFAULT, Color.Intensity.BRIGHT))));
 

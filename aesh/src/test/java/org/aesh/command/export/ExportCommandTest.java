@@ -23,12 +23,17 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.readline.terminal.Key;
 import org.aesh.utils.Config;
@@ -55,18 +60,20 @@ public class ExportCommandTest {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry =
-                new AeshCommandRegistryBuilder()
+                AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .connection(connection)
-                .commandRegistry(registry)
-                .setPersistExport(false)
-                .mode(EditMode.Mode.EMACS)
-                .readInputrc(false)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .setPersistExport(false)
+                        .mode(EditMode.Mode.EMACS)
+                        .readInputrc(false)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -132,17 +139,19 @@ public class ExportCommandTest {
 
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder().create();
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder().create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .setPersistExport(false)
-                 .mode(EditMode.Mode.EMACS)
-                 .readInputrc(false)
-                 .logging(true)
-                 .exportListener(listener)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .setPersistExport(false)
+                         .mode(EditMode.Mode.EMACS)
+                         .readInputrc(false)
+                         .logging(true)
+                         .exportListener(listener)
+                         .build();
 
          ReadlineConsole console = new ReadlineConsole(settings);
          console.start();

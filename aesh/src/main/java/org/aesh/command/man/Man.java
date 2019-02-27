@@ -19,7 +19,6 @@
  */
 package org.aesh.command.man;
 
-import org.aesh.command.Command;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.CommandException;
 import org.aesh.command.completer.CompleterInvocation;
@@ -52,7 +51,7 @@ public class Man extends AeshFileDisplayer {
     private final List<String> manPages;
 
     private final ManFileParser fileParser;
-    private CommandRegistry<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> registry;
+    private CommandRegistry<? extends CommandInvocation> registry;
     private final ManProvider manProvider;
 
     public Man(ManProvider manProvider) {
@@ -62,7 +61,7 @@ public class Man extends AeshFileDisplayer {
         fileParser = new ManFileParser();
     }
 
-    public void setRegistry(CommandRegistry<? extends Command<? extends CommandInvocation>, ? extends CommandInvocation> registry) {
+    public void setRegistry(CommandRegistry<? extends CommandInvocation> registry) {
         this.registry = registry;
     }
 

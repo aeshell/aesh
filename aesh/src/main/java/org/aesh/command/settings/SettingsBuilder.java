@@ -19,7 +19,6 @@
  */
 package org.aesh.command.settings;
 
-import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
@@ -53,232 +52,227 @@ import java.util.function.Consumer;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class SettingsBuilder {
+@SuppressWarnings("unchecked")
+public class SettingsBuilder<CI extends CommandInvocation,
+            CO extends ConverterInvocation, COM extends CompleterInvocation,
+            VI extends ValidatorInvocation, OA extends OptionActivator,
+            CA extends CommandActivator> {
 
-    private SettingsImpl<? extends Command<? extends CommandInvocation>,? extends CommandInvocation,
-            ? extends ConverterInvocation, ? extends CompleterInvocation,
-            ? extends ValidatorInvocation, ? extends OptionActivator,
-            ? extends CommandActivator> settings;
+    private SettingsImpl<CI, CO, COM, VI, OA, CA> settings;
 
-    private SettingsBuilder apply(Consumer<SettingsBuilder> consumer) {
+    private SettingsBuilder<CI, CO, COM, VI, OA, CA> apply(Consumer<SettingsBuilder<CI, CO, COM, VI, OA, CA>> consumer) {
         consumer.accept(this);
         return this;
     }
 
-    public static SettingsBuilder builder() {
-        return new SettingsBuilder();
+    public static <CI extends CommandInvocation,
+            CO extends ConverterInvocation, COM extends CompleterInvocation,
+            VI extends ValidatorInvocation, OA extends OptionActivator,
+            CA extends CommandActivator> SettingsBuilder<CI,CO,COM,VI,OA,CA> builder() {
+        return new SettingsBuilder<>();
     }
 
     private SettingsBuilder() {
         settings = new SettingsImpl<>();
     }
 
-    public SettingsBuilder(Settings<? extends Command,? extends CommandInvocation,
-            ? extends ConverterInvocation, ? extends CompleterInvocation,
-            ? extends ValidatorInvocation, ? extends OptionActivator,
-            ? extends CommandActivator> baseSettings) {
-       settings = (SettingsImpl<? extends Command,? extends CommandInvocation,
-            ? extends ConverterInvocation, ? extends CompleterInvocation,
-            ? extends ValidatorInvocation, ? extends OptionActivator,
-            ? extends CommandActivator>) baseSettings.clone();
+    public SettingsBuilder(Settings<CI, CO, COM, VI, OA, CA> baseSettings) {
+        settings = new SettingsImpl<>(baseSettings);
     }
 
-    public SettingsBuilder mode(EditMode.Mode mode) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> mode(EditMode.Mode mode) {
         return apply(c -> c.settings.setMode(mode));
     }
 
-    public SettingsBuilder historyFile(File history) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> historyFile(File history) {
         return apply(c -> c.settings.setHistoryFile(history));
     }
 
-    public SettingsBuilder historyFilePermission(FileAccessPermission fileAccessPermission) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> historyFilePermission(FileAccessPermission fileAccessPermission) {
         return apply(c -> c.settings.setHistoryFilePermission(fileAccessPermission));
     }
 
-    public SettingsBuilder historySize(int size) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> historySize(int size) {
         return apply(c -> c.settings.setHistorySize(size));
     }
 
-    public SettingsBuilder bellStyle(String bellStyle) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> bellStyle(String bellStyle) {
         return apply(c -> c.settings.setBellStyle(bellStyle));
     }
 
-    public SettingsBuilder inputStream(InputStream inputStream) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> inputStream(InputStream inputStream) {
         return apply(c -> c.settings.setStdIn(inputStream));
     }
 
-    public SettingsBuilder outputStream(PrintStream outputStream) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> outputStream(PrintStream outputStream) {
         return apply(c -> c.settings.setStdOut(outputStream));
     }
 
-    public SettingsBuilder outputStreamError(PrintStream error) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> outputStreamError(PrintStream error) {
         return apply(c -> c.settings.setStdErr(error));
     }
 
-    public SettingsBuilder inputrc(File inputrc) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> inputrc(File inputrc) {
         return apply(c -> c.settings.setInputrc(inputrc));
     }
 
-    public SettingsBuilder logging(boolean logging) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> logging(boolean logging) {
         return apply(c -> c.settings.setLogging(logging));
     }
 
-    public SettingsBuilder disableCompletion(boolean disableCompletion) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> disableCompletion(boolean disableCompletion) {
         return apply(c -> c.settings.setDisableCompletion(disableCompletion));
     }
 
-    public SettingsBuilder logfile(String logFile) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> logfile(String logFile) {
         return apply(c -> c.settings.setLogFile(logFile));
     }
 
-    public SettingsBuilder readInputrc(boolean readInputrc) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> readInputrc(boolean readInputrc) {
         return apply(c -> c.settings.setReadInputrc(readInputrc));
     }
 
-    public SettingsBuilder disableHistory(boolean disableHistory) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> disableHistory(boolean disableHistory) {
         return apply(c -> c.settings.setHistoryDisabled(disableHistory));
     }
 
-    public SettingsBuilder persistHistory(boolean persistHistory) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> persistHistory(boolean persistHistory) {
         return apply(c -> c.settings.setHistoryPersistent(persistHistory));
     }
 
-    public SettingsBuilder aliasFile(File aliasFile) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> aliasFile(File aliasFile) {
         return apply(c -> c.settings.setAliasFile(aliasFile));
     }
 
-    public SettingsBuilder enableAlias(boolean enableAlias) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> enableAlias(boolean enableAlias) {
         return apply(c -> c.settings.setAliasEnabled(enableAlias));
     }
 
-    public SettingsBuilder persistAlias(boolean persistAlias) {
+    public SettingsBuilder <CI,CO,COM,VI,OA,CA>persistAlias(boolean persistAlias) {
         return apply(c -> c.settings.setPersistAlias(persistAlias));
     }
 
-    public SettingsBuilder aliasManager(AliasManager aliasManager) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> aliasManager(AliasManager aliasManager) {
         return apply(c -> c.settings.setAliasManager(aliasManager));
     }
 
-    public SettingsBuilder quitHandler(QuitHandler quitHandler) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> quitHandler(QuitHandler quitHandler) {
         return apply(c -> c.settings.setQuitHandler(quitHandler));
     }
 
-    public SettingsBuilder parseOperators(boolean parseOperators) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> parseOperators(boolean parseOperators) {
         return apply(c -> c.settings.enableOperatorParser(parseOperators));
     }
 
-    public SettingsBuilder enableMan(boolean enableMan) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> enableMan(boolean enableMan) {
         return apply(c -> c.settings.setManEnabled(enableMan));
     }
 
-    public SettingsBuilder aeshContext(AeshContext aeshContext) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> aeshContext(AeshContext aeshContext) {
         return apply(c -> c.settings.setAeshContext(aeshContext));
     }
 
-    public SettingsBuilder enableExport(boolean enableExport) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> enableExport(boolean enableExport) {
         return apply(c -> c.settings.setExportEnabled(enableExport));
     }
 
-    public SettingsBuilder exportFile(File exportFile) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> exportFile(File exportFile) {
         return apply(c -> c.settings.setExportFile(exportFile));
     }
 
-    public SettingsBuilder setPersistExport(boolean persistExport) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> setPersistExport(boolean persistExport) {
         return apply(c -> c.settings.setPersistExport(persistExport));
     }
 
-    public SettingsBuilder setExportUsesSystemEnvironment(boolean isLoad) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> setExportUsesSystemEnvironment(boolean isLoad) {
         return apply(c -> c.settings.setExportUsesSystemEnvironment(isLoad));
     }
 
-    public SettingsBuilder setFileResource(Resource resource) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> setFileResource(Resource resource) {
         return apply(c -> c.settings.setResource(resource));
     }
 
-    public SettingsBuilder setExecuteAtStart(String execute) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> setExecuteAtStart(String execute) {
         return apply(c -> c.settings.setExecuteAtStart(execute));
     }
 
-    public SettingsBuilder setExecuteFileAtStart(Resource executeFile) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> setExecuteFileAtStart(Resource executeFile) {
         return apply(c -> c.settings.setExecuteFileAtStart(executeFile));
     }
 
-     public SettingsBuilder commandActivatorProvider(CommandActivatorProvider commandActivatorProvider) {
+     public SettingsBuilder<CI,CO,COM,VI,OA,CA> commandActivatorProvider(CommandActivatorProvider commandActivatorProvider) {
          return apply(c -> c.settings.setCommandActivatorProvider(commandActivatorProvider));
     }
 
-    public SettingsBuilder optionActivatorProvider(OptionActivatorProvider optionActivatorProvider) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> optionActivatorProvider(OptionActivatorProvider optionActivatorProvider) {
         return apply(c -> c.settings.setOptionActivatorProvider(optionActivatorProvider));
     }
 
-    public SettingsBuilder commandRegistry(CommandRegistry commandRegistry) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> commandRegistry(CommandRegistry commandRegistry) {
         return apply(c -> c.settings.setCommandRegistry(commandRegistry));
     }
 
-    public SettingsBuilder commandInvocationProvider(CommandInvocationProvider commandInvocationProvider) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> commandInvocationProvider(CommandInvocationProvider commandInvocationProvider) {
         return apply(c -> c.settings.setCommandInvocationProvider(commandInvocationProvider));
     }
 
-    public SettingsBuilder commandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> commandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
         return apply(c -> c.settings.setCommandNotFoundHandler(commandNotFoundHandler));
     }
 
-    public SettingsBuilder completerInvocationProvider(CompleterInvocationProvider completerInvocationProvider) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> completerInvocationProvider(CompleterInvocationProvider completerInvocationProvider) {
         return apply(c -> c.settings.setCompleterInvocationProvider(completerInvocationProvider));
     }
 
-    public SettingsBuilder converterInvocationProvider(ConverterInvocationProvider converterInvocationProvider) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> converterInvocationProvider(ConverterInvocationProvider converterInvocationProvider) {
         return apply(c -> c.settings.setConverterInvocationProvider(converterInvocationProvider));
     }
 
-    public SettingsBuilder validatorInvocationProvider(ValidatorInvocationProvider validatorInvocationProvider) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> validatorInvocationProvider(ValidatorInvocationProvider validatorInvocationProvider) {
         return apply(c -> c.settings.setValidatorInvocationProvider(validatorInvocationProvider));
     }
 
-    public SettingsBuilder manProvider(ManProvider manProvider) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> manProvider(ManProvider manProvider) {
         return apply(c -> c.settings.setManProvider(manProvider));
     }
 
-    public SettingsBuilder invocationProviders(InvocationProviders invocationProviders) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> invocationProviders(InvocationProviders<CA,CO,COM,VI,OA> invocationProviders) {
         return apply(c -> c.settings.setInvocationProviders(invocationProviders));
     }
 
-    public SettingsBuilder connection(Connection connection) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> connection(Connection connection) {
         return apply(c -> c.settings.setConnection(connection));
     }
 
-    public SettingsBuilder enableOperatorParser(boolean enabled) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> enableOperatorParser(boolean enabled) {
         return apply(c -> c.settings.enableOperatorParser(enabled));
     }
 
-    public SettingsBuilder exportListener(ExportChangeListener listener) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> exportListener(ExportChangeListener listener) {
         return apply(c -> c.settings.setExportListener(listener));
     }
 
-    public SettingsBuilder echoCtrl(boolean echo) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> echoCtrl(boolean echo) {
         return apply(c -> c.settings.echoCtrl(echo));
     }
 
-    public SettingsBuilder redrawPromptOnInterrupt(boolean redraw) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> redrawPromptOnInterrupt(boolean redraw) {
         return apply(c -> c.settings.redrawPromptOnInterrupt(redraw));
     }
 
-    public SettingsBuilder setInterruptHandler(Consumer<Void> consumer) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> setInterruptHandler(Consumer<Void> consumer) {
         return apply(c -> c.settings.setInterruptHandler(consumer));
     }
 
-    public SettingsBuilder setScanForCommandPackages(String... packages) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> setScanForCommandPackages(String... packages) {
         return apply(c -> c.settings.setScanForCommandPackages(packages));
     }
 
-    public SettingsBuilder enableSearchInPaging(boolean enable) {
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> enableSearchInPaging(boolean enable) {
         return apply(c -> c.settings.setEnableSearchInPaging(enable));
     }
 
-    public Settings<? extends Command<? extends CommandInvocation>,? extends CommandInvocation,
-            ? extends ConverterInvocation, ? extends CompleterInvocation,
-            ? extends ValidatorInvocation, ? extends OptionActivator,
-            ? extends CommandActivator> build() {
+    public Settings<CI,CO,COM,VI,OA,CA> build() {
         if(settings.logging())
             LoggerUtil.doLog();
 
@@ -286,22 +280,22 @@ public class SettingsBuilder {
             settings.setCommandRegistry(new MutableCommandRegistryImpl<>());
 
         if(settings.commandInvocationProvider() == null)
-            settings.setCommandInvocationProvider((CommandInvocationProvider) commandInvocation -> commandInvocation);
+            settings.setCommandInvocationProvider(commandInvocation -> (CI) commandInvocation);
 
         if(settings.completerInvocationProvider() == null)
-            settings.setCompleterInvocationProvider((CompleterInvocationProvider) completerInvocation -> completerInvocation);
+            settings.setCompleterInvocationProvider(completerInvocation -> (COM) completerInvocation);
 
         if(settings.converterInvocationProvider() == null)
-            settings.setConverterInvocationProvider((ConverterInvocationProvider) converterInvocation -> converterInvocation);
+            settings.setConverterInvocationProvider(converterInvocation -> (CO) converterInvocation);
 
         if(settings.validatorInvocationProvider() == null)
-            settings.setValidatorInvocationProvider((ValidatorInvocationProvider) validatorInvocation -> validatorInvocation);
+            settings.setValidatorInvocationProvider(validatorInvocation -> (VI) validatorInvocation);
 
         if(settings.optionActivatorProvider() == null)
-            settings.setOptionActivatorProvider((OptionActivatorProvider) optionActivator -> optionActivator);
+            settings.setOptionActivatorProvider(optionActivator -> (OA) optionActivator);
 
         if(settings.commandActivatorProvider() == null)
-            settings.setCommandActivatorProvider((CommandActivatorProvider) commandActivator -> commandActivator);
+            settings.setCommandActivatorProvider(commandActivator -> (CA) commandActivator);
 
         if(settings.invocationProviders() == null)
             settings.setInvocationProviders(new AeshInvocationProviders(settings.converterInvocationProvider(),

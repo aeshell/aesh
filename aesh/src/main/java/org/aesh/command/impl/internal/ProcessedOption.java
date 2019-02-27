@@ -374,7 +374,7 @@ public final class ProcessedOption {
                 }
             }
             else if(optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
-                Collection tmpSet = initializeCollection(field);
+                Collection<Object> tmpSet = initializeCollection(field);
                 if(values.size() > 0) {
                     for(String in : values)
                         tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
@@ -406,12 +406,13 @@ public final class ProcessedOption {
         }
     }
 
-    private Collection initializeCollection(Field field) throws IllegalAccessException, InstantiationException {
+    @SuppressWarnings("unchecked")
+    private Collection<Object> initializeCollection(Field field) throws IllegalAccessException, InstantiationException {
         if(field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
             if(Set.class.isAssignableFrom(field.getType()))
                 return  new HashSet<>();
             else if(List.class.isAssignableFrom(field.getType()))
-                return new ArrayList();
+                return new ArrayList<>();
             else
                 return null;
         }
@@ -429,7 +430,7 @@ public final class ProcessedOption {
                 field.set(instance, resource);
             }
             else {
-                Collection set = initializeCollection(field);
+                Collection<Object> set = initializeCollection(field);
                 if(set != null)
                     set.add(resource);
             }

@@ -19,6 +19,12 @@
  */
 package org.aesh.command.settings;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
 import org.aesh.readline.editing.EditMode;
@@ -29,8 +35,13 @@ import java.io.File;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class RuntimeSettings {
-    public static Settings readRuntimeProperties(Settings settings) {
-       SettingsBuilder builder = new SettingsBuilder(settings);
+
+    public static Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> readRuntimeProperties(
+                                      Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                                                      OptionActivator, CommandActivator> settings) {
+       SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation,
+                              ValidatorInvocation, OptionActivator, CommandActivator>
+               builder = new SettingsBuilder<>(settings);
 
             String editMode = System.getProperty("aesh.editmode");
             if(editMode != null && editMode.length() > 0) {

@@ -22,7 +22,6 @@ package org.aesh.command.container;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.readline.AeshContext;
-import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
@@ -39,12 +38,12 @@ import org.aesh.parser.ParsedLine;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandContainer<C extends Command<CI>,CI extends CommandInvocation> extends AutoCloseable {
+public interface CommandContainer<CI extends CommandInvocation> extends AutoCloseable {
 
     /**
      * @return parser generated from Command
      */
-    CommandLineParser<C> getParser();
+    CommandLineParser<CI> getParser();
 
     /**
      * @return true if the CommandLineParser or Command generation generated any errors

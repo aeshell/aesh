@@ -28,14 +28,14 @@ import org.aesh.parser.ParsedLine;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandResolver<C extends Command<CI>,CI extends CommandInvocation> {
+public interface CommandResolver<CI extends CommandInvocation> {
 
-    CommandRegistry<C,CI> getRegistry();
+    CommandRegistry<CI> getRegistry();
 
-    CommandContainer<C,CI> resolveCommand(String line) throws CommandNotFoundException;
+    CommandContainer<CI> resolveCommand(String line) throws CommandNotFoundException;
 
-    CommandContainer<C,CI> resolveCommand(ParsedLine line) throws CommandNotFoundException;
+    CommandContainer<CI> resolveCommand(ParsedLine line) throws CommandNotFoundException;
 
-    CommandContainer<C,CI> resolveCommand(String name, String line) throws CommandNotFoundException;
+    CommandContainer<CI> resolveCommand(String name, String line) throws CommandNotFoundException;
 
 }

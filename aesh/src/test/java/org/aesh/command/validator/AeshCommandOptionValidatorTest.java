@@ -19,6 +19,10 @@
  */
 package org.aesh.command.validator;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.registry.CommandRegistryException;
@@ -46,18 +50,20 @@ import org.aesh.command.CommandException;
 public class AeshCommandOptionValidatorTest {
 
     @Test
-    public void testOptionValidator() throws IOException, InterruptedException, CommandRegistryException {
+    public void testOptionValidator() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ValCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .commandRegistry(registry)
-                .connection(connection)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .commandRegistry(registry)
+                        .connection(connection)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -72,19 +78,21 @@ public class AeshCommandOptionValidatorTest {
     }
 
     @Test
-    public void testMultipleOptionValidators() throws IOException, InterruptedException, CommandRegistryException {
+    public void testMultipleOptionValidators() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ValCommand.class)
                 .command(IntCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .commandRegistry(registry)
-                .connection(connection)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .commandRegistry(registry)
+                        .connection(connection)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole aeshConsole = new ReadlineConsole(settings);
 
@@ -106,18 +114,20 @@ public class AeshCommandOptionValidatorTest {
     public void testMultipleOptionWithProvidersValidators() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = new AeshCommandRegistryBuilder()
+       CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ValCommand.class)
                 .command(Val2Command.class)
                 .command(IntCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .commandRegistry(registry)
-                .connection(connection)
-                .logging(true)
-                .validatorInvocationProvider(new TestValidatorInvocationProvider())
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .commandRegistry(registry)
+                        .connection(connection)
+                        .logging(true)
+                        .validatorInvocationProvider(new TestValidatorInvocationProvider())
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -142,16 +152,18 @@ public class AeshCommandOptionValidatorTest {
     public void testRequiredOption() throws IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ValidatorOptionCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .commandRegistry(registry)
-                .connection(connection)
-                .logging(true)
-                .validatorInvocationProvider(new TestValidatorInvocationProvider())
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .commandRegistry(registry)
+                        .connection(connection)
+                        .logging(true)
+                        .validatorInvocationProvider(new TestValidatorInvocationProvider())
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 

@@ -101,7 +101,7 @@ public class MutableCommandRegistryTest {
     }
 
     @CommandDefinition(name = "help", description = "")
-    public class Command3 implements Command {
+    public class Command3 implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;

@@ -32,18 +32,18 @@ import org.aesh.command.parser.CommandLineParserException;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandContainer<C extends Command<CI>,CI extends CommandInvocation> extends DefaultCommandContainer<C,CI> {
+public class AeshCommandContainer<CI extends CommandInvocation> extends DefaultCommandContainer<CI> {
 
-    private CommandLineParser<C> parser;
+    private CommandLineParser<CI> parser;
     private String errorMessage;
 
-    public AeshCommandContainer(CommandLineParser<C> parser) {
+    public AeshCommandContainer(CommandLineParser<CI> parser) {
         if (parser != null && parser.getProcessedCommand() != null) {
             this.parser = parser;
         }
     }
 
-    public AeshCommandContainer(ProcessedCommand<C> processedCommand) {
+    public AeshCommandContainer(ProcessedCommand<Command<CI>, CI> processedCommand) {
         parser = new AeshCommandLineParser<>(processedCommand );
     }
 
@@ -52,7 +52,7 @@ public class AeshCommandContainer<C extends Command<CI>,CI extends CommandInvoca
     }
 
     @Override
-    public CommandLineParser<C> getParser() {
+    public CommandLineParser<CI> getParser() {
         return parser;
     }
 
@@ -71,7 +71,7 @@ public class AeshCommandContainer<C extends Command<CI>,CI extends CommandInvoca
 
     }
 
-    public void addChild(CommandContainer<C,CI> commandContainer) throws CommandLineParserException {
+    public void addChild(CommandContainer<CI> commandContainer) throws CommandLineParserException {
         getParser().addChildParser(commandContainer.getParser());
     }
 

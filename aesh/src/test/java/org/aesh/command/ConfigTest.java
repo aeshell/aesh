@@ -19,16 +19,23 @@
  */
 package org.aesh.command;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.settings.RuntimeSettings;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.utils.Config;
 import org.junit.Test;
 
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -36,7 +43,7 @@ import static org.junit.Assert.assertEquals;
 public class ConfigTest {
 
     @Test
-    public void testParseProperties() throws IOException {
+    public void testParseProperties() {
         System.setProperty("aesh.terminal", "org.jboss.aesh.terminal.TestTerminal");
         System.setProperty("aesh.editmode", "vi");
         System.setProperty("aesh.historypersistent", "false");
@@ -46,16 +53,17 @@ public class ConfigTest {
         System.setProperty("aesh.disablecompletion", "true");
         System.setProperty("aesh.execute", "foo -f --bar");
 
-        SettingsBuilder builder = SettingsBuilder.builder();
+        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                               OptionActivator, CommandActivator> builder = SettingsBuilder.builder();
         Settings settings = RuntimeSettings.readRuntimeProperties(builder.build());
 
         assertEquals(settings.mode(), EditMode.Mode.VI);
 
-        assertEquals(settings.historyPersistent(), false);
-        assertEquals(settings.historyDisabled(), true);
+        assertFalse(settings.historyPersistent());
+        assertTrue(settings.historyDisabled());
         assertEquals(settings.historySize(), 42);
-        assertEquals(settings.logging(), false);
-        assertEquals(settings.completionDisabled(), true);
+        assertFalse(settings.logging());
+        assertTrue(settings.completionDisabled());
 
         assertEquals(settings.executeAtStart(), "foo -f --bar"+ Config.getLineSeparator());
 
@@ -71,6 +79,6 @@ public class ConfigTest {
         builder = SettingsBuilder.builder();
         settings = RuntimeSettings.readRuntimeProperties(builder.build());
 
-        assertEquals(settings.executeAtStart(), null);
+        assertNull(settings.executeAtStart());
     }
 }

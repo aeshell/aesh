@@ -26,6 +26,7 @@ import java.lang.reflect.Modifier;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
+@SuppressWarnings("unchecked")
 public class ReflectionUtil {
 
     public static <T> T newInstance(final Class<T> clazz) {

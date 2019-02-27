@@ -19,7 +19,6 @@
  */
 package org.aesh.command.settings;
 
-import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
@@ -28,6 +27,7 @@ import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.export.ExportChangeListener;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationProvider;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.activator.OptionActivatorProvider;
@@ -37,7 +37,6 @@ import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocationProvider;
-import org.aesh.command.registry.CommandRegistry;
 import org.aesh.io.FileResource;
 import org.aesh.readline.DefaultAeshContext;
 import org.aesh.readline.alias.AliasManager;
@@ -58,7 +57,7 @@ import java.util.function.Consumer;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
+public class SettingsImpl<CI extends CommandInvocation,
         CI3 extends ConverterInvocation, CI2 extends CompleterInvocation,
         VI extends ValidatorInvocation, OA extends OptionActivator,
         CA extends CommandActivator> implements Settings {
@@ -94,7 +93,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     private Resource executeFileAtStart;
     private CommandActivatorProvider<CA> commandActivatorProvider;
     private OptionActivatorProvider<OA> optionActivatorProvider;
-    private CommandRegistry<C,CI> commandRegistry;
+    private CommandRegistry<CI> commandRegistry;
     private CommandInvocationProvider<CI> commandInvocationProvider;
     private CommandNotFoundHandler commandNotFoundHandler;
     private CompleterInvocationProvider<CI2> completerInvocationProvider;
@@ -114,7 +113,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     SettingsImpl() {
     }
 
-    protected SettingsImpl(Settings<C, CI, CI3, CI2, VI, OA, CA> baseSettings) {
+    protected SettingsImpl(Settings<CI, CI3, CI2, VI, OA, CA> baseSettings) {
         setMode(baseSettings.mode());
         setHistoryFile(baseSettings.historyFile());
         setHistoryFilePermission(baseSettings.historyFilePermission());
@@ -617,10 +616,12 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
 
     @Override
     public void setExecuteAtStart(String execute) {
-        if(execute.endsWith(Config.getLineSeparator()))
-            this.execute = execute;
-        else
-            this.execute = execute + Config.getLineSeparator();
+        if(execute != null) {
+            if(execute.endsWith(Config.getLineSeparator()))
+                this.execute = execute;
+            else
+                this.execute = execute + Config.getLineSeparator();
+        }
     }
 
     @Override
@@ -646,12 +647,12 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     }
 
     @Override
-    public CommandRegistry<C,CI> commandRegistry() {
+    public CommandRegistry<CI> commandRegistry() {
         return commandRegistry;
     }
 
     @Override
-    public CommandInvocationProvider<? extends CommandInvocation> commandInvocationProvider() {
+    public CommandInvocationProvider<CI> commandInvocationProvider() {
         return commandInvocationProvider;
     }
 
@@ -661,22 +662,22 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     }
 
     @Override
-    public CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider() {
+    public CompleterInvocationProvider<CI2> completerInvocationProvider() {
         return completerInvocationProvider;
     }
 
     @Override
-    public ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider() {
+    public ConverterInvocationProvider<CI3> converterInvocationProvider() {
         return converterInvocationProvider;
     }
 
     @Override
-    public ValidatorInvocationProvider<? extends ValidatorInvocation> validatorInvocationProvider() {
+    public ValidatorInvocationProvider<VI> validatorInvocationProvider() {
         return validatorInvocationProvider;
     }
 
     @Override
-    public OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider() {
+    public OptionActivatorProvider<OA> optionActivatorProvider() {
         return optionActivatorProvider;
     }
 
@@ -686,7 +687,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     }
 
     @Override
-    public CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider() {
+    public CommandActivatorProvider<CA> commandActivatorProvider() {
         return commandActivatorProvider;
     }
 
@@ -703,7 +704,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
         this.optionActivatorProvider = optionActivatorProvider;
     }
 
-    public void setCommandRegistry(CommandRegistry<C,CI> commandRegistry) {
+    public void setCommandRegistry(CommandRegistry<CI> commandRegistry) {
         this.commandRegistry = commandRegistry;
     }
 
@@ -777,7 +778,7 @@ public class SettingsImpl<C extends Command<CI>, CI extends CommandInvocation,
     }
 
     @Override
-    public Consumer getInterruptHandler() {
+    public Consumer<Void> getInterruptHandler() {
         return interruptHandler;
     }
 

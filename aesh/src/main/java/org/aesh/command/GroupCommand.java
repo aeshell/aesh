@@ -25,16 +25,15 @@ import org.aesh.command.invocation.CommandInvocation;
 
 import java.util.List;
 import org.aesh.command.container.CommandContainer;
-import org.aesh.command.parser.CommandLineParserException;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface GroupCommand<CI extends CommandInvocation, C extends Command> extends Command<CI> {
+public interface GroupCommand<CI extends CommandInvocation> extends Command<CI> {
 
-    List<C> getCommands();
+    List<Command<CI>> getCommands();
 
-    default List<CommandContainer<Command<CI>, CI>> getParsedCommands() throws CommandLineParserException {
+    default List<CommandContainer<CI>> getParsedCommands() {
         return Collections.emptyList();
     }
 

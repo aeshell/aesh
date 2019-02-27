@@ -20,6 +20,10 @@
 package org.aesh.command.operator;
 
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.option.Option;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
@@ -30,6 +34,7 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.utils.Config;
@@ -51,18 +56,20 @@ public class AeshCommandEndOperatorTest {
     public void testEnd() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(FooCommand.class)
                  .command(BarCommand.class)
                  .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .commandRegistry(registry)
-                .enableOperatorParser(true)
-                .connection(connection)
-                .setPersistExport(false)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .commandRegistry(registry)
+                        .enableOperatorParser(true)
+                        .connection(connection)
+                        .setPersistExport(false)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

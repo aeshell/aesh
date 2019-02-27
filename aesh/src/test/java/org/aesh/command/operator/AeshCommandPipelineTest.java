@@ -20,6 +20,10 @@
 package org.aesh.command.operator;
 
 import org.aesh.command.CommandException;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.registry.CommandRegistryException;
@@ -30,6 +34,7 @@ import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.Command;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.CommandResult;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.io.Resource;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
@@ -53,18 +58,20 @@ public class AeshCommandPipelineTest {
 
         FooCommand foo = new FooCommand();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(PipeCommand.class)
                 .command(BarCommand.class)
                 .command(foo)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .connection(connection)
-                .enableOperatorParser(true)
-                .commandRegistry(registry)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation,
+                        ValidatorInvocation, OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .connection(connection)
+                        .enableOperatorParser(true)
+                        .commandRegistry(registry)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -86,18 +93,20 @@ public class AeshCommandPipelineTest {
 
         FooCommand foo = new FooCommand();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(PipeCommand.class)
                 .command(BarCommand.class)
                 .command(foo)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
-                .connection(connection)
-                .enableOperatorParser(true)
-                .commandRegistry(registry)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .connection(connection)
+                        .enableOperatorParser(true)
+                        .commandRegistry(registry)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -139,14 +148,13 @@ public class AeshCommandPipelineTest {
             return CommandResult.SUCCESS;
         }
 
-        public int getCounter() {
+        int getCounter() {
             return counter;
         }
     }
 
     @CommandDefinition(name = "bar", description = "")
     public static class BarCommand implements Command {
-        private int counter = 0;
 
         @Argument
         Resource arg;
@@ -164,9 +172,6 @@ public class AeshCommandPipelineTest {
             return CommandResult.SUCCESS;
         }
 
-        public int getCounter() {
-            return counter;
-        }
     }
 
 }

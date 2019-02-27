@@ -23,13 +23,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.map.MapProcessedCommandBuilder.MapProcessedCommand;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
@@ -48,6 +48,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author jdenise@redhat.com
  */
+@SuppressWarnings("unchecked")
 public class MapCommandTest {
     private final Key completeChar = Key.CTRL_I;
 
@@ -61,7 +62,7 @@ public class MapCommandTest {
 
     }
 
-    static class DynamicOptionsProvider implements MapProcessedCommandBuilder.ProcessedOptionProvider {
+    static class DynamicOptionsProvider implements MapProcessedOptionProvider {
         private List<ProcessedOption> options = Collections.emptyList();
         @Override
         public List<ProcessedOption> getOptions(List<ProcessedOption> currentOptions) {
@@ -69,7 +70,7 @@ public class MapCommandTest {
         }
     }
 
-    static class DynamicOptionsCountProvider implements MapProcessedCommandBuilder.ProcessedOptionProvider {
+    static class DynamicOptionsCountProvider implements MapProcessedOptionProvider {
 
         private int count = 0;
         private List<ProcessedOption> options = Collections.emptyList();
@@ -89,14 +90,14 @@ public class MapCommandTest {
         DynCommand1 cmd = new DynCommand1();
         DynamicOptionsProvider provider = new DynamicOptionsProvider();
 
-        MapProcessedCommandBuilder builder = new MapProcessedCommandBuilder();
+        MapProcessedCommandBuilder builder = MapProcessedCommandBuilder.builder();
         builder.command(cmd);
         // Retrieve dynamic options during completion.
         builder.lookupAtCompletionOnly(true);
         builder.name("dyn1");
         builder.optionProvider(provider);
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(builder.create())
                 .create();
 
@@ -177,7 +178,7 @@ public class MapCommandTest {
         DynCommand1 cmd = new DynCommand1();
         DynamicOptionsProvider provider = new DynamicOptionsProvider();
 
-        MapProcessedCommandBuilder builder = new MapProcessedCommandBuilder();
+        MapProcessedCommandBuilder builder = MapProcessedCommandBuilder.builder();
         builder.command(cmd);
         // Retrieve dynamic options during completion.
         builder.lookupAtCompletionOnly(true);
@@ -200,7 +201,7 @@ public class MapCommandTest {
         }
         builder.optionProvider(provider);
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(builder.create())
                 .create();
 
@@ -300,7 +301,7 @@ public class MapCommandTest {
         DynCommand1 cmd = new DynCommand1();
         DynamicOptionsProvider provider = new DynamicOptionsProvider();
 
-        MapProcessedCommandBuilder builder = new MapProcessedCommandBuilder();
+        MapProcessedCommandBuilder builder = MapProcessedCommandBuilder.builder();
         builder.command(cmd);
         // Retrieve dynamic options at execution time too, required to check for required option.
         builder.lookupAtCompletionOnly(false);
@@ -323,7 +324,7 @@ public class MapCommandTest {
         }
         builder.optionProvider(provider);
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(builder.create())
                 .create();
 
@@ -415,13 +416,13 @@ public class MapCommandTest {
         DynamicOptionsCountProvider provider = new DynamicOptionsCountProvider();
         provider.options = getOptions();
 
-        MapProcessedCommandBuilder builder = new MapProcessedCommandBuilder();
+        MapProcessedCommandBuilder builder = MapProcessedCommandBuilder.builder();
         builder.command(cmd);
         builder.lookupAtCompletionOnly(false);
         builder.name("dyn1");
         builder.optionProvider(provider);
         MapProcessedCommand processedCmd = builder.create();
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(processedCmd)
                 .create();
 
@@ -466,14 +467,14 @@ public class MapCommandTest {
         DynamicOptionsCountProvider provider = new DynamicOptionsCountProvider();
         provider.options = getOptions();
 
-        MapProcessedCommandBuilder builder = new MapProcessedCommandBuilder();
+        MapProcessedCommandBuilder builder = MapProcessedCommandBuilder.builder();
         builder.command(cmd);
         // Retrieve dynamic options during completion.
         builder.lookupAtCompletionOnly(true);
         builder.name("dyn1");
         builder.optionProvider(provider);
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(builder.create())
                 .create();
 

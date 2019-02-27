@@ -24,14 +24,18 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.BaseConsoleTest;
 
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.io.Resource;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
@@ -43,13 +47,9 @@ import org.junit.rules.TemporaryFolder;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,29 +61,31 @@ import static org.junit.Assert.assertEquals;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
- public class ConsoleRedirectionTest extends BaseConsoleTest {
+ public class ConsoleRedirectionTest {
 
     @Rule
     public TemporaryFolder tempDir = new TemporaryFolder();
-    private static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
+    //private static FileAttribute fileAttribute = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---"));
 
-    static boolean beforeHasBeenCalled = false;
-    static boolean afterHasBeenCalled = false;
+    private static boolean beforeHasBeenCalled = false;
+    private static boolean afterHasBeenCalled = false;
 
      @Test
      public void endOperator() throws Throwable {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(BeforeCommand.class)
                  .command(AfterCommand.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          ReadlineConsole console = new ReadlineConsole(settings);
          console.start();
@@ -98,15 +100,17 @@ import static org.junit.Assert.assertEquals;
      public void redirectOutOperator() throws Throwable {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(FooCommand.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection.txt");
          ReadlineConsole console = new ReadlineConsole(settings);
@@ -128,16 +132,18 @@ import static org.junit.Assert.assertEquals;
      public void pipeRedirectOutOperator() throws Throwable {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(DisplayCommand.class)
                  .command(PrintCommand.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_out.txt");
          ReadlineConsole console = new ReadlineConsole(settings);
@@ -159,15 +165,17 @@ import static org.junit.Assert.assertEquals;
      public void redirectInOperator() throws Throwable {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(BarCommand.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_in.txt");
          PrintWriter writer = new PrintWriter(foo, "UTF-8");
@@ -189,16 +197,18 @@ import static org.junit.Assert.assertEquals;
      public void redirectInAndPipeOperator() throws Throwable {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(BarCommand.class)
                  .command(ManCommand.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_in.txt");
          PrintWriter writer = new PrintWriter(foo, "UTF-8");
@@ -220,16 +230,18 @@ import static org.junit.Assert.assertEquals;
      public void redirectInPipeAndRedirectOutOperator() throws Throwable {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(BarCommand.class)
                  .command(ManCommand.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
 
          final File fooOut = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_out.txt");
          final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_in.txt");
@@ -254,15 +266,17 @@ import static org.junit.Assert.assertEquals;
      public void redirectInAndRedirectOutOperator() throws Throwable {
          TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = new AeshCommandRegistryBuilder()
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                  .command(BarCommand.class)
                  .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .logging(true)
-                 .connection(connection)
-                 .commandRegistry(registry)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .logging(true)
+                         .connection(connection)
+                         .commandRegistry(registry)
+                         .build();
          final File fooOut = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_out.txt");
          final File foo = new File(tempDir.getRoot()+Config.getPathSeparator()+"foo_redirection_in.txt");
          PrintWriter writer = new PrintWriter(foo, "UTF-8");
@@ -359,7 +373,6 @@ import static org.junit.Assert.assertEquals;
                  }
          );
      }
-     */
 
     public static Path createTempDirectory() throws IOException {
         final Path tmp;
@@ -373,6 +386,7 @@ import static org.junit.Assert.assertEquals;
 
         return tmp;
     }
+     */
 
     @CommandDefinition(name = "before", description = "")
     public class BeforeCommand implements Command {
@@ -455,7 +469,7 @@ import static org.junit.Assert.assertEquals;
          @Override
          public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
              BufferedReader reader = new BufferedReader(new InputStreamReader(commandInvocation.getConfiguration().getPipedData()));
-             reader.lines().forEach(str -> commandInvocation.print(str));
+             reader.lines().forEach(commandInvocation::print);
              return CommandResult.SUCCESS;
          }
      }

@@ -21,12 +21,17 @@ package org.aesh.command.completer;
 
 import java.io.IOException;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.completion.Completion;
 import org.aesh.command.parser.CommandLineParserException;
@@ -49,15 +54,15 @@ import static org.junit.Assert.assertTrue;
 public class CompletionConsoleTest {
 
     @Test
-    public void completionWithOptions() throws IOException, InterruptedException, CommandLineParserException {
+    public void completionWithOptions() throws IOException, CommandLineParserException {
 
-        final ProcessedCommand<Command> param = new ProcessedCommandBuilder<>().name("less")
+        final ProcessedCommand<Command<CommandInvocation>, CommandInvocation> param = ProcessedCommandBuilder.builder().name("less")
                 .description("less --options <files>")
                 .create();
 
         param.addOption(ProcessedOptionBuilder.builder().shortName('f').name("foo").hasValue(true).type(String.class).build());
 
-        final CommandLineParser<Command> parser = new AeshCommandLineParser<>(param);
+        final CommandLineParser<CommandInvocation> parser = new AeshCommandLineParser<>(param);
         final StringBuilder builder = new StringBuilder();
 
         Completion completion = co -> {
@@ -70,14 +75,14 @@ public class CompletionConsoleTest {
                   if(co.getBuffer().endsWith(" --")) {
                      for(ProcessedOption o : parser.getProcessedCommand().getOptions()) {
                          co.addCompletionCandidate("less --"+o.name());
-                         builder.append(o.name()+" ");
+                         builder.append(o.name()).append(" ");
                      }
                       co.setOffset(co.getOffset());
                   }
                   else if(co.getBuffer().endsWith(" -")) {
                       for(ProcessedOption o : parser.getProcessedCommand().getOptions()) {
                           co.addCompletionCandidate("less -"+o.shortName());
-                          builder.append("-"+o.shortName()+" ");
+                          builder.append("-").append(o.shortName()).append(" ");
                       }
                   }
                }
@@ -85,10 +90,12 @@ public class CompletionConsoleTest {
         };
         TestConnection con = new TestConnection();
 
-        Settings settings = SettingsBuilder.builder()
-                .connection(con)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .connection(con)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -117,10 +124,12 @@ public class CompletionConsoleTest {
         };
         TestConnection con = new TestConnection();
 
-        Settings settings = SettingsBuilder.builder()
-                .connection(con)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .connection(con)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 

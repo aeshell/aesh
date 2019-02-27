@@ -24,11 +24,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.ReadlineConsole;
 
@@ -53,12 +58,12 @@ public class AeshCommandRegistryTest {
         CommandRegistry registry = new CommandRegistry() {
 
             @Override
-            public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
+            public CommandContainer getCommand(String name, String line) {
                 throw new IllegalStateException("Should not crash Aesh");
             }
 
             @Override
-            public CommandContainer getCommandByAlias(String alias) throws CommandNotFoundException {
+            public CommandContainer getCommandByAlias(String alias) {
                 throw new IllegalStateException("Should not crash Aesh");
             }
 
@@ -77,7 +82,7 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
-            public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
+            public List<CommandLineParser<?>> getChildCommandParsers(String parent) {
                 return Collections.emptyList();
             }
 
@@ -90,13 +95,15 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        Settings settings = SettingsBuilder.builder()
-                .commandRegistry(registry)
-                .connection(connection)
-                .enableExport(false)
-                .enableAlias(false)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .commandRegistry(registry)
+                        .connection(connection)
+                        .enableExport(false)
+                        .enableAlias(false)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -117,12 +124,12 @@ public class AeshCommandRegistryTest {
         CommandRegistry registry = new CommandRegistry() {
 
             @Override
-            public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
+            public CommandContainer getCommand(String name, String line) {
                 return null;
             }
 
             @Override
-            public CommandContainer getCommandByAlias(String alias) throws CommandNotFoundException {
+            public CommandContainer getCommandByAlias(String alias) {
                 return null;
             }
 
@@ -141,7 +148,7 @@ public class AeshCommandRegistryTest {
             }
 
             @Override
-            public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
+            public List<CommandLineParser<?>> getChildCommandParsers(String parent) {
                 return Collections.emptyList();
             }
 
@@ -154,14 +161,16 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        Settings settings = SettingsBuilder.builder()
-                .connection(connection)
-                .commandRegistry(registry)
-                .setPersistExport(false)
-                .enableExport(false)
-                .enableAlias(false)
-                .logging(true)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .setPersistExport(false)
+                        .enableExport(false)
+                        .enableAlias(false)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -179,15 +188,15 @@ public class AeshCommandRegistryTest {
 
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = new CommandRegistry() {
+        CommandRegistry registry = new CommandRegistry() {
 
             @Override
-            public CommandContainer getCommand(String name, String line) throws CommandNotFoundException {
+            public CommandContainer getCommand(String name, String line) {
                 return null;
             }
 
             @Override
-            public CommandContainer getCommandByAlias(String alias) throws CommandNotFoundException {
+            public CommandContainer getCommandByAlias(String alias) {
                 return null;
             }
 
@@ -206,7 +215,7 @@ public class AeshCommandRegistryTest {
            }
 
            @Override
-            public List<CommandLineParser<?>> getChildCommandParsers(String parent) throws CommandNotFoundException {
+            public List<CommandLineParser<?>> getChildCommandParsers(String parent) {
                 return Collections.emptyList();
            }
 
@@ -219,13 +228,15 @@ public class AeshCommandRegistryTest {
             }
         };
 
-         Settings settings = SettingsBuilder.builder()
-                 .commandRegistry(registry)
-                 .connection(connection)
-                 .enableExport(false)
-                 .enableAlias(false)
-                 .logging(true)
-                 .build();
+         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                         OptionActivator, CommandActivator> settings =
+                 SettingsBuilder.builder()
+                         .commandRegistry(registry)
+                         .connection(connection)
+                         .enableExport(false)
+                         .enableAlias(false)
+                         .logging(true)
+                         .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

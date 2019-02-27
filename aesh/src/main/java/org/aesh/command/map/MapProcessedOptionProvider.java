@@ -17,17 +17,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.aesh.command.map;
 
-package org.aesh.command.impl.validator;
+import org.aesh.command.impl.internal.ProcessedOption;
 
-import org.aesh.command.Command;
-import org.aesh.command.validator.CommandValidator;
+import java.util.List;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class NullCommandValidator implements CommandValidator<Command> {
-    @Override
-    public void validate(Command command) {
-    }
+public interface MapProcessedOptionProvider {
+    List<ProcessedOption> getOptions(List<ProcessedOption> currentOptions);
 }

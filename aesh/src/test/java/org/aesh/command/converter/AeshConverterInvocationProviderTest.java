@@ -19,15 +19,18 @@
  */
 package org.aesh.command.converter;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.option.Option;
 import org.aesh.command.registry.CommandRegistryException;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.CommandDefinition;
-import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.Command;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
@@ -39,7 +42,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -51,16 +54,18 @@ public class AeshConverterInvocationProviderTest {
 
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(new ConCommand())
                 .create();
 
-         Settings settings = SettingsBuilder.builder()
-                 .commandRegistry(registry)
-                 .converterInvocationProvider(new FooConverterProvider())
-                 .connection(connection)
-                 .logging(true)
-                 .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .commandRegistry(registry)
+                        .converterInvocationProvider(new FooConverterProvider())
+                        .connection(connection)
+                        .logging(true)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -78,7 +83,7 @@ public static class ConCommand implements Command {
     @Option(name = "foo", converter = FooConverter.class)
     private String foo;
 
-    public ConCommand() {
+    ConCommand() {
     }
 
     @Override
@@ -93,7 +98,7 @@ public static class FooConverterInvocation implements ConverterInvocation {
     private final String input;
     private final AeshContext aeshContext;
 
-    public FooConverterInvocation(String input, AeshContext aeshContext) {
+    FooConverterInvocation(String input, AeshContext aeshContext) {
         this.input = input;
         this.aeshContext = aeshContext;
     }
@@ -119,8 +124,8 @@ public static class FooConverterInvocation implements ConverterInvocation {
     }
 
     @Override
-    public String convert(FooConverterInvocation converterInvocation) throws OptionValidatorException {
-        assertTrue(converterInvocation.getFoo().equals("FOOO"));
+    public String convert(FooConverterInvocation converterInvocation) {
+        assertEquals("FOOO", converterInvocation.getFoo());
         return converterInvocation.getFoo();
     }
 }

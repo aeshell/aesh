@@ -20,6 +20,7 @@
 package org.aesh.command.impl.parser;
 
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.populator.CommandPopulator;
@@ -41,17 +42,17 @@ import java.util.List;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandLineParser<C extends Command> {
+public interface CommandLineParser<CI extends CommandInvocation> {
 
     /**
      * @return the processed command this parser is generated from
      */
-    ProcessedCommand<C> getProcessedCommand();
+    ProcessedCommand<Command<CI>, CI> getProcessedCommand();
 
     /**
      * @return the actual command
      */
-    C getCommand();
+    Command<CI> getCommand();
 
     /**
      * @return completion parser created to work on this command
@@ -66,19 +67,19 @@ public interface CommandLineParser<C extends Command> {
      * @param name command
      * @return child parser that matches the name
      */
-    CommandLineParser<C> getChildParser(String name);
+    CommandLineParser<CI> getChildParser(String name);
 
-    void addChildParser(CommandLineParser<C> childParser) throws CommandLineParserException;
+    void addChildParser(CommandLineParser<CI> childParser) throws CommandLineParserException;
 
     /**
      * @return all the child parser
      */
-    List<CommandLineParser<C>> getAllChildParsers();
+    List<CommandLineParser<CI>> getAllChildParsers();
 
     /**
      * @return command populator to work on this command
      */
-    CommandPopulator<Object, C> getCommandPopulator();
+    CommandPopulator<Object, CI> getCommandPopulator();
 
 
     /**
@@ -140,7 +141,7 @@ public interface CommandLineParser<C extends Command> {
      *
      * @return  correct parser
      */
-    CommandLineParser<C> parsedCommand();
+    CommandLineParser<CI> parsedCommand();
 
     /**
      * Parse a command line and populate the
@@ -149,7 +150,7 @@ public interface CommandLineParser<C extends Command> {
      */
     void complete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders);
 
-    void doPopulate(ProcessedCommand processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException;
+    void doPopulate(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException;
 
     enum Mode {
         COMPLETION, STRICT, VALIDATE, NONE

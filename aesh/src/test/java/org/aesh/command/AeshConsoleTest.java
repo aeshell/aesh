@@ -19,6 +19,10 @@
  */
 package org.aesh.command;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.option.Option;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -52,6 +56,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
+@SuppressWarnings("unchecked")
 public class AeshConsoleTest {
 
 
@@ -59,7 +64,8 @@ public class AeshConsoleTest {
     public void testAeshConsole() throws IOException, InterruptedException, CommandLineParserException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        ProcessedCommand fooCommand = new ProcessedCommandBuilder()
+        ProcessedCommand<FooTestCommand,CommandInvocation> fooCommand =
+                ProcessedCommandBuilder.<FooTestCommand, CommandInvocation>builder()
                 .name("foo")
                 .description("fooing")
                 .command(FooTestCommand.class)
@@ -72,12 +78,13 @@ public class AeshConsoleTest {
                         .build())
                 .create();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(new CommandLineParserBuilder().processedCommand(fooCommand).create())
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(CommandLineParserBuilder.<FooTestCommand,CommandInvocation>builder().processedCommand(fooCommand).create())
                 .command(LsCommand.class)
                 .create();
 
-        Settings settings = SettingsBuilder.builder()
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings = SettingsBuilder.builder()
                 .logging(true)
                 .commandRegistry(registry)
                 .validatorInvocationProvider(new DirectoryValidatorInvocationProvider())
@@ -96,7 +103,7 @@ public class AeshConsoleTest {
         console.stop();
     }
 
-    public static class FooTestCommand implements Command {
+    public static class FooTestCommand implements Command<CommandInvocation> {
 
         private String bar;
 
@@ -150,7 +157,7 @@ public class AeshConsoleTest {
         private final Command command;
         private final AeshContext context;
 
-        public DirectoryValidatorInvocation(File value, Command command, AeshContext context) {
+        DirectoryValidatorInvocation(File value, Command command, AeshContext context) {
             this.value = value;
             this.command = command;
             this.context = context;

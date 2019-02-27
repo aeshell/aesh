@@ -19,6 +19,10 @@
  */
 package org.aesh.command;
 
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -29,6 +33,7 @@ import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.utils.Config;
 import org.aesh.command.parser.CommandLineParserException;
@@ -44,7 +49,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  *
@@ -69,26 +74,28 @@ public class AeshScriptTest {
 
         TestConnection connection = new TestConnection();
 
-       CommandResultHandler resultHandler = new CommandResultHandler();
-        ProcessedCommand fooCommand = new ProcessedCommandBuilder()
-                .name("foo")
-                .resultHandler(resultHandler)
-                .command(FooCommand.class)
-                .create();
+        CommandResultHandler resultHandler = new CommandResultHandler();
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> fooCommand = ProcessedCommandBuilder.builder()
+                                              .name("foo")
+                                              .resultHandler(resultHandler)
+                                              .command(FooCommand.class)
+                                              .create();
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
-                .command(fooCommand)
-                .command(BarCommand.class)
-                .command(new RunCommand(resultHandler))
-                .command(ExitCommand.class)
-                .create();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                                           .command(fooCommand)
+                                           .command(BarCommand.class)
+                                           .command(new RunCommand(resultHandler))
+                                           .command(ExitCommand.class)
+                                           .create();
 
-          Settings settings = SettingsBuilder.builder()
-                  .logging(true)
-                  .commandRegistry(registry)
-                  .connection(connection)
-                  .commandNotFoundHandler(resultHandler)
-                .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .commandRegistry(registry)
+                        .connection(connection)
+                        .commandNotFoundHandler(resultHandler)
+                        .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -165,7 +172,7 @@ public class AeshScriptTest {
                 return CommandResult.SUCCESS;
             }
             else {
-                assertTrue(false);
+                fail();
                 return CommandResult.FAILURE;
             }
         }
@@ -182,7 +189,7 @@ public class AeshScriptTest {
                 return CommandResult.SUCCESS;
             }
             else {
-                assertTrue(false);
+                fail();
                 return CommandResult.FAILURE;
             }
         }

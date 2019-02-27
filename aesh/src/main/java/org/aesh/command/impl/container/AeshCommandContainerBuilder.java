@@ -59,23 +59,24 @@ import java.util.Map;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class AeshCommandContainerBuilder<C extends Command<CI>, CI extends CommandInvocation> implements CommandContainerBuilder<C,CI> {
+@SuppressWarnings("unchecked")
+public class AeshCommandContainerBuilder<CI extends CommandInvocation> implements CommandContainerBuilder<CI> {
 
     @Override
-    public CommandContainer<C,CI> create(C command) throws CommandLineParserException {
+    public CommandContainer<CI> create(Command command) throws CommandLineParserException {
         return doGenerateCommandLineParser(command);
     }
 
     @Override
-    public CommandContainer<C,CI> create(Class<C> command) throws CommandLineParserException {
+    public CommandContainer<CI> create(Class<? extends Command> command) throws CommandLineParserException {
         return doGenerateCommandLineParser(ReflectionUtil.newInstance(command));
     }
 
-    private AeshCommandContainer<C,CI> doGenerateCommandLineParser(C commandObject) throws CommandLineParserException {
-        Class<C> clazz = (Class<C>) commandObject.getClass();
+    private AeshCommandContainer<CI> doGenerateCommandLineParser(Command<CI> commandObject) throws CommandLineParserException {
+        Class<Command<CI>> clazz = (Class<Command<CI>>) commandObject.getClass();
         CommandDefinition command = clazz.getAnnotation(CommandDefinition.class);
         if(command != null) {
-            ProcessedCommand<C> processedCommand = new ProcessedCommandBuilder<C>()
+            ProcessedCommand<Command<CI>, CI> processedCommand = ProcessedCommandBuilder.<Command<CI>, CI>builder()
                     .name(command.name())
                     .activator(command.activator())
                     .aliases(Arrays.asList(command.aliases()))
@@ -88,14 +89,14 @@ public class AeshCommandContainerBuilder<C extends Command<CI>, CI extends Comma
             processCommand(processedCommand, clazz);
 
             return new AeshCommandContainer<>(
-                    new CommandLineParserBuilder<C>()
+                    CommandLineParserBuilder.<Command<CI>, CI>builder()
                             .processedCommand(processedCommand)
                             .create());
         }
 
         GroupCommandDefinition groupCommand = clazz.getAnnotation(GroupCommandDefinition.class);
         if(groupCommand != null) {
-            ProcessedCommand<C> processedGroupCommand = new ProcessedCommandBuilder<>()
+            ProcessedCommand<Command<CI>,CI> processedGroupCommand = ProcessedCommandBuilder.<Command<CI>, CI>builder()
                     .name(groupCommand.name())
                     .activator(groupCommand.activator())
                     .aliases(Arrays.asList(groupCommand.aliases()))
@@ -107,30 +108,30 @@ public class AeshCommandContainerBuilder<C extends Command<CI>, CI extends Comma
 
             processCommand(processedGroupCommand, clazz);
 
-            AeshCommandContainer<C,CI> groupContainer;
+            AeshCommandContainer<CI> groupContainer;
 
             groupContainer = new AeshCommandContainer<>(
-                    new CommandLineParserBuilder<C>()
+                    CommandLineParserBuilder.<Command<CI>, CI>builder()
                             .processedCommand(processedGroupCommand)
                             .create());
 
             if (commandObject instanceof GroupCommand) {
-                List<C> commands = ((GroupCommand) commandObject).getCommands();
+                List<Command<CI>> commands = ((GroupCommand<CI>) commandObject).getCommands();
                 if (commands != null) {
-                    for (C sub : commands) {
+                    for (Command<CI> sub : commands) {
                         groupContainer.addChild(doGenerateCommandLineParser(sub));
                     }
                 }
-                List<CommandContainer<C, CI>> parsedCommands = ((GroupCommand) commandObject).getParsedCommands();
+                List<CommandContainer<CI>> parsedCommands = ((GroupCommand<CI>) commandObject).getParsedCommands();
                 if (parsedCommands != null) {
-                    for (CommandContainer<C, CI> sub : parsedCommands) {
+                    for (CommandContainer<CI> sub : parsedCommands) {
                         groupContainer.addChild(sub);
                     }
                 }
             } else {
                 for (Class<? extends Command> groupClazz : groupCommand.groupCommands()) {
-                    Command groupInstance = ReflectionUtil.newInstance(groupClazz);
-                    groupContainer.addChild(doGenerateCommandLineParser((C) groupInstance));
+                    Command<CI> groupInstance = (Command<CI>) ReflectionUtil.newInstance(groupClazz);
+                    groupContainer.addChild(doGenerateCommandLineParser(groupInstance));
                 }
             }
 
@@ -303,8 +304,8 @@ public class AeshCommandContainerBuilder<C extends Command<CI>, CI extends Comma
     }
 
    public static void parseAndPopulate(Command<CommandInvocation> instance, String input) throws CommandLineParserException, OptionValidatorException {
-        AeshCommandContainerBuilder<Command<CommandInvocation>,CommandInvocation> builder = new AeshCommandContainerBuilder<>();
-        CommandLineParser cl = builder.doGenerateCommandLineParser(instance).getParser();
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandLineParser<CommandInvocation> cl = builder.doGenerateCommandLineParser(instance).getParser();
         InvocationProviders invocationProviders = new AeshInvocationProviders(
                 new AeshConverterInvocationProvider(),
                 new AeshCompleterInvocationProvider(),

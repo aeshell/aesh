@@ -21,7 +21,6 @@ package org.aesh.command.impl.invocation;
 
 import java.io.IOException;
 
-import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
@@ -41,16 +40,16 @@ import org.aesh.terminal.tty.Size;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class DefaultCommandInvocation<C extends Command<DefaultCommandInvocation>> implements CommandInvocation{
+public class DefaultCommandInvocation implements CommandInvocation{
 
 
     private final Shell shell = new DefaultShell();
 
-    private final CommandRuntime<C,DefaultCommandInvocation> processor;
+    private final CommandRuntime<DefaultCommandInvocation> processor;
 
     private final CommandInvocationConfiguration config;
 
-    public DefaultCommandInvocation(CommandRuntime<C, DefaultCommandInvocation> processor, CommandInvocationConfiguration config) {
+    public DefaultCommandInvocation(CommandRuntime< DefaultCommandInvocation> processor, CommandInvocationConfiguration config) {
         this.processor = processor;
         this.config = config;
     }
@@ -86,17 +85,17 @@ public class DefaultCommandInvocation<C extends Command<DefaultCommandInvocation
 
     // XXX JFDENISE SHOULD BE REMOVED
     @Override
-    public KeyAction input() throws InterruptedException {
+    public KeyAction input() {
         return null;
     }
 
     @Override
-    public String inputLine() throws InterruptedException {
+    public String inputLine() {
         return null;
     }
 
     @Override
-    public String inputLine(Prompt prompt) throws InterruptedException {
+    public String inputLine(Prompt prompt) {
         return null;
     }
 
@@ -158,22 +157,22 @@ public class DefaultCommandInvocation<C extends Command<DefaultCommandInvocation
         }
 
         @Override
-        public String readLine() throws InterruptedException {
+        public String readLine() {
             return null;
         }
 
         @Override
-        public String readLine(Prompt prompt) throws InterruptedException {
+        public String readLine(Prompt prompt) {
             return null;
         }
 
         @Override
-        public Key read() throws InterruptedException {
+        public Key read() {
             return null;
         }
 
         @Override
-        public Key read(Prompt prompt) throws InterruptedException {
+        public Key read(Prompt prompt) {
             return null;
         }
 

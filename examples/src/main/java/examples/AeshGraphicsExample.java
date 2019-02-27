@@ -22,12 +22,16 @@ package examples;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
-import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.graphics.AeshGraphicsConfiguration;
 import org.aesh.graphics.Graphics;
 import org.aesh.graphics.GraphicsConfiguration;
@@ -48,22 +52,23 @@ import java.nio.charset.Charset;
 public class AeshGraphicsExample {
 
     public static void main(String[] args) throws CommandRegistryException, IOException {
-        SettingsBuilder builder = SettingsBuilder.builder().logging(true);
-        builder.enableMan(true);
 
         TerminalConnection connection = new TerminalConnection(Charset.defaultCharset(), System.in, System.out, null);
 
-        CommandRegistry registry = new AeshCommandRegistryBuilder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ExitCommand.class)
                 .command(new GraphicsCommand(connection))
                 .create();
 
-        Settings settings = builder
-                .commandRegistry(registry)
-                .connection(connection)
-                .build();
+        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                               OptionActivator, CommandActivator> builder =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .enableMan(true)
+                        .commandRegistry(registry)
+                        .connection(connection);
 
-        ReadlineConsole console = new ReadlineConsole(settings);
+        ReadlineConsole console = new ReadlineConsole(builder.build());
         console.setPrompt(new Prompt("[aesh@rules]$ "));
 
         console.read();

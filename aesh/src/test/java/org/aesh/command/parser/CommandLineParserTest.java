@@ -68,10 +68,10 @@ public class CommandLineParserTest {
     public void testParseCommandLine1() throws Exception {
 
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser<Parser1Test<CommandInvocation>> parser = new AeshCommandContainerBuilder<Parser1Test<CommandInvocation>,CommandInvocation>().create(new Parser1Test<>()).getParser();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new Parser1Test<>()).getParser();
 
         parser.populateObject("test -f -e bar -Df=g /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
-        Parser1Test p1 = parser.getCommand();
+        Parser1Test p1 = (Parser1Test) parser.getCommand();
 
         assertTrue(p1.foo);
         assertEquals("bar", p1.equal);
@@ -123,10 +123,10 @@ public class CommandLineParserTest {
     public void testParseCommandLine1SNoSpace() throws Exception {
 
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser<Parser1Test<CommandInvocation>> parser = new AeshCommandContainerBuilder<Parser1Test<CommandInvocation>,CommandInvocation>().create(new Parser1Test<>()).getParser();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new Parser1Test<>()).getParser();
 
         parser.populateObject("test -f -ebar -Df=g /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
-        Parser1Test p1 = parser.getCommand();
+        Parser1Test p1 = (Parser1Test) parser.getCommand();
 
         assertTrue(p1.foo);
         assertEquals("bar", p1.equal);
@@ -177,8 +177,8 @@ public class CommandLineParserTest {
     public void testParseCommandLine2() throws Exception {
 
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser<Parser2Test<CommandInvocation>> parser = new AeshCommandContainerBuilder<Parser2Test<CommandInvocation>, CommandInvocation>().create(new Parser2Test<>()).getParser();
-        Parser2Test p2 = parser.getCommand();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new Parser2Test<>()).getParser();
+        Parser2Test p2 = (Parser2Test) parser.getCommand();
 
         parser.populateObject("test -d true --bar Foo.class", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertEquals("true", p2.display);
@@ -209,7 +209,7 @@ public class CommandLineParserTest {
     public void testParseGroupCommand() throws Exception {
 
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser<? extends Command> parser = new AeshCommandContainerBuilder<GroupCommandTest<CommandInvocation>, CommandInvocation>().create(new GroupCommandTest<>()).getParser();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new GroupCommandTest<>()).getParser();
         ChildTest1 c1 = (ChildTest1) parser.getChildParser("child1").getCommand();
         ChildTest2 c2 = (ChildTest2) parser.getChildParser("child2").getCommand();
 
@@ -230,7 +230,7 @@ public class CommandLineParserTest {
     @Test
     public void testParseSuperGroupCommand() throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser<? extends Command> superParser = new AeshCommandContainerBuilder<SuperGroupCommandTest<CommandInvocation>, CommandInvocation>().create(new SuperGroupCommandTest<>()).getParser();
+        CommandLineParser<CommandInvocation> superParser = new AeshCommandContainerBuilder<>().create(new SuperGroupCommandTest<>()).getParser();
         CommandLineParser subSuperParser = superParser.getChildParser("sub");
 
         ChildTest1 c1 = (ChildTest1) subSuperParser.getChildParser("child1").getCommand();
@@ -253,8 +253,8 @@ public class CommandLineParserTest {
     @Test
     public void testParseCommandLine4() throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser<Parser4Test<CommandInvocation>> parser = new AeshCommandContainerBuilder<Parser4Test<CommandInvocation>, CommandInvocation>().create(new Parser4Test<>()).getParser();
-        Parser4Test p4 = parser.getCommand();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new Parser4Test<>()).getParser();
+        Parser4Test p4 = (Parser4Test) parser.getCommand();
 
         parser.populateObject("test -o bar1,bar2,bar3 foo", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertEquals("bar1", p4.option.get(0));
@@ -290,8 +290,8 @@ public class CommandLineParserTest {
     @Test
     public void testParseCommandLine5() throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser<Parser5Test<CommandInvocation>> parser = new AeshCommandContainerBuilder<Parser5Test<CommandInvocation>, CommandInvocation>().create(new Parser5Test<>()).getParser();
-        Parser5Test p5 = parser.getCommand();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new Parser5Test<>()).getParser();
+        Parser5Test p5 = (Parser5Test) parser.getCommand();
 
         parser.populateObject("test  --foo  \"-X1 X2 -X3\" --baz -wrong --bar -q \"-X4 -X5\"", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertEquals("-X1", p5.foo.get(0));
@@ -318,8 +318,8 @@ public class CommandLineParserTest {
     @Test
     public void testSubClass() throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser<SubHelp<CommandInvocation>> parser = new AeshCommandContainerBuilder<SubHelp<CommandInvocation>, CommandInvocation>().create(new SubHelp<>()).getParser();
-        SubHelp subHelp = parser.getCommand();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new SubHelp<>()).getParser();
+        SubHelp subHelp = (SubHelp) parser.getCommand();
 
         parser.populateObject("subhelp --foo bar -h", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertEquals("bar", subHelp.foo);
@@ -328,14 +328,14 @@ public class CommandLineParserTest {
 
     @Test(expected = CommandLineParserException.class)
     public void testInitializeGroupCommandWithArgument() throws Exception {
-        new AeshCommandContainerBuilder<GroupFailCommand<CommandInvocation>, CommandInvocation>().create(new GroupFailCommand<>());
+        new AeshCommandContainerBuilder<>().create(new GroupFailCommand<>());
     }
 
     @Test
     public void testDoubleDash() throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser<Parser4Test<CommandInvocation>> parser = new AeshCommandContainerBuilder<Parser4Test<CommandInvocation>, CommandInvocation>().create(new Parser4Test<>()).getParser();
-        Parser4Test p4 = parser.getCommand();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new Parser4Test<>()).getParser();
+        Parser4Test p4 = (Parser4Test) parser.getCommand();
 
         parser.populateObject("test -- foo", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertEquals("foo", p4.arguments.get(0));
@@ -418,7 +418,7 @@ public class CommandLineParserTest {
     }
 
     @CommandDefinition(name = "child1", description = "")
-    public class ChildTest1 extends TestingCommand {
+    public class ChildTest1 extends TestingCommand<CommandInvocation> {
 
         @Option
         private String foo;
@@ -429,7 +429,7 @@ public class CommandLineParserTest {
     }
 
     @CommandDefinition(name = "child2", description = "")
-    public class ChildTest2 extends TestingCommand {
+    public class ChildTest2 extends TestingCommand<CommandInvocation> {
 
         @Option
         private String foo;
@@ -455,7 +455,7 @@ public class CommandLineParserTest {
     }
 
     @GroupCommandDefinition(name = "sub", description = "", groupCommands = {ChildTest1.class, ChildTest2.class})
-    public class SubSuperGroupCommandTest extends TestingCommand {
+    public class SubSuperGroupCommandTest extends TestingCommand<CommandInvocation> {
 
         @Option(hasValue = false)
         private boolean help;

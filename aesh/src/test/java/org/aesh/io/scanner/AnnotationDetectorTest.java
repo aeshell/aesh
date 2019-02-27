@@ -31,10 +31,6 @@ public class AnnotationDetectorTest {
 
         private boolean foundManCommand = false;
 
-        public boolean foundManCommand() {
-            return foundManCommand;
-        }
-
         @Override
         public void reportTypeAnnotation(Class<? extends Annotation> annotation, String className) {
             if(className.equals("org.aesh.command.man.Man"))
@@ -42,7 +38,7 @@ public class AnnotationDetectorTest {
         }
 
         @Override
-        public Class<? extends Annotation>[] annotations() {
+        public Class[] annotations() {
             try {
                 return new Class[]{ Class.forName(CommandDefinition.class.getCanonicalName())};
             }

@@ -38,7 +38,7 @@ import org.aesh.readline.action.KeyAction;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandInvocation {
+public interface CommandInvocation<CI extends CommandInvocation> {
 
     /**
      * @return the shell
@@ -120,7 +120,7 @@ public interface CommandInvocation {
             InterruptedException,
             IOException;
 
-    Executor<? extends CommandInvocation> buildExecutor(String line) throws CommandNotFoundException,
+    Executor<CI> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,
             CommandValidatorException,
