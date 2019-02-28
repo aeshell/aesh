@@ -96,7 +96,7 @@ public interface CommandRuntime<CI extends CommandInvocation> {
     default String commandInfo(String line) {
         try {
             String name = Parser.findFirstWord(line);
-            return getCommandRegistry().getCommand(name, line).printHelp(name);
+            return getCommandRegistry().getCommand(name, line).printHelp(line);
         }
         catch (CommandNotFoundException e) {
             return null;
