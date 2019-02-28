@@ -59,7 +59,7 @@ public class GraalReflectionCommand implements Command  {
 
                     GraalReflectionFileGenerator graalFileGenerator = new GraalReflectionFileGenerator();
                     Files.write(Paths.get(container.getParser().getProcessedCommand().name().toLowerCase()+"_reflection.json"),
-                            graalFileGenerator.generateReflection(container.getParser()).getBytes(), StandardOpenOption.WRITE);
+                            graalFileGenerator.generateReflection(container.getParser()).getBytes(), StandardOpenOption.CREATE);
 
                     container.getParser().getProcessedCommand();
 
@@ -78,10 +78,7 @@ public class GraalReflectionCommand implements Command  {
         try {
             return (Class<Command<CommandInvocation>>) Class.forName(commandName);
         }
-        catch(ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        catch(ClassCastException e) {
+        catch(ClassNotFoundException | ClassCastException e) {
             e.printStackTrace();
         }
 

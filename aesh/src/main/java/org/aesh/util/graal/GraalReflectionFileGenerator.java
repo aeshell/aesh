@@ -82,7 +82,7 @@ public class GraalReflectionFileGenerator {
     }
 
     private void appendCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, StringBuilder builder) {
-        builder.append("    \"name\" : ").append(command.getCommand().getClass().toString()).append("\",").append(getLineSeparator());
+        builder.append("    \"name\" : \"").append(command.getCommand().getClass().toString()).append("\",").append(getLineSeparator());
         appendDefaults(builder);
 
         if(command.getOptions().size() > 0) {
@@ -91,8 +91,11 @@ public class GraalReflectionFileGenerator {
                     .append("    \"fields\" : [").append(getLineSeparator());
             for(int i=0; i < command.getOptions().size(); i++) {
                 builder.append("      { \"name\" : \"").append(command.getOptions().get(i).getFieldName()).append("\" }");
-                if(i < command.getOptions().size())
+                if(i + 1 < command.getOptions().size())
                     builder.append(",").append(getLineSeparator());
+                else
+                    builder.append(getLineSeparator());
+
                 if(command.getOptions().get(i).type().getName().equalsIgnoreCase("boolean"))
                     booleanOption = true;
                 if(command.getOptions().get(i).type().getName().equalsIgnoreCase("java.io.file")||

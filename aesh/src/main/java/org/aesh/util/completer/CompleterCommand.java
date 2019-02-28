@@ -64,12 +64,10 @@ public class CompleterCommand implements Command<CommandInvocation> {
                         FileCompleterGenerator completerGenerator = new FileCompleterGenerator();
 
                         Files.write(Paths.get(container.getParser().getProcessedCommand().name().toLowerCase()+"_complete.bash"),
-                                completerGenerator.generateCompeterFile(container.getParser()).getBytes(), StandardOpenOption.WRITE);
+                                completerGenerator.generateCompeterFile(container.getParser()).getBytes(), StandardOpenOption.CREATE);
 
                     }
-                    catch(CommandLineParserException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
+                    catch(CommandLineParserException | IOException e) {
                         e.printStackTrace();
                     }
                 }
@@ -82,10 +80,7 @@ public class CompleterCommand implements Command<CommandInvocation> {
         try {
             return (Class<Command<CommandInvocation>>) Class.forName(commandName);
         }
-        catch(ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        catch(ClassCastException e) {
+        catch(ClassNotFoundException | ClassCastException e) {
             e.printStackTrace();
         }
 
