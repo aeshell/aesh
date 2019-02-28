@@ -61,6 +61,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private boolean parsedCommand = false;
     private final LineParser lineParser;
     private CompleteStatus completeStatus;
+    private AeshCommandLineParser<CI> parent;
 
     public AeshCommandLineParser(ProcessedCommand<Command<CI>, CI> processedCommand) {
         this.processedCommand = processedCommand;
@@ -75,6 +76,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             childParsers = new ArrayList<>();
         commandLineParser.setChild(true);
         childParsers.add(commandLineParser);
+        if(commandLineParser instanceof AeshCommandLineParser)
+            ((AeshCommandLineParser<CI>) commandLineParser).setParent(this);
     }
 
     public List<CommandLineParser<CI>> getChildParsers() {
@@ -84,6 +87,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public void setChild(boolean child) {
         isChild = child;
+    }
+
+    private void setParent(AeshCommandLineParser<CI> parent) {
+        this.parent = parent;
     }
 
     @Override
@@ -208,7 +215,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         List<CommandLineParser<CI>> parsers = getChildParsers();
         if (parsers != null && parsers.size() > 0) {
             StringBuilder sb = new StringBuilder();
-            sb.append(processedCommand.printHelp())
+            sb.append(processedCommand.printHelp(helpNames()))
                     .append(Config.getLineSeparator())
                     .append(processedCommand.name())
                     .append(" commands:")
@@ -223,7 +230,14 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             return sb.toString();
         }
         else
-            return processedCommand.printHelp();
+            return processedCommand.printHelp(helpNames());
+    }
+
+    private String helpNames() {
+        if(isChild()) {
+            return parent.helpNames() +" "+ processedCommand.name();
+        }
+        return processedCommand.name();
     }
 
     /**

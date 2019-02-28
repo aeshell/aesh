@@ -20,16 +20,36 @@
 package org.aesh.command.builder;
 
 import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Argument;
+import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.readline.ReadlineConsole;
+import org.aesh.tty.TestConnection;
 import org.aesh.utils.ANSI;
-import org.aesh.utils.Config;
 import org.junit.Test;
 
+import java.io.IOException;
+
+import static org.aesh.utils.Config.getLineSeparator;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -63,11 +83,11 @@ public class CommandLineFormatterTest {
                 .processedCommand(pb.create())
                 .create();
 
-        assertEquals("Usage: man" + Config.getLineSeparator() + "[OPTION...]"+ Config.getLineSeparator()+
-                        Config.getLineSeparator()+
-                        "Options:"+ Config.getLineSeparator()+
-                        "  -d, --debug    emit debugging messages"+Config.getLineSeparator()+
-                        "  -D, --default  reset all options to their default values"+Config.getLineSeparator(),
+        assertEquals("Usage: man [<options>]" + getLineSeparator() + "[OPTION...]"+ getLineSeparator()+
+                        getLineSeparator()+
+                        "Options:"+ getLineSeparator()+
+                        "  -d, --debug    emit debugging messages"+ getLineSeparator()+
+                        "  -D, --default  reset all options to their default values"+ getLineSeparator(),
                 clp.printHelp());
     }
 
@@ -107,15 +127,15 @@ public class CommandLineFormatterTest {
 
         CommandLineParser clp = CommandLineParserBuilder.builder().processedCommand(pb.create()).create();
 
-        assertEquals("Usage: man" + Config.getLineSeparator() + "[OPTION...]"+ Config.getLineSeparator()+
-                        Config.getLineSeparator()+
-                        "Options:"+ Config.getLineSeparator()+
-                        "  -d, --debug            emit debugging messages"+Config.getLineSeparator()+
+        assertEquals("Usage: man [<options>]" + getLineSeparator() + "[OPTION...]"+ getLineSeparator()+
+                        getLineSeparator()+
+                        "Options:"+ getLineSeparator()+
+                        "  -d, --debug            emit debugging messages"+ getLineSeparator()+
                         ANSI.BOLD+
                         "  -D, --default"+
                         ANSI.BOLD_OFF+
-                        "          reset all options to their default values"+Config.getLineSeparator()+
-                        "  -f, --file=<filename>  set the filename"+Config.getLineSeparator(),
+                        "          reset all options to their default values"+ getLineSeparator()+
+                        "  -f, --file=<filename>  set the filename"+ getLineSeparator(),
                 clp.printHelp());
     }
 
@@ -164,16 +184,104 @@ public class CommandLineFormatterTest {
         clpGit.addChildParser(clpBranch);
         clpGit.addChildParser(clpRebase);
 
-         assertEquals("Usage: git" + Config.getLineSeparator() + "[OPTION...]" + Config.getLineSeparator() +
-                         Config.getLineSeparator() +
-                         "Options:" + Config.getLineSeparator() +
-                         "  -h, --help  display help info" + Config.getLineSeparator()
-                         + Config.getLineSeparator()+"git commands:"+Config.getLineSeparator()+
-                         "    branch  branching"+Config.getLineSeparator()+
-                         "    rebase  [OPTION...]"+Config.getLineSeparator(),
+         assertEquals("Usage: git [<options>]" + getLineSeparator() + "[OPTION...]" + getLineSeparator() +
+                         getLineSeparator() +
+                         "Options:" + getLineSeparator() +
+                         "  -h, --help  display help info" + getLineSeparator()
+                         + getLineSeparator()+"git commands:"+ getLineSeparator()+
+                         "    branch  branching"+ getLineSeparator()+
+                         "    rebase  [OPTION...]"+ getLineSeparator(),
                  clpGit.printHelp());
 
 
     }
+
+
+    @Test
+    public void testChildFormatter() throws CommandRegistryException, IOException, InterruptedException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry =
+                AeshCommandRegistryBuilder.builder()
+                        .command(GitCommand.class)
+                        .create();
+
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                                OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("git rebase --help"+ getLineSeparator());
+        connection.clearOutputBuffer();
+        Thread.sleep(10);
+        connection.assertBuffer("Usage: git rebase [<options>] <branch>"+ getLineSeparator()+
+                                       "Reapply commits on top of another base tip"+ getLineSeparator()+
+                                        getLineSeparator()+
+                                        "Options:"+ getLineSeparator()+
+                                        "  --force  force your commits"+getLineSeparator()+
+                                        "  --help   display this help info"+getLineSeparator()+
+                                        "  --test"+getLineSeparator()+
+                                        getLineSeparator()+
+                                        "Argument:"+getLineSeparator()+
+                                        "         the branch you want to rebase on"+getLineSeparator()+getLineSeparator());
+
+        console.stop();
+    }
+
+    @GroupCommandDefinition(name = "git", description = "", groupCommands = {GitCommit.class, GitRebase.class})
+    public static class GitCommand implements Command {
+
+        @Option(hasValue = false)
+        private boolean help;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "commit", description = "")
+    public static class GitCommit implements Command {
+
+        @Option(shortName = 'a', hasValue = false)
+        private boolean all;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "rebase", description = "Reapply commits on top of another base tip")
+    public static class GitRebase implements Command {
+
+        @Option(hasValue = false, description = "force your commits")
+        private boolean force;
+
+        @Option(hasValue = false, description = "display this help info")
+        private boolean help;
+
+        @Option
+        private String test;
+
+        @Argument(description = "the branch you want to rebase on")
+        private String branch;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            if(help)
+                commandInvocation.println(commandInvocation.getHelpInfo("git rebase"));
+
+            return CommandResult.SUCCESS;
+        }
+
+    }
+
 
 }

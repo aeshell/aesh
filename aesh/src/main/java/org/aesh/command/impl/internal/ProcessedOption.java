@@ -31,14 +31,17 @@ import org.aesh.command.parser.OptionParser;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.io.Resource;
 import org.aesh.readline.AeshContext;
 import org.aesh.io.PipelineResource;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.utils.ANSI;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -481,6 +484,12 @@ public final class ProcessedOption {
 
     public boolean hasDefaultValue() {
         return getDefaultValues() != null && getDefaultValues().size() > 0;
+    }
+
+    boolean isTypeAssignableByResourcesOrFile() {
+        return (Resource.class.isAssignableFrom(type) ||
+                   File.class.isAssignableFrom(type) ||
+                   Path.class.isAssignableFrom(type));
     }
 
     @Override

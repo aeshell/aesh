@@ -387,15 +387,43 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * Useful when printing "help" info etc.
      *
      */
-    public String printHelp() {
+    public String printHelp(String commandName) {
         int maxLength = 0;
         int width = 80;
         List<ProcessedOption> opts = getOptions();
-        for (ProcessedOption o : opts)
+        for (ProcessedOption o : opts) {
             if(o.getFormattedLength() > maxLength)
                 maxLength = o.getFormattedLength();
+        }
 
         StringBuilder sb = new StringBuilder();
+        //first line
+        sb.append("Usage: ");
+        if(commandName == null || commandName.length() == 0)
+            sb.append(name());
+        else
+            sb.append(commandName);
+        if(opts.size() > 0)
+            sb.append(" [<options>]");
+
+        if(argument != null) {
+            if(argument.isTypeAssignableByResourcesOrFile())
+                sb.append(" <file>");
+            else
+                sb.append(" <").append(argument.getFieldName()).append(">");
+        }
+
+        if(arguments != null) {
+            if(arguments.isTypeAssignableByResourcesOrFile())
+                sb.append(" [<files>]");
+            else
+                sb.append(" [<").append(arguments.getFieldName()).append(">]");
+        }
+        sb.append(Config.getLineSeparator());
+        //second line
+        sb.append(description()).append(Config.getLineSeparator());
+
+        //options and arguments
         if (opts.size() > 0)
            sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
         for (ProcessedOption o : opts)
@@ -408,7 +436,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             sb.append(Config.getLineSeparator()).append("Argument:").append(Config.getLineSeparator());
             sb.append(argument.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
         }
-        return "Usage: "+ name()+ Config.getLineSeparator() + description()+ Config.getLineSeparator()+sb.toString();
+        return sb.toString();
     }
 
     @Override
