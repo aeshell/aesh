@@ -65,10 +65,19 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
        if(getParser().isGroupCommand() && childCommandName.contains(" ")) {
            String[] names = childCommandName.split(" ");
            if(names.length > 1 && names[1].length() > 0) {
-              CommandLineParser child = getParser().getChildParser(names[1]);
-               if(child != null)
-                   return child.printHelp();
-           }
+               CommandLineParser current = getParser();
+               for(int i = 1; i < names.length; i++) {
+                   CommandLineParser child = current.getChildParser(names[i]);
+                   if(child != null) {
+                       if(child.isGroupCommand()) {
+                           current = child;
+                       }
+                       else
+                           return child.printHelp();
+                   }
+
+               }
+          }
            return "Child command "+names[1]+" not found.";
        }
        else

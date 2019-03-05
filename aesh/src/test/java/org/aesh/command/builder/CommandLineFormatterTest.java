@@ -203,7 +203,7 @@ public class CommandLineFormatterTest {
 
         CommandRegistry registry =
                 AeshCommandRegistryBuilder.builder()
-                        .command(GitCommand.class)
+                        .command(BaseCommand.class)
                         .create();
 
         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
@@ -217,10 +217,10 @@ public class CommandLineFormatterTest {
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
-        connection.read("git rebase --help"+ getLineSeparator());
+        connection.read("base git rebase --help"+ getLineSeparator());
         connection.clearOutputBuffer();
         Thread.sleep(10);
-        connection.assertBuffer("Usage: git rebase [<options>] <branch>"+ getLineSeparator()+
+        connection.assertBuffer("Usage: base git rebase [<options>] <branch>"+ getLineSeparator()+
                                        "Reapply commits on top of another base tip"+ getLineSeparator()+
                                         getLineSeparator()+
                                         "Options:"+ getLineSeparator()+
@@ -233,6 +233,19 @@ public class CommandLineFormatterTest {
 
         console.stop();
     }
+
+    @GroupCommandDefinition(name = "base", description = "", groupCommands = {GitCommand.class})
+    public static class BaseCommand implements Command {
+
+        @Option(hasValue = false)
+        private boolean help;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 
     @GroupCommandDefinition(name = "git", description = "", groupCommands = {GitCommit.class, GitRebase.class})
     public static class GitCommand implements Command {
@@ -276,7 +289,7 @@ public class CommandLineFormatterTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help)
-                commandInvocation.println(commandInvocation.getHelpInfo("git rebase"));
+                commandInvocation.println(commandInvocation.getHelpInfo("base git rebase"));
 
             return CommandResult.SUCCESS;
         }
