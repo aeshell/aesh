@@ -39,13 +39,13 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
     private MapProcessedOptionProvider provider;
     private String name;
     private String description;
-    private CommandValidator<?> validator;
+    private CommandValidator<MapCommand<CI>,CI> validator;
     private ResultHandler resultHandler;
     private ProcessedOption arguments;
     private ProcessedOption argument;
     private final List<ProcessedOption> options;
-    private CommandPopulator populator;
-    private MapCommand command;
+    private CommandPopulator<Object,CI> populator;
+    private MapCommand<CI> command;
     private List<String> aliases;
     private CommandActivator activator;
     private boolean lookup;
@@ -94,11 +94,12 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
         return this;
     }
 
-    public MapProcessedCommandBuilder<CI> validator(CommandValidator<?> validator) {
+    public MapProcessedCommandBuilder<CI> validator(CommandValidator<MapCommand<CI>,CI> validator) {
         this.validator = validator;
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     public MapProcessedCommandBuilder<CI> validator(Class<? extends CommandValidator> validator) {
         this.validator = initValidator(validator);
         return this;
@@ -136,17 +137,17 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
      * @param populator
      * @return
      */
-    public MapProcessedCommandBuilder<CI> populator(CommandPopulator populator) {
+    public MapProcessedCommandBuilder<CI> populator(CommandPopulator<Object,CI> populator) {
         this.populator = populator;
         return this;
     }
 
-    public MapProcessedCommandBuilder<CI> command(MapCommand command) {
+    public MapProcessedCommandBuilder<CI> command(MapCommand<CI> command) {
         this.command = command;
         return this;
     }
 
-    public MapProcessedCommandBuilder<CI> command(Class<? extends MapCommand> command) {
+    public MapProcessedCommandBuilder<CI> command(Class<? extends MapCommand<CI>> command) {
         this.command = ReflectionUtil.newInstance(command);
         return this;
     }
@@ -168,13 +169,14 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     public MapProcessedCommand<CI> create() throws CommandLineParserException {
         if (name == null || name.length() < 1) {
             throw new CommandLineParserException("The parameter name must be defined");
         }
 
         if (validator == null) {
-            validator = new NullCommandValidator();
+            validator = (CommandValidator) new NullCommandValidator();
         }
 
         if (resultHandler == null) {
@@ -182,7 +184,7 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
         }
 
         if (populator == null) {
-            populator = new MapCommandPopulator(command);
+            populator = new MapCommandPopulator<>(command);
         }
 
         return new MapProcessedCommand<>(name,

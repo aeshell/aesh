@@ -45,7 +45,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
     private String name;
     private String description;
-    private CommandValidator validator;
+    private CommandValidator<C,CI> validator;
     private ResultHandler resultHandler;
     private ProcessedOption arguments;
     private ProcessedOption arg;
@@ -89,21 +89,22 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> validator(CommandValidator validator) {
+    public ProcessedCommandBuilder<C,CI> validator(CommandValidator<C,CI> validator) {
         this.validator = validator;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> validator(Class<? extends CommandValidator> validator) {
+    public ProcessedCommandBuilder<C,CI> validator(Class<? extends CommandValidator<C,CI>> validator) {
         this.validator = initValidator(validator);
         return this;
     }
 
-    private CommandValidator initValidator(Class<? extends CommandValidator> validator) {
+    @SuppressWarnings("unchecked")
+    private CommandValidator<C,CI> initValidator(Class<? extends CommandValidator<C,CI>> validator) {
         if(validator != null && !validator.equals(NullCommandValidator.class))
             return ReflectionUtil.newInstance(validator);
         else
-            return new NullCommandValidator();
+            return (CommandValidator<C, CI>) new NullCommandValidator();
     }
 
     public ProcessedCommandBuilder<C,CI> resultHandler(Class<? extends ResultHandler> resultHandler) {
@@ -167,12 +168,13 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     public ProcessedCommand<C,CI> create() throws CommandLineParserException {
         if(name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
 
         if(validator == null)
-            validator = new NullCommandValidator();
+            validator = (CommandValidator<C, CI>) new NullCommandValidator();
 
         if(resultHandler == null)
             resultHandler = new NullResultHandler();

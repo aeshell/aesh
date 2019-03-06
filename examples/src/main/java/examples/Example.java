@@ -209,7 +209,7 @@ public class Example {
 
 
     //this command use a builder defined above to specify the meta data needed
-    public static class FooCommand implements Command {
+    public static class FooCommand implements Command<CommandInvocation> {
 
         private String bar;
 

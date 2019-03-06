@@ -25,7 +25,6 @@ import org.aesh.command.Executor;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.readline.AeshContext;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
@@ -64,12 +63,6 @@ public interface CommandInvocation<CI extends CommandInvocation> {
      * Stop the console and end the session
      */
     void stop();
-
-    /**
-     * Get AeshContext
-     */
-    @Deprecated
-    AeshContext getAeshContext();
 
     /**
      * Get the configuration.

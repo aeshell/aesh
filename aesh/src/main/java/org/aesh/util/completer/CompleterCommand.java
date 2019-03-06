@@ -64,18 +64,21 @@ public class CompleterCommand implements Command<CommandInvocation> {
                         FileCompleterGenerator completerGenerator = new FileCompleterGenerator();
 
                         Files.write(Paths.get(container.getParser().getProcessedCommand().name().toLowerCase()+"_complete.bash"),
-                                completerGenerator.generateCompeterFile(container.getParser()).getBytes(), StandardOpenOption.CREATE);
+                                completerGenerator.generateCompleterFile(container.getParser()).getBytes(), StandardOpenOption.CREATE);
 
                     }
                     catch(CommandLineParserException | IOException e) {
                         e.printStackTrace();
                     }
                 }
+                else
+                    commandInvocation.println("Could not load command: "+command);
         }
 
         return CommandResult.SUCCESS;
     }
 
+    @SuppressWarnings("unchecked")
     private Class<Command<CommandInvocation>> loadCommand(String commandName) {
         try {
             return (Class<Command<CommandInvocation>>) Class.forName(commandName);

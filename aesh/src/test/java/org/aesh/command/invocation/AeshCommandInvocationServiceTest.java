@@ -25,7 +25,6 @@ import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.readline.AeshContext;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
@@ -129,11 +128,6 @@ class FooCommandInvocation<CI extends CommandInvocation> implements CommandInvoc
     @Override
     public void stop() {
         commandInvocation.stop();
-    }
-
-    @Override
-    public AeshContext getAeshContext() {
-        return commandInvocation.getAeshContext();
     }
 
     @Override

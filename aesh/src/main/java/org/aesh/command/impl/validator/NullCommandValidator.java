@@ -21,13 +21,15 @@
 package org.aesh.command.impl.validator;
 
 import org.aesh.command.Command;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.validator.CommandValidator;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public class NullCommandValidator implements CommandValidator<Command> {
+public class NullCommandValidator implements CommandValidator<Command<CommandInvocation>, CommandInvocation> {
     @Override
-    public void validate(Command command) {
+    public void validate(Command<CommandInvocation> command) {
     }
+
 }

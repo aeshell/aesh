@@ -45,12 +45,12 @@ import java.util.List;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
  */
-public class CommandBuilder<C extends Command> {
+public class CommandBuilder<C extends Command<CommandInvocation>> {
 
     private String name;
     private String description;
     private C command;
-    private CommandValidator<C> validator;
+    private CommandValidator<C, CommandInvocation> validator;
     private ResultHandler resultHandler;
     private ProcessedOption argument;
     private List<ProcessedOption> options;
@@ -62,7 +62,7 @@ public class CommandBuilder<C extends Command> {
     private CommandBuilder() {
     }
 
-    public static <T extends Command> CommandBuilder<T> builder() {
+    public static <T extends Command<CommandInvocation>> CommandBuilder<T> builder() {
         return new CommandBuilder<>();
     }
 
@@ -92,12 +92,12 @@ public class CommandBuilder<C extends Command> {
         return this;
     }
 
-    public CommandBuilder<C> validator(CommandValidator<C> commandValidator) {
+    public CommandBuilder<C> validator(CommandValidator<C, CommandInvocation> commandValidator) {
         this.validator = commandValidator;
         return this;
     }
 
-    public CommandBuilder<C> validator(Class<CommandValidator<C>> commandValidator) {
+    public CommandBuilder<C> validator(Class<CommandValidator<C, CommandInvocation>> commandValidator) {
         this.validator = ReflectionUtil.newInstance(commandValidator);
         return this;
     }
@@ -197,7 +197,7 @@ public class CommandBuilder<C extends Command> {
                 .description(description)
                 .addOptions(options)
                 .resultHandler(resultHandler)
-                .validator(validator)
+                .validator((CommandValidator<Command<CommandInvocation>, CommandInvocation>) validator)
                 .arguments(argument)
                 .populator(populator)
                 .create();

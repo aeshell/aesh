@@ -45,7 +45,7 @@ public class GraalReflectionFileGeneratorTest {
     public void testSimpleCommand() throws IOException {
 
         GraalReflectionFileGenerator generator = new GraalReflectionFileGenerator();
-        CommandLineParser parser = getParser(TestCommand1.class);
+        CommandLineParser<CommandInvocation> parser = getParser(TestCommand1.class);
 
         String out = generator.generateReflection(parser);
         assertEquals(readFile("src/test/resources/graal1"), out);
@@ -55,7 +55,7 @@ public class GraalReflectionFileGeneratorTest {
     public void testCommand() throws IOException {
 
         GraalReflectionFileGenerator generator = new GraalReflectionFileGenerator();
-        CommandLineParser parser = getParser(TestCommand2.class);
+        CommandLineParser<CommandInvocation> parser = getParser(TestCommand2.class);
 
         String out = generator.generateReflection(parser);
         assertEquals(readFile("src/test/resources/graal2"), out);
@@ -65,7 +65,7 @@ public class GraalReflectionFileGeneratorTest {
     public void testCommandWithFileOption() throws IOException {
 
         GraalReflectionFileGenerator generator = new GraalReflectionFileGenerator();
-        CommandLineParser parser = getParser(TestCommand3.class);
+        CommandLineParser<CommandInvocation> parser = getParser(TestCommand3.class);
 
         String out = generator.generateReflection(parser);
         assertEquals(readFile("src/test/resources/graal3"), out);
@@ -83,12 +83,12 @@ public class GraalReflectionFileGeneratorTest {
         return builder.toString();
     }
 
-    private CommandLineParser getParser(Class clazz) {
+    private CommandLineParser<CommandInvocation> getParser(Class<? extends Command> clazz) {
         //Class<Command<CommandInvocation>> clazz = loadCommand(command);
         if (clazz != null) {
             CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
             try {
-                CommandContainer container = builder.create(clazz);
+                CommandContainer<CommandInvocation> container = builder.create(clazz);
                 return container.getParser();
             } catch (CommandLineParserException e) {
                 e.printStackTrace();

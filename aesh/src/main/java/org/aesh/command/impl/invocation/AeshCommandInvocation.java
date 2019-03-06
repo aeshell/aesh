@@ -29,7 +29,6 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.Executor;
-import org.aesh.readline.AeshContext;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
@@ -86,12 +85,6 @@ public final class AeshCommandInvocation implements CommandInvocation<AeshComman
     @Override
     public void stop() {
         console.stop();
-    }
-
-    @Override
-    @Deprecated
-    public AeshContext getAeshContext() {
-        return config.getAeshContext();
     }
 
     @Override

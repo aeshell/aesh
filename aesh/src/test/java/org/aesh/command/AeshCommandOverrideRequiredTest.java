@@ -74,7 +74,7 @@ public class AeshCommandOverrideRequiredTest {
     }
 
     @CommandDefinition(name = "foo", description = "", validator = FooCommandValidator.class)
-    public class FooCommand implements Command {
+    public class FooCommand implements Command<CommandInvocation> {
 
         @Option(required = true)
         private boolean required;
@@ -90,10 +90,11 @@ public class AeshCommandOverrideRequiredTest {
         }
     }
 
-    public class FooCommandValidator implements CommandValidator<FooCommand> {
+    public class FooCommandValidator implements CommandValidator<Command<CommandInvocation>, CommandInvocation> {
         @Override
-        public void validate(FooCommand command) {
+        public void validate(Command<CommandInvocation> command) {
             fail("Should never get here!");
         }
+
     }
 }

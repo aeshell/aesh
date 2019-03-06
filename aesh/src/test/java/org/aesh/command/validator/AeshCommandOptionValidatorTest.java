@@ -259,7 +259,7 @@ public class AeshCommandOptionValidatorTest {
         private final Command command;
         private final AeshContext aeshContext;
 
-        public TestValidatorInvocation(String value, Command command, AeshContext aeshContext) {
+        TestValidatorInvocation(String value, Command command, AeshContext aeshContext) {
             this.value = value;
             this.command = command;
             this.aeshContext = aeshContext;
@@ -283,6 +283,7 @@ public class AeshCommandOptionValidatorTest {
 
     public static class TestValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<String, Command>> {
         @Override
+        @SuppressWarnings("unchecked")
         public ValidatorInvocation<String, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
             if(validatorInvocation.getValue() instanceof String )
                 return new TestValidatorInvocation((String) validatorInvocation.getValue(),

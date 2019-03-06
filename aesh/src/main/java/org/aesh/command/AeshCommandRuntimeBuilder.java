@@ -97,7 +97,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         return this;
     }
 
-    private AeshCommandRuntimeBuilder<CI> apply(Consumer<AeshCommandRuntimeBuilder> consumer) {
+    private AeshCommandRuntimeBuilder<CI> apply(Consumer<AeshCommandRuntimeBuilder<CI>> consumer) {
         consumer.accept(this);
         return this;
     }
@@ -130,6 +130,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         return apply(c -> c.commandActivatorProvider = commandActivatorProvider);
     }
 
+    @SuppressWarnings("unchecked")
     public AeshCommandRuntimeBuilder<CI> commandInvocationBuilder(CommandInvocationBuilder commandInvocationBuilder) {
         return apply(c -> c.commandInvocationBuilder = commandInvocationBuilder);
     }
@@ -138,18 +139,19 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         return apply(c -> c.ctx = ctx);
     }
 
+    @SuppressWarnings("unchecked")
     public AeshCommandRuntimeBuilder<CI> settings(Settings<? extends CommandInvocation,
             ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation,
             ? extends OptionActivator, ? extends CommandActivator> settings) {
         return apply(c -> {
-            c.commandInvocationProvider = settings.commandInvocationProvider();
+            c.commandInvocationProvider = (CommandInvocationProvider<CI>) settings.commandInvocationProvider();
             c.commandNotFoundHandler = settings.commandNotFoundHandler();
             c.completerInvocationProvider = settings.completerInvocationProvider();
             c.converterInvocationProvider = settings.converterInvocationProvider();
             c.validatorInvocationProvider = settings.validatorInvocationProvider();
             c.optionActivatorProvider = settings.optionActivatorProvider();
             c.commandActivatorProvider = settings.commandActivatorProvider();
-            c.registry = settings.commandRegistry();
+            c.registry = (CommandRegistry<CI>) settings.commandRegistry();
             c.ctx = settings.aeshContext();
             c.operators = settings.operatorParserEnabled() ? EnumSet.allOf(OperatorType.class) : null;
         });

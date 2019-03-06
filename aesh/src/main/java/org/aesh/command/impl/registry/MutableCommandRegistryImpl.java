@@ -128,7 +128,7 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     }
 
     @Override
-    public void addCommand(Class<Command> command) throws CommandRegistryException {
+    public void addCommand(Class<? extends Command> command) throws CommandRegistryException {
         try {
             putIntoRegistry(getBuilder().create(command));
         }

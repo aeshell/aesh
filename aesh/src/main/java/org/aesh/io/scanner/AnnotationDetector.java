@@ -105,6 +105,7 @@ import java.util.Set;
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
+@SuppressWarnings("unchecked")
 public final class AnnotationDetector {
 
 
@@ -352,7 +353,7 @@ public final class AnnotationDetector {
     }
 
     @SuppressWarnings("illegalcatch")
-    public void detect(final ResourceIterator iterator) throws IOException {
+    private void detect(final ResourceIterator iterator) throws IOException {
         InputStream stream;
         while ((stream = iterator.next()) != null) {
             try {

@@ -47,7 +47,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     private final String name;
     private final String description;
-    private final CommandValidator validator;
+    private final CommandValidator<C,CI> validator;
     private final ResultHandler resultHandler;
     private final CommandPopulator<Object,CI> populator;
     private CommandActivator activator;
@@ -61,7 +61,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private CompleteStatus completeStatus;
 
     public ProcessedCommand(String name, List<String> aliases, C command,
-                            String description, CommandValidator validator,
+                            String description, CommandValidator<C,CI> validator,
                             ResultHandler resultHandler,
                             ProcessedOption arguments, List<ProcessedOption> options,
                             ProcessedOption argument,
@@ -131,7 +131,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return description;
     }
 
-    public CommandValidator validator() {
+    public CommandValidator<C,CI> validator() {
         return validator;
     }
 

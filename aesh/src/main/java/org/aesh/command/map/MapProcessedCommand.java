@@ -51,14 +51,14 @@ public class MapProcessedCommand<CI extends CommandInvocation> extends Processed
 
     MapProcessedCommand(String name,
                         List<String> aliases,
-                        MapCommand command,
+                        MapCommand<CI> command,
                         String description,
-                        CommandValidator validator,
+                        CommandValidator<MapCommand<CI>, CI> validator,
                         ResultHandler resultHandler,
                         ProcessedOption arguments,
                         List<ProcessedOption> options,
                         ProcessedOption argument,
-                        CommandPopulator populator,
+                        CommandPopulator<Object,CI> populator,
                         MapProcessedOptionProvider provider,
                         CommandActivator activator,
                         boolean lookup) throws OptionParserException {

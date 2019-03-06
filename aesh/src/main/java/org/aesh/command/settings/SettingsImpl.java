@@ -773,6 +773,7 @@ public class SettingsImpl<CI extends CommandInvocation,
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void setInterruptHandler(Consumer interruptHandler) {
         this.interruptHandler = interruptHandler;
     }

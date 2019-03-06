@@ -45,7 +45,7 @@ public class MutableCommandRegistryTest {
     @Test
     public void testFindCommandNames() throws CommandRegistryException {
 
-        MutableCommandRegistryImpl registry = new MutableCommandRegistryImpl();
+        MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
         registry.addCommand(Command1.class);
         registry.addCommand(Command2.class);
         registry.addCommand(Command3.class);

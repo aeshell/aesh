@@ -21,11 +21,12 @@
 package org.aesh.command.validator;
 
 import org.aesh.command.Command;
+import org.aesh.command.invocation.CommandInvocation;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public interface CommandValidator<C extends Command> {
+public interface CommandValidator<C extends Command<CI>, CI extends CommandInvocation> {
 
     /**
      * Validate that all the option values combined are valid

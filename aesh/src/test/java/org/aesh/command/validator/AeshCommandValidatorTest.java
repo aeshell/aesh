@@ -120,7 +120,7 @@ public class AeshCommandValidatorTest {
         }
     }
 
-    public static class FooCommandValidator implements CommandValidator<FooCommand> {
+    public static class FooCommandValidator implements CommandValidator<FooCommand, CommandInvocation> {
         @Override
         public void validate(FooCommand command) throws CommandValidatorException {
             if(command.low + command.high < 42)
@@ -156,7 +156,7 @@ public class AeshCommandValidatorTest {
         }
     }
 
-    public class GitCommitValidator implements CommandValidator<GitCommit> {
+    public class GitCommitValidator implements CommandValidator<GitCommit, CommandInvocation> {
         @Override
         public void validate(GitCommit command) throws CommandValidatorException {
             if(!command.all && command.message == null)

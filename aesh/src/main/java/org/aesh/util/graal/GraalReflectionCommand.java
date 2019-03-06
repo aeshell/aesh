@@ -64,16 +64,17 @@ public class GraalReflectionCommand implements Command  {
                     container.getParser().getProcessedCommand();
 
                 }
-                catch(CommandLineParserException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
+                catch(CommandLineParserException | IOException e) {
                     e.printStackTrace();
                 }
             }
+            else
+                commandInvocation.println("Could not load command: "+command);
         }
         return CommandResult.SUCCESS;
     }
 
+    @SuppressWarnings("unchecked")
     private Class<Command<CommandInvocation>> loadCommand(String commandName) {
         try {
             return (Class<Command<CommandInvocation>>) Class.forName(commandName);

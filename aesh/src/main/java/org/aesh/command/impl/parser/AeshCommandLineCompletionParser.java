@@ -277,6 +277,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
 
     }
 
+    @SuppressWarnings("unchecked")
     private boolean doCompleteOptionValue(InvocationProviders invocationProviders, AeshCompleteOperation completeOperation,
                                           ProcessedOption currentOption, ParsedWord.Status selectedWordStatus) {
         String value = currentOption.getLastValue();

@@ -40,11 +40,11 @@ public class FileCompleterGeneratorTest {
     @Test
     public void testSimpleCommand() {
 
-        CommandLineParser parser = getParser(TestCommand1.class);
+        CommandLineParser<CommandInvocation> parser = getParser(TestCommand1.class);
 
         FileCompleterGenerator completerGenerator = new FileCompleterGenerator();
 
-        String out = completerGenerator.generateCompeterFile(parser);
+        String out = completerGenerator.generateCompleterFile(parser);
 
         assertTrue(out.contains("_complete_test1"));
         assertTrue(out.contains("NO_VALUE_OPTIONS=\"--help -h \""));
@@ -53,11 +53,11 @@ public class FileCompleterGeneratorTest {
 
     @Test
     public void testGroupCommand() {
-        CommandLineParser parser = getParser(GutCommand1.class);
+        CommandLineParser<CommandInvocation> parser = getParser(GutCommand1.class);
 
         FileCompleterGenerator completerGenerator = new FileCompleterGenerator();
 
-        String out = completerGenerator.generateCompeterFile(parser);
+        String out = completerGenerator.generateCompleterFile(parser);
 
         assertTrue(out.contains("_complete_gut"));
         assertTrue(out.contains("_command_gut"));
@@ -68,12 +68,11 @@ public class FileCompleterGeneratorTest {
 
     }
 
-    private CommandLineParser getParser(Class clazz) {
-        //Class<Command<CommandInvocation>> clazz = loadCommand(command);
+    private CommandLineParser<CommandInvocation> getParser(Class<? extends Command> clazz) {
         if (clazz != null) {
             CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
             try {
-                CommandContainer container = builder.create(clazz);
+                CommandContainer<CommandInvocation> container = builder.create(clazz);
                 return container.getParser();
             } catch (CommandLineParserException e) {
                 e.printStackTrace();

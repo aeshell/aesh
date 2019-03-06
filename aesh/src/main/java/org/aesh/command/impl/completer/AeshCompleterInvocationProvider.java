@@ -28,6 +28,7 @@ import org.aesh.command.completer.CompleterInvocationProvider;
  */
 public class AeshCompleterInvocationProvider<CI extends CompleterInvocation> implements CompleterInvocationProvider {
     @Override
+    @SuppressWarnings("unchecked")
     public CI enhanceCompleterInvocation(CompleterInvocation completerInvocation) {
         return (CI) completerInvocation;
     }

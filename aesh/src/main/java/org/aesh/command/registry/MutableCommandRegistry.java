@@ -34,7 +34,7 @@ public interface MutableCommandRegistry<CI extends CommandInvocation> extends Co
 
     void addCommand(Command command) throws CommandRegistryException;
 
-    void addCommand(Class<Command> command) throws CommandRegistryException;
+    void addCommand(Class<? extends Command> command) throws CommandRegistryException;
 
     void addAllCommands(List<Command> commands) throws CommandRegistryException;
 

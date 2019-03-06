@@ -42,6 +42,7 @@ public class CommandLineParserBuilder<C extends Command<CI>,CI extends CommandIn
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     public CommandLineParser<CI> create() throws IllegalArgumentException {
         return new AeshCommandLineParser<>((ProcessedCommand<Command<CI>, CI>) param);
     }

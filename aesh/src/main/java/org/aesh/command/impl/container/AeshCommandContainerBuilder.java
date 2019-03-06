@@ -46,6 +46,7 @@ import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
+import org.aesh.command.validator.CommandValidator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.util.ReflectionUtil;
 
@@ -81,7 +82,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .activator(command.activator())
                     .aliases(Arrays.asList(command.aliases()))
                     .description(command.description())
-                    .validator(command.validator())
+                    .validator((Class<? extends CommandValidator<Command<CI>, CI>>) command.validator())
                     .command(commandObject)
                     .resultHandler(command.resultHandler())
                     .create();
@@ -101,7 +102,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .activator(groupCommand.activator())
                     .aliases(Arrays.asList(groupCommand.aliases()))
                     .description(groupCommand.description())
-                    .validator(groupCommand.validator())
+                    .validator((Class<? extends CommandValidator<Command<CI>, CI>>) groupCommand.validator())
                     .command(commandObject)
                     .resultHandler(groupCommand.resultHandler())
                     .create();

@@ -28,6 +28,7 @@ import org.aesh.command.invocation.CommandInvocationProvider;
  */
 public class AeshCommandInvocationProvider<CI extends CommandInvocation> implements CommandInvocationProvider<CI> {
     @Override
+    @SuppressWarnings("unchecked")
     public CI enhanceCommandInvocation(CommandInvocation commandInvocation) {
         return (CI) commandInvocation;
     }

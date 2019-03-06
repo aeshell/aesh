@@ -26,6 +26,7 @@ public class CommandDefinitionReporter implements AnnotationDetector.TypeReporte
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Class<? extends Annotation>[] annotations() {
         try {
             return new Class[]{ Class.forName(CommandDefinition.class.getCanonicalName())};

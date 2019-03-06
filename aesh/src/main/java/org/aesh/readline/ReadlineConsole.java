@@ -370,6 +370,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         return perm;
     }
 
+    @SuppressWarnings("unchecked")
     private AeshCommandResolver<? extends CommandInvocation> getCommandResolverThroughScan() {
         MutableCommandRegistry<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
 

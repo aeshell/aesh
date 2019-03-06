@@ -68,14 +68,14 @@ class Executions {
     private static class ExecutionImpl<T extends CommandInvocation> implements Execution<T> {
 
         private final ExecutableOperator<T> executable;
-        private final ProcessedCommand<? extends Command<T>, T> cmd;
+        private final ProcessedCommand<Command<T>, T> cmd;
         private final CommandInvocationConfiguration invocationConfiguration;
         private final AeshCommandRuntime<T> runtime;
         private CommandResult result;
         ExecutionImpl(ExecutableOperator<T> executable,
                 AeshCommandRuntime<T> runtime,
                 CommandInvocationConfiguration invocationConfiguration,
-                ProcessedCommand<? extends Command<T>, T> cmd) {
+                ProcessedCommand<Command<T>, T> cmd) {
             this.executable = executable;
             this.runtime = runtime;
             this.invocationConfiguration = invocationConfiguration;
@@ -245,7 +245,7 @@ class Executions {
             AeshCommandRuntime<CI> runtime)
             throws CommandNotFoundException, CommandLineParserException, OptionValidatorException, IOException {
         State state = State.NEED_COMMAND;
-        ProcessedCommand<? extends Command<CI>, CI> processedCommand = null;
+        ProcessedCommand<Command<CI>, CI> processedCommand = null;
         boolean newParsedLine;
         ConfigurationOperator config = null;
         DataProvider dataProvider = null;
