@@ -24,7 +24,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.validator.OptionValidatorException;
 
 /**
  * Contains the list of Execution to execute and the logic to deal with
@@ -41,7 +43,8 @@ public class Executor<T extends CommandInvocation> {
         this.executions = Collections.unmodifiableList(executions);
     }
 
-    public void execute() throws CommandException, CommandValidatorException, InterruptedException, RuntimeException {
+    public void execute() throws CommandException, CommandValidatorException, InterruptedException, RuntimeException,
+                                         CommandLineParserException, OptionValidatorException {
         Execution<T> exec;
         while ((exec = getNextExecution()) != null) {
             exec.execute();
@@ -97,5 +100,16 @@ public class Executor<T extends CommandInvocation> {
             }
         }
         return null;
+    }
+
+    public void clearSkippedListData() {
+       if(skip.size() > 0)
+           for(Execution<T> execution : skip) {
+               execution.clearQueuedLine();
+           }
+    }
+
+    public boolean hasSkipped() {
+        return skip.size() > 0;
     }
 }

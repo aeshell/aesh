@@ -50,7 +50,6 @@ import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.validator.ValidatorInvocationProvider;
@@ -131,6 +130,11 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     @Override
+    public InvocationProviders invocationProviders() {
+        return invocationProviders;
+    }
+
+    @Override
     public void executeCommand(String line) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,
@@ -139,13 +143,11 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             InterruptedException,
             IOException {
 
-        ResultHandler resultHandler = null;
-
-        Executor<CI> executor = null;
+        Executor<CI> executor;
         try {
             executor = buildExecutor(line);
         }
-        catch (CommandLineParserException | CommandValidatorException | OptionValidatorException e) {
+        catch (CommandLineParserException | OptionValidatorException e) {
             throw e;
         } catch (CommandNotFoundException cmd) {
             if (commandNotFoundHandler != null) {
@@ -154,30 +156,29 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             }
             throw cmd;
         }
-        Execution exec = null;
+        Execution exec;
         while ((exec = executor.getNextExecution()) != null) {
             try {
-                resultHandler = exec.getResultHandler();
                 exec.execute();
             } catch (CommandException cmd) {
-                if (resultHandler != null) {
-                    resultHandler.onExecutionFailure(CommandResult.FAILURE, cmd);
+                if (exec.getResultHandler() != null) {
+                    exec.getResultHandler().onExecutionFailure(CommandResult.FAILURE, cmd);
                 }
                 throw cmd;
             } catch (CommandValidatorException e) {
-                if (resultHandler != null) {
-                    resultHandler.onValidationFailure(CommandResult.FAILURE, e);
+                if (exec.getResultHandler() != null) {
+                    exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, e);
                 }
                 throw e;
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
-                if (resultHandler != null) {
-                    resultHandler.onValidationFailure(CommandResult.FAILURE, ex);
+                if (exec.getResultHandler() != null) {
+                    exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, ex);
                 }
                 throw ex;
             } catch (Exception e) {
-                if (resultHandler != null) {
-                    resultHandler.onValidationFailure(CommandResult.FAILURE, e);
+                if (exec.getResultHandler() != null) {
+                    exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, e);
                 }
                 throw new RuntimeException(e);
             }
@@ -208,8 +209,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     @Override
     public Executor<CI> buildExecutor(String line) throws CommandNotFoundException,
-            CommandLineParserException, OptionValidatorException,
-            CommandValidatorException, IOException {
+            CommandLineParserException, OptionValidatorException, IOException {
         LOGGER.fine("Command: " + line);
         List<ParsedLine> lines = new LineParser().parseLine(line, -1, parseBrackets, operators);
         List<Execution<CI>> executions = Executions.buildExecution(lines, this);
@@ -221,24 +221,18 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 enhanceCommandInvocation(commandInvocationBuilder.build(this, config));
     }
 
-    ProcessedCommand<Command<CI>, CI> getPopulatedCommand(ParsedLine aeshLine) throws CommandNotFoundException,
-            CommandLineParserException, OptionValidatorException {
-        String commandLine = aeshLine.line();
+    CommandContainer<CI> findCommandContainer(ParsedLine aeshLine) throws CommandNotFoundException {
         if (aeshLine.words().isEmpty()) {
             return null;
         }
-        String opName = aeshLine.words().get(0).word();
-        CommandContainer<CI> container = commandResolver.resolveCommand(opName, commandLine);
+        CommandContainer<CI> container =
+                commandResolver.resolveCommand(aeshLine.words().get(0).word(), aeshLine.line());
         if (container == null) {
-            throw new CommandNotFoundException("No command handler for '" + opName + "'.", opName);
+            throw new CommandNotFoundException("No command handler for '"+
+                                                       aeshLine.words().get(0).word()+ "'.",aeshLine.words().get(0).word());
         }
-        container.getParser().parse(aeshLine.iterator(), CommandLineParser.Mode.STRICT);
-        if (container.getParser().getProcessedCommand().parserExceptions().size() > 0) {
-            throw container.getParser().getProcessedCommand().parserExceptions().get(0);
-        }
-        container.getParser().parsedCommand().getCommandPopulator().populateObject(container.getParser().parsedCommand().getProcessedCommand(),
-                invocationProviders, getAeshContext(), CommandLineParser.Mode.VALIDATE);
-        return container.getParser().parsedCommand().getProcessedCommand();
+        container.addLine(aeshLine);
+        return container;
     }
 
     void populateAskedOption(ProcessedOption option) {

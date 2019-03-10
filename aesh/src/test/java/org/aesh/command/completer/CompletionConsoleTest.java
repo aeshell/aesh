@@ -54,7 +54,7 @@ import static org.junit.Assert.assertTrue;
 public class CompletionConsoleTest {
 
     @Test
-    public void completionWithOptions() throws IOException, CommandLineParserException {
+    public void completionWithOptions() throws IOException, CommandLineParserException, InterruptedException {
 
         final ProcessedCommand<Command<CommandInvocation>, CommandInvocation> param = ProcessedCommandBuilder.builder().name("less")
                 .description("less --options <files>")

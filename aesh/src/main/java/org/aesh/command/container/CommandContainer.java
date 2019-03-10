@@ -19,6 +19,8 @@
  */
 package org.aesh.command.container;
 
+import org.aesh.command.Command;
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.readline.AeshContext;
@@ -61,10 +63,19 @@ public interface CommandContainer<CI extends CommandInvocation> extends AutoClos
      */
     String getBuildErrorMessage();
 
+    ParsedLine pollLine();
+
+    void emptyLine();
+
+    ProcessedCommand<Command<CI>, CI> parseAndPopulate(InvocationProviders invocationProviders,
+                                                       AeshContext aeshContext)
+            throws CommandLineParserException, OptionValidatorException;
+
     CommandContainerResult executeCommand(ParsedLine line, InvocationProviders invocationProviders,
                                           AeshContext aeshContext,
                                           CI commandInvocation)
             throws CommandLineParserException, OptionValidatorException,
             CommandValidatorException, CommandException, InterruptedException;
 
+    void addLine(ParsedLine aeshLine);
 }

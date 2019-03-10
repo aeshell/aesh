@@ -244,7 +244,7 @@ public class AeshCommandCompletionTest {
     }
 
     @Test
-    public void testCompletionArgument() throws IOException, CommandRegistryException {
+    public void testCompletionArgument() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -434,7 +434,7 @@ public class AeshCommandCompletionTest {
      }
 
     @Test
-    public void testSuperGroupCommand() throws IOException, CommandRegistryException {
+    public void testSuperGroupCommand() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -472,7 +472,7 @@ public class AeshCommandCompletionTest {
      * unless argument is set
      */
      @Test
-     public void testCommandTest4() throws IOException, CommandRegistryException {
+     public void testCommandTest4() throws IOException, CommandRegistryException, InterruptedException {
          TestConnection connection = new TestConnection();
 
          CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -519,7 +519,7 @@ public class AeshCommandCompletionTest {
      * unless option is set
      */
      @Test
-     public void testCommandTest4B() throws IOException, CommandRegistryException {
+     public void testCommandTest4B() throws IOException, CommandRegistryException, InterruptedException {
          TestConnection connection = new TestConnection();
 
          CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -562,7 +562,7 @@ public class AeshCommandCompletionTest {
      * unless option is set
      */
      @Test
-     public void testCommandTest4C() throws IOException, CommandRegistryException {
+     public void testCommandTest4C() throws IOException, CommandRegistryException, InterruptedException {
          TestConnection connection = new TestConnection();
 
          CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -600,7 +600,7 @@ public class AeshCommandCompletionTest {
 
 
      @Test
-     public void testCommandTest5() throws IOException, CommandRegistryException {
+     public void testCommandTest5() throws IOException, CommandRegistryException, InterruptedException {
          TestConnection connection = new TestConnection();
 
          CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -630,7 +630,7 @@ public class AeshCommandCompletionTest {
      }
 
      @Test
-     public void testCommandTest6() throws IOException, CommandRegistryException {
+     public void testCommandTest6() throws IOException, CommandRegistryException, InterruptedException {
          TestConnection connection = new TestConnection();
 
          CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -668,7 +668,7 @@ public class AeshCommandCompletionTest {
      }
 
      @Test
-     public void testCommandTest7() throws IOException, CommandRegistryException {
+     public void testCommandTest7() throws IOException, CommandRegistryException, InterruptedException {
          TestConnection connection = new TestConnection();
 
          CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -714,7 +714,7 @@ public class AeshCommandCompletionTest {
      }
 
     @Test
-    public void testCommandTest8() throws IOException, CommandRegistryException {
+    public void testCommandTest8() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -749,7 +749,7 @@ public class AeshCommandCompletionTest {
 
     //make sure we complete options if argument completer is not returning anything
     @Test
-    public void testCommandTest9() throws IOException, CommandRegistryException {
+    public void testCommandTest9() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -783,7 +783,7 @@ public class AeshCommandCompletionTest {
     }
 
     @Test
-    public void testCommandTest10() throws IOException, CommandRegistryException {
+    public void testCommandTest10() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -809,7 +809,7 @@ public class AeshCommandCompletionTest {
     }
 
     @Test
-    public void testCompletionInsideBuffer() throws IOException, CommandRegistryException {
+    public void testCompletionInsideBuffer() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -850,7 +850,7 @@ public class AeshCommandCompletionTest {
     }
 
     @Test
-    public void testWithEndOperator() throws IOException, CommandRegistryException {
+    public void testWithEndOperator() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()

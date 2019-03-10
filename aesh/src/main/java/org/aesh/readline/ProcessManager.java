@@ -49,10 +49,15 @@ public class ProcessManager {
         if(hasNext()) {
             executeNext();
         }
-        else if(console.running())
-            console.read();
-        else
-            conn.close();
+        else {
+            //if there are commands that wasn't executed we need to clear their data
+            if(executor.hasSkipped())
+                executor.clearSkippedListData();
+            if(console.running())
+                console.read();
+            else
+                conn.close();
+        }
     }
 
     public void executeNext() {

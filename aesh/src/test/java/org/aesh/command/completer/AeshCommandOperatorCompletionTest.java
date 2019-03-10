@@ -39,7 +39,7 @@ public class AeshCommandOperatorCompletionTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
-    public void testCompletionWithEndOperator() throws IOException, CommandRegistryException {
+    public void testCompletionWithEndOperator() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection(new Size(400, 80));
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -69,7 +69,7 @@ public class AeshCommandOperatorCompletionTest {
     }
 
      @Test
-    public void testCompletionWithRedirectOutOperator() throws IOException, CommandRegistryException {
+    public void testCompletionWithRedirectOutOperator() throws IOException, CommandRegistryException, InterruptedException {
          TestConnection connection = new TestConnection();
 
          CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -117,7 +117,7 @@ public class AeshCommandOperatorCompletionTest {
 
 
     @Test
-    public void testCompletionWithPipeOperator() throws IOException, CommandRegistryException {
+    public void testCompletionWithPipeOperator() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection(new Size(400, 80));
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()

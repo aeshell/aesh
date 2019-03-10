@@ -19,6 +19,8 @@
  */
 package org.aesh.command.container;
 
+import org.aesh.command.Command;
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.readline.AeshContext;
@@ -30,10 +32,49 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.CommandResult;
 import org.aesh.parser.ParsedLine;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public abstract class DefaultCommandContainer<CI extends CommandInvocation> implements CommandContainer<CI> {
+
+    private final ConcurrentLinkedQueue<ParsedLine> lines;
+
+    public DefaultCommandContainer() {
+        lines = new ConcurrentLinkedQueue<>();
+    }
+
+    @Override
+    public void addLine(ParsedLine aeshLine) {
+        lines.add(aeshLine);
+    }
+
+    @Override
+    public ParsedLine pollLine() {
+        return lines.poll();
+    }
+
+    @Override
+    public void emptyLine() {
+        lines.clear();
+    }
+
+    @Override
+    public ProcessedCommand<Command<CI>, CI> parseAndPopulate(InvocationProviders invocationProviders,
+                                                              AeshContext aeshContext)
+            throws CommandLineParserException, OptionValidatorException {
+        if(lines.isEmpty())
+            return null;
+        ParsedLine aeshLine = lines.poll();
+        getParser().parse(aeshLine.iterator(), CommandLineParser.Mode.STRICT);
+        if (getParser().getProcessedCommand().parserExceptions().size() > 0) {
+            throw getParser().getProcessedCommand().parserExceptions().get(0);
+        }
+        getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(),
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        return getParser().parsedCommand().getProcessedCommand();
+    }
 
     @Override
     public CommandContainerResult executeCommand(ParsedLine line, InvocationProviders invocationProviders,

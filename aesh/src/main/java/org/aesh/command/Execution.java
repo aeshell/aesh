@@ -20,8 +20,10 @@
 package org.aesh.command;
 
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.validator.OptionValidatorException;
 
 /**
  * Contains an execution content.
@@ -39,7 +41,11 @@ public interface Execution<T extends CommandInvocation> {
     ResultHandler getResultHandler();
 
     CommandResult execute() throws CommandException, CommandValidatorException,
-            InterruptedException;
+                                           InterruptedException, CommandLineParserException, OptionValidatorException;
 
     CommandResult getResult();
+
+    void setResut(CommandResult result);
+
+    void clearQueuedLine();
 }

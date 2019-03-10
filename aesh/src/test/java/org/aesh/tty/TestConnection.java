@@ -243,11 +243,13 @@ public class TestConnection implements Connection {
         assertEquals(expected, out);
     }
 
-    public void assertBuffer(String expected) {
+    public void assertBuffer(String expected) throws InterruptedException {
+        Thread.sleep(20);
         assertEquals(expected, bufferBuilder.toString());
     }
 
-    public void assertBufferEndsWith(String expected) {
+    public void assertBufferEndsWith(String expected) throws InterruptedException {
+        Thread.sleep(20);
         assertTrue(bufferBuilder.toString(), bufferBuilder.toString().endsWith(expected));
     }
 

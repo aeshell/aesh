@@ -234,6 +234,44 @@ public class CommandLineFormatterTest {
         console.stop();
     }
 
+    @Test
+    public void testChildFormatter2() throws CommandRegistryException, IOException, InterruptedException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry =
+                AeshCommandRegistryBuilder.builder()
+                        .command(BaseCommand.class)
+                        .create();
+
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                                OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("base git checkout --help"+ getLineSeparator());
+        connection.clearOutputBuffer();
+        Thread.sleep(10);
+        connection.assertBuffer("Usage: base git checkout [<options>] <branch>"+ getLineSeparator()+
+                                       "Switch branches or restore working tree files"+ getLineSeparator()+
+                                        getLineSeparator()+
+                                        "Options:"+ getLineSeparator()+
+                                        "  --quiet  Suppress feedback messages"+getLineSeparator()+
+                                        "  --force  Proceed even if the index or the working tree differs from HEAD"+getLineSeparator()+
+                                        "  --help   display this help info"+getLineSeparator()+
+                                        "  --test"+getLineSeparator()+
+                                        getLineSeparator()+
+                                        "Argument:"+getLineSeparator()+
+                                        "         the branch you want to checkout"+getLineSeparator()+getLineSeparator());
+
+        console.stop();
+    }
+
     @GroupCommandDefinition(name = "base", description = "", groupCommands = {GitCommand.class})
     public static class BaseCommand implements Command {
 
@@ -247,7 +285,7 @@ public class CommandLineFormatterTest {
     }
 
 
-    @GroupCommandDefinition(name = "git", description = "", groupCommands = {GitCommit.class, GitRebase.class})
+    @GroupCommandDefinition(name = "git", description = "", groupCommands = {GitCommit.class, GitRebase.class, GitCheckout.class})
     public static class GitCommand implements Command {
 
         @Option(hasValue = false)
@@ -293,8 +331,33 @@ public class CommandLineFormatterTest {
 
             return CommandResult.SUCCESS;
         }
-
     }
 
+    @CommandDefinition(name = "checkout", description = "Switch branches or restore working tree files")
+    public static class GitCheckout implements Command {
+
+        @Option(hasValue = false, description = "Suppress feedback messages")
+        private boolean quiet;
+
+        @Option(hasValue = false, description = "Proceed even if the index or the working tree differs from HEAD")
+        private boolean force;
+
+        @Option(hasValue = false, description = "display this help info")
+        private boolean help;
+
+        @Option
+        private String test;
+
+        @Argument(description = "the branch you want to checkout")
+        private String branch;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            if(help)
+                commandInvocation.println(commandInvocation.getHelpInfo("base git checkout"));
+
+            return CommandResult.SUCCESS;
+        }
+    }
 
 }

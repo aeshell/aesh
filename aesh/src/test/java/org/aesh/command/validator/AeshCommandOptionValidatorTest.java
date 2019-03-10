@@ -50,7 +50,7 @@ import org.aesh.command.CommandException;
 public class AeshCommandOptionValidatorTest {
 
     @Test
-    public void testOptionValidator() throws IOException, CommandRegistryException {
+    public void testOptionValidator() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -69,7 +69,7 @@ public class AeshCommandOptionValidatorTest {
 
         console.start();
         connection.read("val --foo yay"+ Config.getLineSeparator());
-        connection.assertBuffer("val --foo yay"+Config.getLineSeparator());
+        connection.assertBuffer("val --foo yay"+Config.getLineSeparator()+"VAL"+Config.getLineSeparator());
         connection.clearOutputBuffer();
         connection.read("val --foo doh\\ doh" + Config.getLineSeparator());
         connection.assertBufferEndsWith("Option value cannot contain spaces"+Config.getLineSeparator());
@@ -78,7 +78,7 @@ public class AeshCommandOptionValidatorTest {
     }
 
     @Test
-    public void testMultipleOptionValidators() throws IOException, CommandRegistryException {
+    public void testMultipleOptionValidators() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -99,7 +99,8 @@ public class AeshCommandOptionValidatorTest {
         aeshConsole.start();
 
         connection.read("val --foo yay"+ Config.getLineSeparator());
-        connection.assertBuffer("val --foo yay"+Config.getLineSeparator());
+        connection.assertBuffer("val --foo yay"+Config.getLineSeparator()+"VAL"+Config.getLineSeparator());
+        connection.clearOutputBuffer();
 
         connection.read("val --foo yay\\ nay" + Config.getLineSeparator());
         connection.assertBufferEndsWith("Option value cannot contain spaces"+Config.getLineSeparator());
@@ -111,7 +112,7 @@ public class AeshCommandOptionValidatorTest {
     }
 
     @Test
-    public void testMultipleOptionWithProvidersValidators() throws IOException, CommandRegistryException {
+    public void testMultipleOptionWithProvidersValidators() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -134,7 +135,7 @@ public class AeshCommandOptionValidatorTest {
         console.start();
 
         connection.read("val2 --foo yay"+Config.getLineSeparator());
-        connection.assertBuffer("val2 --foo yay"+ Config.getLineSeparator());
+        connection.assertBuffer("val2 --foo yay"+ Config.getLineSeparator()+"VAL2"+Config.getLineSeparator());
 
         connection.read("val2 --foo Doh" + Config.getLineSeparator());
         connection.assertBufferEndsWith("NO UPPER CASE!"+Config.getLineSeparator());
@@ -149,7 +150,7 @@ public class AeshCommandOptionValidatorTest {
     }
 
     @Test
-    public void testRequiredOption() throws IOException, CommandRegistryException {
+    public void testRequiredOption() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
@@ -169,6 +170,7 @@ public class AeshCommandOptionValidatorTest {
 
         console.start();
         connection.read("test argvalue"+Config.getLineSeparator());
+        Thread.sleep(20);
         connection.assertBufferEndsWith("Option: --foo is required for this command."+Config.getLineSeparator());
 
         console.stop();

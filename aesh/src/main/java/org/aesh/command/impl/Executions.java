@@ -25,6 +25,7 @@ import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Executable;
 import org.aesh.command.Execution;
+import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -68,19 +69,21 @@ class Executions {
     private static class ExecutionImpl<T extends CommandInvocation> implements Execution<T> {
 
         private final ExecutableOperator<T> executable;
-        private final ProcessedCommand<Command<T>, T> cmd;
+        private ProcessedCommand<Command<T>, T> cmd;
         private final CommandInvocationConfiguration invocationConfiguration;
         private final AeshCommandRuntime<T> runtime;
+        private final CommandContainer<T> commandContainer;
         private CommandResult result;
         ExecutionImpl(ExecutableOperator<T> executable,
                 AeshCommandRuntime<T> runtime,
                 CommandInvocationConfiguration invocationConfiguration,
-                ProcessedCommand<Command<T>, T> cmd) {
+                CommandContainer<T> commandContainer) {
             this.executable = executable;
             this.runtime = runtime;
             this.invocationConfiguration = invocationConfiguration;
-            this.cmd = cmd;
-            this.executable.setCommand(cmd.getCommand());
+            this.commandContainer = commandContainer;
+            //this.cmd = cmd;
+            //this.executable.setCommand(cmd.getCommand());
         }
 
         @Override
@@ -110,9 +113,14 @@ class Executions {
         }
 
         @Override
-        public CommandResult execute() throws CommandException, InterruptedException,
-                CommandValidatorException {
-            if (cmd.validator() != null && !cmd.hasOptionWithOverrideRequired()) {
+        public CommandResult execute() throws CommandException, InterruptedException, CommandValidatorException,
+                                                              CommandLineParserException, OptionValidatorException {
+            //first we need to parse and populate the command line
+            cmd = commandContainer.parseAndPopulate(runtime.invocationProviders(), runtime.getAeshContext());
+            //finally we set the command that should be executed
+            executable.setCommand(cmd.getCommand());
+
+            if(cmd.validator() != null && !cmd.hasOptionWithOverrideRequired()) {
                 cmd.validator().validate(getCommand());
             }
             if (cmd.getActivator() != null) {
@@ -233,6 +241,16 @@ class Executions {
         public CommandResult getResult() {
             return result;
         }
+
+        @Override
+        public void setResut(CommandResult result) {
+            this.result = result;
+        }
+
+        @Override
+        public void clearQueuedLine() {
+            commandContainer.emptyLine();
+        }
     }
 
     private enum State {
@@ -245,7 +263,7 @@ class Executions {
             AeshCommandRuntime<CI> runtime)
             throws CommandNotFoundException, CommandLineParserException, OptionValidatorException, IOException {
         State state = State.NEED_COMMAND;
-        ProcessedCommand<Command<CI>, CI> processedCommand = null;
+        CommandContainer<CI> processedCommand = null;
         boolean newParsedLine;
         ConfigurationOperator config = null;
         DataProvider dataProvider = null;
@@ -259,7 +277,7 @@ class Executions {
             while (!newParsedLine) {
                 switch (state) {
                     case NEED_COMMAND: {
-                        processedCommand = runtime.getPopulatedCommand(pl);
+                        processedCommand = runtime.findCommandContainer(pl);
                         state = State.NEED_OPERATOR;
                         break;
                     }

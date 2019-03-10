@@ -19,9 +19,12 @@
  */
 package org.aesh.readline;
 
+import org.aesh.command.CommandResult;
 import org.aesh.command.Execution;
 import org.aesh.command.CommandException;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.terminal.tty.Signal;
 import org.aesh.utils.Config;
 import org.aesh.command.validator.CommandValidatorException;
@@ -76,13 +79,16 @@ public class Process extends Thread implements Consumer<Signal> {
         try {
             execution.execute();
         }
-        catch (CommandValidatorException | CommandException e) {
+        catch (CommandValidatorException | CommandException  | OptionValidatorException | CommandLineParserException e ) {
+            execution.setResut(CommandResult.FAILURE);
             conn.write(e.getMessage()+ Config.getLineSeparator());
         }
         catch (InterruptedException e) {
             // Ctlr-C interrupt
+            execution.setResut(CommandResult.FAILURE);
         }
         catch (Exception e) {
+            execution.setResut(CommandResult.FAILURE);
             conn.write(e.getMessage()+ Config.getLineSeparator());
             LOGGER.log(Level.WARNING, "Uncaught exception when executing the command: "+execution.getCommand().toString(), e);
         }

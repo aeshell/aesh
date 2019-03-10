@@ -21,6 +21,7 @@ package org.aesh.command;
 
 import java.io.IOException;
 import org.aesh.command.invocation.CommandInvocationBuilder;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
@@ -104,6 +105,8 @@ public interface CommandRuntime<CI extends CommandInvocation> {
     }
 
     CommandInvocationBuilder<CI> commandInvocationBuilder();
+
+    InvocationProviders invocationProviders();
 
     void complete(AeshCompleteOperation completeOperation);
 }

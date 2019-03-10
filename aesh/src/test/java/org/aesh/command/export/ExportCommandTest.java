@@ -55,7 +55,7 @@ public class ExportCommandTest {
     private final Key backSpace =  Key.BACKSPACE;
 
     @Test
-    public void testExportCompletionAndCommand() throws IOException, CommandRegistryException {
+    public void testExportCompletionAndCommand() throws IOException, CommandRegistryException, InterruptedException {
 
         TestConnection connection = new TestConnection();
 

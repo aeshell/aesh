@@ -38,12 +38,14 @@ public class AeshCommandContainer<CI extends CommandInvocation> extends DefaultC
     private String errorMessage;
 
     public AeshCommandContainer(CommandLineParser<CI> parser) {
+        super();
         if (parser != null && parser.getProcessedCommand() != null) {
             this.parser = parser;
         }
     }
 
     public AeshCommandContainer(ProcessedCommand<Command<CI>, CI> processedCommand) {
+        super();
         parser = new AeshCommandLineParser<>(processedCommand );
     }
 
@@ -66,7 +68,7 @@ public class AeshCommandContainer<CI extends CommandInvocation> extends DefaultC
         return errorMessage;
     }
 
-    @Override
+   @Override
     public void close() {
 
     }
