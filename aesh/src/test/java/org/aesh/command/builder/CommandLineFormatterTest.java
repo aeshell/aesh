@@ -354,7 +354,7 @@ public class CommandLineFormatterTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help)
-                commandInvocation.println(commandInvocation.getHelpInfo("base git checkout"));
+                commandInvocation.println(commandInvocation.getHelpInfo());
 
             return CommandResult.SUCCESS;
         }

@@ -60,6 +60,11 @@ public interface CommandInvocation<CI extends CommandInvocation> {
     String getHelpInfo(String commandName);
 
     /**
+     * @return a formatted usage/help info from the running command
+     */
+    String getHelpInfo();
+
+    /**
      * Stop the console and end the session
      */
     void stop();

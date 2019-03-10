@@ -152,7 +152,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         } catch (CommandNotFoundException cmd) {
             if (commandNotFoundHandler != null) {
                 commandNotFoundHandler.handleCommandNotFound(line,
-                        commandInvocationBuilder.build(this, null).getShell());
+                        commandInvocationBuilder.build(this, null, null).getShell());
             }
             throw cmd;
         }
@@ -216,9 +216,9 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         return new Executor<>(executions);
     }
 
-    CI buildCommandInvocation(CommandInvocationConfiguration config) {
+    CI buildCommandInvocation(CommandInvocationConfiguration config, CommandContainer<CI> commandContainer) {
         return commandInvocationProvider.
-                enhanceCommandInvocation(commandInvocationBuilder.build(this, config));
+                enhanceCommandInvocation(commandInvocationBuilder.build(this, config, commandContainer));
     }
 
     CommandContainer<CI> findCommandContainer(ParsedLine aeshLine) throws CommandNotFoundException {

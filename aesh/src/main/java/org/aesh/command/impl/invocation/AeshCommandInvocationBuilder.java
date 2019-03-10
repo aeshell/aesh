@@ -20,6 +20,7 @@
 package org.aesh.command.impl.invocation;
 
 import org.aesh.command.CommandRuntime;
+import org.aesh.command.container.CommandContainer;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
@@ -39,8 +40,10 @@ public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<Ae
     }
 
     @Override
-    public AeshCommandInvocation build(CommandRuntime<AeshCommandInvocation> runtime, CommandInvocationConfiguration config) {
-        return new AeshCommandInvocation(console, shell, runtime, config);
+    public AeshCommandInvocation build(CommandRuntime<AeshCommandInvocation> runtime,
+                                       CommandInvocationConfiguration config,
+                                       CommandContainer<AeshCommandInvocation> commandContainer) {
+        return new AeshCommandInvocation(console, shell, runtime, config, commandContainer);
     }
 
 }

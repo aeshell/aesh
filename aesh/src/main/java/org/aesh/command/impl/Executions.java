@@ -82,13 +82,11 @@ class Executions {
             this.runtime = runtime;
             this.invocationConfiguration = invocationConfiguration;
             this.commandContainer = commandContainer;
-            //this.cmd = cmd;
-            //this.executable.setCommand(cmd.getCommand());
         }
 
         @Override
         public T getCommandInvocation() {
-            return runtime.buildCommandInvocation(invocationConfiguration);
+            return runtime.buildCommandInvocation(invocationConfiguration, commandContainer);
         }
 
         /**

@@ -20,6 +20,7 @@
 package org.aesh.command.invocation;
 
 import org.aesh.command.CommandRuntime;
+import org.aesh.command.container.CommandContainer;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -27,5 +28,5 @@ import org.aesh.command.CommandRuntime;
 public interface CommandInvocationBuilder<CI extends CommandInvocation> {
 
     CI build(CommandRuntime<CI> runtime,
-            CommandInvocationConfiguration configuration);
+             CommandInvocationConfiguration configuration, CommandContainer<CI> commandContainer);
 }

@@ -126,6 +126,11 @@ class FooCommandInvocation<CI extends CommandInvocation> implements CommandInvoc
     }
 
     @Override
+    public String getHelpInfo() {
+        return commandInvocation.getHelpInfo();
+    }
+
+    @Override
     public void stop() {
         commandInvocation.stop();
     }

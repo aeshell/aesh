@@ -23,6 +23,7 @@ package org.aesh.command.impl.invocation;
 import java.io.IOException;
 
 import org.aesh.command.CommandRuntime;
+import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.shell.ShellOutputDelegate;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.invocation.CommandInvocation;
@@ -46,13 +47,16 @@ public final class AeshCommandInvocation implements CommandInvocation<AeshComman
     private final Shell shell;
     private final CommandRuntime<AeshCommandInvocation> runtime;
     private final CommandInvocationConfiguration config;
+    private final CommandContainer<AeshCommandInvocation> commandContainer;
 
     public AeshCommandInvocation(Console console, Shell shell,
-            CommandRuntime<AeshCommandInvocation> runtime,
-            CommandInvocationConfiguration config) {
+                                 CommandRuntime<AeshCommandInvocation> runtime,
+                                 CommandInvocationConfiguration config,
+                                 CommandContainer<AeshCommandInvocation> commandContainer) {
         this.console = console;
         this.runtime = runtime;
         this.config = config;
+        this.commandContainer = commandContainer;
         //if we have output redirection, use output delegate
         if (getConfiguration() != null && getConfiguration().getOutputRedirection() != null) {
             this.shell = new ShellOutputDelegate(shell, getConfiguration().getOutputRedirection());
@@ -80,6 +84,11 @@ public final class AeshCommandInvocation implements CommandInvocation<AeshComman
     @Override
     public String getHelpInfo(String commandName) {
         return console.helpInfo(commandName);
+    }
+
+    @Override
+    public String getHelpInfo() {
+        return commandContainer.getParser().parsedCommand().printHelp();
     }
 
     @Override

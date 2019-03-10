@@ -25,6 +25,7 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
+import org.aesh.command.container.CommandContainer;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
@@ -48,9 +49,14 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
     private final CommandInvocationConfiguration config;
 
-    public DefaultCommandInvocation(CommandRuntime< DefaultCommandInvocation> processor, CommandInvocationConfiguration config) {
+    private final CommandContainer<DefaultCommandInvocation> commandContainer;
+
+    public DefaultCommandInvocation(CommandRuntime< DefaultCommandInvocation> processor,
+                                    CommandInvocationConfiguration config,
+                                    CommandContainer<DefaultCommandInvocation> commandContainer) {
         this.processor = processor;
         this.config = config;
+        this.commandContainer = commandContainer;
     }
 
     @Override
@@ -70,6 +76,11 @@ public class DefaultCommandInvocation implements CommandInvocation{
     @Override
     public String getHelpInfo(String commandName) {
         return processor.commandInfo(commandName);
+    }
+
+    @Override
+    public String getHelpInfo() {
+        return commandContainer.getParser().printHelp();
     }
 
     @Override
