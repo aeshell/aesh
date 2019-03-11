@@ -111,6 +111,42 @@ public class AeshCommandMultipleInvocations {
         console.stop();
     }
 
+    @Test
+    public void testMultipleInvocationsRequiredOption() throws CommandRegistryException, IOException, InterruptedException {
+        TestConnection connection = new TestConnection();
+
+         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                 .command(FooCommand.class)
+                 .command(BarCommand.class)
+                 .command(RequiredBarCommand.class)
+                 .create();
+
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                                OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .commandRegistry(registry)
+                        .enableOperatorParser(true)
+                        .connection(connection)
+                        .setPersistExport(false)
+                        .logging(true)
+                        .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+        counter = 0;
+
+        connection.read("foo ;req && foo --value=VAL" + Config.getLineSeparator());
+        Thread.sleep(100);
+        assertEquals(1, counter);
+        connection.clearOutputBuffer();
+        connection.read("foo" + Config.getLineSeparator());
+        Thread.sleep(20);
+        assertEquals(2, counter);
+
+        console.stop();
+    }
+
+
 
     @CommandDefinition(name ="foo", description = "")
     private static class FooCommand implements Command {
@@ -125,9 +161,10 @@ public class AeshCommandMultipleInvocations {
                 counter++;
             }
             else if(counter == 1) {
-                assertEquals("VAL", value);
+                assertNull(value);
                 counter++;
             }
+
             return CommandResult.SUCCESS;
         }
     }
@@ -154,5 +191,16 @@ public class AeshCommandMultipleInvocations {
         }
     }
 
+    @CommandDefinition(name ="req", description = "")
+    private static class RequiredBarCommand implements Command {
+
+        @Option(required = true)
+        private String required;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
 
 }

@@ -259,7 +259,7 @@ class Executions {
 
     static <CI extends CommandInvocation> List<Execution<CI>> buildExecution(List<ParsedLine> fullLine,
             AeshCommandRuntime<CI> runtime)
-            throws CommandNotFoundException, CommandLineParserException, OptionValidatorException, IOException {
+            throws CommandNotFoundException, CommandLineParserException, IOException {
         State state = State.NEED_COMMAND;
         CommandContainer<CI> processedCommand = null;
         boolean newParsedLine;
