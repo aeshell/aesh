@@ -38,6 +38,8 @@ public interface Execution<T extends CommandInvocation> {
 
     Command<T> getCommand();
 
+    void populateCommand() throws CommandLineParserException, OptionValidatorException;
+
     ResultHandler getResultHandler();
 
     CommandResult execute() throws CommandException, CommandValidatorException,

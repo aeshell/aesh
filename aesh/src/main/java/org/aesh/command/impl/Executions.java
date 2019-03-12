@@ -74,6 +74,7 @@ class Executions {
         private final AeshCommandRuntime<T> runtime;
         private final CommandContainer<T> commandContainer;
         private CommandResult result;
+        private boolean populated;
         ExecutionImpl(ExecutableOperator<T> executable,
                 AeshCommandRuntime<T> runtime,
                 CommandInvocationConfiguration invocationConfiguration,
@@ -82,6 +83,7 @@ class Executions {
             this.runtime = runtime;
             this.invocationConfiguration = invocationConfiguration;
             this.commandContainer = commandContainer;
+            this.cmd = commandContainer.getParser().getProcessedCommand();
         }
 
         @Override
@@ -106,6 +108,14 @@ class Executions {
         }
 
         @Override
+        public void populateCommand() throws CommandLineParserException, OptionValidatorException {
+            if (!populated) {
+                cmd = commandContainer.parseAndPopulate(runtime.invocationProviders(), runtime.getAeshContext());
+                populated = true;
+            }
+        }
+
+        @Override
         public ResultHandler getResultHandler() {
             return cmd.resultHandler();
         }
@@ -114,7 +124,7 @@ class Executions {
         public CommandResult execute() throws CommandException, InterruptedException, CommandValidatorException,
                                                               CommandLineParserException, OptionValidatorException {
             //first we need to parse and populate the command line
-            cmd = commandContainer.parseAndPopulate(runtime.invocationProviders(), runtime.getAeshContext());
+            populateCommand();
             //finally we set the command that should be executed
             executable.setCommand(cmd.getCommand());
 
