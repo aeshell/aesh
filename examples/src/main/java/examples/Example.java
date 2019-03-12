@@ -561,7 +561,7 @@ public class Example {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help)
-                commandInvocation.getShell().writeln(commandInvocation.getHelpInfo("group"));
+                commandInvocation.getShell().writeln(commandInvocation.getHelpInfo());
             else
                 commandInvocation.getShell().writeln("only executed group, it doesnt do much...");
             return CommandResult.SUCCESS;
@@ -579,7 +579,7 @@ public class Example {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             if(help)
-                commandInvocation.getShell().writeln(commandInvocation.getHelpInfo("group child1"));
+                commandInvocation.getShell().writeln(commandInvocation.getHelpInfo());
             else
                 commandInvocation.getShell().writeln("foo is set to: "+foo);
             return CommandResult.SUCCESS;
