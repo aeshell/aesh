@@ -30,6 +30,8 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 
+import java.util.List;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -59,6 +61,13 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
     public AeshCommandRegistryBuilder<CI> commands(Class<? extends Command>... commands) throws CommandRegistryException {
         for (Class<? extends Command> c : commands) {
             commandRegistry.addCommand((Class<Command>) c);
+        }
+        return this;
+    }
+
+    public AeshCommandRegistryBuilder<CI> commands(List<Class<? extends Command>> commands) throws CommandRegistryException {
+        for (Class<? extends Command> c : commands) {
+            commandRegistry.addCommand(c);
         }
         return this;
     }

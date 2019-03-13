@@ -19,23 +19,11 @@
  */
 package examples;
 
+import org.aesh.AeshConsoleRunner;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
-import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.registry.CommandRegistryException;
-import org.aesh.command.settings.Settings;
-import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.readline.ReadlineConsole;
-
-import java.io.IOException;
 
 /**
  * A very simple example
@@ -44,27 +32,19 @@ import java.io.IOException;
  */
 public class SimpleExample {
 
-    public static void main(String[] args) throws CommandRegistryException, IOException {
-
-        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                .command(ExitCommand.class)
-                .create();
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings = SettingsBuilder
-                .builder()
-                .commandRegistry(registry)
-                .build();
-
-        ReadlineConsole console = new ReadlineConsole(settings);
-        console.setPrompt("[simple@aesh]$ ");
-        console.start();
+    public static void main(String[] args) {
+        AeshConsoleRunner.builder()
+                .command(HelloCommand.class)
+                .prompt("[simple@aesh]$ ")
+                .addExitCommand()
+                .start();
     }
 
-    @CommandDefinition(name = "exit", description = "exit the program", aliases = {"quit"})
-    public static class ExitCommand implements Command {
+    @CommandDefinition(name = "hello", description = "hello from aesh")
+    public static class HelloCommand implements Command {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
-            commandInvocation.stop();
+            commandInvocation.println("Hello from Aesh!");
             return CommandResult.SUCCESS;
         }
     }
