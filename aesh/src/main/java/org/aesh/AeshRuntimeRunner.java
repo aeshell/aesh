@@ -64,7 +64,7 @@ public class AeshRuntimeRunner {
     }
 
     public void execute() {
-        if(command == null)
+        if(command == null && runtime == null)
             throw new RuntimeException("Command needs to be added");
         try {
             if (runtime == null) {
