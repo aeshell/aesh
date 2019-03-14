@@ -80,7 +80,7 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
     @Override
     public String getHelpInfo() {
-        return commandContainer.getParser().printHelp();
+        return commandContainer.getParser().parsedCommand().printHelp();
     }
 
     @Override
