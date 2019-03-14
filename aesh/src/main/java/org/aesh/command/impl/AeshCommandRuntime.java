@@ -137,7 +137,6 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     @Override
     public void executeCommand(String line) throws CommandNotFoundException,
             CommandLineParserException,
-            OptionValidatorException,
             CommandValidatorException,
             CommandException,
             InterruptedException,
@@ -147,7 +146,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         try {
             executor = buildExecutor(line);
         }
-        catch (CommandLineParserException | OptionValidatorException e) {
+        catch (CommandLineParserException e) {
             throw e;
         } catch (CommandNotFoundException cmd) {
             if (commandNotFoundHandler != null) {
@@ -209,7 +208,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     @Override
     public Executor<CI> buildExecutor(String line) throws CommandNotFoundException,
-            CommandLineParserException, OptionValidatorException, IOException {
+            CommandLineParserException, IOException {
         LOGGER.fine("Command: " + line);
         List<ParsedLine> lines = new LineParser().parseLine(line, -1, parseBrackets, operators);
         List<Execution<CI>> executions = Executions.buildExecution(lines, this);

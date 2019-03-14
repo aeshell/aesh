@@ -179,6 +179,10 @@ public class TestConnection implements Connection {
             closeHandler.accept(null);
     }
 
+    public boolean closed() {
+        return !reading;
+    }
+
     @Override
     public void openBlocking() {
         //we're not doing anything here, all input will come from the read(..) methods

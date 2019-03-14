@@ -24,12 +24,12 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.ReadlineConsole;
+import org.aesh.terminal.Connection;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,14 +37,16 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
+ * Use the AeshConsoleRunner when you want to easily create an interactive CLI application.
+ *
  * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
  */
 public class AeshConsoleRunner {
     private List<Class<? extends Command>> commands;
     private Settings settings;
-    private CommandRegistry registry;
     private Prompt prompt;
     private ReadlineConsole console;
+    private Connection connection;
 
     private AeshConsoleRunner() {
         commands = new ArrayList<>();
@@ -75,6 +77,11 @@ public class AeshConsoleRunner {
     public AeshConsoleRunner settings(Settings settings) {
         if(settings != null)
             this.settings = settings;
+        return this;
+    }
+
+    public AeshConsoleRunner connection(Connection connection) {
+        this.connection = connection;
         return this;
     }
 
@@ -120,21 +127,41 @@ public class AeshConsoleRunner {
 
     @SuppressWarnings("unchecked")
     private void init() {
-        if(commands.isEmpty())
+        if(commands.isEmpty() && (settings == null ||
+                                          settings.commandRegistry() == null ||
+                                          settings.commandRegistry().getAllCommandNames().isEmpty()))
             throw new RuntimeException("No commands added, nothing to run");
 
         try {
-            AeshCommandRegistryBuilder builder = AeshCommandRegistryBuilder.builder();
-            for(Class<? extends Command> command : commands)
-                builder.command(command);
-            registry = builder.create();
-            if(settings == null)
+            if(settings == null) {
+                AeshCommandRegistryBuilder registryBuilder = AeshCommandRegistryBuilder.builder();
+                for(Class<? extends Command> command : commands)
+                    registryBuilder.command(command);
                 settings = SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .enableAlias(false)
-                        .enableExport(false)
-                        .enableMan(false)
-                        .build();
+                                   .commandRegistry(registryBuilder.create())
+                                   .enableAlias(false)
+                                   .enableExport(false)
+                                   .enableMan(false)
+                                   .persistHistory(false)
+                                   .connection(connection)
+                                   .build();
+            }
+            //user added its own settings object, but no commands in registry
+            else if(!commands.isEmpty() &&
+                            (settings.commandRegistry() == null ||
+                                     settings.commandRegistry().getAllCommandNames().isEmpty())) {
+
+                AeshCommandRegistryBuilder registryBuilder = AeshCommandRegistryBuilder.builder();
+                for(Class<? extends Command> command : commands)
+                    registryBuilder.command(command);
+                SettingsBuilder settingsBuilder = new SettingsBuilder(settings)
+                                                   .commandRegistry(registryBuilder.create());
+
+                if(connection != null)
+                    settingsBuilder.connection(connection);
+
+                settings = settingsBuilder.build();
+            }
 
             console = new ReadlineConsole(settings);
         }

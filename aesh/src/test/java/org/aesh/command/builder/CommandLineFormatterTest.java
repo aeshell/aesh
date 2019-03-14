@@ -19,35 +19,23 @@
  */
 package org.aesh.command.builder;
 
+import org.aesh.AeshConsoleRunner;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
-import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.registry.CommandRegistryException;
-import org.aesh.command.settings.Settings;
-import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.aesh.utils.ANSI;
 import org.junit.Test;
-
-import java.io.IOException;
 
 import static org.aesh.utils.Config.getLineSeparator;
 import static org.junit.Assert.assertEquals;
@@ -198,24 +186,11 @@ public class CommandLineFormatterTest {
 
 
     @Test
-    public void testChildFormatter() throws CommandRegistryException, IOException, InterruptedException {
+    public void testChildFormatter() throws InterruptedException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry =
-                AeshCommandRegistryBuilder.builder()
-                        .command(BaseCommand.class)
-                        .create();
-
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                                OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
-
-        ReadlineConsole console = new ReadlineConsole(settings);
-        console.start();
+        AeshConsoleRunner runner = AeshConsoleRunner.builder().command(BaseCommand.class).connection(connection);
+        runner.start();
 
         connection.read("base git rebase --help"+ getLineSeparator());
         connection.clearOutputBuffer();
@@ -231,28 +206,15 @@ public class CommandLineFormatterTest {
                                         "Argument:"+getLineSeparator()+
                                         "         the branch you want to rebase on"+getLineSeparator()+getLineSeparator());
 
-        console.stop();
+        runner.stop();
     }
 
     @Test
-    public void testChildFormatter2() throws CommandRegistryException, IOException, InterruptedException {
+    public void testChildFormatter2() throws InterruptedException {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry registry =
-                AeshCommandRegistryBuilder.builder()
-                        .command(BaseCommand.class)
-                        .create();
-
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                                OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
-
-        ReadlineConsole console = new ReadlineConsole(settings);
-        console.start();
+        AeshConsoleRunner runner = AeshConsoleRunner.builder().command(BaseCommand.class).connection(connection);
+        runner.start();
 
         connection.read("base git checkout --help"+ getLineSeparator());
         connection.clearOutputBuffer();
@@ -269,7 +231,7 @@ public class CommandLineFormatterTest {
                                         "Argument:"+getLineSeparator()+
                                         "         the branch you want to checkout"+getLineSeparator()+getLineSeparator());
 
-        console.stop();
+        runner.stop();
     }
 
     @GroupCommandDefinition(name = "base", description = "", groupCommands = {GitCommand.class})
