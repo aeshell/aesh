@@ -37,6 +37,7 @@ import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedLineIterator;
 import org.aesh.parser.ParsedWord;
+import org.aesh.utils.ANSIBuilder;
 import org.aesh.utils.Config;
 
 import java.util.ArrayList;
@@ -62,6 +63,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private final LineParser lineParser;
     private CompleteStatus completeStatus;
     private AeshCommandLineParser<CI> parent;
+    private boolean ansiMode = true;
 
     public AeshCommandLineParser(ProcessedCommand<Command<CI>, CI> processedCommand) {
         this.processedCommand = processedCommand;
@@ -220,12 +222,20 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                     .append(processedCommand.name())
                     .append(" commands:")
                     .append(Config.getLineSeparator());
-            for (CommandLineParser child : parsers)
-                sb.append("    ")
-                  .append(child.getProcessedCommand().name())
-                  .append("  ")
-                  .append(child.getProcessedCommand().description())
-                  .append(Config.getLineSeparator());
+
+            int maxLength = 0;
+
+            for (CommandLineParser child : parsers) {
+                int length = child.getProcessedCommand().name().length();
+                if (length > maxLength) {
+                    maxLength = length;
+                }
+            }
+
+            for (CommandLineParser child : parsers) {
+                sb.append(child.getFormattedCommand(4, maxLength + 2))
+                        .append(Config.getLineSeparator());
+            }
 
             return sb.toString();
         }
@@ -575,6 +585,33 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     public boolean isGroupCommand() {
         List<CommandLineParser<CI>> parsers = getChildParsers();
         return parsers != null && parsers.size() > 0;
+    }
+
+    @Override
+    public String getFormattedCommand(int offset, int descriptionStart) {
+
+        ANSIBuilder ansiBuilder = ANSIBuilder.builder(ansiMode);
+
+        if(offset > 0)
+            ansiBuilder.append(String.format("%" + offset+ "s", ""));
+
+        ansiBuilder.blueText(getProcessedCommand().name());
+
+        int descOffset = descriptionStart - getProcessedCommand().name().length();
+
+        if(descOffset > 0)
+            ansiBuilder.append(String.format("%"+descOffset+"s", ""));
+        else
+            ansiBuilder.append(" ");
+
+        ansiBuilder.append(getProcessedCommand().description());
+
+        return ansiBuilder.toString();
+    }
+
+    @Override
+    public void updateAnsiMode(boolean mode) {
+        this.ansiMode = mode;
     }
 
     @Override

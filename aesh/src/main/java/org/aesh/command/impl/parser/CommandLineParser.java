@@ -152,6 +152,10 @@ public interface CommandLineParser<CI extends CommandInvocation> {
 
     void doPopulate(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException;
 
+    String getFormattedCommand(int offset, int descriptionStart);
+
+    void updateAnsiMode(boolean mode);
+
     enum Mode {
         COMPLETION, STRICT, VALIDATE, NONE
     }

@@ -169,6 +169,10 @@ public class CommandLineFormatterTest {
         CommandLineParser<CommandInvocation> clpBranch = CommandLineParserBuilder.builder().processedCommand(branch.create()).create();
         CommandLineParser<CommandInvocation> clpRebase = CommandLineParserBuilder.builder().processedCommand(rebase.create()).create();
 
+        clpGit.updateAnsiMode(false);
+        clpBranch.updateAnsiMode(false);
+        clpRebase.updateAnsiMode(false);
+
         clpGit.addChildParser(clpBranch);
         clpGit.addChildParser(clpRebase);
 
@@ -177,8 +181,8 @@ public class CommandLineFormatterTest {
                          "Options:" + getLineSeparator() +
                          "  -h, --help  display help info" + getLineSeparator()
                          + getLineSeparator()+"git commands:"+ getLineSeparator()+
-                         "    branch  branching"+ getLineSeparator()+
-                         "    rebase  [OPTION...]"+ getLineSeparator(),
+                         "    " + "branch" + "  branching" + getLineSeparator() +
+                         "    " + "rebase" + "  [OPTION...]"+ getLineSeparator(),
                  clpGit.printHelp());
 
 
