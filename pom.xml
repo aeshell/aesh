@@ -99,18 +99,6 @@
               <artifactId>maven-shade-plugin</artifactId>
               <version>3.2.0</version>
 	    </plugin>            
-	    <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-compiler-plugin</artifactId>
-              <version>3.8.0</version>
-              <configuration>
-                <configuration>
-		  <source>1.8</source>
-		  <target>1.8</target>
-	        </configuration>
-		      <!--<release>8</release>-->
-              </configuration>
-            </plugin>
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-checkstyle-plugin</artifactId>
