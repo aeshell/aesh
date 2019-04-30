@@ -19,6 +19,9 @@
  */
 package org.aesh;
 
+import java.io.IOException;
+import java.util.Set;
+
 import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
@@ -30,15 +33,15 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 
-import java.io.IOException;
-
 /**
  * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
  */
 public class AeshRuntimeRunner {
 
     private Class<? extends Command> command;
+
     private CommandRuntime runtime;
+
     private String[] args;
 
     private AeshRuntimeRunner() {
@@ -64,7 +67,7 @@ public class AeshRuntimeRunner {
     }
 
     public void execute() {
-        if(command == null && runtime == null)
+        if (command == null && runtime == null)
             throw new RuntimeException("Command needs to be added");
         try {
             if (runtime == null) {
@@ -72,21 +75,22 @@ public class AeshRuntimeRunner {
                         commandRegistry(AeshCommandRegistryBuilder.builder().command(command).create())
                         .build();
             }
-            else {
-                if(runtime.getCommandRegistry().getAllCommandNames().isEmpty())
-                    throw new RuntimeException("Command needs to be added to the registry.");
-                else if(runtime.getCommandRegistry().getAllCommandNames().size() > 1)
-                    throw new RuntimeException("Only one command can be added to the registry.");
-            }
 
-            StringBuilder sb = new StringBuilder((String) runtime.getCommandRegistry().getAllCommandNames().iterator().next());
+            final Set<String> commandNames = runtime.getCommandRegistry().getAllCommandNames();
+            if (commandNames.isEmpty())
+                throw new RuntimeException("Command needs to be added to the registry.");
+            else if (commandNames.size() > 1)
+                throw new RuntimeException("Only one command can be added to the registry.");
+
+            final String commandName = commandNames.iterator().next();
+            StringBuilder sb = new StringBuilder(commandName);
             if (args.length > 0) {
                 sb.append(" ");
-                if(args.length == 1) {
+                if (args.length == 1) {
                     sb.append(args[0]);
                 } else {
-                    for(String arg : args) {
-                        if(arg.indexOf(' ') >= 0) {
+                    for (String arg : args) {
+                        if (arg.indexOf(' ') >= 0) {
                             sb.append('"').append(arg).append("\" ");
                         } else {
                             sb.append(arg).append(' ');
@@ -95,14 +99,25 @@ public class AeshRuntimeRunner {
                 }
             }
 
-            runtime.executeCommand(sb.toString());
+            try {
+                runtime.executeCommand(sb.toString());
+            } catch (CommandNotFoundException e) {
+                System.err.println("Command not found: " + sb.toString());
+            } catch (CommandException | CommandLineParserException | CommandValidatorException | OptionValidatorException e) {
+                showHelpIfNeeded(runtime, commandName, e);
+            } catch (InterruptedException | IOException e) {
+                System.err.println(e.getMessage());
+            }
 
+        } catch (CommandRegistryException e) {
+            throw new RuntimeException("Exception while executing command: " + e.getMessage());
         }
-        catch (CommandRegistryException | IOException | CommandException |
-                OptionValidatorException | InterruptedException |
-                CommandNotFoundException | CommandLineParserException |
-                CommandValidatorException e) {
-            throw new RuntimeException("Exception while executing command: "+e.getMessage());
+    }
+
+    private static void showHelpIfNeeded(CommandRuntime runtime, String commandName, Exception e) {
+        if (e != null) {
+            System.err.println(e.getMessage());
         }
+        System.err.println(runtime.commandInfo(commandName));
     }
 }
