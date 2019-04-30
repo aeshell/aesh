@@ -517,13 +517,25 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         }
         if(command.getArgument() != null) {
             if (doCheckForMissingRequiredOption(command.getArgument()))
-                return new RequiredOptionException("Argument is required for this command.");
+                return generateRequiredExceptionFor(command.getArgument(), false);
         }
         else if(command.getArguments() != null)
             if(doCheckForMissingRequiredOption(command.getArguments()))
-                return new RequiredOptionException("Arguments is required for this command.");
+                return generateRequiredExceptionFor(command.getArguments(), true);
 
         return null;
+    }
+
+    private RequiredOptionException generateRequiredExceptionFor(ProcessedOption argument, boolean plural) {
+        final String description = argument.description();
+        String msg;
+        if (description != null && !description.isEmpty()) {
+            msg = description;
+        } else {
+            msg = "Argument '" + argument.getFieldName() + "'";
+        }
+        msg += (plural ? " are " : " is ") + "required for this command.";
+        return new RequiredOptionException(msg);
     }
 
     private boolean doCheckForMissingRequiredOption(ProcessedOption o) {

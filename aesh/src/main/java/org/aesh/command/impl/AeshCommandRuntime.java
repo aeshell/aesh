@@ -164,7 +164,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                     exec.getResultHandler().onExecutionFailure(CommandResult.FAILURE, cmd);
                 }
                 throw cmd;
-            } catch (CommandValidatorException e) {
+            } catch (CommandValidatorException | CommandLineParserException e) {
                 if (exec.getResultHandler() != null) {
                     exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, e);
                 }
@@ -224,11 +224,11 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         if (aeshLine.words().isEmpty()) {
             return null;
         }
+        final String name = aeshLine.firstWord().word();
         CommandContainer<CI> container =
-                commandResolver.resolveCommand(aeshLine.words().get(0).word(), aeshLine.line());
+                commandResolver.resolveCommand(name, aeshLine.line());
         if (container == null) {
-            throw new CommandNotFoundException("No command handler for '"+
-                                                       aeshLine.words().get(0).word()+ "'.",aeshLine.words().get(0).word());
+            throw new CommandNotFoundException("No command handler for '"+name+ "'.",name);
         }
         container.addLine(aeshLine);
         return container;
