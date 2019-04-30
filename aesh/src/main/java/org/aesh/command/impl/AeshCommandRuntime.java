@@ -164,7 +164,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                     exec.getResultHandler().onExecutionFailure(CommandResult.FAILURE, cmd);
                 }
                 throw cmd;
-            } catch (CommandValidatorException e) {
+            } catch (CommandValidatorException | CommandLineParserException e) {
                 if (exec.getResultHandler() != null) {
                     exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, e);
                 }
