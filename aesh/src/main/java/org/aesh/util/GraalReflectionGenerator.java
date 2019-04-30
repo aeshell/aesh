@@ -49,7 +49,7 @@ public class GraalReflectionGenerator {
             }
         }
         else {
-            System.err.println(runtime.commandInfo("completer"));
+            System.err.println(runtime.commandInfo("graalreflection"));
         }
     }
 }
