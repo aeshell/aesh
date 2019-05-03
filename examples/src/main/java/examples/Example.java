@@ -61,6 +61,8 @@ import org.aesh.readline.terminal.formatting.Color;
 import org.aesh.readline.terminal.formatting.TerminalColor;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.readline.terminal.formatting.TerminalTextStyle;
+import org.aesh.selector.Selector;
+import org.aesh.selector.SelectorType;
 import org.aesh.utils.ANSI;
 import org.aesh.utils.Config;
 
@@ -112,6 +114,7 @@ public class Example {
                 .command(GroupCommand.class)
                 .command(LongOutputCommand.class)
                 .command(ReadlineCommand.class)
+                .command(SelectCommand.class)
                 //example on how to build a command with a simple lambda
                 .command(CommandBuilder.builder().name("quit").command(commandInvocation -> {
                     commandInvocation.stop();
@@ -419,6 +422,34 @@ public class Example {
             }
             else
                 shell.writeln(Config.getLineSeparator()+"you chickened out!!");
+        }
+
+    }
+
+    @CommandDefinition(name = "select", description = "")
+    public static class SelectCommand implements Command {
+
+        @Option(selector = SelectorType.SELECT, description = "Choose your color",
+                defaultValue = {"red", "green", "blue"})
+        private String color;
+
+
+        private Shell shell;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            this.shell = commandInvocation.getShell();
+
+            commandInvocation.println("Color: "+color);
+
+            List<String> selected = new Selector(SelectorType.SELECT, new String[]{"blue","green", "red" },
+                    "Which color do you want? ")
+                    .doSelect(commandInvocation.getShell());
+
+            if(selected.size() > 0)
+                commandInvocation.println("You selected: "+selected.get(0));
+
+            return CommandResult.SUCCESS;
         }
 
     }

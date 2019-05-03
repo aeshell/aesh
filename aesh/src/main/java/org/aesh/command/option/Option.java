@@ -32,6 +32,7 @@ import org.aesh.command.parser.OptionParser;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.impl.validator.NullValidator;
 import org.aesh.command.validator.OptionValidator;
+import org.aesh.selector.SelectorType;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -108,6 +109,8 @@ public @interface Option {
      * If a default value has been set, it will override this setting.
      */
     boolean askIfNotSet() default false;
+
+    SelectorType selector() default SelectorType.NO_OP;
 
     /**
      * Define a converter if the field is a type thats not java.lang and other

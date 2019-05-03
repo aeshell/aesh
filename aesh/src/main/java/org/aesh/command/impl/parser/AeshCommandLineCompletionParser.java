@@ -36,6 +36,7 @@ import org.aesh.parser.ParserStatus;
 import org.aesh.readline.AeshContext;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.readline.util.Parser;
+import org.aesh.selector.SelectorType;
 
 import java.util.List;
 
@@ -296,7 +297,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             verifyCompleteValue(completeOperation, completions, value, selectedWordStatus, currentOption);
         }
         //only try to complete default values if completer is null
-        else if(currentOption.getDefaultValues().size() > 0) {
+        else if(currentOption.getDefaultValues().size() > 0 && currentOption.selectorType() == SelectorType.NO_OP) {
             CompleterInvocation completions =
                     invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
                             new CompleterData(completeOperation.getContext(), value, parser.getCommand()));

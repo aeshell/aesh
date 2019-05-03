@@ -36,6 +36,7 @@ import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.impl.validator.NullValidator;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.io.Resource;
+import org.aesh.selector.SelectorType;
 import org.aesh.util.ReflectionUtil;
 
 import java.io.File;
@@ -72,6 +73,7 @@ public class ProcessedOptionBuilder {
     private boolean overrideRequired;
     private OptionParser parser;
     private boolean askIfNotSet = false;
+    private SelectorType selectorType;
 
     private ProcessedOptionBuilder() {
         defaultValues = new ArrayList<>();
@@ -140,6 +142,10 @@ public class ProcessedOptionBuilder {
 
     public ProcessedOptionBuilder askIfNotSet(boolean askIfNotSet) {
         return apply(c -> c.askIfNotSet = askIfNotSet);
+    }
+
+    public ProcessedOptionBuilder selector(SelectorType selectorType) {
+        return apply(c -> c.selectorType = selectorType);
     }
 
     public ProcessedOptionBuilder fieldName(String fieldName) {
@@ -337,7 +343,7 @@ public class ProcessedOptionBuilder {
         //    renderer = new NullOptionRenderer();
 
         return new ProcessedOption(shortName, name, description, argument, required,
-                valueSeparator, askIfNotSet, defaultValues, type, fieldName, optionType, converter,
+                valueSeparator, askIfNotSet, selectorType, defaultValues, type, fieldName, optionType, converter,
                 completer, validator, activator, renderer, parser, overrideRequired);
     }
 }

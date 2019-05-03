@@ -35,6 +35,7 @@ import org.aesh.io.Resource;
 import org.aesh.readline.AeshContext;
 import org.aesh.io.PipelineResource;
 import org.aesh.readline.terminal.formatting.TerminalString;
+import org.aesh.selector.SelectorType;
 import org.aesh.utils.ANSI;
 
 import java.io.File;
@@ -82,9 +83,11 @@ public final class ProcessedOption {
     private boolean cursorOption = false;
     private boolean cursorValue = false;
     private boolean askIfNotSet = false;
+    private final SelectorType selectorType;
 
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator, boolean askIfNotSet,
+                           SelectorType selectorType,
                            List<String> defaultValue, Class<?> type, String fieldName,
                            OptionType optionType, Converter converter, OptionCompleter completer,
                            OptionValidator optionValidator,
@@ -108,6 +111,7 @@ public final class ProcessedOption {
         this.validator = optionValidator;
         this.activator = activator;
         this.askIfNotSet = askIfNotSet;
+        this.selectorType = selectorType;
         if(parser != null)
             this.parser = parser;
         else
@@ -132,6 +136,10 @@ public final class ProcessedOption {
 
     public void addValue(String value) {
         values.add(value);
+    }
+
+    public void addValues(List<String> values) {
+        this.values.addAll(values);
     }
 
     public String getValue() {
@@ -261,6 +269,10 @@ public final class ProcessedOption {
 
     public boolean askIfNotSet() {
         return askIfNotSet;
+    }
+
+    public SelectorType selectorType() {
+        return selectorType;
     }
 
     public void clear() {

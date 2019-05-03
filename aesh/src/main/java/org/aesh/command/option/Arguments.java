@@ -36,6 +36,7 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import org.aesh.command.impl.activator.NullActivator;
+import org.aesh.selector.SelectorType;
 
 /**
  * The possible arguments of a command line command
@@ -81,6 +82,8 @@ public @interface Arguments {
      * If a default value has been set, it will override this setting.
      */
     boolean askIfNotSet() default false;
+
+    SelectorType selector() default SelectorType.NO_OP;
 
     /**
      * Define a converter if the field is a type thats not java.lang and other

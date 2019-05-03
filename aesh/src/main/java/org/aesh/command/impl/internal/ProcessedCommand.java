@@ -34,6 +34,7 @@ import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.readline.util.Parser;
+import org.aesh.selector.SelectorType;
 import org.aesh.utils.Config;
 
 import java.util.ArrayList;
@@ -104,7 +105,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void addOption(ProcessedOption opt) throws OptionParserException {
         this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
-                opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(),
+                opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.selectorType(),
                 opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(), opt.converter(),
                 opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(), opt.parser(), opt.doOverrideRequired()));
 
@@ -114,7 +115,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
         for(ProcessedOption opt : options) {
             this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
-                    opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(),
+                    opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.selectorType(),
                     opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(),
                     opt.converter(), opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(),
                     opt.parser(), opt.doOverrideRequired()));
@@ -557,5 +558,27 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean hasArgumentWithNoValue() {
         return argument != null && argument.getValue() == null;
+    }
+
+    public boolean hasSelector() {
+        for(ProcessedOption opt : getOptions()) {
+            if(opt.selectorType() != SelectorType.NO_OP && opt.hasValue())
+                return true;
+        }
+        return false;
+     }
+
+    public List<ProcessedOption> getAllSelectors() {
+       List<ProcessedOption>  options = new ArrayList<>();
+        for(ProcessedOption opt : getOptions()) {
+            if(opt.selectorType() != SelectorType.NO_OP && opt.hasValue())
+                options.add(opt);
+        }
+        if(argument != null && argument.selectorType() != SelectorType.NO_OP && argument.hasValue())
+            options.add(argument);
+        if(arguments != null && arguments.selectorType() != SelectorType.NO_OP && arguments.hasValue())
+            options.add(arguments);
+
+        return options;
     }
 }

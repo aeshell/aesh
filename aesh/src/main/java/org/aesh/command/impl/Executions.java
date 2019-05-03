@@ -54,6 +54,7 @@ import org.aesh.io.Resource;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.AeshContext;
 import org.aesh.readline.Prompt;
+import org.aesh.selector.Selector;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -170,6 +171,14 @@ class Executions {
                     catch(InterruptedException e) {
                         //input was interrupted, ignore it
                     }
+                }
+            }
+
+            if(cmd.hasSelector()) {
+                for(ProcessedOption option : cmd.getAllSelectors()) {
+                    option.addValues(new Selector(option.selectorType(), option.getDefaultValues(), option.description())
+                                             .doSelect(getCommandInvocation().getShell()));
+                    runtime.populateAskedOption(option);
                 }
             }
 

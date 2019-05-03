@@ -30,6 +30,7 @@ import org.aesh.readline.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.Command;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.selector.SelectorType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -62,7 +63,7 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
             if(option.getValues() != null && option.getValues().size() > 0)
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext,
                         mode == CommandLineParser.Mode.VALIDATE );
-            else if(option.getDefaultValues().size() > 0) {
+            else if(option.getDefaultValues().size() > 0 && option.selectorType() == SelectorType.NO_OP) {
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext,
                         mode == CommandLineParser.Mode.VALIDATE);
             }
@@ -74,14 +75,16 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
         }
         //arguments
         if(processedCommand.getArguments() != null &&
-                (processedCommand.getArguments().getValues().size() > 0 || processedCommand.getArguments().getDefaultValues().size() > 0))
+                (processedCommand.getArguments().getValues().size() > 0 ||
+                         processedCommand.getArguments().getDefaultValues().size() > 0))
             processedCommand.getArguments().injectValueIntoField(getObject(), invocationProviders, aeshContext,
                     mode == CommandLineParser.Mode.VALIDATE);
         else if(processedCommand.getArguments() != null)
             resetField(getObject(), processedCommand.getArguments().getFieldName(), true);
         //argument
          if(processedCommand.getArgument() != null &&
-                (processedCommand.getArgument().getValues().size() > 0 || processedCommand.getArgument().getDefaultValues().size() > 0))
+                (processedCommand.getArgument().getValues().size() > 0 ||
+                         processedCommand.getArgument().getDefaultValues().size() > 0))
             processedCommand.getArgument().injectValueIntoField(getObject(), invocationProviders, aeshContext,
                     mode == CommandLineParser.Mode.VALIDATE);
         else if(processedCommand.getArgument() != null)
