@@ -19,6 +19,7 @@
  */
 package org.aesh.command.impl.invocation;
 
+import java.io.Console;
 import java.io.IOException;
 
 import org.aesh.command.CommandException;
@@ -35,7 +36,9 @@ import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
 import org.aesh.readline.terminal.Key;
+import org.aesh.readline.util.Parser;
 import org.aesh.terminal.tty.Size;
+import org.aesh.utils.ANSI;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -91,16 +94,26 @@ public class DefaultCommandInvocation implements CommandInvocation{
     // XXX JFDENISE SHOULD BE REMOVED
     @Override
     public KeyAction input() {
+        try {
+            return getShell().read();
+        }
+        catch (InterruptedException ignored) {
+        }
         return null;
     }
 
     @Override
     public String inputLine() {
-        return null;
+        return inputLine(null);
     }
 
     @Override
     public String inputLine(Prompt prompt) {
+        try {
+            return getShell().readLine(prompt);
+        }
+        catch (InterruptedException ignored) {
+        }
         return null;
     }
 
@@ -153,7 +166,11 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
         @Override
         public void write(int[] out) {
-            // Not supported.
+            Console console = System.console();
+            if(console != null) {
+                console.writer().write(Parser.fromCodePoints(out));
+                console.writer().flush();
+            }
         }
 
         @Override
@@ -163,21 +180,42 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
         @Override
         public String readLine() {
-            return null;
+            return readLine(null);
         }
 
         @Override
         public String readLine(Prompt prompt) {
+            Console console = System.console();
+            if(console != null) {
+                if(prompt != null) {
+                    console.writer().print(Parser.fromCodePoints(prompt.getANSI()));
+                    console.writer().flush();
+                }
+                return console.readLine();
+            }
             return null;
         }
 
         @Override
         public Key read() {
-            return null;
+            return read(null);
         }
 
         @Override
         public Key read(Prompt prompt) {
+            Console console = System.console();
+            if(console != null) {
+                try {
+                    if(prompt != null) {
+                        console.writer().print(Parser.fromCodePoints(prompt.getANSI()));
+                        console.writer().flush();
+                    }
+                    int input = console.reader().read();
+                    return Key.getKey(new int[]{input});
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             return null;
         }
 
@@ -198,6 +236,10 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
         @Override
         public void clear() {
+            Console console = System.console();
+            if(console != null) {
+                console.writer().write(Parser.fromCodePoints(ANSI.CLEAR_SCREEN));
+            }
         }
     }
 }
