@@ -111,7 +111,10 @@ public final class ProcessedOption {
         this.validator = optionValidator;
         this.activator = activator;
         this.askIfNotSet = askIfNotSet;
-        this.selectorType = selectorType;
+        if(selectorType != null)
+            this.selectorType = selectorType;
+        else
+            this.selectorType = SelectorType.NO_OP;
         if(parser != null)
             this.parser = parser;
         else
