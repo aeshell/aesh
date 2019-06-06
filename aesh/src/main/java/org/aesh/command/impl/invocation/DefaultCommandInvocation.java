@@ -46,7 +46,7 @@ import org.aesh.utils.ANSI;
 public class DefaultCommandInvocation implements CommandInvocation{
 
 
-    private final Shell shell = new DefaultShell();
+    private final Shell shell;
 
     private final CommandRuntime<DefaultCommandInvocation> processor;
 
@@ -56,10 +56,15 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
     public DefaultCommandInvocation(CommandRuntime< DefaultCommandInvocation> processor,
                                     CommandInvocationConfiguration config,
-                                    CommandContainer<DefaultCommandInvocation> commandContainer) {
+                                    CommandContainer<DefaultCommandInvocation> commandContainer,
+                                    Shell shell) {
         this.processor = processor;
         this.config = config;
         this.commandContainer = commandContainer;
+        if(shell != null)
+            this.shell = shell;
+        else
+            this.shell = new DefaultShell();
     }
 
     @Override

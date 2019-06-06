@@ -33,16 +33,16 @@ import org.aesh.terminal.Attributes;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-class ShellImpl implements Shell {
+public class ShellImpl implements Shell {
 
     private Connection connection;
     private final PagingSupport pagingSupport;
 
-    ShellImpl(Connection connection) {
+    public ShellImpl(Connection connection) {
         this(connection, false);
     }
 
-    ShellImpl(Connection connection, boolean search) {
+    public ShellImpl(Connection connection, boolean search) {
         this.connection = connection;
         pagingSupport = new PagingSupport(connection, search);
     }

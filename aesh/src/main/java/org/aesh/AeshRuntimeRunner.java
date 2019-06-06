@@ -32,6 +32,9 @@ import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.readline.ShellImpl;
+import org.aesh.readline.tty.terminal.TerminalConnection;
+import org.aesh.terminal.Connection;
 
 /**
  * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
@@ -43,6 +46,7 @@ public class AeshRuntimeRunner {
     private CommandRuntime runtime;
 
     private String[] args;
+    private boolean interactive = false;
 
     private AeshRuntimeRunner() {
     }
@@ -61,19 +65,30 @@ public class AeshRuntimeRunner {
         return this;
     }
 
+    public AeshRuntimeRunner interactive(boolean interactive) {
+        this.interactive = interactive;
+        return this;
+    }
+
     public AeshRuntimeRunner args(String[] args) {
         this.args = args;
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     public void execute() {
+        Connection connection = null;
         if (command == null && runtime == null)
             throw new RuntimeException("Command needs to be added");
         try {
             if (runtime == null) {
-                runtime = AeshCommandRuntimeBuilder.builder().
-                        commandRegistry(AeshCommandRegistryBuilder.builder().command(command).create())
-                        .build();
+                   AeshCommandRuntimeBuilder builder = AeshCommandRuntimeBuilder.builder();
+                   if(interactive) {
+                       connection = new TerminalConnection();
+                       connection.openNonBlocking();
+                       builder.shell(new ShellImpl(connection));
+                   }
+                   runtime = builder.commandRegistry(AeshCommandRegistryBuilder.builder().command(command).create()).build();
             }
 
             final Set<String> commandNames = runtime.getCommandRegistry().getAllCommandNames();
@@ -108,8 +123,9 @@ public class AeshRuntimeRunner {
             } catch (InterruptedException | IOException e) {
                 System.err.println(e.getMessage());
             }
-
-        } catch (CommandRegistryException e) {
+            if(connection != null)
+                connection.close();
+        } catch (CommandRegistryException | IOException e) {
             throw new RuntimeException("Exception while executing command: " + e.getMessage());
         }
     }

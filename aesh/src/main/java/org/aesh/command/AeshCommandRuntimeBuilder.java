@@ -26,9 +26,10 @@ import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.AeshCommandRuntime;
-import org.aesh.command.impl.invocation.DefaultCommandInvocation;
+import org.aesh.command.impl.invocation.DefaultCommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationBuilder;
+import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.AeshContext;
 import org.aesh.command.impl.activator.AeshCommandActivatorProvider;
@@ -71,6 +72,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     private CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider;
     private AeshContext ctx;
     private CommandInvocationBuilder<CI> commandInvocationBuilder;
+    private Shell shell;
 
     private boolean parseBrackets;
     private EnumSet<OperatorType> operators;
@@ -128,6 +130,10 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
 
     public AeshCommandRuntimeBuilder<CI> commandActivatorProvider(CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider) {
         return apply(c -> c.commandActivatorProvider = commandActivatorProvider);
+    }
+
+    public AeshCommandRuntimeBuilder<CI> shell(Shell shell) {
+        return apply(c -> c.shell = shell);
     }
 
     @SuppressWarnings("unchecked")
@@ -188,7 +194,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         }
 
         if(commandInvocationBuilder == null)
-            commandInvocationBuilder = (CommandInvocationBuilder) DefaultCommandInvocation::new;
+            commandInvocationBuilder = (CommandInvocationBuilder) new DefaultCommandInvocationBuilder(shell);
 
         if (ctx == null) {
             ctx = new DefaultAeshContext();
