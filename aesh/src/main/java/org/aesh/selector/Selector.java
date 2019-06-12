@@ -66,6 +66,68 @@ public class Selector {
 
     private List<String> multiSelect(Shell shell) {
         List<String> out = new ArrayList<>(1);
+        shell.writeln(message+"  [Use arrow up/down to move and space to select. Enter to finish]");
+        for(int i=0; i < defaultValues.size();i++) {
+            if (i == 0)
+                shell.writeln(">[ ] " + defaultValues.get(i));
+            else
+                shell.writeln(" [ ] " + defaultValues.get(i));
+        }
+
+        shell.write(ANSI.CURSOR_HIDE);
+        int[] moveToFirstLine = new int[]{ 27, '[', 48+defaultValues.size(), 'A'};
+        shell.write(moveToFirstLine);
+
+        boolean waitingForEnter = true;
+        int focusLine = 0;
+        while(waitingForEnter) {
+            try {
+                Key in = shell.read();
+                if(in == Key.ENTER || in == Key.ENTER_2 || in == Key.CTRL_M) {
+                    waitingForEnter = false;
+                    int moveDown = defaultValues.size()-focusLine;
+                    shell.write(new int[]{27,'[',48+moveDown,'B'});
+                    shell.write(ANSI.CURSOR_SHOW);
+                }
+                else if(in == Key.SPACE) {
+                    if(!out.contains(defaultValues.get(focusLine))) {
+                        out.add(defaultValues.get(focusLine));
+                        shell.write(">[*]");
+                        shell.write(ANSI.CURSOR_START);
+                    }
+                    else {
+                        out.remove(defaultValues.get(focusLine));
+                        shell.write(">[ ]");
+                        shell.write(ANSI.CURSOR_START);
+                    }
+                }
+                else if(in == Key.UP || in == Key.UP_2) {
+                    if(focusLine > 0) {
+                        focusLine--;
+                        shell.write(' ');
+                        shell.write(MOVE_LINE_UP);
+                        shell.write(ANSI.CURSOR_START);
+                        shell.write('>');
+                        shell.write(ANSI.CURSOR_START);
+                    }
+                }
+                else if(in == Key.DOWN || in == Key.DOWN_2) {
+                    if(focusLine < defaultValues.size()-1) {
+                        focusLine++;
+                        shell.write(' ');
+                        shell.write(MOVE_LINE_DOWN);
+                        shell.write(ANSI.CURSOR_START);
+                        shell.write('>');
+                        shell.write(ANSI.CURSOR_START);
+                    }
+                }
+            }
+            catch(InterruptedException e) {
+                int moveDown = defaultValues.size()-focusLine;
+                shell.write(new int[]{27,'[',48+moveDown,'B'});
+                shell.write(ANSI.CURSOR_SHOW);
+            }
+        }
 
         return out;
     }
@@ -73,7 +135,7 @@ public class Selector {
     private List<String> select(Shell shell) {
         List<String> out = new ArrayList<>(1);
 
-        shell.writeln(message+"  [Use arrow up/down to move and enter to select]");
+        shell.writeln(message+"  [Use arrow up/down to move and enter/space to select]");
         for(int i=0; i < defaultValues.size();i++) {
             if(i == 0)
                 shell.writeln("> "+defaultValues.get(i));
@@ -89,7 +151,7 @@ public class Selector {
         while(waitingForEnter) {
             try {
                 Key in = shell.read();
-                if(in == Key.ENTER || in == Key.ENTER_2 || in == Key.CTRL_M) {
+                if(in == Key.ENTER || in == Key.ENTER_2 || in == Key.CTRL_M || in == Key.SPACE) {
                     waitingForEnter = false;
                     out.add(defaultValues.get(focusLine));
                     int moveDown = defaultValues.size()-focusLine;
