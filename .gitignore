@@ -19,6 +19,7 @@ out
 
 # ignore vim tmp files
 *.swp
+.attach_pid*
 
 # ignore compile/test files
 classes

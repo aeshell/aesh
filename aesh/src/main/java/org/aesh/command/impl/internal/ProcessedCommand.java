@@ -574,7 +574,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if(opt.selectorType() != SelectorType.NO_OP && opt.hasValue())
                 options.add(opt);
         }
-        if(argument != null && argument.selectorType() != SelectorType.NO_OP && argument.hasValue())
+        if(argument != null && argument.selectorType() != SelectorType.NO_OP &&
+                   (argument.hasValue() || argument.getOptionType().equals(OptionType.BOOLEAN)))
             options.add(argument);
         if(arguments != null && arguments.selectorType() != SelectorType.NO_OP && arguments.hasValue())
             options.add(arguments);
