@@ -22,14 +22,14 @@ package org.aesh.selector;
 import org.aesh.command.shell.Shell;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.terminal.Key;
-import org.aesh.utils.ANSI;
+import org.aesh.terminal.utils.ANSI;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.aesh.utils.ANSI.MOVE_LINE_DOWN;
-import static org.aesh.utils.ANSI.MOVE_LINE_UP;
+import static org.aesh.terminal.utils.ANSI.MOVE_LINE_DOWN;
+import static org.aesh.terminal.utils.ANSI.MOVE_LINE_UP;
 
 public class Selector {
 

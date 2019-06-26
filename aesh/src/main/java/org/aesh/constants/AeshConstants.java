@@ -19,7 +19,7 @@
  */
 package org.aesh.constants;
 
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

@@ -24,7 +24,7 @@ import org.aesh.readline.terminal.formatting.TerminalTextStyle;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.tty.Capability;
 import org.aesh.terminal.tty.Size;
-import org.aesh.utils.ANSI;
+import org.aesh.terminal.utils.ANSI;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

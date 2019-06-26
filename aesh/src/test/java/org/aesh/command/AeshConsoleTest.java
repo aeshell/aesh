@@ -44,7 +44,7 @@ import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import org.junit.Test;
 
 import java.io.File;

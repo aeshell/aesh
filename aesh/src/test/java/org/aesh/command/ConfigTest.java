@@ -29,7 +29,7 @@ import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.editing.EditMode;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

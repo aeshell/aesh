@@ -38,7 +38,7 @@ import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.io.Resource;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import org.junit.Test;
 
 import java.io.BufferedReader;

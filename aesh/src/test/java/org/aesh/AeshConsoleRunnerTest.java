@@ -35,7 +35,7 @@ import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import static org.aesh.utils.Config.getLineSeparator;
+import static org.aesh.terminal.utils.Config.getLineSeparator;
 import static org.junit.Assert.assertTrue;
 
 /**

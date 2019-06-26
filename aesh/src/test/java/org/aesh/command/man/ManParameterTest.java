@@ -20,8 +20,8 @@
 package org.aesh.command.man;
 
 import org.aesh.command.man.parser.ManParameter;
-import org.aesh.utils.ANSI;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.ANSI;
+import org.aesh.terminal.utils.Config;
 import org.junit.Assert;
 import org.junit.Test;
 

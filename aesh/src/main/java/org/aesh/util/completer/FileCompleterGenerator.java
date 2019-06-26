@@ -22,9 +22,9 @@ package org.aesh.util.completer;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 
-import static org.aesh.utils.Config.getLineSeparator;
+import static org.aesh.terminal.utils.Config.getLineSeparator;
 
 
 /**

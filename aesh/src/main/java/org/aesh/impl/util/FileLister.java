@@ -28,7 +28,7 @@ import org.aesh.command.impl.converter.FileConverter;
 import org.aesh.io.Resource;
 import org.aesh.readline.util.LoggerUtil;
 import org.aesh.readline.util.Parser;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 
 /**
  * Helper class to list possible files during a complete operation.

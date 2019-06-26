@@ -33,7 +33,7 @@ import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.CommandResult;

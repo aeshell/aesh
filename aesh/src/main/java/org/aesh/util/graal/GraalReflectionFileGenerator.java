@@ -20,7 +20,7 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 
-import static org.aesh.utils.Config.getLineSeparator;
+import static org.aesh.terminal.utils.Config.getLineSeparator;
 
 /**
  * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>

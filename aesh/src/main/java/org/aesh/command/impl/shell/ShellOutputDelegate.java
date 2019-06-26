@@ -6,7 +6,7 @@ import org.aesh.readline.Prompt;
 import org.aesh.readline.terminal.Key;
 import org.aesh.terminal.tty.Size;
 import org.aesh.readline.util.Parser;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>

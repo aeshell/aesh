@@ -34,7 +34,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
-import static org.aesh.utils.Config.getLineSeparator;
+import static org.aesh.terminal.utils.Config.getLineSeparator;
 
 /**
  * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>

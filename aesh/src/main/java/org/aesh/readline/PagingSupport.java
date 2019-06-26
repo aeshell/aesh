@@ -35,8 +35,8 @@ import org.aesh.terminal.Attributes;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.tty.Signal;
 import org.aesh.terminal.tty.Size;
-import org.aesh.utils.ANSI;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.ANSI;
+import org.aesh.terminal.utils.Config;
 
 /**
  *

@@ -20,7 +20,7 @@
 package org.aesh.command.man.parser;
 
 import org.aesh.command.man.FileParser;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 
 import java.io.BufferedReader;
 import java.io.IOException;

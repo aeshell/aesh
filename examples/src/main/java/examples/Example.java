@@ -63,8 +63,8 @@ import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.readline.terminal.formatting.TerminalTextStyle;
 import org.aesh.selector.Selector;
 import org.aesh.selector.SelectorType;
-import org.aesh.utils.ANSI;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.ANSI;
+import org.aesh.terminal.utils.Config;
 
 import java.io.BufferedReader;
 import java.io.File;

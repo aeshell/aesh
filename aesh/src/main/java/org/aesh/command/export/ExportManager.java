@@ -19,8 +19,8 @@
  */
 package org.aesh.command.export;
 
-import org.aesh.utils.Config;
 import org.aesh.readline.util.LoggerUtil;
+import org.aesh.terminal.utils.Config;
 
 import java.io.BufferedReader;
 import java.io.File;

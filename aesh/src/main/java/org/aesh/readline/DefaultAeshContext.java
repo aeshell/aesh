@@ -22,7 +22,7 @@ package org.aesh.readline;
 import org.aesh.command.export.ExportManager;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 
 import java.util.Collections;
 import java.util.Set;

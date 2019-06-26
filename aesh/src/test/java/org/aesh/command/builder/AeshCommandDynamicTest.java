@@ -41,7 +41,7 @@ import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

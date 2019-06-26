@@ -26,7 +26,7 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.terminal.tty.Signal;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.terminal.Connection;
 import org.aesh.readline.util.LoggerUtil;

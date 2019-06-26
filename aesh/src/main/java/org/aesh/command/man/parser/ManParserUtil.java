@@ -19,7 +19,7 @@
  */
 package org.aesh.command.man.parser;
 
-import org.aesh.utils.ANSI;
+import org.aesh.terminal.utils.ANSI;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

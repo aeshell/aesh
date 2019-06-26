@@ -49,7 +49,7 @@ import org.aesh.readline.terminal.formatting.TerminalColor;
 import org.aesh.readline.terminal.formatting.TerminalTextStyle;
 import org.aesh.terminal.tty.Size;
 import org.aesh.tty.TestConnection;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import org.junit.Test;
 
 import java.io.IOException;

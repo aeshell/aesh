@@ -43,7 +43,7 @@ import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.terminal.Connection;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 
 import java.io.File;
 import java.io.FileInputStream;

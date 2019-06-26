@@ -81,7 +81,7 @@
       </dependency>
       <dependency>
          <groupId>org.aesh</groupId>
-         <artifactId>aesh-readline</artifactId>
+         <artifactId>readline</artifactId>
          <version>${readline.version}</version>
       </dependency>
     </dependencies>

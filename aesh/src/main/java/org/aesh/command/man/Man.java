@@ -29,14 +29,14 @@ import org.aesh.command.man.parser.ManFileParser;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
-import org.aesh.utils.ANSI;
+import org.aesh.terminal.utils.ANSI;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 
 /**
  * A Man implementation for Aesh. ref: http://en.wikipedia.org/wiki/Man_page

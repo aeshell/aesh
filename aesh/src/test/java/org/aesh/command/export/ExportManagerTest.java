@@ -19,7 +19,7 @@
  */
 package org.aesh.command.export;
 
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import org.junit.Test;
 
 import java.io.File;

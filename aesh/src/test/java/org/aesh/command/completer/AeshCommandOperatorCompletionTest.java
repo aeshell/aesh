@@ -21,7 +21,7 @@ import org.aesh.readline.ReadlineConsole;
 import org.aesh.readline.terminal.Key;
 import org.aesh.terminal.tty.Size;
 import org.aesh.tty.TestConnection;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;

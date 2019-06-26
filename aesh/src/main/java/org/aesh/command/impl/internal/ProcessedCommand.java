@@ -35,7 +35,7 @@ import org.aesh.command.validator.CommandValidator;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.readline.util.Parser;
 import org.aesh.selector.SelectorType;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 
 import java.util.ArrayList;
 import java.util.Collections;

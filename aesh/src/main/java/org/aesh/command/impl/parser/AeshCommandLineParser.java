@@ -37,8 +37,8 @@ import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedLineIterator;
 import org.aesh.parser.ParsedWord;
-import org.aesh.utils.ANSIBuilder;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.ANSIBuilder;
+import org.aesh.terminal.utils.Config;
 
 import java.util.ArrayList;
 import java.util.List;

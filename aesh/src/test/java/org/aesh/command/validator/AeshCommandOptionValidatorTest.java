@@ -30,7 +30,7 @@ import org.aesh.readline.AeshContext;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.Command;
 import org.aesh.command.CommandResult;

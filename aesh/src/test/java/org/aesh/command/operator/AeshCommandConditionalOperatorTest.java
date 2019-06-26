@@ -40,7 +40,7 @@ import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.ReadlineConsole;
 import org.aesh.tty.TestConnection;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 

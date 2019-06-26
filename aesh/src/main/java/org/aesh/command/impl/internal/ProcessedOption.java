@@ -36,7 +36,7 @@ import org.aesh.readline.AeshContext;
 import org.aesh.io.PipelineResource;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.selector.SelectorType;
-import org.aesh.utils.ANSI;
+import org.aesh.terminal.utils.ANSI;
 
 import java.io.File;
 import java.lang.reflect.Constructor;

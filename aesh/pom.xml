@@ -49,10 +49,14 @@
       </license>
    </licenses>
 
+    <properties>
+        <javaModuleName>org.aesh.aesh</javaModuleName>
+    </properties>
+
    <dependencies>
       <dependency>
          <groupId>org.aesh</groupId>
-         <artifactId>aesh-readline</artifactId>
+         <artifactId>readline</artifactId>
          <version>${readline.version}</version>
       </dependency>
 
@@ -84,10 +88,13 @@
             <artifactId>maven-jar-plugin</artifactId>
             <configuration>
                <archive>
-                  <manifest>
-                     <addClasspath>true</addClasspath>
-                     <mainClass>AeshExample</mainClass>
-                  </manifest>
+                 <manifest>
+                   <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                 </manifest>
+                 <manifestEntries>
+                   <Automatic-Module-Name>${javaModuleName}</Automatic-Module-Name>
+                 </manifestEntries>
+                 <index>true</index>
                </archive>
             </configuration>
             <executions>
@@ -122,7 +129,6 @@
                  <configLocation>config/checkstyle/checkstyle.xml</configLocation>                   
                  <consoleOutput>true</consoleOutput>
                  <failsOnError>true</failsOnError>
-                 <linkXRef>false</linkXRef>
                  <useFile/>
                  <includeTestSourceDirectory>true</includeTestSourceDirectory>
                </configuration>

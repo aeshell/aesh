@@ -35,7 +35,7 @@ import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.ReadlineConsole;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.Config;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;

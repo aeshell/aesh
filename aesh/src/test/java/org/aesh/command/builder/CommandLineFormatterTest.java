@@ -34,10 +34,10 @@ import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.tty.TestConnection;
-import org.aesh.utils.ANSI;
+import org.aesh.terminal.utils.ANSI;
 import org.junit.Test;
 
-import static org.aesh.utils.Config.getLineSeparator;
+import static org.aesh.terminal.utils.Config.getLineSeparator;
 import static org.junit.Assert.assertEquals;
 
 /**

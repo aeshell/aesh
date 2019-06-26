@@ -19,8 +19,8 @@
  */
 package org.aesh.command.man;
 
-import org.aesh.utils.ANSI;
-import org.aesh.utils.Config;
+import org.aesh.terminal.utils.ANSI;
+import org.aesh.terminal.utils.Config;
 import org.aesh.command.man.parser.ManSection;
 import org.junit.Test;
 
