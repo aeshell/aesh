@@ -168,6 +168,8 @@ public class FileResource implements Resource {
 
     @Override
     public InputStream read() throws FileNotFoundException {
+        if(file.getPath().startsWith("~"+File.separatorChar))
+            file = new File(System.getProperty("user.home") + file.getPath().substring(1));
         return new FileInputStream(file);
     }
 
