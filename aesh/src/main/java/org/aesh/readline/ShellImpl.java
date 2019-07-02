@@ -113,6 +113,11 @@ public class ShellImpl implements Shell {
     }
 
     @Override
+    public String readLine(String prompt) throws InterruptedException {
+        return readLine(new Prompt(prompt));
+    }
+
+    @Override
     public Key read() throws InterruptedException {
         printCollectedOutput();
         pagingSupport.reset();

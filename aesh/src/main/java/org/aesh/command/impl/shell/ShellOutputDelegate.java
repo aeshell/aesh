@@ -56,6 +56,11 @@ public class ShellOutputDelegate implements Shell {
     }
 
     @Override
+    public String readLine(String prompt) throws InterruptedException {
+        return delegate.readLine(prompt);
+    }
+
+    @Override
     public Key read() throws InterruptedException {
         return delegate.read();
     }

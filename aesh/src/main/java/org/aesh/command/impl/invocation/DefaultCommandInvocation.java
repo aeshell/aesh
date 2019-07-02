@@ -185,7 +185,7 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
         @Override
         public String readLine() {
-            return readLine(null);
+            return readLine(new Prompt());
         }
 
         @Override
@@ -199,6 +199,11 @@ public class DefaultCommandInvocation implements CommandInvocation{
                 return console.readLine();
             }
             return null;
+        }
+
+        @Override
+        public String readLine(String prompt) {
+            return readLine(new Prompt(prompt));
         }
 
         @Override

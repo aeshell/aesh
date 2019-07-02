@@ -82,6 +82,14 @@ public interface Shell {
     String readLine(Prompt prompt) throws InterruptedException;
 
     /**
+     * Blocking call which will return when user press the "enter" key
+     *
+     * @param prompt display prompt
+     * @return input line
+     */
+    String readLine(String prompt) throws InterruptedException;
+
+    /**
      * Blocking call that will return after the first key press
      * @return input
      */
