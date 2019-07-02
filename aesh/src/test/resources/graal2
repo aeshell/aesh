@@ -1,6 +1,6 @@
 [
   {
-    "name" : "class org.aesh.util.graal.GraalReflectionFileGeneratorTest$TestCommand2",
+    "name" : "org.aesh.util.graal.GraalReflectionFileGeneratorTest$TestCommand2",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,

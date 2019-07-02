@@ -84,7 +84,6 @@ public class GraalReflectionFileGeneratorTest {
     }
 
     private CommandLineParser<CommandInvocation> getParser(Class<? extends Command> clazz) {
-        //Class<Command<CommandInvocation>> clazz = loadCommand(command);
         if (clazz != null) {
             CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
             try {

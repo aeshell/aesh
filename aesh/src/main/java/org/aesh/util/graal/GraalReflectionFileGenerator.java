@@ -82,7 +82,7 @@ public class GraalReflectionFileGenerator {
     }
 
     private void appendCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, StringBuilder builder) {
-        builder.append("    \"name\" : \"").append(command.getCommand().getClass().toString()).append("\",").append(getLineSeparator());
+        builder.append("    \"name\" : \"").append(command.getCommand().getClass().getName()).append("\",").append(getLineSeparator());
         appendDefaults(builder);
 
         if(command.getOptions().size() > 0) {
