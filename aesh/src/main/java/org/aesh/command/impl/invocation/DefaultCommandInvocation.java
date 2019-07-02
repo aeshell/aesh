@@ -202,11 +202,6 @@ public class DefaultCommandInvocation implements CommandInvocation{
         }
 
         @Override
-        public String readLine(String prompt) {
-            return readLine(new Prompt(prompt));
-        }
-
-        @Override
         public Key read() {
             return read(null);
         }

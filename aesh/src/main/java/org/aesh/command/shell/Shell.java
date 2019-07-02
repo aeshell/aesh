@@ -87,7 +87,9 @@ public interface Shell {
      * @param prompt display prompt
      * @return input line
      */
-    String readLine(String prompt) throws InterruptedException;
+    default String readLine(String prompt) throws InterruptedException {
+        return readLine(new Prompt(prompt));
+    }
 
     /**
      * Blocking call that will return after the first key press
