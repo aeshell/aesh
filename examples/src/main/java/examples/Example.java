@@ -434,13 +434,16 @@ public class Example {
         private String color;
 
 
+        @Option(selector = SelectorType.SELECT, description = "Set to true or false")
+        private boolean bool;
+
         private Shell shell;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             this.shell = commandInvocation.getShell();
 
-            commandInvocation.println("Color: "+color);
+            commandInvocation.println("Color: "+color+", Bool: "+bool);
 
             List<String> selected = new Selector(SelectorType.SELECT, new String[]{"blue","green", "red" },
                     "Which color do you want? ")

@@ -26,6 +26,8 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.Executable;
 import org.aesh.command.Execution;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.completer.CompleterData;
+import org.aesh.command.impl.completer.NullOptionCompleter;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -54,11 +56,13 @@ import org.aesh.io.Resource;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.AeshContext;
 import org.aesh.readline.Prompt;
+import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.selector.Selector;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -176,8 +180,23 @@ class Executions {
 
             if(cmd.hasSelector()) {
                 for(ProcessedOption option : cmd.getAllSelectors()) {
-                    option.addValues(new Selector(option.selectorType(), option.getDefaultValues(), option.description())
-                                             .doSelect(getCommandInvocation().getShell()));
+                    //if we do not have any default values, check if we can use the completer
+                    if((option.getDefaultValues() == null || option.getDefaultValues().size() == 0) &&
+                               (option.completer() != null && !(option.completer() instanceof NullOptionCompleter))) {
+                        //first create a mock CompleterInvocation, then get all the values
+                        CompleterData completerMock = new CompleterData(null, "", null);
+                        option.completer().complete(completerMock);
+
+
+                        option.addValues(new Selector(option.selectorType(),
+                                completerMock.getCompleterValues().stream().map(TerminalString::getCharacters).collect(Collectors.toList()),
+                                option.description()).doSelect(getCommandInvocation().getShell()));
+
+                    }
+                    else {
+                        option.addValues(new Selector(option.selectorType(), option.getDefaultValues(), option.description())
+                                                 .doSelect(getCommandInvocation().getShell()));
+                    }
                     runtime.populateAskedOption(option);
                 }
             }
