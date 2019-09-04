@@ -571,7 +571,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public List<ProcessedOption> getAllSelectors() {
        List<ProcessedOption>  options = new ArrayList<>();
         for(ProcessedOption opt : getOptions()) {
-            if(opt.selectorType() != SelectorType.NO_OP && opt.hasValue())
+            if(opt.selectorType() != SelectorType.NO_OP && opt.hasValue() && opt.getValue() == null)
                 options.add(opt);
         }
         if(argument != null && argument.selectorType() != SelectorType.NO_OP &&
