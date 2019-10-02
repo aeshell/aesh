@@ -1,10 +1,10 @@
-include::_attributes.adoc[]
-
 = Getting Started
+
+include::_attributes.adoc[]
 
 To use Æsh you need to add it as a dependency to your project:
 
-=== Maven
+== Maven
 ----
 <dependency>
   <groupId>{groupId}</groupId>
@@ -13,7 +13,7 @@ To use Æsh you need to add it as a dependency to your project:
 </dependency>
 ----
 
-=== Gradle
+== Gradle
 ----
   compile \'{grouId}:{artifact}:{version}\'
 ----
