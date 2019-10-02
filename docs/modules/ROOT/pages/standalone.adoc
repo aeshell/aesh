@@ -1,6 +1,7 @@
-include::_attributes.adoc[]
 [[Standalone-Mode]]
 = Standalone Mode
+
+include::attributes.adoc[]
 
 Standalone mode is when you only want to run one command and not have many commands defined in a CLI session.
 Note that it is possible to have more than one command if you create xref:commands.adoc#Subcommand[sub-commands].

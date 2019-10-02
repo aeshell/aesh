@@ -1,6 +1,6 @@
 = Getting Started
 
-include::attributes.adoc[tags={include-tags}]
+include::attributes.adoc[]
 
 To use Æsh you need to add it as a dependency to your project:
 

@@ -1,6 +1,10 @@
+
 :name: Æsh
 
 :groupId: org.aesh
 :artifact: aesh
 :version: 2.4
 
+== Attributes
+
+Here are the attributes!
