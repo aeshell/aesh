@@ -1,0 +1,24 @@
+include::_attributes.adoc[]
+
+= Getting Started
+
+To use Æsh you need to add it as a dependency to your project:
+
+=== Maven
+----
+<dependency>
+  <groupId>{groupId}</groupId>
+  <artifactId>{artifact}</artifactId>
+  <version>{version}</version>
+</dependency>
+----
+
+=== Gradle
+----
+  compile \'{grouId}:{artifact}:{version}\'
+----
+
+Now we need to write some command applications! 
+
+If you want to write standalone (a single command) go to xref:standalone.adoc[Standalone Mode].
+If you are more interested in writing an interactive CLI go to xref:cli.adoc[CLI Mode].
