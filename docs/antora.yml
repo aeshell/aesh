@@ -1,6 +1,7 @@
 name: aesh
 title: Æsh
 version: dev
+start_ROOT: ROOT/index.adoc
 nav:
 - modules/ROOT/nav.adoc
 

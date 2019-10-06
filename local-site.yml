@@ -1,0 +1,24 @@
+runtime:
+  cache_dir: ./.cache/antora
+site:
+  title: Æsh Docs
+  url: https://aeshell.github.io/
+  start_page: aesh::index.adoc
+content:
+  sources:
+  - url: .
+    branches: HEAD
+    start_path: docs
+asciidoc:
+  attributes:
+    experimental: ''
+    idprefix: ''
+    idseparator: '-'
+    linkattrs: ''
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/master/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true
+#output:
+# dir: ./public
+
