@@ -4,6 +4,7 @@
 .settings
 .metadata
 target
+.cache
 
 # ignore IDEA files
 *.iml
