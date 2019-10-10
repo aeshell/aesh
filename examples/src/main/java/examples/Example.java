@@ -426,7 +426,7 @@ public class Example {
 
     }
 
-    @CommandDefinition(name = "select", description = "")
+    @CommandDefinition(name = "select", description = "The select command", generateHelp = true)
     public static class SelectCommand implements Command {
 
         @Option(selector = SelectorType.SELECT, description = "Choose your color",

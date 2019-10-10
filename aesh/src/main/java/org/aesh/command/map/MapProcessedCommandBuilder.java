@@ -49,6 +49,7 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
     private List<String> aliases;
     private CommandActivator activator;
     private boolean lookup;
+    private boolean generateHelp;
 
     private MapProcessedCommandBuilder() {
         options = new ArrayList<>();
@@ -76,6 +77,11 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
 
     public MapProcessedCommandBuilder<CI> description(String usage) {
         this.description = usage;
+        return this;
+    }
+
+    public MapProcessedCommandBuilder<CI> generateHelp(boolean help) {
+        this.generateHelp = help;
         return this;
     }
 
@@ -193,6 +199,7 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
                 description,
                 validator,
                 resultHandler,
+                generateHelp,
                 arguments,
                 options,
                 argument,

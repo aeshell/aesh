@@ -54,6 +54,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private C command;
     private List<String> aliases;
     private CommandActivator activator;
+    private boolean generateHelp;
 
     private ProcessedCommandBuilder() {
         options = new ArrayList<>();
@@ -76,6 +77,11 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
     public ProcessedCommandBuilder<C,CI> description(String usage) {
         this.description = usage;
+        return this;
+    }
+
+    public ProcessedCommandBuilder<C,CI> generateHelp(boolean help) {
+        this.generateHelp = help;
         return this;
     }
 
@@ -180,6 +186,6 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
             resultHandler = new NullResultHandler();
 
         return new ProcessedCommand<>(name, aliases, command, description, validator,
-                resultHandler, arguments, options, arg, populator, activator);
+                resultHandler, generateHelp, arguments, options, arg, populator, activator);
     }
 }

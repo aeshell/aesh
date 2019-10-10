@@ -202,7 +202,16 @@ class Executions {
             }
 
             try {
-                result = executable.execute(getCommandInvocation());
+                //if the generated help option is set, we "execute" it instead of normal execution
+                if(cmd.generateHelp() && cmd.isGenerateHelpOptionSet()) {
+                    T invocation = getCommandInvocation();
+                    invocation.println(invocation.getHelpInfo());
+                    result = CommandResult.SUCCESS;
+                }
+                //else we execute as normal
+                else
+                    result = executable.execute(getCommandInvocation());
+
                 if (getResultHandler() != null) {
                     if (result == null || result.equals(CommandResult.SUCCESS)) {
                         getResultHandler().onSuccess();

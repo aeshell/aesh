@@ -55,6 +55,7 @@ public class MapProcessedCommand<CI extends CommandInvocation> extends Processed
                         String description,
                         CommandValidator<MapCommand<CI>, CI> validator,
                         ResultHandler resultHandler,
+                        boolean generateHelp,
                         ProcessedOption arguments,
                         List<ProcessedOption> options,
                         ProcessedOption argument,
@@ -62,8 +63,8 @@ public class MapProcessedCommand<CI extends CommandInvocation> extends Processed
                         MapProcessedOptionProvider provider,
                         CommandActivator activator,
                         boolean lookup) throws OptionParserException {
-        super(name, aliases, command, description, validator, resultHandler, arguments,
-                options, argument, populator, activator);
+        super(name, aliases, command, description, validator, resultHandler, generateHelp,
+                arguments, options, argument, populator, activator);
         initialized = true;
         this.provider = provider == null ? EMPTY_PROVIDER : provider;
         this.lookup = lookup;

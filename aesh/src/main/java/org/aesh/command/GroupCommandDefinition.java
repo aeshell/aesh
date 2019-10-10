@@ -40,17 +40,61 @@ import org.aesh.command.activator.CommandActivator;
 @Target(TYPE)
 public @interface GroupCommandDefinition {
 
+    /**
+     * Specifies the command name
+     *
+     * @return command name
+     */
     String name();
 
+    /**
+     * Add any aliases connected to this command
+     * Not required
+     *
+     * @return alias names
+     */
     String[] aliases() default {};
 
+    /**
+     * Specify a description of the command
+     *
+     * @return command description
+     */
     String description();
 
+    /**
+     * Automatically generate a help option to the command
+     * Set to false by default
+     *
+     * @return generate help option
+     */
+    boolean generateHelp() default false;
+
+    /**
+     * Specify a CommandValidator that will be called before the command is executed.
+     *
+     * @return CommandValidator
+     */
     Class<? extends CommandValidator> validator() default NullCommandValidator.class;
 
+    /**
+     * Specify a ResultHandler that will be called after the command finished execution.
+     *
+     * @return ResultHandler
+     */
     Class<? extends ResultHandler> resultHandler() default NullResultHandler.class;
 
+    /**
+     * Specify sub commands
+     *
+     * @return sub commands
+     */
     Class<? extends Command>[] groupCommands() default {};
 
+    /**
+     * Specify a CommandActivator which will verify if a command can be activated/accessed.
+     *
+     * @return CommandActivator
+     */
     Class<? extends CommandActivator> activator() default NullCommandActivator.class;
 }

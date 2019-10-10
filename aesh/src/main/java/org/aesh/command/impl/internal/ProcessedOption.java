@@ -377,6 +377,10 @@ public final class ProcessedOption {
             return;
         try {
             Field field = getField(instance.getClass(), fieldName);
+            //for some options, the field might be null. eg generatedHelp
+            //if so we ignore it
+            if(field == null)
+                return;
             if(!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
             if(!Modifier.isPublic(instance.getClass().getModifiers())) {
@@ -477,7 +481,8 @@ public final class ProcessedOption {
         catch(NoSuchFieldException nsfe) {
             if(clazz.getSuperclass() != null)
                 return getField(clazz.getSuperclass(), fieldName);
-            else throw nsfe;
+            else
+                return null;
         }
     }
 

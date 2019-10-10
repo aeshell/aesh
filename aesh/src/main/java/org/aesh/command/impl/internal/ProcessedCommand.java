@@ -52,6 +52,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final ResultHandler resultHandler;
     private final CommandPopulator<Object,CI> populator;
     private CommandActivator activator;
+    private final boolean generateHelp;
 
     private List<ProcessedOption> options;
     private ProcessedOption arguments;
@@ -64,6 +65,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public ProcessedCommand(String name, List<String> aliases, C command,
                             String description, CommandValidator<C,CI> validator,
                             ResultHandler resultHandler,
+                            boolean generateHelp,
                             ProcessedOption arguments, List<ProcessedOption> options,
                             ProcessedOption argument,
                             CommandPopulator<Object,CI> populator, CommandActivator activator) throws OptionParserException {
@@ -71,6 +73,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
         this.validator = validator;
+        this.generateHelp = generateHelp;
         if(resultHandler != null)
             this.resultHandler = resultHandler;
         else
@@ -87,6 +90,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         else
             this.populator = populator;
         setOptions(options);
+
+        if(generateHelp)
+            doGenerateHelp();
 
         parserExceptions = new ArrayList<>();
     }
@@ -159,6 +165,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public C getCommand() {
         return command;
+    }
+
+    public boolean generateHelp() {
+        return generateHelp;
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {
@@ -311,6 +321,36 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         for (ProcessedOption processedOption : getOptions()) {
             processedOption.clear();
         }
+    }
+
+    private void doGenerateHelp() {
+        //only generate a help option if there is no other option already called help
+        if(findOption("help") == null) {
+            try {
+                ProcessedOption helpOption = ProcessedOptionBuilder
+                        .builder()
+                        .name("help")
+                        .shortName('h')
+                        .description("Displays information of the command and all options")
+                        .hasValue(false)
+                        .required(false)
+                        .optionType(OptionType.BOOLEAN)
+                        .type(Boolean.class)
+                        .overrideRequired(true)
+                        .fieldName("generatedHelp")
+                        .build();
+
+                options.add(helpOption);
+            }
+            catch (OptionParserException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public boolean isGenerateHelpOptionSet() {
+       ProcessedOption helpOption = findLongOptionNoActivatorCheck("help");
+        return helpOption != null && helpOption.getValue() != null;
     }
 
     /**

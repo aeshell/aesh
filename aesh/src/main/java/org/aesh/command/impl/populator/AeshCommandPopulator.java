@@ -110,6 +110,10 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
     private void resetField(Object instance, String fieldName, boolean hasValue) {
         try {
             Field field = getField(instance.getClass(), fieldName);
+            //for some options, the field might be null. eg generatedHelp
+            //if so we ignore it
+            if(field == null)
+                return;
             if(!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
             if(field.getType().isPrimitive()) {
@@ -148,7 +152,8 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
         catch(NoSuchFieldException nsfe) {
             if(clazz.getSuperclass() != null)
                 return getField(clazz.getSuperclass(), fieldName);
-            else throw nsfe;
+            else
+                return null;
         }
     }
 
