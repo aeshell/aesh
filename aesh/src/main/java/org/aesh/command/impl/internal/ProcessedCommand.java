@@ -601,11 +601,16 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public boolean hasSelector() {
+        boolean selector = false;
         for(ProcessedOption opt : getOptions()) {
+            // if we have an option that's marked with override required and is set
+            // it should override selector
+            if(opt.doOverrideRequired() && opt.getValue() != null)
+                return false;
             if(opt.selectorType() != SelectorType.NO_OP && opt.hasValue())
-                return true;
+                selector = true;
         }
-        return false;
+        return selector;
      }
 
     public List<ProcessedOption> getAllSelectors() {
