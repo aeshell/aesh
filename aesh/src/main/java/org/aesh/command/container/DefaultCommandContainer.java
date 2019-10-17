@@ -71,6 +71,10 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
         if (getParser().getProcessedCommand().parserExceptions().size() > 0) {
             throw getParser().getProcessedCommand().parserExceptions().get(0);
         }
+
+        if (getParser().parsedCommand() == null) {
+            throw new CommandLineParserException("Command and/or sub-command is not valid!");
+        }
         getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(),
                 invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         return getParser().parsedCommand().getProcessedCommand();
