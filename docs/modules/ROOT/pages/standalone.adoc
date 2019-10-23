@@ -17,8 +17,35 @@ public class RuntimeExample {
   public static void main(String[] args) {
       AeshRuntimeRunner.builder() <1>
                        .command(MyCommand.class) <2>
-                       .args(args) <3>
-                       .execute(); <4>
+                       .interactive(true) <3> //optional
+                       .args(args) <4>
+                       .execute(); <5>
   }
 }
 ----
+<1> Initiate the builder
+<2> Add the class we want to execute, in this case MyCommand
+<3> Set to true if the command requires to do interactive operations (often not needed)
+<3> Add the arguments to Æsh
+<4> Execute
+
+This is everything that is needed to execute a CLI command with Æsh.
+
+Let's say we have package our RuntimeExample and MyCommand classes in a jar called 'mycommands.jar'.
+To run this we do:
+
+> java -cp /path/to/aesh/aesh-version.jar:mycommand.jar RuntimeExample <my options>
+
+== Standalone Example with Maven
+
+For a complete standalone example built with Maven, take a look at link:https://github.com/aeshell/aesh-examples/tree/master/aesh/getting-started-runtime[Getting started Example]
+
+Here we use the shade plugin in Maven to include all the dependenies in our own jar. We also say
+which class should be the main class so that we easily can run the example with:
+
+> java -jar target/getting-started-runtime-0.1.jar --input
+
+or
+
+> java -jar target/getting-started-runtime-0.1.jar --bar Foo
+
