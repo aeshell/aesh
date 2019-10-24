@@ -2,7 +2,7 @@
 = Command
 
 In Æsh we call classes that are set to be executed by Æsh commands. Æsh requires that those classes
-implements the 'Command* interface. It is very easy to implement as it contains only one method, 
+implements the 'Command' interface. It is very easy to implement as it contains only one method, 
 `execute`: 
 
 [source,java]
