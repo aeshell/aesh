@@ -293,6 +293,10 @@ public interface Settings<CI extends CommandInvocation,
 
     Consumer<Void> getInterruptHandler();
 
+    void setConnectionClosedHandler(Consumer<Void> handler);
+
+    Consumer<Void> connectionClosedHandler();
+
     void redrawPromptOnInterrupt(boolean redraw);
 
     boolean isRedrawPromptOnInterrupt();

@@ -224,11 +224,18 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             attr.setLocalFlag(Attributes.LocalFlag.ECHOCTL, false);
             connection.setAttributes(attr);
         }
-        connection.setSignalHandler((Signal t) -> {
-            if(settings.getInterruptHandler() != null) {
+        if(settings.getInterruptHandler() != null) {
+            connection.setSignalHandler((Signal t) -> {
                 settings.getInterruptHandler().accept(null);
-            }
-        });
+            });
+        }
+
+        if(settings.connectionClosedHandler() != null) {
+            connection.setCloseHandler(c -> {
+                settings.connectionClosedHandler().accept(null);
+            });
+        }
+
         this.runtime = generateRuntime();
         read(this.connection, readline);
         processManager = new ProcessManager(this);

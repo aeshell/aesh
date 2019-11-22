@@ -109,6 +109,7 @@ public class SettingsImpl<CI extends CommandInvocation,
     private String[] scanPackages;
     private boolean enableSearchPaging;
     private AliasManager aliasManager;
+    private Consumer<Void> connectionClosedHandler;
 
     SettingsImpl() {
     }
@@ -160,6 +161,7 @@ public class SettingsImpl<CI extends CommandInvocation,
         setScanForCommandPackages(baseSettings.getScanForCommandPackages());
         setEnableSearchInPaging(baseSettings.enableSearchInPaging());
         setAliasManager(baseSettings.aliasManager());
+        setConnectionClosedHandler(baseSettings.connectionClosedHandler());
     }
 
     public void resetToDefaults() {
@@ -781,6 +783,17 @@ public class SettingsImpl<CI extends CommandInvocation,
     @Override
     public Consumer<Void> getInterruptHandler() {
         return interruptHandler;
+    }
+
+    @Override
+    public void setConnectionClosedHandler(Consumer handler) {
+        this.connectionClosedHandler = handler;
+
+    }
+
+    @Override
+    public Consumer<Void> connectionClosedHandler() {
+        return connectionClosedHandler;
     }
 
     @Override

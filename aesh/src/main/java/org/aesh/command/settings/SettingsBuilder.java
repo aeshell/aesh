@@ -264,6 +264,10 @@ public class SettingsBuilder<CI extends CommandInvocation,
         return apply(c -> c.settings.setInterruptHandler(consumer));
     }
 
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> setConnectionClosedHandler(Consumer<Void> consumer) {
+        return apply(c -> c.settings.setConnectionClosedHandler(consumer));
+    }
+
     public SettingsBuilder<CI,CO,COM,VI,OA,CA> setScanForCommandPackages(String... packages) {
         return apply(c -> c.settings.setScanForCommandPackages(packages));
     }
