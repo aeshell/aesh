@@ -285,7 +285,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         }
         // Just call readline and get a callback when line is startBlockingReader
         else {
-            LOGGER.info("not running, returning");
+            if(settings.logging())
+                LOGGER.info("not running, returning");
             conn.close();
             if (settings.quitHandler() != null)
                 settings.quitHandler().quit();
