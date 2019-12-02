@@ -35,7 +35,7 @@ import static org.aesh.terminal.utils.ANSI.MOVE_LINE_UP;
 public class MultiSelect {
 
     private final Shell shell;
-    private final boolean pagination;
+    private boolean pagination;
     private final String message;
     private int maxDisplayedLines = 0;
     private List<SelectLine> lines;
@@ -43,16 +43,27 @@ public class MultiSelect {
     private int focusLine = 0;
 
     public MultiSelect(Shell shell, List<String> defaultValues, String message) {
-        this.shell = shell;
-        this.message = message;
+        this(shell, message);
         lines = new ArrayList<>(defaultValues.size());
         for(String value : defaultValues)
             lines.add(new SelectLine(value, shell.size().getWidth()));
 
         pagination = lines.size()+1 > shell.size().getHeight();
+    }
+
+    public MultiSelect(Shell shell, String message) {
+        this.shell = shell;
+        this.message = message;
+
         maxDisplayedLines = shell.size().getHeight() - 1;
     }
 
+    public void setLines(List<SelectLine> lines) {
+        this.lines = new ArrayList<>(lines.size());
+        this.lines.addAll(lines);
+
+        pagination = lines.size()+1 > shell.size().getHeight();
+    }
 
     public List<String> doSelect() {
         shell.write(ANSI.CURSOR_HIDE);

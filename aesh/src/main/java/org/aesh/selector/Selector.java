@@ -40,6 +40,7 @@ public class Selector {
     public Selector(SelectorType type, String[] defaultValues, String message) {
        this(type, Arrays.asList(defaultValues), message);
     }
+
     public Selector(SelectorType type, List<String> defaultValues, String message) {
         if(type == null)
             throw new IllegalArgumentException("SelectorType can not be null");

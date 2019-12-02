@@ -31,6 +31,12 @@ public class SelectLine {
         this.maxLength = maxLength;
     }
 
+    public SelectLine(String description, boolean selected, int maxLength) {
+        this.description = description;
+        this.maxLength = maxLength;
+        this.selected = selected;
+    }
+
     public void select() {
         selected = !selected;
     }
