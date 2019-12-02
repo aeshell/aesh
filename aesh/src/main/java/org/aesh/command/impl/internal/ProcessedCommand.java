@@ -509,6 +509,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return result;
     }
 
+    public boolean anyOptionsSet() {
+        for(ProcessedOption o : getOptions())
+            if(o.hasValue() && o.getValue() != null || !o.hasValue() && o.getValue() != null)
+                return true;
+
+        return false;
+    }
+
     public boolean hasLongOption(String optionName) {
         for(ProcessedOption o : getOptions()) {
             if (o.name().equals(optionName))

@@ -203,7 +203,7 @@ class Executions {
 
             try {
                 //if the generated help option is set, we "execute" it instead of normal execution
-                if(cmd.generateHelp() && cmd.isGenerateHelpOptionSet()) {
+                if(cmd.generateHelp() && (cmd.isGenerateHelpOptionSet() || !cmd.anyOptionsSet())) {
                     T invocation = getCommandInvocation();
                     invocation.println(invocation.getHelpInfo());
                     result = CommandResult.SUCCESS;
