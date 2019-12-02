@@ -32,7 +32,7 @@
     <groupId>org.aesh</groupId>
     <artifactId>aesh-all</artifactId>
     <packaging>pom</packaging>
-    <version>2.5-SNAPSHOT</version>
+    <version>2.5</version>
     <name>Æsh All</name>
     <description>Æsh (Another Extendable SHell) All</description>
     <scm>
