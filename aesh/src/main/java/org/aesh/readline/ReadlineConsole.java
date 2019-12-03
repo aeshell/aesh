@@ -188,6 +188,13 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     private void doStop(boolean closeConnection) {
         if (running) {
             running = false;
+
+            if(settings.connectionClosedHandler() != null) {
+                connection.setCloseHandler(c -> {
+                    settings.connectionClosedHandler().accept(null);
+                });
+            }
+
             if (history != null) {
                 history.stop();
             }
@@ -227,12 +234,6 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         if(settings.getInterruptHandler() != null) {
             connection.setSignalHandler((Signal t) -> {
                 settings.getInterruptHandler().accept(null);
-            });
-        }
-
-        if(settings.connectionClosedHandler() != null) {
-            connection.setCloseHandler(c -> {
-                settings.connectionClosedHandler().accept(null);
             });
         }
 
