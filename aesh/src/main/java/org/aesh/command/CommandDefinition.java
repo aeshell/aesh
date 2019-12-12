@@ -71,6 +71,13 @@ public @interface CommandDefinition {
     boolean generateHelp() default false;
 
     /**
+     * Will prevent automatic parsing and validation of options and arguments for this command.
+     * All values given after the command will be added to the filed annotated with @Arguments.
+     *
+     * @return true if disable parsing is enabled
+     */
+    boolean disableParsing() default false;
+    /**
      * Specify a CommandValidator that will be called before the command is executed.
      *
      * @return CommandValidator

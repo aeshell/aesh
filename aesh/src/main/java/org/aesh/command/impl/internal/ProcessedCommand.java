@@ -51,6 +51,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final CommandValidator<C,CI> validator;
     private final ResultHandler resultHandler;
     private final CommandPopulator<Object,CI> populator;
+    private final boolean disableParsing;
     private CommandActivator activator;
     private final boolean generateHelp;
 
@@ -65,7 +66,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public ProcessedCommand(String name, List<String> aliases, C command,
                             String description, CommandValidator<C,CI> validator,
                             ResultHandler resultHandler,
-                            boolean generateHelp,
+                            boolean generateHelp, boolean disableParsing,
                             ProcessedOption arguments, List<ProcessedOption> options,
                             ProcessedOption argument,
                             CommandPopulator<Object,CI> populator, CommandActivator activator) throws OptionParserException {
@@ -74,6 +75,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
         this.validator = validator;
         this.generateHelp = generateHelp;
+        this.disableParsing = disableParsing;
         if(resultHandler != null)
             this.resultHandler = resultHandler;
         else
@@ -169,6 +171,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean generateHelp() {
         return generateHelp;
+    }
+
+    public boolean disableParsing() {
+        return disableParsing;
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {

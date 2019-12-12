@@ -311,7 +311,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 boolean argumentMarker = false;
                 while (iter.hasNextWord()) {
                     ParsedWord word = iter.peekParsedWord();
-                    if(argumentMarker) {
+                    if(argumentMarker || processedCommand.disableParsing()) {
                         setArgStatus(word.word());
                         iter.pollParsedWord();
                     }

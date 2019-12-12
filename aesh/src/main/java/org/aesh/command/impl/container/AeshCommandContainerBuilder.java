@@ -86,6 +86,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .command(commandObject)
                     .resultHandler(command.resultHandler())
                     .generateHelp(command.generateHelp())
+                    .disableParsing(command.disableParsing())
                     .create();
 
             processCommand(processedCommand, clazz);

@@ -50,6 +50,7 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
     private CommandActivator activator;
     private boolean lookup;
     private boolean generateHelp;
+    private boolean disableParsing;
 
     private MapProcessedCommandBuilder() {
         options = new ArrayList<>();
@@ -82,6 +83,11 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
 
     public MapProcessedCommandBuilder<CI> generateHelp(boolean help) {
         this.generateHelp = help;
+        return this;
+    }
+
+    public MapProcessedCommandBuilder<CI> disableParsing(boolean disableParsing) {
+        this.disableParsing = disableParsing;
         return this;
     }
 
@@ -200,6 +206,7 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
                 validator,
                 resultHandler,
                 generateHelp,
+                disableParsing,
                 arguments,
                 options,
                 argument,

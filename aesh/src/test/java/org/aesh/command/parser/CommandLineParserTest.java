@@ -341,6 +341,21 @@ public class CommandLineParserTest {
         assertEquals("foo", p4.arguments.get(0));
     }
 
+    @Test
+    public void testDisableParsing() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new DisableParsingCommand()).getParser();
+        DisableParsingCommand disableParsing = (DisableParsingCommand) parser.getCommand();
+
+        parser.populateObject("test --foo bar he --yay boo \"one two three\"", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("--foo", disableParsing.args.get(0));
+        assertEquals("bar", disableParsing.args.get(1));
+        assertEquals("he", disableParsing.args.get(2));
+        assertEquals("--yay", disableParsing.args.get(3));
+        assertEquals("boo", disableParsing.args.get(4));
+        assertEquals("one two three", disableParsing.args.get(5));
+    }
+
     @CommandDefinition(name = "test", description = "a simple test", aliases = {"toto"})
     public class Parser1Test<CI extends CommandInvocation> extends TestingCommand<CI> {
 
@@ -509,6 +524,18 @@ public class CommandLineParserTest {
             return CommandResult.SUCCESS;
         }
 
+    }
+
+    @CommandDefinition(name = "test", description = "", disableParsing = true)
+    public class DisableParsingCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Arguments
+        private List<String> args;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
     }
 
 }
