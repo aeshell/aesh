@@ -24,14 +24,14 @@
    <parent>
         <groupId>org.aesh</groupId>
         <artifactId>aesh-all</artifactId>
-        <version>2.6-SNAPSHOT</version>
+        <version>2.6</version>
    </parent>
    <modelVersion>4.0.0</modelVersion>
 
    <groupId>org.aesh</groupId>
    <artifactId>aesh</artifactId>
    <packaging>jar</packaging>
-   <version>2.6-SNAPSHOT</version>
+   <version>2.6</version>
    <name>Æsh</name>
    <description>Æsh (Another Extendable SHell)</description>
    <scm>
