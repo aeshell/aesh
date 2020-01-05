@@ -56,6 +56,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private CommandActivator activator;
     private boolean generateHelp;
     private boolean disableParsing;
+    private String version;
 
     private ProcessedCommandBuilder() {
         options = new ArrayList<>();
@@ -78,6 +79,11 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
     public ProcessedCommandBuilder<C,CI> description(String usage) {
         this.description = usage;
+        return this;
+    }
+
+    public ProcessedCommandBuilder<C,CI> version(String version) {
+        this.version = version;
         return this;
     }
 
@@ -192,6 +198,6 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
             resultHandler = new NullResultHandler();
 
         return new ProcessedCommand<>(name, aliases, command, description, validator,
-                resultHandler, generateHelp, disableParsing, arguments, options, arg, populator, activator);
+                resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator);
     }
 }

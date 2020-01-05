@@ -71,6 +71,13 @@ public @interface GroupCommandDefinition {
     boolean generateHelp() default false;
 
     /**
+     * If set will automatically generate a version option (--version, -v)
+     * for the command with the given value
+     * @return version
+     */
+    String version() default "";
+
+    /**
      * Specify a CommandValidator that will be called before the command is executed.
      *
      * @return CommandValidator

@@ -87,6 +87,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .resultHandler(command.resultHandler())
                     .generateHelp(command.generateHelp())
                     .disableParsing(command.disableParsing())
+                    .version(command.version())
                     .create();
 
             processCommand(processedCommand, clazz);
@@ -107,6 +108,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .validator((Class<? extends CommandValidator<Command<CI>, CI>>) groupCommand.validator())
                     .command(commandObject)
                     .generateHelp(groupCommand.generateHelp())
+                    .version(groupCommand.version())
                     .resultHandler(groupCommand.resultHandler())
                     .create();
 

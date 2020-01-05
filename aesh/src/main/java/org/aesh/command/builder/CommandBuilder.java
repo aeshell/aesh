@@ -49,6 +49,9 @@ public class CommandBuilder<C extends Command<CommandInvocation>> {
 
     private String name;
     private String description;
+    private boolean generateHelp;
+    private boolean disableParsing;
+    private String version;
     private C command;
     private CommandValidator<C, CommandInvocation> validator;
     private ResultHandler resultHandler;
@@ -80,6 +83,22 @@ public class CommandBuilder<C extends Command<CommandInvocation>> {
     public CommandBuilder<C> description(String description) {
         this.description = description;
         return this;
+    }
+
+    public CommandBuilder<C> version(String version) {
+        this.version = version;
+        return this;
+    }
+
+    public CommandBuilder<C> generateHelp(boolean help) {
+        this.generateHelp = help;
+        return this;
+    }
+
+    public CommandBuilder<C> disableParsing(boolean disableParsing) {
+        this.disableParsing = disableParsing;
+        return this;
+
     }
 
     public CommandBuilder<C> command(C command) {
@@ -195,6 +214,9 @@ public class CommandBuilder<C extends Command<CommandInvocation>> {
                 .aliases(aliases)
                 .command(command)
                 .description(description)
+                .generateHelp(generateHelp)
+                .disableParsing(disableParsing)
+                .version(version)
                 .addOptions(options)
                 .resultHandler(resultHandler)
                 .validator((CommandValidator<Command<CommandInvocation>, CommandInvocation>) validator)

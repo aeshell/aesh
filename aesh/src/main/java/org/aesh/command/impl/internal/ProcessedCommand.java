@@ -54,6 +54,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final boolean disableParsing;
     private CommandActivator activator;
     private final boolean generateHelp;
+    private String version;
 
     private List<ProcessedOption> options;
     private ProcessedOption arguments;
@@ -67,6 +68,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                             String description, CommandValidator<C,CI> validator,
                             ResultHandler resultHandler,
                             boolean generateHelp, boolean disableParsing,
+                            String version,
                             ProcessedOption arguments, List<ProcessedOption> options,
                             ProcessedOption argument,
                             CommandPopulator<Object,CI> populator, CommandActivator activator) throws OptionParserException {
@@ -95,6 +97,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
         if(generateHelp)
             doGenerateHelp();
+
+        if(version != null && version.length() > 0) {
+            this.version = version;
+            doGenerateVersion();
+        }
 
         parserExceptions = new ArrayList<>();
     }
@@ -175,6 +182,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean disableParsing() {
         return disableParsing;
+    }
+
+    public String version() {
+        return version;
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {
@@ -357,6 +368,36 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public boolean isGenerateHelpOptionSet() {
        ProcessedOption helpOption = findLongOptionNoActivatorCheck("help");
         return helpOption != null && helpOption.getValue() != null;
+    }
+
+    private void doGenerateVersion() {
+        //only generate a version option if there is no other option already called version
+        if(findOption("version") == null) {
+            try {
+                ProcessedOption versionOption = ProcessedOptionBuilder
+                        .builder()
+                        .name("version")
+                        .shortName('v')
+                        .description("Displays version information of the command")
+                        .hasValue(false)
+                        .required(false)
+                        .optionType(OptionType.BOOLEAN)
+                        .type(Boolean.class)
+                        .overrideRequired(true)
+                        .fieldName("generatedVersion")
+                        .build();
+
+                options.add(versionOption);
+            }
+            catch (OptionParserException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public boolean isGenerateVersionOptionSet() {
+        ProcessedOption versionOption = findLongOptionNoActivatorCheck("version");
+        return versionOption != null && versionOption.getValue() != null;
     }
 
     /**

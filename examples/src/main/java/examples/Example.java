@@ -293,7 +293,7 @@ public class Example {
         }
     }
 
-    @CommandDefinition(name="ls", description = "[OPTION]... [FILE]...")
+    @CommandDefinition(name="ls", description = "[OPTION]... [FILE]...", version = "1.0")
     public static class LsCommand implements Command {
 
         @Option(shortName = 'f', hasValue = false, description = "set foo to true/false")

@@ -208,6 +208,13 @@ class Executions {
                     invocation.println(invocation.getHelpInfo());
                     result = CommandResult.SUCCESS;
                 }
+                //if the generated help option is set, we "execute" it instead of normal execution
+                else if(cmd.version() != null && (cmd.isGenerateVersionOptionSet())) {
+                    T invocation = getCommandInvocation();
+                    invocation.println(cmd.name()+" version: "+cmd.version());
+                    result = CommandResult.SUCCESS;
+                }
+
                 //else we execute as normal
                 else
                     result = executable.execute(getCommandInvocation());

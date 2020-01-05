@@ -63,7 +63,7 @@ public @interface CommandDefinition {
     String description();
 
     /**
-     * Automatically generate a help option to the command
+     * Automatically generate a help option for the command
      * Set to false by default
      *
      * @return generate help option
@@ -77,6 +77,14 @@ public @interface CommandDefinition {
      * @return true if disable parsing is enabled
      */
     boolean disableParsing() default false;
+
+    /**
+     * If set will automatically generate a version option (--version, -v)
+     * for the command with the given value
+     * @return version
+     */
+    String version() default "";
+
     /**
      * Specify a CommandValidator that will be called before the command is executed.
      *
