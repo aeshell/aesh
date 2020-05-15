@@ -195,6 +195,9 @@ public class DefaultCommandInvocation implements CommandInvocation{
                 if(prompt != null) {
                     console.writer().print(Parser.fromCodePoints(prompt.getANSI()));
                     console.writer().flush();
+                    if (prompt.isMasking()) {
+                        return new String(console.readPassword());
+                    }
                 }
                 return console.readLine();
             }
