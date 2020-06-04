@@ -557,9 +557,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public boolean anyOptionsSet() {
-        for(ProcessedOption o : getOptions())
-            if(o.hasValue() && o.getValue() != null || !o.hasValue() && o.getValue() != null)
+        for(ProcessedOption o : getOptions()) {
+            if (o.hasValue() && o.getValue() != null || !o.hasValue() && o.getValue() != null)
                 return true;
+        }
+        if(hasArgument() && argument.getValue() != null)
+            return true;
+        if(hasArguments() && arguments.getValue() != null)
+            return true;
 
         return false;
     }
@@ -653,6 +658,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean hasArgumentWithNoValue() {
         return argument != null && argument.getValue() == null;
+    }
+
+    public boolean hasArgumentsWithNoValue() {
+        return arguments != null && arguments.getValue() == null;
     }
 
     public boolean hasSelector() {
