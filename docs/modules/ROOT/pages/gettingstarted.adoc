@@ -2,23 +2,77 @@
 
 include::attributes.adoc[]
 
-To use Æsh you need to add it as a dependency to your project:
+The Æsh project is based on two different projects named *aesh-readline* and *aesh*.
 
-== Maven
+== aesh-readline
+
+The https://github.com/aeshell/aesh-readline[aesh-readline] project is library that 
+provides an easy to use API to handle terminal input and output. It is designed 
+to be as flexible as possible so the project do not only support native terminal 
+interaction, but also SSH, Telnet and Websocket.
+For more information take a look at link:readline.html[readline].
+
+== aesh
+
+The https://github.com/aeshell/aesh[aesh] project is a library to easily create 
+commands through a well defined API. Æsh will take care of all input parsing and
+make sure that the commands are populated with the correct input.
+It has numerous features and flexibility, please take a look at 
+link:command.html[Commands], link:option.html[Options] and link:argument.html[Arguments]
+for more information.
+
+== Getting hold of Æsh / Æsh-Readline
+
+First we need to make sure Æsh/Æsh-Readline is added as a dependency to your project:
+
+=== Maven
+
+Æsh
+
 ----
 <dependency>
-  <groupId>{groupId}</groupId>
-  <artifactId>{artifact}</artifactId>
-  <version>{version}</version>
+  <groupId>org.aesh</groupId>
+  <artifactId>aesh</artifactId>
+  <version>2.5</version>
 </dependency>
 ----
 
-== Gradle
+Æsh-Readline
+
 ----
-  compile \'{grouId}:{artifact}:{version}\'
+<dependency>
+  <groupId>org.aesh</groupId>
+  <artifactId>aesh-readline</artifactId>
+  <version>2.0</version>
+</dependency>
+----
+
+
+=== Gradle
+
+Æsh
+
+----
+  compile \'org.aesh:aesh:2.5\'
+----
+
+Æsh-Readline
+
+----
+  compile \'org.aesh:aesh-readline:2.0\'
 ----
 
 Now we need to write some command applications! 
 
 If you want to write standalone (a single command) go to xref:standalone.adoc[Standalone Mode].
 If you are more interested in writing an interactive CLI go to xref:cli.adoc[CLI Mode].
+For more examples, take a look below.
+
+== Examples
+
+Æsh provides a fair range of examples that can be found here: 
+https://github.com/aeshell/aesh-examples[aesh-examples].
+The examples are separated into two categories; Æsh and Readline. 
+The Readline examples depends only on the 'aesh-readline' library while the Æsh examples depends on 'aesh'.
+
+

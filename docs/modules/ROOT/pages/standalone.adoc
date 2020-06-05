@@ -17,7 +17,7 @@ public class RuntimeExample {
   public static void main(String[] args) {
       AeshRuntimeRunner.builder() <1>
                        .command(MyCommand.class) <2>
-                       .interactive(true) <3> //optional
+                       .interactive(true) //optional <3>
                        .args(args) <4>
                        .execute(); <5>
   }
@@ -26,8 +26,8 @@ public class RuntimeExample {
 <1> Initiate the builder
 <2> Add the class we want to execute, in this case MyCommand
 <3> Set to true if the command requires to do interactive operations (often not needed)
-<3> Add the arguments to Æsh
-<4> Execute
+<4> Add the arguments to Æsh
+<5> Execute
 
 This is everything that is needed to execute a CLI command with Æsh.
 
