@@ -7,18 +7,21 @@ site:
 content:
   sources:
   - url: .
-    branches: HEAD
+    branches: master
     start_path: docs
 asciidoc:
   attributes:
-    experimental: ''
-    idprefix: ''
-    idseparator: '-'
-    linkattrs: ''
+    imagesdir: '{moduledir}/assets/images'
+    source-highlighter: highlightjs
+    #    experimental: ''
+    #    idprefix: ''
+    #    idseparator: '-'
+    #    linkattrs: ''
 ui:
   bundle:
     url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/master/raw/build/ui-bundle.zip?job=bundle-stable
     snapshot: true
+  supplemental_files: ./docs/supplemental-ui
 #output:
 # dir: ./public
 
