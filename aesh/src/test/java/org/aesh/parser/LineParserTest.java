@@ -265,6 +265,10 @@ public class LineParserTest {
 
         line = lineParser.parseLine(" \"\"/s-ramp/ext/${type} \\ \"\"");
         assertEquals("/s-ramp/ext/${type} \\ ", line.words().get(0).word());
+
+        line = lineParser.parseLine(" 'test=\"some thing\"' ");
+        assertEquals("test=\"some thing\"", line.words().get(0).word());
+
     }
 
     @Test
