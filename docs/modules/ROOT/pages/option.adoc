@@ -1,0 +1,175 @@
+= Option(s)
+
+include::attributes.adoc[]
+
+When a command line program requires input it is usually given either as option values or link:argument.html[argument(s)].
+Arguments and options are identical in how they work, but with one big difference. Arguments do not require any names, only values.
+For more info on arguments, please have a look at the link:argument.html[argument(s)] page.
+
+An option is used to give some value to the command before it executes. The only requirement for an option is that it must have 
+a name (it can have several aliases). Let's dive into a couple of examples:
+
+[source, java]
+----
+class MyCommand implements Command {
+  
+  @Option <1>
+  private boolean force;
+
+  @Option(name = "country", shortname = 'c', <2>
+          description = "Specify which country using the correct country code")
+  private String countryCode;
+
+  ...
+}
+----
+<1> An option annotation without any values will use the field name as the option name.
+<2> We can override the option name by specifying a name. We can also specify a "shortname"
+
+In the example above, the `country` option would accept the options: ```--country```and ```-c```. 
+The description text would be used when displaying the help/info text for the command.
+
+== Default values, required and more
+
+Æsh supports a lot of different settings for options, lets go through them:
+
+* ```required``` - the required field will make the specific option required to be set upon execution. Note that if a default value is specified that would be used.
+* ```defaultValue``` - the defaultValue field accepts a String array of values that will be set if no value has been given. If a completer is not specificed Æsh will use the default values as completion words.
+* ```hasValue``` - the hasValue field specify if the option requires a value or not, the default is true. If set to false, there is no need to specify any value.
+* ```overrideRequired``` - the overrideRequired field will override options that's specified with ```required``` even if they're not set.
+* ```askIfNotSet``` - the askIfNotSet field will cause the user to be prompted to specify a value for that option if it's not been set already.
+
+== Different type of options
+
+The ```@Option``` annotation specify an option that has one value. Æsh do however support different field types as well. 
+We'll describe them below, just note that all option types support the same settings.
+
+=== OptionList
+
+The ```@OptionList``` annotation allow you to specify a List/Set type.
+
+=== OptionGroup
+
+The ```@OptionGroup``` annotation allow you to specify a Map type to your option. As an example let's say we have defined a option like:
+
+[source, java]
+----
+  @OptionGroup(shortName = 'X')
+  private Map<String,Integer> runtimeSettings;
+----
+
+If we have input like: ```$ mycommand -Xmax=1024 -Xmin=512```
+
+The runtimeSettings property will be populated with: ```max=1024, min=512```
+
+== Completer
+
+Æsh supports specifying custom completers for every option type. To define a custom completer we need to create a class that
+implements the ```OptionCompleter``` interface. Lets show how an already built in completer for booleans look like:
+
+[source, java]
+----
+public class BooleanOptionCompleter implements OptionCompleter<CompleterInvocation> {<1>
+  @Override
+  public void complete(CompleterInvocation completerData) {<2>
+    if(completerData.getGivenCompleteValue().length() == 0) {<3>
+      completerData.addCompleterValue("true");
+      completerData.addCompleterValue("false");
+    }
+    else if("true".startsWith( completerData.getGivenCompleteValue().toLowerCase())) {<4>
+      completerData.addCompleterValue("true");
+
+    }
+    else if("false".startsWith( completerData.getGivenCompleteValue().toLowerCase())) {<5>
+      completerData.addCompleterValue("false");
+    }
+  }
+}
+
+//Option completer
+@Option(completer = BooleanOptionCompleter.class)
+private boolean create;
+----
+<1> The completer class needs to implement OptionCompleter
+<2> The OptionCompleter interface has on method: ```complete(CompleterInvocation)``` which we need to implement
+<3> Here we check if the input (which is defined as the word left of the cursor) has a length of 0, eg no input value. Then we add both "true" and "false" as values to the completer invocation.
+<4> If "true" starts with the given input value, we add "true" to the completer value.
+<5> If "false" starts with the given input value, we add "false" to the completer value.
+
+Æsh provides two built-in completers, one for Boolean types and one for File types.
+
+== Validator
+
+Æsh supports specifying a validator for the input value of options.
+To define a option validator we need to create a class that implements the ```OptionValidator``` interface.
+Here is an example of an integer value validator:
+
+[source, java]
+----
+public class IntValidator implements OptionValidator {
+  @Override
+  public void validate(ValidatorInvocation validatorInvocation) throws OptionValidatorException {<1>
+    if(((Integer) validatorInvocation.getValue()) > 42) <2>
+      throw new OptionValidatorException("Number cannot be higher than 42");<3>
+  }
+}
+
+...
+//Option validator
+@Option(validator = IntValidator.class)
+private Integer whatIsTheMeaningOfLife;
+----
+<1> The class needs to implement one method called ```validate(ValidatorInvocation)```.
+<2> We check if the given value is complying with our validation rules
+<3> If the value is not valid, we throw an ```OptionValidatorException```.
+
+== Activator
+
+If you need to define a complex command there might be cases where an option should not be activated unless other options or option values are set.
+Æsh supports this by defining an implementation of ```OptionActivator```. 
+Here is an example where an option only will be activated if the option bar has been given a value.
+
+[source, java]
+----
+public static class BarActivator implements OptionActivator {
+  @Override
+  public boolean isActivated(ParsedCommand parsedCommand) {<1>
+    ParsedOption bar = parsedCommand.findLongOption("bar");<2>
+    return bar != null && bar.value() != null;
+  }
+}
+//Option activator
+@Option(activator = BarActivator.class)
+private String foo;
+----
+<1> The class needs to implement the method ```isActivated(ParsedCommand)```.
+<2> We try to find an option named "bar" and we verify that bar has been given a value.
+
+== Renderer
+
+Options can also be configured to be rendered differently during completion if wanted. 
+To enable that you need to create a class that implements the ```OptionRenderer``` interface.
+Here is an example where we set an option to be rendered as blue text with bold font.
+
+[source, java]
+----
+public class BlueBoldRenderer implements OptionRenderer {
+  private static final TerminalTextStyle style = new TerminalTextStyle(CharacterType.BOLD);
+  private static final TerminalColor color = new TerminalColor(42, Color.BLUE);
+
+  @Override
+    public TerminalColor getColor() { <1>
+      return color;
+    }
+
+  @Override
+    public TerminalTextStyle getTextType() { <2>
+      return style;
+    }
+}
+//OptionRenderer
+@Option(renderer = BlueBoldRenderer.class)
+private String blue;
+----
+<1> Here we define that the text color should be blue.
+<2> We set the text type to be bold.

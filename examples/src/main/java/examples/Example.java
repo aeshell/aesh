@@ -558,7 +558,7 @@ public class Example {
     public static class BlueBoldRenderer implements OptionRenderer {
 
         private static final TerminalTextStyle style = new TerminalTextStyle(CharacterType.UNDERLINE);
-        private static final TerminalColor color = new TerminalColor(42, Color.DEFAULT);
+        private static final TerminalColor color = new TerminalColor(42, Color.BLUE);
 
         @Override
         public TerminalColor getColor() {

@@ -3,8 +3,8 @@
 * xref:gettingstarted.adoc[Getting Started]
 * xref:standalone.adoc[Standalone Mode]
 * xref:cli.adoc[CLI Mode]
+* xref:command.adoc[Commands]
 * xref:option.adoc[Options]
 * xref:argument.adoc[Arguments]
-* xref:command.adoc[Commands]
 
 
