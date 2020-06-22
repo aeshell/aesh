@@ -72,7 +72,7 @@ public @interface CommandDefinition {
 
     /**
      * Will prevent automatic parsing and validation of options and arguments for this command.
-     * All values given after the command will be added to the filed annotated with @Arguments.
+     * All values given after the command will be added to the field annotated with @Arguments.
      *
      * @return true if disable parsing is enabled
      */

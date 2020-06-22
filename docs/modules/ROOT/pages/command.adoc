@@ -1,8 +1,14 @@
 [[Command]]
-= Command
+= Commands
 
-In Æsh we call classes that are set to be executed by Æsh commands. Æsh requires that those classes
-implements the 'Command' interface. It is very easy to implement as it contains only one method, 
+In Æsh we call classes that are set to be executed by Æsh commands. Æsh require that those classes
+implements the 'Command' interface. In addition Æsh need some meta-data for for command. It is possible
+do specify that using an annotation or a builder pattern. For simplicity we recommend using annotations.
+Read more about those annotations under the <<CommandDefinition>> section.
+
+== The Command interface
+
+It is very easy to implement as it contains only one method, 
 `execute`: 
 
 [source,java]
@@ -11,8 +17,6 @@ public interface Command<T extends CommandInvocation> {
     CommandResult execute(T commandInvocation) throws CommandException, InterruptedException;
 }
 ----
-
-== The execute method
 
 The ```execute``` method will be called when the command it set to be executed by Æsh. It has one argument 
 'CommandInvocation' which provides the command with useful methods to easily read and write data to and 
@@ -23,6 +27,34 @@ executes as expected, it should return 'SUCCESS'. If any unexpected exception ha
 'FAILURE'.
 The 'CommandResult' value is used by Æsh in cases where commands are executed with operators and pipelines.
 Read more how this works in xref:operators.adoc[Operators and Pipelines].
+
+== CommandDefinition
+
+A command also need to specify it's command definition by annotating the command with `@CommandDefinition`.
+With the `CommandDefinition` annotaiton you define the name and description of the command.
+You can also specify aliases, sub-commands (See SubCommands for more info) and automatically generate help info:
+
+[source,java]
+----
+@CommandDefinition(name="test", <1>
+                   description = "Here we write a description for the command",<2>
+                   aliases = ["testing", "tests"], <3>
+                   generateHelp = true, <4>
+                   version = "1.0", <5>
+                   disableParsing = false, <6>
+                   validator = ..., <7>
+                   resultHandler = ..., <8>
+                   activator = ...) <9>
+public static class TestCommand implements Command {
+...
+}
+----
+<1> The name of the command. Only the name and description attributes are required to be defined.
+<2> The description of the command. Used when generation help info.
+<3> A command can specify multiple aliases.
+<4> If generateHelp is set to true, Æsh will generate a 'help' propery automatically.
+<5> If version is set, Æsh will generate a 'version' property which will return the current version.
+<6> Some commands 
 
 == CommandInvocation
 
@@ -40,22 +72,5 @@ Some of the most used methods:
  * ```KeyAction input()``` This method will return the first key the user presses. This method will block until that happens or it's interrupted.
  * ```String inputLine()``` This method will return all the input gathered until the user presses `enter`. This method will block until that happens or it's interrupted.
  * ```String inputLine(Prompt prompt)``` Similar to `inputLine()`, in addition you can specify a `prompt` object before the user input.
-
-== CommandDefinition
-
-A command also need to specify it's command definition by annotating the command with `@CommandDefinition`.
-With the `CommandDefinition` annotaiton you define the name and description of the command.
-You can also specify aliases, sub-commands (See SubCommands for more info) and automatically generate help info:
-
-[source,java]
-----
-@CommandDefinition(name="test", 
-                   aliases=["testing", "tests"], //not required
-                   generateHelp=true, //not required
-                   description = "Here we write a description for the command")
-public static class TestCommand implements Command {
-...
-}
-----
 
 

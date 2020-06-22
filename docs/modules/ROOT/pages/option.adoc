@@ -173,3 +173,5 @@ private String blue;
 ----
 <1> Here we define that the text color should be blue.
 <2> We set the text type to be bold.
+
+
