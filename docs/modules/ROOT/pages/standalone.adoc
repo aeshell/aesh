@@ -34,7 +34,13 @@ This is everything that is needed to execute a CLI command with Æsh.
 Let's say we have package our RuntimeExample and MyCommand classes in a jar called 'mycommands.jar'.
 To run this we do:
 
+> java -cp /path/to/aesh/mycommand.jar RuntimeExample <my options>
+
+Note that we here assume that the Æsh library is included in the newly built 'mycommands.jar' 
+(eg using the maven shade plugin). If not, we can run it using:
+
 > java -cp /path/to/aesh/aesh-version.jar:mycommand.jar RuntimeExample <my options>
+
 
 == Standalone Example with Maven
 
@@ -43,9 +49,9 @@ For a complete standalone example built with Maven, take a look at link:https://
 Here we use the shade plugin in Maven to include all the dependenies in our own jar. We also say
 which class should be the main class so that we easily can run the example with:
 
-> java -jar target/getting-started-runtime-0.1.jar --input
+> java -jar target/getting-started-runtime-{aesh-examples-version}.jar --input
 
 or
 
-> java -jar target/getting-started-runtime-0.1.jar --bar Foo
+> java -jar target/getting-started-runtime-{aesh-examples-version}.jar --bar Foo
 

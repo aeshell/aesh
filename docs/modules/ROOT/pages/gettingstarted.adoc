@@ -29,21 +29,23 @@ First we need to make sure Æsh/Æsh-Readline is added as a dependency to your p
 
 Æsh
 
+[subs=attributes+]
 ----
 <dependency>
-  <groupId>org.aesh</groupId>
+  <groupId>{groupId}</groupId>
   <artifactId>aesh</artifactId>
-  <version>2.5</version>
+  <version>{version}</version>
 </dependency>
 ----
 
 Æsh-Readline
 
+[subs=attributes+]
 ----
 <dependency>
-  <groupId>org.aesh</groupId>
+  <groupId>{groupId}</groupId>
   <artifactId>aesh-readline</artifactId>
-  <version>2.0</version>
+  <version>{aesh-readline-version}</version>
 </dependency>
 ----
 
@@ -52,14 +54,16 @@ First we need to make sure Æsh/Æsh-Readline is added as a dependency to your p
 
 Æsh
 
+[subs=attributes+]
 ----
-  compile \'org.aesh:aesh:2.5\'
+  compile \'org.aesh:aesh:{version}\'
 ----
 
 Æsh-Readline
 
+[subs=attributes+]
 ----
-  compile \'org.aesh:aesh-readline:2.0\'
+  compile \'org.aesh:aesh-readline:{aesh-readline-version}\'
 ----
 
 Now we need to write some command applications! 

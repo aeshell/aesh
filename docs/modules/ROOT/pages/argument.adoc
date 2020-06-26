@@ -1,0 +1,53 @@
+= Argument(s)
+
+include::attributes.adoc[]
+
+When a command line program requires input it is usually given either as option values or link:argument.html[argument(s)].
+Arguments and options are identical in how they work, but with one big difference. Arguments do not require any names, only values.
+For more info on arguments, please have a look at the link:argument.html[argument(s)] page.
+
+
+Together with link:option.html[options], arguments are inputs to the command. What differ arguments from options is that they do not have any
+names. Otherwise they work exactly the same way. By default they are usually added as the last arguments. 
+
+Let's 
+
+[source, java]
+----
+class LsCommand implements Command {
+  
+  @Argument(description = "bla bla") <1>
+  private File dir;
+
+  public CommandResult execute(CommandInvocation invo) {
+    ...
+  } 
+
+}
+----
+<1> Here we define an argument which will be populated by Æsh when the command is executed if it is set. 
+Note that in this example Æsh will automatially inject a file completer since it will recognize the File type.
+
+In the example above the command will only accept one argument value, if additional values are given, it will
+give the user an error explaining the user that the command only accepts one argument value.
+
+
+It is also possible to define multiple arguments using the ```@Arguments``` annotation. The example above would look like:
+
+[source, java]
+----
+class LsCommand implements Command {
+  
+  @Arguments(description = "bla bla", required = true) <1>
+  private List<File> dirs;
+
+  public CommandResult execute(CommandInvocation invo) {
+    ...
+  } 
+
+}
+----
+<1> Here we define a list of arguments which accepts one or more values. We also set ```required``` to true so here
+Æsh will throw an error explaining to the user that the command requires one or more argument values if no values are given.
+
+For all the other settings supported by Argument(s) please look at link:option.hmlt[options] as they are otherwise identical.

@@ -6,5 +6,6 @@
 * xref:command.adoc[Commands]
 * xref:option.adoc[Options]
 * xref:argument.adoc[Arguments]
+* xref:native.adoc[Native image]
 
 

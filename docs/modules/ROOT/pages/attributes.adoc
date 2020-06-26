@@ -5,3 +5,7 @@
 :artifact: aesh
 :version: 2.4
 
+:readline-artifact: aesh-readline
+:readline-version: 2.1
+
+:aesh-examples-version: 0.1

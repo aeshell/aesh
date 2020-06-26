@@ -1,0 +1,19 @@
+[[NativeMode]]
+= Native Mode
+
+include::attributes.adoc[]
+
+With the help of link:https://www.graalvm.org/[GraalVM] and it's 
+link:https://www.graalvm.org/docs/reference-manual/native-image/[native image] feature, it is now possible
+to generate a standalone executable from Java code. The native image do not require Java to execute and
+usually starts up faster and require less memory compared to usual Java programs.
+
+Generating these images however is often not straightforward unfortunately as the native image generator
+has some link:https://www.graalvm.org/docs/reference-manual/native-image/#aot-compilation-limitations[limitations]
+that makes it a bit cumbersome.
+
+Luckily Æsh has a built-in utility that will generate a .json file for you to make this a lot easier.
+
+For a complete example please have a look at the 
+link:https://github.com/aeshell/aesh-examples/tree/master/aesh/native-runtime[native runtime] example.
+

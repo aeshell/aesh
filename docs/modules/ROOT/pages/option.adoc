@@ -1,3 +1,4 @@
+[[Option]]
 = Option(s)
 
 include::attributes.adoc[]
