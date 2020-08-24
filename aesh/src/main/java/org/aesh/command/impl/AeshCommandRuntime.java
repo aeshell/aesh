@@ -135,7 +135,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     @Override
-    public void executeCommand(String line) throws CommandNotFoundException,
+    public CommandResult executeCommand(String line) throws CommandNotFoundException,
             CommandLineParserException,
             CommandValidatorException,
             CommandException,
@@ -156,9 +156,10 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             throw cmd;
         }
         Execution exec;
+        CommandResult result = null;
         while ((exec = executor.getNextExecution()) != null) {
             try {
-                exec.execute();
+                result = exec.execute();
             } catch (CommandException cmd) {
                 if (exec.getResultHandler() != null) {
                     exec.getResultHandler().onExecutionFailure(CommandResult.FAILURE, cmd);
@@ -182,6 +183,10 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 throw new RuntimeException(e);
             }
         }
+        if(result != null)
+            return result;
+        else
+            return CommandResult.FAILURE;
     }
 
     private void processAfterInit() {

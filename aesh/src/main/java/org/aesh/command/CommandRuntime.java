@@ -74,7 +74,7 @@ public interface CommandRuntime<CI extends CommandInvocation> {
      * @throws java.lang.InterruptedException
      * @throws java.io.IOException
      */
-    void executeCommand(String line) throws CommandNotFoundException,
+    CommandResult executeCommand(String line) throws CommandNotFoundException,
             CommandLineParserException,
             OptionValidatorException,
             CommandValidatorException,

@@ -26,6 +26,7 @@ import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.parser.CommandLineParserException;
@@ -70,13 +71,13 @@ public class AeshRuntimeRunner {
         return this;
     }
 
-    public AeshRuntimeRunner args(String[] args) {
+    public AeshRuntimeRunner args(String... args) {
         this.args = args;
         return this;
     }
 
     @SuppressWarnings("unchecked")
-    public void execute() {
+    public CommandResult execute() {
         Connection connection = null;
         if (command == null && runtime == null)
             throw new RuntimeException("Command needs to be added");
@@ -99,7 +100,7 @@ public class AeshRuntimeRunner {
 
             final String commandName = commandNames.iterator().next();
             StringBuilder sb = new StringBuilder(commandName);
-            if (args.length > 0) {
+            if (args != null && args.length > 0) {
                 sb.append(" ");
                 if (args.length == 1) {
                     sb.append(args[0]);
@@ -114,8 +115,9 @@ public class AeshRuntimeRunner {
                 }
             }
 
+            CommandResult result = null;
             try {
-                runtime.executeCommand(sb.toString());
+                result = runtime.executeCommand(sb.toString());
             } catch (CommandNotFoundException e) {
                 System.err.println("Command not found: " + sb.toString());
             } catch (CommandException | CommandLineParserException | CommandValidatorException | OptionValidatorException e) {
@@ -125,6 +127,8 @@ public class AeshRuntimeRunner {
             }
             if(connection != null)
                 connection.close();
+
+            return result;
         } catch (CommandRegistryException | IOException e) {
             throw new RuntimeException("Exception while executing command: " + e.getMessage());
         }
