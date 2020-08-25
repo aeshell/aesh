@@ -62,12 +62,71 @@ public class AeshCommandRequiredTest {
         console.setPrompt(new Prompt(""));
         console.start();
 
-        connection.read("req --reset-configuration="+ Config.getLineSeparator());
-        connection.assertBufferEndsWith("Option reset-configuration was specified, but no value was given."
+        connection.read("req "+ Config.getLineSeparator());
+        Thread.sleep(200);
+        connection.assertBufferEndsWith("Option: --reset-configuration is required for this command."
                 +Config.getLineSeparator());
 
         console.stop();
     }
+
+    @Test
+    public void testArgumentAndOptionRequired() throws Exception {
+        TestConnection connection = new TestConnection(false);
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(ReqCommand2.class)
+                .create();
+
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt(""));
+        console.start();
+
+        connection.read("req2 --reset-configuration=false"+ Config.getLineSeparator());
+        Thread.sleep(200);
+        connection.assertBufferEndsWith("Argument 'arg' is required for this command."
+                +Config.getLineSeparator());
+
+        console.stop();
+    }
+
+    @Test
+    public void testArgumentAndOptionRequiredGroupCommand() throws Exception {
+        TestConnection connection = new TestConnection(false);
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(GroupReqCommand.class)
+                .create();
+
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                OptionActivator, CommandActivator> settings =
+                SettingsBuilder.builder()
+                        .logging(true)
+                        .connection(connection)
+                        .commandRegistry(registry)
+                        .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt(""));
+        console.start();
+
+        connection.read("group req2 --reset-configuration=false"+ Config.getLineSeparator());
+        Thread.sleep(200);
+        connection.assertBufferEndsWith("Argument 'arg' is required for this command."
+                +Config.getLineSeparator());
+
+        console.stop();
+    }
+
+
 
     @CommandDefinition(name = "req", description = "")
     public static class ReqCommand implements Command {
@@ -86,4 +145,35 @@ public class AeshCommandRequiredTest {
             return CommandResult.SUCCESS;
         }
     }
+
+    @GroupCommandDefinition(name = "group", description = "", groupCommands = {ReqCommand2.class})
+    public static class GroupReqCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+
+    @CommandDefinition(name = "req2", description = "")
+    public static class ReqCommand2 implements Command {
+
+        @Option(name = "reset-configuration", required = true)
+        private boolean resetConfiguration;
+
+        @Option
+        private String foo;
+
+        @Argument(required = true)
+        private String arg;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            commandInvocation.println("resetConfiguration is: "+resetConfiguration+", arg is:"+arg);
+            return CommandResult.SUCCESS;
+        }
+    }
+
+
 }
