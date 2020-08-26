@@ -62,8 +62,8 @@ public class AeshCommandInvocationServiceTest {
                 .command(new BarCommand())
                 .create();
 
-        Settings<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings = SettingsBuilder.<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+        Settings<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation<Object,Command<FooCommandInvocation>>,
+                        OptionActivator, CommandActivator> settings = SettingsBuilder.<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation<Object,Command<FooCommandInvocation>>,
                         OptionActivator, CommandActivator>builder()
                 .commandRegistry(registry)
                 .connection(connection)
@@ -97,11 +97,11 @@ class BarCommand implements Command<FooCommandInvocation> {
 }
 
 
-class FooCommandInvocation<CI extends CommandInvocation> implements CommandInvocation {
+class FooCommandInvocation implements CommandInvocation {
 
-    private final CommandInvocation<CI> commandInvocation;
+    private final CommandInvocation commandInvocation;
 
-    FooCommandInvocation(CommandInvocation<CI> commandInvocation) {
+    FooCommandInvocation(CommandInvocation commandInvocation) {
         this.commandInvocation = commandInvocation;
     }
 
@@ -172,7 +172,7 @@ class FooCommandInvocation<CI extends CommandInvocation> implements CommandInvoc
     }
 
     @Override
-    public Executor<CI> buildExecutor(String line) throws CommandNotFoundException,
+    public Executor<? extends CommandInvocation> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException, OptionValidatorException, CommandValidatorException, IOException {
         return commandInvocation.buildExecutor(line);
     }
@@ -183,8 +183,7 @@ class FooCommandInvocation<CI extends CommandInvocation> implements CommandInvoc
     }
 }
 
-@SuppressWarnings("unchecked")
-class FooCommandInvocationProvider implements CommandInvocationProvider<CommandInvocation> {
+class FooCommandInvocationProvider implements CommandInvocationProvider<FooCommandInvocation> {
     @Override
     public FooCommandInvocation enhanceCommandInvocation(CommandInvocation commandInvocation) {
         return new FooCommandInvocation(commandInvocation);

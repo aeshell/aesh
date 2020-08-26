@@ -41,7 +41,7 @@ import org.aesh.readline.action.KeyAction;
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
-public final class AeshCommandInvocation implements CommandInvocation<AeshCommandInvocation> {
+public final class AeshCommandInvocation implements CommandInvocation {
 
     private final Console console;
     private final Shell shell;
