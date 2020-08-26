@@ -83,6 +83,27 @@ public interface CommandRuntime<CI extends CommandInvocation> {
             IOException;
 
     /**
+     * Execute multiple lines sequentially.
+     * If a line return CommandResult.FAILURE it will ignore the remaining lines.
+     *
+     * @param lines
+     * @throws CommandNotFoundException
+     * @throws CommandLineParserException
+     * @throws OptionValidatorException
+     * @throws CommandValidatorException
+     * @throws CommandException
+     * @throws java.lang.InterruptedException
+     * @throws java.io.IOException
+     */
+    CommandResult executeCommand(String... lines) throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException,
+            CommandException,
+            InterruptedException,
+            IOException;
+
+    /**
      * Returns the aesh context.
      *
      * @return The aesh context.

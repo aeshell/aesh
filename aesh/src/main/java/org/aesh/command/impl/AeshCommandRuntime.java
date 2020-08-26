@@ -189,6 +189,19 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             return CommandResult.FAILURE;
     }
 
+    @Override
+    public CommandResult executeCommand(String... lines) throws CommandNotFoundException, CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException, IOException {
+        if(lines == null || lines.length == 0)
+            throw new CommandException("No input lines");
+        CommandResult result = null;
+        for(String line : lines) {
+            result = executeCommand(line);
+            if(result == CommandResult.FAILURE)
+                return result;
+        }
+        return result;
+    }
+
     private void processAfterInit() {
         try {
             for (String commandName : registry.getAllCommandNames()) {
