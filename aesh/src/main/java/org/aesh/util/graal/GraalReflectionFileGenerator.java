@@ -17,8 +17,15 @@ package org.aesh.util.graal;
 
 import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.parser.AeshOptionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.aesh.terminal.utils.Config.getLineSeparator;
 
@@ -27,82 +34,83 @@ import static org.aesh.terminal.utils.Config.getLineSeparator;
  */
 public class GraalReflectionFileGenerator {
 
-    private boolean booleanOption = false;
-    private boolean fileOption = false;
-    private boolean hasOptions = false;
+    Set<String> klasses = new HashSet<>();
 
-    public String generateReflection(CommandLineParser<CommandInvocation> parser) {
-        StringBuilder builder = new StringBuilder("[").append(getLineSeparator());
-        parseCommand(parser.getProcessedCommand(), builder);
-        if(parser.isGroupCommand())
-            for(CommandLineParser<CommandInvocation> child : parser.getAllChildParsers()) {
-                builder.append("  },").append(getLineSeparator());
-                parseCommand(child.getProcessedCommand(), builder);
+    public GraalReflectionFileGenerator() {
+        klasses.add(AeshOptionParser.class.getName());
+    }
+
+    public void generateReflection(CommandLineParser<CommandInvocation> parser, Writer w) throws IOException {
+        w.append('[').append(getLineSeparator());
+        processCommand(parser, w);
+        appendOptions(w);
+        w.append(getLineSeparator()).append("]");
+    }
+
+    private void processCommand(CommandLineParser<CommandInvocation> parser, Writer w) throws IOException {
+        parseCommand(parser.getProcessedCommand(), w);
+        if (parser.isGroupCommand()) {
+            for (CommandLineParser<CommandInvocation> child : parser.getAllChildParsers()) {
+                w.append("  },").append(getLineSeparator());
+                processCommand(child, w);
             }
-        if(hasOptions)
-            appendOptions(parser.getProcessedCommand(), builder);
-        else
-            builder.append(getLineSeparator()).append("  }");
-
-        return builder.append(getLineSeparator()).append("]").toString();
-    }
-
-    private void parseCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, StringBuilder builder) {
-        builder.append("  {").append(getLineSeparator());
-        appendCommand(command, builder);
-    }
-
-    private void appendOptions(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, StringBuilder builder) {
-        builder.append("  },").append(getLineSeparator());
-        builder.append("  {").append(getLineSeparator())
-                .append("    \"name\" : \"org.aesh.command.impl.parser.AeshOptionParser\", ").append(getLineSeparator());
-        appendDefaults(builder);
-        builder.append(getLineSeparator()).append("  }");
-        if(booleanOption) {
-            builder.append(',').append(getLineSeparator());
-            builder.append("  {").append(getLineSeparator())
-                    .append("    \"name\" : \"org.aesh.command.impl.completer.BooleanOptionCompleter\", ").append(getLineSeparator());
-            appendDefaults(builder);
-            builder.append(getLineSeparator()).append("  }");
-        }
-        if(fileOption) {
-            builder.append(',').append(getLineSeparator());
-            builder.append("  {").append(getLineSeparator())
-                    .append("    \"name\" : \"org.aesh.command.impl.completer.FileOptionCompleter\", ").append(getLineSeparator());
-            appendDefaults(builder);
-            builder.append(getLineSeparator()).append("  }");
         }
     }
 
-    private void appendDefaults(StringBuilder builder) {
-        builder.append("    \"allDeclaredConstructors\" : true,").append(getLineSeparator())
+    private void parseCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, Writer w) throws IOException {
+        w.append("  {").append(getLineSeparator());
+        appendCommand(command, w);
+    }
+
+    private void appendOptions(Writer w) throws IOException {
+        for (String klass : klasses) {
+            w.append("  },")
+                    .append(getLineSeparator())
+                    .append("  {")
+                    .append(getLineSeparator())
+                    .append("    \"name\" : \"")
+                    .append(klass).append("\", ")
+                    .append(getLineSeparator());
+            appendDefaults(w);
+        }
+        w.append(getLineSeparator()).append("  }");
+    }
+
+    private void appendDefaults(Writer w) throws IOException {
+        w.append("    \"allDeclaredConstructors\" : true,").append(getLineSeparator())
                 .append("    \"allPublicConstructors\" : true,").append(getLineSeparator())
                 .append("    \"allDeclaredMethods\" : true,").append(getLineSeparator())
                 .append("    \"allPublicMethods\" : true");
     }
 
-    private void appendCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, StringBuilder builder) {
-        builder.append("    \"name\" : \"").append(command.getCommand().getClass().getName()).append("\",").append(getLineSeparator());
-        appendDefaults(builder);
-
-        if(command.getOptions().size() > 0) {
-            hasOptions = true;
-            builder.append(",").append(getLineSeparator())
+    private void appendCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, Writer w) throws IOException {
+        w.append("    \"name\" : \"").append(command.getCommand().getClass().getName()).append("\",").append(getLineSeparator());
+        appendDefaults(w);
+        if (command.getActivator() != null) {
+            klasses.add(command.getActivator().getClass().getName());
+        }
+        if (command.getOptions().size() > 0) {
+            w.append(",").append(getLineSeparator())
                     .append("    \"fields\" : [").append(getLineSeparator());
-            for(int i=0; i < command.getOptions().size(); i++) {
-                builder.append("      { \"name\" : \"").append(command.getOptions().get(i).getFieldName()).append("\" }");
-                if(i + 1 < command.getOptions().size())
-                    builder.append(",").append(getLineSeparator());
+            boolean comma = false;
+            for (ProcessedOption option : command.getOptions()) {
+                if (comma)
+                    w.append(",");
                 else
-                    builder.append(getLineSeparator());
-
-                if(command.getOptions().get(i).type().getName().equalsIgnoreCase("boolean"))
-                    booleanOption = true;
-                if(command.getOptions().get(i).type().getName().equalsIgnoreCase("java.io.file")||
-                    command.getOptions().get(i).type().getName().equalsIgnoreCase("org.aesh.io.resource"))
-                    fileOption = true;
+                    comma = true;
+                w.append("      { \"name\" : \"").append(option.getFieldName()).append("\" }");
+                w.append(getLineSeparator());
+                if (option.completer() != null) {
+                    klasses.add(option.completer().getClass().getName());
+                }
+                if (option.activator() != null) {
+                    klasses.add(option.activator().getClass().getName());
+                }
+                if (option.converter() != null) {
+                    klasses.add(option.converter().getClass().getName());
+                }
             }
-            builder.append("    ]").append(getLineSeparator());
+            w.append("    ]").append(getLineSeparator());
         }
     }
 }
