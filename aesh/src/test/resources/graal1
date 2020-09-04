@@ -4,6 +4,18 @@
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
+    "allPublicMethods" : true  },
+  {
+    "name" : "org.aesh.command.impl.activator.NullCommandActivator", 
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true  },
+  {
+    "name" : "org.aesh.command.impl.parser.AeshOptionParser", 
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
     "allPublicMethods" : true
   }
 ]

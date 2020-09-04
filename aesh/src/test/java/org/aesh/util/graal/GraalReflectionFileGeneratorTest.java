@@ -32,6 +32,7 @@ import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringWriter;
 
 import static org.junit.Assert.assertEquals;
 import static org.aesh.terminal.utils.Config.getLineSeparator;
@@ -47,8 +48,9 @@ public class GraalReflectionFileGeneratorTest {
         GraalReflectionFileGenerator generator = new GraalReflectionFileGenerator();
         CommandLineParser<CommandInvocation> parser = getParser(TestCommand1.class);
 
-        String out = generator.generateReflection(parser);
-        assertEquals(readFile("src/test/resources/graal1"), out);
+        StringWriter writer = new StringWriter();
+        generator.generateReflection(parser, writer);
+        assertEquals(readFile("src/test/resources/graal1"), writer.toString());
     }
 
     @Test
@@ -57,8 +59,9 @@ public class GraalReflectionFileGeneratorTest {
         GraalReflectionFileGenerator generator = new GraalReflectionFileGenerator();
         CommandLineParser<CommandInvocation> parser = getParser(TestCommand2.class);
 
-        String out = generator.generateReflection(parser);
-        assertEquals(readFile("src/test/resources/graal2"), out);
+        StringWriter writer = new StringWriter();
+        generator.generateReflection(parser, writer);
+        assertEquals(readFile("src/test/resources/graal2"), writer.toString());
     }
 
     @Test
@@ -67,8 +70,9 @@ public class GraalReflectionFileGeneratorTest {
         GraalReflectionFileGenerator generator = new GraalReflectionFileGenerator();
         CommandLineParser<CommandInvocation> parser = getParser(TestCommand3.class);
 
-        String out = generator.generateReflection(parser);
-        assertEquals(readFile("src/test/resources/graal3"), out);
+        StringWriter writer = new StringWriter();
+        generator.generateReflection(parser, writer);
+        assertEquals(readFile("src/test/resources/graal3"), writer.toString());
     }
 
 

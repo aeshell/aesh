@@ -95,11 +95,11 @@ public class GraalReflectionFileGenerator {
             boolean comma = false;
             for (ProcessedOption option : command.getOptions()) {
                 if (comma)
-                    w.append(",");
+                    w.append(",").append(getLineSeparator());
                 else
                     comma = true;
                 w.append("      { \"name\" : \"").append(option.getFieldName()).append("\" }");
-                w.append(getLineSeparator());
+                //w.append(getLineSeparator());
                 if (option.completer() != null) {
                     klasses.add(option.completer().getClass().getName());
                 }
@@ -110,7 +110,7 @@ public class GraalReflectionFileGenerator {
                     klasses.add(option.converter().getClass().getName());
                 }
             }
-            w.append("    ]").append(getLineSeparator());
+            w.append(getLineSeparator()).append("    ]").append(getLineSeparator());
         }
     }
 }
