@@ -5,3 +5,7 @@ jdk:
 
 notifications:
   irc: chat.freenode.net#aesh
+
+cache:
+  directories:
+  - $HOME/.m2
