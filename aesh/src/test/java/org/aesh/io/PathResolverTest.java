@@ -191,7 +191,7 @@ public class PathResolverTest {
 
         //test3
         actual = PathResolver.resolvePath(
-                new File(tempDir.toFile().getName()+Config.getPathSeparator()+"child*"),
+                new File(tempDir.toFile().getAbsolutePath()+Config.getPathSeparator()+"child*"),
                 new File(Config.getTmpDir()));
 
         assertEquals(expected.size(), actual.size());
