@@ -41,11 +41,30 @@ public class AeshRuntimeRunnerTest {
 
     }
 
+    @Test
+    public void testInstantiatedCommand() throws InterruptedException {
+        Bar1Command bar1Cmd = new Bar1Command();
+
+        CommandResult result = AeshRuntimeRunner.builder().command(bar1Cmd).execute();
+        Thread.sleep(200);
+        assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
+        assertEquals(100, bar1Cmd.getSomeVal());
+
+    }
+
+
     @CommandDefinition(name = "bar1", description = "bar1")
     public static class Bar1Command implements Command {
+        private static int someVal = 0;
+
+        public int getSomeVal() {
+            return someVal;
+        }
+
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
             commandInvocation.println("Hello from Bar1");
+            someVal = 100;
             return CommandResult.SUCCESS;
         }
     }

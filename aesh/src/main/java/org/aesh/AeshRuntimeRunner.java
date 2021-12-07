@@ -30,6 +30,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
@@ -42,9 +43,10 @@ import org.aesh.terminal.Connection;
  */
 public class AeshRuntimeRunner {
 
-    private Class<? extends Command> command;
 
     private CommandRuntime runtime;
+
+    AeshCommandRegistryBuilder registryBuilder = AeshCommandRegistryBuilder.builder();
 
     private String[] args;
     private boolean interactive = false;
@@ -57,7 +59,20 @@ public class AeshRuntimeRunner {
     }
 
     public AeshRuntimeRunner command(Class<? extends Command> command) {
-        this.command = command;
+        try {
+            registryBuilder.command(command);
+        } catch (CommandRegistryException  e) {
+            throw new RuntimeException("Exception while building command: " + e.getMessage());
+        }
+        return this;
+    }
+
+    public AeshRuntimeRunner command(Command commandInstance) {
+        try {
+            registryBuilder.command(commandInstance);
+        } catch (CommandRegistryException  e) {
+            throw new RuntimeException("Exception while building command: " + e.getMessage());
+        }
         return this;
     }
 
@@ -79,17 +94,23 @@ public class AeshRuntimeRunner {
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
         Connection connection = null;
-        if (command == null && runtime == null)
+        CommandRegistry commandRegistry = registryBuilder.create();
+
+        if (commandRegistry.getAllCommandNames().size() == 0 && runtime == null)
             throw new RuntimeException("Command needs to be added");
         try {
+
+
             if (runtime == null) {
-                   AeshCommandRuntimeBuilder builder = AeshCommandRuntimeBuilder.builder();
+                   AeshCommandRuntimeBuilder runtimeBuilder = AeshCommandRuntimeBuilder.builder();
                    if(interactive) {
                        connection = new TerminalConnection();
                        connection.openNonBlocking();
-                       builder.shell(new ShellImpl(connection));
+                       runtimeBuilder.shell(new ShellImpl(connection));
                    }
-                   runtime = builder.commandRegistry(AeshCommandRegistryBuilder.builder().command(command).create()).build();
+
+                   runtime = runtimeBuilder.commandRegistry(commandRegistry).build();
+
             }
 
             final Set<String> commandNames = runtime.getCommandRegistry().getAllCommandNames();
@@ -129,7 +150,7 @@ public class AeshRuntimeRunner {
                 connection.close();
 
             return result;
-        } catch (CommandRegistryException | IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Exception while executing command: " + e.getMessage());
         }
     }
