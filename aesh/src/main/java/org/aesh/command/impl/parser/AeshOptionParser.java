@@ -211,12 +211,7 @@ public class AeshOptionParser implements OptionParser {
             String propertyName =
                     word.substring(name.length(), word.indexOf(EQUALS));
             String value = word.substring(word.indexOf(EQUALS) + 1);
-            if (value.length() < 1)
-                throw new OptionParserException("Option " + currOption.getDisplayName() + ", must have a value");
-            else {
-                currOption.addProperty(propertyName, value);
-                //commandLine.addOption(currOption);
-            }
+            currOption.addProperty(propertyName, value);
         }
         status = Status.NULL;
     }

@@ -92,13 +92,14 @@ public class CommandLineParserTest {
         assertEquals("foo", p1.arguments.get(1));
         assertEquals("bar", p1.arguments.get(2));
 
-        parser.populateObject("test -e beer -DXms=128m -DXmx=512m --X /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        parser.populateObject("test -e beer -DXms=128m -DXmx=512m -DXmm= --X /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertEquals("beer", p1.equal);
         assertEquals("/tmp/file.txt", p1.arguments.get(0));
         assertTrue(p1.enableX);
 
         assertEquals("128m", p1.define.get("Xms"));
         assertEquals("512m", p1.define.get("Xmx"));
+        assertEquals("", p1.define.get("Xmm"));
 
         parser.populateObject("test --equal \"bar bar2\" -DXms=\"128g \" -DXmx=512g\\ m /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertEquals("bar bar2", p1.equal);
