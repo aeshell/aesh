@@ -118,6 +118,22 @@ public class CommandLineParserTest {
         assertEquals("bar", p1.equal);
         assertEquals("g", p1.define.get("f"));
         assertEquals("/tmp/file.txt", p1.arguments.get(0));
+
+        parser = new AeshCommandContainerBuilder<>().create(new Parser1aTest<>()).getParser();
+
+        parser.populateObject("test -f -e bar /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        Parser1aTest p1a = (Parser1aTest) parser.getCommand();
+
+        assertTrue(p1a.foo);
+        assertEquals("bar", p1a.equal);
+        assertEquals("/tmp/file.txt", p1a.arguments.get(0));
+        assertTrue(p1a.define.isEmpty());
+
+        parser.populateObject("test -f -DN1= /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertNull( p1a.equal);
+        assertFalse(p1a.define.isEmpty());
+        assertEquals("foo", p1a.define.get("N1"));
+
     }
 
     @Test
@@ -373,6 +389,28 @@ public class CommandLineParserTest {
         private int connection;
 
         @OptionGroup(shortName = 'D', description = "define properties", required = true)
+        private Map<String,String> define;
+
+        @Arguments
+        private List<String> arguments;
+    }
+
+    @CommandDefinition(name = "test", description = "a simple test", aliases = {"toto"})
+    public class Parser1aTest<CI extends CommandInvocation> extends TestingCommand<CI> {
+
+        @Option(shortName = 'X', name = "X", description = "enable X", hasValue = false)
+        private Boolean enableX;
+
+        @Option(shortName = 'f', name = "foo", description = "enable foo", hasValue = false)
+        private Boolean foo;
+
+        @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
+        private String equal;
+
+        @Option(shortName = 'c')
+        private int connection;
+
+        @OptionGroup(shortName = 'D', description = "define properties", defaultValue = "foo")
         private Map<String,String> define;
 
         @Arguments
