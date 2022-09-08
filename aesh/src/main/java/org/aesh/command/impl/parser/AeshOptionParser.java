@@ -159,8 +159,14 @@ public class AeshOptionParser implements OptionParser {
         if(iterator.isNextWordCursorWord())
             currOption.setCursorValue(true);
         //we know that the option will accept a value, so we can poll the value
-        String word = iterator.pollWord();
-        doAddValueToOption(currOption, word);
+        doAddValueToOption(currOption, iterator.pollWord());
+            //lets try to parse the rest of the optionList if there are more
+            while (status != Status.NULL &&
+                    iterator.hasNextWord() && iterator.peekWord().charAt(0) == currOption.getValueSeparator()) {
+                doAddValueToOption(currOption,iterator.pollWord());
+            }
+            if(currOption.getValueSeparator() != ' ')
+                status = Status.NULL;
     }
 
     private void doAddValueToOption(ProcessedOption currOption, String word) {

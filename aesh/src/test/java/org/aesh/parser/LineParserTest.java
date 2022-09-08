@@ -178,6 +178,11 @@ public class LineParserTest {
 
         line = lineParser.parseLine("..\\..\\..\\..\\..\\..\\..\\temp\\foo.txt");
         assertEquals("..\\..\\..\\..\\..\\..\\..\\temp\\foo.txt", line.words().get(0).word());
+
+        line = lineParser.parseLine("ls -f 'foo','bar' arg");
+        assertEquals("foo", line.words().get(2).word());
+        assertEquals(",bar", line.words().get(3).word());
+        assertEquals("arg", line.words().get(4).word());
     }
 
     @Test

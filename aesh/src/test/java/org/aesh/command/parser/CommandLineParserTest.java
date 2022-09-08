@@ -59,7 +59,7 @@ public class CommandLineParserTest {
     private final InvocationProviders invocationProviders = new AeshInvocationProviders(
             SettingsBuilder.builder()
                     .converterInvocationProvider(new AeshConverterInvocationProvider())
-                    .completerInvocationProvider(new AeshCompleterInvocationProvider())
+                    .completerInvocationProvider(new AeshCompleterInvocationProvider<>())
                     .validatorInvocationProvider(new AeshValidatorInvocationProvider())
                     .optionActivatorProvider(new AeshOptionActivatorProvider())
                     .commandActivatorProvider(new AeshCommandActivatorProvider()).build());
@@ -71,7 +71,7 @@ public class CommandLineParserTest {
         CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new Parser1Test<>()).getParser();
 
         parser.populateObject("test -f -e bar -Df=g /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
-        Parser1Test p1 = (Parser1Test) parser.getCommand();
+        Parser1Test<CommandInvocation> p1 = (Parser1Test<CommandInvocation>) parser.getCommand();
 
         assertTrue(p1.foo);
         assertEquals("bar", p1.equal);
@@ -271,12 +271,19 @@ public class CommandLineParserTest {
     public void testParseCommandLine4() throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new Parser4Test<>()).getParser();
-        Parser4Test p4 = (Parser4Test) parser.getCommand();
+        Parser4Test<CommandInvocation> p4 = (Parser4Test<CommandInvocation>) parser.getCommand();
 
         parser.populateObject("test -o bar1,bar2,bar3 foo", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertEquals("bar1", p4.option.get(0));
         assertEquals("bar3", p4.option.get(2));
         assertEquals(3, p4.option.size());
+
+        parser.populateObject("test -o bar1 -o bar2 -o 'bar3' foo", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("bar1", p4.option.get(0));
+        assertEquals("bar3", p4.option.get(2));
+        assertEquals(3, p4.option.size());
+        assertEquals("foo", p4.arguments.get(0));
+
 
         parser.populateObject("test -o=bar1,bar2,bar3 foo", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertEquals("bar1", p4.option.get(0));
