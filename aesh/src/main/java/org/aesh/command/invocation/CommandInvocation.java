@@ -21,6 +21,8 @@
 package org.aesh.command.invocation;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import org.aesh.command.Executor;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
@@ -82,6 +84,14 @@ public interface CommandInvocation {
      * @throws InterruptedException
      */
     KeyAction input() throws InterruptedException;
+
+    /**
+     * A blocking call with a timeout that will return user input from the terminal
+     *
+     * @return user input or null if it times out
+     * @throws InterruptedException on timeout
+     */
+    KeyAction input(long timeout, TimeUnit unit) throws InterruptedException;
 
     /**
      * A blocking call that will return user input from the terminal

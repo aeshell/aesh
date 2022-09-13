@@ -21,6 +21,7 @@
 package org.aesh.command.impl.invocation;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.container.CommandContainer;
@@ -99,6 +100,11 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public KeyAction input() throws InterruptedException {
         return shell.read();
+    }
+
+    @Override
+    public KeyAction input(long timeout, TimeUnit unit) throws InterruptedException {
+        return shell.read(timeout,unit);
     }
 
     @Override

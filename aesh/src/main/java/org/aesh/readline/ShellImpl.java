@@ -28,6 +28,8 @@ import org.aesh.terminal.tty.Size;
 import org.aesh.terminal.utils.Config;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.aesh.terminal.Attributes;
 
 /**
@@ -113,7 +115,16 @@ public class ShellImpl implements Shell {
     }
 
     @Override
+    public Key read(long timeout, TimeUnit unit) throws InterruptedException {
+        return doRead(timeout,unit);
+    }
+
+    @Override
     public Key read() throws InterruptedException {
+        return doRead(0, null);
+    }
+
+    private Key doRead(long timeout, TimeUnit unit) throws InterruptedException {
         printCollectedOutput();
         pagingSupport.reset();
         ActionDecoder decoder = new ActionDecoder();
@@ -130,7 +141,10 @@ public class ShellImpl implements Shell {
             });
             try {
                 // Wait until interrupted
+                if(unit == null)
                 latch.await();
+                else
+                    latch.await(timeout, unit);
             } finally {
                 connection.setStdinHandler(null);
             }

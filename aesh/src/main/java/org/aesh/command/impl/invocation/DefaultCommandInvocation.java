@@ -21,6 +21,7 @@ package org.aesh.command.impl.invocation;
 
 import java.io.Console;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
@@ -101,6 +102,16 @@ public class DefaultCommandInvocation implements CommandInvocation{
     public KeyAction input() {
         try {
             return getShell().read();
+        }
+        catch (InterruptedException ignored) {
+        }
+        return null;
+    }
+
+    @Override
+    public KeyAction input(long timeout, TimeUnit unit) throws InterruptedException {
+        try {
+            return getShell().read(timeout,unit);
         }
         catch (InterruptedException ignored) {
         }
@@ -206,6 +217,11 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
         @Override
         public Key read() {
+            return read(null);
+        }
+
+        @Override
+        public Key read(long timeout, TimeUnit unit) throws InterruptedException {
             return read(null);
         }
 

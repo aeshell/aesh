@@ -8,6 +8,8 @@ import org.aesh.terminal.tty.Size;
 import org.aesh.readline.util.Parser;
 import org.aesh.terminal.utils.Config;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
  */
@@ -58,6 +60,11 @@ public class ShellOutputDelegate implements Shell {
     @Override
     public Key read() throws InterruptedException {
         return delegate.read();
+    }
+
+    @Override
+    public Key read(long timeout, TimeUnit unit) throws InterruptedException {
+        return delegate.read(timeout,unit);
     }
 
     @Override

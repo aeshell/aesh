@@ -42,6 +42,8 @@ import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
@@ -138,6 +140,11 @@ class FooCommandInvocation implements CommandInvocation {
     @Override
     public KeyAction input() throws InterruptedException {
         return commandInvocation.input();
+    }
+
+    @Override
+    public KeyAction input(long timeout, TimeUnit unit) throws InterruptedException {
+        return commandInvocation.input(timeout, unit);
     }
 
     @Override

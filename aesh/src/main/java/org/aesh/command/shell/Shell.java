@@ -24,6 +24,8 @@ import org.aesh.readline.Prompt;
 import org.aesh.readline.terminal.Key;
 import org.aesh.terminal.tty.Size;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
@@ -96,6 +98,13 @@ public interface Shell {
      * @return input
      */
     Key read() throws InterruptedException;
+
+    /**
+     * Blocking call that will return after the first key press
+     * @return input or null if it times out
+     * @throws InterruptedException when interrupted
+     */
+    Key read(long timeout, TimeUnit unit) throws InterruptedException;
 
     /**
      * Blocking call that will return after the first key press
