@@ -159,7 +159,9 @@ class Executions {
                 }
             }
 
-            if(cmd.hasAskIfNotSet()) {
+            //When we check for askIfNotSet, we also need to make sure we do not have help generated
+            if(cmd.hasAskIfNotSet() &&
+                    !(cmd.generateHelp() && (cmd.isGenerateHelpOptionSet() || !cmd.anyOptionsSet()))) {
                 for(ProcessedOption option : cmd.getAllAskIfNotSet()) {
                     try {
                         if(option.getOptionType().equals(OptionType.ARGUMENT) ||
