@@ -65,9 +65,7 @@ public class FileUtilsTest {
 
     @Test
     public void testSaveFile() throws IOException {
-        File file = File.createTempFile("tmp", ".tmp");
-        file.delete();
-        file.mkdir();
+        File file = Files.createTempDirectory("tmp" + ".tmp").toFile();
         file.deleteOnExit();
         File child = new File(file, "child.txt");
         child.createNewFile();

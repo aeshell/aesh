@@ -22,6 +22,7 @@ package org.aesh.command.completer;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.FileOptionCompleter;
@@ -61,9 +62,7 @@ public class FileOptionCompleterTest {
 
     @Test
     public void testCompleterSingleFile() throws IOException {
-        File file = File.createTempFile("tmp", ".tmp");
-        file.delete();
-        file.mkdir();
+        File file = Files.createTempDirectory("tmp" + ".tmp").toFile();
         file.deleteOnExit();
         File child = new File(file, "child.txt");
         child.createNewFile();
@@ -89,9 +88,7 @@ public class FileOptionCompleterTest {
 
     @Test
     public void testCompleterMultipleFile() throws IOException {
-        File file = File.createTempFile("tmp", ".tmp");
-        file.delete();
-        file.mkdir();
+        File file = Files.createTempDirectory("tmp" + ".tmp").toFile();
         file.deleteOnExit();
         File child = new File(file, "child.txt");
         child.createNewFile();
@@ -111,9 +108,7 @@ public class FileOptionCompleterTest {
 
     @Test
     public void testCompleterMultipleDirectory() throws IOException {
-        File file = File.createTempFile("tmp", ".tmp");
-        file.delete();
-        file.mkdir();
+        File file = Files.createTempDirectory("tmp" + ".tmp").toFile();
         file.deleteOnExit();
         File child = new File(file, "child");
         child.mkdir();

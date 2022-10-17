@@ -50,9 +50,7 @@ public class FileListerTest {
 
     @Before
     public void before() throws IOException {
-        File tmpWorkingDir = File.createTempFile("temp", ".FileListerTest");
-        tmpWorkingDir .delete();
-        tmpWorkingDir.mkdirs();
+        File tmpWorkingDir = Files.createTempDirectory("temp" + ".FileListerTest").toFile();
         workingDir = new FileResource(tmpWorkingDir);
     }
 
