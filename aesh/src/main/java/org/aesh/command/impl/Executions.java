@@ -192,12 +192,12 @@ class Executions {
 
                         option.addValues(new Selector(option.selectorType(),
                                 completerMock.getCompleterValues().stream().map(TerminalString::getCharacters).collect(Collectors.toList()),
-                                option.description()).doSelect(getCommandInvocation().getShell()));
+                                option.description()).performSelection(getCommandInvocation().getShell()));
 
                     }
                     else {
                         option.addValues(new Selector(option.selectorType(), option.getDefaultValues(), option.description())
-                                                 .doSelect(getCommandInvocation().getShell()));
+                                                 .performSelection(getCommandInvocation().getShell()));
                     }
                     runtime.populateAskedOption(option);
                 }

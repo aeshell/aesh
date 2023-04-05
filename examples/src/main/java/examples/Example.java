@@ -447,7 +447,7 @@ public class Example {
 
             List<String> selected = new Selector(SelectorType.SELECT, new String[]{"blue","green", "red" },
                     "Which color do you want? ")
-                    .doSelect(commandInvocation.getShell());
+                    .performSelection(commandInvocation.getShell());
 
             if(selected.size() > 0)
                 commandInvocation.println("You selected: "+selected.get(0));

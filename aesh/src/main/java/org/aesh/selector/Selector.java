@@ -41,22 +41,45 @@ public class Selector {
        this(type, Arrays.asList(defaultValues), message);
     }
 
+    /**
+     * Refactoring using: Extract Method
+     * For better Readability and Code Understanding I used the Extract Method for Refactoring the below code
+     * validateSelectorType and initializeDefaultValues methods were extracted from the constructor.
+     * @param type
+     * @param defaultValues
+     * @param message
+     */
     public Selector(SelectorType type, List<String> defaultValues, String message) {
-        if(type == null)
-            throw new IllegalArgumentException("SelectorType can not be null");
-       this.type = type;
-       this.defaultValues = new ArrayList<>();
-       if(defaultValues != null)
-           this.defaultValues.addAll(defaultValues);
-
-       this.message = message;
+        this.type = validateSelectorType(type);
+        this.defaultValues = initializeDefaultValues(defaultValues);
+        this.message = message;
     }
 
-    public List<String> doSelect(Shell shell) throws InterruptedException {
+    private SelectorType validateSelectorType(SelectorType type) {
+        if (type == null)
+            throw new IllegalArgumentException("SelectorType can not be null");
+        return type;
+    }
+
+    private ArrayList<String> initializeDefaultValues(List<String> defaultValues) {
+        ArrayList<String> values = new ArrayList<>();
+        if (defaultValues != null)
+            values.addAll(defaultValues);
+        return values;
+    }
+
+    /**
+     * Refactoring using: Renamed method
+     * doSelect was renamed to performSelection, for better readability.
+     * @param shell
+     * @return List of Strings
+     * @throws InterruptedException
+     */
+    public List<String> performSelection(Shell shell) throws InterruptedException {
        if(type == SelectorType.INPUT)
            return input(shell);
        else if(type == SelectorType.PASSWORD)
-           return passwd(shell);
+           return password(shell);
        else if(type == SelectorType.SELECT)
            return select(shell);
        else if(type == SelectorType.SELECTIONS)
@@ -70,64 +93,114 @@ public class Selector {
         return multiSelect.doSelect();
     }
 
+
+    /**
+     * Refactoring using: Decompose conditional
+     * select method was having Complicated conditional logic with their actions,
+     * make code harder to read and understand, So I Introduced new methods for conditional logic,
+     * as well as action block and gave them meaningful names, then replaced that conditional logic with,
+     * newly created method calls! printDefaultValues(), handleKeyPress(), isSelectionKey(), finalizeSelection(),
+     * isArrowUp(), isArrowDown(), moveFocusUp(), and moveFocusDown() methods used
+     * @param shell
+     * @return List of Strings
+     */
     private List<String> select(Shell shell) {
         List<String> out = new ArrayList<>(1);
 
-        shell.writeln(message+"  [Use arrow up/down to move and enter/space to select]");
-        for(int i=0; i < defaultValues.size();i++) {
-            if(i == 0)
-                shell.writeln("> "+defaultValues.get(i));
-            else
-                shell.writeln("  "+defaultValues.get(i));
-        }
+        printDefaultValues(shell);
+
         shell.write(ANSI.CURSOR_HIDE);
-        int[] moveToFirstLine = new int[]{ 27, '[', 48+defaultValues.size(), 'A'};
+        int[] moveToFirstLine = new int[]{27, '[', 48 + defaultValues.size(), 'A'};
         shell.write(moveToFirstLine);
 
         boolean waitingForEnter = true;
         int focusLine = 0;
-        while(waitingForEnter) {
+        while (waitingForEnter) {
             try {
-                Key in = shell.read();
-                if(in == Key.ENTER || in == Key.ENTER_2 || in == Key.CTRL_M || in == Key.SPACE) {
+                Key key = shell.read();
+                handleKeyPress(shell, out, key, focusLine);
+                if (isSelectionKey(key)) {
                     waitingForEnter = false;
-                    out.add(defaultValues.get(focusLine));
-                    int moveDown = defaultValues.size()-focusLine;
-                    shell.write(new int[]{27,'[',48+moveDown,'B'});
-                    shell.write(ANSI.CURSOR_SHOW);
+                    finalizeSelection(shell, focusLine);
+                } else if (isArrowUp(key)) {
+                    focusLine = moveFocusUp(shell, focusLine);
+                } else if (isArrowDown(key)) {
+                    focusLine = moveFocusDown(shell, focusLine);
                 }
-                else if(in == Key.UP || in == Key.UP_2) {
-                    if(focusLine > 0) {
-                        focusLine--;
-                        shell.write(' ');
-                        shell.write(MOVE_LINE_UP);
-                        shell.write(ANSI.CURSOR_START);
-                        shell.write('>');
-                        shell.write(ANSI.CURSOR_START);
-                    }
-                }
-                else if(in == Key.DOWN || in == Key.DOWN_2) {
-                    if(focusLine < defaultValues.size()-1) {
-                        focusLine++;
-                        shell.write(' ');
-                        shell.write(MOVE_LINE_DOWN);
-                        shell.write(ANSI.CURSOR_START);
-                        shell.write('>');
-                        shell.write(ANSI.CURSOR_START);
-                    }
-                }
-            }
-            catch(InterruptedException e) {
-                int moveDown = defaultValues.size()-focusLine;
-                shell.write(new int[]{27,'[',48+moveDown,'B'});
-                shell.write(ANSI.CURSOR_SHOW);
+            } catch (InterruptedException e) {
+                finalizeSelection(shell, focusLine);
             }
         }
 
         return out;
     }
 
-    private List<String> passwd(Shell shell) throws InterruptedException {
+    private void printDefaultValues(Shell shell) {
+        shell.writeln(message + "  [Use arrow up/down to move and enter/space to select]");
+        for (int i = 0; i < defaultValues.size(); i++) {
+            if (i == 0)
+                shell.writeln("> " + defaultValues.get(i));
+            else
+                shell.writeln("  " + defaultValues.get(i));
+        }
+    }
+
+    private void handleKeyPress(Shell shell, List<String> out, Key key, int focusLine) {
+        if (isSelectionKey(key)) {
+            out.add(defaultValues.get(focusLine));
+        }
+    }
+
+    private boolean isSelectionKey(Key key) {
+        return key == Key.ENTER || key == Key.ENTER_2 || key == Key.CTRL_M || key == Key.SPACE;
+    }
+
+    private void finalizeSelection(Shell shell, int focusLine) {
+        int moveDown = defaultValues.size() - focusLine;
+        shell.write(new int[]{27, '[', 48 + moveDown, 'B'});
+        shell.write(ANSI.CURSOR_SHOW);
+    }
+
+    private boolean isArrowUp(Key key) {
+        return key == Key.UP || key == Key.UP_2;
+    }
+
+    private boolean isArrowDown(Key key) {
+        return key == Key.DOWN || key == Key.DOWN_2;
+    }
+
+    private int moveFocusUp(Shell shell, int focusLine) {
+        if (focusLine > 0) {
+            focusLine--;
+            shell.write(' ');
+            shell.write(MOVE_LINE_UP);
+            shell.write(ANSI.CURSOR_START);
+            shell.write('>');
+            shell.write(ANSI.CURSOR_START);
+        }
+        return focusLine;
+    }
+
+    private int moveFocusDown(Shell shell, int focusLine) {
+        if (focusLine < defaultValues.size() - 1) {
+            focusLine++;
+            shell.write(' ');
+            shell.write(MOVE_LINE_DOWN);
+            shell.write(ANSI.CURSOR_START);
+            shell.write('>');
+            shell.write(ANSI.CURSOR_START);
+        }
+        return focusLine;
+    }
+
+    /**
+     * Refactoring using: Renamed method
+     * changed pass to password giving meaningful name!
+     * @param shell
+     * @return List of Strings
+     * @throws InterruptedException
+     */
+    private List<String> password(Shell shell) throws InterruptedException {
         List<String> out = new ArrayList<>(1);
         out.add(shell.readLine(new Prompt(message+" ", '*')));
         return out;
