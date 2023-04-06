@@ -55,16 +55,56 @@ public class Process extends Thread implements Consumer<Signal> {
         this.execution = execution;
     }
 
-    @Override
+    /**
+     * Refactoring used: Replace Conditional with Polymorphism,
+     * In this technique, I have created an interface 'SignalHandler' with method
+     * 'handleSignal(). Then, we can create concrete classes for each signal, e.g. IntSignalHandler,  implementing the
+     *  handleSignal() method for their respective signal.
+     *  Finally, in the accept() method, we can create an instance of the appropriate signal handler based on the
+     *  signal argument and call the handleSignal() method on it.
+     */
+    public interface SignalHandler {
+        void handleSignal();
+    }
+
+    public class IntSignalHandler implements SignalHandler {
+        private final boolean running;
+
+        public IntSignalHandler(boolean running) {
+            this.running = running;
+        }
+
+        @Override
+        public void handleSignal() {
+            if (running) {
+                // Ctrl-C interrupt : we use Thread interrupts to signal the command to stop
+                LOGGER.info("got interrupted in Task");
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+// add other signal handlers for each signal
+
+
+    /**
+     * Refactoring method used: Replace Conditional with Polymorphism
+     * reducing the code complexity by removing the long line of code in switch...
+     * @param signal the input argument
+     */
     public void accept(Signal signal) {
+        SignalHandler handler;
         switch (signal) {
             case INT:
-                if (running) {
-                    // Ctrl-C interrupt : we use Thread interrupts to signal the command to stop
-                    LOGGER.info("got interrupted in Task");
-                    interrupt();
-                }
+                handler = new IntSignalHandler(running);
+                break;
+            // add other cases for each signal
+            default:
+                // default handler
+                handler = () -> {};
+                break;
         }
+        handler.handleSignal();
     }
 
     @Override

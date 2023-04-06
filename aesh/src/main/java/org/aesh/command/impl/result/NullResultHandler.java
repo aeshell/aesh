@@ -19,28 +19,16 @@
  */
 package org.aesh.command.impl.result;
 
-import org.aesh.command.CommandException;
-import org.aesh.command.CommandResult;
 import org.aesh.command.result.ResultHandler;
 
 /**
+ * Refactoring Method used : Pull up Method,
+ * this technique involves moving a method from a subclass to its superclass(Interface) ,
+ * allowing all subclasses(Interfaces) to inherit the method. In this case, we can pull up the implementation of the
+ * onSuccess() and onFailure(CommandResult result) methods from the  NullResultHandler classes to the ResultHandler interface itself.
+ * this way we have removed code duplication and made code more maintainable.
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class NullResultHandler implements ResultHandler {
 
-    @Override
-    public void onSuccess() {
-    }
-
-    @Override
-    public void onFailure(CommandResult result) {
-    }
-
-    @Override
-    public void onValidationFailure(CommandResult result, Exception exception) {
-    }
-
-    @Override
-    public void onExecutionFailure(CommandResult result, CommandException exception) {
-    }
 }

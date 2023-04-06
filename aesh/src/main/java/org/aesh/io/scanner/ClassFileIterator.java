@@ -26,6 +26,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipFile;
 
+import static org.aesh.io.scanner.ClassFileIterator.ZipFileUtil.endsWithIgnoreCase;
+import static org.aesh.io.scanner.ClassFileIterator.ZipFileUtil.isZipFile;
+
 /**
  * {@code ClassFileIterator} is used to iterate over all Java ClassFile files available within
  * a specific context.
@@ -35,7 +38,44 @@ import java.util.zip.ZipFile;
  * @author <a href="mailto:rmuller@xiam.nl">Ronald K. Muller</a>
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
+
 public final class ClassFileIterator extends ResourceIterator {
+
+    /**
+     * Refactoring using: Extract Class
+     * performed the "Extract Class" refactoring by moving the isZipFile and endsWithIgnoreCase methods
+     * into a separate ZipFileUtil static nested class.
+     * This refactoring improves the organization of the code by separating the utility methods from
+     * the core functionality of the ClassFileIterator class. The main class now only contains methods directly related
+     * to its primary purpose, which is to iterate over Java ClassFiles.
+     */
+    public static class ZipFileUtil {
+
+        public static boolean isZipFile(final File file) {
+            DataInputStream in = null;
+            try {
+                in = new DataInputStream(new FileInputStream(file));
+                final int n = in.readInt();
+                return n == 0x504b0304;
+            } catch (IOException ex) {
+                // silently ignore read exceptions
+                return false;
+            } finally {
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException ex) {
+                        // ignore
+                    }
+                }
+            }
+        }
+
+        public static boolean endsWithIgnoreCase(final String value, final String suffix) {
+            final int n = suffix.length();
+            return value.regionMatches(true, value.length() - n, suffix, 0, n);
+        }
+    }
 
     private final FileIterator fileIterator;
     private final String[] pkgNameFilter;
@@ -78,7 +118,7 @@ public final class ClassFileIterator extends ResourceIterator {
         while (true) {
             if (zipIterator == null) {
                 final File file = fileIterator.next();
-                // not all specified Files exists!
+                // not all specified Files   exists!
                 if (file == null || !file.isFile()) {
                     return null;
                 } else {
@@ -101,28 +141,6 @@ public final class ClassFileIterator extends ResourceIterator {
         }
     }
 
-    // private
-
-    private boolean isZipFile(final File file) {
-        DataInputStream in = null;
-        try {
-            in = new DataInputStream(new FileInputStream(file));
-            final int n = in.readInt();
-            return n == 0x504b0304;
-        } catch (IOException ex) {
-            // silently ignore read exceptions
-            return false;
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException ex) {
-                    // ignore
-                }
-            }
-        }
-    }
-
     /**
      * Returns the class path of the current JVM instance as an array of {@link File} objects.
      */
@@ -136,9 +154,8 @@ public final class ClassFileIterator extends ResourceIterator {
         return files;
     }
 
-    private static boolean endsWithIgnoreCase(final String value, final String suffix) {
-        final int n = suffix.length();
-        return value.regionMatches(true, value.length() - n, suffix, 0, n);
-    }
 
 }
+
+
+

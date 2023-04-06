@@ -313,6 +313,7 @@ class Executions {
         NEED_ARGUMENT
     }
 
+
     static <CI extends CommandInvocation> List<Execution<CI>> buildExecution(List<ParsedLine> fullLine,
             AeshCommandRuntime<CI> runtime)
             throws CommandNotFoundException, CommandLineParserException, IOException {

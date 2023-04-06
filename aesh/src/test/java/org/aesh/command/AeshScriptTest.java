@@ -196,15 +196,17 @@ public class AeshScriptTest {
         }
     }
 
+    /**
+     * Refactoring Method used : Pull up Method,
+     *  this technique involves moving a method from a subclass to its superclass(Interface) ,
+     *  allowing all subclasses(Interfaces) to inherit the method. In this case, we can pull up the implementation of the
+     *  onSuccess()  methods from the CommandResultHandler  classes to the ResultHandler interface itself.
+     *  this way we have removed code duplication and made code more maintainable.
+     */
     private static class CommandResultHandler implements ResultHandler, CommandNotFoundHandler {
 
         private boolean failed = false;
         private String failedString;
-
-        @Override
-        public void onSuccess() {
-
-        }
 
         @Override
         public void onFailure(CommandResult result) {

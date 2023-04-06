@@ -28,11 +28,18 @@ import org.aesh.command.CommandResult;
  */
 public interface ResultHandler {
 
-    void onSuccess();
+    default void onSuccess() {
 
-    void onFailure(CommandResult result);
+    }
 
-    void onValidationFailure(CommandResult result, Exception exception);
+    default void onFailure(CommandResult result){
 
-    void onExecutionFailure(CommandResult result, CommandException exception);
+    }
+
+    default void onValidationFailure(CommandResult result, Exception exception){
+
+    }
+
+    default void onExecutionFailure(CommandResult result, CommandException exception) {
+        }
 }
