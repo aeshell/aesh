@@ -276,12 +276,12 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                     if(clp == null) {
                         //if the user have written garbage in the next word, we need to check
                         // eg: group GARBAGE <tab>
-                        if(iterator.isNextWordCursorWord() ||
-                                iterator.peekWord().startsWith("--") || iterator.peekWord().startsWith("-"))
+                        if((iterator.isNextWordCursorWord() ||
+                                iterator.peekWord().startsWith("--") || iterator.peekWord().startsWith("-")) & !(iterator.peekWord().equalsIgnoreCase("--help")) )
                             doParse(iterator, mode);
                         else {
-                            processedCommand.addParserException(new CommandLineParserException(command+" '"+iterator.peekWord()+"' is not a "+command+" command. See '"+command+" --help'."));
-                            if(mode == Mode.COMPLETION) {
+                            processedCommand.addParserException(new CommandLineParserException("'"+command+" "+iterator.peekWord()+"' is not part of the "+command+" commands. See 'help "+command+"'."));
+                        if(mode == Mode.COMPLETION) {
                                 parsedCommand = true;
                                 processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.INVALID_INPUT, ""));
                             }
