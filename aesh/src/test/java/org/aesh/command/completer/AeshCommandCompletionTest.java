@@ -381,6 +381,9 @@ public class AeshCommandCompletionTest {
         connection.read(enter.getFirstValue());
         connection.clearOutputBuffer();
 
+        connection.assertBuffer("'git --help' is not part of the git commands. See 'help git'.\n");
+        connection.clearOutputBuffer();
+
         connection.read("git reb");
         connection.read(completeChar.getFirstValue());
         connection.assertBuffer("git rebase ");
