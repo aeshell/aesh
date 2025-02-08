@@ -1,16 +1,9 @@
 == Æsh (Another Extendable SHell)
 
-
-image:https://travis-ci.org/aeshell/aesh.svg?branch=master["Build Status", link="https://travis-ci.org/aeshell/aesh"]
-
 Æsh is a Java library to easily create commands through a well defined API. Æsh will take care of all the parsing and injection for your commands. Æsh uses the project 'aesh-readline' for it's terminal/readline integration.
 
 IMPORTANT:
 ---------
-
-We're now heading into the final stages before we'll tag an 1.0-alpha release. 
-The master branch is fairly stable atm and the plan is to not change anything big in the upcoming weeks.
-We have released a snapshot version of 1.0 if you are eager to test. Just add this to your 'pom.xml':
 
 [source,xml]
 ----
