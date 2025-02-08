@@ -570,7 +570,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
      */
     @Override
     public void parse(String line, Mode mode) {
-        parse(lineParser.parseLine(line, line.length()).iterator(), mode);
+        parse(lineParser.parseLine(line, line.length(), true).iterator(), mode);
     }
 
     @Override

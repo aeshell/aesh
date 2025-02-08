@@ -119,6 +119,9 @@ public class CommandLineParserTest {
         assertEquals("g", p1.define.get("f"));
         assertEquals("/tmp/file.txt", p1.arguments.get(0));
 
+        parser.populateObject("test -e true {\"distributed-cache\":{}}", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("{\"distributed-cache\":{}}", p1.arguments.get(0));
+
         parser = new AeshCommandContainerBuilder<>().create(new Parser1aTest<>()).getParser();
 
         parser.populateObject("test -f -e bar /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
