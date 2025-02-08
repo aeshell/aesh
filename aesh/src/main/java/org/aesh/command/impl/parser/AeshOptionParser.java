@@ -44,8 +44,13 @@ public class AeshOptionParser implements OptionParser {
             while(status != Status.NULL && parsedLineIterator.hasNextWord()) {
                 String word = parsedLineIterator.peekWord();
                 ProcessedOption nextOption = option.parent().searchAllOptions(word);
-                if(nextOption == null)
+                if(nextOption == null) {
                     doParse(parsedLineIterator, option);
+                    if (status == null && !option.hasValue()) {
+                        //this might happen if we have an option at the "end" that doesn't accept values
+                        return;
+                    }
+                }
                 //we have something like: --foo --bar eg, two options after another
                 else {
                     //TODO: we need to do something better here
