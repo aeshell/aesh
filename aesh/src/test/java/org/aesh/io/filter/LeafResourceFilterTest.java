@@ -19,7 +19,7 @@
  */
 package org.aesh.io.filter;
 
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.io.Resource;

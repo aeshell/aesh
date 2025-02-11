@@ -32,7 +32,7 @@ import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.io.Resource;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 import org.aesh.io.PipelineResource;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.selector.SelectorType;

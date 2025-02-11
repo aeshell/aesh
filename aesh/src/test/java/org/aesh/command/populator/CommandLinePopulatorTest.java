@@ -33,7 +33,7 @@ import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
 import org.aesh.command.parser.RequiredOptionException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.impl.activator.AeshCommandActivatorProvider;

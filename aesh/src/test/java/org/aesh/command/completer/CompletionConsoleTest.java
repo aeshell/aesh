@@ -39,7 +39,7 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 
 import org.aesh.command.Command;
-import org.aesh.readline.ReadlineConsole;
+import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.terminal.Key;
 import org.aesh.tty.TestConnection;
 import org.aesh.terminal.utils.Config;

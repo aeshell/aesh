@@ -23,7 +23,7 @@ import java.io.BufferedInputStream;
 import org.aesh.command.impl.operator.DataProvider;
 import org.aesh.command.impl.operator.InputDelegate;
 import org.aesh.command.impl.operator.OutputDelegate;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 
 /**
  *

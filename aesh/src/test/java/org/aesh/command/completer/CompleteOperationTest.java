@@ -20,8 +20,8 @@
 package org.aesh.command.completer;
 
 import org.aesh.complete.AeshCompleteOperation;
-import org.aesh.readline.AeshContext;
-import org.aesh.readline.DefaultAeshContext;
+import org.aesh.console.AeshContext;
+import org.aesh.console.DefaultAeshContext;
 import org.junit.Test;
 
 import java.util.List;

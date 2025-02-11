@@ -19,7 +19,7 @@
  */
 package org.aesh.command.validator;
 
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

@@ -33,7 +33,7 @@ import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedWord;
 import org.aesh.parser.ParserStatus;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.readline.util.Parser;
 import org.aesh.selector.SelectorType;

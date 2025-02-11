@@ -17,9 +17,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.readline;
+package org.aesh.console;
 
 import org.aesh.command.shell.Shell;
+import org.aesh.readline.Prompt;
+import org.aesh.readline.Readline;
 import org.aesh.readline.action.ActionDecoder;
 import org.aesh.readline.terminal.Key;
 import org.aesh.terminal.Connection;

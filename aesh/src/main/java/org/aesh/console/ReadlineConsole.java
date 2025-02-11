@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.readline;
+package org.aesh.console;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
@@ -53,6 +53,9 @@ import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.io.scanner.AnnotationDetector;
 import org.aesh.io.scanner.CommandDefinitionReporter;
+import org.aesh.readline.Prompt;
+import org.aesh.readline.Readline;
+import org.aesh.readline.ReadlineFlag;
 import org.aesh.readline.alias.AliasCompletion;
 import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.alias.AliasPreProcessor;

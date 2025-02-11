@@ -20,7 +20,7 @@
 package org.aesh.command.impl.operator;
 
 import org.aesh.command.invocation.CommandInvocationConfiguration;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 
 import java.io.IOException;
 

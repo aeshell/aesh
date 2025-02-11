@@ -32,7 +32,7 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.parser.ParserStatus;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedLineIterator;

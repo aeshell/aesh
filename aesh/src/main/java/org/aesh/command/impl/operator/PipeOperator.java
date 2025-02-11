@@ -26,7 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 
 /**
  *

@@ -26,8 +26,8 @@ import java.nio.file.Files;
 
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.FileOptionCompleter;
-import org.aesh.readline.AeshContext;
-import org.aesh.readline.DefaultAeshContext;
+import org.aesh.console.AeshContext;
+import org.aesh.console.DefaultAeshContext;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.terminal.utils.Config;
 import org.aesh.io.FileResource;
