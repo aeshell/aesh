@@ -28,7 +28,7 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.Prompt;
-import org.aesh.readline.ReadlineConsole;
+import org.aesh.console.ReadlineConsole;
 import org.aesh.terminal.Connection;
 
 import java.io.IOException;

@@ -21,7 +21,7 @@
 package org.aesh.command.impl.converter;
 
 import org.aesh.command.converter.ConverterInvocation;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

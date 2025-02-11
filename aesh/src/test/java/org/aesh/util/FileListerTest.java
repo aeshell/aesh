@@ -30,11 +30,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.aesh.comparators.PosixFileNameComparator;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 import org.aesh.io.Resource;
 import org.aesh.io.FileResource;
 
-import org.aesh.readline.DefaultAeshContext;
+import org.aesh.console.DefaultAeshContext;
 import org.aesh.terminal.utils.Config;
 import org.junit.After;
 import org.junit.Before;

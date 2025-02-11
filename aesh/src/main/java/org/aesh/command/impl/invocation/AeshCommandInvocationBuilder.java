@@ -24,7 +24,7 @@ import org.aesh.command.container.CommandContainer;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
-import org.aesh.readline.Console;
+import org.aesh.console.Console;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

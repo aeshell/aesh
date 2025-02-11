@@ -36,7 +36,7 @@ import org.aesh.graphics.AeshGraphicsConfiguration;
 import org.aesh.graphics.Graphics;
 import org.aesh.graphics.GraphicsConfiguration;
 import org.aesh.readline.Prompt;
-import org.aesh.readline.ReadlineConsole;
+import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.terminal.Key;
 import org.aesh.readline.terminal.formatting.Color;
 import org.aesh.readline.terminal.formatting.TerminalColor;

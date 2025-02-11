@@ -17,12 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.readline;
+package org.aesh.console;
 
+import org.aesh.readline.Prompt;
+import org.aesh.readline.Readline;
 import org.aesh.terminal.Connection;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * Generic console that's targeting terminal prompt usages
  */
 public interface Console {
 

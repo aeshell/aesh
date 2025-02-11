@@ -36,7 +36,7 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.io.Resource;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.terminal.Connection;

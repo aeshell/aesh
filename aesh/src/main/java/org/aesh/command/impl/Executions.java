@@ -54,7 +54,7 @@ import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.io.PipelineResource;
 import org.aesh.io.Resource;
 import org.aesh.parser.ParsedLine;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.selector.Selector;

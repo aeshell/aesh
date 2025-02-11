@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.readline;
+package org.aesh.console;
 
 import org.aesh.command.export.ExportManager;
 import org.aesh.io.FileResource;

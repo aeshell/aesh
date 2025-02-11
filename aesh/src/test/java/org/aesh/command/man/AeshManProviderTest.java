@@ -30,7 +30,7 @@ import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.ManProvider;
 import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.readline.ReadlineConsole;
+import org.aesh.console.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 

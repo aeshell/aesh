@@ -37,7 +37,7 @@ import org.aesh.terminal.utils.Config;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.CommandResult;
-import org.aesh.readline.ReadlineConsole;
+import org.aesh.console.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 

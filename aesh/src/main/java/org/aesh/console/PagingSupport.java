@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.readline;
+package org.aesh.console;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,6 +25,10 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
+
+import org.aesh.readline.Prompt;
+import org.aesh.readline.Readline;
+import org.aesh.readline.ReadlineFlag;
 import org.aesh.readline.action.ActionDecoder;
 import org.aesh.readline.history.History;
 import org.aesh.readline.history.InMemoryHistory;

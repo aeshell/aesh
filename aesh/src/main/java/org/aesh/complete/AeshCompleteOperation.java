@@ -19,7 +19,7 @@
  */
 package org.aesh.complete;
 
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 import org.aesh.readline.completion.CompleteOperationImpl;
 
 /**

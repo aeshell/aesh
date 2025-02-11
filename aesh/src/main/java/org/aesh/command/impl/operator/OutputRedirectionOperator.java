@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
-import org.aesh.readline.AeshContext;
+import org.aesh.console.AeshContext;
 
 /**
  *
