@@ -130,6 +130,39 @@ public class EnvironmentVariableDefaultValueTest {
     }
 
     /**
+     * Test that empty environment variable syntax $() is not resolved.
+     */
+    @Test
+    public void testEmptyEnvironmentVariableSyntax() throws Exception {
+        TestPopulatorWithEnvVar command = new TestPopulatorWithEnvVar();
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> commandBuilder = ProcessedCommandBuilder.builder()
+                .name("test")
+                .populator(new AeshCommandPopulator<>(command))
+                .description("a simple test");
+
+        commandBuilder.addOption(ProcessedOptionBuilder.builder()
+                .name("empty")
+                .description("test option")
+                .fieldName("emptyOption")
+                .type(String.class)
+                .addDefaultValue("$()")
+                .build());
+
+        CommandLineParser<CommandInvocation> parser = CommandLineParserBuilder.builder()
+                .processedCommand(commandBuilder.create())
+                .create();
+
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        // Parse without specifying the option, so the default value should be used
+        parser.parse("test");
+        parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+
+        // The default value should remain unchanged since $() is not a valid env var syntax
+        assertEquals("$()", command.emptyOption);
+    }
+
+    /**
      * Test that regular default values (not environment variables) are not affected.
      */
     @Test
@@ -207,6 +240,7 @@ public class EnvironmentVariableDefaultValueTest {
         public String myVarOption;
         public String regularOption;
         public String homeOption;
+        public String emptyOption;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {

@@ -356,9 +356,12 @@ public class ProcessedOptionBuilder {
      * with the value of the environment variable.
      *
      * @param values the list of default values
-     * @return a new list with environment variables resolved
+     * @return a new list with environment variables resolved, or the original list if null
      */
     private List<String> resolveEnvironmentVariables(List<String> values) {
+        if (values == null) {
+            return null;
+        }
         List<String> resolved = new ArrayList<>();
         for (String value : values) {
             resolved.add(resolveEnvironmentVariable(value));
@@ -380,7 +383,8 @@ public class ProcessedOptionBuilder {
             return null;
         }
         // Check if the value matches the pattern $(ENV_VAR_NAME)
-        if (value.startsWith("$(") && value.endsWith(")")) {
+        // Minimum length is 4 for "$(X)" where X is at least one character
+        if (value.length() > 3 && value.startsWith("$(") && value.endsWith(")")) {
             String envVarName = value.substring(2, value.length() - 1);
             String envValue = System.getenv(envVarName);
             if (envValue != null) {
