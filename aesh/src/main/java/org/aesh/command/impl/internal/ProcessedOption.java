@@ -392,7 +392,7 @@ public final class ProcessedOption {
                 if(getValue() != null)
                     field.set(instance, doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation));
                 else if(defaultValues.size() > 0) {
-                    field.set(instance, doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation));
+                    field.set(instance, doConvert(resolveEnvironmentVariable(defaultValues.get(0)), invocationProviders, instance, aeshContext, doValidation));
                 }
             }
             else if(optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
@@ -403,7 +403,7 @@ public final class ProcessedOption {
                 }
                 else if(defaultValues.size() > 0) {
                     for(String in : defaultValues)
-                        tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
+                        tmpSet.add(doConvert(resolveEnvironmentVariable(in), invocationProviders, instance, aeshContext, doValidation));
                 }
 
                 field.set(instance, tmpSet);
@@ -510,6 +510,33 @@ public final class ProcessedOption {
         return (Resource.class.isAssignableFrom(type) ||
                    File.class.isAssignableFrom(type) ||
                    Path.class.isAssignableFrom(type));
+    }
+
+    /**
+     * Resolves a single environment variable reference.
+     * If the value matches the pattern $(ENV_VAR_NAME), it will be replaced
+     * with the value of the environment variable. If the environment variable
+     * is not set, the original value is returned.
+     *
+     * @param value the value to resolve
+     * @return the resolved value
+     */
+    private String resolveEnvironmentVariable(String value) {
+        if (value == null) {
+            return null;
+        }
+        // Check if the value matches the pattern $(ENV_VAR_NAME)
+        // Minimum length is 4 for "$(X)" where X is at least one character
+        if (value.length() > 3 && value.startsWith("$(") && value.endsWith(")")) {
+            String envVarName = value.substring(2, value.length() - 1);
+            if (!envVarName.isEmpty()) {
+                String envValue = System.getenv(envVarName);
+                if (envValue != null) {
+                    return envValue;
+                }
+            }
+        }
+        return value;
     }
 
     @Override
