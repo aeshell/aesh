@@ -66,6 +66,8 @@ public class CommandLineParserTest {
 
     @Test
     public void testParseCommandLine1() throws Exception {
+        //lets add a properties check
+        System.setProperty("foo", "bar");
 
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new Parser1Test<>()).getParser();
@@ -135,7 +137,7 @@ public class CommandLineParserTest {
         parser.populateObject("test -f -DN1= /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
         assertNull( p1a.equal);
         assertFalse(p1a.define.isEmpty());
-        assertEquals("foo", p1a.define.get("N1"));
+        assertEquals("bar", p1a.define.get("N1"));
 
     }
 
@@ -420,7 +422,7 @@ public class CommandLineParserTest {
         @Option(shortName = 'c')
         private int connection;
 
-        @OptionGroup(shortName = 'D', description = "define properties", defaultValue = "foo")
+        @OptionGroup(shortName = 'D', description = "define properties", defaultValue = "${foo}")
         private Map<String,String> define;
 
         @Arguments
