@@ -37,6 +37,7 @@ import org.aesh.io.PipelineResource;
 import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.selector.SelectorType;
 import org.aesh.terminal.utils.ANSI;
+import org.aesh.util.PropertiesLookup;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -123,7 +124,7 @@ public final class ProcessedOption {
         if(renderer != null)
             this.renderer = renderer;
 
-        this.defaultValues = defaultValue;
+        this.defaultValues = PropertiesLookup.checkForSystemVariables(defaultValue);
 
         properties = new HashMap<>();
         values = new ArrayList<>();
