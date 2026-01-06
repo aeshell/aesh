@@ -120,7 +120,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void addOption(ProcessedOption opt) throws OptionParserException {
         this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
-                opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.selectorType(),
+                opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.acceptNameWithoutDashes(), opt.selectorType(),
                 opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(), opt.converter(),
                 opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(), opt.parser(), opt.doOverrideRequired()));
 
@@ -130,7 +130,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
         for(ProcessedOption opt : options) {
             this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
-                    opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.selectorType(),
+                    opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.acceptNameWithoutDashes(), opt.selectorType(),
                     opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(),
                     opt.converter(), opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(),
                     opt.parser(), opt.doOverrideRequired()));
@@ -269,7 +269,15 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             return currentOption;
         }
         else {
-            return null;
+            // Check for bare long names
+            ProcessedOption currentOption = findBareLongOption(input);
+            if (currentOption == null && input.contains("=")) {
+                currentOption = findBareLongOption(input.substring(0, input.indexOf("=")));
+            }
+            if (currentOption != null) {
+                currentOption.setLongNameUsed(true);
+            }
+            return currentOption;
         }
     }
 
@@ -289,6 +297,25 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 return option;
 
         return null;
+    }
+
+    public ProcessedOption findBareLongOption(String name) {
+        for (ProcessedOption option : getOptions())
+            if(option.name() != null && option.name().equals(name) && option.acceptNameWithoutDashes())
+                return option;
+
+        return null;
+    }
+
+    public List<TerminalString> findPossibleBareLongNamesWithDash(String name) {
+        List<ProcessedOption> opts = getOptions();
+        List<TerminalString> names = new ArrayList<>(opts.size());
+        for (ProcessedOption o : opts) {
+            if(o.name() != null && o.name().startsWith(name) && o.acceptNameWithoutDashes()) {
+                names.add(o.getRenderedNameWithDashes());
+            }
+        }
+        return names;
     }
 
     public ProcessedOption startWithOption(String name) {

@@ -78,8 +78,9 @@ public class AeshOptionParser implements OptionParser {
         if(word.indexOf(" ") < word.indexOf("="))
             word = Parser.switchSpacesToEscapedSpacesInWord(word);
         if(option.isLongNameUsed()) {
-            if(word.length()-2 != option.name().length())
-                processOption(option, word.substring(2), option.name());
+            String optionPart = word.startsWith("--") ? word.substring(2) : word;
+            if(optionPart.length() != option.name().length())
+                processOption(option, optionPart, option.name());
             else if(option.getOptionType() == OptionType.BOOLEAN) {
                 option.addValue("true");
                 status = Status.NULL;

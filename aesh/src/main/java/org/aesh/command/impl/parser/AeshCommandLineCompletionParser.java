@@ -57,6 +57,15 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         //first inject values in command
         doInjectValues(invocationProviders, completeOperation.getContext());
 
+        // Check for partial bare long name completion
+        if (!line.spaceAtEnd() && line.selectedWord() != null) {
+            String currentWord = line.selectedWord().word();
+            if (currentWord.length() > 1 && !currentWord.startsWith("-") && parser.getProcessedCommand().findPossibleBareLongNamesWithDash(currentWord).size() > 0) {
+                doListOptions(completeOperation, currentWord);
+                return;
+            }
+        }
+
         //we have parsed one or more options and their values
         if(parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.COMPLETE_OPTION)) {
             //space and end, we display other options/arguments or option value if the option have a list of values
@@ -255,8 +264,11 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         List<TerminalString> optionNamesWithDash;
         if(value.length() < 3)
             optionNamesWithDash = parser.getProcessedCommand().getOptionLongNamesWithDash();
-        else
+        else if(value.startsWith("--"))
             optionNamesWithDash = parser.getProcessedCommand().findPossibleLongNamesWithDash(value.substring(2));
+        else
+            // Handle bare long name prefix
+            optionNamesWithDash = parser.getProcessedCommand().findPossibleBareLongNamesWithDash(value);
 
         if(optionNamesWithDash.size() > 1) {
             completeOperation.addCompletionCandidatesTerminalString(optionNamesWithDash);

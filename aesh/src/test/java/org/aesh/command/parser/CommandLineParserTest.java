@@ -383,6 +383,67 @@ public class CommandLineParserTest {
         assertEquals("one two three", disableParsing.args.get(5));
     }
 
+    @Test
+    public void testAcceptNameWithoutDashes() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new ParserBareLongNameTest<>()).getParser();
+
+        parser.populateObject("testBareLongName verbose output=file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        ParserBareLongNameTest<CommandInvocation> cmd = (ParserBareLongNameTest<CommandInvocation>) parser.getCommand();
+
+        assertTrue(cmd.verbose);
+        assertEquals("file.txt", cmd.output);
+    }
+
+    @Test
+    public void testAcceptNameWithoutDashesMixed() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new ParserBareLongNameTest<>()).getParser();
+
+        // Mix bare and -- options
+        parser.populateObject("testBareLongName verbose --output=file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        ParserBareLongNameTest<CommandInvocation> cmd = (ParserBareLongNameTest<CommandInvocation>) parser.getCommand();
+
+        assertTrue(cmd.verbose);
+        assertEquals("file.txt", cmd.output);
+    }
+
+    @Test
+    public void testAcceptNameWithoutDashesSpace() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new ParserBareLongNameTest<>()).getParser();
+
+        // Test with space separator
+        parser.populateObject("testBareLongName verbose output file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        ParserBareLongNameTest<CommandInvocation> cmd = (ParserBareLongNameTest<CommandInvocation>) parser.getCommand();
+
+        assertTrue(cmd.verbose);
+        assertEquals("file.txt", cmd.output);
+    }
+
+    @Test(expected = CommandLineParserException.class)
+    public void testAcceptNameWithoutDashesDisabled() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new ParserBareDisabledTest<>()).getParser();
+
+        // Should fail because acceptNameWithoutDashes is false
+        parser.populateObject("testBareDisabled verbose output=file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+    }
+
+    @Test
+    public void testAcceptNameWithoutDashesParser2Style() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new Parser2BareTest<>()).getParser();
+        Parser2BareTest<CommandInvocation> p2 = (Parser2BareTest<CommandInvocation>) parser.getCommand();
+
+        // Test bare long names
+        parser.populateObject("testBareParser2 display true bar Foo.class", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("true", p2.display);
+        assertNull(p2.version);
+        assertEquals("Foo.class", p2.bar);
+        assertNull(p2.arguments);
+    }
+
     @CommandDefinition(name = "test", description = "a simple test", aliases = {"toto"})
     public class Parser1Test<CI extends CommandInvocation> extends TestingCommand<CI> {
 
@@ -436,6 +497,21 @@ public class CommandLineParserTest {
         private String bar;
 
         @Option(shortName = 'V', name = "version", description = "output version information and exit")
+        private String version;
+
+        @Arguments
+        private List<String> arguments;
+    }
+
+    @CommandDefinition(name = "testBareParser2", description = "test bare with parser2 style")
+    public class Parser2BareTest<CI extends CommandInvocation> extends TestingCommand<CI> {
+        @Option(shortName = 'd', name = "display", acceptNameWithoutDashes = true, description = "display help instead of ring bell")
+        private String display;
+
+        @Option(shortName = 'b', name = "bar", acceptNameWithoutDashes = true, argument = "classname", required = true, description = "bar bar")
+        private String bar;
+
+        @Option(shortName = 'V', name = "version", acceptNameWithoutDashes = true, description = "output version information and exit")
         private String version;
 
         @Arguments
@@ -526,6 +602,25 @@ public class CommandLineParserTest {
 
     }
 
+    @CommandDefinition(name = "testBareLongName", description = "test bare long name")
+    public class ParserBareLongNameTest<CI extends CommandInvocation> extends TestingCommand<CI> {
+
+        @Option(name = "verbose", acceptNameWithoutDashes = true, hasValue = false)
+        private Boolean verbose;
+
+        @Option(name = "output", acceptNameWithoutDashes = true)
+        private String output;
+    }
+
+    @CommandDefinition(name = "testBareDisabled", description = "test bare long name disabled")
+    public class ParserBareDisabledTest<CI extends CommandInvocation> extends TestingCommand<CI> {
+
+        @Option(name = "verbose", hasValue = false) // acceptNameWithoutDashes = false by default
+        private Boolean verbose;
+
+        @Option(name = "output")
+        private String output;
+    }
 
     public class TestingCommand<CI extends CommandInvocation> implements Command<CI> {
         @Override

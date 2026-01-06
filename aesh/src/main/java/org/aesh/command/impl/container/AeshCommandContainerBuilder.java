@@ -176,6 +176,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .required(o.required())
                             .valueSeparator(' ')
                             .askIfNotSet(o.askIfNotSet())
+                            .acceptNameWithoutDashes(o.acceptNameWithoutDashes())
                             .selector(o.selector())
                             .addAllDefaultValues(o.defaultValue())
                             .type(field.getType())

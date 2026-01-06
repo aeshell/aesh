@@ -73,6 +73,7 @@ public class ProcessedOptionBuilder {
     private boolean overrideRequired;
     private OptionParser parser;
     private boolean askIfNotSet = false;
+    private boolean acceptNameWithoutDashes = false;
     private SelectorType selectorType;
 
     private ProcessedOptionBuilder() {
@@ -97,11 +98,13 @@ public class ProcessedOptionBuilder {
 
     /**
      * The name of the option param.
-     * The first letter will be used as the short name.
-     * If name is not defined, the variable name will be used.
      */
     public ProcessedOptionBuilder name(String name) {
         return apply(c -> c.name = name);
+    }
+
+    public ProcessedOptionBuilder askIfNotSet(boolean askIfNotSet) {
+        return apply(c -> c.askIfNotSet = askIfNotSet);
     }
 
     /**
@@ -140,8 +143,8 @@ public class ProcessedOptionBuilder {
         return apply(c -> c.required = required);
     }
 
-    public ProcessedOptionBuilder askIfNotSet(boolean askIfNotSet) {
-        return apply(c -> c.askIfNotSet = askIfNotSet);
+    public ProcessedOptionBuilder acceptNameWithoutDashes(boolean acceptNameWithoutDashes) {
+        return apply(c -> c.acceptNameWithoutDashes = acceptNameWithoutDashes);
     }
 
     public ProcessedOptionBuilder selector(SelectorType selectorType) {
@@ -343,7 +346,7 @@ public class ProcessedOptionBuilder {
         //    renderer = new NullOptionRenderer();
 
         return new ProcessedOption(shortName, name, description, argument, required,
-                valueSeparator, askIfNotSet, selectorType, defaultValues, type, fieldName, optionType, converter,
+                valueSeparator, askIfNotSet, acceptNameWithoutDashes, selectorType, defaultValues, type, fieldName, optionType, converter,
                 completer, validator, activator, renderer, parser, overrideRequired);
     }
 }
