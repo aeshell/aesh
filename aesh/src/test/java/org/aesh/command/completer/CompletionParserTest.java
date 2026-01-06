@@ -597,5 +597,54 @@ public class CompletionParserTest {
                 completerInvocation.addCompleterValue("foo bar");
         }
     }
+
+    @Test
+    public void testAcceptNameWithoutDashesCompletion() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteBareTest<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // Test completion of partial bare long name
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test verb", 9);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("ose", co.getFormattedCompletionCandidates().get(0));
+
+        // Test completion of partial bare long name with value
+        co = new AeshCompleteOperation(aeshContext, "test out", 8);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("put=", co.getFormattedCompletionCandidates().get(0));
+
+        // Test completion after bare long name (should list remaining options)
+        co = new AeshCompleteOperation(aeshContext, "test verbose ", 12);
+        clp.complete(co, ip);
+        // After parsing "verbose", completion should show remaining options
+        assertEquals(2, co.getFormattedCompletionCandidates().size());
+
+        // Test that standard options (without acceptNameWithoutDashes) complete with --
+        co = new AeshCompleteOperation(aeshContext, "test --stan", 11);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("dard", co.getFormattedCompletionCandidates().get(0));
+
+        // Test that bare completion does not work for standard options
+        co = new AeshCompleteOperation(aeshContext, "test stan", 9);
+        clp.complete(co, ip);
+        // Should not complete since standard option doesn't have acceptNameWithoutDashes
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+    }
+
+    @CommandDefinition(name = "test", description = "test bare long name completion")
+    public class ParseCompleteBareTest<CI extends CommandInvocation> extends TestCommand<CI> {
+
+        @Option(name = "verbose", acceptNameWithoutDashes = true, hasValue = false)
+        private Boolean verbose;
+
+        @Option(name = "output", acceptNameWithoutDashes = true)
+        private String output;
+
+        @Option(name = "standard", hasValue = false) // acceptNameWithoutDashes = false by default
+        private Boolean standard;
+    }
 }
 

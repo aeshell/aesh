@@ -110,6 +110,12 @@ public @interface Option {
      */
     boolean askIfNotSet() default false;
 
+    /**
+     * When set to true, the option name can be accepted without "--" prefix.
+     * This feature only works for long option names.
+     */
+    boolean acceptNameWithoutDashes() default false;
+
     SelectorType selector() default SelectorType.NO_OP;
 
     /**

@@ -84,10 +84,11 @@ public final class ProcessedOption {
     private boolean cursorOption = false;
     private boolean cursorValue = false;
     private boolean askIfNotSet = false;
+    private boolean acceptNameWithoutDashes = false;
     private final SelectorType selectorType;
 
     public ProcessedOption(char shortName, String name, String description,
-                           String argument, boolean required, char valueSeparator, boolean askIfNotSet,
+                           String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
                            SelectorType selectorType,
                            List<String> defaultValue, Class<?> type, String fieldName,
                            OptionType optionType, Converter converter, OptionCompleter completer,
@@ -112,6 +113,7 @@ public final class ProcessedOption {
         this.validator = optionValidator;
         this.activator = activator;
         this.askIfNotSet = askIfNotSet;
+        this.acceptNameWithoutDashes = acceptNameWithoutDashes;
         if(selectorType != null)
             this.selectorType = selectorType;
         else
@@ -275,6 +277,10 @@ public final class ProcessedOption {
         return askIfNotSet;
     }
 
+    public boolean acceptNameWithoutDashes() {
+        return acceptNameWithoutDashes;
+    }
+
     public SelectorType selectorType() {
         return selectorType;
     }
@@ -301,11 +307,12 @@ public final class ProcessedOption {
     }
 
     public TerminalString getRenderedNameWithDashes() {
+        String prefix = acceptNameWithoutDashes ? "" : "--";
         if(renderer == null || !ansiMode)
             //if hasValue append a = after the name
-            return new TerminalString( hasValue() ? "--"+name+"=" : "--"+name, true);
+            return new TerminalString( hasValue() ? prefix+name+"=" : prefix+name, true);
         else
-            return new TerminalString( hasValue() ? "--"+name+"=" : "--"+name, renderer.getColor(), renderer.getTextType());
+            return new TerminalString( hasValue() ? prefix+name+"=" : prefix+name, renderer.getColor(), renderer.getTextType());
     }
 
     public int getFormattedLength() {
