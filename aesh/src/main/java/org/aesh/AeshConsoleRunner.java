@@ -24,6 +24,7 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
@@ -32,9 +33,6 @@ import org.aesh.console.ReadlineConsole;
 import org.aesh.terminal.Connection;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Use the AeshConsoleRunner when you want to easily create an interactive CLI application.
@@ -42,14 +40,13 @@ import java.util.List;
  * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
  */
 public class AeshConsoleRunner {
-    private List<Class<? extends Command>> commands;
+    private AeshCommandRegistryBuilder<CommandInvocation> registryBuilder;
     private Settings settings;
     private Prompt prompt;
     private ReadlineConsole console;
     private Connection connection;
 
     private AeshConsoleRunner() {
-        commands = new ArrayList<>();
     }
 
     public static AeshConsoleRunner builder() {
@@ -57,21 +54,44 @@ public class AeshConsoleRunner {
     }
 
     public AeshConsoleRunner commands(Class<? extends Command>... commands) {
-        if(commands != null)
-            this.commands.addAll(Arrays.asList(commands));
+        if(commands != null) {
+            ensureRegistryBuilderInitialized();
+            try {
+                registryBuilder.commands(commands);
+            } catch (CommandRegistryException e) {
+                throw new RuntimeException("Error when adding commands: " + e.getMessage(), e);
+            }
+        }
         return this;
     }
 
-    public AeshConsoleRunner command(Class<? extends Command> commands) {
-        if(commands != null)
-            this.commands.add(commands);
+    public AeshConsoleRunner command(Class<? extends Command> command) {
+        if(command != null) {
+            ensureRegistryBuilderInitialized();
+            try {
+                registryBuilder.command(command);
+            } catch (CommandRegistryException e) {
+                throw new RuntimeException("Error when adding command: " + e.getMessage(), e);
+            }
+        }
         return this;
     }
 
-    public AeshConsoleRunner commands(List<Class<Command>> commands) {
-        if(commands != null)
-            this.commands.addAll(commands);
+    public AeshConsoleRunner commandRegistryBuilder(AeshCommandRegistryBuilder<CommandInvocation> commandRegistryBuilder) {
+        if(registryBuilder != null) {
+            throw new RuntimeException("Cannot set CommandRegistryBuilder after it has been initialized. " +
+                    "CommandRegistryBuilder must be set before adding any commands.");
+        }
+        if(commandRegistryBuilder != null) {
+            this.registryBuilder = commandRegistryBuilder;
+        }
         return this;
+    }
+
+    private void ensureRegistryBuilderInitialized() {
+        if(registryBuilder == null) {
+            registryBuilder = AeshCommandRegistryBuilder.builder();
+        }
     }
 
     public AeshConsoleRunner settings(Settings settings) {
@@ -102,7 +122,12 @@ public class AeshConsoleRunner {
     }
 
     public AeshConsoleRunner addExitCommand() {
-        commands.add(ExitCommand.class);
+        ensureRegistryBuilderInitialized();
+        try {
+            registryBuilder.command(ExitCommand.class);
+        } catch (CommandRegistryException e) {
+            throw new RuntimeException("Error when adding exit command: " + e.getMessage(), e);
+        }
         return this;
     }
 
@@ -127,18 +152,42 @@ public class AeshConsoleRunner {
 
     @SuppressWarnings("unchecked")
     private void init() {
-        if(commands.isEmpty() && (settings == null ||
-                                          settings.commandRegistry() == null ||
-                                          settings.commandRegistry().getAllCommandNames().isEmpty()))
+        // Build the command registry from the builder
+        CommandRegistry<CommandInvocation> builtRegistry = null;
+        if(registryBuilder != null) {
+            try {
+                builtRegistry = registryBuilder.create();
+            } catch (Exception e) {
+                throw new RuntimeException("Error creating command registry: " + e.getMessage(), e);
+            }
+        }
+
+        // Check if both builder and settings.commandRegistry have commands
+        if(builtRegistry != null && !builtRegistry.getAllCommandNames().isEmpty() &&
+                settings != null && settings.commandRegistry() != null &&
+                !settings.commandRegistry().getAllCommandNames().isEmpty()) {
+            throw new RuntimeException("Cannot define commands in both AeshConsoleRunner (via command() or commandRegistryBuilder()) " +
+                    "and Settings.commandRegistry(). Please use only one method to specify commands.");
+        }
+
+        // Determine which registry to use
+        CommandRegistry<CommandInvocation> finalRegistry = null;
+        if(builtRegistry != null && !builtRegistry.getAllCommandNames().isEmpty()) {
+            finalRegistry = builtRegistry;
+        } else if(settings != null && settings.commandRegistry() != null &&
+                !settings.commandRegistry().getAllCommandNames().isEmpty()) {
+            finalRegistry = settings.commandRegistry();
+        }
+
+        // Validate that we have at least one command
+        if(finalRegistry == null || finalRegistry.getAllCommandNames().isEmpty()) {
             throw new RuntimeException("No commands added, nothing to run");
+        }
 
         try {
             if(settings == null) {
-                AeshCommandRegistryBuilder registryBuilder = AeshCommandRegistryBuilder.builder();
-                for(Class<? extends Command> command : commands)
-                    registryBuilder.command(command);
                 settings = SettingsBuilder.builder()
-                                   .commandRegistry(registryBuilder.create())
+                                   .commandRegistry(finalRegistry)
                                    .enableAlias(false)
                                    .enableExport(false)
                                    .enableMan(false)
@@ -146,16 +195,11 @@ public class AeshConsoleRunner {
                                    .connection(connection)
                                    .build();
             }
-            //user added its own settings object, but no commands in registry
-            else if(!commands.isEmpty() &&
-                            (settings.commandRegistry() == null ||
-                                     settings.commandRegistry().getAllCommandNames().isEmpty())) {
-
-                AeshCommandRegistryBuilder registryBuilder = AeshCommandRegistryBuilder.builder();
-                for(Class<? extends Command> command : commands)
-                    registryBuilder.command(command);
+            // User added their own settings object, but we need to add or replace the registry
+            else if(settings.commandRegistry() == null ||
+                    settings.commandRegistry().getAllCommandNames().isEmpty()) {
                 SettingsBuilder settingsBuilder = new SettingsBuilder(settings)
-                                                   .commandRegistry(registryBuilder.create());
+                                                   .commandRegistry(finalRegistry);
 
                 if(connection != null)
                     settingsBuilder.connection(connection);
@@ -165,8 +209,8 @@ public class AeshConsoleRunner {
 
             console = new ReadlineConsole(settings);
         }
-        catch (CommandRegistryException e) {
-            throw new RuntimeException("Error when adding command: "+e.getMessage());
+        catch (Exception e) {
+            throw new RuntimeException("Error when initializing console: " + e.getMessage(), e);
         }
     }
 

@@ -103,6 +103,88 @@ public class AeshConsoleRunnerTest {
 
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testCommandRegistryDirect() throws Exception {
+        TestConnection connection = new TestConnection();
+
+        AeshCommandRegistryBuilder<CommandInvocation> builder = AeshCommandRegistryBuilder.<CommandInvocation>builder()
+                .command(HelloCommand.class)
+                .command(AeshConsoleRunner.ExitCommand.class);
+
+        AeshConsoleRunner runner = AeshConsoleRunner.builder()
+                .connection(connection)
+                .commandRegistryBuilder(builder);
+
+        runner.start();
+
+        connection.read("hello"+getLineSeparator());
+        connection.assertBufferEndsWith("Hello from Aesh!"+getLineSeparator());
+        connection.read("exit"+getLineSeparator());
+        Thread.sleep(200);
+        assertTrue(connection.closed());
+    }
+
+    @Test(expected = RuntimeException.class)
+    @SuppressWarnings("unchecked")
+    public void testDuplicateCommandRegistry() throws Exception {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.<CommandInvocation>builder()
+                .command(HelloCommand.class)
+                .create();
+
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
+                        OptionActivator, CommandActivator>
+                settings = SettingsBuilder.builder()
+                                   .logging(true)
+                                   .connection(connection)
+                                   .commandRegistry(registry)
+                                   .build();
+
+        // This should throw an exception because we're defining commands in both places
+        AeshConsoleRunner runner = AeshConsoleRunner.builder()
+                .settings(settings)
+                .command(Bar1Command.class);  // Adding command when settings already has a non-empty registry
+
+        runner.start();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testCommandRegistryBuilder() throws Exception {
+        TestConnection connection = new TestConnection();
+
+        AeshCommandRegistryBuilder<CommandInvocation> builder = AeshCommandRegistryBuilder.<CommandInvocation>builder()
+                .command(HelloCommand.class);
+
+        AeshConsoleRunner runner = AeshConsoleRunner.builder()
+                .connection(connection)
+                .commandRegistryBuilder(builder)
+                .addExitCommand();
+
+        runner.start();
+
+        connection.read("hello"+getLineSeparator());
+        connection.assertBufferEndsWith("Hello from Aesh!"+getLineSeparator());
+        connection.read("exit"+getLineSeparator());
+        Thread.sleep(200);
+        assertTrue(connection.closed());
+    }
+
+    @Test(expected = RuntimeException.class)
+    @SuppressWarnings("unchecked")
+    public void testCommandRegistryBuilderAfterInit() {
+        AeshCommandRegistryBuilder<CommandInvocation> builder = AeshCommandRegistryBuilder.<CommandInvocation>builder();
+
+        // Add a command first, which initializes the default builder
+        AeshConsoleRunner runner = AeshConsoleRunner.builder()
+                .command(HelloCommand.class);
+
+        // This should throw an exception because the builder was already initialized
+        runner.commandRegistryBuilder(builder);
+    }
+
 
     @CommandDefinition(name = "hello", description = "hello from aesh")
     public static class HelloCommand implements Command {
