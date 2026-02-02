@@ -151,4 +151,19 @@ public @interface Option {
      */
     Class<? extends OptionParser> parser() default AeshOptionParser.class;
 
+    /**
+     * When set to true for boolean options, automatically supports --no-{name}
+     * to set the value to false. Only valid for boolean/Boolean field types.
+     * For example, if the option is named "verbose", both --verbose and --no-verbose
+     * will be recognized.
+     */
+    boolean negatable() default false;
+
+    /**
+     * The prefix used for negation when negatable=true.
+     * Default is "no-". For example, with name="verbose" and default prefix,
+     * the negated form will be --no-verbose.
+     */
+    String negationPrefix() default "no-";
+
 }

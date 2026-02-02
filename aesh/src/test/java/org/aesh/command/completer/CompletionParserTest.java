@@ -646,5 +646,37 @@ public class CompletionParserTest {
         @Option(name = "standard", hasValue = false) // acceptNameWithoutDashes = false by default
         private Boolean standard;
     }
+
+    @Test
+    public void testNegatableOptionCompletion() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteNegatableTest<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // Test that completion shows both --verbose and --no-verbose
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test --", 7);
+        clp.complete(co, ip);
+        List<String> candidates = co.getFormattedCompletionCandidates();
+        assertTrue("Should contain --verbose", candidates.stream().anyMatch(c -> c.contains("verbose")));
+        assertTrue("Should contain --no-verbose", candidates.stream().anyMatch(c -> c.contains("no-verbose")));
+
+        // Test that --no-v completes to --no-verbose
+        co = new AeshCompleteOperation(aeshContext, "test --no-v", 11);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("erbose", co.getFormattedCompletionCandidates().get(0));
+
+        // Test that --v completes to --verbose
+        co = new AeshCompleteOperation(aeshContext, "test --v", 8);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("erbose", co.getFormattedCompletionCandidates().get(0));
+    }
+
+    @CommandDefinition(name = "test", description = "test negatable option completion")
+    public class ParseCompleteNegatableTest<CI extends CommandInvocation> extends TestCommand<CI> {
+
+        @Option(name = "verbose", hasValue = false, negatable = true, description = "enable verbose mode")
+        private boolean verbose;
+    }
 }
 

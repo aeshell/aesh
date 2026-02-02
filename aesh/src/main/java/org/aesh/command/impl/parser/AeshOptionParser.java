@@ -79,10 +79,14 @@ public class AeshOptionParser implements OptionParser {
             word = Parser.switchSpacesToEscapedSpacesInWord(word);
         if(option.isLongNameUsed()) {
             String optionPart = word.startsWith("--") ? word.substring(2) : word;
-            if(optionPart.length() != option.name().length())
-                processOption(option, optionPart, option.name());
+            // For negatable options, we need to use the correct name for comparison
+            String nameToMatch = option.isNegatedByUser() && option.getNegatedName() != null
+                    ? option.getNegatedName() : option.name();
+            if(optionPart.length() != nameToMatch.length())
+                processOption(option, optionPart, nameToMatch);
             else if(option.getOptionType() == OptionType.BOOLEAN) {
-                option.addValue("true");
+                // For negatable options, use "false" if specified in negated form
+                option.addValue(option.isNegatedByUser() ? "false" : "true");
                 status = Status.NULL;
             }
             else

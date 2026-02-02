@@ -28,3 +28,6 @@ classes
 
 #ignore checkstile files
 .checkstyle
+
+# ignore maven versionsBackup
+*.versionsBackup

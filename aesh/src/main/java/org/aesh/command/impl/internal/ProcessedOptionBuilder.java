@@ -75,6 +75,8 @@ public class ProcessedOptionBuilder {
     private boolean askIfNotSet = false;
     private boolean acceptNameWithoutDashes = false;
     private SelectorType selectorType;
+    private boolean negatable = false;
+    private String negationPrefix = "no-";
 
     private ProcessedOptionBuilder() {
         defaultValues = new ArrayList<>();
@@ -299,6 +301,21 @@ public class ProcessedOptionBuilder {
             return null;
     }
 
+    /**
+     * Set whether this option is negatable (supports --no-{name} form).
+     * Only valid for boolean options.
+     */
+    public ProcessedOptionBuilder negatable(boolean negatable) {
+        return apply(c -> c.negatable = negatable);
+    }
+
+    /**
+     * Set the prefix used for negation. Default is "no-".
+     */
+    public ProcessedOptionBuilder negationPrefix(String negationPrefix) {
+        return apply(c -> c.negationPrefix = negationPrefix);
+    }
+
      public ProcessedOption build() throws OptionParserException {
         if(optionType == null) {
             if(!hasValue)
@@ -345,8 +362,13 @@ public class ProcessedOptionBuilder {
         //if(renderer == null)
         //    renderer = new NullOptionRenderer();
 
+        // Validate that negatable is only used with boolean types
+        if(negatable && type != Boolean.class && type != boolean.class) {
+            throw new OptionParserException("Option '" + name + "' is marked as negatable but is not a boolean type");
+        }
+
         return new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, askIfNotSet, acceptNameWithoutDashes, selectorType, defaultValues, type, fieldName, optionType, converter,
-                completer, validator, activator, renderer, parser, overrideRequired);
+                completer, validator, activator, renderer, parser, overrideRequired, negatable, negationPrefix);
     }
 }
