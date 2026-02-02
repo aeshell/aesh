@@ -189,6 +189,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .renderer(o.renderer())
                             .parser(o.parser())
                             .overrideRequired(o.overrideRequired())
+                            .negatable(o.negatable())
+                            .negationPrefix(o.negationPrefix())
                             .build()
             );
         }

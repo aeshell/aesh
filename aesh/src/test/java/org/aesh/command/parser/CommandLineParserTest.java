@@ -684,4 +684,57 @@ public class CommandLineParserTest {
         }
     }
 
+    @Test
+    public void testNegatableOption() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new NegatableOptionCommand<>()).getParser();
+
+        // Test that --verbose sets verbose to true
+        parser.populateObject("negatable --verbose", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        NegatableOptionCommand<CommandInvocation> cmd = (NegatableOptionCommand<CommandInvocation>) parser.getCommand();
+        assertTrue(cmd.verbose);
+
+        // Test that --no-verbose sets verbose to false
+        parser.populateObject("negatable --no-verbose", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (NegatableOptionCommand<CommandInvocation>) parser.getCommand();
+        assertFalse(cmd.verbose);
+
+        // Test with custom prefix
+        parser.populateObject("negatable --without-debug", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (NegatableOptionCommand<CommandInvocation>) parser.getCommand();
+        assertFalse(cmd.debug);
+
+        // Test that --debug sets debug to true
+        parser.populateObject("negatable --debug", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (NegatableOptionCommand<CommandInvocation>) parser.getCommand();
+        assertTrue(cmd.debug);
+    }
+
+    @Test
+    public void testNegatableOptionHelp() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new NegatableOptionCommand<>()).getParser();
+
+        String help = parser.printHelp();
+        // Help should include both the normal and negated forms
+        assertTrue(help.contains("--verbose"));
+        assertTrue(help.contains("--no-verbose"));
+        assertTrue(help.contains("--debug"));
+        assertTrue(help.contains("--without-debug"));
+    }
+
+    @CommandDefinition(name = "negatable", description = "test negatable options")
+    public class NegatableOptionCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(hasValue = false, negatable = true, description = "enable verbose mode")
+        private boolean verbose;
+
+        @Option(hasValue = false, negatable = true, negationPrefix = "without-", description = "enable debug mode")
+        private boolean debug;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }

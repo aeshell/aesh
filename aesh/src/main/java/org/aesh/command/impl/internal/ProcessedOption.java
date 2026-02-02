@@ -86,6 +86,9 @@ public final class ProcessedOption {
     private boolean askIfNotSet = false;
     private boolean acceptNameWithoutDashes = false;
     private final SelectorType selectorType;
+    private boolean negatable = false;
+    private String negationPrefix = "no-";
+    private boolean negatedByUser = false;
 
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
@@ -95,7 +98,7 @@ public final class ProcessedOption {
                            OptionValidator optionValidator,
                            OptionActivator activator,
                            OptionRenderer renderer, OptionParser parser,
-                           boolean overrideRequired) throws OptionParserException {
+                           boolean overrideRequired, boolean negatable, String negationPrefix) throws OptionParserException {
 
         if(shortName != '\u0000')
             this.shortName = String.valueOf(shortName);
@@ -127,6 +130,8 @@ public final class ProcessedOption {
             this.renderer = renderer;
 
         this.defaultValues = PropertiesLookup.checkForSystemVariables(defaultValue);
+        this.negatable = negatable;
+        this.negationPrefix = negationPrefix != null ? negationPrefix : "no-";
 
         properties = new HashMap<>();
         values = new ArrayList<>();
@@ -285,6 +290,37 @@ public final class ProcessedOption {
         return selectorType;
     }
 
+    public boolean isNegatable() {
+        return negatable;
+    }
+
+    public String getNegationPrefix() {
+        return negationPrefix;
+    }
+
+    /**
+     * Returns the negated form of this option's name.
+     * For example, if name is "verbose" and prefix is "no-", returns "no-verbose".
+     * Returns null if this option is not negatable.
+     */
+    public String getNegatedName() {
+        return negatable && name != null ? negationPrefix + name : null;
+    }
+
+    /**
+     * Returns true if this option was specified in its negated form (e.g., --no-verbose).
+     */
+    public boolean isNegatedByUser() {
+        return negatedByUser;
+    }
+
+    /**
+     * Sets whether this option was specified in its negated form.
+     */
+    public void setNegatedByUser(boolean negatedByUser) {
+        this.negatedByUser = negatedByUser;
+    }
+
     public void clear() {
         if(values != null)
             values.clear();
@@ -294,6 +330,7 @@ public final class ProcessedOption {
         endsWithSeparator = false;
         cursorOption = false;
         cursorValue = false;
+        negatedByUser = false;
     }
 
     public String getDisplayName() {
@@ -315,6 +352,22 @@ public final class ProcessedOption {
             return new TerminalString( hasValue() ? prefix+name+"=" : prefix+name, renderer.getColor(), renderer.getTextType());
     }
 
+    /**
+     * Returns the negated form of the option name with dashes for completion.
+     * For example, for option "verbose" with prefix "no-", returns "--no-verbose".
+     * Returns null if this option is not negatable.
+     */
+    public TerminalString getRenderedNegatedNameWithDashes() {
+        if (!negatable || name == null) {
+            return null;
+        }
+        // Negatable options are boolean, so they don't have a value suffix
+        if (renderer == null || !ansiMode)
+            return new TerminalString("--" + negationPrefix + name, true);
+        else
+            return new TerminalString("--" + negationPrefix + name, renderer.getColor(), renderer.getTextType());
+    }
+
     public int getFormattedLength() {
         StringBuilder sb = new StringBuilder();
         if(shortName != null)
@@ -323,6 +376,10 @@ public final class ProcessedOption {
             if(sb.toString().trim().length() > 0)
                 sb.append(", ");
             sb.append("--").append(name);
+            // Add negated form for negatable options
+            if(negatable) {
+                sb.append(", --").append(negationPrefix).append(name);
+            }
         }
         if(argument != null && argument.length() > 0) {
             sb.append("=<").append(argument).append(">");
@@ -344,6 +401,10 @@ public final class ProcessedOption {
             if(shortName != null)
                 sb.append(", ");
             sb.append("--").append(name);
+            // Add negated form for negatable options
+            if(negatable) {
+                sb.append(", --").append(negationPrefix).append(name);
+            }
         }
         if(argument != null && argument.length() > 0) {
             sb.append("=<").append(argument).append(">");
@@ -397,7 +458,11 @@ public final class ProcessedOption {
                     constructor.setAccessible(true);
             }
             if(optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN || optionType == OptionType.ARGUMENT) {
-                if(getValue() != null)
+                // Handle negatable options - when used in negated form (e.g., --no-verbose), inject false
+                if(negatedByUser && optionType == OptionType.BOOLEAN) {
+                    field.set(instance, doConvert("false", invocationProviders, instance, aeshContext, doValidation));
+                }
+                else if(getValue() != null)
                     field.set(instance, doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation));
                 else if(defaultValues.size() > 0) {
                     field.set(instance, doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation));

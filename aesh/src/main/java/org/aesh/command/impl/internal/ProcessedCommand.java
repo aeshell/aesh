@@ -122,7 +122,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
                 opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.acceptNameWithoutDashes(), opt.selectorType(),
                 opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(), opt.converter(),
-                opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(), opt.parser(), opt.doOverrideRequired()));
+                opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(), opt.parser(), opt.doOverrideRequired(),
+                opt.isNegatable(), opt.getNegationPrefix()));
 
         options.get(options.size()-1).setParent(this);
     }
@@ -133,7 +134,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                     opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.acceptNameWithoutDashes(), opt.selectorType(),
                     opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(),
                     opt.converter(), opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(),
-                    opt.parser(), opt.doOverrideRequired()));
+                    opt.parser(), opt.doOverrideRequired(), opt.isNegatable(), opt.getNegationPrefix()));
 
             this.options.get(this.options.size()-1).setParent(this);
         }
@@ -246,9 +247,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      */
     public ProcessedOption searchAllOptions(String input) {
         if (input.startsWith("--")) {
-            ProcessedOption currentOption = findLongOptionNoActivatorCheck(input.substring(2));
+            String optionName = input.substring(2);
+            ProcessedOption currentOption = findLongOptionNoActivatorCheck(optionName);
             if(currentOption == null && input.contains("="))
-                currentOption = startWithLongOptionNoActivatorCheck(input.substring(2));
+                currentOption = startWithLongOptionNoActivatorCheck(optionName);
+            // Check for negated options (e.g., --no-verbose)
+            if (currentOption == null) {
+                currentOption = findNegatedOptionNoActivatorCheck(optionName);
+            }
             if (currentOption != null)
                 currentOption.setLongNameUsed(true);
             //need to handle spaces in option names
@@ -296,6 +302,42 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if(option.name() != null && option.name().equals(name))
                 return option;
 
+        return null;
+    }
+
+    /**
+     * Find an option by its negated name (e.g., "no-verbose" for option "verbose").
+     * If found, marks the option as negated.
+     *
+     * @param name the negated name to search for
+     * @return the matching option, or null if not found
+     */
+    public ProcessedOption findNegatedOption(String name) {
+        for (ProcessedOption option : getOptions()) {
+            if (option.isNegatable() && option.getNegatedName() != null &&
+                    option.getNegatedName().equals(name) &&
+                    option.activator().isActivated(new ParsedCommand(this))) {
+                option.setNegatedByUser(true);
+                return option;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Find an option by its negated name without checking activator.
+     *
+     * @param name the negated name to search for
+     * @return the matching option, or null if not found
+     */
+    public ProcessedOption findNegatedOptionNoActivatorCheck(String name) {
+        for (ProcessedOption option : getOptions()) {
+            if (option.isNegatable() && option.getNegatedName() != null &&
+                    option.getNegatedName().equals(name)) {
+                option.setNegatedByUser(true);
+                return option;
+            }
+        }
         return null;
     }
 
@@ -429,15 +471,21 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     /**
      * Return all option names that not already have a value
-     * and is enabled
+     * and is enabled. For negatable options, also includes the negated form.
      */
     public List<TerminalString> getOptionLongNamesWithDash() {
         List<ProcessedOption> opts = getOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
             if(o.getValues().size() == 0 &&
-                    o.activator().isActivated(new ParsedCommand(this)))
+                    o.activator().isActivated(new ParsedCommand(this))) {
                 names.add(o.getRenderedNameWithDashes());
+                // Also add the negated form for negatable options
+                TerminalString negated = o.getRenderedNegatedNameWithDashes();
+                if (negated != null) {
+                    names.add(negated);
+                }
+            }
         }
 
         return names;
@@ -452,6 +500,15 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                    (o.name().startsWith(name) && o.getValues().size() == 0)) &&
                    o.activator().isActivated(new ParsedCommand(this)))
                names.add(o.getRenderedNameWithDashes());
+           // Also check negated option names for negatable options
+           if (o.isNegatable() && o.getNegatedName() != null &&
+                   o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
+                   o.activator().isActivated(new ParsedCommand(this))) {
+               TerminalString negated = o.getRenderedNegatedNameWithDashes();
+               if (negated != null) {
+                   names.add(negated);
+               }
+           }
         }
         return names;
     }
@@ -467,6 +524,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                    (o.name().startsWith(name) && o.getValues().size() == 0)) &&
                    o.activator().isActivated(new ParsedCommand(this)))
                names.add(o.name());
+           // Also check negated option names for negatable options
+           if (o.isNegatable() && o.getNegatedName() != null &&
+                   o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
+                   o.activator().isActivated(new ParsedCommand(this)))
+               names.add(o.getNegatedName());
         }
         return names;
     }
