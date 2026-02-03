@@ -89,6 +89,7 @@ public final class ProcessedOption {
     private boolean negatable = false;
     private String negationPrefix = "no-";
     private boolean negatedByUser = false;
+    private boolean inherited = false;
 
     public ProcessedOption(char shortName, String name, String description,
                            String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
@@ -98,7 +99,8 @@ public final class ProcessedOption {
                            OptionValidator optionValidator,
                            OptionActivator activator,
                            OptionRenderer renderer, OptionParser parser,
-                           boolean overrideRequired, boolean negatable, String negationPrefix) throws OptionParserException {
+                           boolean overrideRequired, boolean negatable, String negationPrefix,
+                           boolean inherited) throws OptionParserException {
 
         if(shortName != '\u0000')
             this.shortName = String.valueOf(shortName);
@@ -132,6 +134,7 @@ public final class ProcessedOption {
         this.defaultValues = PropertiesLookup.checkForSystemVariables(defaultValue);
         this.negatable = negatable;
         this.negationPrefix = negationPrefix != null ? negationPrefix : "no-";
+        this.inherited = inherited;
 
         properties = new HashMap<>();
         values = new ArrayList<>();
@@ -319,6 +322,15 @@ public final class ProcessedOption {
      */
     public void setNegatedByUser(boolean negatedByUser) {
         this.negatedByUser = negatedByUser;
+    }
+
+    /**
+     * Returns true if this option should be inherited by subcommands.
+     * Inherited options are automatically available to subcommands when
+     * in sub-command mode.
+     */
+    public boolean isInherited() {
+        return inherited;
     }
 
     public void clear() {

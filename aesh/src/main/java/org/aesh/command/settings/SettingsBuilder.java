@@ -276,6 +276,10 @@ public class SettingsBuilder<CI extends CommandInvocation,
         return apply(c -> c.settings.setEnableSearchInPaging(enable));
     }
 
+    public SettingsBuilder<CI,CO,COM,VI,OA,CA> subCommandModeSettings(SubCommandModeSettings subCommandModeSettings) {
+        return apply(c -> c.settings.setSubCommandModeSettings(subCommandModeSettings));
+    }
+
     public Settings<CI,CO,COM,VI,OA,CA> build() {
         if(settings.logging())
             LoggerUtil.doLog();

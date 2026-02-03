@@ -308,4 +308,11 @@ public interface Settings<CI extends CommandInvocation,
     void setEnableSearchInPaging(boolean enable);
 
     boolean enableSearchInPaging();
+
+    /**
+     * Get sub-command mode settings.
+     *
+     * @return the sub-command mode settings
+     */
+    SubCommandModeSettings subCommandModeSettings();
 }

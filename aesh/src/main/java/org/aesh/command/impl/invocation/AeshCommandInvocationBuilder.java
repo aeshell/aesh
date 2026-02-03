@@ -21,10 +21,12 @@ package org.aesh.command.impl.invocation;
 
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.console.Console;
+import org.aesh.console.ReadlineConsole;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -43,7 +45,23 @@ public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<Ae
     public AeshCommandInvocation build(CommandRuntime<AeshCommandInvocation> runtime,
                                        CommandInvocationConfiguration config,
                                        CommandContainer<AeshCommandInvocation> commandContainer) {
+        // Get CommandContext from ReadlineConsole if available
+        CommandContext ctx = null;
+        if (console instanceof ReadlineConsole) {
+            ctx = ((ReadlineConsole) console).getCommandContext();
+        }
+        if (ctx != null && ctx.isInSubCommandMode()) {
+            return new AeshCommandInvocation(console, shell, runtime, config, commandContainer, ctx);
+        }
         return new AeshCommandInvocation(console, shell, runtime, config, commandContainer);
+    }
+
+    @Override
+    public AeshCommandInvocation build(CommandRuntime<AeshCommandInvocation> runtime,
+                                       CommandInvocationConfiguration config,
+                                       CommandContainer<AeshCommandInvocation> commandContainer,
+                                       CommandContext commandContext) {
+        return new AeshCommandInvocation(console, shell, runtime, config, commandContainer, commandContext);
     }
 
 }

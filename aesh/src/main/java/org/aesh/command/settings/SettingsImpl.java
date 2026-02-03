@@ -110,6 +110,7 @@ public class SettingsImpl<CI extends CommandInvocation,
     private boolean enableSearchPaging;
     private AliasManager aliasManager;
     private Consumer<Void> connectionClosedHandler;
+    private SubCommandModeSettings subCommandModeSettings;
 
     SettingsImpl() {
     }
@@ -162,6 +163,7 @@ public class SettingsImpl<CI extends CommandInvocation,
         setEnableSearchInPaging(baseSettings.enableSearchInPaging());
         setAliasManager(baseSettings.aliasManager());
         setConnectionClosedHandler(baseSettings.connectionClosedHandler());
+        setSubCommandModeSettings(baseSettings.subCommandModeSettings());
     }
 
     public void resetToDefaults() {
@@ -824,5 +826,17 @@ public class SettingsImpl<CI extends CommandInvocation,
     @Override
     public boolean enableSearchInPaging() {
         return enableSearchPaging;
+    }
+
+    @Override
+    public SubCommandModeSettings subCommandModeSettings() {
+        if (subCommandModeSettings == null) {
+            subCommandModeSettings = SubCommandModeSettings.defaults();
+        }
+        return subCommandModeSettings;
+    }
+
+    public void setSubCommandModeSettings(SubCommandModeSettings subCommandModeSettings) {
+        this.subCommandModeSettings = subCommandModeSettings;
     }
 }

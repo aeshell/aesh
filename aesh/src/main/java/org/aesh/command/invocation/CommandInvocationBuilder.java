@@ -21,6 +21,7 @@ package org.aesh.command.invocation;
 
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.context.CommandContext;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -29,4 +30,21 @@ public interface CommandInvocationBuilder<CI extends CommandInvocation> {
 
     CI build(CommandRuntime<CI> runtime,
              CommandInvocationConfiguration configuration, CommandContainer<CI> commandContainer);
+
+    /**
+     * Build a command invocation with a command context for sub-command mode.
+     *
+     * @param runtime the command runtime
+     * @param configuration the invocation configuration
+     * @param commandContainer the command container
+     * @param commandContext the command context (may be null)
+     * @return the command invocation
+     */
+    default CI build(CommandRuntime<CI> runtime,
+                     CommandInvocationConfiguration configuration,
+                     CommandContainer<CI> commandContainer,
+                     CommandContext commandContext) {
+        // Default implementation ignores context for backward compatibility
+        return build(runtime, configuration, commandContainer);
+    }
 }

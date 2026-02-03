@@ -23,8 +23,10 @@ package org.aesh.command.impl.invocation;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import org.aesh.command.Command;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.shell.ShellOutputDelegate;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.invocation.CommandInvocation;
@@ -36,6 +38,7 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.console.Console;
+import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.action.KeyAction;
 
@@ -49,15 +52,25 @@ public final class AeshCommandInvocation implements CommandInvocation {
     private final CommandRuntime<AeshCommandInvocation> runtime;
     private final CommandInvocationConfiguration config;
     private final CommandContainer<AeshCommandInvocation> commandContainer;
+    private final CommandContext commandContext;
 
     public AeshCommandInvocation(Console console, Shell shell,
                                  CommandRuntime<AeshCommandInvocation> runtime,
                                  CommandInvocationConfiguration config,
                                  CommandContainer<AeshCommandInvocation> commandContainer) {
+        this(console, shell, runtime, config, commandContainer, null);
+    }
+
+    public AeshCommandInvocation(Console console, Shell shell,
+                                 CommandRuntime<AeshCommandInvocation> runtime,
+                                 CommandInvocationConfiguration config,
+                                 CommandContainer<AeshCommandInvocation> commandContainer,
+                                 CommandContext commandContext) {
         this.console = console;
         this.runtime = runtime;
         this.config = config;
         this.commandContainer = commandContainer;
+        this.commandContext = commandContext;
         //if we have output redirection, use output delegate
         if (getConfiguration() != null && getConfiguration().getOutputRedirection() != null) {
             this.shell = new ShellOutputDelegate(shell, getConfiguration().getOutputRedirection());
@@ -148,6 +161,83 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public CommandInvocationConfiguration getConfiguration() {
         return config;
+    }
+
+    @Override
+    public CommandContext getCommandContext() {
+        // If we have a direct reference, use it
+        if (commandContext != null) {
+            return commandContext;
+        }
+        // Otherwise try to get it from the console
+        if (console instanceof ReadlineConsole) {
+            return ((ReadlineConsole) console).getCommandContext();
+        }
+        return null;
+    }
+
+    @Override
+    public boolean enterSubCommandMode(Command<?> command) {
+        if (!(console instanceof ReadlineConsole)) {
+            return false;
+        }
+
+        ReadlineConsole readlineConsole = (ReadlineConsole) console;
+        CommandContext ctx = readlineConsole.getCommandContext();
+        if (ctx == null) {
+            return false;
+        }
+
+        // Check if sub-command mode is enabled
+        if (!ctx.getSettings().isEnabled()) {
+            return false;
+        }
+
+        // Push the current command onto the context
+        ctx.push(commandContainer.getParser(), command);
+
+        // Update the prompt to show the context
+        String newPrompt = ctx.buildPrompt(true);
+        console.setPrompt(new Prompt(newPrompt));
+
+        // Print entry message if configured
+        String commandName = commandContainer.getParser().getProcessedCommand().name();
+        String enterMessage = ctx.formatEnterMessage(commandName);
+        if (enterMessage != null) {
+            println(enterMessage);
+        }
+        String exitHint = ctx.formatExitHint();
+        if (exitHint != null) {
+            println(exitHint);
+        }
+        println("");
+
+        return true;
+    }
+
+    @Override
+    public boolean exitSubCommandMode() {
+        if (!(console instanceof ReadlineConsole)) {
+            return false;
+        }
+
+        ReadlineConsole readlineConsole = (ReadlineConsole) console;
+        CommandContext ctx = readlineConsole.getCommandContext();
+        if (ctx == null || !ctx.isInSubCommandMode()) {
+            return false;
+        }
+
+        // Pop the context
+        ctx.pop();
+
+        // Update the prompt
+        if (ctx.isInSubCommandMode()) {
+            console.setPrompt(new Prompt(ctx.buildPrompt(true)));
+        } else {
+            console.setPrompt(new Prompt(ctx.getOriginalPrompt()));
+        }
+
+        return true;
     }
 
 }
