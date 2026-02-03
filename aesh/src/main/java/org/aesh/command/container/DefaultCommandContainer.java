@@ -64,6 +64,14 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
     public ProcessedCommand<Command<CI>, CI> parseAndPopulate(InvocationProviders invocationProviders,
                                                               AeshContext aeshContext)
             throws CommandLineParserException, OptionValidatorException {
+        return parseAndPopulate(invocationProviders, aeshContext, null);
+    }
+
+    @Override
+    public ProcessedCommand<Command<CI>, CI> parseAndPopulate(InvocationProviders invocationProviders,
+                                                              AeshContext aeshContext,
+                                                              org.aesh.command.impl.context.CommandContext commandContext)
+            throws CommandLineParserException, OptionValidatorException {
         if(lines.isEmpty())
             return null;
         ParsedLine aeshLine = lines.poll();
@@ -75,8 +83,14 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
         if (getParser().parsedCommand() == null) {
             throw new CommandLineParserException("Command and/or sub-command is not valid!");
         }
-        getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(),
-                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        // Use context-aware populateObject if CommandContext is available
+        if (commandContext != null && commandContext.isInSubCommandMode()) {
+            getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(),
+                    invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE, commandContext);
+        } else {
+            getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(),
+                    invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        }
         return getParser().parsedCommand().getProcessedCommand();
     }
 

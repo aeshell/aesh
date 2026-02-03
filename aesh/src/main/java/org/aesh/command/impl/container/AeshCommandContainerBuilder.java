@@ -191,6 +191,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .overrideRequired(o.overrideRequired())
                             .negatable(o.negatable())
                             .negationPrefix(o.negationPrefix())
+                            .inherited(o.inherited())
                             .build()
             );
         }
@@ -311,6 +312,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .renderer(arg.renderer())
                             .parser(arg.parser())
                             .overrideRequired(arg.overrideRequired())
+                            .inherited(arg.inherited())
                             .build()
             );
         }

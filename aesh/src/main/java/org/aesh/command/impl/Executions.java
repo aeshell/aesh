@@ -28,10 +28,12 @@ import org.aesh.command.Execution;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.NullOptionCompleter;
+import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.option.ParentCommand;
 import org.aesh.command.impl.operator.AndOperator;
 import org.aesh.command.impl.operator.AppendOutputRedirectionOperator;
 import org.aesh.command.impl.operator.ConfigurationOperator;
@@ -60,6 +62,8 @@ import org.aesh.readline.terminal.formatting.TerminalString;
 import org.aesh.selector.Selector;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -115,7 +119,9 @@ class Executions {
         @Override
         public void populateCommand() throws CommandLineParserException, OptionValidatorException {
             if (!populated) {
-                cmd = commandContainer.parseAndPopulate(runtime.invocationProviders(), runtime.getAeshContext());
+                // Get command context for inherited option injection
+                CommandContext cmdContext = getCommandInvocation().getCommandContext();
+                cmd = commandContainer.parseAndPopulate(runtime.invocationProviders(), runtime.getAeshContext(), cmdContext);
                 populated = true;
             }
         }
@@ -130,6 +136,13 @@ class Executions {
                                                               CommandLineParserException, OptionValidatorException {
             //first we need to parse and populate the command line
             populateCommand();
+
+            // Inject @ParentCommand fields if in sub-command mode
+            CommandContext cmdContext = getCommandInvocation().getCommandContext();
+            if (cmdContext != null && cmdContext.isInSubCommandMode()) {
+                injectParentCommands(cmd.getCommand(), cmdContext);
+            }
+
             //finally we set the command that should be executed
             executable.setCommand(cmd.getCommand());
 
@@ -433,5 +446,48 @@ class Executions {
             }
         }
         throw new IllegalArgumentException("Unsupported operator " + op);
+    }
+
+    /**
+     * Inject parent command instances into fields annotated with @ParentCommand.
+     */
+    private static void injectParentCommands(Object command, CommandContext commandContext) {
+        List<Field> fields = getAllFields(command.getClass());
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(ParentCommand.class)) {
+                Class<?> fieldType = field.getType();
+
+                // Find matching parent command in context stack
+                @SuppressWarnings("unchecked")
+                Command<?> parent = commandContext.getParentCommand(
+                        (Class<? extends Command<?>>) fieldType.asSubclass(Command.class));
+
+                if (parent != null) {
+                    try {
+                        if (!Modifier.isPublic(field.getModifiers())) {
+                            field.setAccessible(true);
+                        }
+                        field.set(command, parent);
+                    } catch (IllegalAccessException e) {
+                        // Log warning but continue
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Get all fields from a class and its superclasses.
+     */
+    private static List<Field> getAllFields(Class<?> clazz) {
+        List<Field> fields = new ArrayList<>();
+        while (clazz != null) {
+            for (Field field : clazz.getDeclaredFields()) {
+                fields.add(field);
+            }
+            clazz = clazz.getSuperclass();
+        }
+        return fields;
     }
 }

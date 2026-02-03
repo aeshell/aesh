@@ -38,6 +38,7 @@ import org.aesh.command.export.ExportManager;
 import org.aesh.command.export.ExportPreProcessor;
 import org.aesh.command.impl.AeshCommandResolver;
 import org.aesh.command.impl.completer.AeshCompletionHandler;
+import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
@@ -112,6 +113,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     private History history;
 
     private ShellImpl shell;
+    private CommandContext commandContext;
 
    private final EnumMap<ReadlineFlag, Integer> readlineFlags = new EnumMap<>(ReadlineFlag.class);
 
@@ -234,11 +236,29 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             attr.setLocalFlag(Attributes.LocalFlag.ECHOCTL, false);
             connection.setAttributes(attr);
         }
-        if(settings.getInterruptHandler() != null) {
-            connection.setSignalHandler((Signal t) -> {
+        // Set up signal handler for Ctrl+C
+        connection.setSignalHandler((Signal t) -> {
+            if (t == Signal.INT) {
+                // If in sub-command mode and exitOnCtrlC is enabled, exit sub-command mode
+                if (commandContext != null && commandContext.isInSubCommandMode()
+                        && commandContext.getSettings().exitOnCtrlC()) {
+                    commandContext.pop();
+                    // Update prompt - the readline will finish with empty string
+                    // and the normal flow will restart with the new prompt
+                    if (commandContext.isInSubCommandMode()) {
+                        setPrompt(new Prompt(commandContext.buildPrompt(true)));
+                    } else {
+                        setPrompt(new Prompt(commandContext.getOriginalPrompt()));
+                    }
+                    // Don't call the user's interrupt handler since we handled it
+                    return;
+                }
+            }
+            // Call user's interrupt handler if set
+            if (settings.getInterruptHandler() != null) {
                 settings.getInterruptHandler().accept(null);
-            });
-        }
+            }
+        });
 
         this.runtime = generateRuntime();
         read(this.connection, readline);
@@ -248,8 +268,18 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private void init() {
         completionHandler = new AeshCompletionHandler(context);
+        String originalPromptString = "";
         if(prompt == null)
             prompt = new Prompt("");
+        else {
+            // Convert prompt's int[] back to String for CommandContext
+            int[] promptCodes = prompt.getPromptAsString();
+            if (promptCodes != null && promptCodes.length > 0) {
+                originalPromptString = new String(promptCodes, 0, promptCodes.length);
+            }
+        }
+        // Initialize command context for sub-command mode
+        commandContext = new CommandContext(originalPromptString, settings.subCommandModeSettings());
         if (settings.historyPersistent()) {
             history = new FileHistory(settings.historyFile(), settings.historySize(),
                     buildPermission(settings.historyFilePermission()), settings.logging());
@@ -297,7 +327,77 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         }
      }
 
+    /**
+     * Display current context information when the context command is invoked.
+     */
+    private void displayContextInfo(Connection conn) {
+        if (commandContext == null || !commandContext.isInSubCommandMode()) {
+            conn.write("Not in sub-command mode.\n");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== Current Context ===\n");
+        sb.append("Path: ").append(commandContext.getContextPath()).append("\n");
+        sb.append("Depth: ").append(commandContext.depth()).append("\n");
+        sb.append("\n");
+
+        // Display values from each context level
+        sb.append(commandContext.formatContextValues());
+
+        // Display inherited values if any
+        java.util.Map<String, Object> inherited = commandContext.getAllInheritedValues();
+        if (!inherited.isEmpty()) {
+            sb.append("\nInherited values:\n");
+            for (java.util.Map.Entry<String, Object> entry : inherited.entrySet()) {
+                // Skip internal keys and duplicates (option name vs field name)
+                if (!entry.getKey().startsWith("_")) {
+                    sb.append("  ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+                }
+            }
+        }
+
+        // Display exit hints
+        sb.append("\n");
+        String exitHint = commandContext.formatExitHint();
+        if (exitHint != null) {
+            sb.append(exitHint).append("\n");
+        }
+
+        conn.write(sb.toString());
+    }
+
     private void processLine(String line, Connection conn) {
+        // Handle special commands in sub-command mode
+        if (commandContext != null && commandContext.isInSubCommandMode()) {
+            // Handle exit command
+            if (commandContext.isExitCommand(line)) {
+                commandContext.pop();
+                // Update prompt
+                if (commandContext.isInSubCommandMode()) {
+                    setPrompt(new Prompt(commandContext.buildPrompt(true)));
+                } else {
+                    setPrompt(new Prompt(commandContext.getOriginalPrompt()));
+                }
+                read(conn, readline);
+                return;
+            }
+
+            // Handle context command - display current context values
+            String contextCommand = commandContext.getSettings().getContextCommand();
+            if (contextCommand != null && line.trim().equals(contextCommand)) {
+                displayContextInfo(conn);
+                read(conn, readline);
+                return;
+            }
+
+            // Prefix command with context path
+            String contextPath = commandContext.getContextPathWithSpaces();
+            if (!contextPath.isEmpty()) {
+                line = contextPath + " " + line;
+            }
+        }
+
         try {
             Executor<? extends CommandInvocation> executor = runtime.buildExecutor(line);
             processManager.execute(executor, conn);
@@ -409,16 +509,40 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     class AeshCompletion implements Completion<AeshCompleteOperation> {
         @Override
         public void complete(AeshCompleteOperation completeOperation) {
+            // In sub-command mode, prefix the buffer with context path
+            if (commandContext != null && commandContext.isInSubCommandMode()) {
+                String contextPath = commandContext.getContextPathWithSpaces();
+                if (!contextPath.isEmpty()) {
+                    String originalBuffer = completeOperation.getBuffer();
+                    int originalCursor = completeOperation.getCursor();
+
+                    // Create a new complete operation with context prefix
+                    String prefixedBuffer = contextPath + " " + originalBuffer;
+                    int prefixLength = contextPath.length() + 1;
+
+                    AeshCompleteOperation prefixedOperation = new AeshCompleteOperation(
+                            context, prefixedBuffer, originalCursor + prefixLength);
+
+                    // Run completion on the prefixed buffer
+                    runtime.complete(prefixedOperation);
+
+                    // Transfer results back to original operation
+                    completeOperation.addCompletionCandidatesTerminalString(
+                            prefixedOperation.getCompletionCandidates());
+                    completeOperation.setIgnoreOffset(prefixedOperation.doIgnoreOffset());
+                    completeOperation.setIgnoreStartsWith(prefixedOperation.isIgnoreStartsWith());
+
+                    // Adjust offset to account for the prefix
+                    int newOffset = prefixedOperation.getOffset() - prefixLength;
+                    if (newOffset >= 0) {
+                        completeOperation.setOffset(newOffset);
+                    }
+
+                    return;
+                }
+            }
             runtime.complete(completeOperation);
         }
-
-        /* TODO
-        if(internalRegistry != null) {
-            for (String internalCommand : internalRegistry.getAllCommandNames())
-                if (internalCommand.startsWith(co.getBuffer()))
-                    co.addCompletionCandidate(internalCommand);
-        }
-        */
     }
 
     private CommandRuntime<? extends CommandInvocation> generateRuntime() {
@@ -429,6 +553,24 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                 .aeshContext(context)
                 .operators(EnumSet.allOf(OperatorType.class))
                 .build();
+    }
+
+    /**
+     * Get the command context for sub-command mode.
+     *
+     * @return the command context
+     */
+    public CommandContext getCommandContext() {
+        return commandContext;
+    }
+
+    /**
+     * Check if currently in sub-command mode.
+     *
+     * @return true if in sub-command mode
+     */
+    public boolean isInSubCommandMode() {
+        return commandContext != null && commandContext.isInSubCommandMode();
     }
 
 }

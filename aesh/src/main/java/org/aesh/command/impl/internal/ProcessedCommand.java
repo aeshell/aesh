@@ -123,7 +123,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.acceptNameWithoutDashes(), opt.selectorType(),
                 opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(), opt.converter(),
                 opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(), opt.parser(), opt.doOverrideRequired(),
-                opt.isNegatable(), opt.getNegationPrefix()));
+                opt.isNegatable(), opt.getNegationPrefix(), opt.isInherited()));
 
         options.get(options.size()-1).setParent(this);
     }
@@ -134,7 +134,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                     opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.acceptNameWithoutDashes(), opt.selectorType(),
                     opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(),
                     opt.converter(), opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(),
-                    opt.parser(), opt.doOverrideRequired(), opt.isNegatable(), opt.getNegationPrefix()));
+                    opt.parser(), opt.doOverrideRequired(), opt.isNegatable(), opt.getNegationPrefix(), opt.isInherited()));
 
             this.options.get(this.options.size()-1).setParent(this);
         }

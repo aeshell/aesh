@@ -23,7 +23,9 @@ package org.aesh.command.invocation;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import org.aesh.command.Command;
 import org.aesh.command.Executor;
+import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
@@ -163,5 +165,133 @@ public interface CommandInvocation {
      * @param paging true to pause output for long content
      */
     void println(String msg, boolean paging);
+
+    // ========== Parent Command Context Methods ==========
+
+    /**
+     * Get the current command context for sub-command mode.
+     * The context provides access to parent command values and state.
+     *
+     * @return the command context, or null if not available
+     */
+    default CommandContext getCommandContext() {
+        return null;
+    }
+
+    /**
+     * Get a value from a parent command by field or option name.
+     * Searches from immediate parent up to root.
+     *
+     * @param name The field or option name
+     * @param type The expected type
+     * @param <T> the value type
+     * @return The value, or null if not found
+     */
+    default <T> T getParentValue(String name, Class<T> type) {
+        CommandContext ctx = getCommandContext();
+        return ctx != null ? ctx.getParentValue(name, type) : null;
+    }
+
+    /**
+     * Get a value from a parent command with a default value.
+     *
+     * @param name The field or option name
+     * @param type The expected type
+     * @param defaultValue The default value if not found
+     * @param <T> the value type
+     * @return The value, or defaultValue if not found
+     */
+    default <T> T getParentValue(String name, Class<T> type, T defaultValue) {
+        CommandContext ctx = getCommandContext();
+        return ctx != null ? ctx.getParentValue(name, type, defaultValue) : defaultValue;
+    }
+
+    /**
+     * Get the immediate parent command instance.
+     *
+     * @return the parent command, or null if not in sub-command mode
+     */
+    default Command<?> getParentCommand() {
+        CommandContext ctx = getCommandContext();
+        return ctx != null ? ctx.getParentCommand() : null;
+    }
+
+    /**
+     * Get a specific parent command by type.
+     *
+     * @param type the command class to find
+     * @param <T> the command type
+     * @return the matching parent command, or null if not found
+     */
+    default <T extends Command<?>> T getParentCommand(Class<T> type) {
+        CommandContext ctx = getCommandContext();
+        return ctx != null ? ctx.getParentCommand(type) : null;
+    }
+
+    /**
+     * Check if currently executing in sub-command mode.
+     *
+     * @return true if in sub-command mode
+     */
+    default boolean isInSubCommandMode() {
+        CommandContext ctx = getCommandContext();
+        return ctx != null && ctx.isInSubCommandMode();
+    }
+
+    // ========== Inherited Value Access Methods ==========
+
+    /**
+     * Get an inherited value from parent commands.
+     * Only returns values from options marked with inherited=true.
+     *
+     * @param name The field or option name
+     * @param type The expected type
+     * @param <T> the value type
+     * @return The inherited value, or null if not found
+     */
+    default <T> T getInheritedValue(String name, Class<T> type) {
+        CommandContext ctx = getCommandContext();
+        return ctx != null ? ctx.getInheritedValue(name, type) : null;
+    }
+
+    /**
+     * Get an inherited value from parent commands with a default.
+     * Only returns values from options marked with inherited=true.
+     *
+     * @param name The field or option name
+     * @param type The expected type
+     * @param defaultValue The default value if not found
+     * @param <T> the value type
+     * @return The inherited value, or defaultValue if not found
+     */
+    default <T> T getInheritedValue(String name, Class<T> type, T defaultValue) {
+        CommandContext ctx = getCommandContext();
+        return ctx != null ? ctx.getInheritedValue(name, type, defaultValue) : defaultValue;
+    }
+
+    /**
+     * Enter sub-command mode for the current group command.
+     * This pushes the current command onto the context stack and changes the prompt.
+     * Subsequent commands will have access to this command's values via
+     * {@link #getParentValue} and {@link #getParentCommand}.
+     *
+     * Type 'exit' to leave sub-command mode.
+     *
+     * @param command The group command instance to push onto the context
+     * @return true if sub-command mode was entered successfully
+     */
+    default boolean enterSubCommandMode(Command<?> command) {
+        return false; // Default implementation does nothing
+    }
+
+    /**
+     * Exit the current sub-command mode level.
+     * This pops the current context and restores the previous prompt.
+     *
+     * @return true if a context level was exited, false if not in sub-command mode
+     */
+    default boolean exitSubCommandMode() {
+        return false; // Default implementation does nothing
+    }
 
 }

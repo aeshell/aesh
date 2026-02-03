@@ -20,6 +20,7 @@
 
 package org.aesh.command.populator;
 
+import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
@@ -44,6 +45,27 @@ public interface CommandPopulator<T, CI extends CommandInvocation> {
      */
     void populateObject(ProcessedCommand<Command<CI>,CI> processedCommand, InvocationProviders invocationProviders,
                         AeshContext aeshContext, CommandLineParser.Mode mode) throws CommandLineParserException, OptionValidatorException;
+
+    /**
+     * Populate a Command instance with the values parsed from a command line,
+     * including parent command injection via @ParentCommand annotation.
+     *
+     * @param processedCommand command line
+     * @param invocationProviders providers
+     * @param aeshContext the context
+     * @param mode based on rules given to the parser
+     * @param commandContext the command context for parent command access (may be null)
+     * @throws CommandLineParserException
+     * @throws OptionValidatorException
+     */
+    default void populateObject(ProcessedCommand<Command<CI>,CI> processedCommand,
+                                InvocationProviders invocationProviders,
+                                AeshContext aeshContext,
+                                CommandLineParser.Mode mode,
+                                CommandContext commandContext) throws CommandLineParserException, OptionValidatorException {
+        // Default implementation ignores context for backward compatibility
+        populateObject(processedCommand, invocationProviders, aeshContext, mode);
+    }
 
     /**
      * @return the object instance that will be populated.

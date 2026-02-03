@@ -71,6 +71,24 @@ public interface CommandContainer<CI extends CommandInvocation> extends AutoClos
                                                        AeshContext aeshContext)
             throws CommandLineParserException, OptionValidatorException;
 
+    /**
+     * Parse and populate the command with CommandContext for parent command injection.
+     *
+     * @param invocationProviders providers
+     * @param aeshContext the aesh context
+     * @param commandContext the command context for sub-command mode (may be null)
+     * @return the processed command
+     * @throws CommandLineParserException on parse error
+     * @throws OptionValidatorException on validation error
+     */
+    default ProcessedCommand<Command<CI>, CI> parseAndPopulate(InvocationProviders invocationProviders,
+                                                                AeshContext aeshContext,
+                                                                org.aesh.command.impl.context.CommandContext commandContext)
+            throws CommandLineParserException, OptionValidatorException {
+        // Default implementation ignores context for backward compatibility
+        return parseAndPopulate(invocationProviders, aeshContext);
+    }
+
     CommandContainerResult executeCommand(ParsedLine line, InvocationProviders invocationProviders,
                                           AeshContext aeshContext,
                                           CI commandInvocation)

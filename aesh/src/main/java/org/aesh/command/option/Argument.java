@@ -117,4 +117,12 @@ public @interface Argument {
      */
     Class<? extends OptionParser> parser() default AeshOptionParser.class;
 
+    /**
+     * When true, this argument value is available to all subcommands.
+     * Subcommands can access the value via CommandInvocation.getInheritedValue()
+     * or it will be auto-populated into a field with the same name.
+     * Only valid on group commands.
+     */
+    boolean inherited() default false;
+
 }

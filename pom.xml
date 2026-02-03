@@ -35,7 +35,6 @@
 
     <modules>
         <module>aesh</module>
-        <module>examples</module>
     </modules>
     
     <!-- Licenses -->

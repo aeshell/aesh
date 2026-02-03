@@ -77,6 +77,7 @@ public class ProcessedOptionBuilder {
     private SelectorType selectorType;
     private boolean negatable = false;
     private String negationPrefix = "no-";
+    private boolean inherited = false;
 
     private ProcessedOptionBuilder() {
         defaultValues = new ArrayList<>();
@@ -316,6 +317,14 @@ public class ProcessedOptionBuilder {
         return apply(c -> c.negationPrefix = negationPrefix);
     }
 
+    /**
+     * Set whether this option is inherited by subcommands.
+     * Only valid for options on group commands.
+     */
+    public ProcessedOptionBuilder inherited(boolean inherited) {
+        return apply(c -> c.inherited = inherited);
+    }
+
      public ProcessedOption build() throws OptionParserException {
         if(optionType == null) {
             if(!hasValue)
@@ -369,6 +378,6 @@ public class ProcessedOptionBuilder {
 
         return new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, askIfNotSet, acceptNameWithoutDashes, selectorType, defaultValues, type, fieldName, optionType, converter,
-                completer, validator, activator, renderer, parser, overrideRequired, negatable, negationPrefix);
+                completer, validator, activator, renderer, parser, overrideRequired, negatable, negationPrefix, inherited);
     }
 }
