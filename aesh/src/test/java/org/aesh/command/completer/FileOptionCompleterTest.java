@@ -28,7 +28,7 @@ import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.console.AeshContext;
 import org.aesh.console.DefaultAeshContext;
-import org.aesh.readline.terminal.formatting.TerminalString;
+import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.terminal.utils.Config;
 import org.aesh.io.FileResource;
 import org.junit.Test;

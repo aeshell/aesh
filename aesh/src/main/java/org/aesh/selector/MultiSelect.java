@@ -20,7 +20,7 @@
 package org.aesh.selector;
 
 import org.aesh.command.shell.Shell;
-import org.aesh.readline.terminal.Key;
+import org.aesh.terminal.Key;
 import org.aesh.terminal.utils.ANSI;
 import org.aesh.terminal.utils.Config;
 

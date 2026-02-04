@@ -21,7 +21,7 @@ package org.aesh.command.impl.operator;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import org.aesh.readline.util.Parser;
+import org.aesh.terminal.utils.Parser;
 
 /**
  *

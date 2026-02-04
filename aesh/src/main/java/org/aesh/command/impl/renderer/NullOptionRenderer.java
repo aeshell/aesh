@@ -20,8 +20,8 @@
 package org.aesh.command.impl.renderer;
 
 import org.aesh.command.renderer.OptionRenderer;
-import org.aesh.readline.terminal.formatting.TerminalColor;
-import org.aesh.readline.terminal.formatting.TerminalTextStyle;
+import org.aesh.terminal.formatting.TerminalColor;
+import org.aesh.terminal.formatting.TerminalTextStyle;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

@@ -40,7 +40,7 @@ import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.console.Console;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.Prompt;
-import org.aesh.readline.action.KeyAction;
+import org.aesh.terminal.KeyAction;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>

@@ -38,7 +38,7 @@ import org.aesh.parser.ParsedLine;
 import org.aesh.console.ReadlineConsole;
 
 import org.aesh.readline.completion.CompleteOperation;
-import org.aesh.readline.terminal.Key;
+import org.aesh.terminal.Key;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 

@@ -32,8 +32,8 @@ import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
-import org.aesh.readline.terminal.formatting.TerminalString;
-import org.aesh.readline.util.Parser;
+import org.aesh.terminal.formatting.TerminalString;
+import org.aesh.terminal.utils.Parser;
 import org.aesh.selector.SelectorType;
 import org.aesh.terminal.utils.Config;
 

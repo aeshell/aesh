@@ -20,7 +20,7 @@
 
 package org.aesh.tty;
 
-import org.aesh.readline.terminal.Key;
+import org.aesh.terminal.Key;
 import org.aesh.terminal.Attributes;
 import org.aesh.terminal.BaseDevice;
 import org.aesh.terminal.Connection;
@@ -28,7 +28,7 @@ import org.aesh.terminal.Device;
 import org.aesh.terminal.tty.Capability;
 import org.aesh.terminal.tty.Signal;
 import org.aesh.terminal.tty.Size;
-import org.aesh.readline.util.Parser;
+import org.aesh.terminal.utils.Parser;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;

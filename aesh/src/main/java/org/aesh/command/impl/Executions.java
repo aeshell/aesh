@@ -58,7 +58,7 @@ import org.aesh.io.Resource;
 import org.aesh.parser.ParsedLine;
 import org.aesh.console.AeshContext;
 import org.aesh.readline.Prompt;
-import org.aesh.readline.terminal.formatting.TerminalString;
+import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.selector.Selector;
 
 import java.io.IOException;

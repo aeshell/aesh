@@ -40,7 +40,7 @@ import org.aesh.command.impl.parser.AeshCommandLineParser;
 
 import org.aesh.command.Command;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.readline.terminal.Key;
+import org.aesh.terminal.Key;
 import org.aesh.tty.TestConnection;
 import org.aesh.terminal.utils.Config;
 import org.junit.Test;

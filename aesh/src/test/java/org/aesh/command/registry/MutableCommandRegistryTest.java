@@ -29,7 +29,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
-import org.aesh.readline.terminal.formatting.TerminalString;
+import org.aesh.terminal.formatting.TerminalString;
 import org.junit.Test;
 
 import org.aesh.command.CommandException;

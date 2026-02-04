@@ -23,7 +23,7 @@ import org.aesh.command.shell.Shell;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.Readline;
 import org.aesh.readline.action.ActionDecoder;
-import org.aesh.readline.terminal.Key;
+import org.aesh.terminal.Key;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.tty.Capability;
 import org.aesh.terminal.tty.Size;

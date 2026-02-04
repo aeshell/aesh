@@ -42,7 +42,7 @@ import org.aesh.io.Resource;
 import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.terminal.Connection;
-import org.aesh.readline.util.LoggerUtil;
+import org.aesh.terminal.utils.LoggerUtil;
 
 import java.io.File;
 import java.io.InputStream;
