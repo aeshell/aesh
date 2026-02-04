@@ -29,7 +29,7 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.readline.util.Parser;
+import org.aesh.terminal.utils.Parser;
 
 /**
  * An Aesh Command processor.

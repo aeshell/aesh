@@ -37,10 +37,10 @@ import org.aesh.graphics.Graphics;
 import org.aesh.graphics.GraphicsConfiguration;
 import org.aesh.readline.Prompt;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.readline.terminal.Key;
-import org.aesh.readline.terminal.formatting.Color;
-import org.aesh.readline.terminal.formatting.TerminalColor;
-import org.aesh.readline.tty.terminal.TerminalConnection;
+import org.aesh.terminal.Key;
+import org.aesh.terminal.formatting.Color;
+import org.aesh.terminal.formatting.TerminalColor;
+import org.aesh.terminal.tty.TerminalConnection;
 import org.aesh.terminal.Connection;
 
 import java.io.IOException;

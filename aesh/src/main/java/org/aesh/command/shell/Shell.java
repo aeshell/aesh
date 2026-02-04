@@ -21,7 +21,7 @@
 package org.aesh.command.shell;
 
 import org.aesh.readline.Prompt;
-import org.aesh.readline.terminal.Key;
+import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.Size;
 
 import java.util.concurrent.TimeUnit;

@@ -19,7 +19,7 @@
  */
 package org.aesh.command.export;
 
-import org.aesh.readline.util.LoggerUtil;
+import org.aesh.terminal.utils.LoggerUtil;
 import org.aesh.terminal.utils.Config;
 
 import java.io.BufferedReader;

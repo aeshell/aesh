@@ -35,7 +35,7 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.ShellImpl;
-import org.aesh.readline.tty.terminal.TerminalConnection;
+import org.aesh.terminal.tty.TerminalConnection;
 import org.aesh.terminal.Connection;
 
 /**

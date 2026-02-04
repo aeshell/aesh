@@ -35,9 +35,9 @@ import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.readline.Prompt;
-import org.aesh.readline.action.KeyAction;
-import org.aesh.readline.terminal.Key;
-import org.aesh.readline.util.Parser;
+import org.aesh.terminal.KeyAction;
+import org.aesh.terminal.Key;
+import org.aesh.terminal.utils.Parser;
 import org.aesh.terminal.tty.Size;
 import org.aesh.terminal.utils.ANSI;
 

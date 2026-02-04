@@ -30,7 +30,7 @@ import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
-import org.aesh.readline.util.Parser;
+import org.aesh.terminal.utils.Parser;
 
 import java.util.ArrayList;
 import java.util.Collections;

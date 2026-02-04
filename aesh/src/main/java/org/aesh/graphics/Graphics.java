@@ -19,8 +19,8 @@
  */
 package org.aesh.graphics;
 
-import org.aesh.readline.terminal.formatting.TerminalColor;
-import org.aesh.readline.terminal.formatting.TerminalTextStyle;
+import org.aesh.terminal.formatting.TerminalColor;
+import org.aesh.terminal.formatting.TerminalTextStyle;
 
 /**
  * Simple Terminal Graphics API

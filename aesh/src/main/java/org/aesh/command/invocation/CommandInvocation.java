@@ -33,7 +33,7 @@ import org.aesh.command.shell.Shell;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.readline.Prompt;
-import org.aesh.readline.action.KeyAction;
+import org.aesh.terminal.KeyAction;
 
 /**
  * A CommandInvocation is the value object passed to a Command when it is executed.

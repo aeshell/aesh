@@ -34,7 +34,7 @@ import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.io.Resource;
 import org.aesh.console.AeshContext;
 import org.aesh.io.PipelineResource;
-import org.aesh.readline.terminal.formatting.TerminalString;
+import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.selector.SelectorType;
 import org.aesh.terminal.utils.ANSI;
 import org.aesh.util.PropertiesLookup;
