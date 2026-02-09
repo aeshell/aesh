@@ -14,22 +14,21 @@ public class PropertiesLookup {
             Matcher m = systemProperties.matcher(v);
             if (m.matches()) {
                 //handle env:
-                if(m.group(2) != null) {
+                if (m.group(2) != null) {
                     result.add(findEnvironmentVariable(m.group(4)));
                 }
                 // handle sys:
-                else if(m.group(3) != null) {
+                else if (m.group(3) != null) {
                     result.add(findSystemProperty(m.group(4)));
                 }
                 // try to search for all
-                else if(m.group(4) != null) {
+                else if (m.group(4) != null) {
                     String value = findSystemProperty(m.group(4));
-                    if(value == null)
+                    if (value == null)
                         value = findEnvironmentVariable(m.group(4));
                     result.add(value);
                 }
-            }
-            else {
+            } else {
                 result.add(v);
             }
         }
@@ -41,8 +40,7 @@ public class PropertiesLookup {
         try {
             String value = System.getenv(variable);
             return value != null ? value : "";
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
             // System.getenv will throw an exception if a key is not found, lets just return empty string
             return "";
         }

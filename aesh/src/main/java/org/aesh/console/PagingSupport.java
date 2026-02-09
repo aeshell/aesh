@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2018 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -32,19 +32,19 @@ import org.aesh.readline.ReadlineFlag;
 import org.aesh.readline.action.ActionDecoder;
 import org.aesh.readline.history.History;
 import org.aesh.readline.history.InMemoryHistory;
-import org.aesh.terminal.Key;
-import org.aesh.terminal.tty.impl.WinSysTerminal;
-import org.aesh.terminal.utils.Parser;
 import org.aesh.terminal.Attributes;
 import org.aesh.terminal.Connection;
+import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.Signal;
 import org.aesh.terminal.tty.Size;
+import org.aesh.terminal.tty.impl.WinSysTerminal;
 import org.aesh.terminal.utils.ANSI;
 import org.aesh.terminal.utils.Config;
+import org.aesh.terminal.utils.Parser;
 
 /**
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public class PagingSupport {
 
@@ -374,8 +374,7 @@ public class PagingSupport {
         }
     }
 
-    private static final EnumMap<ReadlineFlag, Integer> RED_PATTERN_READLINE_FLAGS
-            = new EnumMap<>(ReadlineFlag.class);
+    private static final EnumMap<ReadlineFlag, Integer> RED_PATTERN_READLINE_FLAGS = new EnumMap<>(ReadlineFlag.class);
 
     static {
         RED_PATTERN_READLINE_FLAGS.put(ReadlineFlag.NO_PROMPT_REDRAW_ON_INTR,
@@ -627,7 +626,7 @@ public class PagingSupport {
 
     private Key read() throws InterruptedException {
         ActionDecoder decoder = new ActionDecoder();
-        final Key[] key = {null};
+        final Key[] key = { null };
         CountDownLatch latch = new CountDownLatch(1);
         Attributes attributes = getConnection().enterRawMode();
         // We need to set the interrupt SignalHandler to interrupt the reading.

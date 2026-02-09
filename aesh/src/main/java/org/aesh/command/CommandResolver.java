@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,13 +20,13 @@
 
 package org.aesh.command;
 
+import org.aesh.command.container.CommandContainer;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.container.CommandContainer;
 import org.aesh.parser.ParsedLine;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface CommandResolver<CI extends CommandInvocation> {
 

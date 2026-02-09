@@ -15,6 +15,12 @@
  */
 package org.aesh.util.graal;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -27,14 +33,8 @@ import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-
 /**
- * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
+ * @author Aesh team
  */
 @CommandDefinition(name = "graalreflection", description = "Generates a json file to help graal generate a native image")
 public class GraalReflectionCommand implements Command {
@@ -44,7 +44,6 @@ public class GraalReflectionCommand implements Command {
 
     @Argument(required = true, description = "Command class name")
     private String command;
-
 
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
@@ -57,7 +56,9 @@ public class GraalReflectionCommand implements Command {
                 try {
                     CommandContainer<CommandInvocation> container = builder.create(clazz);
                     GraalReflectionFileGenerator graalFileGenerator = new GraalReflectionFileGenerator();
-                    try (BufferedWriter w = Files.newBufferedWriter(Paths.get(container.getParser().getProcessedCommand().name().toLowerCase() + "_reflection.json"), StandardOpenOption.CREATE)) {
+                    try (BufferedWriter w = Files.newBufferedWriter(
+                            Paths.get(container.getParser().getProcessedCommand().name().toLowerCase() + "_reflection.json"),
+                            StandardOpenOption.CREATE)) {
                         graalFileGenerator.generateReflection(container.getParser(), w);
                     }
                     container.getParser().getProcessedCommand();

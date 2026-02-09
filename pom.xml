@@ -24,9 +24,10 @@
     <groupId>org.aesh</groupId>
     <artifactId>aesh-all</artifactId>
     <packaging>pom</packaging>
-    <version>3.0-dev</version>
+    <version>3.0</version>
     <name>Æsh All</name>
     <description>Æsh (Another Extendable SHell) All</description>
+    <url>https://aeshell.github.io</url>
     <scm>
         <connection>scm:git:git://github.com/aeshell/aesh.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/aeshell/aesh.git</developerConnection>
@@ -50,6 +51,28 @@
       <maven.compiler.target>1.8</maven.compiler.target>
       <maven.compiler.source>1.8</maven.compiler.source>
       <readline.version>3.1</readline.version>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+      <!-- Code formatting -->
+      <version.formatter.plugin>2.27.0</version.formatter.plugin>
+      <version.impsort.plugin>1.13.0</version.impsort.plugin>
+      <format.skip>false</format.skip>
+
+      <!-- Maven plugin versions -->
+      <version.compiler.plugin>3.14.0</version.compiler.plugin>
+      <version.surefire.plugin>3.5.3</version.surefire.plugin>
+      <version.jar.plugin>3.4.2</version.jar.plugin>
+      <version.source.plugin>3.3.1</version.source.plugin>
+      <version.javadoc.plugin>3.11.2</version.javadoc.plugin>
+      <version.shade.plugin>3.6.0</version.shade.plugin>
+      <version.enforcer.plugin>3.5.0</version.enforcer.plugin>
+      <version.gpg.plugin>3.2.7</version.gpg.plugin>
+      <version.nexus-staging.plugin>1.7.0</version.nexus-staging.plugin>
+      <version.clean.plugin>3.4.0</version.clean.plugin>
+      <version.resources.plugin>3.3.1</version.resources.plugin>
+      <version.install.plugin>3.1.3</version.install.plugin>
+      <version.deploy.plugin>3.1.3</version.deploy.plugin>
+      <version.site.plugin>3.21.0</version.site.plugin>
     </properties>
  
     <developers>
@@ -67,36 +90,257 @@
         </developer>
     </developers>
 
-      <build>
-        <pluginManagement>
+    <distributionManagement>
+        <repository>
+            <id>jboss-testing-repository</id>
+            <name>JBoss Testing Repository</name>
+            <url>https://repository.jboss.org/nexus/repository/testing/</url>
+        </repository>
+        <snapshotRepository>
+            <id>jboss-snapshots-repository</id>
+            <name>JBoss Snapshots Repository</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <build>
+      <pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>${version.javadoc.plugin}</version>
+            <configuration>
+              <doclint>none</doclint>
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>${version.enforcer.plugin}</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>${version.jar.plugin}</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>${version.source.plugin}</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>${version.gpg.plugin}</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+                <configuration>
+                  <useAgent>true</useAgent>
+                  <keyname>${gpg.keyname}</keyname>
+                  <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                  <gpgArguments>
+                    <arg>--pinentry-mode</arg>
+                    <arg>loopback</arg>
+                  </gpgArguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>${version.nexus-staging.plugin}</version>
+            <extensions>true</extensions>
+            <configuration>
+              <serverId>jboss-testing-repository</serverId>
+              <nexusUrl>https://repository.jboss.org/nexus/</nexusUrl>
+              <autoReleaseAfterClose>false</autoReleaseAfterClose>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>${version.shade.plugin}</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${version.compiler.plugin}</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${version.surefire.plugin}</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-clean-plugin</artifactId>
+            <version>${version.clean.plugin}</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>${version.resources.plugin}</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>${version.install.plugin}</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <version>${version.deploy.plugin}</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-site-plugin</artifactId>
+            <version>${version.site.plugin}</version>
+          </plugin>
+          <plugin>
+            <groupId>net.revelc.code.formatter</groupId>
+            <artifactId>formatter-maven-plugin</artifactId>
+            <version>${version.formatter.plugin}</version>
+            <configuration>
+              <cachedir>.cache/formatter-maven-plugin-${version.formatter.plugin}</cachedir>
+              <configFile>${maven.multiModuleProjectDirectory}/config/eclipse-format.xml</configFile>
+              <lineEnding>LF</lineEnding>
+              <skip>${format.skip}</skip>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>net.revelc.code</groupId>
+            <artifactId>impsort-maven-plugin</artifactId>
+            <version>${version.impsort.plugin}</version>
+            <configuration>
+              <cachedir>.cache/impsort-maven-plugin-${version.impsort.plugin}</cachedir>
+              <groups>java.,javax.,jakarta.,org.,com.</groups>
+              <staticGroups>*</staticGroups>
+              <skip>${format.skip}</skip>
+              <removeUnused>true</removeUnused>
+            </configuration>
+          </plugin>
+        </plugins>
+      </pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+        </plugin>
+      </plugins>
+    </build>
+
+    <profiles>
+      <profile>
+        <id>release</id>
+        <build>
           <plugins>
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-enforcer-plugin</artifactId>
-              <version>3.0.0-M2</version>
-            </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-jar-plugin</artifactId>
-              <version>3.0.0</version>
-            </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-source-plugin</artifactId>
-              <version>3.0.0</version>
-            </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-shade-plugin</artifactId>
-              <version>3.2.0</version>
-	    </plugin>            
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>3.0.0</version>
+              <artifactId>maven-gpg-plugin</artifactId>
             </plugin>
           </plugins>
-        </pluginManagement>
-      </build>
+        </build>
+      </profile>
+      <profile>
+        <id>format</id>
+        <activation>
+          <activeByDefault>true</activeByDefault>
+          <property>
+            <name>!no-format</name>
+          </property>
+        </activation>
+        <build>
+          <plugins>
+            <plugin>
+              <groupId>net.revelc.code.formatter</groupId>
+              <artifactId>formatter-maven-plugin</artifactId>
+              <executions>
+                <execution>
+                  <phase>process-sources</phase>
+                  <goals>
+                    <goal>format</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+            <plugin>
+              <groupId>net.revelc.code</groupId>
+              <artifactId>impsort-maven-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>sort-imports</id>
+                  <goals>
+                    <goal>sort</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
+      <profile>
+        <id>validate</id>
+        <activation>
+          <property>
+            <name>no-format</name>
+          </property>
+        </activation>
+        <build>
+          <plugins>
+            <plugin>
+              <groupId>net.revelc.code.formatter</groupId>
+              <artifactId>formatter-maven-plugin</artifactId>
+              <executions>
+                <execution>
+                  <phase>process-sources</phase>
+                  <goals>
+                    <goal>validate</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+            <plugin>
+              <groupId>net.revelc.code</groupId>
+              <artifactId>impsort-maven-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>check-imports</id>
+                  <goals>
+                    <goal>check</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
+    </profiles>
 
 </project>

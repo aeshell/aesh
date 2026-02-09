@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,11 @@
  */
 package org.aesh.command;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+import java.io.IOException;
+
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
@@ -32,17 +37,12 @@ import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
 import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandMultipleInvocations {
 
@@ -52,20 +52,19 @@ public class AeshCommandMultipleInvocations {
     public void testMultipleInvocations() throws CommandRegistryException, IOException, InterruptedException {
         TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                 .command(FooCommand.class)
-                 .command(BarCommand.class)
-                 .create();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(FooCommand.class)
+                .command(BarCommand.class)
+                .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                                OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .enableOperatorParser(true)
-                        .connection(connection)
-                        .setPersistExport(false)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .enableOperatorParser(true)
+                .connection(connection)
+                .setPersistExport(false)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -81,21 +80,20 @@ public class AeshCommandMultipleInvocations {
     public void testMultipleInvocationsClearLine() throws CommandRegistryException, IOException, InterruptedException {
         TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                 .command(FooCommand.class)
-                 .command(BarCommand.class)
-                 .command(BarBarCommand.class)
-                 .create();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(FooCommand.class)
+                .command(BarCommand.class)
+                .command(BarBarCommand.class)
+                .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                                OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .enableOperatorParser(true)
-                        .connection(connection)
-                        .setPersistExport(false)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .enableOperatorParser(true)
+                .connection(connection)
+                .setPersistExport(false)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -115,21 +113,20 @@ public class AeshCommandMultipleInvocations {
     public void testMultipleInvocationsRequiredOption() throws CommandRegistryException, IOException, InterruptedException {
         TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                 .command(FooCommand.class)
-                 .command(BarCommand.class)
-                 .command(RequiredBarCommand.class)
-                 .create();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(FooCommand.class)
+                .command(BarCommand.class)
+                .command(RequiredBarCommand.class)
+                .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                                OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .enableOperatorParser(true)
-                        .connection(connection)
-                        .setPersistExport(false)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .enableOperatorParser(true)
+                .connection(connection)
+                .setPersistExport(false)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -146,9 +143,7 @@ public class AeshCommandMultipleInvocations {
         console.stop();
     }
 
-
-
-    @CommandDefinition(name ="foo", description = "")
+    @CommandDefinition(name = "foo", description = "")
     private static class FooCommand implements Command {
 
         @Option
@@ -156,11 +151,10 @@ public class AeshCommandMultipleInvocations {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            if(counter == 0) {
+            if (counter == 0) {
                 assertNull(value);
                 counter++;
-            }
-            else if(counter == 1) {
+            } else if (counter == 1) {
                 assertNull(value);
                 counter++;
             }
@@ -169,7 +163,7 @@ public class AeshCommandMultipleInvocations {
         }
     }
 
-    @CommandDefinition(name ="bar", description = "")
+    @CommandDefinition(name = "bar", description = "")
     private static class BarCommand implements Command {
 
         @Option
@@ -182,7 +176,7 @@ public class AeshCommandMultipleInvocations {
         }
     }
 
-    @CommandDefinition(name ="barbar", description = "")
+    @CommandDefinition(name = "barbar", description = "")
     private static class BarBarCommand implements Command {
 
         @Override
@@ -191,7 +185,7 @@ public class AeshCommandMultipleInvocations {
         }
     }
 
-    @CommandDefinition(name ="req", description = "")
+    @CommandDefinition(name = "req", description = "")
     private static class RequiredBarCommand implements Command {
 
         @Option(required = true)

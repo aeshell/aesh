@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,7 +19,6 @@
  */
 package org.aesh.util;
 
-import org.aesh.impl.util.FileLister;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -31,17 +30,17 @@ import java.util.List;
 
 import org.aesh.comparators.PosixFileNameComparator;
 import org.aesh.console.AeshContext;
-import org.aesh.io.Resource;
-import org.aesh.io.FileResource;
-
 import org.aesh.console.DefaultAeshContext;
+import org.aesh.impl.util.FileLister;
+import org.aesh.io.FileResource;
+import org.aesh.io.Resource;
 import org.aesh.terminal.utils.Config;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
- * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
+ * @author Aesh team
  */
 public class FileListerTest {
     private Resource workingDir;
@@ -61,7 +60,7 @@ public class FileListerTest {
 
     @Test
     public void testFileNameStartingWithDotCompletion() throws IOException {
-        Files.createFile(new File(workingDir.toString()+Config.getPathSeparator()+".testfile").toPath());
+        Files.createFile(new File(workingDir.toString() + Config.getPathSeparator() + ".testfile").toPath());
 
         List<String> candidates = new ArrayList<>();
         new FileLister("", workingDir).findMatchingDirectories(candidates);
@@ -96,9 +95,9 @@ public class FileListerTest {
         List<String> candidates = new ArrayList<>();
         new FileLister("", workingDir).findMatchingDirectories(candidates);
         assertEquals(2, candidates.size());
-        assertTrue("child"+Config.getPathSeparator(),
+        assertTrue("child" + Config.getPathSeparator(),
                 candidates.contains("child" + Config.getPathSeparator()));
-        assertTrue("child2"+Config.getPathSeparator(),
+        assertTrue("child2" + Config.getPathSeparator(),
                 candidates.contains("child2" + Config.getPathSeparator()));
     }
 
@@ -158,8 +157,7 @@ public class FileListerTest {
         File test = new File(workingDir, "test123");
         test.mkdir();
         List<String> candidates = new ArrayList<>();
-        new FileLister("test123", new FileResource(workingDir)).
-                findMatchingDirectories(candidates);
+        new FileLister("test123", new FileResource(workingDir)).findMatchingDirectories(candidates);
         assertEquals(1, candidates.size());
         assertEquals("test123" + Config.getPathSeparator(), candidates.get(0));
 
@@ -231,22 +229,22 @@ public class FileListerTest {
 
     @Test
     public void posixFileNameComparatorTest() {
-       PosixFileNameComparator comparator = new PosixFileNameComparator();
+        PosixFileNameComparator comparator = new PosixFileNameComparator();
 
-       assertEquals("a".compareToIgnoreCase("b"), comparator.compare("a", "b"));
-       assertEquals("a".compareToIgnoreCase("b"), comparator.compare(".a", "b"));
-       assertEquals("a".compareToIgnoreCase("b"), comparator.compare("a", ".b"));
+        assertEquals("a".compareToIgnoreCase("b"), comparator.compare("a", "b"));
+        assertEquals("a".compareToIgnoreCase("b"), comparator.compare(".a", "b"));
+        assertEquals("a".compareToIgnoreCase("b"), comparator.compare("a", ".b"));
 
-       assertEquals("a".compareToIgnoreCase("b"), comparator.compare("A", "B"));
+        assertEquals("a".compareToIgnoreCase("b"), comparator.compare("A", "B"));
 
-       assertEquals("A".compareToIgnoreCase("b"), comparator.compare("A", "b"));
-       assertEquals("a".compareToIgnoreCase("B"), comparator.compare("a", "B"));
-       assertEquals("a".compareToIgnoreCase("B"), comparator.compare(".a", ".B"));
-       assertEquals("a".compareToIgnoreCase("B"), comparator.compare(".A", ".b"));
+        assertEquals("A".compareToIgnoreCase("b"), comparator.compare("A", "b"));
+        assertEquals("a".compareToIgnoreCase("B"), comparator.compare("a", "B"));
+        assertEquals("a".compareToIgnoreCase("B"), comparator.compare(".a", ".B"));
+        assertEquals("a".compareToIgnoreCase("B"), comparator.compare(".A", ".b"));
 
-       assertEquals("A".compareToIgnoreCase("b"), comparator.compare(".A", "b"));
-       assertEquals("A".compareToIgnoreCase("b"), comparator.compare("A", ".b"));
-       assertEquals("a".compareToIgnoreCase("B"), comparator.compare("a", ".B"));
-       assertEquals("a".compareToIgnoreCase("B"), comparator.compare(".a", "B"));
+        assertEquals("A".compareToIgnoreCase("b"), comparator.compare(".A", "b"));
+        assertEquals("A".compareToIgnoreCase("b"), comparator.compare("A", ".b"));
+        assertEquals("a".compareToIgnoreCase("B"), comparator.compare("a", ".B"));
+        assertEquals("a".compareToIgnoreCase("B"), comparator.compare(".a", "B"));
     }
 }

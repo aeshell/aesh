@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -18,6 +18,10 @@
  * limitations under the License.
  */
 package org.aesh.command.validator;
+
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -39,16 +43,12 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
 import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import java.io.IOException;
-
-import static org.junit.Assert.assertTrue;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandValidatorTest {
 
@@ -56,25 +56,24 @@ public class AeshCommandValidatorTest {
     public void testCommandValidator() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .connection(connection)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
         console.start();
-        connection.read("foo -l 12 -h 20"+ Config.getLineSeparator());
+        connection.read("foo -l 12 -h 20" + Config.getLineSeparator());
         Thread.sleep(100);
 
-        connection.assertBufferEndsWith("Sum of high and low must be over 42!"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("Sum of high and low must be over 42!" + Config.getLineSeparator());
 
         console.stop();
     }
@@ -87,20 +86,19 @@ public class AeshCommandValidatorTest {
                 .command(GitCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .commandRegistry(registry)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
         console.start();
-        connection.read("git commit"+ Config.getLineSeparator());
+        connection.read("git commit" + Config.getLineSeparator());
         Thread.sleep(100);
-        connection.assertBufferEndsWith("Either all or message must be set"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("Either all or message must be set" + Config.getLineSeparator());
 
         console.stop();
     }
@@ -123,13 +121,12 @@ public class AeshCommandValidatorTest {
     public static class FooCommandValidator implements CommandValidator<FooCommand, CommandInvocation> {
         @Override
         public void validate(FooCommand command) throws CommandValidatorException {
-            if(command.low + command.high < 42)
+            if (command.low + command.high < 42)
                 throw new CommandValidatorException("Sum of high and low must be over 42!");
         }
     }
 
-
-    @GroupCommandDefinition(name = "git", description = "", groupCommands = {GitCommit.class, GitRebase.class})
+    @GroupCommandDefinition(name = "git", description = "", groupCommands = { GitCommit.class, GitRebase.class })
     public static class GitCommand implements Command {
 
         @Option(hasValue = false)
@@ -159,7 +156,7 @@ public class AeshCommandValidatorTest {
     public class GitCommitValidator implements CommandValidator<GitCommit, CommandInvocation> {
         @Override
         public void validate(GitCommit command) throws CommandValidatorException {
-            if(!command.all && command.message == null)
+            if (!command.all && command.message == null)
                 throw new CommandValidatorException("Either all or message must be set");
         }
     }

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2017 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -25,7 +25,7 @@ import org.aesh.command.invocation.CommandInvocation;
 
 /**
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public interface ExecutableOperator<T extends CommandInvocation> extends Operator, Executable<T> {
     void setCommand(Command<T> exec);

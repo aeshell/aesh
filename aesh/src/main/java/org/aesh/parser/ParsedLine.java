@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,10 +20,10 @@
 
 package org.aesh.parser;
 
-import org.aesh.command.operator.OperatorType;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.aesh.command.operator.OperatorType;
 
 /**
  * A input line that is parsed into chunks of words.
@@ -37,7 +37,7 @@ import java.util.List;
  * "connected" to the cursor.
  * If no cursor position is given the cursor value is -1 and cursorWord is an empty string.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ParsedLine {
 
@@ -50,10 +50,9 @@ public class ParsedLine {
     private final int wordCursor;
     private final OperatorType operator;
 
-
     public ParsedLine(String originalInput, List<ParsedWord> words,
-                      int cursor, int cursorWord, int wordCursor,
-                      ParserStatus status, String errorMessage, OperatorType operator) {
+            int cursor, int cursorWord, int wordCursor,
+            ParserStatus status, String errorMessage, OperatorType operator) {
         this.originalInput = originalInput;
         this.cursor = cursor;
         this.cursorWord = cursorWord;
@@ -86,10 +85,10 @@ public class ParsedLine {
 
     /**
      * @return the word connected to the cursor.
-     * If not cursor was given it will return an empty ParsedWord object.
+     *         If not cursor was given it will return an empty ParsedWord object.
      */
     public ParsedWord selectedWord() {
-        if(cursorWord > -1 && cursorWord < words.size())
+        if (cursorWord > -1 && cursorWord < words.size())
             return words.get(cursorWord);
         else
             return new ParsedWord("", 0);
@@ -97,11 +96,11 @@ public class ParsedLine {
 
     /**
      * @return the word connected to the cursor.
-     * If the cursor is not at the end of the word,
-     * it will only return part of the word up to the cursor position.
+     *         If the cursor is not at the end of the word,
+     *         it will only return part of the word up to the cursor position.
      */
     public ParsedWord selectedWordToCursor() {
-        if(cursorWord > -1 && cursorWord < words.size())
+        if (cursorWord > -1 && cursorWord < words.size())
             return new ParsedWord(
                     words.get(cursorWord).word().substring(0, wordCursor),
                     words.get(cursorWord).lineIndex());
@@ -145,11 +144,11 @@ public class ParsedLine {
     }
 
     public ParsedWord lastWord() {
-        return words().get(words.size()-1);
+        return words().get(words.size() - 1);
     }
 
     public ParsedWord firstWord() {
-        if(words.size() > 0 )
+        if (words.size() > 0)
             return words.get(0);
         else
             return new ParsedWord("", 0);
@@ -179,17 +178,16 @@ public class ParsedLine {
     }
 
     public boolean spaceAtEnd() {
-        if(originalInput.length() > 1) {
-            return originalInput.charAt(originalInput.length()-1) == ' ' &&
-                   originalInput.charAt(originalInput.length()-2) != '\\' ;
-        }
-        else
+        if (originalInput.length() > 1) {
+            return originalInput.charAt(originalInput.length() - 1) == ' ' &&
+                    originalInput.charAt(originalInput.length() - 2) != '\\';
+        } else
             return (originalInput.length() > 0 &&
-                    originalInput.charAt(originalInput.length()-1) == ' ');
+                    originalInput.charAt(originalInput.length() - 1) == ' ');
     }
 
     public boolean isCursorAtEndOfSelectedWord() {
-        return cursor() == (selectedWord().lineIndex()+selectedWord().word().length());
+        return cursor() == (selectedWord().lineIndex() + selectedWord().word().length());
     }
 
     @Override

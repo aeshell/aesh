@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,14 +19,13 @@
  */
 package org.aesh.converter;
 
-import org.aesh.command.converter.Converter;
-import org.aesh.io.Resource;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import org.aesh.command.converter.Converter;
 import org.aesh.command.impl.converter.BooleanConverter;
 import org.aesh.command.impl.converter.ByteConverter;
 import org.aesh.command.impl.converter.CharacterConverter;
@@ -38,9 +37,10 @@ import org.aesh.command.impl.converter.IntegerConverter;
 import org.aesh.command.impl.converter.LongConverter;
 import org.aesh.command.impl.converter.ShortConverter;
 import org.aesh.command.impl.converter.StringConverter;
+import org.aesh.io.Resource;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class CLConverterManager {
 

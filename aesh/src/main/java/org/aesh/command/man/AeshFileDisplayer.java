@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,24 +19,24 @@
  */
 package org.aesh.command.man;
 
-import org.aesh.command.shell.Shell;
-import org.aesh.command.Command;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.terminal.KeyAction;
-import org.aesh.terminal.Key;
-import org.aesh.terminal.utils.ANSI;
-import org.aesh.terminal.utils.Config;
-import org.aesh.terminal.utils.LoggerUtil;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
+
+import org.aesh.command.Command;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.shell.Shell;
+import org.aesh.terminal.Key;
+import org.aesh.terminal.KeyAction;
+import org.aesh.terminal.utils.ANSI;
+import org.aesh.terminal.utils.Config;
+import org.aesh.terminal.utils.LoggerUtil;
 
 /**
  * An abstract command used to display files
  * Implemented similar to less
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public abstract class AeshFileDisplayer implements Command {
 
@@ -80,7 +80,7 @@ public abstract class AeshFileDisplayer implements Command {
         topVisibleRowCache = -1;
         stop = false;
 
-        if(commandInvocation.getConfiguration().hasOutputRedirection()) {
+        if (commandInvocation.getConfiguration().hasOutputRedirection()) {
             int count = 0;
             for (String line : this.page.getLines()) {
                 commandInvocation.print(line);
@@ -89,17 +89,15 @@ public abstract class AeshFileDisplayer implements Command {
                     commandInvocation.print(Config.getLineSeparator());
             }
             page.clear();
-        }
-        else {
+        } else {
 
-            if(!page.hasData()) {
+            if (!page.hasData()) {
                 getShell().write("error: input is null...");
                 afterDetach();
-            }
-            else {
+            } else {
                 getShell().write(ANSI.ALTERNATE_BUFFER);
 
-                if(this.page.getFileName() != null)
+                if (this.page.getFileName() != null)
                     display();
                 else
                     display();
@@ -110,7 +108,7 @@ public abstract class AeshFileDisplayer implements Command {
     }
 
     protected void afterDetach() {
-        if(!commandInvocation.getConfiguration().hasOutputRedirection())
+        if (!commandInvocation.getConfiguration().hasOutputRedirection())
             getShell().write(ANSI.MAIN_BUFFER);
 
         page.clear();
@@ -119,13 +117,12 @@ public abstract class AeshFileDisplayer implements Command {
 
     public void processInput() throws IOException, InterruptedException {
         try {
-            while(!stop) {
+            while (!stop) {
                 KeyAction event = getCommandInvocation().input();
-                if(event instanceof Key)
-                    processOperation( (Key) event);
+                if (event instanceof Key)
+                    processOperation((Key) event);
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             afterDetach();
             stop = true;
             throw e;
@@ -133,142 +130,124 @@ public abstract class AeshFileDisplayer implements Command {
     }
 
     public void processOperation(Key operation) throws IOException {
-        if(operation == Key.q) {
-            if(search == TerminalPage.Search.SEARCHING) {
+        if (operation == Key.q) {
+            if (search == TerminalPage.Search.SEARCHING) {
                 searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
-            }
-            else {
+            } else {
                 clearNumber();
                 afterDetach();
                 stop = true;
             }
-        }
-        else if(operation == Key.j ||
+        } else if (operation == Key.j ||
                 operation == Key.DOWN ||
                 operation == Key.DOWN_2 ||
-                operation == Key.ENTER ) {
-            if(search == TerminalPage.Search.SEARCHING) {
-                if(operation == Key.j) {
+                operation == Key.ENTER) {
+            if (search == TerminalPage.Search.SEARCHING) {
+                if (operation == Key.j) {
                     searchBuilder.append((char) operation.getFirstValue());
                     displayBottom();
-                }
-                else if(operation == Key.ENTER) {
+                } else if (operation == Key.ENTER) {
                     search = TerminalPage.Search.RESULT;
                     findSearchWord(true);
                 }
-            }
-            else if(search == TerminalPage.Search.NOT_FOUND) {
-               if(operation == Key.ENTER) {
-                   search = TerminalPage.Search.NO_SEARCH;
-                   clearBottomLine();
-                   displayBottom();
-               }
-            }
-            else {
+            } else if (search == TerminalPage.Search.NOT_FOUND) {
+                if (operation == Key.ENTER) {
+                    search = TerminalPage.Search.NO_SEARCH;
+                    clearBottomLine();
+                    displayBottom();
+                }
+            } else {
                 topVisibleRow = topVisibleRow + getNumber();
-                if(topVisibleRow > (page.size()-rows-1)) {
-                    topVisibleRow = page.size()-rows-1;
-                    if(topVisibleRow < 0)
+                if (topVisibleRow > (page.size() - rows - 1)) {
+                    topVisibleRow = page.size() - rows - 1;
+                    if (topVisibleRow < 0)
                         topVisibleRow = 0;
                     display();
-                }
-                else
+                } else
                     display();
                 clearNumber();
             }
-        }
-        else if(operation == Key.k ||
+        } else if (operation == Key.k ||
                 operation == Key.UP ||
                 operation == Key.UP_2) {
-            if(search == TerminalPage.Search.SEARCHING) {
-                if(operation == Key.k)
-                searchBuilder.append((char) operation.getFirstValue());
+            if (search == TerminalPage.Search.SEARCHING) {
+                if (operation == Key.k)
+                    searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
-            }
-            else {
+            } else {
                 topVisibleRow = topVisibleRow - getNumber();
-                if(topVisibleRow < 0)
+                if (topVisibleRow < 0)
                     topVisibleRow = 0;
                 display();
                 clearNumber();
             }
-        }
-        else if(operation == Key.CTRL_F ||
+        } else if (operation == Key.CTRL_F ||
                 operation == Key.PGDOWN ||
                 operation == Key.SPACE) { // ctrl-f || pgdown || space
-            if(search == TerminalPage.Search.SEARCHING) {
+            if (search == TerminalPage.Search.SEARCHING) {
 
-            }
-            else {
+            } else {
                 topVisibleRow = topVisibleRow + ((rows - 1) * getNumber());
-                if(topVisibleRow > (page.size()-rows-1)) {
-                    topVisibleRow = page.size()-rows-1;
-                    if(topVisibleRow < 0)
+                if (topVisibleRow > (page.size() - rows - 1)) {
+                    topVisibleRow = page.size() - rows - 1;
+                    if (topVisibleRow < 0)
                         topVisibleRow = 0;
                     display();
-                }
-                else
+                } else
                     display();
                 clearNumber();
             }
-        }
-        else if(operation == Key.CTRL_B ||
+        } else if (operation == Key.CTRL_B ||
                 operation == Key.PGUP) { // ctrl-b || pgup
-            if(search != TerminalPage.Search.SEARCHING) {
+            if (search != TerminalPage.Search.SEARCHING) {
                 topVisibleRow = topVisibleRow - ((rows - 1) * getNumber());
-                if(topVisibleRow < 0)
+                if (topVisibleRow < 0)
                     topVisibleRow = 0;
                 display();
                 clearNumber();
             }
         }
         //search
-        else if(operation == Key.SLASH) {
-            if(search == TerminalPage.Search.NO_SEARCH || search == TerminalPage.Search.RESULT) {
+        else if (operation == Key.SLASH) {
+            if (search == TerminalPage.Search.NO_SEARCH || search == TerminalPage.Search.RESULT) {
                 search = TerminalPage.Search.SEARCHING;
                 searchBuilder = new StringBuilder();
                 displayBottom();
-            }
-            else if(search == TerminalPage.Search.SEARCHING) {
+            } else if (search == TerminalPage.Search.SEARCHING) {
                 searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
             }
 
-        }
-        else if(operation == Key.n) {
-            if(search == TerminalPage.Search.SEARCHING) {
+        } else if (operation == Key.n) {
+            if (search == TerminalPage.Search.SEARCHING) {
                 searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
-            }
-            else if(search == TerminalPage.Search.RESULT) {
-                if(searchLines.size() > 0) {
-                    for(Integer i : searchLines) {
-                        if(i > topVisibleRow+1) {
-                            topVisibleRow = i-1;
+            } else if (search == TerminalPage.Search.RESULT) {
+                if (searchLines.size() > 0) {
+                    for (Integer i : searchLines) {
+                        if (i > topVisibleRow + 1) {
+                            topVisibleRow = i - 1;
                             display();
                             return;
                         }
                     }
                     //we didnt find any more
                     displayBottom();
-                }
-                else {
+                } else {
                     displayBottom();
                 }
             }
-        }
-        else if(operation == Key.N) {
-            if(search == TerminalPage.Search.SEARCHING) {
+        } else if (operation == Key.N) {
+            if (search == TerminalPage.Search.SEARCHING) {
                 searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
-            }
-            else if(search == TerminalPage.Search.RESULT) {
-                if(searchLines.size() > 0) {
-                    for(int i=searchLines.size()-1; i >= 0; i--) {
-                        if(searchLines.get(i) < topVisibleRow) {
-                            topVisibleRow = searchLines.get(i)-1;
-                            if(topVisibleRow < 0)
+            } else if (search == TerminalPage.Search.RESULT) {
+                if (searchLines.size() > 0) {
+                    for (int i = searchLines.size() - 1; i >= 0; i--) {
+                        if (searchLines.get(i) < topVisibleRow) {
+                            topVisibleRow = searchLines.get(i) - 1;
+                            if (topVisibleRow < 0)
                                 topVisibleRow = 0;
                             display();
                             return;
@@ -278,42 +257,35 @@ public abstract class AeshFileDisplayer implements Command {
                     displayBottom();
                 }
             }
-        }
-        else if(operation == Key.G) {
-            if(search == TerminalPage.Search.SEARCHING) {
+        } else if (operation == Key.G) {
+            if (search == TerminalPage.Search.SEARCHING) {
                 searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
-            }
-            else {
-                if(number.length() == 0 || getNumber() == 0) {
-                    topVisibleRow = page.size()-rows-1;
+            } else {
+                if (number.length() == 0 || getNumber() == 0) {
+                    topVisibleRow = page.size() - rows - 1;
                     display();
-                }
-                else {
-                    topVisibleRow = getNumber()-1;
-                    if(topVisibleRow > page.size()-rows-1) {
-                        topVisibleRow = page.size()-rows-1;
+                } else {
+                    topVisibleRow = getNumber() - 1;
+                    if (topVisibleRow > page.size() - rows - 1) {
+                        topVisibleRow = page.size() - rows - 1;
                         display();
-                    }
-                    else {
+                    } else {
                         display();
                     }
                 }
                 clearNumber();
             }
-        }
-        else if(operation.isNumber()) {
-            if(search == TerminalPage.Search.SEARCHING) {
+        } else if (operation.isNumber()) {
+            if (search == TerminalPage.Search.SEARCHING) {
                 searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
-            }
-            else {
+            } else {
                 number.append(Character.getNumericValue(operation.getFirstValue()));
                 display();
             }
-        }
-        else {
-            if(search == TerminalPage.Search.SEARCHING &&
+        } else {
+            if (search == TerminalPage.Search.SEARCHING &&
                     (Character.isAlphabetic(operation.getFirstValue()))) {
                 searchBuilder.append((char) operation.getFirstValue());
                 displayBottom();
@@ -322,14 +294,14 @@ public abstract class AeshFileDisplayer implements Command {
     }
 
     private void display() throws IOException {
-        if(topVisibleRow != topVisibleRowCache) {
+        if (topVisibleRow != topVisibleRowCache) {
             getShell().clear();
-            if(search == TerminalPage.Search.RESULT && searchLines.size() > 0) {
+            if (search == TerminalPage.Search.RESULT && searchLines.size() > 0) {
                 String searchWord = searchBuilder.toString();
-                for(int i=topVisibleRow; i < (topVisibleRow+rows-1); i++) {
-                    if(i < page.size()) {
+                for (int i = topVisibleRow; i < (topVisibleRow + rows - 1); i++) {
+                    if (i < page.size()) {
                         String line = page.getLine(i);
-                        if(line.contains(searchWord))
+                        if (line.contains(searchWord))
                             displaySearchLine(line, searchWord);
                         else
                             getShell().write(line);
@@ -337,11 +309,10 @@ public abstract class AeshFileDisplayer implements Command {
                     }
                 }
                 topVisibleRowCache = topVisibleRow;
-            }
-            else {
-                for(int i=topVisibleRow; i < (topVisibleRow+rows-1); i++) {
-                    if(i < page.size()) {
-                        getShell().write(page.getLine(i)+ Config.getLineSeparator());
+            } else {
+                for (int i = topVisibleRow; i < (topVisibleRow + rows - 1); i++) {
+                    if (i < page.size()) {
+                        getShell().write(page.getLine(i) + Config.getLineSeparator());
                     }
                 }
                 topVisibleRowCache = topVisibleRow;
@@ -355,7 +326,7 @@ public abstract class AeshFileDisplayer implements Command {
      */
     private void displaySearchLine(String line, String searchWord) throws IOException {
         int start = line.indexOf(searchWord);
-        getShell().write(line.substring(0,start));
+        getShell().write(line.substring(0, start));
         getShell().write(ANSI.INVERT_BACKGROUND);
         getShell().write(searchWord);
         getShell().write(ANSI.RESET);
@@ -376,7 +347,7 @@ public abstract class AeshFileDisplayer implements Command {
     }
 
     public boolean isAtBottom() {
-        return topVisibleRow >= (page.size()-rows-1);
+        return topVisibleRow >= (page.size() - rows - 1);
     }
 
     public boolean isAtTop() {
@@ -392,22 +363,21 @@ public abstract class AeshFileDisplayer implements Command {
     }
 
     public int getTopVisibleRow() {
-        return topVisibleRow+1;
+        return topVisibleRow + 1;
     }
 
     private void findSearchWord(boolean forward) throws IOException {
         LOGGER.info("searching for: " + searchBuilder.toString());
         searchLines = page.findWord(searchBuilder.toString());
-        LOGGER.info("found: "+searchLines);
-        if(searchLines.size() > 0) {
-            for(Integer i : searchLines)
-                if(i > topVisibleRow) {
-                    topVisibleRow = i-1;
+        LOGGER.info("found: " + searchLines);
+        if (searchLines.size() > 0) {
+            for (Integer i : searchLines)
+                if (i > topVisibleRow) {
+                    topVisibleRow = i - 1;
                     display();
                     return;
                 }
-        }
-        else {
+        } else {
             search = TerminalPage.Search.NOT_FOUND;
             displayBottom();
         }
@@ -417,7 +387,7 @@ public abstract class AeshFileDisplayer implements Command {
      * number written by the user (used to jump to specific commands)
      */
     private int getNumber() {
-        if(number.length() > 0)
+        if (number.length() > 0)
             return Integer.parseInt(number.toString());
         else
             return 1;

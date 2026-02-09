@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,8 +19,6 @@
  */
 package org.aesh.io;
 
-import org.aesh.io.filter.ResourceFilter;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,12 +27,14 @@ import java.nio.file.LinkOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
+import org.aesh.io.filter.ResourceFilter;
+
 /**
  * FileResource is a Aesh native io class.
  * The default implementation is based on java.io.File, but it can be specified
  * by the Settings object when it needs to be overridden.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface Resource {
 
@@ -92,7 +92,7 @@ public interface Resource {
 
     /**
      * Creates the directory named by this file resource, including any
-     * necessary but nonexistent parent directories.  Note that if this
+     * necessary but nonexistent parent directories. Note that if this
      * operation fails it may have succeeded in creating some of the necessary
      * parent directories.
      *
@@ -174,7 +174,6 @@ public interface Resource {
      * @throws FileNotFoundException if the file doesn't exist
      */
     InputStream read() throws FileNotFoundException;
-
 
     <A extends BasicFileAttributes> A readAttributes(Class<A> type, LinkOption... options) throws IOException;
 

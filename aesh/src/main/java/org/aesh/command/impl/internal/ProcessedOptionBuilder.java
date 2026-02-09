@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,36 +19,36 @@
  */
 package org.aesh.command.impl.internal;
 
-import org.aesh.command.impl.activator.NullActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.impl.completer.BooleanOptionCompleter;
-import org.aesh.command.impl.completer.FileOptionCompleter;
-import org.aesh.command.impl.completer.NullOptionCompleter;
-import org.aesh.command.completer.OptionCompleter;
-import org.aesh.command.converter.Converter;
-import org.aesh.converter.CLConverterManager;
-import org.aesh.command.impl.converter.NullConverter;
-import org.aesh.command.impl.parser.AeshOptionParser;
-import org.aesh.command.parser.OptionParserException;
-import org.aesh.command.impl.renderer.NullOptionRenderer;
-import org.aesh.command.parser.OptionParser;
-import org.aesh.command.renderer.OptionRenderer;
-import org.aesh.command.impl.validator.NullValidator;
-import org.aesh.command.validator.OptionValidator;
-import org.aesh.io.Resource;
-import org.aesh.selector.SelectorType;
-import org.aesh.util.ReflectionUtil;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.OptionCompleter;
+import org.aesh.command.converter.Converter;
+import org.aesh.command.impl.activator.NullActivator;
+import org.aesh.command.impl.completer.BooleanOptionCompleter;
+import org.aesh.command.impl.completer.FileOptionCompleter;
+import org.aesh.command.impl.completer.NullOptionCompleter;
+import org.aesh.command.impl.converter.NullConverter;
+import org.aesh.command.impl.parser.AeshOptionParser;
+import org.aesh.command.impl.renderer.NullOptionRenderer;
+import org.aesh.command.impl.validator.NullValidator;
+import org.aesh.command.parser.OptionParser;
+import org.aesh.command.parser.OptionParserException;
+import org.aesh.command.renderer.OptionRenderer;
+import org.aesh.command.validator.OptionValidator;
+import org.aesh.converter.CLConverterManager;
+import org.aesh.io.Resource;
+import org.aesh.selector.SelectorType;
+import org.aesh.util.ReflectionUtil;
+
 /**
  * Build a {@link ProcessedOption} object using the Builder pattern.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ProcessedOptionBuilder {
 
@@ -132,6 +132,7 @@ public class ProcessedOptionBuilder {
      * Note that the
      *
      * If its a property option the
+     *
      * @param type class
      * @return this
      */
@@ -199,13 +200,12 @@ public class ProcessedOptionBuilder {
     }
 
     private Converter initConverter(Class<? extends Converter> converterClass) {
-        if(converterClass != null && !converterClass.equals(NullConverter.class)) {
-            if( CLConverterManager.getInstance().hasConverter(converterClass))
+        if (converterClass != null && !converterClass.equals(NullConverter.class)) {
+            if (CLConverterManager.getInstance().hasConverter(converterClass))
                 return CLConverterManager.getInstance().getConverter(converterClass);
             else
                 return ReflectionUtil.newInstance(converterClass);
-        }
-        else
+        } else
             return CLConverterManager.getInstance().getConverter(type);
     }
 
@@ -219,14 +219,13 @@ public class ProcessedOptionBuilder {
 
     private OptionCompleter initCompleter(Class<? extends OptionCompleter> completerClass) {
 
-        if(completerClass != null && !completerClass.equals(NullOptionCompleter.class)) {
-                return ReflectionUtil.newInstance(completerClass);
-        }
-        else {
+        if (completerClass != null && !completerClass.equals(NullOptionCompleter.class)) {
+            return ReflectionUtil.newInstance(completerClass);
+        } else {
             try {
-                if(type == Boolean.class || type == boolean.class)
+                if (type == Boolean.class || type == boolean.class)
                     return BooleanOptionCompleter.class.newInstance();
-                else if(type == File.class || type == Resource.class)
+                else if (type == File.class || type == Resource.class)
                     return FileOptionCompleter.class.newInstance();
                 else
                     return null;
@@ -247,7 +246,7 @@ public class ProcessedOptionBuilder {
     }
 
     private OptionValidator initValidator(Class<? extends OptionValidator> validator) {
-        if(validator != null && validator != NullValidator.class)
+        if (validator != null && validator != NullValidator.class)
             return ReflectionUtil.newInstance(validator);
         else
             return new NullValidator();
@@ -262,7 +261,7 @@ public class ProcessedOptionBuilder {
     }
 
     private OptionActivator initActivator(Class<? extends OptionActivator> activator) {
-        if(activator != null && activator != NullActivator.class)
+        if (activator != null && activator != NullActivator.class)
             return ReflectionUtil.newInstance(activator);
         else
             return new NullActivator();
@@ -277,7 +276,7 @@ public class ProcessedOptionBuilder {
     }
 
     private OptionRenderer initRenderer(Class<? extends OptionRenderer> renderer) {
-        if(renderer != null && renderer != NullOptionRenderer.class)
+        if (renderer != null && renderer != NullOptionRenderer.class)
             return ReflectionUtil.newInstance(renderer);
         else
             return null;
@@ -296,7 +295,7 @@ public class ProcessedOptionBuilder {
     }
 
     private OptionParser initParser(Class<? extends OptionParser> parser) {
-        if(parser != null)
+        if (parser != null)
             return ReflectionUtil.newInstance(parser);
         else
             return null;
@@ -325,59 +324,60 @@ public class ProcessedOptionBuilder {
         return apply(c -> c.inherited = inherited);
     }
 
-     public ProcessedOption build() throws OptionParserException {
-        if(optionType == null) {
-            if(!hasValue)
+    public ProcessedOption build() throws OptionParserException {
+        if (optionType == null) {
+            if (!hasValue)
                 optionType = OptionType.BOOLEAN;
-            else if(isProperty)
+            else if (isProperty)
                 optionType = OptionType.GROUP;
-            else if(hasMultipleValues)
+            else if (hasMultipleValues)
                 optionType = OptionType.LIST;
             else
                 optionType = OptionType.NORMAL;
         }
 
-        if((name == null || name.length() < 1) &&
+        if ((name == null || name.length() < 1) &&
                 optionType != OptionType.ARGUMENTS && optionType != OptionType.ARGUMENT) {
-            if(fieldName == null || fieldName.length() < 1)
+            if (fieldName == null || fieldName.length() < 1)
                 throw new OptionParserException("Name must be defined to build an Option");
             else
                 name = fieldName;
         }
         //by default fieldName will be given the same name as the option name
-        if(fieldName == null)
+        if (fieldName == null)
             fieldName = name;
 
-        if(type == null)
+        if (type == null)
             throw new OptionParserException("Type must be defined to build an Option");
 
-        if((shortName == Character.MIN_VALUE) && "".equals(name) &&
+        if ((shortName == Character.MIN_VALUE) && "".equals(name) &&
                 optionType != OptionType.ARGUMENTS && optionType != OptionType.ARGUMENT) {
             throw new OptionParserException("Either shortName or name must be set.");
         }
 
-        if(validator == null)
+        if (validator == null)
             validator = new NullValidator();
 
-        if(converter == null)
+        if (converter == null)
             converter = CLConverterManager.getInstance().getConverter(type);
 
-        if(activator == null)
+        if (activator == null)
             activator = new NullActivator();
 
-        if(parser == null)
+        if (parser == null)
             parser = new AeshOptionParser();
 
         //if(renderer == null)
         //    renderer = new NullOptionRenderer();
 
         // Validate that negatable is only used with boolean types
-        if(negatable && type != Boolean.class && type != boolean.class) {
+        if (negatable && type != Boolean.class && type != boolean.class) {
             throw new OptionParserException("Option '" + name + "' is marked as negatable but is not a boolean type");
         }
 
         return new ProcessedOption(shortName, name, description, argument, required,
-                valueSeparator, askIfNotSet, acceptNameWithoutDashes, selectorType, defaultValues, type, fieldName, optionType, converter,
+                valueSeparator, askIfNotSet, acceptNameWithoutDashes, selectorType, defaultValues, type, fieldName, optionType,
+                converter,
                 completer, validator, activator, renderer, parser, overrideRequired, negatable, negationPrefix, inherited);
     }
 }

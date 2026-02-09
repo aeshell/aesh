@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,10 @@
  */
 package org.aesh.command.map;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -32,12 +36,8 @@ import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
 import org.aesh.terminal.utils.Parser;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class MapProcessedCommand<CI extends CommandInvocation> extends ProcessedCommand<MapCommand<CI>, CI> {
 
@@ -50,21 +50,21 @@ public class MapProcessedCommand<CI extends CommandInvocation> extends Processed
     private static final MapProcessedOptionProvider EMPTY_PROVIDER = options -> Collections.emptyList();
 
     MapProcessedCommand(String name,
-                        List<String> aliases,
-                        MapCommand<CI> command,
-                        String description,
-                        CommandValidator<MapCommand<CI>, CI> validator,
-                        ResultHandler resultHandler,
-                        boolean generateHelp,
-                        boolean disableParsing,
-                        String version,
-                        ProcessedOption arguments,
-                        List<ProcessedOption> options,
-                        ProcessedOption argument,
-                        CommandPopulator<Object,CI> populator,
-                        MapProcessedOptionProvider provider,
-                        CommandActivator activator,
-                        boolean lookup) throws OptionParserException {
+            List<String> aliases,
+            MapCommand<CI> command,
+            String description,
+            CommandValidator<MapCommand<CI>, CI> validator,
+            ResultHandler resultHandler,
+            boolean generateHelp,
+            boolean disableParsing,
+            String version,
+            ProcessedOption arguments,
+            List<ProcessedOption> options,
+            ProcessedOption argument,
+            CommandPopulator<Object, CI> populator,
+            MapProcessedOptionProvider provider,
+            CommandActivator activator,
+            boolean lookup) throws OptionParserException {
         super(name, aliases, command, description, validator, resultHandler, generateHelp,
                 disableParsing, version, arguments, options, argument, populator, activator);
         initialized = true;
@@ -79,6 +79,7 @@ public class MapProcessedCommand<CI extends CommandInvocation> extends Processed
             option.updateInvocationProviders(invocationProviders);
         }
     }
+
     @Override
     public List<ProcessedOption> getOptions() {
         if (!initialized) {
@@ -133,20 +134,21 @@ public class MapProcessedCommand<CI extends CommandInvocation> extends Processed
         }
         for (ProcessedOption option : getOptions(false)) {
             if (option.name() != null
-                        && option.name().equals(name)
-                        && option.activator().isActivated(new ParsedCommand(this))) {
+                    && option.name().equals(name)
+                    && option.activator().isActivated(new ParsedCommand(this))) {
                 return option;
             }
         }
         for (ProcessedOption option : getOptions(true)) {
             if (option.name() != null
-                        && option.name().equals(name)
-                        && option.activator().isActivated(new ParsedCommand(this))) {
+                    && option.name().equals(name)
+                    && option.activator().isActivated(new ParsedCommand(this))) {
                 return option;
             }
         }
         return null;
     }
+
     @Override
     public ProcessedOption findLongOptionNoActivatorCheck(String name) {
         if (!initialized) {

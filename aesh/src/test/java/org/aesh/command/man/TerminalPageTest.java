@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,17 +19,16 @@
  */
 package org.aesh.command.man;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+
 import org.aesh.command.man.parser.ManFileParser;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-
-
 /**
- * @author <a href="mailto:00hf11@gmail.com">Helio Frota</a>
+ * @author Aesh team
  */
 public class TerminalPageTest {
 

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -21,7 +21,7 @@
 package org.aesh.command.parser;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class CommandLineParserException extends Exception {
 
@@ -30,6 +30,6 @@ public class CommandLineParserException extends Exception {
     }
 
     public CommandLineParserException(String msg, Throwable cause) {
-       super(msg, cause);
+        super(msg, cause);
     }
 }

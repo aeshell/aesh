@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -32,7 +32,8 @@ import java.util.zip.ZipFile;
  * It is possible to specify an (optional) entry name filter.
  * <p>
  * The most efficient way of iterating is used, see benchmark in test classes.
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ *
+ * @author Aesh team
  *
  */
 final class ZipFileIterator {
@@ -48,7 +49,7 @@ final class ZipFileIterator {
      *
      * @param zipFile The ZIP file used to iterate over all entries
      * @param entryNameFilter (optional) file name filter. Only entry names starting with
-     * one of the specified names in the filter are returned
+     *        one of the specified names in the filter are returned
      */
     ZipFileIterator(final ZipFile zipFile, final String[] entryNameFilter) throws IOException {
         this.zipFile = zipFile;

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,15 +19,15 @@
  */
 package org.aesh.command.populator;
 
-import org.aesh.command.CommandDefinition;
-import org.aesh.command.CommandException;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.Command;
-import org.aesh.command.CommandResult;
-import org.aesh.command.option.OptionGroup;
-
 import java.util.Map;
 import java.util.TreeMap;
+
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.OptionGroup;
 
 @CommandDefinition(name = "test", description = "a simple test")
 public class TestPopulator3<CI extends CommandInvocation> implements Command<CI> {
@@ -41,7 +41,7 @@ public class TestPopulator3<CI extends CommandInvocation> implements Command<CI>
     public TestPopulator3() {
     }
 
-    public Map<String,String> getBasicMap() {
+    public Map<String, String> getBasicMap() {
         return basicMap;
     }
 

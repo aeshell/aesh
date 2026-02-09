@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,32 +19,31 @@
  */
 package org.aesh.command.alias;
 
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.readline.alias.AliasManager;
-
 import java.io.File;
 import java.io.IOException;
 
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.readline.alias.AliasManager;
+
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshAliasManager extends AliasManager {
 
     private final CommandRegistry registry;
 
     public AeshAliasManager(File aliasFile, boolean persistAlias,
-                            CommandRegistry registry) throws IOException {
-           super(aliasFile, persistAlias);
-           this.registry = registry;
+            CommandRegistry registry) throws IOException {
+        super(aliasFile, persistAlias);
+        this.registry = registry;
     }
 
     @Override
     public boolean verifyNoNewAliasConflict(String aliasName) {
-        if(registry.contains(aliasName))
+        if (registry.contains(aliasName))
             return false;
         else
             return true;
     }
-
 
 }

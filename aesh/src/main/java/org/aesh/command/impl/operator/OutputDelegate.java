@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2017 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -21,11 +21,12 @@ package org.aesh.command.impl.operator;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+
 import org.aesh.terminal.utils.Parser;
 
 /**
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public abstract class OutputDelegate {
 
@@ -44,12 +45,11 @@ public abstract class OutputDelegate {
                 writer = buildWriter();
             }
             //if we have a writer, write
-            if(writer != null) {
+            if (writer != null) {
                 writer.append(msg);
                 writer.flush();
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             exception = e;
         }
     }
@@ -57,7 +57,7 @@ public abstract class OutputDelegate {
     public void close() throws IOException {
         //if(writer != null)
         //    writer.close();
-        if(exception != null)
+        if (exception != null)
             throw exception;
     }
 

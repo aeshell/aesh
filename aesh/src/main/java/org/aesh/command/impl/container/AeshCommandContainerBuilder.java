@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,6 +20,14 @@
 
 package org.aesh.command.impl.container;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.GroupCommand;
 import org.aesh.command.GroupCommandDefinition;
@@ -36,29 +44,21 @@ import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
-import org.aesh.command.Command;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.option.Argument;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.util.ReflectionUtil;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 @SuppressWarnings("unchecked")
 public class AeshCommandContainerBuilder<CI extends CommandInvocation> implements CommandContainerBuilder<CI> {
@@ -76,8 +76,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
     private AeshCommandContainer<CI> doGenerateCommandLineParser(Command<CI> commandObject) throws CommandLineParserException {
         Class<Command<CI>> clazz = (Class<Command<CI>>) commandObject.getClass();
         CommandDefinition command = clazz.getAnnotation(CommandDefinition.class);
-        if(command != null) {
-            ProcessedCommand<Command<CI>, CI> processedCommand = ProcessedCommandBuilder.<Command<CI>, CI>builder()
+        if (command != null) {
+            ProcessedCommand<Command<CI>, CI> processedCommand = ProcessedCommandBuilder.<Command<CI>, CI> builder()
                     .name(command.name())
                     .activator(command.activator())
                     .aliases(Arrays.asList(command.aliases()))
@@ -93,14 +93,14 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             processCommand(processedCommand, clazz);
 
             return new AeshCommandContainer<>(
-                    CommandLineParserBuilder.<Command<CI>, CI>builder()
+                    CommandLineParserBuilder.<Command<CI>, CI> builder()
                             .processedCommand(processedCommand)
                             .create());
         }
 
         GroupCommandDefinition groupCommand = clazz.getAnnotation(GroupCommandDefinition.class);
-        if(groupCommand != null) {
-            ProcessedCommand<Command<CI>,CI> processedGroupCommand = ProcessedCommandBuilder.<Command<CI>, CI>builder()
+        if (groupCommand != null) {
+            ProcessedCommand<Command<CI>, CI> processedGroupCommand = ProcessedCommandBuilder.<Command<CI>, CI> builder()
                     .name(groupCommand.name())
                     .activator(groupCommand.activator())
                     .aliases(Arrays.asList(groupCommand.aliases()))
@@ -117,7 +117,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             AeshCommandContainer<CI> groupContainer;
 
             groupContainer = new AeshCommandContainer<>(
-                    CommandLineParserBuilder.<Command<CI>, CI>builder()
+                    CommandLineParserBuilder.<Command<CI>, CI> builder()
                             .processedCommand(processedGroupCommand)
                             .create());
 
@@ -142,16 +142,16 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             }
 
             return groupContainer;
-        }
-        else
-            throw new CommandLineParserException("Commands must be annotated with @CommandDefinition or @GroupCommandDefinition");
+        } else
+            throw new CommandLineParserException(
+                    "Commands must be annotated with @CommandDefinition or @GroupCommandDefinition");
     }
 
     private static void processCommand(ProcessedCommand processedCommand, Class clazz) throws CommandLineParserException {
-        for(Field field : clazz.getDeclaredFields())
+        for (Field field : clazz.getDeclaredFields())
             processField(processedCommand, field);
 
-        if(clazz.getSuperclass() != null)
+        if (clazz.getSuperclass() != null)
             processCommand(processedCommand, clazz.getSuperclass());
     }
 
@@ -161,9 +161,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         OptionList ol;
         Arguments a;
         Argument arg;
-        if((o = field.getAnnotation(Option.class)) != null) {
+        if ((o = field.getAnnotation(Option.class)) != null) {
             OptionType optionType;
-            if(o.hasValue())
+            if (o.hasValue())
                 optionType = OptionType.NORMAL;
             else
                 optionType = OptionType.BOOLEAN;
@@ -192,14 +192,12 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .negatable(o.negatable())
                             .negationPrefix(o.negationPrefix())
                             .inherited(o.inherited())
-                            .build()
-            );
-        }
-        else if((ol = field.getAnnotation(OptionList.class)) != null) {
-            if(!Collection.class.isAssignableFrom(field.getType()))
+                            .build());
+        } else if ((ol = field.getAnnotation(OptionList.class)) != null) {
+            if (!Collection.class.isAssignableFrom(field.getType()))
                 throw new CommandLineParserException("OptionList field must be instance of Collection");
             Class type = Object.class;
-            if(field.getGenericType() != null) {
+            if (field.getGenericType() != null) {
                 ParameterizedType listType = (ParameterizedType) field.getGenericType();
                 type = (Class) listType.getActualTypeArguments()[0];
             }
@@ -225,19 +223,18 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .parser(ol.parser())
                             .build());
 
-        }
-        else if((og = field.getAnnotation(OptionGroup.class)) != null) {
-            if(!Map.class.isAssignableFrom(field.getType()))
+        } else if ((og = field.getAnnotation(OptionGroup.class)) != null) {
+            if (!Map.class.isAssignableFrom(field.getType()))
                 throw new CommandLineParserException("OptionGroup field must be instance of Map");
             Class type = Object.class;
-            if(field.getGenericType() != null) {
+            if (field.getGenericType() != null) {
                 ParameterizedType listType = (ParameterizedType) field.getGenericType();
                 type = (Class) listType.getActualTypeArguments()[1];
             }
 
-            processedCommand.addOption( ProcessedOptionBuilder.builder()
+            processedCommand.addOption(ProcessedOptionBuilder.builder()
                     .shortName(og.shortName())
-                    .name( og.name().length() < 1 ? field.getName() : og.name())
+                    .name(og.name().length() < 1 ? field.getName() : og.name())
                     .description(og.description())
                     .required(og.required())
                     .valueSeparator(',')
@@ -255,17 +252,17 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .build());
         }
 
-        else if((a = field.getAnnotation(Arguments.class)) != null) {
-            if(!Collection.class.isAssignableFrom(field.getType()))
+        else if ((a = field.getAnnotation(Arguments.class)) != null) {
+            if (!Collection.class.isAssignableFrom(field.getType()))
                 throw new CommandLineParserException("Arguments field must be instance of Collection");
-            if(processedCommand.getArgument() != null)
+            if (processedCommand.getArgument() != null)
                 throw new CommandLineParserException("Arguments can not be defined with an Argument type");
             Class type = Object.class;
-            if(field.getGenericType() != null) {
+            if (field.getGenericType() != null) {
                 ParameterizedType listType = (ParameterizedType) field.getGenericType();
                 type = (Class) listType.getActualTypeArguments()[0];
             }
-            processedCommand.setArguments( ProcessedOptionBuilder.builder()
+            processedCommand.setArguments(ProcessedOptionBuilder.builder()
                     .shortName('\u0000')
                     .name("")
                     .description(a.description())
@@ -283,15 +280,14 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .activator(a.activator())
                     .parser(a.parser())
                     .build());
-        }
-        else if((arg = field.getAnnotation(Argument.class)) != null) {
-            if(processedCommand.getArgument() != null)
+        } else if ((arg = field.getAnnotation(Argument.class)) != null) {
+            if (processedCommand.getArgument() != null)
                 throw new CommandLineParserException("Argument can not be defined more than once pr class");
-            if(processedCommand.getArguments() != null)
+            if (processedCommand.getArguments() != null)
                 throw new CommandLineParserException("Argument can not be defined with an Arguments type");
-            if(Collection.class.isAssignableFrom(field.getType()))
+            if (Collection.class.isAssignableFrom(field.getType()))
                 throw new CommandLineParserException("Argument field can not be an instance of Collection");
-             OptionType optionType = OptionType.ARGUMENT;
+            OptionType optionType = OptionType.ARGUMENT;
             processedCommand.setArgument(
                     ProcessedOptionBuilder.builder()
                             .shortName('\u0000')
@@ -313,12 +309,12 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .parser(arg.parser())
                             .overrideRequired(arg.overrideRequired())
                             .inherited(arg.inherited())
-                            .build()
-            );
+                            .build());
         }
     }
 
-   public static void parseAndPopulate(Command<CommandInvocation> instance, String input) throws CommandLineParserException, OptionValidatorException {
+    public static void parseAndPopulate(Command<CommandInvocation> instance, String input)
+            throws CommandLineParserException, OptionValidatorException {
         AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
         CommandLineParser<CommandInvocation> cl = builder.doGenerateCommandLineParser(instance).getParser();
         InvocationProviders invocationProviders = new AeshInvocationProviders(
@@ -328,7 +324,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 new AeshOptionActivatorProvider(),
                 new AeshCommandActivatorProvider());
         cl.parse(input);
-        cl.getCommandPopulator().populateObject( cl.getProcessedCommand(), invocationProviders, null, CommandLineParser.Mode.VALIDATE);
+        cl.getCommandPopulator().populateObject(cl.getProcessedCommand(), invocationProviders, null,
+                CommandLineParser.Mode.VALIDATE);
     }
 
 }

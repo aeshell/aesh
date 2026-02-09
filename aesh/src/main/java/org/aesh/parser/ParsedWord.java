@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -25,7 +25,7 @@ package org.aesh.parser;
  * A word can contain spaces if they are escaped or if the word is wrapped in
  * a single or double quote.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ParsedWord {
 
@@ -47,6 +47,7 @@ public class ParsedWord {
 
     /**
      * The specific index this word have relative to the complete line
+     *
      * @return lineIndex
      */
     public int lineIndex() {
@@ -62,7 +63,10 @@ public class ParsedWord {
     }
 
     public enum Status {
-        OK, OPEN_BRACKET, OPEN_QUOTE, OPEN_DOUBLE_QUOTE
+        OK,
+        OPEN_BRACKET,
+        OPEN_QUOTE,
+        OPEN_DOUBLE_QUOTE
     }
 
     @Override

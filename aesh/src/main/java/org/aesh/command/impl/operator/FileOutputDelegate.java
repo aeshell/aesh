@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2017 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -23,12 +23,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
+
 import org.aesh.console.AeshContext;
 
 /**
  * Output to a file.
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public abstract class FileOutputDelegate extends OutputDelegate {
     private final File outputFile;

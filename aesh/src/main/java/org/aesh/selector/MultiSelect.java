@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2019 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,18 +19,18 @@
  */
 package org.aesh.selector;
 
-import org.aesh.command.shell.Shell;
-import org.aesh.terminal.Key;
-import org.aesh.terminal.utils.ANSI;
-import org.aesh.terminal.utils.Config;
+import static org.aesh.terminal.utils.ANSI.CURSOR_START;
+import static org.aesh.terminal.utils.ANSI.MOVE_LINE_DOWN;
+import static org.aesh.terminal.utils.ANSI.MOVE_LINE_UP;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.aesh.terminal.utils.ANSI.CURSOR_START;
-import static org.aesh.terminal.utils.ANSI.MOVE_LINE_DOWN;
-import static org.aesh.terminal.utils.ANSI.MOVE_LINE_UP;
+import org.aesh.command.shell.Shell;
+import org.aesh.terminal.Key;
+import org.aesh.terminal.utils.ANSI;
+import org.aesh.terminal.utils.Config;
 
 public class MultiSelect {
 
@@ -45,10 +45,10 @@ public class MultiSelect {
     public MultiSelect(Shell shell, List<String> defaultValues, String message) {
         this(shell, message);
         lines = new ArrayList<>(defaultValues.size());
-        for(String value : defaultValues)
+        for (String value : defaultValues)
             lines.add(new SelectLine(value, shell.size().getWidth()));
 
-        pagination = lines.size()+1 > shell.size().getHeight();
+        pagination = lines.size() + 1 > shell.size().getHeight();
     }
 
     public MultiSelect(Shell shell, String message) {
@@ -62,13 +62,13 @@ public class MultiSelect {
         this.lines = new ArrayList<>(lines.size());
         this.lines.addAll(lines);
 
-        pagination = lines.size()+1 > shell.size().getHeight();
+        pagination = lines.size() + 1 > shell.size().getHeight();
     }
 
     public List<String> doSelect() {
         shell.write(ANSI.CURSOR_HIDE);
         //lets use the other buffer
-        if(pagination) {
+        if (pagination) {
             shell.write(ANSI.ALTERNATE_BUFFER);
             //write header
         }
@@ -79,92 +79,82 @@ public class MultiSelect {
 
         boolean waitingForEnter = true;
 
-        while(waitingForEnter) {
+        while (waitingForEnter) {
             try {
                 Key in = shell.read();
-                if(in == Key.ENTER || in == Key.ENTER_2 || in == Key.CTRL_M) {
+                if (in == Key.ENTER || in == Key.ENTER_2 || in == Key.CTRL_M) {
                     waitingForEnter = false;
-                    if(!pagination)
+                    if (!pagination)
                         shell.write(ANSI.moveRowsDown(page.bottom() - focusLine));
 
                     shell.write(ANSI.CURSOR_SHOW);
-                }
-                else if(in == Key.SPACE) {
+                } else if (in == Key.SPACE) {
                     lines.get(focusLine).select();
                     shell.write(lines.get(focusLine).print());
                     shell.write(ANSI.CURSOR_START);
-                }
-                else if(in == Key.UP || in == Key.UP_2) {
-                    if(focusLine > page.top()) {
+                } else if (in == Key.UP || in == Key.UP_2) {
+                    if (focusLine > page.top()) {
                         moveUp();
-                    }
-                    else if(page.top() > 0) {
-                        page = new Page(page.top-1, page.bottom()-1);
+                    } else if (page.top() > 0) {
+                        page = new Page(page.top - 1, page.bottom() - 1);
                         displayPage(page.top(), maxDisplayedLines, focusLine);
                         moveUp();
                     }
-                }
-                else if(in == Key.PGUP || in == Key.PGUP_2) {
+                } else if (in == Key.PGUP || in == Key.PGUP_2) {
                     //we're already at the bottom, let's try to move the focusLine to the bottom
-                    if(page.top() == 0) {
+                    if (page.top() == 0) {
                         //System.out.print("page.top="+page.top+", focusLine="+focusLine);
-                        if(focusLine > page.top()) {
+                        if (focusLine > page.top()) {
                             moveUp(focusLine);
                         }
                     }
                     //try to move focusLine up with maxDisplayedLines
-                    else if(page.top() - maxDisplayedLines < 0) {
+                    else if (page.top() - maxDisplayedLines < 0) {
                         int diffUp = page.top();
-                        if(diffUp > 0) {
+                        if (diffUp > 0) {
                             page = new Page(page.top - diffUp, page.bottom() - diffUp);
                             updateFocusLineGoingUp();
-                       }
-                    }
-                    else if(page.top() - maxDisplayedLines >= 0) {
-                        page = new Page(page.top-maxDisplayedLines, page.bottom()-maxDisplayedLines);
+                        }
+                    } else if (page.top() - maxDisplayedLines >= 0) {
+                        page = new Page(page.top - maxDisplayedLines, page.bottom() - maxDisplayedLines);
                         updateFocusLineGoingUp();
                     }
-                }
-                else if(in == Key.DOWN || in == Key.DOWN_2) {
-                    if(focusLine < page.bottom()-1) {
+                } else if (in == Key.DOWN || in == Key.DOWN_2) {
+                    if (focusLine < page.bottom() - 1) {
                         moveDown();
-                    }
-                    else if(page.bottom() < lines.size()) {
-                        page = new Page(page.top+1, page.bottom()+1);
+                    } else if (page.bottom() < lines.size()) {
+                        page = new Page(page.top + 1, page.bottom() + 1);
                         displayPage(page.top(), maxDisplayedLines, focusLine);
                         moveDown();
                     }
-                }
-                else if(in == Key.PGDOWN || in == Key.PGDOWN_2) {
+                } else if (in == Key.PGDOWN || in == Key.PGDOWN_2) {
                     //we're already at the bottom, let's try to move the focusLine to the bottom
-                    if(page.bottom() == lines.size()) {
-                        if(focusLine < page.bottom()-1) {
-                            moveDown(page.bottom()-focusLine-1);
+                    if (page.bottom() == lines.size()) {
+                        if (focusLine < page.bottom() - 1) {
+                            moveDown(page.bottom() - focusLine - 1);
                         }
                     }
                     //try to move focusLine down with maxDisplayedLines
-                    else if(page.bottom() + maxDisplayedLines > lines.size()) {
+                    else if (page.bottom() + maxDisplayedLines > lines.size()) {
                         int diffDown = lines.size() - page.bottom();
-                        if(diffDown > 0) {
+                        if (diffDown > 0) {
                             page = new Page(page.top + diffDown, page.bottom() + diffDown);
                             updateFocusLineGoingDown();
                         }
-                    }
-                    else {
-                        page = new Page(page.top+maxDisplayedLines, page.bottom()+maxDisplayedLines);
+                    } else {
+                        page = new Page(page.top + maxDisplayedLines, page.bottom() + maxDisplayedLines);
                         updateFocusLineGoingDown();
                     }
                 }
-            }
-            catch(InterruptedException e) {
-                if(!pagination)
+            } catch (InterruptedException e) {
+                if (!pagination)
                     shell.write(ANSI.moveRowsDown(page.bottom() - focusLine));
                 shell.write(ANSI.CURSOR_SHOW);
             }
         }
 
         //let's move back to the original buffer before returning
-        if(pagination)
+        if (pagination)
             shell.write(ANSI.MAIN_BUFFER);
 
         shell.write(ANSI.CURSOR_SHOW);
@@ -175,8 +165,8 @@ public class MultiSelect {
     private void updateFocusLineGoingDown() {
         lines.get(focusLine).focus();
         focusLine += maxDisplayedLines;
-        if(focusLine > lines.size()-1)
-            focusLine = lines.size()-1;
+        if (focusLine > lines.size() - 1)
+            focusLine = lines.size() - 1;
         lines.get(focusLine).focus();
         displayPage(page.top(), maxDisplayedLines, focusLine);
     }
@@ -184,7 +174,7 @@ public class MultiSelect {
     private void updateFocusLineGoingUp() {
         lines.get(focusLine).focus();
         focusLine -= maxDisplayedLines;
-        if(focusLine < 0)
+        if (focusLine < 0)
             focusLine = 0;
         lines.get(focusLine).focus();
         displayPage(page.top(), maxDisplayedLines, focusLine);
@@ -235,7 +225,7 @@ public class MultiSelect {
     }
 
     private int calcNumOfDisplayableLines() {
-        if(maxDisplayedLines < lines.size())
+        if (maxDisplayedLines < lines.size())
             return maxDisplayedLines;
         else
             return lines.size();
@@ -243,18 +233,18 @@ public class MultiSelect {
 
     private void displayPage(int startLine, int numberOfLines, int focusLine) {
         StringBuilder builder = new StringBuilder();
-        builder.append(message+"  [Use arrow up/down to move and space to select. Enter to finish]");
-        for(int i = startLine; i < (startLine+numberOfLines); i++) {
+        builder.append(message + "  [Use arrow up/down to move and space to select. Enter to finish]");
+        for (int i = startLine; i < (startLine + numberOfLines); i++) {
             builder.append(Config.getLineSeparator());
             builder.append(lines.get(i).print());
         }
-        if(pagination)
+        if (pagination)
             shell.write(ANSI.CLEAR_SCREEN);
 
         shell.write(builder.toString());
         shell.write(CURSOR_START);
-        if(focusLine < startLine + numberOfLines-1) {
-            shell.write(ANSI.moveRowsUp(startLine + numberOfLines - focusLine -1));
+        if (focusLine < startLine + numberOfLines - 1) {
+            shell.write(ANSI.moveRowsUp(startLine + numberOfLines - focusLine - 1));
         }
     }
 

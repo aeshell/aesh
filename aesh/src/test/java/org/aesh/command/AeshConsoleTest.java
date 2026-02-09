@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,53 +19,53 @@
  */
 package org.aesh.command;
 
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
-import org.aesh.command.option.Option;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.internal.ProcessedCommandBuilder;
-import org.aesh.command.impl.internal.ProcessedOptionBuilder;
-import org.aesh.command.impl.parser.CommandLineParserBuilder;
-import org.aesh.command.registry.CommandRegistryException;
-import org.aesh.command.validator.OptionValidator;
-import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.console.AeshContext;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.command.settings.Settings;
-import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.option.Arguments;
-import org.aesh.command.option.OptionList;
-import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
-import org.aesh.terminal.utils.Config;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.CommandLineParserBuilder;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionList;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.OptionValidator;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.command.validator.ValidatorInvocationProvider;
+import org.aesh.console.AeshContext;
+import org.aesh.console.ReadlineConsole;
+import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
+import org.junit.Test;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 @SuppressWarnings("unchecked")
 public class AeshConsoleTest {
 
-
     @Test
-    public void testAeshConsole() throws IOException, InterruptedException, CommandLineParserException, CommandRegistryException {
+    public void testAeshConsole()
+            throws IOException, InterruptedException, CommandLineParserException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-        ProcessedCommand<FooTestCommand,CommandInvocation> fooCommand =
-                ProcessedCommandBuilder.<FooTestCommand, CommandInvocation>builder()
+        ProcessedCommand<FooTestCommand, CommandInvocation> fooCommand = ProcessedCommandBuilder
+                .<FooTestCommand, CommandInvocation> builder()
                 .name("foo")
                 .description("fooing")
                 .command(FooTestCommand.class)
@@ -79,12 +79,13 @@ public class AeshConsoleTest {
                 .create();
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
-                .command(CommandLineParserBuilder.<FooTestCommand,CommandInvocation>builder().processedCommand(fooCommand).create())
+                .command(CommandLineParserBuilder.<FooTestCommand, CommandInvocation> builder().processedCommand(fooCommand)
+                        .create())
                 .command(LsCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings = SettingsBuilder.builder()
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
                 .logging(true)
                 .commandRegistry(registry)
                 .validatorInvocationProvider(new DirectoryValidatorInvocationProvider())
@@ -94,10 +95,10 @@ public class AeshConsoleTest {
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
-        connection.read("foo"+ Config.getLineSeparator());
+        connection.read("foo" + Config.getLineSeparator());
         connection.read();
 
-        connection.read("ls --files /home:/tmp"+Config.getLineSeparator());
+        connection.read("ls --files /home:/tmp" + Config.getLineSeparator());
 
         Thread.sleep(100);
         console.stop();
@@ -113,7 +114,7 @@ public class AeshConsoleTest {
         }
     }
 
-    @CommandDefinition(name="ls", description = "[OPTION]... [FILE]...")
+    @CommandDefinition(name = "ls", description = "[OPTION]... [FILE]...")
     public class LsCommand implements Command {
 
         @Option(hasValue = false, description = "set foo to true/false")
@@ -122,11 +123,10 @@ public class AeshConsoleTest {
         @Option(hasValue = false, description = "set the bar")
         private boolean bar;
 
-        @Option(defaultValue = {"MORE"}, argument = "SIZE")
+        @Option(defaultValue = { "MORE" }, argument = "SIZE")
         private String less;
 
-        @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':',
-                validator = DirectoryValidator.class)
+        @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':', validator = DirectoryValidator.class)
         List<File> files;
 
         @Option(hasValue = false, description = "display this help and exit")
@@ -145,7 +145,7 @@ public class AeshConsoleTest {
     public class DirectoryValidator implements OptionValidator<DirectoryValidatorInvocation> {
         @Override
         public void validate(DirectoryValidatorInvocation validatorInvocation) throws OptionValidatorException {
-            if(!validatorInvocation.getValue().isDirectory()) {
+            if (!validatorInvocation.getValue().isDirectory()) {
                 throw new OptionValidatorException("File validation failed, must be a directory.");
             }
         }
@@ -179,12 +179,13 @@ public class AeshConsoleTest {
         }
     }
 
-    public static class DirectoryValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>> {
+    public static class DirectoryValidatorInvocationProvider
+            implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>> {
 
         @Override
         public ValidatorInvocation<File, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
-            if(validatorInvocation.getValue() instanceof File)
-                return new DirectoryValidatorInvocation( (File) validatorInvocation.getValue(),
+            if (validatorInvocation.getValue() instanceof File)
+                return new DirectoryValidatorInvocation((File) validatorInvocation.getValue(),
                         (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
             else
                 return validatorInvocation;

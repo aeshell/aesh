@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,25 +20,25 @@
 
 package org.aesh.command.option;
 
-import org.aesh.command.impl.activator.NullActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.impl.completer.NullOptionCompleter;
-import org.aesh.command.completer.OptionCompleter;
-import org.aesh.command.converter.Converter;
-import org.aesh.command.impl.converter.NullConverter;
-import org.aesh.command.impl.parser.AeshOptionParser;
-import org.aesh.command.impl.renderer.NullOptionRenderer;
-import org.aesh.command.parser.OptionParser;
-import org.aesh.command.renderer.OptionRenderer;
-import org.aesh.command.impl.validator.NullValidator;
-import org.aesh.command.validator.OptionValidator;
-import org.aesh.selector.SelectorType;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.OptionCompleter;
+import org.aesh.command.converter.Converter;
+import org.aesh.command.impl.activator.NullActivator;
+import org.aesh.command.impl.completer.NullOptionCompleter;
+import org.aesh.command.impl.converter.NullConverter;
+import org.aesh.command.impl.parser.AeshOptionParser;
+import org.aesh.command.impl.renderer.NullOptionRenderer;
+import org.aesh.command.impl.validator.NullValidator;
+import org.aesh.command.parser.OptionParser;
+import org.aesh.command.renderer.OptionRenderer;
+import org.aesh.command.validator.OptionValidator;
+import org.aesh.selector.SelectorType;
 
 /**
  * A command line option list
@@ -46,7 +46,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * Eg: --foo=bar1,bar2,bar3 or --foo bar1,bar2,bar3
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 @Retention(RUNTIME)
 @Target(FIELD)

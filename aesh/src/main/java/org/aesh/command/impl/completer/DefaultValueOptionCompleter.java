@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,14 +20,14 @@
 
 package org.aesh.command.impl.completer;
 
+import java.util.List;
+
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.terminal.utils.Parser;
 
-import java.util.List;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class DefaultValueOptionCompleter implements OptionCompleter<CompleterInvocation> {
 
@@ -44,21 +44,21 @@ public class DefaultValueOptionCompleter implements OptionCompleter<CompleterInv
     }
 
     private void completeDataWithoutValues(CompleterInvocation completerData) {
-        if(completerData.getGivenCompleteValue() == null ||
+        if (completerData.getGivenCompleteValue() == null ||
                 completerData.getGivenCompleteValue().length() == 0) {
             completerData.addAllCompleterValues(defaultValues);
             return;
         }
 
-        for(String value : defaultValues) {
-            if(value.startsWith(completerData.getGivenCompleteValue())) {
+        for (String value : defaultValues) {
+            if (value.startsWith(completerData.getGivenCompleteValue())) {
                 completerData.addCompleterValue(value);
             }
         }
     }
 
     private void completeDataWithValues(CompleterInvocation completerData) {
-        if(completerData.getCompleterValues().size() == 1 &&
+        if (completerData.getCompleterValues().size() == 1 &&
                 completerData.getCompleterValues().get(0).containSpaces()) {
             String tmpData = Parser.switchSpacesToEscapedSpacesInWord(
                     completerData.getCompleterValues().get(0).getCharacters());

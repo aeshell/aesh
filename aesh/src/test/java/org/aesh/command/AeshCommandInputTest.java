@@ -1,5 +1,10 @@
 package org.aesh.command;
 
+import static org.junit.Assert.*;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
@@ -13,16 +18,11 @@ import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.terminal.KeyAction;
 import org.aesh.terminal.Key;
+import org.aesh.terminal.KeyAction;
 import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.*;
 
 public class AeshCommandInputTest {
 
@@ -30,19 +30,18 @@ public class AeshCommandInputTest {
     public void testCommandInvocationTest() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                 .command(FooCommand.class)
-                 .create();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(FooCommand.class)
+                .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .enableOperatorParser(true)
-                        .connection(connection)
-                        .setPersistExport(false)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .enableOperatorParser(true)
+                .connection(connection)
+                .setPersistExport(false)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -57,7 +56,7 @@ public class AeshCommandInputTest {
         console.stop();
     }
 
-   @CommandDefinition(name ="foo", description = "")
+    @CommandDefinition(name = "foo", description = "")
     private static class FooCommand implements Command {
 
         @Option
@@ -79,6 +78,5 @@ public class AeshCommandInputTest {
             return CommandResult.SUCCESS;
         }
     }
-
 
 }

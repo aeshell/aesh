@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -32,8 +32,8 @@ import java.util.zip.ZipFile;
  * <p>
  * For every Java ClassFile ({@code .class}) an {@link InputStream} is returned.
  *
- * @author <a href="mailto:rmuller@xiam.nl">Ronald K. Muller</a>
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
+ * @author Aesh team
  */
 public final class ClassFileIterator extends ResourceIterator {
 
@@ -68,9 +68,7 @@ public final class ClassFileIterator extends ResourceIterator {
      */
     public String getName() {
         // Both getPath() and getName() are very light weight method calls
-        return zipIterator == null ?
-                fileIterator.getFile().getPath() :
-                zipIterator.getEntry().getName();
+        return zipIterator == null ? fileIterator.getFile().getPath() : zipIterator.getEntry().getName();
     }
 
     @Override
@@ -127,8 +125,7 @@ public final class ClassFileIterator extends ResourceIterator {
      * Returns the class path of the current JVM instance as an array of {@link File} objects.
      */
     private static File[] classPath() {
-        final String[] fileNames =
-                System.getProperty("java.class.path").split(File.pathSeparator);
+        final String[] fileNames = System.getProperty("java.class.path").split(File.pathSeparator);
         final File[] files = new File[fileNames.length];
         for (int i = 0; i < files.length; ++i) {
             files[i] = new File(fileNames[i]);

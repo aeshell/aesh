@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,9 @@
  */
 package org.aesh.command.builder;
 
+import static org.aesh.terminal.utils.Config.getLineSeparator;
+import static org.junit.Assert.assertEquals;
+
 import org.aesh.AeshConsoleRunner;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -27,29 +30,25 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.CommandLineParserBuilder;
-import org.aesh.tty.TestConnection;
 import org.aesh.terminal.utils.ANSI;
+import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import static org.aesh.terminal.utils.Config.getLineSeparator;
-import static org.junit.Assert.assertEquals;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class CommandLineFormatterTest {
 
-
     @Test
     public void formatter() throws CommandLineParserException {
-        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb =
-                ProcessedCommandBuilder.builder().name("man").description("[OPTION...]");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("man").description("[OPTION...]");
 
         pb.addOption(
                 ProcessedOptionBuilder.builder()
@@ -71,18 +70,18 @@ public class CommandLineFormatterTest {
                 .processedCommand(pb.create())
                 .create();
 
-        assertEquals("Usage: man [<options>]" + getLineSeparator() + "[OPTION...]"+ getLineSeparator()+
-                        getLineSeparator()+
-                        "Options:"+ getLineSeparator()+
-                        "  -d, --debug    emit debugging messages"+ getLineSeparator()+
-                        "  -D, --default  reset all options to their default values"+ getLineSeparator(),
+        assertEquals("Usage: man [<options>]" + getLineSeparator() + "[OPTION...]" + getLineSeparator() +
+                getLineSeparator() +
+                "Options:" + getLineSeparator() +
+                "  -d, --debug    emit debugging messages" + getLineSeparator() +
+                "  -D, --default  reset all options to their default values" + getLineSeparator(),
                 clp.printHelp());
     }
 
     @Test
     public void formatter2() throws CommandLineParserException {
-        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb =
-                ProcessedCommandBuilder.builder().name("man").description("[OPTION...]");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("man").description("[OPTION...]");
 
         pb.addOption(
                 ProcessedOptionBuilder.builder()
@@ -99,8 +98,7 @@ public class CommandLineFormatterTest {
                         .required(true)
                         .description("reset all options to their default values")
                         .type(String.class)
-                        .build()
-        );
+                        .build());
 
         pb.addOption(
                 ProcessedOptionBuilder.builder()
@@ -112,36 +110,34 @@ public class CommandLineFormatterTest {
                         .type(String.class)
                         .build());
 
-
         CommandLineParser clp = CommandLineParserBuilder.builder().processedCommand(pb.create()).create();
 
-        assertEquals("Usage: man [<options>]" + getLineSeparator() + "[OPTION...]"+ getLineSeparator()+
-                        getLineSeparator()+
-                        "Options:"+ getLineSeparator()+
-                        "  -d, --debug            emit debugging messages"+ getLineSeparator()+
-                        ANSI.BOLD+
-                        "  -D, --default"+
-                        ANSI.BOLD_OFF+
-                        "          reset all options to their default values"+ getLineSeparator()+
-                        "  -f, --file=<filename>  set the filename"+ getLineSeparator(),
+        assertEquals("Usage: man [<options>]" + getLineSeparator() + "[OPTION...]" + getLineSeparator() +
+                getLineSeparator() +
+                "Options:" + getLineSeparator() +
+                "  -d, --debug            emit debugging messages" + getLineSeparator() +
+                ANSI.BOLD +
+                "  -D, --default" +
+                ANSI.BOLD_OFF +
+                "          reset all options to their default values" + getLineSeparator() +
+                "  -f, --file=<filename>  set the filename" + getLineSeparator(),
                 clp.printHelp());
     }
 
     @Test
     public void groupFormatter() throws CommandLineParserException {
-        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> git =
-                ProcessedCommandBuilder.builder().name("git").description("[OPTION...]");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> git = ProcessedCommandBuilder.builder()
+                .name("git").description("[OPTION...]");
         git.addOption(
                 ProcessedOptionBuilder.builder()
                         .shortName('h')
                         .name("help")
                         .description("display help info")
                         .type(boolean.class)
-                        .build()
-        );
+                        .build());
 
-        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> rebase =
-                ProcessedCommandBuilder.builder().name("rebase").description("[OPTION...]");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> rebase = ProcessedCommandBuilder.builder()
+                .name("rebase").description("[OPTION...]");
         rebase.addOption(
                 ProcessedOptionBuilder.builder()
                         .shortName('f')
@@ -149,11 +145,10 @@ public class CommandLineFormatterTest {
                         .required(true)
                         .description("reset all options to their default values")
                         .type(String.class)
-                        .build()
-        );
+                        .build());
 
-        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> branch =
-                ProcessedCommandBuilder.builder().name("branch").description("branching");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> branch = ProcessedCommandBuilder.builder()
+                .name("branch").description("branching");
         branch.addOption(
                 ProcessedOptionBuilder.builder()
                         .shortName('b')
@@ -161,13 +156,14 @@ public class CommandLineFormatterTest {
                         .required(true)
                         .description("reset all options to their default values")
                         .type(String.class)
-                        .build()
-        );
+                        .build());
 
-
-        CommandLineParser<CommandInvocation> clpGit = CommandLineParserBuilder.builder().processedCommand(git.create()).create();
-        CommandLineParser<CommandInvocation> clpBranch = CommandLineParserBuilder.builder().processedCommand(branch.create()).create();
-        CommandLineParser<CommandInvocation> clpRebase = CommandLineParserBuilder.builder().processedCommand(rebase.create()).create();
+        CommandLineParser<CommandInvocation> clpGit = CommandLineParserBuilder.builder().processedCommand(git.create())
+                .create();
+        CommandLineParser<CommandInvocation> clpBranch = CommandLineParserBuilder.builder().processedCommand(branch.create())
+                .create();
+        CommandLineParser<CommandInvocation> clpRebase = CommandLineParserBuilder.builder().processedCommand(rebase.create())
+                .create();
 
         clpGit.updateAnsiMode(false);
         clpBranch.updateAnsiMode(false);
@@ -176,18 +172,16 @@ public class CommandLineFormatterTest {
         clpGit.addChildParser(clpBranch);
         clpGit.addChildParser(clpRebase);
 
-         assertEquals("Usage: git [<options>]" + getLineSeparator() + "[OPTION...]" + getLineSeparator() +
-                         getLineSeparator() +
-                         "Options:" + getLineSeparator() +
-                         "  -h, --help  display help info" + getLineSeparator()
-                         + getLineSeparator()+"git commands:"+ getLineSeparator()+
-                         "    " + "branch" + "  branching" + getLineSeparator() +
-                         "    " + "rebase" + "  [OPTION...]"+ getLineSeparator(),
-                 clpGit.printHelp());
-
+        assertEquals("Usage: git [<options>]" + getLineSeparator() + "[OPTION...]" + getLineSeparator() +
+                getLineSeparator() +
+                "Options:" + getLineSeparator() +
+                "  -h, --help  display help info" + getLineSeparator()
+                + getLineSeparator() + "git commands:" + getLineSeparator() +
+                "    " + "branch" + "  branching" + getLineSeparator() +
+                "    " + "rebase" + "  [OPTION...]" + getLineSeparator(),
+                clpGit.printHelp());
 
     }
-
 
     @Test
     public void testChildFormatter() throws InterruptedException {
@@ -196,19 +190,19 @@ public class CommandLineFormatterTest {
         AeshConsoleRunner runner = AeshConsoleRunner.builder().command(BaseCommand.class).connection(connection);
         runner.start();
 
-        connection.read("base git rebase --help"+ getLineSeparator());
+        connection.read("base git rebase --help" + getLineSeparator());
         connection.clearOutputBuffer();
         Thread.sleep(10);
-        connection.assertBuffer("Usage: base git rebase [<options>] <branch>"+ getLineSeparator()+
-                                       "Reapply commits on top of another base tip"+ getLineSeparator()+
-                                        getLineSeparator()+
-                                        "Options:"+ getLineSeparator()+
-                                        "  --force  force your commits"+getLineSeparator()+
-                                        "  --help   display this help info"+getLineSeparator()+
-                                        "  --test"+getLineSeparator()+
-                                        getLineSeparator()+
-                                        "Argument:"+getLineSeparator()+
-                                        "         the branch you want to rebase on"+getLineSeparator()+getLineSeparator());
+        connection.assertBuffer("Usage: base git rebase [<options>] <branch>" + getLineSeparator() +
+                "Reapply commits on top of another base tip" + getLineSeparator() +
+                getLineSeparator() +
+                "Options:" + getLineSeparator() +
+                "  --force  force your commits" + getLineSeparator() +
+                "  --help   display this help info" + getLineSeparator() +
+                "  --test" + getLineSeparator() +
+                getLineSeparator() +
+                "Argument:" + getLineSeparator() +
+                "         the branch you want to rebase on" + getLineSeparator() + getLineSeparator());
 
         runner.stop();
     }
@@ -220,25 +214,25 @@ public class CommandLineFormatterTest {
         AeshConsoleRunner runner = AeshConsoleRunner.builder().command(BaseCommand.class).connection(connection);
         runner.start();
 
-        connection.read("base git checkout --help"+ getLineSeparator());
+        connection.read("base git checkout --help" + getLineSeparator());
         connection.clearOutputBuffer();
         Thread.sleep(10);
-        connection.assertBuffer("Usage: base git checkout [<options>] <branch>"+ getLineSeparator()+
-                                       "Switch branches or restore working tree files"+ getLineSeparator()+
-                                        getLineSeparator()+
-                                        "Options:"+ getLineSeparator()+
-                                        "  --quiet  Suppress feedback messages"+getLineSeparator()+
-                                        "  --force  Proceed even if the index or the working tree differs from HEAD"+getLineSeparator()+
-                                        "  --help   display this help info"+getLineSeparator()+
-                                        "  --test"+getLineSeparator()+
-                                        getLineSeparator()+
-                                        "Argument:"+getLineSeparator()+
-                                        "         the branch you want to checkout"+getLineSeparator()+getLineSeparator());
+        connection.assertBuffer("Usage: base git checkout [<options>] <branch>" + getLineSeparator() +
+                "Switch branches or restore working tree files" + getLineSeparator() +
+                getLineSeparator() +
+                "Options:" + getLineSeparator() +
+                "  --quiet  Suppress feedback messages" + getLineSeparator() +
+                "  --force  Proceed even if the index or the working tree differs from HEAD" + getLineSeparator() +
+                "  --help   display this help info" + getLineSeparator() +
+                "  --test" + getLineSeparator() +
+                getLineSeparator() +
+                "Argument:" + getLineSeparator() +
+                "         the branch you want to checkout" + getLineSeparator() + getLineSeparator());
 
         runner.stop();
     }
 
-    @GroupCommandDefinition(name = "base", description = "", groupCommands = {GitCommand.class})
+    @GroupCommandDefinition(name = "base", description = "", groupCommands = { GitCommand.class })
     public static class BaseCommand implements Command {
 
         @Option(hasValue = false)
@@ -250,8 +244,8 @@ public class CommandLineFormatterTest {
         }
     }
 
-
-    @GroupCommandDefinition(name = "git", description = "", groupCommands = {GitCommit.class, GitRebase.class, GitCheckout.class})
+    @GroupCommandDefinition(name = "git", description = "", groupCommands = { GitCommit.class, GitRebase.class,
+            GitCheckout.class })
     public static class GitCommand implements Command {
 
         @Option(hasValue = false)
@@ -292,7 +286,7 @@ public class CommandLineFormatterTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            if(help)
+            if (help)
                 commandInvocation.println(commandInvocation.getHelpInfo("base git rebase"));
 
             return CommandResult.SUCCESS;
@@ -319,7 +313,7 @@ public class CommandLineFormatterTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            if(help)
+            if (help)
                 commandInvocation.println(commandInvocation.getHelpInfo());
 
             return CommandResult.SUCCESS;

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 package org.aesh.io.scanner;
-
 
 import java.io.DataInput;
 import java.io.File;
@@ -49,6 +48,7 @@ import java.util.Set;
  * supported by interfaces {@link java.io.DataInput} and {@link java.io.DataOutput}.
  * <p>
  * A class file consists of a single ClassFile structure:
+ *
  * <pre>
  * ClassFile {
  *   u4 magic;
@@ -77,6 +77,7 @@ import java.util.Set;
  * Annotations are stored as Attributes (i.e. "RuntimeVisibleAnnotations" and
  * "RuntimeInvisibleAnnotations").
  * </pre>
+ *
  * References:
  * <ul>
  * <li><a href="http://en.wikipedia.org/wiki/Java_class_file">Java class file (Wikipedia)</a>
@@ -94,7 +95,7 @@ import java.util.Set;
  * <li><a href="http://community.jboss.org/wiki/MCScanninglib">JBoss MC Scanning lib</a>;
  * <li><a href="http://code.google.com/p/reflections/">Google Reflections</a>, in fact an
  * improved version of <a href="http://scannotation.sourceforge.net/">scannotation</a>;
- * <li><a herf="https://github.com/ngocdaothanh/annovention">annovention</a>, improved version
+ * <li><a href="https://github.com/ngocdaothanh/annovention">annovention</a>, improved version
  * of the <a href="http://code.google.com/p/annovention">original Annovention</a> project.
  * Available from maven: {@code tv.cntt:annovention:1.2};
  * <li>If using the Spring Framework, use {@code ClassPathScanningCandidateComponentProvider}
@@ -103,11 +104,10 @@ import java.util.Set;
  * All above mentioned projects make use of a byte code manipulation library (like BCEL,
  * ASM or Javassist).
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 @SuppressWarnings("unchecked")
 public final class AnnotationDetector {
-
 
     /**
      * A {@code Reporter} for type annotations.
@@ -132,7 +132,7 @@ public final class AnnotationDetector {
          * Only {@code Annotation}s, specified by {@link #annotations()} are reported!
          */
         void reportFieldAnnotation(Class<? extends Annotation> annotation, String className,
-                                   String fieldName);
+                String fieldName);
 
     }
 
@@ -146,7 +146,7 @@ public final class AnnotationDetector {
          * Only {@code Annotation}s, specified by {@link #annotations()} are reported!
          */
         void reportMethodAnnotation(Class<? extends Annotation> annotation, String className,
-                                    String methodName);
+                String methodName);
 
     }
 
@@ -212,13 +212,13 @@ public final class AnnotationDetector {
             annotations.put("L" + a[i].getName().replace('.', '/') + ";", a[i]);
         }
         if (reporter instanceof TypeReporter) {
-            typeReporter = (TypeReporter)reporter;
+            typeReporter = (TypeReporter) reporter;
         }
         if (reporter instanceof FieldReporter) {
-            fieldReporter = (FieldReporter)reporter;
+            fieldReporter = (FieldReporter) reporter;
         }
         if (reporter instanceof MethodReporter) {
-            methodReporter = (MethodReporter)reporter;
+            methodReporter = (MethodReporter) reporter;
         }
         if (typeReporter == null && fieldReporter == null && methodReporter == null) {
             throw new AssertionError("No reporter defined");
@@ -293,11 +293,11 @@ public final class AnnotationDetector {
      * {@code CAFEBABE} are silently ignored.
      *
      * @param filesOrDirectories Valid files are: jar files, Java *.class files (all other
-     * files are silently ignored) and directories which are package root directories
+     *        files are silently ignored) and directories which are package root directories
      */
     public void detect(final File... filesOrDirectories) throws IOException {
         if (DEBUG) {
-            print("detectFilesOrDirectories: %s", (Object)filesOrDirectories);
+            print("detectFilesOrDirectories: %s", (Object) filesOrDirectories);
         }
         detect(new ClassFileIterator(filesOrDirectories, null));
     }
@@ -338,14 +338,14 @@ public final class AnnotationDetector {
                 if (!m.isAccessible()) {
                     m.setAccessible(true);
                 }
-                final URL jarUrl = (URL)m.invoke(urlConnection);
+                final URL jarUrl = (URL) m.invoke(urlConnection);
                 urlConnection = jarUrl.openConnection();
             } catch (Exception ex) {
                 throw new AssertionError("Couldn't read jar file URL from bundle: " + ex);
             }
         }
         if (urlConnection instanceof JarURLConnection) {
-            return (JarURLConnection)urlConnection;
+            return (JarURLConnection) urlConnection;
         } else {
             throw new AssertionError(
                     "Unknown URLConnection type: " + urlConnection.getClass().getName());
@@ -377,7 +377,7 @@ public final class AnnotationDetector {
     }
 
     private boolean hasCafebabe(final ClassFileBuffer buffer) throws IOException {
-        return buffer.size() > 4 &&  buffer.readInt() == 0xCAFEBABE;
+        return buffer.size() > 4 && buffer.readInt() == 0xCAFEBABE;
     }
 
     /**
@@ -425,7 +425,7 @@ public final class AnnotationDetector {
         final int tag = di.readUnsignedByte();
         switch (tag) {
             case CP_METHOD_TYPE:
-                di.skipBytes(2);  // readUnsignedShort()
+                di.skipBytes(2); // readUnsignedShort()
                 return false;
             case CP_METHOD_HANDLE:
                 di.skipBytes(3);
@@ -510,7 +510,7 @@ public final class AnnotationDetector {
     }
 
     private void readAttributes(final DataInput di, final char reporterType,
-                                final boolean skipReporting) throws IOException {
+            final boolean skipReporting) throws IOException {
 
         final int count = di.readUnsignedShort();
         if (DEBUG) {
@@ -582,11 +582,10 @@ public final class AnnotationDetector {
         return rawTypeName;
     }
 
-
     private void readAnnotationElementValue(final DataInput di) throws IOException {
         final int tag = di.readUnsignedByte();
         if (DEBUG) {
-            print("tag='%c'", (char)tag);
+            print("tag='%c'", (char) tag);
         }
         switch (tag) {
             case BYTE:
@@ -630,12 +629,12 @@ public final class AnnotationDetector {
         final Object value = constantPool[index];
         final String s;
         if (value instanceof Integer) {
-            s = (String)constantPool[(Integer)value];
+            s = (String) constantPool[(Integer) value];
             if (DEBUG) {
                 print("resolveUtf8(%d): %d --> %s", index, value, s);
             }
         } else {
-            s = (String)value;
+            s = (String) value;
             if (DEBUG) {
                 print("resolveUtf8(%d): %s", index, s);
             }
@@ -661,9 +660,9 @@ public final class AnnotationDetector {
                     }
                     if (args[i].getClass().isArray()) {
                         // cast back to array! Note that primitive arrays are not supported
-                        args[i] = Arrays.toString((Object[])args[i]);
+                        args[i] = Arrays.toString((Object[]) args[i]);
                     } else if (args[i] == Class.class) {
-                        args[i] = ((Class<?>)args[i]).getName();
+                        args[i] = ((Class<?>) args[i]).getName();
                     }
                 }
                 logMessage = String.format(message, args);

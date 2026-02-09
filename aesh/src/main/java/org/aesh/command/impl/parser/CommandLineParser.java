@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,20 +19,20 @@
  */
 package org.aesh.command.impl.parser;
 
+import java.util.List;
+
+import org.aesh.command.Command;
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.populator.CommandPopulator;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.Command;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedLineIterator;
-
-import java.util.List;
 
 /**
  * A command line parser that is created based on a given
@@ -40,7 +40,7 @@ import java.util.List;
  *
  * It must also be able to inject values from a line into a Command object
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface CommandLineParser<CI extends CommandInvocation> {
 
@@ -81,7 +81,6 @@ public interface CommandLineParser<CI extends CommandInvocation> {
      */
     CommandPopulator<Object, CI> getCommandPopulator();
 
-
     /**
      * Direct call to CommandPopulator to populate this command
      *
@@ -92,7 +91,7 @@ public interface CommandLineParser<CI extends CommandInvocation> {
      * @throws OptionValidatorException validator exception
      */
     void populateObject(String line, InvocationProviders invocationProviders,
-                        AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException;
+            AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException;
 
     /**
      * Returns a usage String based on the defined command and options.
@@ -139,24 +138,29 @@ public interface CommandLineParser<CI extends CommandInvocation> {
      * Will return the correct command's parser. Used when a command have child commands and
      * we need to know which parser to use for completions.
      *
-     * @return  correct parser
+     * @return correct parser
      */
     CommandLineParser<CI> parsedCommand();
 
     /**
      * Parse a command line and populate the
+     *
      * @param completeOperation
      * @param invocationProviders
      */
     void complete(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders);
 
-    void doPopulate(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException;
+    void doPopulate(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders,
+            AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException;
 
     String getFormattedCommand(int offset, int descriptionStart);
 
     void updateAnsiMode(boolean mode);
 
     enum Mode {
-        COMPLETION, STRICT, VALIDATE, NONE
+        COMPLETION,
+        STRICT,
+        VALIDATE,
+        NONE
     }
 }

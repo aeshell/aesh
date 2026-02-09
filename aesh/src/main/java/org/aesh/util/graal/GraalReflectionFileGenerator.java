@@ -15,6 +15,13 @@
  */
 package org.aesh.util.graal;
 
+import static org.aesh.terminal.utils.Config.getLineSeparator;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.aesh.command.Command;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
@@ -22,15 +29,8 @@ import org.aesh.command.impl.parser.AeshOptionParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.aesh.terminal.utils.Config.getLineSeparator;
-
 /**
- * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
+ * @author Aesh team
  */
 public class GraalReflectionFileGenerator {
 
@@ -57,7 +57,8 @@ public class GraalReflectionFileGenerator {
         }
     }
 
-    private void parseCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, Writer w) throws IOException {
+    private void parseCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, Writer w)
+            throws IOException {
         w.append("  {").append(getLineSeparator());
         appendCommand(command, w);
     }
@@ -83,8 +84,10 @@ public class GraalReflectionFileGenerator {
                 .append("    \"allPublicMethods\" : true");
     }
 
-    private void appendCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, Writer w) throws IOException {
-        w.append("    \"name\" : \"").append(command.getCommand().getClass().getName()).append("\",").append(getLineSeparator());
+    private void appendCommand(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command, Writer w)
+            throws IOException {
+        w.append("    \"name\" : \"").append(command.getCommand().getClass().getName()).append("\",")
+                .append(getLineSeparator());
         appendDefaults(w);
         if (command.getActivator() != null) {
             klasses.add(command.getActivator().getClass().getName());

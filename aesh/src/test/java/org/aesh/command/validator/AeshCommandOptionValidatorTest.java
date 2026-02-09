@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,33 +19,33 @@
  */
 package org.aesh.command.validator;
 
+import java.io.IOException;
+
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.impl.validator.AeshValidatorInvocation;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
-import org.aesh.console.AeshContext;
-import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.terminal.utils.Config;
-import org.aesh.command.CommandDefinition;
-import org.aesh.command.Command;
-import org.aesh.command.CommandResult;
-import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.impl.validator.AeshValidatorInvocation;
+import org.aesh.console.AeshContext;
 import org.aesh.console.ReadlineConsole;
+import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import java.io.IOException;
-import org.aesh.command.CommandException;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandOptionValidatorTest {
 
@@ -53,26 +53,25 @@ public class AeshCommandOptionValidatorTest {
     public void testOptionValidator() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ValCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .connection(connection)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
         console.start();
-        connection.read("val --foo yay"+ Config.getLineSeparator());
-        connection.assertBuffer("val --foo yay"+Config.getLineSeparator()+"VAL"+Config.getLineSeparator());
+        connection.read("val --foo yay" + Config.getLineSeparator());
+        connection.assertBuffer("val --foo yay" + Config.getLineSeparator() + "VAL" + Config.getLineSeparator());
         connection.clearOutputBuffer();
         connection.read("val --foo doh\\ doh" + Config.getLineSeparator());
-        connection.assertBufferEndsWith("Option value cannot contain spaces"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("Option value cannot contain spaces" + Config.getLineSeparator());
 
         console.stop();
     }
@@ -86,67 +85,65 @@ public class AeshCommandOptionValidatorTest {
                 .command(IntCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .connection(connection)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .build();
 
         ReadlineConsole aeshConsole = new ReadlineConsole(settings);
 
         aeshConsole.start();
 
-        connection.read("val --foo yay"+ Config.getLineSeparator());
-        connection.assertBuffer("val --foo yay"+Config.getLineSeparator()+"VAL"+Config.getLineSeparator());
+        connection.read("val --foo yay" + Config.getLineSeparator());
+        connection.assertBuffer("val --foo yay" + Config.getLineSeparator() + "VAL" + Config.getLineSeparator());
         connection.clearOutputBuffer();
 
         connection.read("val --foo yay\\ nay" + Config.getLineSeparator());
-        connection.assertBufferEndsWith("Option value cannot contain spaces"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("Option value cannot contain spaces" + Config.getLineSeparator());
 
         connection.read("int --num 43" + Config.getLineSeparator());
-        connection.assertBufferEndsWith("Number cannot be higher than 42"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("Number cannot be higher than 42" + Config.getLineSeparator());
 
-         aeshConsole.stop();
+        aeshConsole.stop();
     }
 
     @Test
     public void testMultipleOptionWithProvidersValidators() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ValCommand.class)
                 .command(Val2Command.class)
                 .command(IntCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .connection(connection)
-                        .logging(true)
-                        .validatorInvocationProvider(new TestValidatorInvocationProvider())
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .validatorInvocationProvider(new TestValidatorInvocationProvider())
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
         console.start();
 
-        connection.read("val2 --foo yay"+Config.getLineSeparator());
-        connection.assertBuffer("val2 --foo yay"+ Config.getLineSeparator()+"VAL2"+Config.getLineSeparator());
+        connection.read("val2 --foo yay" + Config.getLineSeparator());
+        connection.assertBuffer("val2 --foo yay" + Config.getLineSeparator() + "VAL2" + Config.getLineSeparator());
 
         connection.read("val2 --foo Doh" + Config.getLineSeparator());
-        connection.assertBufferEndsWith("NO UPPER CASE!"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("NO UPPER CASE!" + Config.getLineSeparator());
 
         connection.read("val --foo yay\\ nay" + Config.getLineSeparator());
-        connection.assertBufferEndsWith("Option value cannot contain spaces"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("Option value cannot contain spaces" + Config.getLineSeparator());
 
         connection.read("int --num 43" + Config.getLineSeparator());
-        connection.assertBufferEndsWith("Number cannot be higher than 42"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("Number cannot be higher than 42" + Config.getLineSeparator());
 
-         console.stop();
+        console.stop();
     }
 
     @Test
@@ -157,25 +154,23 @@ public class AeshCommandOptionValidatorTest {
                 .command(ValidatorOptionCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .connection(connection)
-                        .logging(true)
-                        .validatorInvocationProvider(new TestValidatorInvocationProvider())
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .validatorInvocationProvider(new TestValidatorInvocationProvider())
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
         console.start();
-        connection.read("test argvalue"+Config.getLineSeparator());
+        connection.read("test argvalue" + Config.getLineSeparator());
         Thread.sleep(20);
-        connection.assertBufferEndsWith("Option: --foo is required for this command."+Config.getLineSeparator());
+        connection.assertBufferEndsWith("Option: --foo is required for this command." + Config.getLineSeparator());
 
         console.stop();
     }
-
 
     @CommandDefinition(name = "test", description = "")
     public static class ValidatorOptionCommand implements Command {
@@ -191,7 +186,6 @@ public class AeshCommandOptionValidatorTest {
             return CommandResult.SUCCESS;
         }
     }
-
 
     @CommandDefinition(name = "val", description = "")
     public static class ValCommand implements Command {
@@ -220,7 +214,7 @@ public class AeshCommandOptionValidatorTest {
     public static class IntValidator implements OptionValidator {
         @Override
         public void validate(ValidatorInvocation validatorInvocation) throws OptionValidatorException {
-            if(((Integer) validatorInvocation.getValue()) > 42)
+            if (((Integer) validatorInvocation.getValue()) > 42)
                 throw new OptionValidatorException("Number cannot be higher than 42");
         }
     }
@@ -230,7 +224,7 @@ public class AeshCommandOptionValidatorTest {
         @Override
         public void validate(ValidatorInvocation validatorInvocation) throws OptionValidatorException {
             String s = (String) validatorInvocation.getValue();
-            if(s.contains(" "))
+            if (s.contains(" "))
                 throw new OptionValidatorException("Option value cannot contain spaces");
         }
     }
@@ -251,12 +245,12 @@ public class AeshCommandOptionValidatorTest {
 
         @Override
         public void validate(TestValidatorInvocation validatorInvocation) throws OptionValidatorException {
-            if(!validatorInvocation.getValue().toLowerCase().equals(validatorInvocation.getValue()))
+            if (!validatorInvocation.getValue().toLowerCase().equals(validatorInvocation.getValue()))
                 throw new OptionValidatorException("NO UPPER CASE!");
         }
     }
 
-    public static class TestValidatorInvocation implements ValidatorInvocation<String,Command> {
+    public static class TestValidatorInvocation implements ValidatorInvocation<String, Command> {
         private final String value;
         private final Command command;
         private final AeshContext aeshContext;
@@ -283,11 +277,12 @@ public class AeshCommandOptionValidatorTest {
         }
     }
 
-    public static class TestValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<String, Command>> {
+    public static class TestValidatorInvocationProvider
+            implements ValidatorInvocationProvider<ValidatorInvocation<String, Command>> {
         @Override
         @SuppressWarnings("unchecked")
         public ValidatorInvocation<String, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
-            if(validatorInvocation.getValue() instanceof String )
+            if (validatorInvocation.getValue() instanceof String)
                 return new TestValidatorInvocation((String) validatorInvocation.getValue(),
                         (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
             else

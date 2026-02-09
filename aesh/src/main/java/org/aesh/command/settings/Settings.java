@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,11 @@
  */
 package org.aesh.command.settings;
 
+import java.io.File;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.function.Consumer;
+
 import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.CommandActivatorProvider;
@@ -35,26 +40,19 @@ import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.io.Resource;
 import org.aesh.console.AeshContext;
+import org.aesh.io.Resource;
 import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.terminal.Connection;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.function.Consumer;
-
 /**
  * Object thats define all tunable settings used by Console
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
-public interface Settings<CI extends CommandInvocation,
-        CI3 extends ConverterInvocation, CI2 extends CompleterInvocation,
-        VI extends ValidatorInvocation, OA extends OptionActivator,
-        CA extends CommandActivator> extends Cloneable {
+public interface Settings<CI extends CommandInvocation, CI3 extends ConverterInvocation, CI2 extends CompleterInvocation, VI extends ValidatorInvocation, OA extends OptionActivator, CA extends CommandActivator>
+        extends Cloneable {
 
     /**
      * Get the current Mode.
@@ -217,6 +215,7 @@ public interface Settings<CI extends CommandInvocation,
 
     /**
      * Specify
+     *
      * @param resource
      */
     void setResource(Resource resource);

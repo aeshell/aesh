@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,26 +19,8 @@
  */
 package org.aesh.command;
 
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
-import org.aesh.command.registry.CommandRegistryException;
-import org.aesh.command.shell.Shell;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.internal.ProcessedCommandBuilder;
-import org.aesh.command.result.ResultHandler;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.settings.Settings;
-import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.console.ReadlineConsole;
-import org.aesh.terminal.utils.Config;
-import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.tty.TestConnection;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -48,8 +30,26 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
+import org.aesh.command.result.ResultHandler;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.shell.Shell;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.console.ReadlineConsole;
+import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
+import org.junit.Test;
 
 /**
  *
@@ -63,7 +63,7 @@ import static org.junit.Assert.fail;
  *
  * exit //should exit
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshScriptTest {
 
@@ -76,26 +76,25 @@ public class AeshScriptTest {
 
         CommandResultHandler resultHandler = new CommandResultHandler();
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> fooCommand = ProcessedCommandBuilder.builder()
-                                              .name("foo")
-                                              .resultHandler(resultHandler)
-                                              .command(FooCommand.class)
-                                              .create();
+                .name("foo")
+                .resultHandler(resultHandler)
+                .command(FooCommand.class)
+                .create();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                                           .command(fooCommand)
-                                           .command(BarCommand.class)
-                                           .command(new RunCommand(resultHandler))
-                                           .command(ExitCommand.class)
-                                           .create();
+                .command(fooCommand)
+                .command(BarCommand.class)
+                .command(new RunCommand(resultHandler))
+                .command(ExitCommand.class)
+                .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .commandRegistry(registry)
-                        .connection(connection)
-                        .commandNotFoundHandler(resultHandler)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .commandRegistry(registry)
+                .connection(connection)
+                .commandNotFoundHandler(resultHandler)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -151,7 +150,7 @@ public class AeshScriptTest {
         }
     }
 
-    @CommandDefinition(name ="exit", description = "")
+    @CommandDefinition(name = "exit", description = "")
     private static class ExitCommand implements Command {
 
         @Override
@@ -167,12 +166,11 @@ public class AeshScriptTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            if(counter.getCount() > 1) {
+            if (counter.getCount() > 1) {
                 commandInvocation.println("computing...." + Config.getLineSeparator() + "finished computing, returning...");
                 counter.countDown();
                 return CommandResult.SUCCESS;
-            }
-            else {
+            } else {
                 fail();
                 return CommandResult.FAILURE;
             }
@@ -184,12 +182,11 @@ public class AeshScriptTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            if(counter.getCount() == 1) {
+            if (counter.getCount() == 1) {
                 commandInvocation.println("baring...." + Config.getLineSeparator() + "finished baring, returning...");
                 counter.countDown();
                 return CommandResult.SUCCESS;
-            }
-            else {
+            } else {
                 fail();
                 return CommandResult.FAILURE;
             }

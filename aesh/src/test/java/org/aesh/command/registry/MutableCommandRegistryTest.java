@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,26 +19,25 @@
  */
 package org.aesh.command.registry;
 
-import org.aesh.command.option.Option;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.CommandDefinition;
-import org.aesh.command.GroupCommandDefinition;
-import org.aesh.complete.AeshCompleteOperation;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
+import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Option;
+import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.terminal.formatting.TerminalString;
 import org.junit.Test;
 
-import org.aesh.command.CommandException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class MutableCommandRegistryTest {
 
@@ -67,7 +66,7 @@ public class MutableCommandRegistryTest {
                 .cursor(co.getCursor())
                 .parseBrackets(true)
                 .parse();
-         registry.completeCommandName(co, parsedLine);
+        registry.completeCommandName(co, parsedLine);
         assertEquals(1, co.getCompletionCandidates().size());
         assertEquals("foo", co.getCompletionCandidates().get(0).toString());
 
@@ -82,7 +81,6 @@ public class MutableCommandRegistryTest {
         assertTrue(co.getCompletionCandidates().contains(new TerminalString("bar", true)));
         assertTrue(co.getCompletionCandidates().contains(new TerminalString("group", true)));
     }
-
 
     @CommandDefinition(name = "foo", description = "")
     public class Command1 implements Command {
@@ -108,7 +106,7 @@ public class MutableCommandRegistryTest {
         }
     }
 
-    @GroupCommandDefinition(name = "group", description = "", groupCommands = {Command3.class})
+    @GroupCommandDefinition(name = "group", description = "", groupCommands = { Command3.class })
     public class GroupCommand1 implements Command {
 
         @Option

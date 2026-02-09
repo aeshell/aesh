@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,28 +19,28 @@
  */
 package org.aesh.command.impl.populator;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.aesh.command.Command;
 import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.option.ParentCommand;
-import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.command.populator.CommandPopulator;
-import org.aesh.console.AeshContext;
 import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.Command;
+import org.aesh.command.option.ParentCommand;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.populator.CommandPopulator;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.console.AeshContext;
 import org.aesh.selector.SelectorType;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation> implements CommandPopulator<O, CI> {
 
@@ -53,54 +53,54 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
     /**
      * Populate a Command instance with the values parsed from a command line
      * If any parser errors are detected it will throw an exception
+     *
      * @param processedCommand command line
      * @param mode do validation or not
      * @throws CommandLineParserException any incorrectness in the parser will abort the populate
      */
     @Override
     public void populateObject(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders,
-                               AeshContext aeshContext, CommandLineParser.Mode mode)
+            AeshContext aeshContext, CommandLineParser.Mode mode)
             throws CommandLineParserException, OptionValidatorException {
-        if(processedCommand.parserExceptions().size() > 0 && mode == CommandLineParser.Mode.VALIDATE)
+        if (processedCommand.parserExceptions().size() > 0 && mode == CommandLineParser.Mode.VALIDATE)
             throw processedCommand.parserExceptions().get(0);
-        for(ProcessedOption option : processedCommand.getOptions()) {
-            if(option.getValues() != null && option.getValues().size() > 0)
-                option.injectValueIntoField(getObject(), invocationProviders, aeshContext,
-                        mode == CommandLineParser.Mode.VALIDATE );
-            else if(option.getDefaultValues().size() > 0 && option.selectorType() == SelectorType.NO_OP) {
+        for (ProcessedOption option : processedCommand.getOptions()) {
+            if (option.getValues() != null && option.getValues().size() > 0)
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext,
                         mode == CommandLineParser.Mode.VALIDATE);
-            }
-            else if(option.getOptionType().equals(OptionType.GROUP) && option.getProperties().size() > 0)
+            else if (option.getDefaultValues().size() > 0 && option.selectorType() == SelectorType.NO_OP) {
+                option.injectValueIntoField(getObject(), invocationProviders, aeshContext,
+                        mode == CommandLineParser.Mode.VALIDATE);
+            } else if (option.getOptionType().equals(OptionType.GROUP) && option.getProperties().size() > 0)
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext,
                         mode == CommandLineParser.Mode.VALIDATE);
             else
                 resetField(getObject(), option.getFieldName(), option.hasValue());
         }
         //arguments
-        if(processedCommand.getArguments() != null &&
+        if (processedCommand.getArguments() != null &&
                 (processedCommand.getArguments().getValues().size() > 0 ||
-                         processedCommand.getArguments().getDefaultValues().size() > 0))
+                        processedCommand.getArguments().getDefaultValues().size() > 0))
             processedCommand.getArguments().injectValueIntoField(getObject(), invocationProviders, aeshContext,
                     mode == CommandLineParser.Mode.VALIDATE);
-        else if(processedCommand.getArguments() != null)
+        else if (processedCommand.getArguments() != null)
             resetField(getObject(), processedCommand.getArguments().getFieldName(), true);
         //argument
-         if(processedCommand.getArgument() != null &&
+        if (processedCommand.getArgument() != null &&
                 (processedCommand.getArgument().getValues().size() > 0 ||
-                         processedCommand.getArgument().getDefaultValues().size() > 0))
+                        processedCommand.getArgument().getDefaultValues().size() > 0))
             processedCommand.getArgument().injectValueIntoField(getObject(), invocationProviders, aeshContext,
                     mode == CommandLineParser.Mode.VALIDATE);
-        else if(processedCommand.getArgument() != null)
+        else if (processedCommand.getArgument() != null)
             resetField(getObject(), processedCommand.getArgument().getFieldName(), true);
     }
 
     @Override
     public void populateObject(ProcessedCommand<Command<CI>, CI> processedCommand,
-                               InvocationProviders invocationProviders,
-                               AeshContext aeshContext,
-                               CommandLineParser.Mode mode,
-                               CommandContext commandContext) throws CommandLineParserException, OptionValidatorException {
+            InvocationProviders invocationProviders,
+            AeshContext aeshContext,
+            CommandLineParser.Mode mode,
+            CommandContext commandContext) throws CommandLineParserException, OptionValidatorException {
         // First, do the standard population
         populateObject(processedCommand, invocationProviders, aeshContext, mode);
 
@@ -147,9 +147,9 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
      * by the user, inject the inherited value.
      */
     private void injectInheritedValues(ProcessedCommand<Command<CI>, CI> processedCommand,
-                                       CommandContext commandContext,
-                                       InvocationProviders invocationProviders,
-                                       AeshContext aeshContext) {
+            CommandContext commandContext,
+            InvocationProviders invocationProviders,
+            AeshContext aeshContext) {
         // Get all inherited options from the context
         java.util.Map<String, ProcessedOption> inheritedOptions = commandContext.getAllInheritedOptions();
 
@@ -231,14 +231,22 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
         }
         // Handle primitive type boxing/unboxing
         if (fieldType.isPrimitive()) {
-            if (fieldType == boolean.class && valueType == Boolean.class) return true;
-            if (fieldType == int.class && valueType == Integer.class) return true;
-            if (fieldType == long.class && valueType == Long.class) return true;
-            if (fieldType == short.class && valueType == Short.class) return true;
-            if (fieldType == byte.class && valueType == Byte.class) return true;
-            if (fieldType == char.class && valueType == Character.class) return true;
-            if (fieldType == float.class && valueType == Float.class) return true;
-            if (fieldType == double.class && valueType == Double.class) return true;
+            if (fieldType == boolean.class && valueType == Boolean.class)
+                return true;
+            if (fieldType == int.class && valueType == Integer.class)
+                return true;
+            if (fieldType == long.class && valueType == Long.class)
+                return true;
+            if (fieldType == short.class && valueType == Short.class)
+                return true;
+            if (fieldType == byte.class && valueType == Byte.class)
+                return true;
+            if (fieldType == char.class && valueType == Character.class)
+                return true;
+            if (fieldType == float.class && valueType == Float.class)
+                return true;
+            if (fieldType == double.class && valueType == Double.class)
+                return true;
         }
         return false;
     }
@@ -265,12 +273,12 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
      *
      * @param instance command
      * @param fieldName field
-    public static void parseAndPopulate(Object instance, String line)
-            throws CommandLineParserException, OptionValidatorException {
-        CommandLineParser parser = ParserGenerator.generateCommandLineParser(instance.getClass());
-        AeshCommandPopulator populator = new AeshCommandPopulator(parser);
-        populator.populateObject(instance, parser.parse(line));
-    }
+     *        public static void parseAndPopulate(Object instance, String line)
+     *        throws CommandLineParserException, OptionValidatorException {
+     *        CommandLineParser parser = ParserGenerator.generateCommandLineParser(instance.getClass());
+     *        AeshCommandPopulator populator = new AeshCommandPopulator(parser);
+     *        populator.populateObject(instance, parser.parse(line));
+     *        }
      */
 
     private void resetField(Object instance, String fieldName, boolean hasValue) {
@@ -278,35 +286,32 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
             Field field = getField(instance.getClass(), fieldName);
             //for some options, the field might be null. eg generatedHelp
             //if so we ignore it
-            if(field == null)
+            if (field == null)
                 return;
-            if(!Modifier.isPublic(field.getModifiers()))
+            if (!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
-            if(field.getType().isPrimitive()) {
-                if(boolean.class.isAssignableFrom(field.getType()))
+            if (field.getType().isPrimitive()) {
+                if (boolean.class.isAssignableFrom(field.getType()))
                     field.set(instance, false);
-                else if(int.class.isAssignableFrom(field.getType()))
+                else if (int.class.isAssignableFrom(field.getType()))
                     field.set(instance, 0);
-                else if(short.class.isAssignableFrom(field.getType()))
+                else if (short.class.isAssignableFrom(field.getType()))
                     field.set(instance, 0);
-                else if(char.class.isAssignableFrom(field.getType()))
+                else if (char.class.isAssignableFrom(field.getType()))
                     field.set(instance, '\u0000');
-                else if(byte.class.isAssignableFrom(field.getType()))
+                else if (byte.class.isAssignableFrom(field.getType()))
                     field.set(instance, 0);
-                else if(long.class.isAssignableFrom(field.getType()))
+                else if (long.class.isAssignableFrom(field.getType()))
                     field.set(instance, 0L);
-                else if(float.class.isAssignableFrom(field.getType()))
+                else if (float.class.isAssignableFrom(field.getType()))
                     field.set(instance, 0.0f);
-                else if(double.class.isAssignableFrom(field.getType()))
+                else if (double.class.isAssignableFrom(field.getType()))
                     field.set(instance, 0.0d);
-            }
-            else if(!hasValue && field.getType().equals(Boolean.class)) {
-               field.set(instance, Boolean.FALSE);
-            }
-            else
+            } else if (!hasValue && field.getType().equals(Boolean.class)) {
+                field.set(instance, Boolean.FALSE);
+            } else
                 field.set(instance, null);
-        }
-        catch (NoSuchFieldException | IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
     }
@@ -314,9 +319,8 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
     private Field getField(Class clazz, String fieldName) throws NoSuchFieldException {
         try {
             return clazz.getDeclaredField(fieldName);
-        }
-        catch(NoSuchFieldException nsfe) {
-            if(clazz.getSuperclass() != null)
+        } catch (NoSuchFieldException nsfe) {
+            if (clazz.getSuperclass() != null)
                 return getField(clazz.getSuperclass(), fieldName);
             else
                 return null;

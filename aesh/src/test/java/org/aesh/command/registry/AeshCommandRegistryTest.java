@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -27,28 +27,27 @@ import java.util.Set;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.container.CommandContainer;
 import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.container.CommandContainer;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.parser.ParsedLine;
 import org.aesh.console.ReadlineConsole;
-
+import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
 import org.aesh.terminal.Key;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandRegistryTest {
 
     private static final String WRITTEN = "hgjfiehk";
-    private final Key completeChar =  Key.CTRL_I;
+    private final Key completeChar = Key.CTRL_I;
 
     @Test
     public void testExceptionThrownFromCommandRegistryShouldNotCrashAesh() throws Exception {
@@ -95,15 +94,14 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .connection(connection)
-                        .enableExport(false)
-                        .enableAlias(false)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .enableExport(false)
+                .enableAlias(false)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -161,16 +159,15 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .setPersistExport(false)
-                        .enableExport(false)
-                        .enableAlias(false)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .commandRegistry(registry)
+                .setPersistExport(false)
+                .enableExport(false)
+                .enableAlias(false)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -207,36 +204,35 @@ public class AeshCommandRegistryTest {
             @Override
             public Set<String> getAllCommandNames() {
                 return new HashSet<>();
-           }
+            }
 
-           @Override
-           public boolean contains(String commandName) {
-               return false;
-           }
+            @Override
+            public boolean contains(String commandName) {
+                return false;
+            }
 
-           @Override
+            @Override
             public List<CommandLineParser<?>> getChildCommandParsers(String parent) {
                 return Collections.emptyList();
-           }
+            }
 
-           @Override
-           public void addRegistrationListener(CommandRegistry.CommandRegistrationListener listener) {
-           }
+            @Override
+            public void addRegistrationListener(CommandRegistry.CommandRegistrationListener listener) {
+            }
 
             @Override
             public void removeRegistrationListener(CommandRegistry.CommandRegistrationListener listener) {
             }
         };
 
-         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                         OptionActivator, CommandActivator> settings =
-                 SettingsBuilder.builder()
-                         .commandRegistry(registry)
-                         .connection(connection)
-                         .enableExport(false)
-                         .enableAlias(false)
-                         .logging(true)
-                         .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .enableExport(false)
+                .enableAlias(false)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();

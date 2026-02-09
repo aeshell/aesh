@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,20 +20,19 @@
 package org.aesh.command.registry;
 
 import java.util.List;
+import java.util.Set;
 
-import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.container.CommandContainer;
 import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
 
-import java.util.Set;
-
 /**
  * A simple registry where all the Commands are stored
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface CommandRegistry<CI extends CommandInvocation> {
 
@@ -104,10 +103,9 @@ public interface CommandRegistry<CI extends CommandInvocation> {
         if (getAllCommandNames().contains(commandName))
             return true;
         try {
-            if(getCommandByAlias(commandName) != null)
+            if (getCommandByAlias(commandName) != null)
                 return true;
-        }
-        catch(CommandNotFoundException e) {
+        } catch (CommandNotFoundException e) {
             return false;
         }
         return false;

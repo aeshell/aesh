@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,8 +19,6 @@
  */
 package org.aesh.io;
 
-import org.aesh.io.filter.ResourceFilter;
-
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -32,15 +30,17 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.aesh.io.filter.ResourceFilter;
+
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class PipelineResource implements Resource {
 
     private final BufferedInputStream inputStream;
 
     public PipelineResource(BufferedInputStream inputStream) {
-       this.inputStream = inputStream;
+        this.inputStream = inputStream;
     }
 
     @Override
@@ -141,7 +141,7 @@ public class PipelineResource implements Resource {
     @Override
     public Resource copy(Resource destination) throws IOException {
 
-        if(destination instanceof FileResource) {
+        if (destination instanceof FileResource) {
             java.nio.file.Files.copy(
                     inputStream,
                     ((FileResource) destination).getFile().toPath(),

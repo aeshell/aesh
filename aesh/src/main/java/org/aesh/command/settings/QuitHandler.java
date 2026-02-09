@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -22,7 +22,7 @@ package org.aesh.command.settings;
 /**
  * A simple Callback thats called when the program quits
  *
- * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
+ * @author Aesh team
  */
 public interface QuitHandler {
     void quit();

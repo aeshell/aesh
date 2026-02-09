@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,8 @@
  */
 package org.aesh.command.export;
 
+import java.util.List;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -26,12 +28,10 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.impl.invocation.AeshCommandInvocation;
 import org.aesh.command.option.Arguments;
 
-import java.util.List;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
-@CommandDefinition(name = "export", description = "" )
+@CommandDefinition(name = "export", description = "")
 public class ExportCommand implements Command<AeshCommandInvocation> {
 
     private ExportManager manager;
@@ -46,8 +46,8 @@ public class ExportCommand implements Command<AeshCommandInvocation> {
     @Override
     public CommandResult execute(AeshCommandInvocation commandInvocation) throws CommandException, InterruptedException {
 
-        if(arguments != null && arguments.size() > 0)
-            manager.addVariable("export "+arguments.get(0));
+        if (arguments != null && arguments.size() > 0)
+            manager.addVariable("export " + arguments.get(0));
         else {
             //for now just list the exported values
             for (String value : manager.getAllNamesWithEquals())

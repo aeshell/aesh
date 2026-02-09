@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,9 @@
  */
 package org.aesh.command.impl.completer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.impl.util.FileLister;
@@ -26,13 +29,10 @@ import org.aesh.io.Resource;
 import org.aesh.io.filter.AllResourceFilter;
 import org.aesh.io.filter.ResourceFilter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Completes {@link Resource} objects
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class FileOptionCompleter implements OptionCompleter<CompleterInvocation> {
 
@@ -53,8 +53,7 @@ public class FileOptionCompleter implements OptionCompleter<CompleterInvocation>
     public void complete(CompleterInvocation completerInvocation) {
         List<String> candidates = new ArrayList<>();
         int cursor = new FileLister(completerInvocation.getGivenCompleteValue(),
-                completerInvocation.getAeshContext().getCurrentWorkingDirectory()).
-                findMatchingDirectories(candidates);
+                completerInvocation.getAeshContext().getCurrentWorkingDirectory()).findMatchingDirectories(candidates);
         boolean appendSpace = false;
         if (candidates.size() == 1) {
             if (completerInvocation.getGivenCompleteValue().endsWith(candidates.get(0))) {

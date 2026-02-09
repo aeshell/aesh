@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,14 +19,14 @@
  */
 package org.aesh.comparators;
 
-import org.aesh.constants.AeshConstants;
-
 import java.util.Comparator;
 
+import org.aesh.constants.AeshConstants;
+
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
- * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
- * @author <a href="mailto:robert@balent.cz">Robert Balent</a>
+ * @author Aesh team
+ * @author Aesh team
+ * @author Aesh team
  *
  */
 public class PosixFileNameComparator implements Comparator<String> {

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2016 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,21 +20,22 @@
 package org.aesh.command;
 
 import java.io.IOException;
+
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
-import org.aesh.command.registry.CommandRegistry;
 import org.aesh.terminal.utils.Parser;
 
 /**
  * An Aesh Command processor.
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public interface CommandRuntime<CI extends CommandInvocation> {
 
@@ -119,8 +120,7 @@ public interface CommandRuntime<CI extends CommandInvocation> {
         try {
             String name = Parser.findFirstWord(line);
             return getCommandRegistry().getCommand(name, line).printHelp(line);
-        }
-        catch (CommandNotFoundException e) {
+        } catch (CommandNotFoundException e) {
             return null;
         }
     }

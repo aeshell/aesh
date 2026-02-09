@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -25,7 +25,7 @@ import org.aesh.terminal.formatting.TerminalTextStyle;
 /**
  * Simple Terminal Graphics API
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface Graphics {
 
@@ -112,10 +112,10 @@ public interface Graphics {
      */
     void fillRect(int x, int y, int width, int height);
 
-
     /**
      * Draw a Circle using the given x,y as center
      * Note: the circle is more like an oval atm..
+     *
      * @param x
      * @param y
      * @param radius

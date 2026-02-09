@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -24,13 +24,14 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.terminal.Connection;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ProcessManager {
 
     private Connection conn;
     private final Console console;
     private Executor<? extends CommandInvocation> executor;
+
     public ProcessManager(Console console) {
         this.console = console;
     }
@@ -46,14 +47,13 @@ public class ProcessManager {
     }
 
     public void processFinished(Process process) {
-        if(hasNext()) {
+        if (hasNext()) {
             executeNext();
-        }
-        else {
+        } else {
             //if there are commands that wasn't executed we need to clear their data
-            if(executor.hasSkipped())
+            if (executor.hasSkipped())
                 executor.clearSkippedListData();
-            if(console.running())
+            if (console.running())
                 console.read();
             else
                 conn.close();
@@ -61,7 +61,7 @@ public class ProcessManager {
     }
 
     public void executeNext() {
-        if(hasNext()) {
+        if (hasNext()) {
             new Process(this, conn, executor.getNextExecution()).start();
         }
     }

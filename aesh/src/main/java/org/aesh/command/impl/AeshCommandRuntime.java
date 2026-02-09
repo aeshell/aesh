@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -18,6 +18,12 @@
  * limitations under the License.
  */
 package org.aesh.command.impl;
+
+import java.io.IOException;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
@@ -54,21 +60,15 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.complete.AeshCompleteOperation;
+import org.aesh.console.AeshContext;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParserStatus;
-import org.aesh.console.AeshContext;
-
-import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Implementation of the Command processor.
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public class AeshCommandRuntime<CI extends CommandInvocation>
         implements CommandRuntime<CI>, CommandRegistry.CommandRegistrationListener {
@@ -105,9 +105,8 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         this.commandInvocationProvider = commandInvocationProvider;
         this.commandNotFoundHandler = commandNotFoundHandler;
         this.commandInvocationBuilder = commandInvocationBuilder;
-        this.invocationProviders
-                = new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
-                        validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider);
+        this.invocationProviders = new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
+                validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider);
         processAfterInit();
         registry.addRegistrationListener(this);
         this.parseBrackets = parseBrackets;
@@ -145,8 +144,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         Executor<CI> executor;
         try {
             executor = buildExecutor(line);
-        }
-        catch (CommandLineParserException e) {
+        } catch (CommandLineParserException e) {
             throw e;
         } catch (CommandNotFoundException cmd) {
             if (commandNotFoundHandler != null) {
@@ -183,20 +181,21 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 throw new RuntimeException(e);
             }
         }
-        if(result != null)
+        if (result != null)
             return result;
         else
             return CommandResult.FAILURE;
     }
 
     @Override
-    public CommandResult executeCommand(String... lines) throws CommandNotFoundException, CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException, IOException {
-        if(lines == null || lines.length == 0)
+    public CommandResult executeCommand(String... lines) throws CommandNotFoundException, CommandLineParserException,
+            OptionValidatorException, CommandValidatorException, CommandException, InterruptedException, IOException {
+        if (lines == null || lines.length == 0)
             throw new CommandException("No input lines");
         CommandResult result = null;
-        for(String line : lines) {
+        for (String line : lines) {
             result = executeCommand(line);
-            if(result == CommandResult.FAILURE)
+            if (result == CommandResult.FAILURE)
                 return result;
         }
         return result;
@@ -234,8 +233,8 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     CI buildCommandInvocation(CommandInvocationConfiguration config, CommandContainer<CI> commandContainer) {
-        return commandInvocationProvider.
-                enhanceCommandInvocation(commandInvocationBuilder.build(this, config, commandContainer));
+        return commandInvocationProvider
+                .enhanceCommandInvocation(commandInvocationBuilder.build(this, config, commandContainer));
     }
 
     CommandContainer<CI> findCommandContainer(ParsedLine aeshLine) throws CommandNotFoundException {
@@ -243,10 +242,9 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             return null;
         }
         final String name = aeshLine.firstWord().word();
-        CommandContainer<CI> container =
-                commandResolver.resolveCommand(name, aeshLine.line());
+        CommandContainer<CI> container = commandResolver.resolveCommand(name, aeshLine.line());
         if (container == null) {
-            throw new CommandNotFoundException("No command handler for '"+name+ "'.",name);
+            throw new CommandNotFoundException("No command handler for '" + name + "'.", name);
         }
         container.addLine(aeshLine);
         return container;
@@ -255,9 +253,9 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     void populateAskedOption(ProcessedOption option) {
         try {
             option.injectValueIntoField(option.parent().getCommand(), invocationProviders, getAeshContext(), false);
-        }
-        catch(OptionValidatorException e) {
-            LOGGER.log(Level.WARNING, "Trying to inject value: "+option.getValue()+", into option: "+option.name()+" failed", e);
+        } catch (OptionValidatorException e) {
+            LOGGER.log(Level.WARNING,
+                    "Trying to inject value: " + option.getValue() + ", into option: " + option.name() + " failed", e);
         }
     }
 
@@ -274,7 +272,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     @Override
     public void complete(AeshCompleteOperation completeOperation) {
-        if(operators.isEmpty())
+        if (operators.isEmpty())
             simpleComplete(completeOperation);
         else {
             completeWithOperators(completeOperation);
@@ -289,22 +287,21 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 .operators(operators)
                 .parseWithOperators();
 
-        if(!lines.isEmpty()) {
-            for(int i=0; i < lines.size(); i++) {
+        if (!lines.isEmpty()) {
+            for (int i = 0; i < lines.size(); i++) {
                 if (lines.get(i).cursor() > -1) {
-                    if(i == 0) {
+                    if (i == 0) {
                         doSimpleComplete(completeOperation, lines.get(i));
                         return;
                     }
                     //we need to check the previous line
                     //if it is redirect/append out we should use a file completer
                     else {
-                        if(OperatorType.isAppendOrRedirectInOrOut(lines.get(i-1).operator())) {
+                        if (OperatorType.isAppendOrRedirectInOrOut(lines.get(i - 1).operator())) {
                             //do file completion
                             FileOptionCompleter completer = new FileOptionCompleter();
-                            CompleterInvocation invocation
-                                    = new CompleterData(completeOperation.getContext(),
-                                            lines.get(i).selectedWord().word(), null);
+                            CompleterInvocation invocation = new CompleterData(completeOperation.getContext(),
+                                    lines.get(i).selectedWord().word(), null);
                             completer.complete(invocation);
                             completeOperation.addCompletionCandidatesTerminalString(invocation.getCompleterValues());
                             AeshCommandLineCompletionParser.verifyCompleteValue(completeOperation,
@@ -312,8 +309,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                                     lines.get(i).selectedWord().word(),
                                     lines.get(i).selectedWord().status(), null);
                             return;
-                        }
-                        else {
+                        } else {
                             doSimpleComplete(completeOperation, lines.get(i));
                             return;
                         }
@@ -338,7 +334,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     private void doSimpleComplete(AeshCompleteOperation completeOperation, ParsedLine parsedLine) {
-        if((parsedLine.selectedIndex() == 0 || //possible command name
+        if ((parsedLine.selectedIndex() == 0 || //possible command name
                 parsedLine.words().size() == 0) && ParserStatus.okForCompletion(parsedLine.status())) {
             commandResolver.getRegistry().completeCommandName(completeOperation, parsedLine);
         }
@@ -348,10 +344,8 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
                 commandContainer.getParser()
                         .complete(completeOperation, parsedLine, invocationProviders);
-            }
-            catch (CommandNotFoundException ignored) {
-            }
-            catch (Exception ex) {
+            } catch (CommandNotFoundException ignored) {
+            } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, "Runtime exception when completing: "
                         + completeOperation, ex);
             }

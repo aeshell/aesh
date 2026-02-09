@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,8 +20,8 @@
 
 package org.aesh.command.impl;
 
-import org.aesh.command.CommandResolver;
 import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.CommandResolver;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
@@ -29,7 +29,7 @@ import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandResolver<CI extends CommandInvocation> implements CommandResolver<CI> {
 
@@ -86,8 +86,7 @@ public class AeshCommandResolver<CI extends CommandInvocation> implements Comman
     private CommandContainer<CI> getCommand(String commandName, String line) throws CommandNotFoundException {
         try {
             return registry.getCommand(commandName, line);
-        }
-        catch (CommandNotFoundException e) {
+        } catch (CommandNotFoundException e) {
             // Lookup in aliases
             return registry.getCommandByAlias(commandName);
         }

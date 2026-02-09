@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,33 +19,33 @@
  */
 package org.aesh.command.converter;
 
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.option.Option;
-import org.aesh.command.registry.CommandRegistryException;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.console.AeshContext;
-import org.aesh.command.CommandException;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.settings.Settings;
-import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.CommandDefinition;
-import org.aesh.command.Command;
-import org.aesh.command.CommandResult;
-import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
-import org.aesh.terminal.utils.Config;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Option;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.console.AeshContext;
+import org.aesh.console.ReadlineConsole;
+import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
+import org.junit.Test;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshConverterInvocationProviderTest {
 
@@ -58,83 +58,82 @@ public class AeshConverterInvocationProviderTest {
                 .command(new ConCommand())
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .converterInvocationProvider(new FooConverterProvider())
-                        .connection(connection)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .converterInvocationProvider(new FooConverterProvider())
+                .connection(connection)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
-        connection.read("convert --foo bar"+ Config.getLineSeparator());
+        connection.read("convert --foo bar" + Config.getLineSeparator());
 
         Thread.sleep(50);
-        connection.assertBufferEndsWith("FOOO"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("FOOO" + Config.getLineSeparator());
         console.stop();
     }
 
-@CommandDefinition(name = "convert", description = "")
-public static class ConCommand implements Command {
+    @CommandDefinition(name = "convert", description = "")
+    public static class ConCommand implements Command {
 
-    @Option(name = "foo", converter = FooConverter.class)
-    private String foo;
+        @Option(name = "foo", converter = FooConverter.class)
+        private String foo;
 
-    ConCommand() {
+        ConCommand() {
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            commandInvocation.println(foo);
+            return CommandResult.SUCCESS;
+        }
     }
 
-    @Override
-    public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-        commandInvocation.println(foo);
-        return CommandResult.SUCCESS;
+    public static class FooConverterInvocation implements ConverterInvocation {
+
+        private final String input;
+        private final AeshContext aeshContext;
+
+        FooConverterInvocation(String input, AeshContext aeshContext) {
+            this.input = input;
+            this.aeshContext = aeshContext;
+        }
+
+        public String getFoo() {
+            return "FOOO";
+        }
+
+        @Override
+        public String getInput() {
+            return input;
+        }
+
+        @Override
+        public AeshContext getAeshContext() {
+            return aeshContext;
+        }
     }
-}
-
-public static class FooConverterInvocation implements ConverterInvocation {
-
-    private final String input;
-    private final AeshContext aeshContext;
-
-    FooConverterInvocation(String input, AeshContext aeshContext) {
-        this.input = input;
-        this.aeshContext = aeshContext;
-    }
-
-    public String getFoo() {
-        return "FOOO";
-    }
-
-    @Override
-    public String getInput() {
-        return input;
-    }
-
-    @Override
-    public AeshContext getAeshContext() {
-        return aeshContext;
-    }
-}
 
     public static class FooConverter implements Converter<String, FooConverterInvocation> {
 
-    public FooConverter() {
+        public FooConverter() {
+        }
+
+        @Override
+        public String convert(FooConverterInvocation converterInvocation) {
+            assertEquals("FOOO", converterInvocation.getFoo());
+            return converterInvocation.getFoo();
+        }
     }
 
-    @Override
-    public String convert(FooConverterInvocation converterInvocation) {
-        assertEquals("FOOO", converterInvocation.getFoo());
-        return converterInvocation.getFoo();
+    public static class FooConverterProvider implements ConverterInvocationProvider<FooConverterInvocation> {
+        @Override
+        public FooConverterInvocation enhanceConverterInvocation(ConverterInvocation converterInvocation) {
+            return new FooConverterInvocation(converterInvocation.getInput(), converterInvocation.getAeshContext());
+        }
     }
-}
-
-public static class FooConverterProvider implements ConverterInvocationProvider<FooConverterInvocation> {
-    @Override
-    public FooConverterInvocation enhanceConverterInvocation(ConverterInvocation converterInvocation) {
-        return new FooConverterInvocation(converterInvocation.getInput(), converterInvocation.getAeshContext());
-    }
-}
 
 }

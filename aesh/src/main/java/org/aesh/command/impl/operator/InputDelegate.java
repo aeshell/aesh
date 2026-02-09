@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -25,7 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class InputDelegate {
 
@@ -37,11 +37,10 @@ public class InputDelegate {
 
     public BufferedInputStream read() {
         File file = new File(path);
-        if(file.isFile()) {
+        if (file.isFile()) {
             try {
                 return new BufferedInputStream(new FileInputStream(file));
-            }
-            catch (FileNotFoundException e) {
+            } catch (FileNotFoundException e) {
                 return null;
             }
         }

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -30,6 +30,7 @@ import java.util.NoSuchElementException;
  * directories.
  * <p>
  * Usage:
+ *
  * <pre>
  * FileIterator iter = new FileIterator(new File("./src"));
  * File f;
@@ -39,7 +40,7 @@ import java.util.NoSuchElementException;
  * }
  * </pre>
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 final class FileIterator {
 
@@ -55,7 +56,7 @@ final class FileIterator {
      * and its sub directories are returned (depth first).
      *
      * @param filesOrDirectories Zero or more {@link File} objects, which are iterated
-     * in the specified order (depth first)
+     *        in the specified order (depth first)
      */
     FileIterator(final File... filesOrDirectories) {
         addReverse(filesOrDirectories);

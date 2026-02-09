@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2016 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
@@ -32,19 +33,20 @@ import org.aesh.command.validator.OptionValidatorException;
  * Contains the list of Execution to execute and the logic to deal with
  * operators.
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public class Executor<T extends CommandInvocation> {
 
     private final List<Execution<T>> executions;
 
     private final Set<Execution<T>> skip = new HashSet<>();
+
     public Executor(List<Execution<T>> executions) {
         this.executions = Collections.unmodifiableList(executions);
     }
 
     public void execute() throws CommandException, CommandValidatorException, InterruptedException, RuntimeException,
-                                         CommandLineParserException, OptionValidatorException {
+            CommandLineParserException, OptionValidatorException {
         Execution<T> exec;
         while ((exec = getNextExecution()) != null) {
             exec.execute();
@@ -103,10 +105,10 @@ public class Executor<T extends CommandInvocation> {
     }
 
     public void clearSkippedListData() {
-       if(skip.size() > 0)
-           for(Execution<T> execution : skip) {
-               execution.clearQueuedLine();
-           }
+        if (skip.size() > 0)
+            for (Execution<T> execution : skip) {
+                execution.clearQueuedLine();
+            }
     }
 
     public boolean hasSkipped() {

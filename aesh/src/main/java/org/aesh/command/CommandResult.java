@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -23,8 +23,8 @@ package org.aesh.command;
 /**
  * The result of a command execution
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
- * @author <a href="mailto:ggastald@redhat.com">George Gastaldi</a>
+ * @author Aesh team
+ * @author Aesh team
  */
 public class CommandResult {
     public static final CommandResult SUCCESS = new CommandResult(0);
@@ -42,11 +42,9 @@ public class CommandResult {
     public static CommandResult valueOf(final int result) {
         if (result == 0) {
             return SUCCESS;
-        }
-        else if (result == -1) {
+        } else if (result == -1) {
             return FAILURE;
-        }
-        else {
+        } else {
             return new CommandResult(result);
         }
     }

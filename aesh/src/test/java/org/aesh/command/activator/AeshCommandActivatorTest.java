@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -32,16 +32,16 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.readline.Prompt;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
+import org.aesh.readline.Prompt;
 import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public class AeshCommandActivatorTest {
 
@@ -53,13 +53,12 @@ public class AeshCommandActivatorTest {
                 .command(FooCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -69,8 +68,7 @@ public class AeshCommandActivatorTest {
         connection.read("foo" + Config.getLineSeparator());
         Thread.sleep(200);
         Assert.assertTrue(connection.getOutputBuffer(),
-                connection.getOutputBuffer().
-                contains("The command is not available in the current context."));
+                connection.getOutputBuffer().contains("The command is not available in the current context."));
     }
 
     public static class NotActived implements CommandActivator {
@@ -81,6 +79,7 @@ public class AeshCommandActivatorTest {
         }
 
     }
+
     @CommandDefinition(name = "foo", description = "", activator = NotActived.class)
     public static class FooCommand implements Command {
 

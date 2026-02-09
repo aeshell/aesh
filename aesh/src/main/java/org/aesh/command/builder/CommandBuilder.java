@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,31 +19,31 @@
  */
 package org.aesh.command.builder;
 
-import org.aesh.command.impl.internal.ProcessedCommandBuilder;
-import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.impl.internal.ProcessedOptionBuilder;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.parser.OptionParserException;
-import org.aesh.command.populator.CommandPopulator;
-import org.aesh.command.validator.CommandValidator;
-import org.aesh.command.Command;
-import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.parser.AeshCommandLineParser;
-import org.aesh.command.result.ResultHandler;
-import org.aesh.command.impl.container.AeshCommandContainer;
-import org.aesh.command.container.CommandContainer;
-import org.aesh.util.ReflectionUtil;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.aesh.command.Command;
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.container.AeshCommandContainer;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.parser.OptionParserException;
+import org.aesh.command.populator.CommandPopulator;
+import org.aesh.command.result.ResultHandler;
+import org.aesh.command.validator.CommandValidator;
+import org.aesh.util.ReflectionUtil;
+
 /**
  * Builder to build commands during runtime
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
- * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
+ * @author Aesh team
+ * @author Aesh team
  */
 public class CommandBuilder<C extends Command<CommandInvocation>> {
 
@@ -142,40 +142,39 @@ public class CommandBuilder<C extends Command<CommandInvocation>> {
     }
 
     public CommandBuilder<C> addOption(ProcessedOption option) {
-        if(options == null)
+        if (options == null)
             options = new ArrayList<>();
         options.add(option);
         return this;
     }
 
     public CommandBuilder<C> addOption(ProcessedOptionBuilder option) {
-        if(options == null)
+        if (options == null)
             options = new ArrayList<>();
         try {
             options.add(option.build());
-        }
-        catch (OptionParserException ope) {
+        } catch (OptionParserException ope) {
             parserException = ope;
         }
         return this;
     }
 
     public CommandBuilder<C> addOptions(List<ProcessedOption> options) {
-        if(this.options == null)
+        if (this.options == null)
             this.options = new ArrayList<>();
         this.options.addAll(options);
         return this;
     }
 
     public CommandBuilder<C> addChild(CommandBuilder child) {
-        if(children == null)
+        if (children == null)
             children = new ArrayList<>();
         this.children.add(child);
         return this;
     }
 
     public CommandBuilder<C> addChildren(List<CommandBuilder> children) {
-        if(this.children == null)
+        if (this.children == null)
             this.children = new ArrayList<>();
         this.children.addAll(children);
         return this;
@@ -183,24 +182,23 @@ public class CommandBuilder<C extends Command<CommandInvocation>> {
 
     public CommandContainer<CommandInvocation> create() {
         try {
-            if(parserException != null) {
+            if (parserException != null) {
                 return new AeshCommandContainer<>(parserException.getMessage());
             }
             return new AeshCommandContainer<>(createParser());
-        }
-        catch (CommandLineParserException e) {
+        } catch (CommandLineParserException e) {
             return new AeshCommandContainer<>(e.getMessage());
         }
     }
 
     @SuppressWarnings("unchecked")
     private AeshCommandLineParser<CommandInvocation> createParser() throws CommandLineParserException {
-        if(command == null)
+        if (command == null)
             throw new CommandLineParserException("Command object is null, cannot build command");
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processedCommand = createProcessedCommand();
         AeshCommandLineParser<CommandInvocation> parser = new AeshCommandLineParser<>(processedCommand);
-        if(children != null) {
-            for(CommandBuilder builder : children) {
+        if (children != null) {
+            for (CommandBuilder builder : children) {
                 parser.addChildParser(builder.createParser());
             }
         }
@@ -208,7 +206,8 @@ public class CommandBuilder<C extends Command<CommandInvocation>> {
     }
 
     @SuppressWarnings("unchecked")
-    private ProcessedCommand<Command<CommandInvocation>, CommandInvocation> createProcessedCommand() throws CommandLineParserException {
+    private ProcessedCommand<Command<CommandInvocation>, CommandInvocation> createProcessedCommand()
+            throws CommandLineParserException {
         return ProcessedCommandBuilder.builder()
                 .name(name)
                 .aliases(aliases)

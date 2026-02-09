@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2017 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,13 @@
  */
 package org.aesh.command.impl;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
@@ -33,7 +40,6 @@ import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.option.ParentCommand;
 import org.aesh.command.impl.operator.AndOperator;
 import org.aesh.command.impl.operator.AppendOutputRedirectionOperator;
 import org.aesh.command.impl.operator.ConfigurationOperator;
@@ -49,28 +55,22 @@ import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.operator.OperatorType;
+import org.aesh.command.option.ParentCommand;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.console.AeshContext;
 import org.aesh.io.PipelineResource;
 import org.aesh.io.Resource;
 import org.aesh.parser.ParsedLine;
-import org.aesh.console.AeshContext;
 import org.aesh.readline.Prompt;
-import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.selector.Selector;
-
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.aesh.terminal.formatting.TerminalString;
 
 /**
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 @SuppressWarnings("unchecked")
 class Executions {
@@ -84,6 +84,7 @@ class Executions {
         private final CommandContainer<T> commandContainer;
         private CommandResult result;
         private boolean populated;
+
         ExecutionImpl(ExecutableOperator<T> executable,
                 AeshCommandRuntime<T> runtime,
                 CommandInvocationConfiguration invocationConfiguration,
@@ -133,7 +134,7 @@ class Executions {
 
         @Override
         public CommandResult execute() throws CommandException, InterruptedException, CommandValidatorException,
-                                                              CommandLineParserException, OptionValidatorException {
+                CommandLineParserException, OptionValidatorException {
             //first we need to parse and populate the command line
             populateCommand();
 
@@ -146,7 +147,7 @@ class Executions {
             //finally we set the command that should be executed
             executable.setCommand(cmd.getCommand());
 
-            if(cmd.validator() != null && !cmd.hasOptionWithOverrideRequired()) {
+            if (cmd.validator() != null && !cmd.hasOptionWithOverrideRequired()) {
                 cmd.validator().validate(getCommand());
             }
             if (cmd.getActivator() != null) {
@@ -173,44 +174,42 @@ class Executions {
             }
 
             //When we check for askIfNotSet, we also need to make sure we do not have help generated
-            if(cmd.hasAskIfNotSet() &&
+            if (cmd.hasAskIfNotSet() &&
                     !(cmd.generateHelp() && (cmd.isGenerateHelpOptionSet() || !cmd.anyOptionsSet()))) {
-                for(ProcessedOption option : cmd.getAllAskIfNotSet()) {
+                for (ProcessedOption option : cmd.getAllAskIfNotSet()) {
                     try {
-                        if(option.getOptionType().equals(OptionType.ARGUMENT) ||
-                                   option.getOptionType().equals(OptionType.ARGUMENTS))
+                        if (option.getOptionType().equals(OptionType.ARGUMENT) ||
+                                option.getOptionType().equals(OptionType.ARGUMENTS))
                             option.addValue(getCommandInvocation().getShell().readLine(
                                     new Prompt("Argument(s) is not set, please provide a value: ")));
                         else
                             option.addValue(getCommandInvocation().getShell().readLine(
-                                    new Prompt("Option "+option.name()+", is not set, please provide a value: ")));
+                                    new Prompt("Option " + option.name() + ", is not set, please provide a value: ")));
 
                         runtime.populateAskedOption(option);
-                    }
-                    catch(InterruptedException e) {
+                    } catch (InterruptedException e) {
                         //input was interrupted, ignore it
                     }
                 }
             }
 
-            if(cmd.hasSelector()) {
-                for(ProcessedOption option : cmd.getAllSelectors()) {
+            if (cmd.hasSelector()) {
+                for (ProcessedOption option : cmd.getAllSelectors()) {
                     //if we do not have any default values, check if we can use the completer
-                    if((option.getDefaultValues() == null || option.getDefaultValues().size() == 0) &&
-                               (option.completer() != null && !(option.completer() instanceof NullOptionCompleter))) {
+                    if ((option.getDefaultValues() == null || option.getDefaultValues().size() == 0) &&
+                            (option.completer() != null && !(option.completer() instanceof NullOptionCompleter))) {
                         //first create a mock CompleterInvocation, then get all the values
                         CompleterData completerMock = new CompleterData(null, "", null);
                         option.completer().complete(completerMock);
 
-
                         option.addValues(new Selector(option.selectorType(),
-                                completerMock.getCompleterValues().stream().map(TerminalString::getCharacters).collect(Collectors.toList()),
+                                completerMock.getCompleterValues().stream().map(TerminalString::getCharacters)
+                                        .collect(Collectors.toList()),
                                 option.description()).doSelect(getCommandInvocation().getShell()));
 
-                    }
-                    else {
+                    } else {
                         option.addValues(new Selector(option.selectorType(), option.getDefaultValues(), option.description())
-                                                 .doSelect(getCommandInvocation().getShell()));
+                                .doSelect(getCommandInvocation().getShell()));
                     }
                     runtime.populateAskedOption(option);
                 }
@@ -218,15 +217,15 @@ class Executions {
 
             try {
                 //if the generated help option is set, we "execute" it instead of normal execution
-                if(cmd.generateHelp() && (cmd.isGenerateHelpOptionSet() || !cmd.anyOptionsSet())) {
+                if (cmd.generateHelp() && (cmd.isGenerateHelpOptionSet() || !cmd.anyOptionsSet())) {
                     T invocation = getCommandInvocation();
                     invocation.println(invocation.getHelpInfo());
                     result = CommandResult.SUCCESS;
                 }
                 //if the generated help option is set, we "execute" it instead of normal execution
-                else if(cmd.version() != null && (cmd.isGenerateVersionOptionSet())) {
+                else if (cmd.version() != null && (cmd.isGenerateVersionOptionSet())) {
                     T invocation = getCommandInvocation();
-                    invocation.println(cmd.name()+" version: "+cmd.version());
+                    invocation.println(cmd.name() + " version: " + cmd.version());
                     result = CommandResult.SUCCESS;
                 }
 
@@ -244,26 +243,21 @@ class Executions {
                 if (result == null) {
                     result = CommandResult.SUCCESS;
                 }
-            }
-            catch (CommandException ex) {
+            } catch (CommandException ex) {
                 result = CommandResult.FAILURE;
                 throw ex;
-            }
-            catch (InterruptedException ex) {
+            } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
                 result = CommandResult.FAILURE;
                 throw ex;
-            }
-            catch(Exception e) {
+            } catch (Exception e) {
                 result = CommandResult.FAILURE;
                 throw new RuntimeException(e);
-            }
-            finally {
+            } finally {
                 if (invocationConfiguration.getOutputRedirection() != null) {
                     try {
                         invocationConfiguration.getOutputRedirection().close();
-                    }
-                    catch (IOException ex) {
+                    } catch (IOException ex) {
                         throw new CommandException(ex);
                     }
                 }
@@ -273,7 +267,7 @@ class Executions {
 
         private void updateInjectedArgumentWithPipelinedData(PipelineResource resource) {
             ProcessedOption arg = checkProcessedCommandForResourceArgument();
-            if(arg != null)
+            if (arg != null)
                 arg.injectResource(resource, cmd.getCommand());
         }
 
@@ -283,16 +277,16 @@ class Executions {
 
         private void updateInjectedArgumentWithRedirectedInData() {
             ProcessedOption arg = checkProcessedCommandForResourceArgument();
-            if(arg != null)
-                arg.injectResource(new PipelineResource(invocationConfiguration.getInputRedirection().read()), cmd.getCommand());
+            if (arg != null)
+                arg.injectResource(new PipelineResource(invocationConfiguration.getInputRedirection().read()),
+                        cmd.getCommand());
         }
 
         private ProcessedOption checkProcessedCommandForResourceArgument() {
-            if(cmd.hasArguments() &&
+            if (cmd.hasArguments() &&
                     Resource.class.isAssignableFrom(cmd.getArguments().type())) {
                 return cmd.getArguments();
-            }
-            else if(cmd.hasArgument() &&
+            } else if (cmd.hasArgument() &&
                     Resource.class.isAssignableFrom(cmd.getArgument().type())) {
                 return cmd.getArgument();
             }
@@ -339,7 +333,7 @@ class Executions {
         List<Execution<CI>> executions = new ArrayList<>();
         for (ParsedLine pl : fullLine) {
             newParsedLine = false;
-            if(!pl.hasWords())
+            if (!pl.hasWords())
                 throw new CommandLineParserException(pl.errorMessage());
             while (!newParsedLine) {
                 switch (state) {
@@ -361,7 +355,7 @@ class Executions {
                         Operator op = buildOperator(pl.operator(), runtime.getAeshContext());
                         if (ot.isConfiguration()) {
                             if (config != null) { // input provider prior to an output consumer.
-                                if(config.getConfiguration().getInputRedirection() == null) {
+                                if (config.getConfiguration().getInputRedirection() == null) {
                                     throw new IllegalArgumentException("Invalid operators structure");
                                 }
                                 inDelegate = config.getConfiguration().getInputRedirection();
@@ -370,8 +364,7 @@ class Executions {
                         }
                         if (ot.isConfiguration() && ot.hasArgument()) {
                             state = State.NEED_ARGUMENT;
-                        }
-                        else {
+                        } else {
                             // The operator must be an executor one
                             if (!(op instanceof ExecutableOperator)) {
                                 throw new IllegalArgumentException("Op " + ot + " is not executable");

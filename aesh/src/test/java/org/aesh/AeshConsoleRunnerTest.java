@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,9 @@
  */
 package org.aesh;
 
+import static org.aesh.terminal.utils.Config.getLineSeparator;
+import static org.junit.Assert.assertTrue;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
@@ -35,11 +38,8 @@ import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import static org.aesh.terminal.utils.Config.getLineSeparator;
-import static org.junit.Assert.assertTrue;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshConsoleRunnerTest {
 
@@ -49,13 +49,13 @@ public class AeshConsoleRunnerTest {
         TestConnection connection = new TestConnection();
 
         AeshConsoleRunner runner = AeshConsoleRunner.builder()
-                                           .connection(connection)
-                                           .command(HelloCommand.class)
-                                           .addExitCommand();
+                .connection(connection)
+                .command(HelloCommand.class)
+                .addExitCommand();
         runner.start();
 
-        connection.read("hello"+ getLineSeparator());
-        connection.assertBufferEndsWith("Hello from Aesh!"+getLineSeparator());
+        connection.read("hello" + getLineSeparator());
+        connection.assertBufferEndsWith("Hello from Aesh!" + getLineSeparator());
 
         runner.stop();
     }
@@ -72,13 +72,12 @@ public class AeshConsoleRunnerTest {
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder().create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator>
-                settings = SettingsBuilder.builder()
-                                   .logging(true)
-                                   .connection(connection)
-                                   .commandRegistry(registry)
-                                   .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         AeshConsoleRunner runner = AeshConsoleRunner.builder().settings(settings);
         runner.start();
@@ -89,15 +88,15 @@ public class AeshConsoleRunnerTest {
         TestConnection connection = new TestConnection();
 
         AeshConsoleRunner runner = AeshConsoleRunner.builder()
-                                           .connection(connection)
-                                           .commands(new Class[]{HelloCommand.class, Bar1Command.class, Bar2Command.class})
-                                           .addExitCommand();
+                .connection(connection)
+                .commands(new Class[] { HelloCommand.class, Bar1Command.class, Bar2Command.class })
+                .addExitCommand();
 
         runner.start();
 
-        connection.read("bar1"+getLineSeparator());
-        connection.assertBufferEndsWith("Hello from Bar1"+getLineSeparator());
-        connection.read("exit"+getLineSeparator());
+        connection.read("bar1" + getLineSeparator());
+        connection.assertBufferEndsWith("Hello from Bar1" + getLineSeparator());
+        connection.read("exit" + getLineSeparator());
         Thread.sleep(200);
         assertTrue(connection.closed());
 
@@ -108,7 +107,7 @@ public class AeshConsoleRunnerTest {
     public void testCommandRegistryDirect() throws Exception {
         TestConnection connection = new TestConnection();
 
-        AeshCommandRegistryBuilder<CommandInvocation> builder = AeshCommandRegistryBuilder.<CommandInvocation>builder()
+        AeshCommandRegistryBuilder<CommandInvocation> builder = AeshCommandRegistryBuilder.<CommandInvocation> builder()
                 .command(HelloCommand.class)
                 .command(AeshConsoleRunner.ExitCommand.class);
 
@@ -118,9 +117,9 @@ public class AeshConsoleRunnerTest {
 
         runner.start();
 
-        connection.read("hello"+getLineSeparator());
-        connection.assertBufferEndsWith("Hello from Aesh!"+getLineSeparator());
-        connection.read("exit"+getLineSeparator());
+        connection.read("hello" + getLineSeparator());
+        connection.assertBufferEndsWith("Hello from Aesh!" + getLineSeparator());
+        connection.read("exit" + getLineSeparator());
         Thread.sleep(200);
         assertTrue(connection.closed());
     }
@@ -130,22 +129,21 @@ public class AeshConsoleRunnerTest {
     public void testDuplicateCommandRegistry() throws Exception {
         TestConnection connection = new TestConnection();
 
-        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.<CommandInvocation>builder()
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.<CommandInvocation> builder()
                 .command(HelloCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator>
-                settings = SettingsBuilder.builder()
-                                   .logging(true)
-                                   .connection(connection)
-                                   .commandRegistry(registry)
-                                   .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         // This should throw an exception because we're defining commands in both places
         AeshConsoleRunner runner = AeshConsoleRunner.builder()
                 .settings(settings)
-                .command(Bar1Command.class);  // Adding command when settings already has a non-empty registry
+                .command(Bar1Command.class); // Adding command when settings already has a non-empty registry
 
         runner.start();
     }
@@ -155,7 +153,7 @@ public class AeshConsoleRunnerTest {
     public void testCommandRegistryBuilder() throws Exception {
         TestConnection connection = new TestConnection();
 
-        AeshCommandRegistryBuilder<CommandInvocation> builder = AeshCommandRegistryBuilder.<CommandInvocation>builder()
+        AeshCommandRegistryBuilder<CommandInvocation> builder = AeshCommandRegistryBuilder.<CommandInvocation> builder()
                 .command(HelloCommand.class);
 
         AeshConsoleRunner runner = AeshConsoleRunner.builder()
@@ -165,9 +163,9 @@ public class AeshConsoleRunnerTest {
 
         runner.start();
 
-        connection.read("hello"+getLineSeparator());
-        connection.assertBufferEndsWith("Hello from Aesh!"+getLineSeparator());
-        connection.read("exit"+getLineSeparator());
+        connection.read("hello" + getLineSeparator());
+        connection.assertBufferEndsWith("Hello from Aesh!" + getLineSeparator());
+        connection.read("exit" + getLineSeparator());
         Thread.sleep(200);
         assertTrue(connection.closed());
     }
@@ -175,7 +173,7 @@ public class AeshConsoleRunnerTest {
     @Test(expected = RuntimeException.class)
     @SuppressWarnings("unchecked")
     public void testCommandRegistryBuilderAfterInit() {
-        AeshCommandRegistryBuilder<CommandInvocation> builder = AeshCommandRegistryBuilder.<CommandInvocation>builder();
+        AeshCommandRegistryBuilder<CommandInvocation> builder = AeshCommandRegistryBuilder.<CommandInvocation> builder();
 
         // Add a command first, which initializes the default builder
         AeshConsoleRunner runner = AeshConsoleRunner.builder()
@@ -184,7 +182,6 @@ public class AeshConsoleRunnerTest {
         // This should throw an exception because the builder was already initialized
         runner.commandRegistryBuilder(builder);
     }
-
 
     @CommandDefinition(name = "hello", description = "hello from aesh")
     public static class HelloCommand implements Command {
@@ -195,7 +192,7 @@ public class AeshConsoleRunnerTest {
         }
     }
 
-     @CommandDefinition(name = "bar1", description = "bar1")
+    @CommandDefinition(name = "bar1", description = "bar1")
     public static class Bar1Command implements Command {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
@@ -203,7 +200,8 @@ public class AeshConsoleRunnerTest {
             return CommandResult.SUCCESS;
         }
     }
-     @CommandDefinition(name = "bar2", description = "bar2")
+
+    @CommandDefinition(name = "bar2", description = "bar2")
     public static class Bar2Command implements Command {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
@@ -211,7 +209,5 @@ public class AeshConsoleRunnerTest {
             return CommandResult.SUCCESS;
         }
     }
-
-
 
 }

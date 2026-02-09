@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,31 +19,31 @@
  */
 package org.aesh.command.impl.parser;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.aesh.command.Command;
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.map.MapCommand;
+import org.aesh.command.map.MapCommandPopulator;
 import org.aesh.command.map.MapProcessedCommand;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.parser.RequiredOptionException;
 import org.aesh.command.populator.CommandPopulator;
-import org.aesh.command.Command;
-import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
-import org.aesh.parser.ParserStatus;
 import org.aesh.console.AeshContext;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedLineIterator;
 import org.aesh.parser.ParsedWord;
+import org.aesh.parser.ParserStatus;
 import org.aesh.terminal.utils.ANSIBuilder;
 import org.aesh.terminal.utils.Config;
-
-import java.util.ArrayList;
-import java.util.List;
-import org.aesh.command.map.MapCommand;
-import org.aesh.command.map.MapCommandPopulator;
 
 /**
  * A simple command line parser.
@@ -51,7 +51,7 @@ import org.aesh.command.map.MapCommandPopulator;
  *
  * It can also print a formatted usage/help information.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandLineParser<CI extends CommandInvocation> implements CommandLineParser<CI> {
 
@@ -72,13 +72,13 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     @Override
     public void addChildParser(CommandLineParser<CI> commandLineParser) throws CommandLineParserException {
-        if(processedCommand.hasArgument() || processedCommand.hasArguments())
+        if (processedCommand.hasArgument() || processedCommand.hasArguments())
             throw new CommandLineParserException("Group commands can not have arguments defined");
-        if(childParsers == null)
+        if (childParsers == null)
             childParsers = new ArrayList<>();
         commandLineParser.setChild(true);
         childParsers.add(commandLineParser);
-        if(commandLineParser instanceof AeshCommandLineParser)
+        if (commandLineParser instanceof AeshCommandLineParser)
             ((AeshCommandLineParser<CI>) commandLineParser).setParent(this);
     }
 
@@ -97,13 +97,13 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     @Override
     public CommandLineParser<CI> parsedCommand() {
-        if(parsedCommand)
+        if (parsedCommand)
             return this;
-        else if(isGroupCommand()) {
+        else if (isGroupCommand()) {
             CommandLineParser<CI> correct;
-            for(CommandLineParser<CI> child : childParsers) {
+            for (CommandLineParser<CI> child : childParsers) {
                 correct = child.parsedCommand();
-                if(correct != null)
+                if (correct != null)
                     return correct;
             }
         }
@@ -132,11 +132,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             List<CommandLineParser<CI>> parsers = getChildParsers();
             List<String> names = new ArrayList<>(parsers.size());
             for (CommandLineParser child : parsers) {
-                names.add(processedCommand.name()+" "+child.getProcessedCommand().name());
+                names.add(processedCommand.name() + " " + child.getProcessedCommand().name());
             }
             return names;
-        }
-        else {
+        } else {
             List<String> names = new ArrayList<>(1);
             names.add(processedCommand.name());
             return names;
@@ -149,10 +148,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     @Override
     public CommandLineParser<CI> getChildParser(String name) {
-        if(!isGroupCommand())
+        if (!isGroupCommand())
             return null;
         for (CommandLineParser<CI> clp : getChildParsers()) {
-            if(clp.getProcessedCommand().name().equals(name))
+            if (clp.getProcessedCommand().name().equals(name))
                 return clp;
         }
         return null;
@@ -160,10 +159,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     @Override
     public List<CommandLineParser<CI>> getAllChildParsers() {
-        if(isGroupCommand())
+        if (isGroupCommand())
             return getChildParsers();
         else
-           return new ArrayList<>();
+            return new ArrayList<>();
     }
 
     @Override
@@ -187,22 +186,23 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     }
 
     @Override
-    public void populateObject(String line, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException {
+    public void populateObject(String line, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode)
+            throws CommandLineParserException, OptionValidatorException {
         //first parse, then populate
         parse(line, mode);
-        if(mode == Mode.VALIDATE && getProcessedCommand().parserExceptions().size() > 0) {
+        if (mode == Mode.VALIDATE && getProcessedCommand().parserExceptions().size() > 0) {
             throw getProcessedCommand().parserExceptions().get(0);
-        }
-        else {
+        } else {
             doPopulate(processedCommand, invocationProviders, aeshContext, mode);
-       }
+        }
     }
 
     @Override
-    public void doPopulate(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException {
+    public void doPopulate(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders,
+            AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException {
         getCommandPopulator().populateObject(processedCommand, invocationProviders, aeshContext, mode);
-        if(isGroupCommand()) {
-            for(CommandLineParser<CI> parser : getChildParsers()) {
+        if (isGroupCommand()) {
+            for (CommandLineParser<CI> parser : getChildParsers()) {
                 parser.doPopulate(parser.getProcessedCommand(), invocationProviders, aeshContext, mode);
             }
         }
@@ -238,14 +238,13 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             }
 
             return sb.toString();
-        }
-        else
+        } else
             return processedCommand.printHelp(helpNames());
     }
 
     private String helpNames() {
-        if(isChild()) {
-            return parent.helpNames() +" "+ processedCommand.name();
+        if (isChild()) {
+            return parent.helpNames() + " " + processedCommand.name();
         }
         return processedCommand.name();
     }
@@ -267,21 +266,24 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public void parse(ParsedLineIterator iterator, Mode mode) {
         clear();
-        if(iterator.hasNextWord()) {
+        if (iterator.hasNextWord()) {
             String command = iterator.pollWord();
             if (processedCommand.name().equals(command)
                     || processedCommand.getAliases().contains(command)) {
-                if(isGroupCommand() && iterator.hasNextWord()) {
-                   CommandLineParser<CI> clp = getChildParser(iterator.peekWord());
-                    if(clp == null) {
+                if (isGroupCommand() && iterator.hasNextWord()) {
+                    CommandLineParser<CI> clp = getChildParser(iterator.peekWord());
+                    if (clp == null) {
                         //if the user have written garbage in the next word, we need to check
                         // eg: group GARBAGE <tab>
-                        if((iterator.isNextWordCursorWord() ||
-                                iterator.peekWord().startsWith("--") || iterator.peekWord().startsWith("-")) & !(iterator.peekWord().equalsIgnoreCase("--help")) )
+                        if ((iterator.isNextWordCursorWord() ||
+                                iterator.peekWord().startsWith("--") || iterator.peekWord().startsWith("-"))
+                                & !(iterator.peekWord().equalsIgnoreCase("--help")))
                             doParse(iterator, mode);
                         else {
-                            processedCommand.addParserException(new CommandLineParserException("'"+command+" "+iterator.peekWord()+"' is not part of the "+command+" commands. See 'help "+command+"'."));
-                        if(mode == Mode.COMPLETION) {
+                            processedCommand
+                                    .addParserException(new CommandLineParserException("'" + command + " " + iterator.peekWord()
+                                            + "' is not part of the " + command + " commands. See 'help " + command + "'."));
+                            if (mode == Mode.COMPLETION) {
                                 parsedCommand = true;
                                 processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.INVALID_INPUT, ""));
                             }
@@ -292,63 +294,56 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                         //remove the child name
                         clp.parse(iterator, mode);
                     }
-                }
-                else
+                } else
                     doParse(iterator, mode);
             }
-        }
-        else if(iterator.parserError() != null)
+        } else if (iterator.parserError() != null)
             processedCommand.addParserException(new CommandLineParserException(iterator.parserError()));
     }
 
-
     private void doParse(ParsedLineIterator iter, Mode mode) {
         parsedCommand = true;
-        if(mode == Mode.COMPLETION)
+        if (mode == Mode.COMPLETION)
             doParseCompletion(iter);
         else {
             try {
                 boolean argumentMarker = false;
                 while (iter.hasNextWord()) {
                     ParsedWord word = iter.peekParsedWord();
-                    if(argumentMarker || processedCommand.disableParsing()) {
+                    if (argumentMarker || processedCommand.disableParsing()) {
                         setArgStatus(word.word());
                         iter.pollParsedWord();
-                    }
-                    else {
+                    } else {
                         lastParsedOption = processedCommand.searchAllOptions(word.word());
-                        if(lastParsedOption != null) {
+                        if (lastParsedOption != null) {
                             lastParsedOption.parser().parse(iter, lastParsedOption);
-                        }
-                        else {
+                        } else {
                             //if we have a -- and its not at the end of the line it is used as a
                             //marker to signal that all the values after it are arguments, so we will ignore this
-                            if(word.word().equals("--") && !iter.isNextWordCursorWord()) {
+                            if (word.word().equals("--") && !iter.isNextWordCursorWord()) {
                                 argumentMarker = true;
-                            }
-                            else {
+                            } else {
                                 // Unknown commands are possible with a dynamic command (MapCommand)
                                 // In this case we shouldn't validate the option and pass it down to
                                 // the populator for Map injection.
                                 boolean unknown = false;
-                                if(word.word().startsWith("-")) {
-                                    if(word.word().startsWith("--") || word.word().length() == 2) {
+                                if (word.word().startsWith("-")) {
+                                    if (word.word().startsWith("--") || word.word().length() == 2) {
                                         // invalid short names and long names should be rejected.
-                                        if(!(processedCommand.getCommand() instanceof MapCommand)) {
+                                        if (!(processedCommand.getCommand() instanceof MapCommand)) {
                                             processedCommand.addParserException(
                                                     new OptionParserException("The option " + word.word()
-                                                                                      + " is unknown."));
+                                                            + " is unknown."));
                                         } else {
                                             unknown = true;
                                         }
                                     }
                                 }
-                                if(unknown) {
+                                if (unknown) {
                                     // Pass down the option directly to the populator.
                                     MapCommandPopulator pop = (MapCommandPopulator) processedCommand.getCommandPopulator();
                                     pop.addUnknownOption(word.word());
-                                }
-                                else {
+                                } else {
                                     setArgStatus(word.word());
                                 }
                             }
@@ -356,8 +351,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                         }
                     }
                 }
-            }
-            catch (OptionParserException ope) {
+            } catch (OptionParserException ope) {
                 processedCommand.addParserException(ope);
             }
             if (mode == Mode.STRICT) {
@@ -378,13 +372,12 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private void setArgStatus(String word) {
         if (processedCommand.hasArguments()) {
             processedCommand.getArguments().addValue(word);
-        }
-        else if (processedCommand.hasArgumentWithNoValue()) {
+        } else if (processedCommand.hasArgumentWithNoValue()) {
             processedCommand.getArgument().addValue(word);
-        }
-        else {
+        } else {
             processedCommand.addParserException(
-                    new OptionParserException("A value " + word + " was given as an argument, but the command do not support it."));
+                    new OptionParserException(
+                            "A value " + word + " was given as an argument, but the command do not support it."));
         }
     }
 
@@ -393,15 +386,15 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         if (copy instanceof MapProcessedCommand) {
             ((MapProcessedCommand) copy).setMode(Mode.COMPLETION);
         }
-        if(!iter.hasNextWord()) {
-            if(isGroupCommand())
+        if (!iter.hasNextWord()) {
+            if (isGroupCommand())
                 processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, ""));
             else {
                 //child commands that ends after its name, must be able to append space
-                if(iter.baseLine().size() == (iter.baseLine().selectedIndex()+1) &&
+                if (iter.baseLine().size() == (iter.baseLine().selectedIndex() + 1) &&
                         lastParsedOption == null) {
                     //append space
-                    if(iter.baseLine().status() == ParserStatus.OK)
+                    if (iter.baseLine().status() == ParserStatus.OK)
                         processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.APPEND_SPACE, ""));
                     //we have unclosed quote, lets parse it as an argument
                     else
@@ -411,69 +404,77 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 else
                     processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
             }
-        }
-        else {
+        } else {
             try {
                 boolean argumentMarker = false; //argumentMarker is set to true if we have found "--" inside the line
-                while(iter.hasNextWord()) {
+                while (iter.hasNextWord()) {
                     //first check if we have passed the selected word, if so lets stop
-                    if(iter.baseLine().selectedIndex() > -1 &&
-                               iter.pastCursorWord() &&
-                               processedCommand.completeStatus() != null)
+                    if (iter.baseLine().selectedIndex() > -1 &&
+                            iter.pastCursorWord() &&
+                            processedCommand.completeStatus() != null)
                         return;
                     ParsedWord word = iter.peekParsedWord();
                     //first check if argumentMarker has been set
-                    if(argumentMarker) {
+                    if (argumentMarker) {
                         setCompletionArgStatus(word.word());
                         iter.pollParsedWord();
-                    }
-                    else {
+                    } else {
                         lastParsedOption = processedCommand.searchAllOptions(word.word());
-                        if(lastParsedOption != null) {
+                        if (lastParsedOption != null) {
                             //if current word is cursor word, we need to check if the current option name
                             //might be part of another option name: eg: list and listFolders
-                            if(iter.isNextWordCursorWord() && !word.word().contains("=")
-                                       && processedCommand.findPossibleLongNames(word.word()).size() > 1) {
-                                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
+                            if (iter.isNextWordCursorWord() && !word.word().contains("=")
+                                    && processedCommand.findPossibleLongNames(word.word()).size() > 1) {
+                                processedCommand.setCompleteStatus(
+                                        new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
                                 iter.pollParsedWord();
                             } else {
                                 lastParsedOption.parser().parse(iter, lastParsedOption);
-                                if(!iter.hasNextWord()) {
-                                    if(lastParsedOption.hasValue() || iter.baseLine().spaceAtEnd())
-                                        processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
-                                        //if the option do not have any value, set missing value status for easier processing
+                                if (!iter.hasNextWord()) {
+                                    if (lastParsedOption.hasValue() || iter.baseLine().spaceAtEnd())
+                                        processedCommand.setCompleteStatus(
+                                                new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, ""));
+                                    //if the option do not have any value, set missing value status for easier processing
                                     else
-                                        processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
+                                        processedCommand.setCompleteStatus(
+                                                new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
                                 }
                             }
                         }
                         //if we have -- that stands alone it's a marker for separation of options and arguments
-                        else if(word.word().equals("--") && !iter.isNextWordCursorWord()) {
+                        else if (word.word().equals("--") && !iter.isNextWordCursorWord()) {
                             argumentMarker = true;
                             iter.pollParsedWord();
                         }
                         //got a partial option
-                        else if(word.word().startsWith("--")) {
-                            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
+                        else if (word.word().startsWith("--")) {
+                            processedCommand.setCompleteStatus(
+                                    new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
                             iter.pollParsedWord();
-                        } else if(word.word().startsWith("-")) {
-                            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.SHORT_OPTION, word.word().substring(1)));
+                        } else if (word.word().startsWith("-")) {
+                            processedCommand.setCompleteStatus(
+                                    new CompleteStatus(CompleteStatus.Status.SHORT_OPTION, word.word().substring(1)));
                             iter.pollParsedWord();
                         }
                         //we're completing arguments or group command names
                         else {
                             //only set group command if nothing else is set
-                            if(lastParsedOption == null && isGroupCommand()) {
-                                if(iter.isNextWordCursorWord())
-                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, word.word()));
-                                else if(iter.baseLine().cursorAtEnd() && iter.baseLine().spaceAtEnd())
-                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, ""));
-                            } else if(iter.isNextWordCursorWord()) {
-                                if(processedCommand.getArguments() != null ||
-                                        (processedCommand.getArgument() != null && processedCommand.getArgument().getValue() == null)) {
-                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
+                            if (lastParsedOption == null && isGroupCommand()) {
+                                if (iter.isNextWordCursorWord())
+                                    processedCommand.setCompleteStatus(
+                                            new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, word.word()));
+                                else if (iter.baseLine().cursorAtEnd() && iter.baseLine().spaceAtEnd())
+                                    processedCommand
+                                            .setCompleteStatus(new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, ""));
+                            } else if (iter.isNextWordCursorWord()) {
+                                if (processedCommand.getArguments() != null ||
+                                        (processedCommand.getArgument() != null
+                                                && processedCommand.getArgument().getValue() == null)) {
+                                    processedCommand
+                                            .setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
                                 } else {
-                                    processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT_ERROR, null));
+                                    processedCommand
+                                            .setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT_ERROR, null));
                                 }
                             } else {
                                 setCompletionArgStatus(word.word());
@@ -482,10 +483,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                         }
                     }
                 }
-                if(argumentMarker && processedCommand.completeStatus() == null)
+                if (argumentMarker && processedCommand.completeStatus() == null)
                     setCompletionArgStatus(null);
-            }
-            catch (OptionParserException e) {
+            } catch (OptionParserException e) {
                 //TODO: needs to be improved
                 //ignored for now
                 processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
@@ -495,12 +495,11 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     private void setCompletionArgStatus(String word) {
         //add the value to argument/arguments
-        if(processedCommand.hasArguments()) {
+        if (processedCommand.hasArguments()) {
             processedCommand.getArguments().addValue(word);
             processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
-        }
-        else if(processedCommand.hasArgument()) {
-            if(processedCommand.getArgument().getValue() == null) {
+        } else if (processedCommand.hasArgument()) {
+            if (processedCommand.getArgument().getValue() == null) {
                 processedCommand.getArgument().addValue(word);
                 processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
             }
@@ -511,16 +510,15 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     }
 
     private RequiredOptionException checkForMissingRequiredOptions(ProcessedCommand<? extends Command<CI>, CI> command) {
-        for(ProcessedOption o : command.getOptions()) {
-            if(doCheckForMissingRequiredOption(o))
-                return new RequiredOptionException("Option: "+o.getDisplayName()+" is required for this command.");
+        for (ProcessedOption o : command.getOptions()) {
+            if (doCheckForMissingRequiredOption(o))
+                return new RequiredOptionException("Option: " + o.getDisplayName() + " is required for this command.");
         }
-        if(command.getArgument() != null) {
+        if (command.getArgument() != null) {
             if (doCheckForMissingRequiredOption(command.getArgument()))
                 return generateRequiredExceptionFor(command.getArgument(), false);
-        }
-        else if(command.getArguments() != null)
-            if(doCheckForMissingRequiredOption(command.getArguments()))
+        } else if (command.getArguments() != null)
+            if (doCheckForMissingRequiredOption(command.getArguments()))
                 return generateRequiredExceptionFor(command.getArguments(), true);
 
         return null;
@@ -576,7 +574,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public void clear() {
         //if this is the parsed command, clear it
-        if(parsedCommand) {
+        if (parsedCommand) {
             processedCommand.clear();
             lastParsedOption = null;
             parsedCommand = false;
@@ -584,7 +582,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         }
         //else find the parsed command and clear that one
         else {
-            if(processedCommand != null)
+            if (processedCommand != null)
                 processedCommand.clear();
 
             CommandLineParser parsed = parsedCommand();
@@ -604,15 +602,15 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
         ANSIBuilder ansiBuilder = ANSIBuilder.builder(ansiMode);
 
-        if(offset > 0)
-            ansiBuilder.append(String.format("%" + offset+ "s", ""));
+        if (offset > 0)
+            ansiBuilder.append(String.format("%" + offset + "s", ""));
 
         ansiBuilder.blueText(getProcessedCommand().name());
 
         int descOffset = descriptionStart - getProcessedCommand().name().length();
 
-        if(descOffset > 0)
-            ansiBuilder.append(String.format("%"+descOffset+"s", ""));
+        if (descOffset > 0)
+            ansiBuilder.append(String.format("%" + descOffset + "s", ""));
         else
             ansiBuilder.append(" ");
 
@@ -640,8 +638,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof AeshCommandLineParser)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof AeshCommandLineParser))
+            return false;
 
         AeshCommandLineParser that = (AeshCommandLineParser) o;
 

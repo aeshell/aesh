@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,8 @@
  */
 package org.aesh;
 
+import java.io.IOException;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
@@ -28,16 +30,14 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.readline.Prompt;
 import org.aesh.console.ReadlineConsole;
+import org.aesh.readline.Prompt;
 import org.aesh.terminal.Connection;
-
-import java.io.IOException;
 
 /**
  * Use the AeshConsoleRunner when you want to easily create an interactive CLI application.
  *
- * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
+ * @author Aesh team
  */
 public class AeshConsoleRunner {
     private AeshCommandRegistryBuilder<CommandInvocation> registryBuilder;
@@ -54,7 +54,7 @@ public class AeshConsoleRunner {
     }
 
     public AeshConsoleRunner commands(Class<? extends Command>... commands) {
-        if(commands != null) {
+        if (commands != null) {
             ensureRegistryBuilderInitialized();
             try {
                 registryBuilder.commands(commands);
@@ -66,7 +66,7 @@ public class AeshConsoleRunner {
     }
 
     public AeshConsoleRunner command(Class<? extends Command> command) {
-        if(command != null) {
+        if (command != null) {
             ensureRegistryBuilderInitialized();
             try {
                 registryBuilder.command(command);
@@ -78,24 +78,24 @@ public class AeshConsoleRunner {
     }
 
     public AeshConsoleRunner commandRegistryBuilder(AeshCommandRegistryBuilder<CommandInvocation> commandRegistryBuilder) {
-        if(registryBuilder != null) {
+        if (registryBuilder != null) {
             throw new RuntimeException("Cannot set CommandRegistryBuilder after it has been initialized. " +
                     "CommandRegistryBuilder must be set before adding any commands.");
         }
-        if(commandRegistryBuilder != null) {
+        if (commandRegistryBuilder != null) {
             this.registryBuilder = commandRegistryBuilder;
         }
         return this;
     }
 
     private void ensureRegistryBuilderInitialized() {
-        if(registryBuilder == null) {
+        if (registryBuilder == null) {
             registryBuilder = AeshCommandRegistryBuilder.builder();
         }
     }
 
     public AeshConsoleRunner settings(Settings settings) {
-        if(settings != null)
+        if (settings != null)
             this.settings = settings;
         return this;
     }
@@ -106,17 +106,17 @@ public class AeshConsoleRunner {
     }
 
     public AeshConsoleRunner prompt(String prompt) {
-        if(prompt != null)
+        if (prompt != null)
             this.prompt = new Prompt(prompt);
-        if(console != null && console.running())
+        if (console != null && console.running())
             console.setPrompt(this.prompt);
         return this;
     }
 
     public AeshConsoleRunner prompt(Prompt prompt) {
-        if(prompt != null)
+        if (prompt != null)
             this.prompt = prompt;
-        if(console != null && console.running())
+        if (console != null && console.running())
             console.setPrompt(this.prompt);
         return this;
     }
@@ -132,21 +132,20 @@ public class AeshConsoleRunner {
     }
 
     public void start() {
-        if(console == null) {
+        if (console == null) {
             init();
-            if(prompt != null)
+            if (prompt != null)
                 console.setPrompt(prompt);
             try {
                 console.start();
-            }
-            catch (IOException e) {
-                throw new RuntimeException("Exception while starting the console: "+e.getMessage());
+            } catch (IOException e) {
+                throw new RuntimeException("Exception while starting the console: " + e.getMessage());
             }
         }
     }
 
     public void stop() {
-        if(console != null && console.running())
+        if (console != null && console.running())
             console.stop();
     }
 
@@ -154,7 +153,7 @@ public class AeshConsoleRunner {
     private void init() {
         // Build the command registry from the builder
         CommandRegistry<CommandInvocation> builtRegistry = null;
-        if(registryBuilder != null) {
+        if (registryBuilder != null) {
             try {
                 builtRegistry = registryBuilder.create();
             } catch (Exception e) {
@@ -163,58 +162,58 @@ public class AeshConsoleRunner {
         }
 
         // Check if both builder and settings.commandRegistry have commands
-        if(builtRegistry != null && !builtRegistry.getAllCommandNames().isEmpty() &&
+        if (builtRegistry != null && !builtRegistry.getAllCommandNames().isEmpty() &&
                 settings != null && settings.commandRegistry() != null &&
                 !settings.commandRegistry().getAllCommandNames().isEmpty()) {
-            throw new RuntimeException("Cannot define commands in both AeshConsoleRunner (via command() or commandRegistryBuilder()) " +
-                    "and Settings.commandRegistry(). Please use only one method to specify commands.");
+            throw new RuntimeException(
+                    "Cannot define commands in both AeshConsoleRunner (via command() or commandRegistryBuilder()) " +
+                            "and Settings.commandRegistry(). Please use only one method to specify commands.");
         }
 
         // Determine which registry to use
         CommandRegistry<CommandInvocation> finalRegistry = null;
-        if(builtRegistry != null && !builtRegistry.getAllCommandNames().isEmpty()) {
+        if (builtRegistry != null && !builtRegistry.getAllCommandNames().isEmpty()) {
             finalRegistry = builtRegistry;
-        } else if(settings != null && settings.commandRegistry() != null &&
+        } else if (settings != null && settings.commandRegistry() != null &&
                 !settings.commandRegistry().getAllCommandNames().isEmpty()) {
             finalRegistry = settings.commandRegistry();
         }
 
         // Validate that we have at least one command
-        if(finalRegistry == null || finalRegistry.getAllCommandNames().isEmpty()) {
+        if (finalRegistry == null || finalRegistry.getAllCommandNames().isEmpty()) {
             throw new RuntimeException("No commands added, nothing to run");
         }
 
         try {
-            if(settings == null) {
+            if (settings == null) {
                 settings = SettingsBuilder.builder()
-                                   .commandRegistry(finalRegistry)
-                                   .enableAlias(false)
-                                   .enableExport(false)
-                                   .enableMan(false)
-                                   .persistHistory(false)
-                                   .connection(connection)
-                                   .build();
+                        .commandRegistry(finalRegistry)
+                        .enableAlias(false)
+                        .enableExport(false)
+                        .enableMan(false)
+                        .persistHistory(false)
+                        .connection(connection)
+                        .build();
             }
             // User added their own settings object, but we need to add or replace the registry
-            else if(settings.commandRegistry() == null ||
+            else if (settings.commandRegistry() == null ||
                     settings.commandRegistry().getAllCommandNames().isEmpty()) {
                 SettingsBuilder settingsBuilder = new SettingsBuilder(settings)
-                                                   .commandRegistry(finalRegistry);
+                        .commandRegistry(finalRegistry);
 
-                if(connection != null)
+                if (connection != null)
                     settingsBuilder.connection(connection);
 
                 settings = settingsBuilder.build();
             }
 
             console = new ReadlineConsole(settings);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Error when initializing console: " + e.getMessage(), e);
         }
     }
 
-    @CommandDefinition(name = "exit", description = "exit the program", aliases = {"quit"})
+    @CommandDefinition(name = "exit", description = "exit the program", aliases = { "quit" })
     public static class ExitCommand implements Command {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {

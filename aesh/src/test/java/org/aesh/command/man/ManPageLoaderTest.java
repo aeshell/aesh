@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,18 +19,18 @@
  */
 package org.aesh.command.man;
 
-import org.aesh.command.man.parser.ManFileParser;
-import org.aesh.terminal.utils.ANSI;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.aesh.command.man.parser.ManFileParser;
+import org.aesh.terminal.utils.ANSI;
+import org.junit.Test;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ManPageLoaderTest {
     @Test
@@ -67,7 +67,7 @@ public class ManPageLoaderTest {
             assertEquals("NAME", parser.getSections().get(0).getName());
 
             List<String> out = parser.getAsList();
-            assertEquals(ANSI.BOLD+"NAME"+ ANSI.DEFAULT_TEXT, out.get(0));
+            assertEquals(ANSI.BOLD + "NAME" + ANSI.DEFAULT_TEXT, out.get(0));
 
         } catch (IOException e) {
             e.printStackTrace();

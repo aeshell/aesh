@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,8 @@
  */
 package org.aesh.command.alias;
 
+import java.util.List;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -29,17 +31,14 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Arguments;
 import org.aesh.readline.alias.AliasManager;
 
-import java.util.List;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 @CommandDefinition(name = "unalias", description = "remove an alias")
 public class UnAliasCommand implements Command<CommandInvocation> {
 
     @Arguments(completer = AliasCompletor.class)
     private List<String> arguments;
-
 
     private final AliasManager manager;
 
@@ -53,12 +52,11 @@ public class UnAliasCommand implements Command<CommandInvocation> {
 
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-        if(arguments == null || arguments.size() == 0) {
+        if (arguments == null || arguments.size() == 0) {
             commandInvocation.println(manager.unaliasUsage());
-        }
-        else if(arguments.size() == 1) {
+        } else if (arguments.size() == 1) {
             String out = manager.removeAlias("unalias " + arguments.get(0));
-            if(out != null && out.length() > 0)
+            if (out != null && out.length() > 0)
                 commandInvocation.println(out);
         }
 
@@ -70,13 +68,14 @@ public class UnAliasCommand implements Command<CommandInvocation> {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
 
-            if(completerInvocation.getCommand() instanceof AliasCommand) {
+            if (completerInvocation.getCommand() instanceof AliasCommand) {
                 AliasManager manager = ((AliasCommand) completerInvocation.getCommand()).manager();
-                if(completerInvocation.getGivenCompleteValue() == null ||
-                           completerInvocation.getGivenCompleteValue().length() == 0)
+                if (completerInvocation.getGivenCompleteValue() == null ||
+                        completerInvocation.getGivenCompleteValue().length() == 0)
                     completerInvocation.addAllCompleterValues(manager.findAllMatchingNames(""));
                 else
-                    completerInvocation.addAllCompleterValues(manager.findAllMatchingNames(completerInvocation.getGivenCompleteValue()));
+                    completerInvocation
+                            .addAllCompleterValues(manager.findAllMatchingNames(completerInvocation.getGivenCompleteValue()));
             }
         }
     }

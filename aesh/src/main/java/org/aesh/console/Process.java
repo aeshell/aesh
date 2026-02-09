@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,24 +19,24 @@
  */
 package org.aesh.console;
 
-import org.aesh.command.CommandResult;
-import org.aesh.command.Execution;
-import org.aesh.command.CommandException;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.terminal.tty.Signal;
-import org.aesh.terminal.utils.Config;
-import org.aesh.command.validator.CommandValidatorException;
-import org.aesh.terminal.Connection;
-import org.aesh.terminal.utils.LoggerUtil;
-
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.Execution;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.terminal.Connection;
+import org.aesh.terminal.tty.Signal;
+import org.aesh.terminal.utils.Config;
+import org.aesh.terminal.utils.LoggerUtil;
+
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class Process extends Thread implements Consumer<Signal> {
 
@@ -49,7 +49,7 @@ public class Process extends Thread implements Consumer<Signal> {
     private int pid;
 
     public Process(ProcessManager manager, Connection conn,
-                   Execution<? extends CommandInvocation> execution) {
+            Execution<? extends CommandInvocation> execution) {
         this.manager = manager;
         this.conn = conn;
         this.execution = execution;
@@ -78,21 +78,17 @@ public class Process extends Thread implements Consumer<Signal> {
 
         try {
             execution.execute();
-        }
-        catch (CommandValidatorException | CommandException  | OptionValidatorException | CommandLineParserException e ) {
+        } catch (CommandValidatorException | CommandException | OptionValidatorException | CommandLineParserException e) {
             execution.setResut(CommandResult.FAILURE);
-            conn.write(e.getMessage()+ Config.getLineSeparator());
-        }
-        catch (InterruptedException e) {
+            conn.write(e.getMessage() + Config.getLineSeparator());
+        } catch (InterruptedException e) {
             // Ctlr-C interrupt
             execution.setResut(CommandResult.FAILURE);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             execution.setResut(CommandResult.FAILURE);
-            conn.write(e.getMessage()+ Config.getLineSeparator());
-            LOGGER.log(Level.WARNING, "Uncaught exception when executing the command: "+execution.getCommand().toString(), e);
-        }
-        finally {
+            conn.write(e.getMessage() + Config.getLineSeparator());
+            LOGGER.log(Level.WARNING, "Uncaught exception when executing the command: " + execution.getCommand().toString(), e);
+        } finally {
             running = false;
             conn.setSignalHandler(prev);
             conn.setStdinHandler(prevIn);

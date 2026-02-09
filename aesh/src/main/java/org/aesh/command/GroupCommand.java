@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -21,13 +21,13 @@
 package org.aesh.command;
 
 import java.util.Collections;
+import java.util.List;
+
+import org.aesh.command.container.CommandContainer;
 import org.aesh.command.invocation.CommandInvocation;
 
-import java.util.List;
-import org.aesh.command.container.CommandContainer;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface GroupCommand<CI extends CommandInvocation> extends Command<CI> {
 

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -18,6 +18,12 @@
  * limitations under the License.
  */
 package org.aesh.command.completer;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.List;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -40,32 +46,26 @@ import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.readline.Prompt;
 import org.aesh.console.ReadlineConsole;
+import org.aesh.readline.Prompt;
 import org.aesh.terminal.Key;
 import org.aesh.terminal.formatting.CharacterType;
 import org.aesh.terminal.formatting.Color;
 import org.aesh.terminal.formatting.TerminalColor;
 import org.aesh.terminal.formatting.TerminalTextStyle;
 import org.aesh.terminal.tty.Size;
-import org.aesh.tty.TestConnection;
 import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandCompletionTest {
 
-    private final Key completeChar =  Key.CTRL_I;
-    private final Key backspace =  Key.BACKSPACE;
-    private final Key enter =  Key.ENTER;
+    private final Key completeChar = Key.CTRL_I;
+    private final Key backspace = Key.BACKSPACE;
+    private final Key enter = Key.ENTER;
 
     @Test
     public void testCompletion() throws Exception {
@@ -75,15 +75,13 @@ public class AeshCommandCompletionTest {
                 .command(FooCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .enableAlias(false)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
-
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .enableAlias(false)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
@@ -99,7 +97,8 @@ public class AeshCommandCompletionTest {
         assertEquals("foo --", connection.getOutputBuffer());
 
         connection.read(completeChar.getFirstValue());
-        assertEquals(String.format("foo --%1$s--bar=  --bool  --name=  %1$sfoo --", Config.getLineSeparator()), connection.getOutputBuffer());
+        assertEquals(String.format("foo --%1$s--bar=  --bool  --name=  %1$sfoo --", Config.getLineSeparator()),
+                connection.getOutputBuffer());
 
         connection.clearOutputBuffer();
         connection.read("name aslak --bar");
@@ -180,13 +179,12 @@ public class AeshCommandCompletionTest {
                 .command(FooFormattedCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
@@ -208,15 +206,14 @@ public class AeshCommandCompletionTest {
                 .command(TotoCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .connection(connection)
-                        //.inputStream(pipedInputStream)
-                        //.outputStream(new PrintStream(byteArrayOutputStream))
-                        .logging(true)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                //.inputStream(pipedInputStream)
+                //.outputStream(new PrintStream(byteArrayOutputStream))
+                .logging(true)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
@@ -252,13 +249,12 @@ public class AeshCommandCompletionTest {
                 .command(GroupArgCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -327,19 +323,18 @@ public class AeshCommandCompletionTest {
 
     @Test
     public void testRequiredAndActivatorOption() throws IOException, InterruptedException, CommandRegistryException {
-        TestConnection connection = new TestConnection(new Size(200,20));
+        TestConnection connection = new TestConnection(new Size(200, 20));
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ArqCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
@@ -362,13 +357,12 @@ public class AeshCommandCompletionTest {
                 .command(GitCommand.class)
                 .create();
 
-         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                         OptionActivator, CommandActivator> settings =
-                 SettingsBuilder.builder()
-                         .logging(true)
-                         .connection(connection)
-                         .commandRegistry(registry)
-                         .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -427,14 +421,14 @@ public class AeshCommandCompletionTest {
         connection.assertBuffer("git ");
         connection.clearOutputBuffer();
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer(Config.getLineSeparator()+"commit  rebase  "+Config.getLineSeparator()+"git ");
+        connection.assertBuffer(Config.getLineSeparator() + "commit  rebase  " + Config.getLineSeparator() + "git ");
         connection.clearOutputBuffer();
         connection.read("commit");
         connection.read(completeChar.getFirstValue());
         connection.assertBuffer("commit ");
 
         console.stop();
-     }
+    }
 
     @Test
     public void testSuperGroupCommand() throws IOException, CommandRegistryException, InterruptedException {
@@ -444,13 +438,12 @@ public class AeshCommandCompletionTest {
                 .command(SuperGitCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -461,7 +454,7 @@ public class AeshCommandCompletionTest {
         connection.assertBuffer("super git ");
         connection.clearOutputBuffer();
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer(Config.getLineSeparator()+"commit  rebase  "+Config.getLineSeparator()+"super git ");
+        connection.assertBuffer(Config.getLineSeparator() + "commit  rebase  " + Config.getLineSeparator() + "super git ");
         connection.clearOutputBuffer();
         connection.read("commit");
         connection.read(completeChar.getFirstValue());
@@ -474,247 +467,243 @@ public class AeshCommandCompletionTest {
      * CommandTest4 tests that options should not be completed since it is not activated
      * unless argument is set
      */
-     @Test
-     public void testCommandTest4() throws IOException, CommandRegistryException, InterruptedException {
-         TestConnection connection = new TestConnection();
+    @Test
+    public void testCommandTest4() throws IOException, CommandRegistryException, InterruptedException {
+        TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                 .command(GitCommand.class)
-                 .command(CommandTest4.class)
-                 .create();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(GitCommand.class)
+                .command(CommandTest4.class)
+                .create();
 
-         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                         OptionActivator, CommandActivator> settings =
-                 SettingsBuilder.builder()
-                         .logging(true)
-                         .connection(connection)
-                         .commandRegistry(registry)
-                         .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
-         ReadlineConsole console = new ReadlineConsole(settings);
-         console.start();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-         connection.read("test");
-         connection.read(completeChar.getFirstValue());
+        connection.read("test");
+        connection.read(completeChar.getFirstValue());
 
-         connection.assertBuffer("test ");
-         connection.read("--");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("test --");
-         connection.read(Key.BACKSPACE);
-         connection.read(Key.BACKSPACE);
-         connection.clearOutputBuffer();
-         //argument completion
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer(Config.getLineSeparator()+"one  two  "+Config.getLineSeparator()+"test ");
-         connection.clearOutputBuffer();
+        connection.assertBuffer("test ");
+        connection.read("--");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test --");
+        connection.read(Key.BACKSPACE);
+        connection.read(Key.BACKSPACE);
+        connection.clearOutputBuffer();
+        //argument completion
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer(Config.getLineSeparator() + "one  two  " + Config.getLineSeparator() + "test ");
+        connection.clearOutputBuffer();
 
         //setting argument value
-         connection.read("BAR ");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("BAR --required=");
+        connection.read("BAR ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("BAR --required=");
 
-         console.stop();
-     }
-
-    /**
-     * CommandTest4B tests that arguments should not be completed since it is not activated
-     * unless option is set
-     */
-     @Test
-     public void testCommandTest4B() throws IOException, CommandRegistryException, InterruptedException {
-         TestConnection connection = new TestConnection();
-
-         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                 .command(GitCommand.class)
-                 .command(CommandTest4B.class)
-                 .create();
-
-         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                         OptionActivator, CommandActivator> settings =
-                 SettingsBuilder.builder()
-                         .logging(true)
-                         .connection(connection)
-                         .commandRegistry(registry)
-                         .build();
-
-         ReadlineConsole console = new ReadlineConsole(settings);
-         console.start();
-
-         connection.read("test");
-         connection.read(completeChar.getFirstValue());
-
-         connection.assertBuffer("test ");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("test --required=");
-
-         connection.read("BAR ");
-         connection.assertBuffer("test --required=BAR ");
-         connection.clearOutputBuffer();
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer(Config.getLineSeparator()+"one  two  "+Config.getLineSeparator()+"test --required=BAR ");
-         connection.read("three");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer(Config.getLineSeparator()+"one  two  "+Config.getLineSeparator()+"test --required=BAR three_BAR ");
-
-         console.stop();
-     }
+        console.stop();
+    }
 
     /**
      * CommandTest4B tests that arguments should not be completed since it is not activated
      * unless option is set
      */
-     @Test
-     public void testCommandTest4C() throws IOException, CommandRegistryException, InterruptedException {
-         TestConnection connection = new TestConnection();
+    @Test
+    public void testCommandTest4B() throws IOException, CommandRegistryException, InterruptedException {
+        TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                 .command(GitCommand.class)
-                 .command(CommandTest4C.class)
-                 .create();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(GitCommand.class)
+                .command(CommandTest4B.class)
+                .create();
 
-         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                         OptionActivator, CommandActivator> settings =
-                 SettingsBuilder.builder()
-                         .logging(true)
-                         .connection(connection)
-                         .commandRegistry(registry)
-                         .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
-         ReadlineConsole console = new ReadlineConsole(settings);
-         console.start();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-         connection.read("test");
-         connection.read(completeChar.getFirstValue());
+        connection.read("test");
+        connection.read(completeChar.getFirstValue());
 
-         connection.assertBuffer("test ");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("test --required ");
-         connection.clearOutputBuffer();
+        connection.assertBuffer("test ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test --required=");
 
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer(Config.getLineSeparator()+"one  two  "+Config.getLineSeparator()+"test --required ");
-         connection.read("three");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer(Config.getLineSeparator()+"one  two  "+Config.getLineSeparator()+"test --required three_BAR ");
+        connection.read("BAR ");
+        connection.assertBuffer("test --required=BAR ");
+        connection.clearOutputBuffer();
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer(Config.getLineSeparator() + "one  two  " + Config.getLineSeparator() + "test --required=BAR ");
+        connection.read("three");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer(
+                Config.getLineSeparator() + "one  two  " + Config.getLineSeparator() + "test --required=BAR three_BAR ");
 
-         console.stop();
-     }
+        console.stop();
+    }
 
+    /**
+     * CommandTest4B tests that arguments should not be completed since it is not activated
+     * unless option is set
+     */
+    @Test
+    public void testCommandTest4C() throws IOException, CommandRegistryException, InterruptedException {
+        TestConnection connection = new TestConnection();
 
-     @Test
-     public void testCommandTest5() throws IOException, CommandRegistryException, InterruptedException {
-         TestConnection connection = new TestConnection();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(GitCommand.class)
+                .command(CommandTest4C.class)
+                .create();
 
-         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                 .command(GitCommand.class)
-                 .command(CommandTest5.class)
-                 .create();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
-         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                         OptionActivator, CommandActivator> settings =
-                 SettingsBuilder.builder()
-                         .logging(true)
-                         .connection(connection)
-                         .commandRegistry(registry)
-                         .build();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-         ReadlineConsole console = new ReadlineConsole(settings);
-         console.start();
+        connection.read("test");
+        connection.read(completeChar.getFirstValue());
 
-         connection.read("test");
-         connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test --required ");
+        connection.clearOutputBuffer();
 
-         connection.assertBuffer("test ");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("test ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer(Config.getLineSeparator() + "one  two  " + Config.getLineSeparator() + "test --required ");
+        connection.read("three");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer(
+                Config.getLineSeparator() + "one  two  " + Config.getLineSeparator() + "test --required three_BAR ");
 
-         console.stop();
-     }
+        console.stop();
+    }
 
-     @Test
-     public void testCommandTest6() throws IOException, CommandRegistryException, InterruptedException {
-         TestConnection connection = new TestConnection();
+    @Test
+    public void testCommandTest5() throws IOException, CommandRegistryException, InterruptedException {
+        TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                 .command(GitCommand.class)
-                 .command(CommandTest6.class)
-                 .create();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(GitCommand.class)
+                .command(CommandTest5.class)
+                .create();
 
-         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                         OptionActivator, CommandActivator> settings =
-                 SettingsBuilder.builder()
-                         .logging(true)
-                         .connection(connection)
-                         .commandRegistry(registry)
-                         .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
-         ReadlineConsole console = new ReadlineConsole(settings);
-         console.start();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-         connection.read("test");
-         connection.read(completeChar.getFirstValue());
+        connection.read("test");
+        connection.read(completeChar.getFirstValue());
 
-         connection.assertBuffer("test ");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("test --bar");
-         connection.clearOutputBuffer();
-         connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test ");
 
-         connection.assertBuffer(Config.getLineSeparator()+"--bar  --barbar  "+Config.getLineSeparator()+"test --bar");
-         connection.clearOutputBuffer();
-         connection.read("b");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("bar ");
+        console.stop();
+    }
 
-         console.stop();
-     }
+    @Test
+    public void testCommandTest6() throws IOException, CommandRegistryException, InterruptedException {
+        TestConnection connection = new TestConnection();
 
-     @Test
-     public void testCommandTest7() throws IOException, CommandRegistryException, InterruptedException {
-         TestConnection connection = new TestConnection();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(GitCommand.class)
+                .command(CommandTest6.class)
+                .create();
 
-         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                 .command(GitCommand.class)
-                 .command(CommandTest7.class)
-                 .command(CommandTest7a.class)
-                 .create();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
-         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                         OptionActivator, CommandActivator> settings =
-                 SettingsBuilder.builder()
-                         .logging(true)
-                         .connection(connection)
-                         .commandRegistry(registry)
-                         .build();
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
 
-         ReadlineConsole console = new ReadlineConsole(settings);
-         console.start();
+        connection.read("test");
+        connection.read(completeChar.getFirstValue());
 
-         connection.read("test --headers={allow-resource-service-restart=true; ");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO ");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO _FOO ");
-         connection.read("} ");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO _FOO } --bar=");
+        connection.assertBuffer("test ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test --bar");
+        connection.clearOutputBuffer();
+        connection.read(completeChar.getFirstValue());
 
-         connection.read(Config.getLineSeparator());
-         connection.clearOutputBuffer();
+        connection.assertBuffer(Config.getLineSeparator() + "--bar  --barbar  " + Config.getLineSeparator() + "test --bar");
+        connection.clearOutputBuffer();
+        connection.read("b");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("bar ");
 
-         connection.read("test2 \"");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("test2 \" as if ");
+        console.stop();
+    }
 
-         /* TODO: for now we do not support this
-         connection.read("\"");
-         connection.read(completeChar.getFirstValue());
-         connection.assertBuffer("test2 \" as if \"as off ");
+    @Test
+    public void testCommandTest7() throws IOException, CommandRegistryException, InterruptedException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(GitCommand.class)
+                .command(CommandTest7.class)
+                .command(CommandTest7a.class)
+                .create();
+
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("test --headers={allow-resource-service-restart=true; ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO _FOO ");
+        connection.read("} ");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO _FOO } --bar=");
+
+        connection.read(Config.getLineSeparator());
+        connection.clearOutputBuffer();
+
+        connection.read("test2 \"");
+        connection.read(completeChar.getFirstValue());
+        connection.assertBuffer("test2 \" as if ");
+
+        /*
+         * TODO: for now we do not support this
+         * connection.read("\"");
+         * connection.read(completeChar.getFirstValue());
+         * connection.assertBuffer("test2 \" as if \"as off ");
          */
 
-         console.stop();
-     }
+        console.stop();
+    }
 
     @Test
     public void testCommandTest8() throws IOException, CommandRegistryException, InterruptedException {
@@ -724,13 +713,12 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest8.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -759,13 +747,12 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest9.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -793,13 +780,12 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest10.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -820,13 +806,12 @@ public class AeshCommandCompletionTest {
                 .command(GitCommand.class)
                 .create();
 
-         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                         OptionActivator, CommandActivator> settings =
-                 SettingsBuilder.builder()
-                         .logging(true)
-                         .connection(connection)
-                         .commandRegistry(registry)
-                         .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -861,14 +846,13 @@ public class AeshCommandCompletionTest {
                 .command(GitCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .enableAlias(false)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .enableAlias(false)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -902,13 +886,12 @@ public class AeshCommandCompletionTest {
 
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            if(completerInvocation.getGivenCompleteValue() == null ||
+            if (completerInvocation.getGivenCompleteValue() == null ||
                     completerInvocation.getGivenCompleteValue().length() == 0) {
                 completerInvocation.addCompleterValue("one");
                 completerInvocation.addCompleterValue("two");
-            }
-            else
-                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"_BAR");
+            } else
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue() + "_BAR");
         }
     }
 
@@ -1059,8 +1042,8 @@ public class AeshCommandCompletionTest {
 
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            if(completerInvocation.getGivenCompleteValue().length() > 0)
-                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"OO");
+            if (completerInvocation.getGivenCompleteValue().length() > 0)
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue() + "OO");
             else
                 completerInvocation.addCompleterValue("BAR");
 
@@ -1070,8 +1053,8 @@ public class AeshCommandCompletionTest {
     public static class HeaderCompleter implements OptionCompleter {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            if(completerInvocation.getGivenCompleteValue().length() > 0)
-                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"_FOO");
+            if (completerInvocation.getGivenCompleteValue().length() > 0)
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue() + "_FOO");
             else
                 completerInvocation.addCompleterValue("BAR");
         }
@@ -1080,6 +1063,7 @@ public class AeshCommandCompletionTest {
     private static class TestCommandActivator implements CommandActivator {
 
         static boolean activated;
+
         @Override
         public boolean isActivated(ParsedCommand cmd) {
             return activated;
@@ -1144,8 +1128,8 @@ public class AeshCommandCompletionTest {
 
     public static class BarOptionRenderer implements OptionRenderer {
 
-         private TerminalColor color = new TerminalColor(Color.DEFAULT, Color.DEFAULT);
-         private TerminalTextStyle bold = new TerminalTextStyle(CharacterType.BOLD);
+        private TerminalColor color = new TerminalColor(Color.DEFAULT, Color.DEFAULT);
+        private TerminalTextStyle bold = new TerminalTextStyle(CharacterType.BOLD);
 
         @Override
         public TerminalColor getColor() {
@@ -1162,25 +1146,21 @@ public class AeshCommandCompletionTest {
 
         @Override
         public void complete(CompleterInvocation completerData) {
-            if(completerData.getGivenCompleteValue() == null || completerData.getGivenCompleteValue().length() == 0) {
-                if(((FooCommand) completerData.getCommand()).getName().equals("aslak")) {
+            if (completerData.getGivenCompleteValue() == null || completerData.getGivenCompleteValue().length() == 0) {
+                if (((FooCommand) completerData.getCommand()).getName().equals("aslak")) {
                     completerData.addCompleterValue("bar 2");
                     completerData.setAppendSpace(false);
                 }
-            }
-            else if(completerData.getGivenCompleteValue().equals("bar 2")) {
-                if(((FooCommand) completerData.getCommand()).getName().equals("aslak"))
+            } else if (completerData.getGivenCompleteValue().equals("bar 2")) {
+                if (((FooCommand) completerData.getCommand()).getName().equals("aslak"))
                     completerData.addCompleterValue("bar 2 3 4");
-            }
-            else if(completerData.getGivenCompleteValue().equals("bar 2 ")) {
+            } else if (completerData.getGivenCompleteValue().equals("bar 2 ")) {
                 completerData.addCompleterValue("bar 2 3 4");
-            }
-            else if(completerData.getGivenCompleteValue().equals("bar")) {
+            } else if (completerData.getGivenCompleteValue().equals("bar")) {
                 completerData.addCompleterValue("bar 2");
             }
         }
     }
-
 
     @CommandDefinition(name = "arquillian-container-configuration", description = "")
     public static class ArqCommand implements Command {
@@ -1210,13 +1190,13 @@ public class AeshCommandCompletionTest {
 
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            if(completerInvocation.getGivenCompleteValue() == null ||
-                       completerInvocation.getGivenCompleteValue().equals(""))
-            completerInvocation.addCompleterValue("managed");
+            if (completerInvocation.getGivenCompleteValue() == null ||
+                    completerInvocation.getGivenCompleteValue().equals(""))
+                completerInvocation.addCompleterValue("managed");
         }
     }
 
-    @GroupCommandDefinition(name = "super", description = "", groupCommands = {GitCommand.class})
+    @GroupCommandDefinition(name = "super", description = "", groupCommands = { GitCommand.class })
     public static class SuperGitCommand implements Command {
 
         @Option(hasValue = false)
@@ -1228,8 +1208,7 @@ public class AeshCommandCompletionTest {
         }
     }
 
-
-    @GroupCommandDefinition(name = "git", description = "", groupCommands = {GitCommit.class, GitRebase.class})
+    @GroupCommandDefinition(name = "git", description = "", groupCommands = { GitCommit.class, GitRebase.class })
     public static class GitCommand implements Command<CommandInvocation> {
 
         @Option(hasValue = false)
@@ -1281,7 +1260,7 @@ public class AeshCommandCompletionTest {
         }
     }
 
-    @GroupCommandDefinition(name = "group-arg", description = "", groupCommands = {Arg2Command.class})
+    @GroupCommandDefinition(name = "group-arg", description = "", groupCommands = { Arg2Command.class })
     public static class GroupArgCommand implements Command {
 
         @Override
@@ -1344,10 +1323,10 @@ public class AeshCommandCompletionTest {
     public static class ArgTestCompleter implements OptionCompleter {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            if(completerInvocation.getGivenCompleteValue().equals("{foo-bar "))
-                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"YEAH");
-            else if(!completerInvocation.getGivenCompleteValue().equals("ARG"))
-                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue()+"ARG");
+            if (completerInvocation.getGivenCompleteValue().equals("{foo-bar "))
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue() + "YEAH");
+            else if (!completerInvocation.getGivenCompleteValue().equals("ARG"))
+                completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue() + "ARG");
             else
                 completerInvocation.addCompleterValue("ARG");
         }
@@ -1372,12 +1351,11 @@ public class AeshCommandCompletionTest {
 
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            if(completerInvocation.getGivenCompleteValue().length() == 0)
+            if (completerInvocation.getGivenCompleteValue().length() == 0)
                 completerInvocation.addCompleterValue(" as if");
             else
                 completerInvocation.addCompleterValue(" as off");
         }
     }
-
 
 }

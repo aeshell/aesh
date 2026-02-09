@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -23,17 +23,17 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
-import org.aesh.command.impl.converter.FileConverter;
 
+import org.aesh.command.impl.converter.FileConverter;
 import org.aesh.io.Resource;
+import org.aesh.terminal.utils.Config;
 import org.aesh.terminal.utils.LoggerUtil;
 import org.aesh.terminal.utils.Parser;
-import org.aesh.terminal.utils.Config;
 
 /**
  * Helper class to list possible files during a complete operation.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class FileLister {
 

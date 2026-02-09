@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,36 +19,36 @@
  */
 package org.aesh.command.operator;
 
-import org.aesh.command.CommandException;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.option.Argument;
-import org.aesh.command.registry.CommandRegistryException;
-import org.aesh.command.settings.Settings;
-import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.CommandDefinition;
-import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
-import org.aesh.command.Command;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.CommandResult;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.io.Resource;
-import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
-import org.aesh.terminal.utils.Config;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import static org.junit.Assert.assertEquals;
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Argument;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.console.ReadlineConsole;
+import org.aesh.io.Resource;
+import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
+import org.junit.Test;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandPipelineTest {
 
@@ -64,14 +64,13 @@ public class AeshCommandPipelineTest {
                 .command(foo)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation,
-                        ValidatorInvocation, OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .connection(connection)
-                        .enableOperatorParser(true)
-                        .commandRegistry(registry)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .enableOperatorParser(true)
+                .commandRegistry(registry)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -82,10 +81,9 @@ public class AeshCommandPipelineTest {
 
         connection.read("pipe | bar" + Config.getLineSeparator());
         Thread.sleep(100);
-        connection.assertBufferEndsWith("hello aesh"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("hello aesh" + Config.getLineSeparator());
         console.stop();
     }
-
 
     @Test
     public void testEmptyBeforeOperator() throws InterruptedException, IOException, CommandRegistryException {
@@ -99,25 +97,24 @@ public class AeshCommandPipelineTest {
                 .command(foo)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .connection(connection)
-                        .enableOperatorParser(true)
-                        .commandRegistry(registry)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .enableOperatorParser(true)
+                .commandRegistry(registry)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("&&" + Config.getLineSeparator());
         Thread.sleep(100);
-        connection.assertBufferEndsWith("aesh: syntax error near unexpected token \'&&\'"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("aesh: syntax error near unexpected token \'&&\'" + Config.getLineSeparator());
         console.stop();
     }
 
-    @CommandDefinition(name ="pipe", description = "")
+    @CommandDefinition(name = "pipe", description = "")
     public static class PipeCommand implements Command {
 
         @Override
@@ -138,7 +135,8 @@ public class AeshCommandPipelineTest {
                 if (commandInvocation.getConfiguration().getPipedData().available() > 0) {
                     counter++;
                 }
-                BufferedReader reader = new BufferedReader(new InputStreamReader(commandInvocation.getConfiguration().getPipedData()));
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(commandInvocation.getConfiguration().getPipedData()));
 
                 assertEquals("hello", reader.readLine());
                 assertEquals("aesh", reader.readLine());
@@ -164,8 +162,7 @@ public class AeshCommandPipelineTest {
             try {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(arg.read()));
                 commandInvocation.println(reader.readLine() + " " + reader.readLine());
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 

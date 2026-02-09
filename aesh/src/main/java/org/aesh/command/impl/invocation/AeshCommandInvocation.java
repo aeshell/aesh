@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -24,26 +24,26 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
+import org.aesh.command.Executor;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.shell.ShellOutputDelegate;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocationConfiguration;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.command.Executor;
-import org.aesh.command.shell.Shell;
-import org.aesh.command.CommandException;
-import org.aesh.command.CommandNotFoundException;
-import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.console.Console;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.Prompt;
 import org.aesh.terminal.KeyAction;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public final class AeshCommandInvocation implements CommandInvocation {
 
@@ -55,17 +55,17 @@ public final class AeshCommandInvocation implements CommandInvocation {
     private final CommandContext commandContext;
 
     public AeshCommandInvocation(Console console, Shell shell,
-                                 CommandRuntime<AeshCommandInvocation> runtime,
-                                 CommandInvocationConfiguration config,
-                                 CommandContainer<AeshCommandInvocation> commandContainer) {
+            CommandRuntime<AeshCommandInvocation> runtime,
+            CommandInvocationConfiguration config,
+            CommandContainer<AeshCommandInvocation> commandContainer) {
         this(console, shell, runtime, config, commandContainer, null);
     }
 
     public AeshCommandInvocation(Console console, Shell shell,
-                                 CommandRuntime<AeshCommandInvocation> runtime,
-                                 CommandInvocationConfiguration config,
-                                 CommandContainer<AeshCommandInvocation> commandContainer,
-                                 CommandContext commandContext) {
+            CommandRuntime<AeshCommandInvocation> runtime,
+            CommandInvocationConfiguration config,
+            CommandContainer<AeshCommandInvocation> commandContainer,
+            CommandContext commandContext) {
         this.console = console;
         this.runtime = runtime;
         this.config = config;
@@ -117,7 +117,7 @@ public final class AeshCommandInvocation implements CommandInvocation {
 
     @Override
     public KeyAction input(long timeout, TimeUnit unit) throws InterruptedException {
-        return shell.read(timeout,unit);
+        return shell.read(timeout, unit);
     }
 
     @Override
@@ -136,7 +136,7 @@ public final class AeshCommandInvocation implements CommandInvocation {
             OptionValidatorException,
             CommandValidatorException,
             CommandException, InterruptedException, IOException {
-            runtime.executeCommand(input);
+        runtime.executeCommand(input);
     }
 
     @Override
@@ -146,7 +146,6 @@ public final class AeshCommandInvocation implements CommandInvocation {
             CommandValidatorException, IOException {
         return runtime.buildExecutor(line);
     }
-
 
     @Override
     public void print(String msg, boolean page) {

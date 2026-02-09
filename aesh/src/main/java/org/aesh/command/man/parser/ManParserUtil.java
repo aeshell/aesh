@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,13 +19,13 @@
  */
 package org.aesh.command.man.parser;
 
-import org.aesh.terminal.utils.ANSI;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.aesh.terminal.utils.ANSI;
+
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ManParserUtil {
 
@@ -34,35 +34,33 @@ public class ManParserUtil {
     public static String convertStringToAnsi(String line) {
         StringBuilder builder = new StringBuilder();
         Matcher matcher = boldRegex.matcher(line);
-        while(matcher.find()) {
-            if(matcher.group(1) != null) {
-                builder.append(line.substring(0,matcher.start(1)))
+        while (matcher.find()) {
+            if (matcher.group(1) != null) {
+                builder.append(line.substring(0, matcher.start(1)))
                         .append(ANSI.BOLD)
-                        .append(line.substring(matcher.start(1)+1,matcher.end(1)-1))
+                        .append(line.substring(matcher.start(1) + 1, matcher.end(1) - 1))
                         .append(ANSI.DEFAULT_TEXT);
-                        //.append(line.substring(matcher.end(1)));
+                //.append(line.substring(matcher.end(1)));
                 line = line.substring(matcher.end(1));
                 matcher = boldRegex.matcher(line);
-            }
-            else if(matcher.group(2) != null) {
-                builder.append(line.substring(0,matcher.start(2)))
+            } else if (matcher.group(2) != null) {
+                builder.append(line.substring(0, matcher.start(2)))
                         .append(ANSI.UNDERLINE)
-                        .append(line.substring(matcher.start(2)+1,matcher.end(2)-1))
+                        .append(line.substring(matcher.start(2) + 1, matcher.end(2) - 1))
                         .append(ANSI.DEFAULT_TEXT);
-                        //.append(line.substring(matcher.end(2)));
+                //.append(line.substring(matcher.end(2)));
                 line = line.substring(matcher.end(2));
                 matcher = boldRegex.matcher(line);
-            }
-            else if(matcher.group(3) != null) {
-                builder.append(line.substring(0,matcher.start(3)));
+            } else if (matcher.group(3) != null) {
+                builder.append(line.substring(0, matcher.start(3)));
                 line = line.substring(matcher.end(3));
                 matcher = boldRegex.matcher(line);
             }
         }
-        if(line.length() > 0)
+        if (line.length() > 0)
             builder.append(line);
 
-        if(builder.length() < 1)
+        if (builder.length() < 1)
             return line;
         else
             return builder.toString();

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source.
  * Copyright 2016, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
+ * as indicated by the @authors tag
  * distribution for a full listing of individual contributors.
  *
  * This is free software; you can redistribute it and/or modify it
@@ -25,15 +25,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.Command;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.parser.ParsedLine;
 
 /**
  *
  * A command that stores option values in a map.
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  *
  */
 public abstract class MapCommand<T extends CommandInvocation> implements Command<T> {

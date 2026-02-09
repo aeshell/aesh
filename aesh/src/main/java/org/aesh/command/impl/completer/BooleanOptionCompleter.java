@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,25 +20,22 @@
 
 package org.aesh.command.impl.completer;
 
-
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class BooleanOptionCompleter implements OptionCompleter<CompleterInvocation> {
     @Override
     public void complete(CompleterInvocation completerData) {
-        if(completerData.getGivenCompleteValue().length() == 0) {
+        if (completerData.getGivenCompleteValue().length() == 0) {
             completerData.addCompleterValue("true");
             completerData.addCompleterValue("false");
-        }
-        else if("true".startsWith( completerData.getGivenCompleteValue().toLowerCase())) {
+        } else if ("true".startsWith(completerData.getGivenCompleteValue().toLowerCase())) {
             completerData.addCompleterValue("true");
 
-        }
-        else if("false".startsWith( completerData.getGivenCompleteValue().toLowerCase())) {
+        } else if ("false".startsWith(completerData.getGivenCompleteValue().toLowerCase())) {
             completerData.addCompleterValue("false");
         }
     }

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,32 +19,32 @@
  */
 package org.aesh.command;
 
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
-import org.aesh.command.option.Arguments;
-import org.aesh.command.option.Option;
-import org.aesh.command.registry.CommandRegistryException;
-import org.aesh.command.result.ResultHandler;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.settings.Settings;
-import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
-import org.aesh.terminal.utils.Config;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Option;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
+import org.aesh.command.result.ResultHandler;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.console.ReadlineConsole;
+import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
+import org.junit.Test;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandResultHandlerTest {
 
@@ -52,30 +52,29 @@ public class AeshCommandResultHandlerTest {
     public void testResultHandler() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-       CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
                 .create();
 
-         Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                         OptionActivator, CommandActivator> settings =
-                 SettingsBuilder.builder()
-                         .commandRegistry(registry)
-                         .connection(connection)
-                         .logging(true)
-                         .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
-        connection.read("foo --foo 1 --name aesh"+ Config.getLineSeparator());
+        connection.read("foo --foo 1 --name aesh" + Config.getLineSeparator());
         //outputStream.flush();
         Thread.sleep(80);
 
-        connection.read("foo --foo 1"+ Config.getLineSeparator());
+        connection.read("foo --foo 1" + Config.getLineSeparator());
         //outputStream.flush();
         Thread.sleep(80);
 
-        connection.read("foo --fo 1 --name aesh"+ Config.getLineSeparator());
+        connection.read("foo --fo 1 --name aesh" + Config.getLineSeparator());
         //outputStream.flush();
         Thread.sleep(80);
 
@@ -84,7 +83,6 @@ public class AeshCommandResultHandlerTest {
         Thread.sleep(80);
 
     }
-
 
     @CommandDefinition(name = "foo", description = "", resultHandler = FooResultHandler.class)
     public static class FooCommand implements Command {

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,30 +19,29 @@
  */
 package org.aesh.command.man;
 
-import org.aesh.command.completer.OptionCompleter;
-import org.aesh.command.CommandException;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.settings.ManProvider;
-import org.aesh.command.man.parser.ManFileParser;
-import org.aesh.command.option.Arguments;
-import org.aesh.command.CommandDefinition;
-import org.aesh.command.CommandResult;
-import org.aesh.terminal.utils.ANSI;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.OptionCompleter;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.man.parser.ManFileParser;
+import org.aesh.command.option.Arguments;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.settings.ManProvider;
+import org.aesh.terminal.utils.ANSI;
 import org.aesh.terminal.utils.Config;
 
 /**
  * A Man implementation for Aesh. ref: http://en.wikipedia.org/wiki/Man_page
  *
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 @CommandDefinition(name = "man", description = "manuals")
 public class Man extends AeshFileDisplayer {
@@ -67,46 +66,44 @@ public class Man extends AeshFileDisplayer {
 
     @Override
     public FileParser getFileParser() {
-       return fileParser;
+        return fileParser;
     }
 
     @Override
     public void displayBottom() throws IOException {
-        if(getSearchStatus() == TerminalPage.Search.SEARCHING) {
+        if (getSearchStatus() == TerminalPage.Search.SEARCHING) {
             clearBottomLine();
-           writeToConsole("/"+getSearchWord());
-        }
-        else if(getSearchStatus() == TerminalPage.Search.NOT_FOUND) {
+            writeToConsole("/" + getSearchWord());
+        } else if (getSearchStatus() == TerminalPage.Search.NOT_FOUND) {
             clearBottomLine();
             writeToConsole(ANSI.INVERT_BACKGROUND + "Pattern not found (press RETURN)" + ANSI.DEFAULT_TEXT);
-        }
-        else if(getSearchStatus() == TerminalPage.Search.NO_SEARCH ||
+        } else if (getSearchStatus() == TerminalPage.Search.NO_SEARCH ||
                 getSearchStatus() == TerminalPage.Search.RESULT) {
             writeToConsole(ANSI.INVERT_BACKGROUND);
-            writeToConsole("Manual page "+ fileParser.getName()+" line "+getTopVisibleRow()+
-                    " (press h for help or q to quit)"+ ANSI.DEFAULT_TEXT);
+            writeToConsole("Manual page " + fileParser.getName() + " line " + getTopVisibleRow() +
+                    " (press h for help or q to quit)" + ANSI.DEFAULT_TEXT);
         }
     }
 
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-        if(manPages == null || manPages.size() == 0) {
-            commandInvocation.getShell().write("What manual page do you want?"+ Config.getLineSeparator());
+        if (manPages == null || manPages.size() == 0) {
+            commandInvocation.getShell().write("What manual page do you want?" + Config.getLineSeparator());
             return CommandResult.SUCCESS;
         }
 
-        if(manPages.size() <= 0) {
-            commandInvocation.getShell().write("No manual entry for "+manPages.get(0)+Config.getLineSeparator());
+        if (manPages.size() <= 0) {
+            commandInvocation.getShell().write("No manual entry for " + manPages.get(0) + Config.getLineSeparator());
             return CommandResult.SUCCESS;
         }
 
-        if(manProvider == null) {
+        if (manProvider == null) {
             commandInvocation.getShell().write("No manual provider defined");
             return CommandResult.SUCCESS;
         }
 
         InputStream inputStream = manProvider.getManualDocument(manPages.get(0));
-        if(inputStream != null) {
+        if (inputStream != null) {
             setCommandInvocation(commandInvocation);
             try {
                 fileParser.setInput(inputStream);
@@ -123,9 +120,9 @@ public class Man extends AeshFileDisplayer {
         @Override
         public void complete(CompleterInvocation completerData) {
             List<String> completeValues = new ArrayList<>();
-            if(registry != null) {
-                for(String command : registry.getAllCommandNames()) {
-                    if(command.startsWith(completerData.getGivenCompleteValue()))
+            if (registry != null) {
+                for (String command : registry.getAllCommandNames()) {
+                    if (command.startsWith(completerData.getGivenCompleteValue()))
                         completeValues.add(command);
                 }
                 completerData.setCompleterValues(completeValues);

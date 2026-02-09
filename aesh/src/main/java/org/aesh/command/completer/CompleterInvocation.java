@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,12 +19,12 @@
  */
 package org.aesh.command.completer;
 
-import org.aesh.console.AeshContext;
-import org.aesh.command.Command;
-import org.aesh.terminal.formatting.TerminalString;
-
 import java.util.Collection;
 import java.util.List;
+
+import org.aesh.command.Command;
+import org.aesh.console.AeshContext;
+import org.aesh.terminal.formatting.TerminalString;
 
 /**
  * A payload object to store completion values for an Option
@@ -33,10 +33,9 @@ import java.util.List;
  * If its only appending then set the offset to the length of completeValue
  * given in OptionCompleter.complete(String completeValue)
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface CompleterInvocation {
-
 
     String getGivenCompleteValue();
 

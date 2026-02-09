@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,33 +19,33 @@
  */
 package org.aesh.command.impl.internal;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.aesh.command.Command;
+import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.activator.NullCommandActivator;
+import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.impl.validator.NullCommandValidator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.populator.CommandPopulator;
-import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
-import org.aesh.command.Command;
 import org.aesh.util.ReflectionUtil;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import org.aesh.command.activator.CommandActivator;
 
 /**
  * Build a {@link ProcessedCommand} object using the Builder pattern.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
- * @author <a href="mailto:danielsoro@gmail.com">Daniel Cunha (soro)</a>
+ * @author Aesh team
+ * @author Aesh team
  */
 public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandInvocation> {
 
     private String name;
     private String description;
-    private CommandValidator<C,CI> validator;
+    private CommandValidator<C, CI> validator;
     private ResultHandler resultHandler;
     private ProcessedOption arguments;
     private ProcessedOption arg;
@@ -62,139 +62,139 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
         options = new ArrayList<>();
     }
 
-    public static <T extends Command<I>, I extends CommandInvocation> ProcessedCommandBuilder<T,I> builder() {
+    public static <T extends Command<I>, I extends CommandInvocation> ProcessedCommandBuilder<T, I> builder() {
         return new ProcessedCommandBuilder<>();
     }
 
-    public ProcessedCommandBuilder<C,CI> name(String name) {
+    public ProcessedCommandBuilder<C, CI> name(String name) {
         this.name = name;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> aliases(List<String> aliases) {
+    public ProcessedCommandBuilder<C, CI> aliases(List<String> aliases) {
         this.aliases = aliases == null ? Collections.emptyList()
                 : Collections.unmodifiableList(aliases);
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> description(String usage) {
+    public ProcessedCommandBuilder<C, CI> description(String usage) {
         this.description = usage;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> version(String version) {
+    public ProcessedCommandBuilder<C, CI> version(String version) {
         this.version = version;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> generateHelp(boolean help) {
+    public ProcessedCommandBuilder<C, CI> generateHelp(boolean help) {
         this.generateHelp = help;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> disableParsing(boolean disableParsing) {
+    public ProcessedCommandBuilder<C, CI> disableParsing(boolean disableParsing) {
         this.disableParsing = disableParsing;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> arguments(ProcessedOption arguments) {
+    public ProcessedCommandBuilder<C, CI> arguments(ProcessedOption arguments) {
         this.arguments = arguments;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> argument(ProcessedOption argument) {
+    public ProcessedCommandBuilder<C, CI> argument(ProcessedOption argument) {
         this.arg = argument;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> validator(CommandValidator<C,CI> validator) {
+    public ProcessedCommandBuilder<C, CI> validator(CommandValidator<C, CI> validator) {
         this.validator = validator;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> validator(Class<? extends CommandValidator<C,CI>> validator) {
+    public ProcessedCommandBuilder<C, CI> validator(Class<? extends CommandValidator<C, CI>> validator) {
         this.validator = initValidator(validator);
         return this;
     }
 
     @SuppressWarnings("unchecked")
-    private CommandValidator<C,CI> initValidator(Class<? extends CommandValidator<C,CI>> validator) {
-        if(validator != null && !validator.equals(NullCommandValidator.class))
+    private CommandValidator<C, CI> initValidator(Class<? extends CommandValidator<C, CI>> validator) {
+        if (validator != null && !validator.equals(NullCommandValidator.class))
             return ReflectionUtil.newInstance(validator);
         else
             return (CommandValidator<C, CI>) new NullCommandValidator();
     }
 
-    public ProcessedCommandBuilder<C,CI> resultHandler(Class<? extends ResultHandler> resultHandler) {
+    public ProcessedCommandBuilder<C, CI> resultHandler(Class<? extends ResultHandler> resultHandler) {
         this.resultHandler = initResultHandler(resultHandler);
         return this;
     }
 
     private ResultHandler initResultHandler(Class<? extends ResultHandler> resultHandler) {
-        if(resultHandler != null && !resultHandler.equals(NullResultHandler.class))
+        if (resultHandler != null && !resultHandler.equals(NullResultHandler.class))
             return ReflectionUtil.newInstance(resultHandler);
         else
             return new NullResultHandler();
     }
 
-    public ProcessedCommandBuilder<C,CI> resultHandler(ResultHandler resultHandler) {
+    public ProcessedCommandBuilder<C, CI> resultHandler(ResultHandler resultHandler) {
         this.resultHandler = resultHandler;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> populator(CommandPopulator<Object, CI> populator) {
+    public ProcessedCommandBuilder<C, CI> populator(CommandPopulator<Object, CI> populator) {
         this.populator = populator;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> activator(CommandActivator activator) {
+    public ProcessedCommandBuilder<C, CI> activator(CommandActivator activator) {
         this.activator = activator;
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> activator(Class<? extends CommandActivator> activator) {
+    public ProcessedCommandBuilder<C, CI> activator(Class<? extends CommandActivator> activator) {
         this.activator = initActivator(activator);
         return this;
     }
 
     private CommandActivator initActivator(Class<? extends CommandActivator> activator) {
-        if(activator != null && activator != NullCommandActivator.class)
+        if (activator != null && activator != NullCommandActivator.class)
             return ReflectionUtil.newInstance(activator);
         else
             return new NullCommandActivator();
     }
 
-    public ProcessedCommandBuilder<C,CI> command(C command) {
+    public ProcessedCommandBuilder<C, CI> command(C command) {
         this.command = command;
         return this;
     }
 
     @SuppressWarnings("unchecked")
-    public ProcessedCommandBuilder<C,CI> command(Class command) {
+    public ProcessedCommandBuilder<C, CI> command(Class command) {
         this.command = (C) ReflectionUtil.newInstance(command);
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> addOption(ProcessedOption option) {
+    public ProcessedCommandBuilder<C, CI> addOption(ProcessedOption option) {
         this.options.add(option);
         return this;
     }
 
-    public ProcessedCommandBuilder<C,CI> addOptions(List<ProcessedOption> options) {
-        if(options != null)
+    public ProcessedCommandBuilder<C, CI> addOptions(List<ProcessedOption> options) {
+        if (options != null)
             this.options.addAll(options);
         return this;
     }
 
     @SuppressWarnings("unchecked")
-    public ProcessedCommand<C,CI> create() throws CommandLineParserException {
-        if(name == null || name.length() < 1)
+    public ProcessedCommand<C, CI> create() throws CommandLineParserException {
+        if (name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
 
-        if(validator == null)
+        if (validator == null)
             validator = (CommandValidator<C, CI>) new NullCommandValidator();
 
-        if(resultHandler == null)
+        if (resultHandler == null)
             resultHandler = new NullResultHandler();
 
         return new ProcessedCommand<>(name, aliases, command, description, validator,

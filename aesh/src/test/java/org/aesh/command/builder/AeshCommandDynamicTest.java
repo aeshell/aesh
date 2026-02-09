@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,35 +19,35 @@
  */
 package org.aesh.command.builder;
 
+import static org.junit.Assert.assertEquals;
+
+import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
-import org.aesh.command.parser.OptionParserException;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.complete.AeshCompleteOperation;
-import org.aesh.command.Command;
-import org.aesh.command.CommandException;
-import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.CommandResult;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.DefaultAeshContext;
+import org.aesh.console.ReadlineConsole;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
-import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
 import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandDynamicTest {
 
@@ -59,13 +59,12 @@ public class AeshCommandDynamicTest {
                 .command(createGroupCommand().create())
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation,
-                        ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder.builder()
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
                 .connection(connection)
                 .commandRegistry(registry)
                 .logging(true)
                 .build();
-
 
         ReadlineConsole console = new ReadlineConsole(settings);
         AeshCompleteOperation co = new AeshCompleteOperation(new DefaultAeshContext(), "gr", 2);
@@ -74,11 +73,11 @@ public class AeshCommandDynamicTest {
                 .cursor(co.getCursor())
                 .parseBrackets(true)
                 .parse();
-         registry.completeCommandName(co, parsedLine);
+        registry.completeCommandName(co, parsedLine);
         assertEquals("group", co.getCompletionCandidates().get(0).toString());
         console.start();
 
-        connection.read("group child1 --foo BAR"+Config.getLineSeparator());
+        connection.read("group child1 --foo BAR" + Config.getLineSeparator());
 
         Thread.sleep(10);
 
@@ -86,12 +85,12 @@ public class AeshCommandDynamicTest {
     }
 
     private CommandBuilder<GroupCommand> createGroupCommand() throws OptionParserException {
-        return CommandBuilder.<GroupCommand>builder()
+        return CommandBuilder.<GroupCommand> builder()
                 .name("group")
                 .description("")
                 .addOption(ProcessedOptionBuilder.builder().name("bar").type(Boolean.class).build())
                 .addChild(
-                        CommandBuilder.<Child1Command>builder()
+                        CommandBuilder.<Child1Command> builder()
                                 .name("child1")
                                 .description("")
                                 .command(new Child1Command())
@@ -103,7 +102,6 @@ public class AeshCommandDynamicTest {
                                         .hasValue(true)))
                 .command(new GroupCommand());
     }
-
 
     public class GroupCommand implements Command<CommandInvocation> {
 

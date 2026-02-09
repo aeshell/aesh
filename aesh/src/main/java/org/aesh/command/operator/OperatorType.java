@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -24,7 +24,7 @@ import java.util.Set;
 /**
  * Operators. Only configuration operators can have an argument.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public enum OperatorType {
     PIPE("|", false, true),
@@ -70,9 +70,9 @@ public enum OperatorType {
     }
 
     public boolean matches(String text, int index) {
-        if(text.length() >= index+value.length()) {
-            for(int i=0; i < value.length(); i++)
-                if(text.charAt(index+i) != value.charAt(i))
+        if (text.length() >= index + value.length()) {
+            for (int i = 0; i < value.length(); i++)
+                if (text.charAt(index + i) != value.charAt(i))
                     return false;
 
             return true;
@@ -88,9 +88,9 @@ public enum OperatorType {
 
     public static OperatorType matches(Set<OperatorType> operators, String text, int index) {
         OperatorType found = OperatorType.NONE;
-        for(OperatorType operator : operators) {
-            if(operator.matches(text, index)) {
-                if(found.value().length() < operator.value().length())
+        for (OperatorType operator : operators) {
+            if (operator.matches(text, index)) {
+                if (found.value().length() < operator.value().length())
                     found = operator;
             }
         }

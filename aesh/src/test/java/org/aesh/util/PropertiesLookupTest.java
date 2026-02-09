@@ -1,14 +1,14 @@
 package org.aesh.util;
 
-import org.aesh.terminal.utils.Config;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.*;
+import org.aesh.terminal.utils.Config;
+import org.junit.Test;
 
 public class PropertiesLookupTest {
 
@@ -76,7 +76,7 @@ public class PropertiesLookupTest {
         assertEquals("bar", values.get(3));
 
         // this should hopefully work on posix, we assume all systems have $USER set
-        if(Config.isOSPOSIXCompatible()) {
+        if (Config.isOSPOSIXCompatible()) {
             values.clear();
             values.add("${USER}");
             values.add("${env:USER}");

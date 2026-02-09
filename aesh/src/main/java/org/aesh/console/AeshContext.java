@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,12 +19,12 @@
  */
 package org.aesh.console;
 
-import org.aesh.io.Resource;
-
 import java.util.Set;
 
+import org.aesh.io.Resource;
+
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface AeshContext {
 
@@ -38,6 +38,7 @@ public interface AeshContext {
 
     /**
      * Set the current working directory
+     *
      * @param cwd cwd
      */
     void setCurrentWorkingDirectory(Resource cwd);

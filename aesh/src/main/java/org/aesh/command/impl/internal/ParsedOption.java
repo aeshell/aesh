@@ -9,14 +9,14 @@ public class ParsedOption {
     }
 
     public String value() {
-        if(processedOption != null)
+        if (processedOption != null)
             return processedOption.getValue();
         else
             return null;
     }
 
     public String name() {
-        if(processedOption != null)
+        if (processedOption != null)
             return processedOption.name();
         else
             return null;

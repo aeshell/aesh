@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -24,28 +24,30 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 @SuppressWarnings("unchecked")
 public class ReflectionUtil {
 
     public static <T> T newInstance(final Class<T> clazz) {
-        if(clazz.isAnonymousClass() || clazz.isInterface() || clazz.isAnnotation()) {
+        if (clazz.isAnonymousClass() || clazz.isInterface() || clazz.isAnnotation()) {
             throw new RuntimeException("Can not build new instance of an " + clazz.getName());
         }
 
         T instance = null;
-        for(Constructor<?> constructor : clazz.getConstructors()) {
+        for (Constructor<?> constructor : clazz.getConstructors()) {
             instance = (T) instantiateWithConstructor(constructor);
-            if (isValidInstance(instance)) return instance;
+            if (isValidInstance(instance))
+                return instance;
         }
 
-        for(Constructor<?> constructor : clazz.getDeclaredConstructors()) {
+        for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
             instance = (T) instantiateWithConstructor(constructor);
-            if (isValidInstance(instance)) return instance;
+            if (isValidInstance(instance))
+                return instance;
         }
 
-        throw new RuntimeException("Could not instantiate class: "+clazz+", no access to constructors.");
+        throw new RuntimeException("Could not instantiate class: " + clazz + ", no access to constructors.");
     }
 
     private static <T> boolean isValidInstance(T instance) {
@@ -57,11 +59,11 @@ public class ReflectionUtil {
 
     private static <T> T instantiateWithConstructor(Constructor<T> constructor) {
         T instance = null;
-        if(constructor.getParameterTypes().length == 0) {
+        if (constructor.getParameterTypes().length == 0) {
             instance = newInstanceWithoutParameterTypes(constructor);
         }
 
-        if(constructor.getParameterTypes().length == 1) {
+        if (constructor.getParameterTypes().length == 1) {
             instance = newInstanceWithParameterTypes(constructor);
         }
 
@@ -79,8 +81,9 @@ public class ReflectionUtil {
     }
 
     private static <T> T newInstanceWithParameterTypes(Constructor<T> constructor) {
-        Constructor paramConstructor = getConstructorWithNoParams( constructor.getParameterTypes()[0]);
-        if (paramConstructor == null) return null;
+        Constructor paramConstructor = getConstructorWithNoParams(constructor.getParameterTypes()[0]);
+        if (paramConstructor == null)
+            return null;
         setAccessible(constructor);
         try {
             return constructor.newInstance(paramConstructor.newInstance());
@@ -91,19 +94,19 @@ public class ReflectionUtil {
     }
 
     private static <T> void setAccessible(Constructor<T> constructor) {
-        if(Modifier.isPrivate(constructor.getModifiers()) ||
-                Modifier.isProtected( constructor.getModifiers())) {
+        if (Modifier.isPrivate(constructor.getModifiers()) ||
+                Modifier.isProtected(constructor.getModifiers())) {
             constructor.setAccessible(true);
         }
     }
 
     private static Constructor getConstructorWithNoParams(Class clazz) {
-        for(Constructor constructor : clazz.getConstructors()) {
-            if(constructor.getParameterTypes().length == 0) {
+        for (Constructor constructor : clazz.getConstructors()) {
+            if (constructor.getParameterTypes().length == 0) {
                 setAccessible(constructor);
                 return constructor;
             }
         }
-       return null;
+        return null;
     }
 }

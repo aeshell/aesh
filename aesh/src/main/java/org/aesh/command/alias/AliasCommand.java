@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,8 @@
  */
 package org.aesh.command.alias;
 
+import java.util.List;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -30,20 +32,17 @@ import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.readline.alias.AliasManager;
 
-import java.util.List;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
-@CommandDefinition(name = "alias", aliases = {"unalias"}, description = "")
-public class AliasCommand implements Command<CommandInvocation>{
+@CommandDefinition(name = "alias", aliases = { "unalias" }, description = "")
+public class AliasCommand implements Command<CommandInvocation> {
 
-   @Option(shortName = 'p', hasValue = false, description = "display help information")
+    @Option(shortName = 'p', hasValue = false, description = "display help information")
     private boolean print;
 
     @Arguments(completer = AliasCompletor.class)
     private List<String> arguments;
-
 
     private final AliasManager manager;
 
@@ -57,14 +56,13 @@ public class AliasCommand implements Command<CommandInvocation>{
 
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-        if(print || arguments == null || arguments.size() == 0) {
+        if (print || arguments == null || arguments.size() == 0) {
             String out = manager.printAllAliases();
-            if(out != null && out.length() > 0)
+            if (out != null && out.length() > 0)
                 commandInvocation.println(out);
-        }
-        else if(arguments.size() == 1) {
+        } else if (arguments.size() == 1) {
             String out = manager.parseAlias("alias " + arguments.get(0));
-            if(out != null && out.length() > 0)
+            if (out != null && out.length() > 0)
                 commandInvocation.println(out);
         }
 
@@ -76,13 +74,14 @@ public class AliasCommand implements Command<CommandInvocation>{
         @Override
         public void complete(CompleterInvocation completerInvocation) {
 
-            if(completerInvocation.getCommand() instanceof AliasCommand) {
+            if (completerInvocation.getCommand() instanceof AliasCommand) {
                 AliasManager manager = ((AliasCommand) completerInvocation.getCommand()).manager();
-                if(completerInvocation.getGivenCompleteValue() == null ||
-                           completerInvocation.getGivenCompleteValue().length() == 0)
+                if (completerInvocation.getGivenCompleteValue() == null ||
+                        completerInvocation.getGivenCompleteValue().length() == 0)
                     completerInvocation.addAllCompleterValues(manager.findAllMatchingNames(""));
                 else
-                    completerInvocation.addAllCompleterValues(manager.findAllMatchingNames(completerInvocation.getGivenCompleteValue()));
+                    completerInvocation
+                            .addAllCompleterValues(manager.findAllMatchingNames(completerInvocation.getGivenCompleteValue()));
             }
         }
     }

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,11 @@
  */
 package org.aesh.util.completer;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -31,13 +36,8 @@ import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 @CommandDefinition(name = "completer", description = "Generates a complete file for a command for posix systems")
 public class CompleterCommand implements Command<CommandInvocation> {
@@ -50,29 +50,27 @@ public class CompleterCommand implements Command<CommandInvocation> {
 
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-        if(help) {
-           commandInvocation.println(commandInvocation.getHelpInfo("completer"));
-           return CommandResult.SUCCESS;
-        }
-        else {
-                Class<Command<CommandInvocation>> clazz = loadCommand(command);
-                if(clazz != null) {
-                    CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
-                    try {
-                        CommandContainer<CommandInvocation> container = builder.create(clazz);
+        if (help) {
+            commandInvocation.println(commandInvocation.getHelpInfo("completer"));
+            return CommandResult.SUCCESS;
+        } else {
+            Class<Command<CommandInvocation>> clazz = loadCommand(command);
+            if (clazz != null) {
+                CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+                try {
+                    CommandContainer<CommandInvocation> container = builder.create(clazz);
 
-                        FileCompleterGenerator completerGenerator = new FileCompleterGenerator();
+                    FileCompleterGenerator completerGenerator = new FileCompleterGenerator();
 
-                        Files.write(Paths.get(container.getParser().getProcessedCommand().name().toLowerCase()+"_complete.bash"),
-                                completerGenerator.generateCompleterFile(container.getParser()).getBytes(), StandardOpenOption.CREATE);
+                    Files.write(Paths.get(container.getParser().getProcessedCommand().name().toLowerCase() + "_complete.bash"),
+                            completerGenerator.generateCompleterFile(container.getParser()).getBytes(),
+                            StandardOpenOption.CREATE);
 
-                    }
-                    catch(CommandLineParserException | IOException e) {
-                        e.printStackTrace();
-                    }
+                } catch (CommandLineParserException | IOException e) {
+                    e.printStackTrace();
                 }
-                else
-                    commandInvocation.println("Could not load command: "+command);
+            } else
+                commandInvocation.println("Could not load command: " + command);
         }
 
         return CommandResult.SUCCESS;
@@ -82,8 +80,7 @@ public class CompleterCommand implements Command<CommandInvocation> {
     private Class<Command<CommandInvocation>> loadCommand(String commandName) {
         try {
             return (Class<Command<CommandInvocation>>) Class.forName(commandName);
-        }
-        catch(ClassNotFoundException | ClassCastException e) {
+        } catch (ClassNotFoundException | ClassCastException e) {
             e.printStackTrace();
         }
 

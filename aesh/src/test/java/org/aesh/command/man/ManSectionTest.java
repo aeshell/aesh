@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,18 +19,18 @@
  */
 package org.aesh.command.man;
 
-import org.aesh.terminal.utils.ANSI;
-import org.aesh.terminal.utils.Config;
-import org.aesh.command.man.parser.ManSection;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.aesh.command.man.parser.ManSection;
+import org.aesh.terminal.utils.ANSI;
+import org.aesh.terminal.utils.Config;
+import org.junit.Test;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ManSectionTest {
 
@@ -46,26 +46,26 @@ public class ManSectionTest {
         input.add("  Define or delete document attribute.");
 
         ManSection section = new ManSection().parseSection(input, 80);
-        assertEquals("OPTIONS",section.getName());
+        assertEquals("OPTIONS", section.getName());
 
-        assertEquals(ANSI.BOLD+"OPTIONS"+ ANSI.DEFAULT_TEXT+
-                Config.getLineSeparator()+
-                "  "+ ANSI.BOLD+
-                "-a, --attribute"+
-                ANSI.DEFAULT_TEXT+
-                "="+ ANSI.UNDERLINE+
-                "ATTRIBUTE"+
-                ANSI.DEFAULT_TEXT+ Config.getLineSeparator()+
-                "    Define or delete document attribute. "+ Config.getLineSeparator()+
-                " "+ Config.getLineSeparator()+
-                "  "+ ANSI.BOLD+
-                "-b, --backend"+
-                ANSI.DEFAULT_TEXT+
-                "="+ ANSI.UNDERLINE+
-                "BACKEND"+
-                ANSI.DEFAULT_TEXT+ Config.getLineSeparator()+
-                "    Define or delete document attribute. "+ Config.getLineSeparator()+
-                " "+ Config.getLineSeparator(),
+        assertEquals(ANSI.BOLD + "OPTIONS" + ANSI.DEFAULT_TEXT +
+                Config.getLineSeparator() +
+                "  " + ANSI.BOLD +
+                "-a, --attribute" +
+                ANSI.DEFAULT_TEXT +
+                "=" + ANSI.UNDERLINE +
+                "ATTRIBUTE" +
+                ANSI.DEFAULT_TEXT + Config.getLineSeparator() +
+                "    Define or delete document attribute. " + Config.getLineSeparator() +
+                " " + Config.getLineSeparator() +
+                "  " + ANSI.BOLD +
+                "-b, --backend" +
+                ANSI.DEFAULT_TEXT +
+                "=" + ANSI.UNDERLINE +
+                "BACKEND" +
+                ANSI.DEFAULT_TEXT + Config.getLineSeparator() +
+                "    Define or delete document attribute. " + Config.getLineSeparator() +
+                " " + Config.getLineSeparator(),
                 section.printToTerminal());
     }
 }

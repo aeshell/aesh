@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -24,12 +24,12 @@ import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.context.CommandContext;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface CommandInvocationBuilder<CI extends CommandInvocation> {
 
     CI build(CommandRuntime<CI> runtime,
-             CommandInvocationConfiguration configuration, CommandContainer<CI> commandContainer);
+            CommandInvocationConfiguration configuration, CommandContainer<CI> commandContainer);
 
     /**
      * Build a command invocation with a command context for sub-command mode.
@@ -41,9 +41,9 @@ public interface CommandInvocationBuilder<CI extends CommandInvocation> {
      * @return the command invocation
      */
     default CI build(CommandRuntime<CI> runtime,
-                     CommandInvocationConfiguration configuration,
-                     CommandContainer<CI> commandContainer,
-                     CommandContext commandContext) {
+            CommandInvocationConfiguration configuration,
+            CommandContainer<CI> commandContainer,
+            CommandContext commandContext) {
         // Default implementation ignores context for backward compatibility
         return build(runtime, configuration, commandContainer);
     }

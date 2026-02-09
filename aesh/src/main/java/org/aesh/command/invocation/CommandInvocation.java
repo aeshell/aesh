@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -24,14 +24,14 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.Executor;
 import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.command.shell.Shell;
-import org.aesh.command.CommandException;
-import org.aesh.command.CommandNotFoundException;
 import org.aesh.readline.Prompt;
 import org.aesh.terminal.KeyAction;
 
@@ -39,7 +39,7 @@ import org.aesh.terminal.KeyAction;
  * A CommandInvocation is the value object passed to a Command when it is executed.
  * It contain references to the current ControlOperator, registry, shell, ++
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface CommandInvocation {
 
@@ -79,6 +79,7 @@ public interface CommandInvocation {
      * @return The configuration.
      */
     CommandInvocationConfiguration getConfiguration();
+
     /**
      * A blocking call that will return user input from the terminal
      *
@@ -136,16 +137,18 @@ public interface CommandInvocation {
             CommandValidatorException,
             IOException;
 
-   /**
-    * Print a message on console
-    * @param msg
-    */
+    /**
+     * Print a message on console
+     *
+     * @param msg
+     */
     default void print(String msg) {
         print(msg, false);
     }
 
     /**
      * Print a new line with a message on console;
+     *
      * @param msg
      */
     default void println(String msg) {
@@ -153,14 +156,16 @@ public interface CommandInvocation {
     }
 
     /**
-    * Print a message on console
-    * @param msg
+     * Print a message on console
+     *
+     * @param msg
      * @param paging true to pause output for long content
-    */
+     */
     void print(String msg, boolean paging);
 
     /**
      * Print a new line with a message on console;
+     *
      * @param msg
      * @param paging true to pause output for long content
      */

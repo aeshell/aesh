@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -24,11 +24,11 @@ import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.parser.ParsedLine;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface CommandLineCompletionParser {
 
     void injectValuesAndComplete(AeshCompleteOperation completeOperation,
-                                 InvocationProviders invocationProviders,
-                                 ParsedLine line);
+            InvocationProviders invocationProviders,
+            ParsedLine line);
 }

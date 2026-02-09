@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,13 +19,13 @@
  */
 package org.aesh;
 
+import static org.junit.Assert.assertEquals;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class AeshRuntimeRunnerTest {
 
@@ -51,7 +51,6 @@ public class AeshRuntimeRunnerTest {
         assertEquals(100, bar1Cmd.getSomeVal());
 
     }
-
 
     @CommandDefinition(name = "bar1", description = "bar1")
     public static class Bar1Command implements Command {

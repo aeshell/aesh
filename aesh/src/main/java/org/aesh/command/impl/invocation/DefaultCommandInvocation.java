@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -28,24 +28,23 @@ import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
 import org.aesh.command.container.CommandContainer;
-import org.aesh.command.shell.Shell;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.readline.Prompt;
-import org.aesh.terminal.KeyAction;
 import org.aesh.terminal.Key;
-import org.aesh.terminal.utils.Parser;
+import org.aesh.terminal.KeyAction;
 import org.aesh.terminal.tty.Size;
 import org.aesh.terminal.utils.ANSI;
+import org.aesh.terminal.utils.Parser;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
-public class DefaultCommandInvocation implements CommandInvocation{
-
+public class DefaultCommandInvocation implements CommandInvocation {
 
     private final Shell shell;
 
@@ -55,14 +54,14 @@ public class DefaultCommandInvocation implements CommandInvocation{
 
     private final CommandContainer<DefaultCommandInvocation> commandContainer;
 
-    public DefaultCommandInvocation(CommandRuntime< DefaultCommandInvocation> processor,
-                                    CommandInvocationConfiguration config,
-                                    CommandContainer<DefaultCommandInvocation> commandContainer,
-                                    Shell shell) {
+    public DefaultCommandInvocation(CommandRuntime<DefaultCommandInvocation> processor,
+            CommandInvocationConfiguration config,
+            CommandContainer<DefaultCommandInvocation> commandContainer,
+            Shell shell) {
         this.processor = processor;
         this.config = config;
         this.commandContainer = commandContainer;
-        if(shell != null)
+        if (shell != null)
             this.shell = shell;
         else
             this.shell = new DefaultShell();
@@ -102,8 +101,7 @@ public class DefaultCommandInvocation implements CommandInvocation{
     public KeyAction input() {
         try {
             return getShell().read();
-        }
-        catch (InterruptedException ignored) {
+        } catch (InterruptedException ignored) {
         }
         return null;
     }
@@ -111,9 +109,8 @@ public class DefaultCommandInvocation implements CommandInvocation{
     @Override
     public KeyAction input(long timeout, TimeUnit unit) throws InterruptedException {
         try {
-            return getShell().read(timeout,unit);
-        }
-        catch (InterruptedException ignored) {
+            return getShell().read(timeout, unit);
+        } catch (InterruptedException ignored) {
         }
         return null;
     }
@@ -127,8 +124,7 @@ public class DefaultCommandInvocation implements CommandInvocation{
     public String inputLine(Prompt prompt) {
         try {
             return getShell().readLine(prompt);
-        }
-        catch (InterruptedException ignored) {
+        } catch (InterruptedException ignored) {
         }
         return null;
     }
@@ -183,7 +179,7 @@ public class DefaultCommandInvocation implements CommandInvocation{
         @Override
         public void write(int[] out) {
             Console console = System.console();
-            if(console != null) {
+            if (console != null) {
                 console.writer().write(Parser.fromCodePoints(out));
                 console.writer().flush();
             }
@@ -202,8 +198,8 @@ public class DefaultCommandInvocation implements CommandInvocation{
         @Override
         public String readLine(Prompt prompt) {
             Console console = System.console();
-            if(console != null) {
-                if(prompt != null) {
+            if (console != null) {
+                if (prompt != null) {
                     console.writer().print(Parser.fromCodePoints(prompt.getANSI()));
                     console.writer().flush();
                     if (prompt.isMasking()) {
@@ -228,14 +224,14 @@ public class DefaultCommandInvocation implements CommandInvocation{
         @Override
         public Key read(Prompt prompt) {
             Console console = System.console();
-            if(console != null) {
+            if (console != null) {
                 try {
-                    if(prompt != null) {
+                    if (prompt != null) {
                         console.writer().print(Parser.fromCodePoints(prompt.getANSI()));
                         console.writer().flush();
                     }
                     int input = console.reader().read();
-                    return Key.getKey(new int[]{input});
+                    return Key.getKey(new int[] { input });
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -261,7 +257,7 @@ public class DefaultCommandInvocation implements CommandInvocation{
         @Override
         public void clear() {
             Console console = System.console();
-            if(console != null) {
+            if (console != null) {
                 console.writer().write(Parser.fromCodePoints(ANSI.CLEAR_SCREEN));
             }
         }

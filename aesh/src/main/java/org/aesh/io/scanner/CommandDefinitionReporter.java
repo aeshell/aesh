@@ -1,12 +1,12 @@
 package org.aesh.io.scanner;
 
-import org.aesh.command.CommandDefinition;
-
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CommandDefinitionReporter implements AnnotationDetector.TypeReporter  {
+import org.aesh.command.CommandDefinition;
+
+public class CommandDefinitionReporter implements AnnotationDetector.TypeReporter {
 
     private List<String> commands;
 
@@ -21,7 +21,7 @@ public class CommandDefinitionReporter implements AnnotationDetector.TypeReporte
     @Override
     public void reportTypeAnnotation(Class<? extends Annotation> annotation, String className) {
         //only load commands that's outside of org.aesh
-        if(!className.startsWith("org.aesh"))
+        if (!className.startsWith("org.aesh"))
             commands.add(className);
     }
 
@@ -29,9 +29,8 @@ public class CommandDefinitionReporter implements AnnotationDetector.TypeReporte
     @SuppressWarnings("unchecked")
     public Class<? extends Annotation>[] annotations() {
         try {
-            return new Class[]{ Class.forName(CommandDefinition.class.getCanonicalName())};
-        }
-        catch (ClassNotFoundException e) {
+            return new Class[] { Class.forName(CommandDefinition.class.getCanonicalName()) };
+        } catch (ClassNotFoundException e) {
             return null;
         }
     }

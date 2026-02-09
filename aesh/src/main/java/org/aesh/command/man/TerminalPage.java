@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * TerminalPage parse files or input string and prepare it to be displayed in a term
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class TerminalPage {
 
@@ -34,12 +34,12 @@ public class TerminalPage {
     private FileParser fileParser;
 
     public TerminalPage(FileParser fileParser, int columns) throws IOException {
-       this.fileParser = fileParser;
+        this.fileParser = fileParser;
         lines = fileParser.loadPage(columns);
     }
 
     public String getLine(int num) {
-        if(num < lines.size())
+        if (num < lines.size())
             return lines.get(num);
         else
             return "";
@@ -47,8 +47,8 @@ public class TerminalPage {
 
     public List<Integer> findWord(String word) {
         List<Integer> wordLines = new ArrayList<Integer>();
-        for(int i=0; i < lines.size();i++) {
-            if(lines.get(i).contains(word))
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).contains(word))
                 wordLines.add(i);
         }
         return wordLines;

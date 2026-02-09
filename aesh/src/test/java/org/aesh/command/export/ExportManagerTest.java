@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,25 +19,25 @@
  */
 package org.aesh.command.export;
 
-import org.aesh.terminal.utils.Config;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.aesh.terminal.utils.Config;
+import org.junit.Test;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ExportManagerTest {
 
     @Test
     public void testAddVariable() throws IOException {
 
-        ExportManager exportManager =
-                new ExportManager(new File(Config.getTmpDir()+Config.getPathSeparator()+"aesh_variable_test"));
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
 
         exportManager.addVariable("export TEST=/foo/bar");
         assertEquals("/foo/bar", exportManager.getValue("TEST"));
@@ -69,8 +69,8 @@ public class ExportManagerTest {
     @Test
     public void testMultipleVariable() throws IOException {
 
-        ExportManager exportManager =
-                new ExportManager(new File(Config.getTmpDir()+Config.getPathSeparator()+"aesh_variable_test"));
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
 
         exportManager.addVariable("export FOO=/opt");
 
@@ -81,8 +81,8 @@ public class ExportManagerTest {
 
     @Test
     public void testVariableNotExist() {
-        ExportManager exportManager =
-            new ExportManager(new File(Config.getTmpDir()+Config.getPathSeparator()+"aesh_variable_test"));
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
         assertEquals("", exportManager.getValue("$FOO3"));
         assertEquals(null, exportManager.getValue("FOO3"));
 
@@ -91,8 +91,8 @@ public class ExportManagerTest {
     @Test
     public void testLoadSystemEnv() throws IOException {
 
-        ExportManager exportManager =
-                new ExportManager(new File(Config.getTmpDir()+Config.getPathSeparator()+"aesh_variable_test"), true);
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"), true);
 
         String result = exportManager.getValue("PATH");
         if (Config.isOSPOSIXCompatible()) {

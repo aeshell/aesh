@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,23 +19,22 @@
  */
 package org.aesh.console;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.aesh.command.shell.Shell;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.Readline;
 import org.aesh.readline.action.ActionDecoder;
-import org.aesh.terminal.Key;
+import org.aesh.terminal.Attributes;
 import org.aesh.terminal.Connection;
+import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.Capability;
 import org.aesh.terminal.tty.Size;
 import org.aesh.terminal.utils.Config;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import org.aesh.terminal.Attributes;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ShellImpl implements Shell {
 
@@ -87,7 +86,7 @@ public class ShellImpl implements Shell {
 
     @Override
     public void write(char out) {
-       connection.stdoutHandler().accept(new int[]{out});
+        connection.stdoutHandler().accept(new int[] { out });
     }
 
     @Override
@@ -99,7 +98,7 @@ public class ShellImpl implements Shell {
     public String readLine(Prompt prompt) throws InterruptedException {
         printCollectedOutput();
         pagingSupport.reset();
-        final String[] out = {null};
+        final String[] out = { null };
         CountDownLatch latch = new CountDownLatch(1);
         Readline readline = new Readline();
         readline.readline(connection, prompt, event -> {
@@ -109,8 +108,7 @@ public class ShellImpl implements Shell {
         try {
             // Wait until interrupted
             latch.await();
-        }
-        finally {
+        } finally {
             connection.setStdinHandler(null);
         }
         return out[0];
@@ -118,7 +116,7 @@ public class ShellImpl implements Shell {
 
     @Override
     public Key read(long timeout, TimeUnit unit) throws InterruptedException {
-        return doRead(timeout,unit);
+        return doRead(timeout, unit);
     }
 
     @Override
@@ -130,7 +128,7 @@ public class ShellImpl implements Shell {
         printCollectedOutput();
         pagingSupport.reset();
         ActionDecoder decoder = new ActionDecoder();
-        final Key[] key = {null};
+        final Key[] key = { null };
         CountDownLatch latch = new CountDownLatch(1);
         Attributes attributes = connection.enterRawMode();
         try {
@@ -143,8 +141,8 @@ public class ShellImpl implements Shell {
             });
             try {
                 // Wait until interrupted
-                if(unit == null)
-                latch.await();
+                if (unit == null)
+                    latch.await();
                 else
                     latch.await(timeout, unit);
             } finally {
@@ -155,7 +153,6 @@ public class ShellImpl implements Shell {
         }
         return key[0];
     }
-
 
     @Override
     public Key read(Prompt prompt) throws InterruptedException {

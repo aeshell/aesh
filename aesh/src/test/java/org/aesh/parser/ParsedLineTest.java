@@ -1,12 +1,12 @@
 package org.aesh.parser;
 
-import org.aesh.command.operator.OperatorType;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import org.aesh.command.operator.OperatorType;
+import org.junit.Test;
 
 /**
  * Created by Marek Marusic <mmarusic@redhat.com> on 2/19/18.

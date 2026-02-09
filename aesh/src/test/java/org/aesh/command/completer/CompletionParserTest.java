@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -18,6 +18,12 @@
  * limitations under the License.
  */
 package org.aesh.command.completer;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -41,14 +47,8 @@ import org.aesh.console.AeshContext;
 import org.aesh.console.DefaultAeshContext;
 import org.junit.Test;
 
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class CompletionParserTest {
 
@@ -56,7 +56,8 @@ public class CompletionParserTest {
 
     @Test
     public void testNewCompletionParser() throws Exception {
-        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest1<>()).getParser();
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest1<>())
+                .getParser();
 
         clp.parse("test -e foo1", CommandLineParser.Mode.COMPLETION);
         assertEquals("foo1", clp.getProcessedCommand().findOption("e").getValue());
@@ -74,7 +75,8 @@ public class CompletionParserTest {
 
     @Test
     public void testNewCompletionParserOptionInjection() throws Exception {
-        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest1<>()).getParser();
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest1<>())
+                .getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test --", 7);
 
@@ -178,14 +180,16 @@ public class CompletionParserTest {
 
     @Test
     public void testNewCompletionParserArgumentInjection() throws Exception {
-        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest2<>()).getParser();
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest2<>())
+                .getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 5);
 
         clp.complete(co, ip);
         assertEquals(4, co.getFormattedCompletionCandidates().size());
 
-        CommandLineParser<CommandInvocation> clp2 = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest1<>()).getParser();
+        CommandLineParser<CommandInvocation> clp2 = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest1<>())
+                .getParser();
 
         co = new AeshCompleteOperation(aeshContext, "test ", 5);
         clp2.complete(co, ip);
@@ -255,10 +259,10 @@ public class CompletionParserTest {
 
     }
 
-
     @Test
     public void testParseCompleteObject3() throws Exception {
-        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest3<>()).getParser();
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest3<>())
+                .getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test -v 1,2,3,", 100);
 
@@ -306,7 +310,8 @@ public class CompletionParserTest {
 
     @Test
     public void testParseCompleteObject4() throws Exception {
-        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest4<>()).getParser();
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest4<>())
+                .getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 100);
 
@@ -316,7 +321,8 @@ public class CompletionParserTest {
 
     @Test
     public void testParseCompleteObject6() throws Exception {
-        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest6<>()).getParser();
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest6<>())
+                .getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test foo bar", 100);
 
@@ -326,7 +332,8 @@ public class CompletionParserTest {
 
     @Test
     public void testArgumentNotRequired() throws Exception {
-        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest3<>()).getParser();
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest3<>())
+                .getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test ", 100);
 
@@ -336,7 +343,8 @@ public class CompletionParserTest {
 
     @Test
     public void testGroupCompletion() throws Exception {
-        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteGroupTest<>()).getParser();
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteGroupTest<>())
+                .getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "group child1 --en", 100);
 
@@ -370,11 +378,12 @@ public class CompletionParserTest {
         co = new AeshCompleteOperation(aeshContext, "group xx", 100);
         clp.complete(co, ip);
         assertEquals(0, co.getFormattedCompletionCandidates().size());
-     }
+    }
 
     @Test
     public void testSpaceQuoteCompletion() throws Exception {
-        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseSpaceTest<>()).getParser();
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseSpaceTest<>())
+                .getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
         AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test \"", 100);
 
@@ -418,8 +427,7 @@ public class CompletionParserTest {
         @Option(shortName = 'e', name = "equal", description = "enable equal", required = true, defaultValue = "false")
         private Boolean equal;
 
-        @Option(shortName = 'D', description = "define properties",
-                required = true)
+        @Option(shortName = 'D', description = "define properties", required = true)
         private String define;
     }
 
@@ -435,8 +443,7 @@ public class CompletionParserTest {
         @Option(shortName = 'b', hasValue = false)
         private boolean bool;
 
-        @Option(shortName = 'D', description = "define properties",
-                required = true)
+        @Option(shortName = 'D', description = "define properties", required = true)
         private String define;
 
         @Argument(completer = ArgTestCompleter.class)
@@ -466,8 +473,7 @@ public class CompletionParserTest {
         @Option(shortName = 'b', hasValue = false)
         private boolean bool;
 
-        @Option(shortName = 'D', description = "define properties",
-                required = true)
+        @Option(shortName = 'D', description = "define properties", required = true)
         private String define;
 
         @Argument(completer = ArgTestCompleter.class)
@@ -493,10 +499,8 @@ public class CompletionParserTest {
         }
     }
 
-
-
-    @GroupCommandDefinition(name = "group", description = "groups",
-            groupCommands = {ParseCompleteGroupChild1.class, ParseCompleteGroupChild2.class})
+    @GroupCommandDefinition(name = "group", description = "groups", groupCommands = { ParseCompleteGroupChild1.class,
+            ParseCompleteGroupChild2.class })
     public class ParseCompleteGroupTest<CI extends CommandInvocation> extends TestCommand<CI> {
 
     }
@@ -536,17 +540,13 @@ public class CompletionParserTest {
                     completerInvocation.getGivenCompleteValue().length() == 0) {
                 completerInvocation.addCompleterValue("one!");
                 completerInvocation.addCompleterValue("two!");
-            }
-            else if ("one!".startsWith(completerInvocation.getGivenCompleteValue())) {
+            } else if ("one!".startsWith(completerInvocation.getGivenCompleteValue())) {
                 completerInvocation.addCompleterValue("one!");
-            }
-            else if ("bar".startsWith(completerInvocation.getGivenCompleteValue())) {
+            } else if ("bar".startsWith(completerInvocation.getGivenCompleteValue())) {
                 completerInvocation.addCompleterValue("bar 2 3");
-            }
-            else if ("bar 2".startsWith(completerInvocation.getGivenCompleteValue())) {
+            } else if ("bar 2".startsWith(completerInvocation.getGivenCompleteValue())) {
                 completerInvocation.addCompleterValue("bar 2 3");
-            }
-            else if ("bar 2 ".startsWith(completerInvocation.getGivenCompleteValue())) {
+            } else if ("bar 2 ".startsWith(completerInvocation.getGivenCompleteValue())) {
                 completerInvocation.addCompleterValue("bar 2 3");
             }
         }
@@ -556,10 +556,10 @@ public class CompletionParserTest {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
             ParseCompleteTest3 test3 = (ParseCompleteTest3) completerInvocation.getCommand();
-            if(completerInvocation.getGivenCompleteValue() != null &&
+            if (completerInvocation.getGivenCompleteValue() != null &&
                     completerInvocation.getGivenCompleteValue().length() > 0)
                 completerInvocation.addCompleterValue(completerInvocation.getGivenCompleteValue());
-            else if(test3.values != null)
+            else if (test3.values != null)
                 completerInvocation.addCompleterValue(String.valueOf(test3.values.size() + 1));
             else
                 completerInvocation.addCompleterValue("1");
@@ -569,7 +569,7 @@ public class CompletionParserTest {
     public class ArgTestCompleter implements OptionCompleter<CompleterInvocation> {
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            if(completerInvocation.getGivenCompleteValue() != null &&
+            if (completerInvocation.getGivenCompleteValue() != null &&
                     completerInvocation.getGivenCompleteValue().length() > 0)
                 completerInvocation.addCompleterValue("BAR");
         }
@@ -589,18 +589,19 @@ public class CompletionParserTest {
 
         @Override
         public void complete(CompleterInvocation completerInvocation) {
-            if(completerInvocation.getGivenCompleteValue() == null ||
+            if (completerInvocation.getGivenCompleteValue() == null ||
                     completerInvocation.getGivenCompleteValue().length() == 0)
                 completerInvocation.addCompleterValue("foo bar");
 
-            else if("foo ".startsWith(completerInvocation.getGivenCompleteValue()))
+            else if ("foo ".startsWith(completerInvocation.getGivenCompleteValue()))
                 completerInvocation.addCompleterValue("foo bar");
         }
     }
 
     @Test
     public void testAcceptNameWithoutDashesCompletion() throws Exception {
-        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteBareTest<>()).getParser();
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteBareTest<>())
+                .getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
 
         // Test completion of partial bare long name
@@ -649,7 +650,8 @@ public class CompletionParserTest {
 
     @Test
     public void testNegatableOptionCompletion() throws Exception {
-        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteNegatableTest<>()).getParser();
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new ParseCompleteNegatableTest<>()).getParser();
         InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
 
         // Test that completion shows both --verbose and --no-verbose
@@ -679,4 +681,3 @@ public class CompletionParserTest {
         private boolean verbose;
     }
 }
-

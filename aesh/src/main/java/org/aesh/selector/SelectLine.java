@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2019 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -54,9 +54,9 @@ public class SelectLine {
     }
 
     public String print() {
-        String out = selected ? getFocus()+"[*] "+description : getFocus()+"[ ] "+description;
-        if(out.length() > maxLength)
-            return out.substring(0, maxLength-3)+"...";
+        String out = selected ? getFocus() + "[*] " + description : getFocus() + "[ ] " + description;
+        if (out.length() > maxLength)
+            return out.substring(0, maxLength - 3) + "...";
         else
             return out;
     }

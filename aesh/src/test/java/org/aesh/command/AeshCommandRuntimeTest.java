@@ -1,5 +1,9 @@
 package org.aesh.command;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
@@ -10,16 +14,13 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.junit.Test;
 
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
-
 public class AeshCommandRuntimeTest {
 
     private static StringBuilder builder = new StringBuilder();
 
     @Test
-    public void executeCommands() throws CommandRegistryException, CommandException, OptionValidatorException, IOException, InterruptedException, CommandLineParserException, CommandValidatorException, CommandNotFoundException {
+    public void executeCommands() throws CommandRegistryException, CommandException, OptionValidatorException, IOException,
+            InterruptedException, CommandLineParserException, CommandValidatorException, CommandNotFoundException {
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder().command(TestCommand.class).create();
         CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
 

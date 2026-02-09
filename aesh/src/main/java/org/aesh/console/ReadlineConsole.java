@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -18,6 +18,18 @@
  * limitations under the License.
  */
 package org.aesh.console;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
@@ -65,36 +77,21 @@ import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.readline.history.FileHistory;
 import org.aesh.readline.history.History;
 import org.aesh.readline.history.InMemoryHistory;
-import org.aesh.terminal.tty.TerminalConnection;
 import org.aesh.readline.util.FileAccessPermission;
-import org.aesh.terminal.utils.LoggerUtil;
 import org.aesh.terminal.Attributes;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.tty.Signal;
+import org.aesh.terminal.tty.TerminalConnection;
 import org.aesh.terminal.utils.Config;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.aesh.terminal.utils.LoggerUtil;
 
 /**
- * @author <a href=mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private AliasManager aliasManager;
-    private Settings<? extends CommandInvocation,
-        ? extends ConverterInvocation, ? extends CompleterInvocation,
-        ? extends ValidatorInvocation, ? extends OptionActivator,
-        ? extends CommandActivator> settings;
+    private Settings<? extends CommandInvocation, ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator, ? extends CommandActivator> settings;
     private Prompt prompt;
     private List<Completion> completions;
     private Connection connection;
@@ -115,60 +112,58 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     private ShellImpl shell;
     private CommandContext commandContext;
 
-   private final EnumMap<ReadlineFlag, Integer> readlineFlags = new EnumMap<>(ReadlineFlag.class);
+    private final EnumMap<ReadlineFlag, Integer> readlineFlags = new EnumMap<>(ReadlineFlag.class);
 
-    public ReadlineConsole(Settings<? extends CommandInvocation, ? extends ConverterInvocation,
-                                           ? extends CompleterInvocation, ? extends ValidatorInvocation,
-                                           ? extends OptionActivator, ? extends CommandActivator> givenSettings) {
-        if(givenSettings == null)
+    public ReadlineConsole(
+            Settings<? extends CommandInvocation, ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator, ? extends CommandActivator> givenSettings) {
+        if (givenSettings == null)
             settings = SettingsBuilder.builder().build();
         else
             settings = givenSettings;
 
-        if(settings.getScanForCommandPackages() == null || settings.getScanForCommandPackages().length == 0)
+        if (settings.getScanForCommandPackages() == null || settings.getScanForCommandPackages().length == 0)
             commandResolver = new AeshCommandResolver<>(settings.commandRegistry());
         else
             commandResolver = getCommandResolverThroughScan();
 
         addCompletion(new AeshCompletion());
-        if(settings.connection() != null)
+        if (settings.connection() != null)
             connection = settings.connection();
 
         //enabling export
-        if(this.settings.exportEnabled()) {
-            exportManager = new ExportManager(settings.exportFile(), settings.exportUsesSystemEnvironment(), settings.exportListener());
+        if (this.settings.exportEnabled()) {
+            exportManager = new ExportManager(settings.exportFile(), settings.exportUsesSystemEnvironment(),
+                    settings.exportListener());
             preProcessors.add(new ExportPreProcessor(exportManager));
             completions.add(new ExportCompletion(exportManager));
-            if(commandResolver.getRegistry() != null &&
+            if (commandResolver.getRegistry() != null &&
                     commandResolver.getRegistry() instanceof MutableCommandRegistry) {
                 try {
                     ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new ExportCommand(exportManager));
-                }
-                catch (CommandRegistryException e) {
+                } catch (CommandRegistryException e) {
                     e.printStackTrace();
                 }
             }
         }
-       if(this.settings.aliasEnabled()) {
-           try {
-               if(this.settings.aliasManager() != null)
-                   aliasManager = this.settings.aliasManager();
-               else
-                   aliasManager = new AeshAliasManager(settings.aliasFile(), settings.persistAlias(), commandResolver.getRegistry());
-               preProcessors.add(new AliasPreProcessor(aliasManager));
-               completions.add(new AliasCompletion(aliasManager, false));
-               if(commandResolver.getRegistry() != null &&
-                          commandResolver.getRegistry() instanceof MutableCommandRegistry) {
-                   try {
-                       ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new AliasCommand(aliasManager));
-                       ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new UnAliasCommand(aliasManager));
-                   }
-                   catch (CommandRegistryException e) {
-                       e.printStackTrace();
-                   }
-               }
-           }
-           catch(IOException e) {
+        if (this.settings.aliasEnabled()) {
+            try {
+                if (this.settings.aliasManager() != null)
+                    aliasManager = this.settings.aliasManager();
+                else
+                    aliasManager = new AeshAliasManager(settings.aliasFile(), settings.persistAlias(),
+                            commandResolver.getRegistry());
+                preProcessors.add(new AliasPreProcessor(aliasManager));
+                completions.add(new AliasCompletion(aliasManager, false));
+                if (commandResolver.getRegistry() != null &&
+                        commandResolver.getRegistry() instanceof MutableCommandRegistry) {
+                    try {
+                        ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new AliasCommand(aliasManager));
+                        ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new UnAliasCommand(aliasManager));
+                    } catch (CommandRegistryException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -182,19 +177,19 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     public void start() throws IOException {
-       init();
+        init();
 
-        if(connection == null)
+        if (connection == null)
             new TerminalConnection(Charset.defaultCharset(), settings.stdIn(), settings.stdOut(), this);
         else
             accept(connection);
-   }
+    }
 
     private void doStop(boolean closeConnection) {
         if (running) {
             running = false;
 
-            if(settings.connectionClosedHandler() != null) {
+            if (settings.connectionClosedHandler() != null) {
                 connection.setCloseHandler(c -> {
                     settings.connectionClosedHandler().accept(null);
                 });
@@ -206,7 +201,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             if (connection != null && closeConnection) {
                 connection.close();
             }
-            if(aliasManager != null && settings.persistAlias())
+            if (aliasManager != null && settings.persistAlias())
                 aliasManager.persist();
         }
     }
@@ -217,20 +212,19 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     @Override
-    public boolean running(){
+    public boolean running() {
         return running;
     }
 
-
     @Override
     public void accept(Connection connection) {
-        if(this.connection == null)
+        if (this.connection == null)
             this.connection = connection;
 
         connection.setCloseHandler((Void t) -> {
             doStop(false);
         });
-        if(!settings.isEchoCtrl()) {
+        if (!settings.isEchoCtrl()) {
             // Do not display ^C
             Attributes attr = connection.getAttributes();
             attr.setLocalFlag(Attributes.LocalFlag.ECHOCTL, false);
@@ -269,7 +263,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     private void init() {
         completionHandler = new AeshCompletionHandler(context);
         String originalPromptString = "";
-        if(prompt == null)
+        if (prompt == null)
             prompt = new Prompt("");
         else {
             // Convert prompt's int[] back to String for CommandContext
@@ -307,25 +301,24 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         // In case there is some collected ouput from previous command execution
         shell.printCollectedOutput();
 
-        if(running) {
+        if (running) {
             readline.readline(conn, prompt, line -> {
                 if (line != null && line.trim().length() > 0) {
                     shell.startCollectOutput();
                     processLine(line, conn);
-                }
-                else
+                } else
                     read(conn, readline);
             }, completions, preProcessors, history, null, readlineFlags);
         }
         // Just call readline and get a callback when line is startBlockingReader
         else {
-            if(settings.logging())
+            if (settings.logging())
                 LOGGER.info("not running, returning");
             conn.close();
             if (settings.quitHandler() != null)
                 settings.quitHandler().quit();
         }
-     }
+    }
 
     /**
      * Display current context information when the context command is invoked.
@@ -401,23 +394,19 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         try {
             Executor<? extends CommandInvocation> executor = runtime.buildExecutor(line);
             processManager.execute(executor, conn);
-        }
-        catch (CommandNotFoundException cnfe) {
-            if(settings.commandNotFoundHandler() != null) {
+        } catch (CommandNotFoundException cnfe) {
+            if (settings.commandNotFoundHandler() != null) {
                 //TODO: review CommandNotFoundHandler
                 settings.commandNotFoundHandler().handleCommandNotFound(line, new ShellImpl(conn));
-            }
-            else {
+            } else {
                 conn.write(cnfe.getMessage() + Config.getLineSeparator());
             }
             read(conn, readline);
-        }
-        catch (IllegalArgumentException | OptionValidatorException |
-                CommandValidatorException | CommandLineParserException e) {
-            conn.write(e.getMessage()+Config.getLineSeparator());
+        } catch (IllegalArgumentException | OptionValidatorException | CommandValidatorException
+                | CommandLineParserException e) {
+            conn.write(e.getMessage() + Config.getLineSeparator());
             read(conn, readline);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Got exception while starting new process", e);
             read(conn, readline);
         }
@@ -430,13 +419,13 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     @Override
     public void setPrompt(Prompt prompt) {
-        if(prompt != null)
+        if (prompt != null)
             this.prompt = prompt;
     }
 
     @Override
     public void setPrompt(String prompt) {
-        if(prompt != null)
+        if (prompt != null)
             this.prompt = new Prompt(prompt);
     }
 
@@ -457,13 +446,13 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     public void addCompletion(Completion completion) {
-        if(completions == null)
+        if (completions == null)
             completions = new ArrayList<>();
         completions.add(completion);
     }
 
     public void addCompletions(List<Completion> completions) {
-        if(this.completions == null)
+        if (this.completions == null)
             this.completions = new ArrayList<>();
         this.completions.addAll(completions);
     }
@@ -490,16 +479,14 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         AnnotationDetector detector = new AnnotationDetector(reporter);
         try {
             detector.detect(settings.getScanForCommandPackages());
-            for(String command : reporter.getCommands()) {
+            for (String command : reporter.getCommands()) {
                 //registry.addCommand(Class.forName(command));
                 final Class<Command> clazz = (Class<Command>) Class.forName(command);
                 registry.addCommand(clazz);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             LOGGER.log(Level.WARNING, "AnnotationDetector failed to scan for CommandDefinition annotations", e);
-        }
-        catch (ClassNotFoundException | CommandRegistryException e) {
+        } catch (ClassNotFoundException | CommandRegistryException e) {
             LOGGER.log(Level.WARNING, "Failed to load CommandDefinition class.", e);
         }
 

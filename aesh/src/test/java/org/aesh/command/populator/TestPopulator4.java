@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,16 +19,16 @@
  */
 package org.aesh.command.populator;
 
-import org.aesh.command.CommandDefinition;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.Command;
-import org.aesh.command.CommandResult;
-
 import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;

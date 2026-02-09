@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -22,14 +22,14 @@ package org.aesh.command.impl.invocation;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.context.CommandContext;
-import org.aesh.command.shell.Shell;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
+import org.aesh.command.shell.Shell;
 import org.aesh.console.Console;
 import org.aesh.console.ReadlineConsole;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<AeshCommandInvocation> {
 
@@ -43,8 +43,8 @@ public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<Ae
 
     @Override
     public AeshCommandInvocation build(CommandRuntime<AeshCommandInvocation> runtime,
-                                       CommandInvocationConfiguration config,
-                                       CommandContainer<AeshCommandInvocation> commandContainer) {
+            CommandInvocationConfiguration config,
+            CommandContainer<AeshCommandInvocation> commandContainer) {
         // Get CommandContext from ReadlineConsole if available
         CommandContext ctx = null;
         if (console instanceof ReadlineConsole) {
@@ -58,9 +58,9 @@ public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<Ae
 
     @Override
     public AeshCommandInvocation build(CommandRuntime<AeshCommandInvocation> runtime,
-                                       CommandInvocationConfiguration config,
-                                       CommandContainer<AeshCommandInvocation> commandContainer,
-                                       CommandContext commandContext) {
+            CommandInvocationConfiguration config,
+            CommandContainer<AeshCommandInvocation> commandContainer,
+            CommandContext commandContext) {
         return new AeshCommandInvocation(console, shell, runtime, config, commandContainer, commandContext);
     }
 

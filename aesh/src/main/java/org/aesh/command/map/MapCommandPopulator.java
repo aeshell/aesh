@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source.
  * Copyright 2016, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
+ * as indicated by the @authors tag
  * distribution for a full listing of individual contributors.
  *
  * This is free software; you can redistribute it and/or modify it
@@ -32,18 +32,18 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
-import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.selector.SelectorType;
 
 /**
  *
  * Populator for MapCommand.
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public class MapCommandPopulator<O extends Object, CI extends CommandInvocation> implements CommandPopulator<O, CI> {
 
@@ -80,7 +80,7 @@ public class MapCommandPopulator<O extends Object, CI extends CommandInvocation>
                 }
                 instance.setValue(processedCommand.getArguments().name(), tmpSet);
             } else if (processedCommand.getArguments().getDefaultValues().size() > 0 &&
-                     processedCommand.getArguments().selectorType() == SelectorType.NO_OP) {
+                    processedCommand.getArguments().selectorType() == SelectorType.NO_OP) {
                 List<Object> tmpSet = new ArrayList<>();
                 for (String in : processedCommand.getArguments().getDefaultValues()) {
                     tmpSet.add(processedCommand.getArguments().doConvert(in, invocationProviders,
@@ -97,11 +97,10 @@ public class MapCommandPopulator<O extends Object, CI extends CommandInvocation>
                 String val = processedCommand.getArgument().getValue();
                 if (val != null) {
                     instance.setValue(processedCommand.getArgument().name(),
-                            processedCommand.getArgument().
-                            doConvert(val, invocationProviders, instance, aeshContext,
+                            processedCommand.getArgument().doConvert(val, invocationProviders, instance, aeshContext,
                                     validate == CommandLineParser.Mode.VALIDATE));
                 } else if (processedCommand.getArgument().getDefaultValues().size() > 0 &&
-                         processedCommand.getArguments().selectorType() == SelectorType.NO_OP) {
+                        processedCommand.getArguments().selectorType() == SelectorType.NO_OP) {
                     instance.setValue(processedCommand.getArgument().name(),
                             processedCommand.getArgument().getDefaultValues().get(0));
                 } else {

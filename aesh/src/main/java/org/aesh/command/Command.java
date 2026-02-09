@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,11 +20,10 @@
 
 package org.aesh.command;
 
-
 import org.aesh.command.invocation.CommandInvocation;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 @FunctionalInterface
 public interface Command<T extends CommandInvocation> {
@@ -36,7 +35,7 @@ public interface Command<T extends CommandInvocation> {
      * @return success or failure depending on how the execution went.
      * @throws CommandException In case an exception occurs during execution
      * @throws InterruptedException In case the current thread is being
-     * interrupted.
+     *         interrupted.
      */
     CommandResult execute(T commandInvocation) throws CommandException, InterruptedException;
 }

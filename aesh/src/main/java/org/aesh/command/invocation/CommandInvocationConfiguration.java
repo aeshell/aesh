@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2017 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,6 +20,7 @@
 package org.aesh.command.invocation;
 
 import java.io.BufferedInputStream;
+
 import org.aesh.command.impl.operator.DataProvider;
 import org.aesh.command.impl.operator.InputDelegate;
 import org.aesh.command.impl.operator.OutputDelegate;
@@ -27,7 +28,7 @@ import org.aesh.console.AeshContext;
 
 /**
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public class CommandInvocationConfiguration {
 
@@ -48,7 +49,8 @@ public class CommandInvocationConfiguration {
         this(context, null, null, dataProvider);
     }
 
-    public CommandInvocationConfiguration(AeshContext context, OutputDelegate outputDelegate, InputDelegate inputDelegate, DataProvider dataProvider) {
+    public CommandInvocationConfiguration(AeshContext context, OutputDelegate outputDelegate, InputDelegate inputDelegate,
+            DataProvider dataProvider) {
         this.context = context;
         this.outputDelegate = outputDelegate;
         this.inputDelegate = inputDelegate;

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,11 @@
  */
 package org.aesh.command;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
@@ -32,13 +37,8 @@ import org.aesh.readline.editing.EditMode;
 import org.aesh.terminal.utils.Config;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ConfigTest {
 
@@ -53,8 +53,8 @@ public class ConfigTest {
         System.setProperty("aesh.disablecompletion", "true");
         System.setProperty("aesh.execute", "foo -f --bar");
 
-        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                               OptionActivator, CommandActivator> builder = SettingsBuilder.builder();
+        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> builder = SettingsBuilder
+                .builder();
         Settings settings = RuntimeSettings.readRuntimeProperties(builder.build());
 
         assertEquals(settings.mode(), EditMode.Mode.VI);
@@ -65,7 +65,7 @@ public class ConfigTest {
         assertFalse(settings.logging());
         assertTrue(settings.completionDisabled());
 
-        assertEquals(settings.executeAtStart(), "foo -f --bar"+ Config.getLineSeparator());
+        assertEquals(settings.executeAtStart(), "foo -f --bar" + Config.getLineSeparator());
 
         System.setProperty("aesh.terminal", "");
         System.setProperty("aesh.editmode", "");

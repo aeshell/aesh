@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,14 +20,14 @@
 
 package org.aesh.command.shell;
 
+import java.util.concurrent.TimeUnit;
+
 import org.aesh.readline.Prompt;
 import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.Size;
 
-import java.util.concurrent.TimeUnit;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface Shell {
 
@@ -46,14 +46,16 @@ public interface Shell {
     }
 
     /**
-    * Print a message on console
-    * @param msg
+     * Print a message on console
+     *
+     * @param msg
      * @param paging True means that output longer than terminal height should be paused.
-    */
+     */
     void write(String msg, boolean paging);
 
     /**
      * Print a new line with a message on console;
+     *
      * @param msg
      * @param paging True means that output longer than terminal height should be paused.
      */
@@ -71,6 +73,7 @@ public interface Shell {
 
     /**
      * Blocking call which will return when user press the "enter" key
+     *
      * @return input line
      */
     String readLine() throws InterruptedException;
@@ -95,12 +98,14 @@ public interface Shell {
 
     /**
      * Blocking call that will return after the first key press
+     *
      * @return input
      */
     Key read() throws InterruptedException;
 
     /**
      * Blocking call that will return after the first key press
+     *
      * @return input or null if it times out
      * @throws InterruptedException when interrupted
      */
@@ -108,6 +113,7 @@ public interface Shell {
 
     /**
      * Blocking call that will return after the first key press
+     *
      * @return input
      */
     Key read(Prompt prompt) throws InterruptedException;

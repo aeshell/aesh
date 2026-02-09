@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,23 +19,23 @@
  */
 package org.aesh.command.container;
 
-import org.aesh.command.Command;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.console.AeshContext;
-import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.CommandException;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.validator.CommandValidatorException;
-import org.aesh.command.CommandResult;
-import org.aesh.parser.ParsedLine;
-
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.console.AeshContext;
+import org.aesh.parser.ParsedLine;
+
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public abstract class DefaultCommandContainer<CI extends CommandInvocation> implements CommandContainer<CI> {
 
@@ -62,17 +62,17 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
 
     @Override
     public ProcessedCommand<Command<CI>, CI> parseAndPopulate(InvocationProviders invocationProviders,
-                                                              AeshContext aeshContext)
+            AeshContext aeshContext)
             throws CommandLineParserException, OptionValidatorException {
         return parseAndPopulate(invocationProviders, aeshContext, null);
     }
 
     @Override
     public ProcessedCommand<Command<CI>, CI> parseAndPopulate(InvocationProviders invocationProviders,
-                                                              AeshContext aeshContext,
-                                                              org.aesh.command.impl.context.CommandContext commandContext)
+            AeshContext aeshContext,
+            org.aesh.command.impl.context.CommandContext commandContext)
             throws CommandLineParserException, OptionValidatorException {
-        if(lines.isEmpty())
+        if (lines.isEmpty())
             return null;
         ParsedLine aeshLine = lines.poll();
         getParser().parse(aeshLine.iterator(), CommandLineParser.Mode.STRICT);
@@ -96,9 +96,10 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
 
     @Override
     public CommandContainerResult executeCommand(ParsedLine line, InvocationProviders invocationProviders,
-                                                 AeshContext aeshContext,
-                                                 CI commandInvocation)
-            throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException {
+            AeshContext aeshContext,
+            CI commandInvocation)
+            throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException,
+            InterruptedException {
 
         getParser().parse(line.iterator(), CommandLineParser.Mode.STRICT);
         return executeCommand(invocationProviders, aeshContext, commandInvocation);
@@ -107,10 +108,13 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
     private CommandContainerResult executeCommand(InvocationProviders invocationProviders,
             AeshContext aeshContext,
             CI commandInvocation)
-            throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException, InterruptedException {
+            throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException,
+            InterruptedException {
 
-        getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
-        if (getParser().parsedCommand().getProcessedCommand().validator() != null  && !getParser().parsedCommand().getProcessedCommand().hasOptionWithOverrideRequired()) {
+        getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(),
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        if (getParser().parsedCommand().getProcessedCommand().validator() != null
+                && !getParser().parsedCommand().getProcessedCommand().hasOptionWithOverrideRequired()) {
             getParser().parsedCommand().getProcessedCommand().validator().validate(getParser().parsedCommand().getCommand());
         }
 
@@ -121,25 +125,23 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
 
     @Override
     public String printHelp(String childCommandName) {
-       if(getParser().isGroupCommand() && childCommandName.contains(" ")) {
-           String[] names = childCommandName.split(" ");
-           if(names.length > 1 && names[1].length() > 0) {
-               CommandLineParser current = getParser();
-               for(int i = 1; i < names.length; i++) {
-                   CommandLineParser child = current.getChildParser(names[i]);
-                   if(child != null) {
-                       if(child.isGroupCommand()) {
-                           current = child;
-                       }
-                       else
-                           return child.printHelp();
-                   }
+        if (getParser().isGroupCommand() && childCommandName.contains(" ")) {
+            String[] names = childCommandName.split(" ");
+            if (names.length > 1 && names[1].length() > 0) {
+                CommandLineParser current = getParser();
+                for (int i = 1; i < names.length; i++) {
+                    CommandLineParser child = current.getChildParser(names[i]);
+                    if (child != null) {
+                        if (child.isGroupCommand()) {
+                            current = child;
+                        } else
+                            return child.printHelp();
+                    }
 
-               }
-          }
-           return "Child command "+names[1]+" not found.";
-       }
-       else
-           return getParser().printHelp();
+                }
+            }
+            return "Child command " + names[1] + " not found.";
+        } else
+            return getParser().printHelp();
     }
 }

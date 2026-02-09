@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,23 +19,23 @@
  */
 package org.aesh.command.builder;
 
+import static org.junit.Assert.assertEquals;
+
+import org.aesh.command.Command;
+import org.aesh.command.impl.internal.OptionType;
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
-import org.aesh.command.impl.validator.NullCommandValidator;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.impl.result.NullResultHandler;
-import org.aesh.command.Command;
+import org.aesh.command.impl.validator.NullCommandValidator;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class BuilderTest {
 
@@ -59,7 +59,8 @@ public class BuilderTest {
     @Test
     public void testBuilder2() throws CommandLineParserException {
 
-        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder().name("less").description("less is more");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("less").description("less is more");
         pb.addOption(
                 ProcessedOptionBuilder.builder().description("version").shortName('V').name("version")
                         .hasValue(false).required(true).type(String.class).build());
@@ -95,7 +96,8 @@ public class BuilderTest {
 
     @Test
     public void testBuilder3() throws CommandLineParserException {
-        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder().name("less").description("less is more");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("less").description("less is more");
         pb.addOption(
                 ProcessedOptionBuilder.builder()
                         .description("version")
@@ -130,13 +132,12 @@ public class BuilderTest {
 
     @Test
     public void testParameterInt() throws CommandLineParserException {
-        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processedCommand =
-                ProcessedCommandBuilder.builder()
-                        .name("foo")
-                        .description("")
-                        .validator(NullCommandValidator.class)
-                        .resultHandler(NullResultHandler.class)
-                        .create();
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processedCommand = ProcessedCommandBuilder.builder()
+                .name("foo")
+                .description("")
+                .validator(NullCommandValidator.class)
+                .resultHandler(NullResultHandler.class)
+                .create();
         processedCommand.addOption(ProcessedOptionBuilder.builder().name("foo1").shortName('f').type(String.class).build());
         processedCommand.addOption(ProcessedOptionBuilder.builder().name("foo2").shortName('o').type(String.class).build());
         processedCommand.addOption(ProcessedOptionBuilder.builder().name("foo3").shortName('3').type(String.class).build());

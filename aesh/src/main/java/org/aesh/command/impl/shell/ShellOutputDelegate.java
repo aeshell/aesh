@@ -1,17 +1,17 @@
 package org.aesh.command.impl.shell;
 
+import java.util.concurrent.TimeUnit;
+
 import org.aesh.command.impl.operator.OutputDelegate;
 import org.aesh.command.shell.Shell;
 import org.aesh.readline.Prompt;
 import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.Size;
-import org.aesh.terminal.utils.Parser;
 import org.aesh.terminal.utils.Config;
-
-import java.util.concurrent.TimeUnit;
+import org.aesh.terminal.utils.Parser;
 
 /**
- * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
+ * @author Aesh team
  */
 public class ShellOutputDelegate implements Shell {
 
@@ -34,7 +34,7 @@ public class ShellOutputDelegate implements Shell {
 
     @Override
     public void writeln(String out, boolean paging) {
-        doWrite(out+ Config.getLineSeparator());
+        doWrite(out + Config.getLineSeparator());
     }
 
     @Override
@@ -64,7 +64,7 @@ public class ShellOutputDelegate implements Shell {
 
     @Override
     public Key read(long timeout, TimeUnit unit) throws InterruptedException {
-        return delegate.read(timeout,unit);
+        return delegate.read(timeout, unit);
     }
 
     @Override

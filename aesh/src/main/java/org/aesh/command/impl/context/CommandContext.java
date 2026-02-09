@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,12 +19,6 @@
  */
 package org.aesh.command.impl.context;
 
-import org.aesh.command.Command;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.settings.SubCommandModeSettings;
-
 import java.lang.reflect.Field;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -34,12 +28,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.aesh.command.Command;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.settings.SubCommandModeSettings;
+
 /**
  * Tracks the current command context state for sub-command mode.
  * Maintains a stack of context frames, each representing a group command
  * that has been entered. Provides access to parent command values.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class CommandContext {
     private final Deque<ContextFrame> contextStack;
@@ -238,7 +238,8 @@ public class CommandContext {
             return null;
         }
         hint = hint.replace("{exit}", settings.getExitCommand() != null ? settings.getExitCommand() : "exit");
-        hint = hint.replace("{alt}", settings.getAlternativeExitCommand() != null ? settings.getAlternativeExitCommand() : "..");
+        hint = hint.replace("{alt}",
+                settings.getAlternativeExitCommand() != null ? settings.getAlternativeExitCommand() : "..");
         return hint;
     }
 
@@ -420,7 +421,7 @@ public class CommandContext {
                 // Skip internal keys
                 if (!entry.getKey().startsWith("_")) {
                     sb.append("  ").append(entry.getKey()).append(": ")
-                      .append(entry.getValue()).append("\n");
+                            .append(entry.getValue()).append("\n");
                 }
             }
         }
@@ -596,7 +597,7 @@ public class CommandContext {
                 return ((List<?>) args).get(0).toString();
             }
             // Look for common option names that typically identify the context
-            String[] commonNames = {"name", "projectName", "moduleName", "id", "target"};
+            String[] commonNames = { "name", "projectName", "moduleName", "id", "target" };
             for (String name : commonNames) {
                 Object value = cachedValues.get(name);
                 if (value != null) {

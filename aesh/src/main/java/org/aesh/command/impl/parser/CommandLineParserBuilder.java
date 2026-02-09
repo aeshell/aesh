@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -24,20 +24,20 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.invocation.CommandInvocation;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
-public class CommandLineParserBuilder<C extends Command<CI>,CI extends CommandInvocation> {
+public class CommandLineParserBuilder<C extends Command<CI>, CI extends CommandInvocation> {
 
     private ProcessedCommand<C, CI> param;
 
     private CommandLineParserBuilder() {
     }
 
-    public static <T extends Command<I>, I extends CommandInvocation> CommandLineParserBuilder<T,I> builder() {
+    public static <T extends Command<I>, I extends CommandInvocation> CommandLineParserBuilder<T, I> builder() {
         return new CommandLineParserBuilder<>();
     }
 
-    public CommandLineParserBuilder<C,CI> processedCommand(ProcessedCommand<C, CI> param) {
+    public CommandLineParserBuilder<C, CI> processedCommand(ProcessedCommand<C, CI> param) {
         this.param = param;
         return this;
     }

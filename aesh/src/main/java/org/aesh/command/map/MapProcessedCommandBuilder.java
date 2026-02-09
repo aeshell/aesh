@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2016 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -21,30 +21,30 @@ package org.aesh.command.map;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.impl.result.NullResultHandler;
+import org.aesh.command.impl.validator.NullCommandValidator;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
-import org.aesh.command.impl.validator.NullCommandValidator;
 import org.aesh.util.ReflectionUtil;
-import org.aesh.command.parser.CommandLineParserException;
-import java.util.List;
 
 public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
 
     private MapProcessedOptionProvider provider;
     private String name;
     private String description;
-    private CommandValidator<MapCommand<CI>,CI> validator;
+    private CommandValidator<MapCommand<CI>, CI> validator;
     private ResultHandler resultHandler;
     private ProcessedOption arguments;
     private ProcessedOption argument;
     private final List<ProcessedOption> options;
-    private CommandPopulator<Object,CI> populator;
+    private CommandPopulator<Object, CI> populator;
     private MapCommand<CI> command;
     private List<String> aliases;
     private CommandActivator activator;
@@ -72,7 +72,7 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
     }
 
     public MapProcessedCommandBuilder<CI> name(List<String> aliases) {
-        this.aliases = aliases == null ? Collections.<String>emptyList()
+        this.aliases = aliases == null ? Collections.<String> emptyList()
                 : Collections.unmodifiableList(aliases);
         return this;
     }
@@ -112,7 +112,7 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
         return this;
     }
 
-    public MapProcessedCommandBuilder<CI> validator(CommandValidator<MapCommand<CI>,CI> validator) {
+    public MapProcessedCommandBuilder<CI> validator(CommandValidator<MapCommand<CI>, CI> validator) {
         this.validator = validator;
         return this;
     }
@@ -155,7 +155,7 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
      * @param populator
      * @return
      */
-    public MapProcessedCommandBuilder<CI> populator(CommandPopulator<Object,CI> populator) {
+    public MapProcessedCommandBuilder<CI> populator(CommandPopulator<Object, CI> populator) {
         this.populator = populator;
         return this;
     }

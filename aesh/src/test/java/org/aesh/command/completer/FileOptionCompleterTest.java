@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,6 +20,10 @@
 
 package org.aesh.command.completer;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,19 +32,15 @@ import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.console.AeshContext;
 import org.aesh.console.DefaultAeshContext;
+import org.aesh.io.FileResource;
 import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.terminal.utils.Config;
-import org.aesh.io.FileResource;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * TestCase for {@link FileOptionCompleter}
  *
- * @author <a href="ggastald@redhat.com">George Gastaldi</a>
+ * @author Aesh team
  */
 public class FileOptionCompleterTest {
 

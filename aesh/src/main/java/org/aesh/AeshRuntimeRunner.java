@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -35,14 +35,13 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.ShellImpl;
-import org.aesh.terminal.tty.TerminalConnection;
 import org.aesh.terminal.Connection;
+import org.aesh.terminal.tty.TerminalConnection;
 
 /**
- * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
+ * @author Aesh team
  */
 public class AeshRuntimeRunner {
-
 
     private CommandRuntime runtime;
 
@@ -61,7 +60,7 @@ public class AeshRuntimeRunner {
     public AeshRuntimeRunner command(Class<? extends Command> command) {
         try {
             registryBuilder.command(command);
-        } catch (CommandRegistryException  e) {
+        } catch (CommandRegistryException e) {
             throw new RuntimeException("Exception while building command: " + e.getMessage());
         }
         return this;
@@ -70,7 +69,7 @@ public class AeshRuntimeRunner {
     public AeshRuntimeRunner command(Command commandInstance) {
         try {
             registryBuilder.command(commandInstance);
-        } catch (CommandRegistryException  e) {
+        } catch (CommandRegistryException e) {
             throw new RuntimeException("Exception while building command: " + e.getMessage());
         }
         return this;
@@ -100,16 +99,15 @@ public class AeshRuntimeRunner {
             throw new RuntimeException("Command needs to be added");
         try {
 
-
             if (runtime == null) {
-                   AeshCommandRuntimeBuilder runtimeBuilder = AeshCommandRuntimeBuilder.builder();
-                   if(interactive) {
-                       connection = new TerminalConnection();
-                       connection.openNonBlocking();
-                       runtimeBuilder.shell(new ShellImpl(connection));
-                   }
+                AeshCommandRuntimeBuilder runtimeBuilder = AeshCommandRuntimeBuilder.builder();
+                if (interactive) {
+                    connection = new TerminalConnection();
+                    connection.openNonBlocking();
+                    runtimeBuilder.shell(new ShellImpl(connection));
+                }
 
-                   runtime = runtimeBuilder.commandRegistry(commandRegistry).build();
+                runtime = runtimeBuilder.commandRegistry(commandRegistry).build();
 
             }
 
@@ -146,7 +144,7 @@ public class AeshRuntimeRunner {
             } catch (InterruptedException | IOException e) {
                 System.err.println(e.getMessage());
             }
-            if(connection != null)
+            if (connection != null)
                 connection.close();
 
             return result;

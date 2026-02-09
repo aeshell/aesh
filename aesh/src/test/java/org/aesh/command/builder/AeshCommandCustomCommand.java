@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,47 +19,47 @@
  */
 package org.aesh.command.builder;
 
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
-import org.aesh.command.impl.internal.ProcessedCommandBuilder;
-import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.impl.internal.ProcessedOptionBuilder;
-import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.populator.CommandPopulator;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.settings.Settings;
-import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.parser.CommandLineParserBuilder;
-import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.console.AeshContext;
-import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.Command;
-import org.aesh.command.CommandResult;
-import org.aesh.command.impl.container.AeshCommandContainer;
-import org.aesh.command.container.CommandContainer;
-import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
-import org.aesh.terminal.utils.Config;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aesh.command.CommandException;
 
-import static org.junit.Assert.assertEquals;
+import org.aesh.command.Command;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.impl.container.AeshCommandContainer;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.parser.CommandLineParserBuilder;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.populator.CommandPopulator;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.console.AeshContext;
+import org.aesh.console.ReadlineConsole;
+import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
+import org.junit.Test;
 
 /**
  *
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandCustomCommand {
 
@@ -69,16 +69,15 @@ public class AeshCommandCustomCommand {
         TestConnection connection = new TestConnection();
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
-                                                              .command(createBuilder())
-                                                              .create();
+                .command(createBuilder())
+                .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .connection(connection)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -95,27 +94,25 @@ public class AeshCommandCustomCommand {
 
         CustomPopulator populator = new CustomPopulator();
 
-        ProcessedCommand<CustomCommand, CommandInvocation> processedCommand =
-                ProcessedCommandBuilder.<CustomCommand,CommandInvocation>builder()
-                        .name("foo")
-                        .description("this is foo")
-                        .populator(populator)
-                        .command(new CustomCommand(populator))
-                        .addOption(ProcessedOptionBuilder.builder()
-                                        .name("bar")
-                                        .type(String.class)
-                                        .build()
-                        )
-                        .create();
+        ProcessedCommand<CustomCommand, CommandInvocation> processedCommand = ProcessedCommandBuilder
+                .<CustomCommand, CommandInvocation> builder()
+                .name("foo")
+                .description("this is foo")
+                .populator(populator)
+                .command(new CustomCommand(populator))
+                .addOption(ProcessedOptionBuilder.builder()
+                        .name("bar")
+                        .type(String.class)
+                        .build())
+                .create();
 
-        CommandLineParser<CommandInvocation> parser = CommandLineParserBuilder.<CustomCommand, CommandInvocation>builder()
+        CommandLineParser<CommandInvocation> parser = CommandLineParserBuilder.<CustomCommand, CommandInvocation> builder()
                 .processedCommand(processedCommand)
                 .create();
 
         return new AeshCommandContainer<>(parser);
     }
 }
-
 
 class CustomCommand implements Command<CommandInvocation> {
 
@@ -155,7 +152,7 @@ class CustomPopulator implements CommandPopulator<Object, CommandInvocation> {
     }
 
     public void clearValues() {
-        for(String key : values.keySet())
+        for (String key : values.keySet())
             values.put(key, null);
         arguments.clear();
     }
@@ -173,29 +170,30 @@ class CustomPopulator implements CommandPopulator<Object, CommandInvocation> {
     }
 
     @Override
-    public void populateObject(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processedCommand, InvocationProviders invocationProviders, AeshContext aeshContext, CommandLineParser.Mode validate) throws CommandLineParserException {
-        if(processedCommand.parserExceptions().size() > 0)
+    public void populateObject(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processedCommand,
+            InvocationProviders invocationProviders, AeshContext aeshContext, CommandLineParser.Mode validate)
+            throws CommandLineParserException {
+        if (processedCommand.parserExceptions().size() > 0)
             throw processedCommand.parserExceptions().get(0);
-        for(ProcessedOption option : processedCommand.getOptions()) {
-            if(option.getValue() != null)
+        for (ProcessedOption option : processedCommand.getOptions()) {
+            if (option.getValue() != null)
                 putValue(option.name(), option.getValue());
-                //line.getOption(option.name()).injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
+            //line.getOption(option.name()).injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             /*
-            else if(option.getDefaultValues().size() > 0) {
-                putValue(option.name(), (String) processedCommand.getOption(option.name()).getDefaultValues().get(0));
-                //option.injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
-            }
-            */
+             * else if(option.getDefaultValues().size() > 0) {
+             * putValue(option.name(), (String) processedCommand.getOption(option.name()).getDefaultValues().get(0));
+             * //option.injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
+             * }
+             */
             else
                 clearValue(option.getFieldName());
         }
-        if((processedCommand.getArguments() != null && processedCommand.getArguments().getValues().size() > 0)) {
+        if ((processedCommand.getArguments() != null && processedCommand.getArguments().getValues().size() > 0)) {
             //line.getArguments().injectValueIntoField(getObject(), invocationProviders, aeshContext, validate);
             putArgumentValue(processedCommand.getArguments().getValue());
-        }
-        else if(processedCommand.getArguments() != null)
+        } else if (processedCommand.getArguments() != null)
             clearArguments();
-     }
+    }
 
     @Override
     public Object getObject() {

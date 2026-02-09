@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,21 +20,21 @@
 
 package org.aesh.command;
 
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.impl.activator.NullCommandActivator;
-import org.aesh.command.impl.result.NullResultHandler;
-import org.aesh.command.result.ResultHandler;
-import org.aesh.command.validator.CommandValidator;
-import org.aesh.command.impl.validator.NullCommandValidator;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.impl.activator.NullCommandActivator;
+import org.aesh.command.impl.result.NullResultHandler;
+import org.aesh.command.impl.validator.NullCommandValidator;
+import org.aesh.command.result.ResultHandler;
+import org.aesh.command.validator.CommandValidator;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 @Retention(RUNTIME)
 @Target(TYPE)
@@ -81,6 +81,7 @@ public @interface CommandDefinition {
     /**
      * If set will automatically generate a version option (--version, -v)
      * for the command with the given value
+     *
      * @return version
      */
     String version() default "";

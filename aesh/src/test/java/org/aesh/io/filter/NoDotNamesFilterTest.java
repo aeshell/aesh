@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,22 +19,22 @@
  */
 package org.aesh.io.filter;
 
-import org.aesh.console.AeshContext;
-import org.aesh.command.settings.Settings;
-import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.io.Resource;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
 
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.console.AeshContext;
+import org.aesh.io.Resource;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 /**
- * @author <a href="mailto:00hf11@gmail.com">Helio Frota</a>
+ * @author Aesh team
  */
 public class NoDotNamesFilterTest {
 

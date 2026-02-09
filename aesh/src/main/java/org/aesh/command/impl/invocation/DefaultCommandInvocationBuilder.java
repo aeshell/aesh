@@ -6,7 +6,7 @@ import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.shell.Shell;
 
-public class DefaultCommandInvocationBuilder implements CommandInvocationBuilder<DefaultCommandInvocation>{
+public class DefaultCommandInvocationBuilder implements CommandInvocationBuilder<DefaultCommandInvocation> {
 
     private final Shell shell;
 
@@ -16,8 +16,8 @@ public class DefaultCommandInvocationBuilder implements CommandInvocationBuilder
 
     @Override
     public DefaultCommandInvocation build(CommandRuntime<DefaultCommandInvocation> runtime,
-                                          CommandInvocationConfiguration configuration,
-                                          CommandContainer<DefaultCommandInvocation> commandContainer) {
+            CommandInvocationConfiguration configuration,
+            CommandContainer<DefaultCommandInvocation> commandContainer) {
         return new DefaultCommandInvocation(runtime, configuration, commandContainer, shell);
     }
 }

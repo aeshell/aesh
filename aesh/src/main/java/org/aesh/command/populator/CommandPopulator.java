@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,31 +20,32 @@
 
 package org.aesh.command.populator;
 
+import org.aesh.command.Command;
 import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
-import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.Command;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface CommandPopulator<T, CI extends CommandInvocation> {
 
     /**
      * Populate a Command instance with the values parsed from a command line
      * If any parser errors are detected it will throw an exception
+     *
      * @param processedCommand command line
      * @param aeshContext the context
      * @param mode based on rules given to the parser
      * @throws CommandLineParserException
      */
-    void populateObject(ProcessedCommand<Command<CI>,CI> processedCommand, InvocationProviders invocationProviders,
-                        AeshContext aeshContext, CommandLineParser.Mode mode) throws CommandLineParserException, OptionValidatorException;
+    void populateObject(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders,
+            AeshContext aeshContext, CommandLineParser.Mode mode) throws CommandLineParserException, OptionValidatorException;
 
     /**
      * Populate a Command instance with the values parsed from a command line,
@@ -58,11 +59,11 @@ public interface CommandPopulator<T, CI extends CommandInvocation> {
      * @throws CommandLineParserException
      * @throws OptionValidatorException
      */
-    default void populateObject(ProcessedCommand<Command<CI>,CI> processedCommand,
-                                InvocationProviders invocationProviders,
-                                AeshContext aeshContext,
-                                CommandLineParser.Mode mode,
-                                CommandContext commandContext) throws CommandLineParserException, OptionValidatorException {
+    default void populateObject(ProcessedCommand<Command<CI>, CI> processedCommand,
+            InvocationProviders invocationProviders,
+            AeshContext aeshContext,
+            CommandLineParser.Mode mode,
+            CommandContext commandContext) throws CommandLineParserException, OptionValidatorException {
         // Default implementation ignores context for backward compatibility
         populateObject(processedCommand, invocationProviders, aeshContext, mode);
     }

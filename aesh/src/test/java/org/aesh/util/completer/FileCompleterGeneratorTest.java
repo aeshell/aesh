@@ -15,6 +15,8 @@
  */
 package org.aesh.util.completer;
 
+import static org.junit.Assert.assertTrue;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -29,13 +31,10 @@ import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
-
 /**
- * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
+ * @author Aesh team
  */
 public class FileCompleterGeneratorTest {
-
 
     @Test
     public void testSimpleCommand() {
@@ -81,7 +80,6 @@ public class FileCompleterGeneratorTest {
         return null;
     }
 
-
     @CommandDefinition(name = "test1", description = "")
     public static class TestCommand1 implements Command {
 
@@ -91,7 +89,7 @@ public class FileCompleterGeneratorTest {
         @Option(shortName = 'o')
         private boolean override;
 
-        @Option(shortName = 't', defaultValue = {"FOO","BAR"})
+        @Option(shortName = 't', defaultValue = { "FOO", "BAR" })
         private String test;
 
         @Override
@@ -100,7 +98,7 @@ public class FileCompleterGeneratorTest {
         }
     }
 
-    @GroupCommandDefinition(name = "gut",groupCommands = {HelpCommand1.class, RebaseCommand1.class}, description = "")
+    @GroupCommandDefinition(name = "gut", groupCommands = { HelpCommand1.class, RebaseCommand1.class }, description = "")
     public static class GutCommand1 implements Command {
 
         @Option(shortName = 'h', hasValue = false)
@@ -118,7 +116,7 @@ public class FileCompleterGeneratorTest {
         @Option(shortName = 'h', hasValue = false)
         private boolean help;
 
-        @Option(shortName = 't', defaultValue = {"FOO","BAR"})
+        @Option(shortName = 't', defaultValue = { "FOO", "BAR" })
         private String test;
 
         @Override
@@ -133,7 +131,7 @@ public class FileCompleterGeneratorTest {
         @Option(shortName = 'h', hasValue = false)
         private boolean help;
 
-        @Option(shortName = 't', defaultValue = {"FOO","BAR"})
+        @Option(shortName = 't', defaultValue = { "FOO", "BAR" })
         private String test;
 
         @Override
@@ -143,4 +141,3 @@ public class FileCompleterGeneratorTest {
     }
 
 }
-

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,10 +19,13 @@
  */
 package org.aesh.command.operator;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -39,14 +42,13 @@ import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
 import org.aesh.terminal.utils.Config;
-import static org.junit.Assert.assertEquals;
+import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
 /**
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public class AeshCommandConditionalOperatorTest {
 
@@ -61,15 +63,14 @@ public class AeshCommandConditionalOperatorTest {
                 .command(FailureCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .enableOperatorParser(true)
-                        .connection(connection)
-                        .setPersistExport(false)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .enableOperatorParser(true)
+                .connection(connection)
+                .setPersistExport(false)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -165,7 +166,6 @@ public class AeshCommandConditionalOperatorTest {
         assertEquals("success2", output2.get(0));
         Files.delete(outFile2.toPath());
         reset(connection);
-
 
         console.stop();
     }

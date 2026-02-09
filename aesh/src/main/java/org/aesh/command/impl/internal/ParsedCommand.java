@@ -12,7 +12,7 @@ public class ParsedCommand {
 
     public ParsedOption findLongOption(String name) {
         ProcessedOption po = processedCommand.findLongOption(name);
-        if(po != null)
+        if (po != null)
             return new ParsedOption(po);
         else
             return null;
@@ -24,14 +24,14 @@ public class ParsedCommand {
     }
 
     public ParsedOption argument() {
-        if(processedCommand.hasArgument())
+        if (processedCommand.hasArgument())
             return new ParsedOption(processedCommand.getArgument());
         else
             return null;
     }
 
     public ParsedOption arguments() {
-        if(processedCommand.hasArguments())
+        if (processedCommand.hasArguments())
             return new ParsedOption(processedCommand.getArguments());
         else
             return null;
@@ -39,7 +39,7 @@ public class ParsedCommand {
 
     public ParsedOption findLongOptionNoActivatorCheck(String name) {
         ProcessedOption processedOption = processedCommand.findLongOptionNoActivatorCheck(name);
-        if(processedOption != null)
+        if (processedOption != null)
             return new ParsedOption(processedOption);
         else
             return null;

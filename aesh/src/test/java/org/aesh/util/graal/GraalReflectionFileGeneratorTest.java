@@ -15,6 +15,14 @@
  */
 package org.aesh.util.graal;
 
+import static org.aesh.terminal.utils.Config.getLineSeparator;
+import static org.junit.Assert.assertEquals;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.StringWriter;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -29,16 +37,8 @@ import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.io.Resource;
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.StringWriter;
-
-import static org.junit.Assert.assertEquals;
-import static org.aesh.terminal.utils.Config.getLineSeparator;
-
 /**
- * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
+ * @author Aesh team
  */
 public class GraalReflectionFileGeneratorTest {
 
@@ -75,12 +75,11 @@ public class GraalReflectionFileGeneratorTest {
         assertEquals(readFile("src/test/resources/graal3"), writer.toString());
     }
 
-
     private String readFile(String path) throws IOException {
         StringBuilder builder = new StringBuilder();
         BufferedReader br = new BufferedReader(new FileReader(path));
         br.lines().forEach(line -> {
-            if(builder.length() > 0)
+            if (builder.length() > 0)
                 builder.append(getLineSeparator());
             builder.append(line);
         });
@@ -118,7 +117,7 @@ public class GraalReflectionFileGeneratorTest {
         @Option(shortName = 'o')
         private boolean override;
 
-        @Option(shortName = 't', defaultValue = {"FOO","BAR"})
+        @Option(shortName = 't', defaultValue = { "FOO", "BAR" })
         private String test;
 
         @Override
@@ -144,6 +143,5 @@ public class GraalReflectionFileGeneratorTest {
             return CommandResult.SUCCESS;
         }
     }
-
 
 }

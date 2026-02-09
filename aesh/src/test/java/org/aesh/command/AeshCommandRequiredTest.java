@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -31,14 +31,14 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.readline.Prompt;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
+import org.aesh.readline.Prompt;
 import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandRequiredTest {
 
@@ -50,22 +50,21 @@ public class AeshCommandRequiredTest {
                 .command(ReqCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
         console.start();
 
-        connection.read("req "+ Config.getLineSeparator());
+        connection.read("req " + Config.getLineSeparator());
         Thread.sleep(200);
         connection.assertBufferEndsWith("Option: --reset-configuration is required for this command."
-                +Config.getLineSeparator());
+                + Config.getLineSeparator());
 
         console.stop();
     }
@@ -78,22 +77,21 @@ public class AeshCommandRequiredTest {
                 .command(ReqCommand2.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
         console.start();
 
-        connection.read("req2 --reset-configuration=false"+ Config.getLineSeparator());
+        connection.read("req2 --reset-configuration=false" + Config.getLineSeparator());
         Thread.sleep(200);
         connection.assertBufferEndsWith("Argument 'arg' is required for this command."
-                +Config.getLineSeparator());
+                + Config.getLineSeparator());
 
         console.stop();
     }
@@ -106,27 +104,24 @@ public class AeshCommandRequiredTest {
                 .command(GroupReqCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.setPrompt(new Prompt(""));
         console.start();
 
-        connection.read("group req2 --reset-configuration=false"+ Config.getLineSeparator());
+        connection.read("group req2 --reset-configuration=false" + Config.getLineSeparator());
         Thread.sleep(200);
         connection.assertBufferEndsWith("Argument 'arg' is required for this command."
-                +Config.getLineSeparator());
+                + Config.getLineSeparator());
 
         console.stop();
     }
-
-
 
     @CommandDefinition(name = "req", description = "")
     public static class ReqCommand implements Command {
@@ -146,7 +141,7 @@ public class AeshCommandRequiredTest {
         }
     }
 
-    @GroupCommandDefinition(name = "group", description = "", groupCommands = {ReqCommand2.class})
+    @GroupCommandDefinition(name = "group", description = "", groupCommands = { ReqCommand2.class })
     public static class GroupReqCommand implements Command {
 
         @Override
@@ -154,7 +149,6 @@ public class AeshCommandRequiredTest {
             return CommandResult.SUCCESS;
         }
     }
-
 
     @CommandDefinition(name = "req2", description = "")
     public static class ReqCommand2 implements Command {
@@ -170,10 +164,9 @@ public class AeshCommandRequiredTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            commandInvocation.println("resetConfiguration is: "+resetConfiguration+", arg is:"+arg);
+            commandInvocation.println("resetConfiguration is: " + resetConfiguration + ", arg is:" + arg);
             return CommandResult.SUCCESS;
         }
     }
-
 
 }

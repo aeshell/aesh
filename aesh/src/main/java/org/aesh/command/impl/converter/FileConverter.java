@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,13 +19,13 @@
  */
 package org.aesh.command.impl.converter;
 
+import java.io.File;
+
 import org.aesh.command.converter.Converter;
 import org.aesh.command.converter.ConverterInvocation;
 
-import java.io.File;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class FileConverter implements Converter<File, ConverterInvocation> {
 

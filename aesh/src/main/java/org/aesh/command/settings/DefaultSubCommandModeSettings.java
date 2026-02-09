@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -22,7 +22,7 @@ package org.aesh.command.settings;
 /**
  * Default implementation of SubCommandModeSettings with sensible defaults.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 class DefaultSubCommandModeSettings implements SubCommandModeSettings {
 
@@ -61,10 +61,10 @@ class DefaultSubCommandModeSettings implements SubCommandModeSettings {
      * Create settings with specified values.
      */
     DefaultSubCommandModeSettings(boolean enabled, String exitCommand, String alternativeExitCommand,
-                                   String contextSeparator, boolean showContextOnEntry,
-                                   boolean showArgumentInPrompt, String contextCommand,
-                                   String enterMessage, String exitMessage, String exitHint,
-                                   boolean exitOnCtrlC) {
+            String contextSeparator, boolean showContextOnEntry,
+            boolean showArgumentInPrompt, String contextCommand,
+            String enterMessage, String exitMessage, String exitHint,
+            boolean exitOnCtrlC) {
         this.enabled = enabled;
         this.exitCommand = exitCommand;
         this.alternativeExitCommand = alternativeExitCommand;

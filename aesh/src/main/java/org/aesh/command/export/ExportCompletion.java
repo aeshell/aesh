@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -25,7 +25,7 @@ import org.aesh.readline.completion.Completion;
 import org.aesh.terminal.utils.Parser;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ExportCompletion implements Completion {
 
@@ -42,28 +42,27 @@ public class ExportCompletion implements Completion {
     @Override
     public void complete(CompleteOperation completeOperation) {
 
-        if(EXPORT_SPACE.equals(completeOperation.getBuffer()) ||
+        if (EXPORT_SPACE.equals(completeOperation.getBuffer()) ||
                 EXPORT.equals(completeOperation.getBuffer().trim())) {
             completeOperation.addCompletionCandidates(exportManager.getAllNamesWithEquals());
             completeOperation.setOffset(completeOperation.getCursor());
-        }
-        else if(completeOperation.getBuffer().startsWith(EXPORT_SPACE)) {
-            String word = lineParser.parseLine(completeOperation.getBuffer(), completeOperation.getCursor()).selectedWord().word();
-            if(word.length() > 0) {
-                completeOperation.addCompletionCandidates( exportManager.findAllMatchingKeys(word));
-                if(Parser.containsNonEscapedDollar(word)) {
-                    int index = word.lastIndexOf('$');
-                    completeOperation.setOffset(completeOperation.getCursor()-(word.length()-index));
-                }
-                else
-                    completeOperation.setOffset(completeOperation.getCursor()-word.length());
-            }
-        }
-        else if(Parser.containsNonEscapedDollar( completeOperation.getBuffer())) {
-            String word = lineParser.parseLine(completeOperation.getBuffer(), completeOperation.getCursor()).selectedWord().word();
-            if(Parser.containsNonEscapedDollar(word)) {
+        } else if (completeOperation.getBuffer().startsWith(EXPORT_SPACE)) {
+            String word = lineParser.parseLine(completeOperation.getBuffer(), completeOperation.getCursor()).selectedWord()
+                    .word();
+            if (word.length() > 0) {
                 completeOperation.addCompletionCandidates(exportManager.findAllMatchingKeys(word));
-                completeOperation.setOffset(completeOperation.getCursor()-word.length());
+                if (Parser.containsNonEscapedDollar(word)) {
+                    int index = word.lastIndexOf('$');
+                    completeOperation.setOffset(completeOperation.getCursor() - (word.length() - index));
+                } else
+                    completeOperation.setOffset(completeOperation.getCursor() - word.length());
+            }
+        } else if (Parser.containsNonEscapedDollar(completeOperation.getBuffer())) {
+            String word = lineParser.parseLine(completeOperation.getBuffer(), completeOperation.getCursor()).selectedWord()
+                    .word();
+            if (Parser.containsNonEscapedDollar(word)) {
+                completeOperation.addCompletionCandidates(exportManager.findAllMatchingKeys(word));
+                completeOperation.setOffset(completeOperation.getCursor() - word.length());
             }
         }
     }

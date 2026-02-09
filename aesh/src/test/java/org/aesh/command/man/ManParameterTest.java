@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,19 +19,19 @@
  */
 package org.aesh.command.man;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.aesh.command.man.parser.ManParameter;
 import org.aesh.terminal.utils.ANSI;
 import org.aesh.terminal.utils.Config;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ManParameterTest {
 
@@ -40,28 +40,26 @@ public class ManParameterTest {
 
         List<String> input = new ArrayList<String>();
         input.add("*-a, --attribute*='ATTRIBUTE'::");
-        Assert.assertEquals("  "+ ANSI.BOLD+
-                "-a, --attribute"+
-                ANSI.DEFAULT_TEXT+
-                "="+ ANSI.UNDERLINE+
-                "ATTRIBUTE"+
-                ANSI.DEFAULT_TEXT+ Config.getLineSeparator(),
+        Assert.assertEquals("  " + ANSI.BOLD +
+                "-a, --attribute" +
+                ANSI.DEFAULT_TEXT +
+                "=" + ANSI.UNDERLINE +
+                "ATTRIBUTE" +
+                ANSI.DEFAULT_TEXT + Config.getLineSeparator(),
                 new ManParameter().parseParams(input, 80).printToTerminal());
 
         input.clear();
         input.add("*-a, --attribute*='ATTRIBUTE'::");
         input.add("   Backend output file format");
-        assertEquals("  "+ ANSI.BOLD+
-                "-a, --attribute"+
-                ANSI.DEFAULT_TEXT+
-                "="+ ANSI.UNDERLINE+
-                "ATTRIBUTE"+
-                ANSI.DEFAULT_TEXT+ Config.getLineSeparator()+
-                "    Backend output file format"+" "+ Config.getLineSeparator()+
-                " "+ Config.getLineSeparator(),
+        assertEquals("  " + ANSI.BOLD +
+                "-a, --attribute" +
+                ANSI.DEFAULT_TEXT +
+                "=" + ANSI.UNDERLINE +
+                "ATTRIBUTE" +
+                ANSI.DEFAULT_TEXT + Config.getLineSeparator() +
+                "    Backend output file format" + " " + Config.getLineSeparator() +
+                " " + Config.getLineSeparator(),
                 new ManParameter().parseParams(input, 80).printToTerminal());
-
-
 
     }
 }

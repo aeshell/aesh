@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,25 +20,25 @@
 
 package org.aesh.tty;
 
-import org.aesh.terminal.Key;
-import org.aesh.terminal.Attributes;
-import org.aesh.terminal.BaseDevice;
-import org.aesh.terminal.Connection;
-import org.aesh.terminal.Device;
-import org.aesh.terminal.tty.Capability;
-import org.aesh.terminal.tty.Signal;
-import org.aesh.terminal.tty.Size;
-import org.aesh.terminal.utils.Parser;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.aesh.terminal.Attributes;
+import org.aesh.terminal.BaseDevice;
+import org.aesh.terminal.Connection;
+import org.aesh.terminal.Device;
+import org.aesh.terminal.Key;
+import org.aesh.terminal.tty.Capability;
+import org.aesh.terminal.tty.Signal;
+import org.aesh.terminal.tty.Size;
+import org.aesh.terminal.utils.Parser;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class TestConnection implements Connection {
 
@@ -70,13 +70,13 @@ public class TestConnection implements Connection {
     public TestConnection(Size size, boolean stripAnsiCodes) {
         bufferBuilder = new StringBuilder();
         stdOutHandler = ints -> {
-            if(stripAnsiCodes)
+            if (stripAnsiCodes)
                 bufferBuilder.append(Parser.stripAwayAnsiCodes(Parser.fromCodePoints(ints)));
             else
                 bufferBuilder.append(Parser.fromCodePoints(ints));
         };
 
-        if(size == null)
+        if (size == null)
             this.size = new Size(80, 20);
         else
             this.size = size;
@@ -85,7 +85,7 @@ public class TestConnection implements Connection {
     }
 
     public void clearOutputBuffer() {
-        if(bufferBuilder.length() > 0)
+        if (bufferBuilder.length() > 0)
             bufferBuilder.delete(0, bufferBuilder.length());
     }
 
@@ -175,7 +175,7 @@ public class TestConnection implements Connection {
     @Override
     public void close() {
         reading = false;
-        if(closeHandler != null)
+        if (closeHandler != null)
             closeHandler.accept(null);
     }
 
@@ -195,22 +195,19 @@ public class TestConnection implements Connection {
     }
 
     private void doRead(int[] input) {
-        if(reading) {
-            if(stdinHandler != null) {
+        if (reading) {
+            if (stdinHandler != null) {
                 stdinHandler.accept(input);
-            }
-            else {
+            } else {
                 try {
                     Thread.sleep(10);
                     doRead(input);
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-        }
-        else
-            throw new RuntimeException("Got input when not reading: "+ Arrays.toString(input));
+        } else
+            throw new RuntimeException("Got input when not reading: " + Arrays.toString(input));
     }
 
     @Override
@@ -257,7 +254,7 @@ public class TestConnection implements Connection {
         assertTrue(bufferBuilder.toString(), bufferBuilder.toString().endsWith(expected));
     }
 
-     public void read(int... data) {
+    public void read(int... data) {
         doRead(data);
     }
 

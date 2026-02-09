@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -21,11 +21,12 @@
 package org.aesh.command.validator;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public interface OptionValidator<T extends ValidatorInvocation> {
     /**
      * Validate if the given value is valid
+     *
      * @param validatorInvocation validator
      * @throws OptionValidatorException if not valid
      */

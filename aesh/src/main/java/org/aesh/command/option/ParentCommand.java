@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,22 +19,27 @@
  */
 package org.aesh.command.option;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 /**
  * Marks a field to receive the parent command instance when executing
  * as a subcommand. The field type must match the parent command class.
  *
- * <p>This annotation enables subcommands to access the parsed options
+ * <p>
+ * This annotation enables subcommands to access the parsed options
  * and arguments of their parent group command. It works both in
  * sub-command mode (interactive) and when commands are invoked directly
- * (e.g., "parent --option value sub --suboption").</p>
+ * (e.g., "parent --option value sub --suboption").
+ * </p>
  *
- * <p>Example usage:</p>
+ * <p>
+ * Example usage:
+ * </p>
+ *
  * <pre>
  * {@literal @}GroupCommandDefinition(name = "module", groupCommands = {TagCommand.class})
  * public class ModuleCommand implements Command&lt;CommandInvocation&gt; {
@@ -64,7 +69,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }
  * </pre>
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 @Retention(RUNTIME)
 @Target(FIELD)

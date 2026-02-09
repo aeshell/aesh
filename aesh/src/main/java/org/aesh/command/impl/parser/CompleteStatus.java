@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,7 +20,7 @@
 package org.aesh.command.impl.parser;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class CompleteStatus {
 
@@ -41,7 +41,15 @@ public class CompleteStatus {
     }
 
     public enum Status {
-        SHORT_OPTION,LONG_OPTION, COMPLETE_OPTION, OPTION_MISSING_VALUE, ARGUMENT, GROUP_COMMAND, APPEND_SPACE, INVALID_INPUT, ARGUMENT_ERROR
+        SHORT_OPTION,
+        LONG_OPTION,
+        COMPLETE_OPTION,
+        OPTION_MISSING_VALUE,
+        ARGUMENT,
+        GROUP_COMMAND,
+        APPEND_SPACE,
+        INVALID_INPUT,
+        ARGUMENT_ERROR
     }
 
     @Override

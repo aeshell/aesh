@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -25,11 +25,11 @@ import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.command.settings.Settings;
+import org.aesh.command.validator.ValidatorInvocationProvider;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshInvocationProviders implements InvocationProviders {
 
@@ -48,10 +48,10 @@ public class AeshInvocationProviders implements InvocationProviders {
     }
 
     public AeshInvocationProviders(ConverterInvocationProvider converterInvocationProvider,
-                                   CompleterInvocationProvider completerInvocationProvider,
-                                   ValidatorInvocationProvider validatorInvocationProvider,
-                                   OptionActivatorProvider optionActivatorProvider,
-                                   CommandActivatorProvider commandActivatorProvider) {
+            CompleterInvocationProvider completerInvocationProvider,
+            ValidatorInvocationProvider validatorInvocationProvider,
+            OptionActivatorProvider optionActivatorProvider,
+            CommandActivatorProvider commandActivatorProvider) {
         this.converterInvocationProvider = converterInvocationProvider;
         this.completerInvocationProvider = completerInvocationProvider;
         this.validatorInvocationProvider = validatorInvocationProvider;

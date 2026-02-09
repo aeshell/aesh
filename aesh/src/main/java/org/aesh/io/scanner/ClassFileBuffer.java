@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -33,7 +33,7 @@ import java.io.InputStream;
  * Note that Java ClassFile files can grow really big,
  * {@code com.sun.corba.se.impl.logging.ORBUtilSystemException} is 128.2 kb!
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 final class ClassFileBuffer implements DataInput {
 
@@ -159,12 +159,12 @@ final class ClassFileBuffer implements DataInput {
 
     @Override
     public short readShort() throws IOException {
-        return (short)readUnsignedShort();
+        return (short) readUnsignedShort();
     }
 
     @Override
     public char readChar() throws IOException {
-        return (char)readUnsignedShort();
+        return (char) readUnsignedShort();
     }
 
     @Override
@@ -183,10 +183,10 @@ final class ClassFileBuffer implements DataInput {
         if (pointer + 8 > size) {
             throw new EOFException();
         }
-        return ((long)read() << 56) +
-                ((long)read() << 48) +
-                ((long)read() << 40) +
-                ((long)read() << 32) +
+        return ((long) read() << 56) +
+                ((long) read() << 48) +
+                ((long) read() << 40) +
+                ((long) read() << 32) +
                 (read() << 24) +
                 (read() << 16) +
                 (read() << 8) +

@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,9 +19,6 @@
  */
 package org.aesh.command.export;
 
-import org.aesh.terminal.utils.LoggerUtil;
-import org.aesh.terminal.utils.Config;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -37,8 +34,11 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.aesh.terminal.utils.Config;
+import org.aesh.terminal.utils.LoggerUtil;
+
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ExportManager {
 
@@ -63,6 +63,7 @@ public class ExportManager {
     public ExportManager(File exportFile, ExportChangeListener listener) {
         this(exportFile, false, listener);
     }
+
     public ExportManager(File exportFile, boolean exportUsesSystemEnvironment) {
         this(exportFile, exportUsesSystemEnvironment, null);
     }
@@ -83,8 +84,7 @@ public class ExportManager {
                 if (line.startsWith(EXPORT))
                     addVariable(line);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             LOGGER.warning("Failed to read variables from file " + exportFile + ", error: " + e);
         }
     }
@@ -102,7 +102,7 @@ public class ExportManager {
                 value = value.replace(String.valueOf(DOLLAR + name), variables.get(name));
             }
             variables.put(name, value);
-            if(listener != null)
+            if (listener != null)
                 listener.exportChange(name, value);
             return null;
         }
@@ -249,7 +249,7 @@ public class ExportManager {
             if (exportFile.isFile())
                 keepGoing = exportFile.delete();
 
-            if(keepGoing) {
+            if (keepGoing) {
                 File parentFile = exportFile.getParentFile();
                 if (parentFile != null) {
                     parentFile.mkdirs();
@@ -257,16 +257,15 @@ public class ExportManager {
                 keepGoing = exportFile.createNewFile();
             }
 
-            if(keepGoing) {
+            if (keepGoing) {
                 FileWriter fw = new FileWriter(exportFile);
-                for(String key : variables.keySet()) {
+                for (String key : variables.keySet()) {
                     fw.write(EXPORT + " " + key + "=" + variables.get(key) + Config.getLineSeparator());
                 }
                 fw.flush();
                 fw.close();
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Failed to persist variables to file " + exportFile, e);
         }
     }
@@ -324,6 +323,5 @@ public class ExportManager {
 
         return keys;
     }
-
 
 }

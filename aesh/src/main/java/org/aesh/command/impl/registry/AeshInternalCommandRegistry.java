@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,19 +20,19 @@
 
 package org.aesh.command.impl.registry;
 
-import org.aesh.command.Command;
-import org.aesh.command.impl.container.AeshCommandContainerBuilder;
-import org.aesh.command.container.CommandContainer;
-import org.aesh.command.parser.CommandLineParserException;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.aesh.command.Command;
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.parser.CommandLineParserException;
+
 /**
  * Only used by AeshConsoleImpl to store built-in commands
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshInternalCommandRegistry {
 
@@ -43,7 +43,7 @@ public class AeshInternalCommandRegistry {
     }
 
     private void putIntoRegistry(CommandContainer commandContainer) {
-        if(!commandContainer.haveBuildError() &&
+        if (!commandContainer.haveBuildError() &&
                 !registry.containsKey(commandContainer.getParser().getProcessedCommand().name()))
             registry.put(commandContainer.getParser().getProcessedCommand().name(), commandContainer);
     }

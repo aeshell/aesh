@@ -5,7 +5,7 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.util.graal.GraalReflectionCommand;
 
 /**
- * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
+ * @author Aesh team
  */
 public class GraalReflectionGenerator {
 

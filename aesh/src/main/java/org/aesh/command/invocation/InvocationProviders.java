@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -21,21 +21,20 @@
 package org.aesh.command.invocation;
 
 import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.command.activator.CommandActivatorProvider;
-import org.aesh.command.completer.CompleterInvocationProvider;
-import org.aesh.command.converter.ConverterInvocationProvider;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
-public interface InvocationProviders<CA extends CommandActivator, CI extends ConverterInvocation, CI2 extends CompleterInvocation,
-        VI extends ValidatorInvocation, OA extends OptionActivator> {
+public interface InvocationProviders<CA extends CommandActivator, CI extends ConverterInvocation, CI2 extends CompleterInvocation, VI extends ValidatorInvocation, OA extends OptionActivator> {
 
     ConverterInvocationProvider<CI> getConverterProvider();
 

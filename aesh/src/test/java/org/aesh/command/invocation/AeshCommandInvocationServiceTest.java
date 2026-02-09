@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,39 +19,38 @@
  */
 package org.aesh.command.invocation;
 
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.CommandResult;
+import org.aesh.command.Executor;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
-import org.aesh.command.registry.CommandRegistryException;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.command.shell.Shell;
-import org.aesh.command.Command;
-import org.aesh.command.CommandException;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.shell.Shell;
+import org.aesh.command.validator.CommandValidatorException;
+import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.Prompt;
 import org.aesh.terminal.KeyAction;
 import org.aesh.terminal.utils.Config;
-import org.aesh.command.CommandDefinition;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.CommandResult;
-import org.aesh.console.ReadlineConsole;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
-import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.validator.CommandValidatorException;
-import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.command.Executor;
-import org.aesh.command.CommandNotFoundException;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandInvocationServiceTest {
 
@@ -60,13 +59,12 @@ public class AeshCommandInvocationServiceTest {
 
         TestConnection connection = new TestConnection();
 
-        CommandRegistry<FooCommandInvocation> registry = AeshCommandRegistryBuilder.<FooCommandInvocation>builder()
+        CommandRegistry<FooCommandInvocation> registry = AeshCommandRegistryBuilder.<FooCommandInvocation> builder()
                 .command(new BarCommand())
                 .create();
 
-        Settings<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation<Object,Command<FooCommandInvocation>>,
-                        OptionActivator, CommandActivator> settings = SettingsBuilder.<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation<Object,Command<FooCommandInvocation>>,
-                        OptionActivator, CommandActivator>builder()
+        Settings<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation<Object, Command<FooCommandInvocation>>, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation<Object, Command<FooCommandInvocation>>, OptionActivator, CommandActivator> builder()
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
@@ -77,11 +75,11 @@ public class AeshCommandInvocationServiceTest {
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
-        connection.read("bar"+ Config.getLineSeparator());
+        connection.read("bar" + Config.getLineSeparator());
 
         connection.clearOutputBuffer();
         Thread.sleep(100);
-        connection.assertBuffer("FOO"+Config.getLineSeparator());
+        connection.assertBuffer("FOO" + Config.getLineSeparator());
         //assertTrue( byteArrayOutputStream.toString().contains("FOO") );
         console.stop();
     }
@@ -97,7 +95,6 @@ class BarCommand implements Command<FooCommandInvocation> {
         return CommandResult.SUCCESS;
     }
 }
-
 
 class FooCommandInvocation implements CommandInvocation {
 

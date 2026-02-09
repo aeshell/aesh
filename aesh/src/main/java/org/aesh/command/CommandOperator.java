@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2018 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -24,7 +24,7 @@ import org.aesh.command.invocation.CommandInvocation;
 /**
  * TODO
  *
- * @author jdenise@redhat.com
+ * @author Aesh team
  */
 public interface CommandOperator<T extends CommandInvocation> extends Executable<T> {
 }

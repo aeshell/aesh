@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -25,7 +25,7 @@ package org.aesh.parser;
  * Polling either words or chars from the stack will update the respective
  * other values correctly as well.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ParsedLineIterator {
 
@@ -61,15 +61,14 @@ public class ParsedLineIterator {
      * @return next ParsedWord
      */
     public ParsedWord pollParsedWord() {
-        if(hasNextWord()) {
+        if (hasNextWord()) {
             //set correct next char
-            if(parsedLine.words().size() > (word+1))
-                character = parsedLine.words().get(word+1).lineIndex();
+            if (parsedLine.words().size() > (word + 1))
+                character = parsedLine.words().get(word + 1).lineIndex();
             else
                 character = -1;
             return parsedLine.words().get(word++);
-        }
-        else
+        } else
             return new ParsedWord(null, -1);
     }
 
@@ -79,7 +78,7 @@ public class ParsedLineIterator {
      * @return next ParsedWord
      */
     public ParsedWord peekParsedWord() {
-        if(hasNextWord())
+        if (hasNextWord())
             return parsedLine.words().get(word);
         else
             return new ParsedWord(null, -1);
@@ -109,9 +108,9 @@ public class ParsedLineIterator {
      * @return next char
      */
     public char pollChar() {
-        if(hasNextChar()) {
-            if(hasNextWord() &&
-                    character+1 >= parsedLine.words().get(word).lineIndex()+
+        if (hasNextChar()) {
+            if (hasNextWord() &&
+                    character + 1 >= parsedLine.words().get(word).lineIndex() +
                             parsedLine.words().get(word).word().length())
                 word++;
             return parsedLine.line().charAt(character++);
@@ -125,7 +124,7 @@ public class ParsedLineIterator {
      * @return next char
      */
     public char peekChar() {
-        if(hasNextChar())
+        if (hasNextChar())
             return parsedLine.line().charAt(character);
         return '\u0000';
     }
@@ -160,21 +159,21 @@ public class ParsedLineIterator {
      * @param length update length
      */
     public void updateIteratorPosition(int length) {
-        if(length > 0) {
+        if (length > 0) {
             //make sure we dont go OB
-            if((length + character) > parsedLine.line().length())
+            if ((length + character) > parsedLine.line().length())
                 length = parsedLine.line().length() - character;
 
             //move word counter to the correct word
-            while(hasNextWord() &&
+            while (hasNextWord() &&
                     (length + character) >= parsedLine.words().get(word).lineIndex() +
                             parsedLine.words().get(word).word().length())
                 word++;
 
             character = length + character;
-        }
-        else
-            throw new IllegalArgumentException("The length given must be > 0 and not exceed the boundary of the line (including the current position)");
+        } else
+            throw new IllegalArgumentException(
+                    "The length given must be > 0 and not exceed the boundary of the line (including the current position)");
     }
 
     /**
@@ -185,10 +184,10 @@ public class ParsedLineIterator {
     }
 
     public boolean isCurrentWordCursorWord() {
-        return (word -1) == parsedLine.selectedIndex();
+        return (word - 1) == parsedLine.selectedIndex();
     }
 
-   public ParsedLine baseLine() {
+    public ParsedLine baseLine() {
         return parsedLine;
     }
 

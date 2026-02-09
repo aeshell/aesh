@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,32 +19,6 @@
  */
 package org.aesh.command.settings;
 
-import org.aesh.command.CommandNotFoundHandler;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
-import org.aesh.command.export.ExportChangeListener;
-import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.invocation.CommandInvocationProvider;
-import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.validator.ValidatorInvocation;
-import org.aesh.console.AeshContext;
-import org.aesh.command.activator.OptionActivatorProvider;
-import org.aesh.command.validator.ValidatorInvocationProvider;
-import org.aesh.io.Resource;
-import org.aesh.command.invocation.InvocationProviders;
-import org.aesh.command.activator.CommandActivatorProvider;
-import org.aesh.command.completer.CompleterInvocationProvider;
-import org.aesh.command.converter.ConverterInvocationProvider;
-import org.aesh.io.FileResource;
-import org.aesh.console.DefaultAeshContext;
-import org.aesh.readline.alias.AliasManager;
-import org.aesh.readline.editing.EditMode;
-import org.aesh.readline.editing.EditModeBuilder;
-import org.aesh.terminal.Connection;
-import org.aesh.terminal.utils.Config;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -52,15 +26,39 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.function.Consumer;
 
+import org.aesh.command.CommandNotFoundHandler;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.CommandActivatorProvider;
+import org.aesh.command.activator.OptionActivator;
+import org.aesh.command.activator.OptionActivatorProvider;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.CompleterInvocationProvider;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.converter.ConverterInvocationProvider;
+import org.aesh.command.export.ExportChangeListener;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.CommandInvocationProvider;
+import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.command.validator.ValidatorInvocationProvider;
+import org.aesh.console.AeshContext;
+import org.aesh.console.DefaultAeshContext;
+import org.aesh.io.FileResource;
+import org.aesh.io.Resource;
+import org.aesh.readline.alias.AliasManager;
+import org.aesh.readline.editing.EditMode;
+import org.aesh.readline.editing.EditModeBuilder;
+import org.aesh.terminal.Connection;
+import org.aesh.terminal.utils.Config;
+
 /**
  * Settings object that is parsed when Console is initialized.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
-public class SettingsImpl<CI extends CommandInvocation,
-        CI3 extends ConverterInvocation, CI2 extends CompleterInvocation,
-        VI extends ValidatorInvocation, OA extends OptionActivator,
-        CA extends CommandActivator> implements Settings {
+public class SettingsImpl<CI extends CommandInvocation, CI3 extends ConverterInvocation, CI2 extends CompleterInvocation, VI extends ValidatorInvocation, OA extends OptionActivator, CA extends CommandActivator>
+        implements Settings {
 
     private EditMode.Mode editMode = EditMode.Mode.EMACS;
     private File historyFile;
@@ -208,15 +206,13 @@ public class SettingsImpl<CI extends CommandInvocation,
      */
     @Override
     public EditMode editMode() {
-        if(readInputrc) {
+        if (readInputrc) {
             try {
                 return EditModeBuilder.builder().parseInputrc(new FileInputStream(inputrc())).create();
-            }
-            catch(FileNotFoundException e) {
+            } catch (FileNotFoundException e) {
                 return EditModeBuilder.builder(mode()).create();
             }
-        }
-        else
+        } else
             return EditModeBuilder.builder(mode()).create();
     }
 
@@ -242,11 +238,10 @@ public class SettingsImpl<CI extends CommandInvocation,
      */
     @Override
     public File historyFile() {
-        if(historyFile == null) {
-            return new File(System.getProperty("user.home")+
-                    Config.getPathSeparator()+".aesh_history");
-        }
-        else
+        if (historyFile == null) {
+            return new File(System.getProperty("user.home") +
+                    Config.getPathSeparator() + ".aesh_history");
+        } else
             return historyFile;
     }
 
@@ -297,7 +292,7 @@ public class SettingsImpl<CI extends CommandInvocation,
      */
     @Override
     public InputStream stdIn() {
-        if(inputStream == null) {
+        if (inputStream == null) {
             inputStream = System.in;
         }
         return inputStream;
@@ -314,11 +309,12 @@ public class SettingsImpl<CI extends CommandInvocation,
 
     /**
      * If not set System.out is used
+     *
      * @return out
      */
     @Override
     public PrintStream stdOut() {
-        if(stdOut == null)
+        if (stdOut == null)
             return System.out;
         else
             return stdOut;
@@ -326,19 +322,21 @@ public class SettingsImpl<CI extends CommandInvocation,
 
     /**
      * Set where output should go to
+     *
      * @param stdOut output
      */
     public void setStdOut(PrintStream stdOut) {
         this.stdOut = stdOut;
     }
 
-     /**
+    /**
      * If not set System.out is used
+     *
      * @return out
      */
     @Override
     public PrintStream stdErr() {
-        if(stdErr == null)
+        if (stdErr == null)
             return System.err;
         else
             return stdErr;
@@ -346,6 +344,7 @@ public class SettingsImpl<CI extends CommandInvocation,
 
     /**
      * Set where output should go to
+     *
      * @param stdErr output
      */
     public void setStdErr(PrintStream stdErr) {
@@ -360,8 +359,8 @@ public class SettingsImpl<CI extends CommandInvocation,
      */
     @Override
     public File inputrc() {
-        if(inputrc == null) {
-            inputrc = new File(System.getProperty("user.home")+Config.getPathSeparator()+".inputrc");
+        if (inputrc == null) {
+            inputrc = new File(System.getProperty("user.home") + Config.getPathSeparator() + ".inputrc");
         }
         return inputrc;
     }
@@ -417,8 +416,8 @@ public class SettingsImpl<CI extends CommandInvocation,
      */
     @Override
     public String logFile() {
-        if(logFile == null) {
-            logFile = Config.getTmpDir()+Config.getPathSeparator()+"aesh.log";
+        if (logFile == null) {
+            logFile = Config.getTmpDir() + Config.getPathSeparator() + "aesh.log";
         }
         return logFile;
     }
@@ -501,8 +500,8 @@ public class SettingsImpl<CI extends CommandInvocation,
 
     @Override
     public File aliasFile() {
-        if(aliasFile == null)
-            aliasFile = new File(Config.getHomeDir()+Config.getPathSeparator()+".aesh_aliases");
+        if (aliasFile == null)
+            aliasFile = new File(Config.getHomeDir() + Config.getPathSeparator() + ".aesh_aliases");
 
         return aliasFile;
     }
@@ -563,7 +562,7 @@ public class SettingsImpl<CI extends CommandInvocation,
 
     @Override
     public AeshContext aeshContext() {
-        if(aeshContext == null)
+        if (aeshContext == null)
             aeshContext = new DefaultAeshContext(resource().newInstance(Config.getUserDir()));
         return aeshContext;
     }
@@ -574,13 +573,13 @@ public class SettingsImpl<CI extends CommandInvocation,
 
     @Override
     public File exportFile() {
-        if(exportFile == null)
-            exportFile = new File(Config.getHomeDir()+Config.getPathSeparator()+".aesh_export");
+        if (exportFile == null)
+            exportFile = new File(Config.getHomeDir() + Config.getPathSeparator() + ".aesh_export");
         return exportFile;
     }
 
     public void setExportFile(File exportFile) {
-        if(exportFile != null)
+        if (exportFile != null)
             this.exportFile = exportFile;
     }
 
@@ -620,8 +619,8 @@ public class SettingsImpl<CI extends CommandInvocation,
 
     @Override
     public void setExecuteAtStart(String execute) {
-        if(execute != null) {
-            if(execute.endsWith(Config.getLineSeparator()))
+        if (execute != null) {
+            if (execute.endsWith(Config.getLineSeparator()))
                 this.execute = execute;
             else
                 this.execute = execute + Config.getLineSeparator();
@@ -645,7 +644,7 @@ public class SettingsImpl<CI extends CommandInvocation,
 
     @Override
     public Resource resource() {
-        if(resource == null)
+        if (resource == null)
             resource = new FileResource("");
         return resource;
     }

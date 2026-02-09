@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -18,6 +18,10 @@
  * limitations under the License.
  */
 package org.aesh.console;
+
+import static org.junit.Assert.assertTrue;
+
+import java.util.function.Consumer;
 
 import org.aesh.AeshConsoleRunner;
 import org.aesh.command.Command;
@@ -37,10 +41,6 @@ import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import java.util.function.Consumer;
-
-import static org.junit.Assert.assertTrue;
-
 public class AeshConnectionClosedTest {
 
     @Test
@@ -49,13 +49,12 @@ public class AeshConnectionClosedTest {
 
         ConnectionClosed closed = new ConnectionClosed();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                OptionActivator, CommandActivator > settings =
-                SettingsBuilder.builder()
-                        .connection(connection)
-                        .setConnectionClosedHandler(closed)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .setConnectionClosedHandler(closed)
+                .logging(true)
+                .build();
 
         AeshConsoleRunner console = AeshConsoleRunner.builder()
                 .settings(settings)
@@ -64,14 +63,13 @@ public class AeshConnectionClosedTest {
 
         console.start();
 
-        connection.read("test"+ Config.getLineSeparator());
+        connection.read("test" + Config.getLineSeparator());
         Thread.sleep(100);
-        connection.assertBufferEndsWith("hello"+Config.getLineSeparator());
+        connection.assertBufferEndsWith("hello" + Config.getLineSeparator());
         connection.read(Key.CTRL_D);
         Thread.sleep(100);
         assertTrue(closed.notifiedOfClose);
     }
-
 
     public static class ConnectionClosed implements Consumer<Void> {
 

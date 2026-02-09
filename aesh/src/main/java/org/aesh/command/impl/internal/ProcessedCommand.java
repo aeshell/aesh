@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,6 +19,10 @@
  */
 package org.aesh.command.impl.internal;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.aesh.command.Command;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.activator.NullCommandActivator;
@@ -32,25 +36,21 @@ import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
-import org.aesh.terminal.formatting.TerminalString;
-import org.aesh.terminal.utils.Parser;
 import org.aesh.selector.SelectorType;
+import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.terminal.utils.Config;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import org.aesh.terminal.utils.Parser;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocation> {
 
     private final String name;
     private final String description;
-    private final CommandValidator<C,CI> validator;
+    private final CommandValidator<C, CI> validator;
     private final ResultHandler resultHandler;
-    private final CommandPopulator<Object,CI> populator;
+    private final CommandPopulator<Object, CI> populator;
     private final boolean disableParsing;
     private CommandActivator activator;
     private final boolean generateHelp;
@@ -65,40 +65,40 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private CompleteStatus completeStatus;
 
     public ProcessedCommand(String name, List<String> aliases, C command,
-                            String description, CommandValidator<C,CI> validator,
-                            ResultHandler resultHandler,
-                            boolean generateHelp, boolean disableParsing,
-                            String version,
-                            ProcessedOption arguments, List<ProcessedOption> options,
-                            ProcessedOption argument,
-                            CommandPopulator<Object,CI> populator, CommandActivator activator) throws OptionParserException {
+            String description, CommandValidator<C, CI> validator,
+            ResultHandler resultHandler,
+            boolean generateHelp, boolean disableParsing,
+            String version,
+            ProcessedOption arguments, List<ProcessedOption> options,
+            ProcessedOption argument,
+            CommandPopulator<Object, CI> populator, CommandActivator activator) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
         this.validator = validator;
         this.generateHelp = generateHelp;
         this.disableParsing = disableParsing;
-        if(resultHandler != null)
+        if (resultHandler != null)
             this.resultHandler = resultHandler;
         else
             this.resultHandler = new NullResultHandler();
         this.arguments = arguments;
         this.argument = argument;
-        if(argument != null && arguments != null)
+        if (argument != null && arguments != null)
             throw new OptionParserException("Argument and Arguments cannot be defined in the same Command");
         this.options = new ArrayList<>();
         this.command = command;
         this.activator = activator == null ? new NullCommandActivator() : activator;
-        if(populator == null)
+        if (populator == null)
             this.populator = new AeshCommandPopulator<>(this.command);
         else
             this.populator = populator;
         setOptions(options);
 
-        if(generateHelp)
+        if (generateHelp)
             doGenerateHelp();
 
-        if(version != null && version.length() > 0) {
+        if (version != null && version.length() > 0) {
             this.version = version;
             doGenerateVersion();
         }
@@ -120,23 +120,25 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void addOption(ProcessedOption opt) throws OptionParserException {
         this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
-                opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.acceptNameWithoutDashes(), opt.selectorType(),
+                opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(),
+                opt.acceptNameWithoutDashes(), opt.selectorType(),
                 opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(), opt.converter(),
                 opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(), opt.parser(), opt.doOverrideRequired(),
                 opt.isNegatable(), opt.getNegationPrefix(), opt.isInherited()));
 
-        options.get(options.size()-1).setParent(this);
+        options.get(options.size() - 1).setParent(this);
     }
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
-        for(ProcessedOption opt : options) {
+        for (ProcessedOption opt : options) {
             this.options.add(new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
-                    opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(), opt.acceptNameWithoutDashes(), opt.selectorType(),
+                    opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(),
+                    opt.acceptNameWithoutDashes(), opt.selectorType(),
                     opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(),
                     opt.converter(), opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(),
                     opt.parser(), opt.doOverrideRequired(), opt.isNegatable(), opt.getNegationPrefix(), opt.isInherited()));
 
-            this.options.get(this.options.size()-1).setParent(this);
+            this.options.get(this.options.size() - 1).setParent(this);
         }
     }
 
@@ -148,12 +150,12 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return description;
     }
 
-    public CommandValidator<C,CI> validator() {
+    public CommandValidator<C, CI> validator() {
         return validator;
     }
 
     public ResultHandler resultHandler() {
-      return resultHandler;
+        return resultHandler;
     }
 
     public boolean hasArguments() {
@@ -190,30 +192,30 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {
-        if(name != null)
+        if (name != null)
             return verifyThatNamesAreUnique(name.charAt(0), longName);
         else
             return verifyThatNamesAreUnique('\u0000', longName);
     }
 
     private char verifyThatNamesAreUnique(char name, String longName) throws OptionParserException {
-        if(longName != null && longName.length() > 0 && findLongOption(longName) != null) {
-            throw new OptionParserException("Option --"+longName+" is already added to Param: "+this.toString());
+        if (longName != null && longName.length() > 0 && findLongOption(longName) != null) {
+            throw new OptionParserException("Option --" + longName + " is already added to Param: " + this.toString());
         }
-        if(name != '\u0000' && findOption(String.valueOf(name)) != null) {
-            throw new OptionParserException("Option -"+name+" is already added to Param: "+this.toString());
+        if (name != '\u0000' && findOption(String.valueOf(name)) != null) {
+            throw new OptionParserException("Option -" + name + " is already added to Param: " + this.toString());
         }
 
         //if name is null, use one based on name
-        if(name == '\u0000' && (longName == null || longName.length() == 0))
+        if (name == '\u0000' && (longName == null || longName.length() == 0))
             throw new OptionParserException("Neither option name and option long name can be both null");
 
         return name;
     }
 
     private char findPossibleName(String longName) throws OptionParserException {
-        for(int i=0; i < longName.length(); i++) {
-            if(findOption(String.valueOf(longName.charAt(i))) == null)
+        for (int i = 0; i < longName.length(); i++) {
+            if (findOption(String.valueOf(longName.charAt(i))) == null)
                 return longName.charAt(i);
         }
         //all chars are taken
@@ -222,7 +224,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public ProcessedOption findOption(String name) {
         for (ProcessedOption option : getOptions())
-            if(option.shortName() != null &&
+            if (option.shortName() != null &&
                     option.shortName().equals(name) &&
                     option.activator().isActivated(new ParsedCommand(this)))
                 return option;
@@ -232,7 +234,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public ProcessedOption findOptionNoActivatorCheck(String name) {
         for (ProcessedOption option : getOptions())
-            if(option.shortName() != null &&
+            if (option.shortName() != null &&
                     option.shortName().equals(name))
                 return option;
 
@@ -249,7 +251,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (input.startsWith("--")) {
             String optionName = input.substring(2);
             ProcessedOption currentOption = findLongOptionNoActivatorCheck(optionName);
-            if(currentOption == null && input.contains("="))
+            if (currentOption == null && input.contains("="))
                 currentOption = startWithLongOptionNoActivatorCheck(optionName);
             // Check for negated options (e.g., --no-verbose)
             if (currentOption == null) {
@@ -258,23 +260,21 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (currentOption != null)
                 currentOption.setLongNameUsed(true);
             //need to handle spaces in option names
-            else if(Parser.containsNonEscapedSpace(input)) {
+            else if (Parser.containsNonEscapedSpace(input)) {
                 return searchAllOptions(Parser.switchSpacesToEscapedSpacesInWord(input));
             }
 
             return currentOption;
-        }
-        else if (input.startsWith("-")) {
+        } else if (input.startsWith("-")) {
             ProcessedOption currentOption = findOption(input.substring(1));
-            if(currentOption == null)
+            if (currentOption == null)
                 currentOption = startWithOption(input.substring(1));
 
             if (currentOption != null)
                 currentOption.setLongNameUsed(false);
 
             return currentOption;
-        }
-        else {
+        } else {
             // Check for bare long names
             ProcessedOption currentOption = findBareLongOption(input);
             if (currentOption == null && input.contains("=")) {
@@ -289,7 +289,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public ProcessedOption findLongOption(String name) {
         for (ProcessedOption option : getOptions())
-            if(option.name() != null &&
+            if (option.name() != null &&
                     option.name().equals(name) &&
                     option.activator().isActivated(new ParsedCommand(this)))
                 return option;
@@ -299,7 +299,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public ProcessedOption findLongOptionNoActivatorCheck(String name) {
         for (ProcessedOption option : getOptions())
-            if(option.name() != null && option.name().equals(name))
+            if (option.name() != null && option.name().equals(name))
                 return option;
 
         return null;
@@ -343,7 +343,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public ProcessedOption findBareLongOption(String name) {
         for (ProcessedOption option : getOptions())
-            if(option.name() != null && option.name().equals(name) && option.acceptNameWithoutDashes())
+            if (option.name() != null && option.name().equals(name) && option.acceptNameWithoutDashes())
                 return option;
 
         return null;
@@ -353,7 +353,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if(o.name() != null && o.name().startsWith(name) && o.acceptNameWithoutDashes()) {
+            if (o.name() != null && o.name().startsWith(name) && o.acceptNameWithoutDashes()) {
                 names.add(o.getRenderedNameWithDashes());
             }
         }
@@ -362,7 +362,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public ProcessedOption startWithOption(String name) {
         for (ProcessedOption option : getOptions())
-            if(option.shortName() != null && name.startsWith(option.shortName()) &&
+            if (option.shortName() != null && name.startsWith(option.shortName()) &&
                     option.activator().isActivated(new ParsedCommand(this)))
                 return option;
 
@@ -371,7 +371,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public ProcessedOption startWithLongOption(String name) {
         for (ProcessedOption option : getOptions())
-            if(name.startsWith(option.name()) &&
+            if (name.startsWith(option.name()) &&
                     option.activator().isActivated(new ParsedCommand(this)))
                 return option;
 
@@ -392,15 +392,15 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return longestMatch;
     }
 
-   public void clear() {
-       clearOptions();
-       if(arguments != null)
-           arguments.clear();
-       if(argument != null)
-           argument.clear();
+    public void clear() {
+        clearOptions();
+        if (arguments != null)
+            arguments.clear();
+        if (argument != null)
+            argument.clear();
 
-       parserExceptions.clear();
-       completeStatus = null;
+        parserExceptions.clear();
+        completeStatus = null;
     }
 
     protected void clearOptions() {
@@ -411,7 +411,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     private void doGenerateHelp() {
         //only generate a help option if there is no other option already called help
-        if(findOption("help") == null) {
+        if (findOption("help") == null) {
             try {
                 ProcessedOption helpOption = ProcessedOptionBuilder
                         .builder()
@@ -427,21 +427,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                         .build();
 
                 options.add(helpOption);
-            }
-            catch (OptionParserException e) {
+            } catch (OptionParserException e) {
                 e.printStackTrace();
             }
         }
     }
 
     public boolean isGenerateHelpOptionSet() {
-       ProcessedOption helpOption = findLongOptionNoActivatorCheck("help");
+        ProcessedOption helpOption = findLongOptionNoActivatorCheck("help");
         return helpOption != null && helpOption.getValue() != null;
     }
 
     private void doGenerateVersion() {
         //only generate a version option if there is no other option already called version
-        if(findOption("version") == null) {
+        if (findOption("version") == null) {
             try {
                 ProcessedOption versionOption = ProcessedOptionBuilder
                         .builder()
@@ -457,8 +456,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                         .build();
 
                 options.add(versionOption);
-            }
-            catch (OptionParserException e) {
+            } catch (OptionParserException e) {
                 e.printStackTrace();
             }
         }
@@ -477,7 +475,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if(o.getValues().size() == 0 &&
+            if (o.getValues().size() == 0 &&
                     o.activator().isActivated(new ParsedCommand(this))) {
                 names.add(o.getRenderedNameWithDashes());
                 // Also add the negated form for negatable options
@@ -495,65 +493,67 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-           if(((o.shortName() != null && o.shortName().equals(name) &&
-                   !o.isLongNameUsed() && o.getValues().size() == 0) ||
-                   (o.name().startsWith(name) && o.getValues().size() == 0)) &&
-                   o.activator().isActivated(new ParsedCommand(this)))
-               names.add(o.getRenderedNameWithDashes());
-           // Also check negated option names for negatable options
-           if (o.isNegatable() && o.getNegatedName() != null &&
-                   o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
-                   o.activator().isActivated(new ParsedCommand(this))) {
-               TerminalString negated = o.getRenderedNegatedNameWithDashes();
-               if (negated != null) {
-                   names.add(negated);
-               }
-           }
+            if (((o.shortName() != null && o.shortName().equals(name) &&
+                    !o.isLongNameUsed() && o.getValues().size() == 0) ||
+                    (o.name().startsWith(name) && o.getValues().size() == 0)) &&
+                    o.activator().isActivated(new ParsedCommand(this)))
+                names.add(o.getRenderedNameWithDashes());
+            // Also check negated option names for negatable options
+            if (o.isNegatable() && o.getNegatedName() != null &&
+                    o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
+                    o.activator().isActivated(new ParsedCommand(this))) {
+                TerminalString negated = o.getRenderedNegatedNameWithDashes();
+                if (negated != null) {
+                    names.add(negated);
+                }
+            }
         }
         return names;
     }
 
     public List<String> findPossibleLongNames(String name) {
-        if(name.startsWith("--"))
+        if (name.startsWith("--"))
             name = name.substring(2);
         List<ProcessedOption> opts = getOptions();
         List<String> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-           if(((o.shortName() != null && o.shortName().equals(name) &&
-                   !o.isLongNameUsed() && o.getValues().size() == 0) ||
-                   (o.name().startsWith(name) && o.getValues().size() == 0)) &&
-                   o.activator().isActivated(new ParsedCommand(this)))
-               names.add(o.name());
-           // Also check negated option names for negatable options
-           if (o.isNegatable() && o.getNegatedName() != null &&
-                   o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
-                   o.activator().isActivated(new ParsedCommand(this)))
-               names.add(o.getNegatedName());
+            if (((o.shortName() != null && o.shortName().equals(name) &&
+                    !o.isLongNameUsed() && o.getValues().size() == 0) ||
+                    (o.name().startsWith(name) && o.getValues().size() == 0)) &&
+                    o.activator().isActivated(new ParsedCommand(this)))
+                names.add(o.name());
+            // Also check negated option names for negatable options
+            if (o.isNegatable() && o.getNegatedName() != null &&
+                    o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
+                    o.activator().isActivated(new ParsedCommand(this)))
+                names.add(o.getNegatedName());
         }
         return names;
     }
 
     /**
      * @return returns true if the command has any options with askIfNotSet to true
-     * and its value is not set.
+     *         and its value is not set.
      */
     public boolean hasAskIfNotSet() {
-        for(ProcessedOption opt : getOptions()) {
-            if(opt.askIfNotSet() && opt.hasValue() && opt.getValues().isEmpty() && !opt.hasDefaultValue())
+        for (ProcessedOption opt : getOptions()) {
+            if (opt.askIfNotSet() && opt.hasValue() && opt.getValues().isEmpty() && !opt.hasDefaultValue())
                 return true;
         }
         return false;
     }
 
     public List<ProcessedOption> getAllAskIfNotSet() {
-       List<ProcessedOption>  options = new ArrayList<>();
-        for(ProcessedOption opt : getOptions()) {
-            if(opt.askIfNotSet() && opt.hasValue() && opt.getValues().isEmpty() && !opt.hasDefaultValue())
+        List<ProcessedOption> options = new ArrayList<>();
+        for (ProcessedOption opt : getOptions()) {
+            if (opt.askIfNotSet() && opt.hasValue() && opt.getValues().isEmpty() && !opt.hasDefaultValue())
                 options.add(opt);
         }
-        if(argument != null && argument.askIfNotSet() && argument.hasValue() && argument.getValues().isEmpty() && !argument.hasDefaultValue())
+        if (argument != null && argument.askIfNotSet() && argument.hasValue() && argument.getValues().isEmpty()
+                && !argument.hasDefaultValue())
             options.add(argument);
-        if(arguments != null && arguments.askIfNotSet() && arguments.hasValue() && arguments.getValues().isEmpty() && !arguments.hasDefaultValue())
+        if (arguments != null && arguments.askIfNotSet() && arguments.hasValue() && arguments.getValues().isEmpty()
+                && !arguments.hasDefaultValue())
             options.add(arguments);
 
         return options;
@@ -569,29 +569,29 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         int width = 80;
         List<ProcessedOption> opts = getOptions();
         for (ProcessedOption o : opts) {
-            if(o.getFormattedLength() > maxLength)
+            if (o.getFormattedLength() > maxLength)
                 maxLength = o.getFormattedLength();
         }
 
         StringBuilder sb = new StringBuilder();
         //first line
         sb.append("Usage: ");
-        if(commandName == null || commandName.length() == 0)
+        if (commandName == null || commandName.length() == 0)
             sb.append(name());
         else
             sb.append(commandName);
-        if(opts.size() > 0)
+        if (opts.size() > 0)
             sb.append(" [<options>]");
 
-        if(argument != null) {
-            if(argument.isTypeAssignableByResourcesOrFile())
+        if (argument != null) {
+            if (argument.isTypeAssignableByResourcesOrFile())
                 sb.append(" <file>");
             else
                 sb.append(" <").append(argument.getFieldName()).append(">");
         }
 
-        if(arguments != null) {
-            if(arguments.isTypeAssignableByResourcesOrFile())
+        if (arguments != null) {
+            if (arguments.isTypeAssignableByResourcesOrFile())
                 sb.append(" [<files>]");
             else
                 sb.append(" [<").append(arguments.getFieldName()).append(">]");
@@ -602,16 +602,16 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
         //options and arguments
         if (opts.size() > 0)
-           sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
+            sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
         for (ProcessedOption o : opts)
-            sb.append(o.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
-        if(arguments != null) {
+            sb.append(o.getFormattedOption(2, maxLength + 4, width)).append(Config.getLineSeparator());
+        if (arguments != null) {
             sb.append(Config.getLineSeparator()).append("Arguments:").append(Config.getLineSeparator());
-            sb.append(arguments.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
+            sb.append(arguments.getFormattedOption(2, maxLength + 4, width)).append(Config.getLineSeparator());
         }
-        if(argument != null) {
+        if (argument != null) {
             sb.append(Config.getLineSeparator()).append("Argument:").append(Config.getLineSeparator());
-            sb.append(argument.getFormattedOption(2, maxLength+4, width)).append(Config.getLineSeparator());
+            sb.append(argument.getFormattedOption(2, maxLength + 4, width)).append(Config.getLineSeparator());
         }
         return sb.toString();
     }
@@ -621,19 +621,23 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return "ProcessedCommand{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
- ", options=" + getOptions()
-                +                '}';
+                ", options=" + getOptions()
+                + '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProcessedCommand)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof ProcessedCommand))
+            return false;
 
         ProcessedCommand that = (ProcessedCommand) o;
 
-        if (!name.equals(that.name)) return false;
-        if (description != null ? !description.equals(that.description) : that.description != null) return false;
+        if (!name.equals(that.name))
+            return false;
+        if (description != null ? !description.equals(that.description) : that.description != null)
+            return false;
 
         return true;
     }
@@ -646,20 +650,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public boolean anyOptionsSet() {
-        for(ProcessedOption o : getOptions()) {
+        for (ProcessedOption o : getOptions()) {
             if (o.hasValue() && o.getValue() != null || !o.hasValue() && o.getValue() != null)
                 return true;
         }
-        if(hasArgument() && argument.getValue() != null)
+        if (hasArgument() && argument.getValue() != null)
             return true;
-        if(hasArguments() && arguments.getValue() != null)
+        if (hasArguments() && arguments.getValue() != null)
             return true;
 
         return false;
     }
 
     public boolean hasLongOption(String optionName) {
-        for(ProcessedOption o : getOptions()) {
+        for (ProcessedOption o : getOptions()) {
             if (o.name().equals(optionName))
                 return true;
         }
@@ -674,9 +678,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     //will only return true if the optionName equals an option and it does
     //not start with another option name
     public boolean hasUniqueLongOption(String optionName) {
-        if(hasLongOption(optionName)) {
-            for(ProcessedOption o : getOptions()) {
-                if(o.name().startsWith(optionName) && !o.name().equals(optionName))
+        if (hasLongOption(optionName)) {
+            for (ProcessedOption o : getOptions()) {
+                if (o.name().startsWith(optionName) && !o.name().equals(optionName))
                     return false;
             }
             return true;
@@ -710,15 +714,15 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public boolean hasOptionsWithInjectedValues() {
-        for(ProcessedOption option : options)
-            if(option.getValue() != null)
+        for (ProcessedOption option : options)
+            if (option.getValue() != null)
                 return true;
         return false;
     }
 
     public boolean hasOptionWithOverrideRequired() {
-        for(ProcessedOption option : options) {
-            if(option.getValue() != null && option.doOverrideRequired())
+        for (ProcessedOption option : options) {
+            if (option.getValue() != null && option.doOverrideRequired())
                 return true;
         }
         return false;
@@ -755,27 +759,27 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean hasSelector() {
         boolean selector = false;
-        for(ProcessedOption opt : getOptions()) {
+        for (ProcessedOption opt : getOptions()) {
             // if we have an option that's marked with override required and is set
             // it should override selector
-            if(opt.doOverrideRequired() && opt.getValue() != null)
+            if (opt.doOverrideRequired() && opt.getValue() != null)
                 return false;
-            if(opt.selectorType() != SelectorType.NO_OP && opt.hasValue())
+            if (opt.selectorType() != SelectorType.NO_OP && opt.hasValue())
                 selector = true;
         }
         return selector;
-     }
+    }
 
     public List<ProcessedOption> getAllSelectors() {
-       List<ProcessedOption>  options = new ArrayList<>();
-        for(ProcessedOption opt : getOptions()) {
-            if(opt.selectorType() != SelectorType.NO_OP && opt.hasValue() && opt.getValue() == null)
+        List<ProcessedOption> options = new ArrayList<>();
+        for (ProcessedOption opt : getOptions()) {
+            if (opt.selectorType() != SelectorType.NO_OP && opt.hasValue() && opt.getValue() == null)
                 options.add(opt);
         }
-        if(argument != null && argument.selectorType() != SelectorType.NO_OP &&
-                   (argument.hasValue() || argument.getOptionType().equals(OptionType.BOOLEAN)))
+        if (argument != null && argument.selectorType() != SelectorType.NO_OP &&
+                (argument.hasValue() || argument.getOptionType().equals(OptionType.BOOLEAN)))
             options.add(argument);
-        if(arguments != null && arguments.selectorType() != SelectorType.NO_OP && arguments.hasValue())
+        if (arguments != null && arguments.selectorType() != SelectorType.NO_OP && arguments.hasValue())
             options.add(arguments);
 
         return options;

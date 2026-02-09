@@ -24,14 +24,14 @@
    <parent>
         <groupId>org.aesh</groupId>
         <artifactId>aesh-all</artifactId>
-        <version>3.0-dev</version>
+        <version>3.0</version>
    </parent>
    <modelVersion>4.0.0</modelVersion>
 
    <groupId>org.aesh</groupId>
    <artifactId>aesh</artifactId>
    <packaging>jar</packaging>
-   <version>3.0-dev</version>
+   <version>3.0</version>
    <name>Æsh</name>
    <description>Æsh (Another Extendable SHell)</description>
    <scm>
@@ -104,39 +104,6 @@
                   </goals>
                </execution>
             </executions>
-         </plugin>
-	 <plugin>
-           <groupId>org.apache.maven.plugins</groupId>
-           <artifactId>maven-source-plugin</artifactId>
-           <executions>
-             <execution>
-               <id>attach-sources</id>
-               <phase>verify</phase>
-               <goals>
-                 <goal>jar-no-fork</goal>
-               </goals>
-             </execution>
-           </executions>
-         </plugin>
-         <plugin>
-           <groupId>org.apache.maven.plugins</groupId>
-           <artifactId>maven-checkstyle-plugin</artifactId>
-          <executions>
-             <execution>
-               <id>validate</id>
-               <phase>validate</phase>           
-               <configuration>
-                 <configLocation>config/checkstyle/checkstyle.xml</configLocation>                   
-                 <consoleOutput>true</consoleOutput>
-                 <failsOnError>true</failsOnError>
-                 <useFile/>
-                 <includeTestSourceDirectory>true</includeTestSourceDirectory>
-               </configuration>
-               <goals>
-                 <goal>check</goal>
-               </goals>
-             </execution>
-           </executions>
          </plugin>
        </plugins>
    </build>

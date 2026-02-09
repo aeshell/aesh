@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,7 +20,7 @@
 package org.aesh.command.man.parser;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public enum SectionType {
     NAME("NAME"),
@@ -44,19 +44,19 @@ public enum SectionType {
     }
 
     public static SectionType getSectionType(String name) {
-        if(NAME.getType().equals(name))
+        if (NAME.getType().equals(name))
             return NAME;
-        else if(SYNOPSIS.getType().equals(name))
+        else if (SYNOPSIS.getType().equals(name))
             return SYNOPSIS;
-        else if(DESCRIPTION.getType().equals(name))
+        else if (DESCRIPTION.getType().equals(name))
             return DESCRIPTION;
-        else if(OPTIONS.getType().equals(name))
+        else if (OPTIONS.getType().equals(name))
             return OPTIONS;
-        else if(AUTHOR.getType().equals(name))
+        else if (AUTHOR.getType().equals(name))
             return AUTHOR;
-        else if(RESOURCES.getType().equals(name))
+        else if (RESOURCES.getType().equals(name))
             return RESOURCES;
-        else if(COPYING.getType().equals(name))
+        else if (COPYING.getType().equals(name))
             return COPYING;
         else
             return NOT_SPECIFIED;

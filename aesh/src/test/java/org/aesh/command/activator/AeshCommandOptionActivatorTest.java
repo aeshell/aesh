@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 package org.aesh.command.activator;
+
+import java.io.IOException;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -39,10 +41,8 @@ import org.aesh.terminal.Key;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
-import java.io.IOException;
-
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandOptionActivatorTest {
 
@@ -52,18 +52,17 @@ public class AeshCommandOptionActivatorTest {
         TestConnection connection = new TestConnection();
         TestOptionValidatorProvider validatorProvider = new TestOptionValidatorProvider(new FooContext("bar"));
 
-       CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ValCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .connection(connection)
-                        .commandRegistry(registry)
-                        .optionActivatorProvider(validatorProvider)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .commandRegistry(registry)
+                .optionActivatorProvider(validatorProvider)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
@@ -85,7 +84,7 @@ public class AeshCommandOptionActivatorTest {
         connection.assertBuffer("val --bar=123 --foo=");
 
         console.stop();
-     }
+    }
 
     @CommandDefinition(name = "val", description = "")
     private static class ValCommand implements Command {
@@ -116,7 +115,7 @@ public class AeshCommandOptionActivatorTest {
 
         @Override
         public OptionActivator enhanceOptionActivator(OptionActivator optionActivator) {
-            if(optionActivator instanceof FooOptionActivator)
+            if (optionActivator instanceof FooOptionActivator)
                 ((FooOptionActivator) optionActivator).setContext(context);
             return optionActivator;
         }

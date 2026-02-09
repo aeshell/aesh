@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -20,17 +20,17 @@
 
 package org.aesh.command.impl.container;
 
+import org.aesh.command.Command;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.DefaultCommandContainer;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.Command;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 
 /**
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandContainer<CI extends CommandInvocation> extends DefaultCommandContainer<CI> {
 
@@ -46,7 +46,7 @@ public class AeshCommandContainer<CI extends CommandInvocation> extends DefaultC
 
     public AeshCommandContainer(ProcessedCommand<Command<CI>, CI> processedCommand) {
         super();
-        parser = new AeshCommandLineParser<>(processedCommand );
+        parser = new AeshCommandLineParser<>(processedCommand);
     }
 
     public AeshCommandContainer(String errorMessage) {
@@ -68,7 +68,7 @@ public class AeshCommandContainer<CI extends CommandInvocation> extends DefaultC
         return errorMessage;
     }
 
-   @Override
+    @Override
     public void close() {
 
     }

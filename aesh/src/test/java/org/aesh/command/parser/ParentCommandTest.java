@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 package org.aesh.command.parser;
+
+import static org.junit.Assert.*;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -42,12 +44,10 @@ import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.console.AeshContext;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 /**
  * Tests for @ParentCommand annotation and CommandContext.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class ParentCommandTest {
 
@@ -70,8 +70,7 @@ public class ParentCommandTest {
         parser.getCommandPopulator().populateObject(
                 parser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
 
-        ModuleGroupCommand<CommandInvocation> moduleCmd =
-                (ModuleGroupCommand<CommandInvocation>) parser.getCommand();
+        ModuleGroupCommand<CommandInvocation> moduleCmd = (ModuleGroupCommand<CommandInvocation>) parser.getCommand();
 
         // Create a CommandContext and push the parent
         CommandContext ctx = new CommandContext("aesh> ");
@@ -99,8 +98,7 @@ public class ParentCommandTest {
         parentParser.getCommandPopulator().populateObject(
                 parentParser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
 
-        ModuleGroupCommand<CommandInvocation> moduleCmd =
-                (ModuleGroupCommand<CommandInvocation>) parentParser.getCommand();
+        ModuleGroupCommand<CommandInvocation> moduleCmd = (ModuleGroupCommand<CommandInvocation>) parentParser.getCommand();
 
         // Verify parent values
         assertEquals("my-module-name", moduleCmd.moduleName);
@@ -120,8 +118,7 @@ public class ParentCommandTest {
                 childParser.getProcessedCommand(), invocationProviders, aeshContext,
                 CommandLineParser.Mode.VALIDATE, ctx);
 
-        TagCommand<CommandInvocation> tagCmd =
-                (TagCommand<CommandInvocation>) childParser.getCommand();
+        TagCommand<CommandInvocation> tagCmd = (TagCommand<CommandInvocation>) childParser.getCommand();
 
         // Verify subcommand's own argument was populated
         assertEquals("v1.0", tagCmd.tagName);
@@ -208,8 +205,8 @@ public class ParentCommandTest {
         parentParser.getCommandPopulator().populateObject(
                 parentParser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
 
-        InheritedGroupCommand<CommandInvocation> parentCmd =
-                (InheritedGroupCommand<CommandInvocation>) parentParser.getCommand();
+        InheritedGroupCommand<CommandInvocation> parentCmd = (InheritedGroupCommand<CommandInvocation>) parentParser
+                .getCommand();
 
         // Verify parent values
         assertTrue(parentCmd.debug);
@@ -233,8 +230,7 @@ public class ParentCommandTest {
                 childParser.getProcessedCommand(), invocationProviders, aeshContext,
                 CommandLineParser.Mode.VALIDATE, ctx);
 
-        InheritedSubCommand<CommandInvocation> subCmd =
-                (InheritedSubCommand<CommandInvocation>) childParser.getCommand();
+        InheritedSubCommand<CommandInvocation> subCmd = (InheritedSubCommand<CommandInvocation>) childParser.getCommand();
 
         // Verify subcommand's own option was populated
         assertEquals("extra-value", subCmd.extra);
@@ -266,8 +262,7 @@ public class ParentCommandTest {
                 childParser.getProcessedCommand(), invocationProviders, aeshContext,
                 CommandLineParser.Mode.VALIDATE, ctx);
 
-        InheritedSubCommand<CommandInvocation> subCmd =
-                (InheritedSubCommand<CommandInvocation>) childParser.getCommand();
+        InheritedSubCommand<CommandInvocation> subCmd = (InheritedSubCommand<CommandInvocation>) childParser.getCommand();
 
         // User-specified value should NOT be overridden by inherited value
         assertEquals(Integer.valueOf(10), subCmd.level);
@@ -278,8 +273,7 @@ public class ParentCommandTest {
 
     // ========== Test Command Classes ==========
 
-    @GroupCommandDefinition(name = "module", description = "Module management",
-            groupCommands = {TagCommand.class})
+    @GroupCommandDefinition(name = "module", description = "Module management", groupCommands = { TagCommand.class })
     public static class ModuleGroupCommand<CI extends CommandInvocation> implements Command<CI> {
 
         @Option(name = "verbose", shortName = 'v', hasValue = false, description = "Verbose mode")
@@ -317,8 +311,7 @@ public class ParentCommandTest {
         }
     }
 
-    @GroupCommandDefinition(name = "project", description = "Project management",
-            groupCommands = {})
+    @GroupCommandDefinition(name = "project", description = "Project management", groupCommands = {})
     public static class ProjectGroupCommand<CI extends CommandInvocation> implements Command<CI> {
 
         @Option(name = "name", shortName = 'n', description = "Project name")
@@ -332,8 +325,8 @@ public class ParentCommandTest {
 
     // ========== Inherited Options Test Commands ==========
 
-    @GroupCommandDefinition(name = "inherited", description = "Test inherited options",
-            groupCommands = {InheritedSubCommand.class})
+    @GroupCommandDefinition(name = "inherited", description = "Test inherited options", groupCommands = {
+            InheritedSubCommand.class })
     public static class InheritedGroupCommand<CI extends CommandInvocation> implements Command<CI> {
 
         @Option(name = "debug", shortName = 'd', hasValue = false, description = "Debug mode", inherited = true)

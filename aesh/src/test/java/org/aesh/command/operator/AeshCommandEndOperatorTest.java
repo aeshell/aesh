@@ -1,7 +1,7 @@
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
+ * as indicated by the @authors tag
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -19,34 +19,34 @@
  */
 package org.aesh.command.operator;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+
+import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandException;
+import org.aesh.command.CommandResult;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.converter.ConverterInvocation;
-import org.aesh.command.option.Option;
-import org.aesh.command.Command;
-import org.aesh.command.CommandException;
-import org.aesh.command.CommandResult;
-import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Option;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.tty.TestConnection;
 import org.aesh.terminal.utils.Config;
+import org.aesh.tty.TestConnection;
 import org.junit.Test;
-
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ * @author Aesh team
  */
 public class AeshCommandEndOperatorTest {
 
@@ -56,20 +56,19 @@ public class AeshCommandEndOperatorTest {
     public void testEnd() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
 
-         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
-                 .command(FooCommand.class)
-                 .command(BarCommand.class)
-                 .create();
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(FooCommand.class)
+                .command(BarCommand.class)
+                .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                        OptionActivator, CommandActivator> settings =
-                SettingsBuilder.builder()
-                        .commandRegistry(registry)
-                        .enableOperatorParser(true)
-                        .connection(connection)
-                        .setPersistExport(false)
-                        .logging(true)
-                        .build();
+        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+                .builder()
+                .commandRegistry(registry)
+                .enableOperatorParser(true)
+                .connection(connection)
+                .setPersistExport(false)
+                .logging(true)
+                .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
@@ -81,7 +80,7 @@ public class AeshCommandEndOperatorTest {
         console.stop();
     }
 
-    @CommandDefinition(name ="foo", description = "")
+    @CommandDefinition(name = "foo", description = "")
     private static class FooCommand implements Command {
 
         @Override
@@ -91,7 +90,7 @@ public class AeshCommandEndOperatorTest {
         }
     }
 
-    @CommandDefinition(name ="bar", description = "")
+    @CommandDefinition(name = "bar", description = "")
     private static class BarCommand implements Command {
 
         @Option
