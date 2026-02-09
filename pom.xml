@@ -49,7 +49,7 @@
       <!-- maven-compiler-plugin -->
       <maven.compiler.target>1.8</maven.compiler.target>
       <maven.compiler.source>1.8</maven.compiler.source>
-      <readline.version>3.0</readline.version>
+      <readline.version>3.1</readline.version>
     </properties>
  
     <developers>
