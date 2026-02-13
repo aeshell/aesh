@@ -47,7 +47,20 @@ public interface Execution<T extends CommandInvocation> {
 
     CommandResult getResult();
 
+    /**
+     * @deprecated Use {@link #setResult(CommandResult)} instead. This method contains a typo.
+     */
+    @Deprecated
     void setResut(CommandResult result);
+
+    /**
+     * Sets the result of this execution.
+     *
+     * @param result the command result
+     */
+    default void setResult(CommandResult result) {
+        setResut(result);
+    }
 
     void clearQueuedLine();
 }

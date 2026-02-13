@@ -138,8 +138,14 @@ public final class TableCharacters {
 
     /**
      * Parses a visual template string into a character map.
-     * The template consists of 5-character lines representing different parts of the table border.
-     * Supports 3, 5, or 6-line templates for varying levels of detail.
+     * <p>
+     * Each line of the template must be exactly 5 characters, representing a row of the
+     * table border in the format: {@code [left][fill][intersect][fill][right]}.
+     * Characters at positions 0, 1, 2, and 4 are extracted (position 3 is typically
+     * the same as position 1 and is ignored).
+     * <p>
+     * Supports 3-line (no outer border), 5-line (with outer border), or 6-line
+     * (with outer border and row separators) templates.
      *
      * @param template a multi-line visual template string
      * @param defaultMap fallback map if the template is invalid

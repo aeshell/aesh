@@ -132,8 +132,7 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
                         }
                         field.set(getObject(), parent);
                     } catch (IllegalAccessException e) {
-                        // Log warning but continue
-                        e.printStackTrace();
+                        // Field injection failed, continue with other fields
                     }
                 }
             }
@@ -312,7 +311,7 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
             } else
                 field.set(instance, null);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            // Field reset failed, continue
         }
     }
 

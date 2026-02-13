@@ -231,9 +231,8 @@ public class ProcessedOptionBuilder {
                     return null;
 
             } catch (InstantiationException | IllegalAccessException e) {
-                e.printStackTrace();
+                throw new RuntimeException("Failed to create completer instance", e);
             }
-            return null;
         }
     }
 

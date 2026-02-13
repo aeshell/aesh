@@ -21,6 +21,7 @@ package org.aesh.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.aesh.io.Resource;
 
@@ -38,7 +39,7 @@ public class FileUtils {
         }
 
         try (OutputStream out = file.write(append);) {
-            out.write(text.getBytes());
+            out.write(text.getBytes(StandardCharsets.UTF_8));
         }
     }
 }

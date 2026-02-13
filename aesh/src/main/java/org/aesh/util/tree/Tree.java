@@ -26,15 +26,21 @@ import java.util.function.Function;
 /**
  * Renders tree-structured data as formatted text.
  *
- * <p>Usage via static methods (for {@link TreeNode}):</p>
+ * <p>
+ * Usage via static methods (for {@link TreeNode}):
+ * </p>
+ *
  * <pre>
- * String output = Tree.render(root);                        // default UNICODE
- * String output = Tree.render(root, TreeStyle.ASCII);       // custom style
+ * String output = Tree.render(root); // default UNICODE
+ * String output = Tree.render(root, TreeStyle.ASCII); // custom style
  * </pre>
  *
- * <p>Usage via generic builder (for any typed hierarchy):</p>
+ * <p>
+ * Usage via generic builder (for any typed hierarchy):
+ * </p>
+ *
  * <pre>
- * String output = Tree.&lt;File&gt;builder()
+ * String output = Tree.&lt;File&gt; builder()
  *         .label(File::getName)
  *         .children(f -&gt; f.isDirectory()
  *                 ? Arrays.asList(f.listFiles())
@@ -71,9 +77,19 @@ public class Tree {
         return new Builder<>();
     }
 
+    /**
+     * Recursively renders the tree into a StringBuilder.
+     * <p>
+     * Depth convention: the root node starts at {@code currentDepth = -1}.
+     * Its immediate children are assigned {@code currentDepth = 0}, their children get 1, etc.
+     * When {@code maxDepth = 0}, only the root's immediate children are shown (grandchildren
+     * are truncated with "..."). When {@code maxDepth = -1}, depth is unlimited.
+     *
+     * @param currentDepth the depth of the current node; root starts at -1
+     */
     static <T> void renderTree(StringBuilder sb, T node, Function<T, String> labelFn,
             Function<T, List<T>> childrenFn, TreeStyle style, int maxDepth,
-            String prefix, boolean isRoot, int depth) {
+            String prefix, boolean isRoot, int currentDepth) {
         sb.append(labelFn.apply(node));
         sb.append(System.lineSeparator());
 
@@ -84,7 +100,8 @@ public class Tree {
             sb.append(prefix);
             sb.append(isLast ? style.last() : style.branch());
 
-            int childDepth = isRoot ? 0 : depth;
+            // Root's children start at depth 0; for non-root nodes, use the current depth
+            int childDepth = isRoot ? 0 : currentDepth;
             List<T> grandchildren = getChildren(child, childrenFn);
             if (maxDepth >= 0 && childDepth >= maxDepth && !grandchildren.isEmpty()) {
                 sb.append(labelFn.apply(child));

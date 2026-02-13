@@ -233,7 +233,7 @@ public class DefaultCommandInvocation implements CommandInvocation {
                     int input = console.reader().read();
                     return Key.getKey(new int[] { input });
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // I/O error reading key, return null
                 }
             }
             return null;

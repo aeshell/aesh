@@ -79,13 +79,13 @@ public class Process extends Thread implements Consumer<Signal> {
         try {
             execution.execute();
         } catch (CommandValidatorException | CommandException | OptionValidatorException | CommandLineParserException e) {
-            execution.setResut(CommandResult.FAILURE);
+            execution.setResult(CommandResult.FAILURE);
             conn.write(e.getMessage() + Config.getLineSeparator());
         } catch (InterruptedException e) {
             // Ctlr-C interrupt
-            execution.setResut(CommandResult.FAILURE);
+            execution.setResult(CommandResult.FAILURE);
         } catch (Exception e) {
-            execution.setResut(CommandResult.FAILURE);
+            execution.setResult(CommandResult.FAILURE);
             conn.write(e.getMessage() + Config.getLineSeparator());
             LOGGER.log(Level.WARNING, "Uncaught exception when executing the command: " + execution.getCommand().toString(), e);
         } finally {

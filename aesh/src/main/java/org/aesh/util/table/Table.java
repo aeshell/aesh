@@ -90,10 +90,15 @@ public class Table<T> {
             List<String> headers, List<Function<T, Object>> accessors,
             Map<String, String> characters) {
 
+        if (headers.size() != accessors.size()) {
+            throw new IllegalArgumentException(
+                    "Number of headers (" + headers.size() + ") must match number of accessors (" + accessors.size() + ")");
+        }
+
         characters = isValid(characters) ? characters : TableStyle.SQLITE.characters();
         boolean outsideBorder = hasOutsideBorder(characters);
         List<List<String>> headerRows = lineSplit(headers);
-        int columnCount = Math.min(headers.size(), accessors.size());
+        int columnCount = headers.size();
         List<Object[]> rows = new ArrayList<>();
 
         // Calculate initial column widths from headers
@@ -118,7 +123,7 @@ public class Table<T> {
             for (int a = 0; a < columnCount; a++) {
                 Object c = accessors.get(a).apply(value);
                 if (c == null) {
-                    c = "null";
+                    c = "";
                 } else if (c instanceof Long || c instanceof Integer) {
                     if (columnFormats[a] == null) {
                         columnFormats[a] = "d";
@@ -131,7 +136,7 @@ public class Table<T> {
                 } else {
                     columnFormats[a] = "s";
                 }
-                int cellWidth = columnFormats[a] == null ? "null".length() : c.toString().length();
+                int cellWidth = c.toString().length();
                 if (cellWidth > columnWidths[a]) {
                     columnWidths[a] = cellWidth;
                 }
@@ -142,6 +147,76 @@ public class Table<T> {
         for (int i = 0; i < columnFormats.length; i++) {
             if (columnFormats[i] == null) {
                 columnFormats[i] = "s";
+            }
+        }
+
+        // Enforce maxWidth by shrinking columns proportionally (widest first)
+        if (maxWidth > 0 && columnCount > 0) {
+            // Calculate total overhead: borders + separators + padding
+            int overhead;
+            if (outsideBorder) {
+                // "| " + (" | " * (n-1)) + " |" = 2 + 3*(n-1) + 2 = 4 + 3*(n-1)
+                overhead = 4 + 3 * (columnCount - 1);
+            } else {
+                // " | " * (n-1) = 3*(n-1)
+                overhead = 3 * (columnCount - 1);
+            }
+            int totalContentWidth = 0;
+            for (int w : columnWidths) {
+                totalContentWidth += w;
+            }
+            int totalWidth = totalContentWidth + overhead;
+            if (totalWidth > maxWidth) {
+                int availableContent = maxWidth - overhead;
+                if (availableContent < columnCount) {
+                    availableContent = columnCount; // minimum 1 char per column
+                }
+                // Shrink widest columns first until total fits
+                while (totalContentWidth > availableContent) {
+                    // Find the widest column
+                    int widestIdx = 0;
+                    for (int i = 1; i < columnCount; i++) {
+                        if (columnWidths[i] > columnWidths[widestIdx]) {
+                            widestIdx = i;
+                        }
+                    }
+                    // Find the second widest width to determine target
+                    int secondWidest = 0;
+                    for (int i = 0; i < columnCount; i++) {
+                        if (i != widestIdx && columnWidths[i] > secondWidest) {
+                            secondWidest = columnWidths[i];
+                        }
+                    }
+                    int excess = totalContentWidth - availableContent;
+                    int canShrink = columnWidths[widestIdx] - Math.max(secondWidest, 1);
+                    if (canShrink <= 0) {
+                        // All columns are the same width, shrink all equally
+                        int perColumn = excess / columnCount;
+                        int remainder = excess % columnCount;
+                        for (int i = 0; i < columnCount; i++) {
+                            int shrink = perColumn + (i < remainder ? 1 : 0);
+                            columnWidths[i] = Math.max(1, columnWidths[i] - shrink);
+                        }
+                        break;
+                    }
+                    int shrink = Math.min(canShrink, excess);
+                    columnWidths[widestIdx] -= shrink;
+                    totalContentWidth -= shrink;
+                }
+
+                // Truncate cell content to fit constrained column widths
+                for (Object[] row : rows) {
+                    for (int c = 0; c < row.length; c++) {
+                        String cellStr = row[c].toString();
+                        if (cellStr.length() > columnWidths[c]) {
+                            if (columnWidths[c] > 3) {
+                                row[c] = cellStr.substring(0, columnWidths[c] - 3) + "...";
+                            } else {
+                                row[c] = cellStr.substring(0, columnWidths[c]);
+                            }
+                        }
+                    }
+                }
             }
         }
 

@@ -506,7 +506,7 @@ public final class ProcessedOption {
                 }
             }
         } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InstantiationException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Failed to inject value into field: " + fieldName, e);
         }
     }
 
@@ -538,7 +538,7 @@ public final class ProcessedOption {
             }
 
         } catch (NoSuchFieldException | IllegalAccessException | InstantiationException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Failed to inject resource into field: " + fieldName, e);
         }
     }
 

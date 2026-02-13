@@ -172,7 +172,7 @@ public class TreeTest {
                         .child(TreeNode.of("grandchild")
                                 .child("great-grandchild")));
 
-        String output = Tree.<TreeNode>builder()
+        String output = Tree.<TreeNode> builder()
                 .label(TreeNode::label)
                 .children(TreeNode::children)
                 .style(TreeStyle.UNICODE)
@@ -197,7 +197,7 @@ public class TreeTest {
                 new Category("Birds",
                         new Category("Eagle")));
 
-        String output = Tree.<Category>builder()
+        String output = Tree.<Category> builder()
                 .label(c -> c.name)
                 .children(c -> c.subs)
                 .style(TreeStyle.UNICODE)
@@ -223,7 +223,7 @@ public class TreeTest {
 
         String staticOutput = Tree.render(root);
 
-        String builderOutput = Tree.<TreeNode>builder()
+        String builderOutput = Tree.<TreeNode> builder()
                 .label(TreeNode::label)
                 .children(TreeNode::children)
                 .style(TreeStyle.UNICODE)
@@ -239,7 +239,7 @@ public class TreeTest {
             // Override to return null children
         };
 
-        String output = Tree.<Category>builder()
+        String output = Tree.<Category> builder()
                 .label(c -> c.name)
                 .children(c -> null)
                 .build()
@@ -250,7 +250,7 @@ public class TreeTest {
 
     @Test
     public void testEmptyChildrenTreatedAsLeaf() {
-        String output = Tree.<TreeNode>builder()
+        String output = Tree.<TreeNode> builder()
                 .label(TreeNode::label)
                 .children(TreeNode::children)
                 .build()
@@ -267,7 +267,7 @@ public class TreeTest {
                                 .child("c")));
 
         // Default should be UNICODE style with unlimited depth
-        String output = Tree.<TreeNode>builder()
+        String output = Tree.<TreeNode> builder()
                 .label(TreeNode::label)
                 .children(TreeNode::children)
                 .build()
@@ -281,14 +281,14 @@ public class TreeTest {
 
     @Test(expected = IllegalStateException.class)
     public void testBuilderMissingLabelThrows() {
-        Tree.<String>builder()
+        Tree.<String> builder()
                 .children(s -> Collections.emptyList())
                 .build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void testBuilderMissingChildrenThrows() {
-        Tree.<String>builder()
+        Tree.<String> builder()
                 .label(s -> s)
                 .build();
     }
@@ -302,7 +302,7 @@ public class TreeTest {
                 .child(TreeNode.of("b")
                         .child("b1"));
 
-        String output = Tree.<TreeNode>builder()
+        String output = Tree.<TreeNode> builder()
                 .label(TreeNode::label)
                 .children(TreeNode::children)
                 .maxDepth(0)

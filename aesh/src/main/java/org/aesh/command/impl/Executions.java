@@ -309,6 +309,11 @@ class Executions {
         }
 
         @Override
+        public void setResult(CommandResult result) {
+            this.result = result;
+        }
+
+        @Override
         public void clearQueuedLine() {
             commandContainer.emptyLine();
         }
@@ -462,8 +467,7 @@ class Executions {
                         }
                         field.set(command, parent);
                     } catch (IllegalAccessException e) {
-                        // Log warning but continue
-                        e.printStackTrace();
+                        // Field injection failed, continue with other fields
                     }
                 }
             }

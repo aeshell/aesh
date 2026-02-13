@@ -61,10 +61,9 @@ public class GraalReflectionCommand implements Command {
                             StandardOpenOption.CREATE)) {
                         graalFileGenerator.generateReflection(container.getParser(), w);
                     }
-                    container.getParser().getProcessedCommand();
 
                 } catch (CommandLineParserException | IOException e) {
-                    e.printStackTrace();
+                    throw new CommandException("Failed to generate reflection file: " + e.getMessage(), e);
                 }
             } else
                 commandInvocation.println("Could not load command: " + command);
@@ -77,7 +76,7 @@ public class GraalReflectionCommand implements Command {
         try {
             return (Class<Command<CommandInvocation>>) Class.forName(commandName);
         } catch (ClassNotFoundException | ClassCastException e) {
-            e.printStackTrace();
+            // Class not found or wrong type, return null to let caller handle it
         }
 
         return null;

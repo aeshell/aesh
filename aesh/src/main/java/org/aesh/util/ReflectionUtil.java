@@ -26,7 +26,6 @@ import java.lang.reflect.Modifier;
 /**
  * @author Aesh team
  */
-@SuppressWarnings("unchecked")
 public class ReflectionUtil {
 
     public static <T> T newInstance(final Class<T> clazz) {
@@ -36,25 +35,22 @@ public class ReflectionUtil {
 
         T instance = null;
         for (Constructor<?> constructor : clazz.getConstructors()) {
-            instance = (T) instantiateWithConstructor(constructor);
-            if (isValidInstance(instance))
+            @SuppressWarnings("unchecked")
+            T result = (T) instantiateWithConstructor(constructor);
+            instance = result;
+            if (instance != null)
                 return instance;
         }
 
         for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
-            instance = (T) instantiateWithConstructor(constructor);
-            if (isValidInstance(instance))
+            @SuppressWarnings("unchecked")
+            T result = (T) instantiateWithConstructor(constructor);
+            instance = result;
+            if (instance != null)
                 return instance;
         }
 
         throw new RuntimeException("Could not instantiate class: " + clazz + ", no access to constructors.");
-    }
-
-    private static <T> boolean isValidInstance(T instance) {
-        if (instance != null) {
-            return true;
-        }
-        return false;
     }
 
     private static <T> T instantiateWithConstructor(Constructor<T> constructor) {
@@ -67,7 +63,7 @@ public class ReflectionUtil {
             instance = newInstanceWithParameterTypes(constructor);
         }
 
-        return isValidInstance(instance) ? instance : null;
+        return instance;
     }
 
     private static <T> T newInstanceWithoutParameterTypes(Constructor<T> constructor) {
@@ -75,20 +71,18 @@ public class ReflectionUtil {
             setAccessible(constructor);
             return constructor.newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
 
     private static <T> T newInstanceWithParameterTypes(Constructor<T> constructor) {
-        Constructor paramConstructor = getConstructorWithNoParams(constructor.getParameterTypes()[0]);
+        Constructor<?> paramConstructor = getConstructorWithNoParams(constructor.getParameterTypes()[0]);
         if (paramConstructor == null)
             return null;
         setAccessible(constructor);
         try {
             return constructor.newInstance(paramConstructor.newInstance());
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -100,8 +94,8 @@ public class ReflectionUtil {
         }
     }
 
-    private static Constructor getConstructorWithNoParams(Class clazz) {
-        for (Constructor constructor : clazz.getConstructors()) {
+    private static Constructor<?> getConstructorWithNoParams(Class<?> clazz) {
+        for (Constructor<?> constructor : clazz.getConstructors()) {
             if (constructor.getParameterTypes().length == 0) {
                 setAccessible(constructor);
                 return constructor;

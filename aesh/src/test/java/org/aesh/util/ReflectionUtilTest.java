@@ -69,6 +69,17 @@ public class ReflectionUtilTest {
         Foo4 foo4 = ReflectionUtil.newInstance(Foo4.class);
     }
 
+    @Test(expected = RuntimeException.class)
+    public void testAbstractClassThrowsRuntimeException() {
+        ReflectionUtil.newInstance(AbstractFoo.class);
+    }
+
+    @Test
+    public void testPrivateConstructorAccessibility() {
+        PrivateConstructorFoo foo = ReflectionUtil.newInstance(PrivateConstructorFoo.class);
+        assertNotNull(foo);
+    }
+
     class Foo1 {
 
     }
@@ -98,6 +109,14 @@ public class ReflectionUtilTest {
 
         Foo5(String x, String y) {
 
+        }
+    }
+
+    static abstract class AbstractFoo {
+    }
+
+    static class PrivateConstructorFoo {
+        private PrivateConstructorFoo() {
         }
     }
 }

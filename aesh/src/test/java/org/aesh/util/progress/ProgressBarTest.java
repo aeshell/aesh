@@ -412,4 +412,71 @@ public class ProgressBarTest {
         assertTrue("Should show 50%", output.contains("50%"));
         assertTrue("Should show ratio with large values", output.contains("(500000/1000000)"));
     }
+
+    // --- Edge case tests for bounds checking ---
+
+    @Test
+    public void testTotalZeroCurrentZero() {
+        ProgressBar bar = ProgressBar.builder()
+                .total(0)
+                .style(ProgressBarStyle.ASCII)
+                .showRatio(true)
+                .width(30)
+                .build();
+
+        String output = bar.render(0, 0, 30);
+        assertTrue("Should show 100% when total=0 and current=0", output.contains("100%"));
+        assertTrue("Should show ratio 0/0", output.contains("(0/0)"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testNegativeStepThrowsException() {
+        ProgressBar bar = ProgressBar.builder()
+                .total(100)
+                .style(ProgressBarStyle.ASCII)
+                .width(30)
+                .build();
+
+        bar.step(-1);
+    }
+
+    @Test
+    public void testStepBeyondTotalClamps() {
+        ProgressBar bar = ProgressBar.builder()
+                .total(10)
+                .style(ProgressBarStyle.ASCII)
+                .width(30)
+                .build();
+
+        bar.step(15);
+        // After stepping beyond total, render should show 100%
+        String output = bar.render(10, 10, 30);
+        assertTrue("Should show 100% after clamping", output.contains("100%"));
+    }
+
+    @Test
+    public void testUpdateClampsNegativeToZero() {
+        ProgressBar bar = ProgressBar.builder()
+                .total(100)
+                .style(ProgressBarStyle.ASCII)
+                .width(30)
+                .build();
+
+        bar.update(-10);
+        String output = bar.render(0, 100, 30);
+        assertTrue("Should show 0% after clamping negative", output.contains("0%"));
+    }
+
+    @Test
+    public void testUpdateClampsBeyondTotal() {
+        ProgressBar bar = ProgressBar.builder()
+                .total(100)
+                .style(ProgressBarStyle.ASCII)
+                .width(30)
+                .build();
+
+        bar.update(200);
+        String output = bar.render(100, 100, 30);
+        assertTrue("Should show 100% after clamping above total", output.contains("100%"));
+    }
 }

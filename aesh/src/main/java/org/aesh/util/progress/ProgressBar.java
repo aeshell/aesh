@@ -19,6 +19,8 @@
  */
 package org.aesh.util.progress;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.aesh.command.shell.Shell;
 import org.aesh.terminal.utils.ANSI;
 
@@ -26,7 +28,10 @@ import org.aesh.terminal.utils.ANSI;
  * A pull-based progress bar utility for displaying progress of long-running
  * operations in the terminal.
  *
- * <p>Usage example:</p>
+ * <p>
+ * Usage example:
+ * </p>
+ *
  * <pre>
  * ProgressBar progress = ProgressBar.builder()
  *         .shell(invocation.getShell())
@@ -57,7 +62,7 @@ public class ProgressBar {
     private final boolean showRatio;
     private final int width;
 
-    private long current;
+    private final AtomicLong current;
 
     private ProgressBar(Builder builder) {
         this.shell = builder.shell;
@@ -66,7 +71,7 @@ public class ProgressBar {
         this.style = builder.style;
         this.showPercentage = builder.showPercentage;
         this.showRatio = builder.showRatio;
-        this.current = 0;
+        this.current = new AtomicLong(0);
 
         if (builder.width > 0) {
             this.width = builder.width;
@@ -78,12 +83,18 @@ public class ProgressBar {
     }
 
     /**
-     * Set absolute progress value.
+     * Set absolute progress value. Values are clamped to [0, total] when total &gt; 0.
      *
      * @param value the current progress value
      */
     public void update(long value) {
-        this.current = value;
+        if (value < 0) {
+            value = 0;
+        }
+        if (total > 0 && value > total) {
+            value = total;
+        }
+        this.current.set(value);
         display();
     }
 
@@ -97,10 +108,17 @@ public class ProgressBar {
     /**
      * Increment progress by a given amount.
      *
-     * @param n the amount to increment by
+     * @param n the amount to increment by (must be non-negative)
+     * @throws IllegalArgumentException if n is negative
      */
     public void step(long n) {
-        this.current += n;
+        if (n < 0) {
+            throw new IllegalArgumentException("Step value must be non-negative, got: " + n);
+        }
+        long updated = this.current.addAndGet(n);
+        if (total > 0 && updated > total) {
+            this.current.set(total);
+        }
         display();
     }
 
@@ -109,7 +127,7 @@ public class ProgressBar {
      * so subsequent output appears below the bar.
      */
     public void complete() {
-        this.current = total;
+        this.current.set(total);
         display();
         if (shell != null) {
             shell.writeln("");
@@ -135,7 +153,7 @@ public class ProgressBar {
         }
         shell.write(ANSI.CURSOR_START);
         shell.write(ANSI.ERASE_WHOLE_LINE);
-        shell.write(render(current, total, width));
+        shell.write(render(current.get(), total, width));
     }
 
     /**

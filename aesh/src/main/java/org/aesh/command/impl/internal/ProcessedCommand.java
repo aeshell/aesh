@@ -428,7 +428,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
                 options.add(helpOption);
             } catch (OptionParserException e) {
-                e.printStackTrace();
+                throw new RuntimeException("Failed to generate help option", e);
             }
         }
     }
@@ -457,7 +457,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
                 options.add(versionOption);
             } catch (OptionParserException e) {
-                e.printStackTrace();
+                throw new RuntimeException("Failed to generate version option", e);
             }
         }
     }

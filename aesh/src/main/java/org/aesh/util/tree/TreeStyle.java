@@ -22,20 +22,37 @@ package org.aesh.util.tree;
 /**
  * Predefined visual styles for tree rendering.
  *
- * <p>Each style defines four connector strings used to draw the tree structure:</p>
+ * <p>
+ * Each style defines four connector strings used to draw the tree structure:
+ * </p>
  * <ul>
- *   <li>{@code branch} — prefix for non-last children</li>
- *   <li>{@code last} — prefix for the last child</li>
- *   <li>{@code vertical} — continuation line for non-last children</li>
- *   <li>{@code space} — continuation line for last children</li>
+ * <li>{@code branch} — prefix for non-last children</li>
+ * <li>{@code last} — prefix for the last child</li>
+ * <li>{@code vertical} — continuation line for non-last children</li>
+ * <li>{@code space} — continuation line for last children</li>
  * </ul>
  *
  * <table>
- * <tr><th>Style</th><th>Example</th></tr>
- * <tr><td>ASCII</td><td>{@code +-- child}</td></tr>
- * <tr><td>UNICODE</td><td>{@code ├── child}</td></tr>
- * <tr><td>COMPACT</td><td>{@code ├─ child}</td></tr>
- * <tr><td>ROUNDED</td><td>{@code ╰── last-child}</td></tr>
+ * <tr>
+ * <th>Style</th>
+ * <th>Example</th>
+ * </tr>
+ * <tr>
+ * <td>ASCII</td>
+ * <td>{@code +-- child}</td>
+ * </tr>
+ * <tr>
+ * <td>UNICODE</td>
+ * <td>{@code ├── child}</td>
+ * </tr>
+ * <tr>
+ * <td>COMPACT</td>
+ * <td>{@code ├─ child}</td>
+ * </tr>
+ * <tr>
+ * <td>ROUNDED</td>
+ * <td>{@code ╰── last-child}</td>
+ * </tr>
  * </table>
  */
 public enum TreeStyle {

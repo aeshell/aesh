@@ -67,7 +67,7 @@ public class CompleterCommand implements Command<CommandInvocation> {
                             StandardOpenOption.CREATE);
 
                 } catch (CommandLineParserException | IOException e) {
-                    e.printStackTrace();
+                    throw new CommandException("Failed to generate completer file: " + e.getMessage(), e);
                 }
             } else
                 commandInvocation.println("Could not load command: " + command);
@@ -81,7 +81,7 @@ public class CompleterCommand implements Command<CommandInvocation> {
         try {
             return (Class<Command<CommandInvocation>>) Class.forName(commandName);
         } catch (ClassNotFoundException | ClassCastException e) {
-            e.printStackTrace();
+            // Class not found or wrong type, return null to let caller handle it
         }
 
         return null;

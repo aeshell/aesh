@@ -40,8 +40,8 @@ public class PropertiesLookup {
         try {
             String value = System.getenv(variable);
             return value != null ? value : "";
-        } catch (Exception e) {
-            // System.getenv will throw an exception if a key is not found, lets just return empty string
+        } catch (SecurityException e) {
+            // SecurityException if access to environment variables is restricted
             return "";
         }
     }
@@ -49,8 +49,8 @@ public class PropertiesLookup {
     public static String findSystemProperty(String key) {
         try {
             return System.getProperty(key);
-        } catch (Exception e) {
-            // System.getProperties will throw an exception if a key is not found, lets just return empty string
+        } catch (SecurityException e) {
+            // SecurityException if access to system properties is restricted
             return "";
         }
     }

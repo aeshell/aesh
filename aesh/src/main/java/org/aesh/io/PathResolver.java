@@ -205,7 +205,7 @@ public class PathResolver {
                     files.add(p.toFile());
                 return files;
             } catch (IOException e) {
-                e.printStackTrace();
+                // Return empty list on I/O error
             }
         } else {
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(incPath.toPath(), searchArgument)) {
@@ -219,7 +219,7 @@ public class PathResolver {
                 }
                 return files;
             } catch (IOException e) {
-                e.printStackTrace();
+                // Return empty list on I/O error
             }
         }
 

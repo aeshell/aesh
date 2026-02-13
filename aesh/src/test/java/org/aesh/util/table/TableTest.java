@@ -118,7 +118,11 @@ public class TableTest {
                 a -> a[0], a -> a[1]);
 
         String output = Table.render(80, items, headers, accessors);
-        assertTrue("Null should render as 'null'", output.contains("null"));
+        // Null values should render as empty string, not literal "null"
+        assertFalse("Null should not render as literal 'null'", output.contains("null"));
+        // The table should still render without errors
+        assertTrue("Should still contain key1", output.contains("key1"));
+        assertTrue("Should still contain value1", output.contains("value1"));
     }
 
     @Test
@@ -451,6 +455,48 @@ public class TableTest {
         // With 2 data rows, there should be 1 row separator line
         assertTrue("Should contain row separator character \u255f",
                 output.contains("\u255f"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testMismatchedHeaderAccessorCountThrows() {
+        List<String> headers = Arrays.asList("Name", "Email", "Age");
+        List<Function<Person, Object>> accessors = Arrays.<Function<Person, Object>> asList(
+                p -> p.name, p -> p.email);
+
+        // 3 headers but only 2 accessors should throw
+        Table.render(80, people, headers, accessors);
+    }
+
+    @Test
+    public void testNullAccessorReturnRendersAsEmpty() {
+        List<String[]> items = Arrays.asList(
+                new String[] { "key1", "value1" },
+                new String[] { "key2", null });
+        List<String> headers = Arrays.asList("Key", "Value");
+        List<Function<String[], Object>> accessors = Arrays.<Function<String[], Object>> asList(
+                a -> a[0], a -> a[1]);
+
+        String output = Table.render(80, items, headers, accessors);
+        // Null values should render as empty string, not the literal "null"
+        assertFalse("Null should not render as literal 'null'", output.contains("null"));
+    }
+
+    @Test
+    public void testMaxWidthTruncatesColumns() {
+        List<Person> items = Arrays.asList(
+                new Person("A very long name that exceeds width", "some-long-email@example.com", 30, 95.5));
+        List<String> headers = Arrays.asList("Name", "Email");
+        List<Function<Person, Object>> accessors = Arrays.<Function<Person, Object>> asList(
+                p -> p.name, p -> p.email);
+
+        String output = Table.render(30, items, headers, accessors,
+                TableStyle.SQLITE.characters());
+        // With maxWidth=30, content should be truncated with ellipsis
+        String[] lines = output.split(System.lineSeparator());
+        for (String line : lines) {
+            assertTrue("No line should exceed maxWidth (30), got length " + line.length(),
+                    line.length() <= 30);
+        }
     }
 
     @Test

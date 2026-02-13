@@ -141,7 +141,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                 try {
                     ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new ExportCommand(exportManager));
                 } catch (CommandRegistryException e) {
-                    e.printStackTrace();
+                    LOGGER.log(Level.WARNING, "Failed to register ExportCommand", e);
                 }
             }
         }
@@ -160,11 +160,11 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                         ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new AliasCommand(aliasManager));
                         ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new UnAliasCommand(aliasManager));
                     } catch (CommandRegistryException e) {
-                        e.printStackTrace();
+                        LOGGER.log(Level.WARNING, "Failed to register alias commands", e);
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Failed to initialize alias manager", e);
             }
         }
 

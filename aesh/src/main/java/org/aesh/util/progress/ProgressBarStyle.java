@@ -22,15 +22,32 @@ package org.aesh.util.progress;
 /**
  * Predefined visual styles for the progress bar.
  *
- * <p>Each style defines the characters used for the filled portion,
- * empty portion, brackets, and an optional tip character.</p>
+ * <p>
+ * Each style defines the characters used for the filled portion,
+ * empty portion, brackets, and an optional tip character.
+ * </p>
  *
  * <table>
- * <tr><th>Style</th><th>Example</th></tr>
- * <tr><td>ASCII</td><td>{@code [####------] 40%}</td></tr>
- * <tr><td>UNICODE</td><td>{@code │████░░░░░░│ 40%}</td></tr>
- * <tr><td>SIMPLE</td><td>{@code [====      ] 40%}</td></tr>
- * <tr><td>ARROW</td><td>{@code [===>      ] 40%}</td></tr>
+ * <tr>
+ * <th>Style</th>
+ * <th>Example</th>
+ * </tr>
+ * <tr>
+ * <td>ASCII</td>
+ * <td>{@code [####------] 40%}</td>
+ * </tr>
+ * <tr>
+ * <td>UNICODE</td>
+ * <td>{@code │████░░░░░░│ 40%}</td>
+ * </tr>
+ * <tr>
+ * <td>SIMPLE</td>
+ * <td>{@code [====      ] 40%}</td>
+ * </tr>
+ * <tr>
+ * <td>ARROW</td>
+ * <td>{@code [===>      ] 40%}</td>
+ * </tr>
  * </table>
  */
 public enum ProgressBarStyle {
