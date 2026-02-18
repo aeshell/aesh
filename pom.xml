@@ -37,6 +37,9 @@
     <modules>
         <module>aesh</module>
     </modules>
+
+    <!-- aesh-tamboui is in a profile since it requires tamboui snapshot dependencies -->
+    <!-- Build with: mvn compile -Ptamboui -->
     
     <!-- Licenses -->
     <licenses>
@@ -51,6 +54,7 @@
       <maven.compiler.target>1.8</maven.compiler.target>
       <maven.compiler.source>1.8</maven.compiler.source>
       <readline.version>3.1</readline.version>
+      <tamboui.version>0.1.0</tamboui.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
       <!-- Code formatting -->
@@ -340,6 +344,12 @@
             </plugin>
           </plugins>
         </build>
+      </profile>
+      <profile>
+        <id>tamboui</id>
+        <modules>
+          <module>aesh-tamboui</module>
+        </modules>
       </profile>
     </profiles>
 

@@ -23,6 +23,7 @@ package org.aesh.command.shell;
 import java.util.concurrent.TimeUnit;
 
 import org.aesh.readline.Prompt;
+import org.aesh.terminal.Connection;
 import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.Size;
 
@@ -128,4 +129,15 @@ public interface Shell {
      * Clear the terminal
      */
     void clear();
+
+    /**
+     * Returns the underlying terminal connection.
+     * Useful for integrating with frameworks that need direct terminal access
+     * (e.g., TamboUI TUI framework).
+     *
+     * @return the Connection, or null if not available
+     */
+    default Connection connection() {
+        return null;
+    }
 }
