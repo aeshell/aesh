@@ -179,4 +179,9 @@ public class ShellImpl implements Shell {
     public void clear() {
         connection.put(Capability.clear_screen);
     }
+
+    @Override
+    public Connection connection() {
+        return connection;
+    }
 }
