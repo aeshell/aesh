@@ -110,12 +110,14 @@ class NonClosingConnection implements Connection {
 
     @Override
     public void openBlocking() {
-        delegate.openBlocking();
+        // no-op — aesh manages the connection's blocking mode
     }
 
     @Override
     public void openNonBlocking() {
-        delegate.openNonBlocking();
+        // no-op — aesh manages the connection's blocking mode.
+        // Delegating would create a new executor thread on each TUI command
+        // invocation that is never shut down, delaying JVM exit.
     }
 
     @Override
