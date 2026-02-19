@@ -81,8 +81,7 @@ public class Selector {
                 shell.writeln("  " + defaultValues.get(i));
         }
         shell.write(ANSI.CURSOR_HIDE);
-        int[] moveToFirstLine = new int[] { 27, '[', 48 + defaultValues.size(), 'A' };
-        shell.write(moveToFirstLine);
+        shell.write(ANSI.moveRowsUp(defaultValues.size()));
 
         boolean waitingForEnter = true;
         int focusLine = 0;
@@ -92,8 +91,7 @@ public class Selector {
                 if (in == Key.ENTER || in == Key.ENTER_2 || in == Key.CTRL_M || in == Key.SPACE) {
                     waitingForEnter = false;
                     out.add(defaultValues.get(focusLine));
-                    int moveDown = defaultValues.size() - focusLine;
-                    shell.write(new int[] { 27, '[', 48 + moveDown, 'B' });
+                    shell.write(ANSI.moveRowsDown(defaultValues.size() - focusLine));
                     shell.write(ANSI.CURSOR_SHOW);
                 } else if (in == Key.UP || in == Key.UP_2) {
                     if (focusLine > 0) {
@@ -115,8 +113,7 @@ public class Selector {
                     }
                 }
             } catch (InterruptedException e) {
-                int moveDown = defaultValues.size() - focusLine;
-                shell.write(new int[] { 27, '[', 48 + moveDown, 'B' });
+                shell.write(ANSI.moveRowsDown(defaultValues.size() - focusLine));
                 shell.write(ANSI.CURSOR_SHOW);
             }
         }

@@ -32,7 +32,6 @@ import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.Capability;
 import org.aesh.terminal.tty.Size;
 import org.aesh.terminal.utils.Config;
-import org.aesh.terminal.utils.Parser;
 
 /**
  * @author Aesh team
@@ -87,7 +86,7 @@ public class ShellImpl implements Shell {
 
     @Override
     public void write(char out) {
-        connection.stdoutHandler().accept(new int[] { out });
+        connection.write(String.valueOf(out));
     }
 
     @Override
@@ -158,7 +157,7 @@ public class ShellImpl implements Shell {
     @Override
     public Key read(Prompt prompt) throws InterruptedException {
         if (prompt != null) {
-            connection.write(Parser.fromCodePoints(prompt.getANSI()));
+            connection.stdoutHandler().accept(prompt.getANSI());
         }
         return doRead(0, null);
     }
