@@ -304,11 +304,6 @@ class Executions {
         }
 
         @Override
-        public void setResut(CommandResult result) {
-            this.result = result;
-        }
-
-        @Override
         public void setResult(CommandResult result) {
             this.result = result;
         }

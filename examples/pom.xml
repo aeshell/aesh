@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.aesh</groupId>
         <artifactId>aesh-all</artifactId>
-        <version>3.0-dev</version>
+        <version>3.0</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -70,6 +70,9 @@
       <!-- maven-compiler-plugin -->
       <maven.compiler.target>1.8</maven.compiler.target>
       <maven.compiler.source>1.8</maven.compiler.source>
+
+      <!-- Skip formatter/impsort since the config file path does not resolve when building standalone -->
+      <format.skip>true</format.skip>
     </properties>
 
 
@@ -91,26 +94,13 @@
 	    <plugin>
                <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
-	    <plugin>
-               <groupId>org.apache.maven.plugins</groupId>
-               <artifactId>maven-source-plugin</artifactId>
-               <executions>
-                   <execution>
-                       <id>attach-sources</id>
-                       <phase>verify</phase>
-                       <goals>
-                            <goal>jar-no-fork</goal>
-                       </goals>
-                   </execution>
-               </executions>
-            </plugin>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>examples.Example</mainClass>
+                            <mainClass>examples.AeshGraphicsExample</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -142,26 +132,6 @@
                   </configuration>
                 </execution>
               </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>validate</id>
-                        <phase>validate</phase>           
-                        <configuration>
-                          <configLocation>${project.basedir}/../config/checkstyle/checkstyle.xml</configLocation>
-                            <consoleOutput>true</consoleOutput>
-                            <failsOnError>true</failsOnError>
-                            <linkXRef>false</linkXRef>
-                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                        </configuration>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>

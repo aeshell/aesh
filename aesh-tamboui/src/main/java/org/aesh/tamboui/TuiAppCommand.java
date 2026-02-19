@@ -40,6 +40,7 @@ import dev.tamboui.tui.event.KeyEvent;
  * custom key handling and {@link #onStart(ToolkitRunner)} for initialization.
  * <p>
  * Example:
+ *
  * <pre>
  * {@literal @}CommandDefinition(name = "status", description = "System status")
  * public class StatusCommand extends TuiAppCommand {

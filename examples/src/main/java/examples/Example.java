@@ -19,6 +19,16 @@
  */
 package examples;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -49,32 +59,22 @@ import org.aesh.command.validator.OptionValidator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.command.validator.ValidatorInvocationProvider;
+import org.aesh.console.AeshContext;
+import org.aesh.console.ReadlineConsole;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
-import org.aesh.console.AeshContext;
 import org.aesh.readline.Prompt;
-import org.aesh.console.ReadlineConsole;
-import org.aesh.terminal.KeyAction;
+import org.aesh.selector.Selector;
+import org.aesh.selector.SelectorType;
 import org.aesh.terminal.Key;
+import org.aesh.terminal.KeyAction;
 import org.aesh.terminal.formatting.CharacterType;
 import org.aesh.terminal.formatting.Color;
 import org.aesh.terminal.formatting.TerminalColor;
 import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.terminal.formatting.TerminalTextStyle;
-import org.aesh.selector.Selector;
-import org.aesh.selector.SelectorType;
 import org.aesh.terminal.utils.ANSI;
 import org.aesh.terminal.utils.Config;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -83,7 +83,7 @@ public class Example {
 
     public static void main(String[] args) throws CommandLineParserException, IOException, CommandRegistryException {
 
-        CommandBuilder<FooCommand> fooCommand = CommandBuilder.<FooCommand>builder()
+        CommandBuilder<FooCommand> fooCommand = CommandBuilder.<FooCommand> builder()
                 .name("foo")
                 .description("fooing")
                 .addOption(ProcessedOptionBuilder.builder()
@@ -122,30 +122,28 @@ public class Example {
                 }).create())
                 .create();
 
-
-        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                               OptionActivator, CommandActivator> builder =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .enableMan(true)
-                        .enableAlias(true)
-                        .enableExport(true)
-                        .enableSearchInPaging(true)
-                        .setExecuteFileAtStart(new FileResource(
-                                Config.getHomeDir()+Config.getPathSeparator()+".aeshrc"))
-                        .readInputrc(false)
-                        .commandRegistry(registry)
-                        .manProvider(new ManProviderExample())
-                        .validatorInvocationProvider(new ExampleValidatorInvocationProvider());
+        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> builder = SettingsBuilder
+                .builder()
+                .logging(true)
+                .enableMan(true)
+                .enableAlias(true)
+                .enableExport(true)
+                .enableSearchInPaging(true)
+                .setExecuteFileAtStart(new FileResource(
+                        Config.getHomeDir() + Config.getPathSeparator() + ".aeshrc"))
+                .readInputrc(false)
+                .commandRegistry(registry)
+                .manProvider(new ManProviderExample())
+                .validatorInvocationProvider(new ExampleValidatorInvocationProvider());
 
         ReadlineConsole console = new ReadlineConsole(builder.build());
         console.setPrompt(new Prompt(new TerminalString("[aesh@rules]$ ",
-                        new TerminalColor(Color.GREEN, Color.DEFAULT, Color.Intensity.BRIGHT))));
+                new TerminalColor(Color.GREEN, Color.DEFAULT, Color.Intensity.BRIGHT))));
 
         console.start();
     }
 
-    @CommandDefinition(name = "exit", description = "exit the program", aliases = {"quit"})
+    @CommandDefinition(name = "exit", description = "exit the program", aliases = { "quit" })
     public static class ExitCommand implements Command {
 
         @Override
@@ -210,7 +208,6 @@ public class Example {
         }
     }
 
-
     //this command use a builder defined above to specify the meta data needed
     public static class FooCommand implements Command<CommandInvocation> {
 
@@ -220,13 +217,13 @@ public class Example {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-           if(bar == null)
-               commandInvocation.getShell().writeln("NO BAR!");
+            if (bar == null)
+                commandInvocation.getShell().writeln("NO BAR!");
             else {
-               commandInvocation.getShell().writeln("you set bar to: " + bar);
-               commandInvocation.getShell().writeln("lets work a bit...... ");
-               Thread.sleep(2000);
-           }
+                commandInvocation.getShell().writeln("you set bar to: " + bar);
+                commandInvocation.getShell().writeln("lets work a bit...... ");
+                Thread.sleep(2000);
+            }
             return CommandResult.SUCCESS;
         }
     }
@@ -251,10 +248,9 @@ public class Example {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             this.shell = commandInvocation.getShell();
-            if(help) {
+            if (help) {
                 shell.writeln(commandInvocation.getHelpInfo("test"));
-            }
-            else {
+            } else {
                 try {
                     //display();
                     processOperation(commandInvocation);
@@ -288,12 +284,12 @@ public class Example {
         }
 
         private String promptForInput(String prompt, Character mask,
-                                      CommandInvocation invocation) throws IOException, InterruptedException {
+                CommandInvocation invocation) throws IOException, InterruptedException {
             return invocation.inputLine(new Prompt(prompt, mask));
         }
     }
 
-    @CommandDefinition(name="ls", description = "[OPTION]... [FILE]...", version = "1.0")
+    @CommandDefinition(name = "ls", description = "[OPTION]... [FILE]...", version = "1.0")
     public static class LsCommand implements Command {
 
         @Option(shortName = 'f', hasValue = false, description = "set foo to true/false")
@@ -302,12 +298,10 @@ public class Example {
         @Option(hasValue = false, description = "set the bar", renderer = BlueBoldRenderer.class)
         private boolean bar;
 
-        @Option(shortName = 'l', completer = LessCompleter.class, defaultValue = {"MORE"}, argument = "SIZE")
+        @Option(shortName = 'l', completer = LessCompleter.class, defaultValue = { "MORE" }, argument = "SIZE")
         private String less;
 
-        @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':',
-                validator = DirectoryValidator.class,
-                activator = BarActivator.class)
+        @OptionList(defaultValue = "/tmp", description = "file location", valueSeparator = ':', validator = DirectoryValidator.class, activator = BarActivator.class)
         List<File> files;
 
         @Option(hasValue = false, description = "display this help and exit")
@@ -318,21 +312,20 @@ public class Example {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            if(help) {
+            if (help) {
                 commandInvocation.getShell().writeln(commandInvocation.getHelpInfo("ls"));
-            }
-            else {
-                if(foo)
+            } else {
+                if (foo)
                     commandInvocation.getShell().writeln("you set foo to: " + foo);
-                if(bar)
+                if (bar)
                     commandInvocation.getShell().writeln("you set bar to: " + bar);
-                if(less != null)
+                if (less != null)
                     commandInvocation.getShell().writeln("you set less to: " + less);
-                if(files != null)
+                if (files != null)
                     commandInvocation.getShell().writeln("you set file to: " + files);
 
-                if(arguments != null) {
-                    for(Resource f : arguments)
+                if (arguments != null) {
+                    for (Resource f : arguments)
                         commandInvocation.getShell().writeln(f.toString());
                 }
             }
@@ -352,9 +345,9 @@ public class Example {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
 
-            commandInvocation.println("path is set to: "+path);
-            if(args != null && args.size() > 0)
-            commandInvocation.println("args[0] is: "+args.get(0));
+            commandInvocation.println("path is set to: " + path);
+            if (args != null && args.size() > 0)
+                commandInvocation.println("args[0] is: " + args.get(0));
 
             return CommandResult.SUCCESS;
         }
@@ -401,27 +394,25 @@ public class Example {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             this.shell = commandInvocation.getShell();
-            if(bar) {
+            if (bar) {
                 shell.write("are you sure you want bar? (y/n) ");
                 KeyAction operation = null;
                 try {
                     operation = commandInvocation.input();
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     return CommandResult.FAILURE;
                 }
-                if(operation instanceof Key)
+                if (operation instanceof Key)
                     processOperation((Key) operation);
             }
             return CommandResult.SUCCESS;
         }
 
         public void processOperation(Key operation) {
-            if(operation == Key.y) {
-                shell.writeln(Config.getLineSeparator()+"you wanted bar!");
-            }
-            else
-                shell.writeln(Config.getLineSeparator()+"you chickened out!!");
+            if (operation == Key.y) {
+                shell.writeln(Config.getLineSeparator() + "you wanted bar!");
+            } else
+                shell.writeln(Config.getLineSeparator() + "you chickened out!!");
         }
 
     }
@@ -429,10 +420,8 @@ public class Example {
     @CommandDefinition(name = "select", description = "The select command", generateHelp = true)
     public static class SelectCommand implements Command {
 
-        @Option(selector = SelectorType.SELECT, description = "Choose your color",
-                defaultValue = {"red", "green", "blue"})
+        @Option(selector = SelectorType.SELECT, description = "Choose your color", defaultValue = { "red", "green", "blue" })
         private String color;
-
 
         @Option(selector = SelectorType.SELECT, description = "Set to true or false")
         private boolean bool;
@@ -443,14 +432,14 @@ public class Example {
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             this.shell = commandInvocation.getShell();
 
-            commandInvocation.println("Color: "+color+", Bool: "+bool);
+            commandInvocation.println("Color: " + color + ", Bool: " + bool);
 
-            List<String> selected = new Selector(SelectorType.SELECT, new String[]{"blue","green", "red" },
+            List<String> selected = new Selector(SelectorType.SELECT, new String[] { "blue", "green", "red" },
                     "Which color do you want? ")
                     .doSelect(commandInvocation.getShell());
 
-            if(selected.size() > 0)
-                commandInvocation.println("You selected: "+selected.get(0));
+            if (selected.size() > 0)
+                commandInvocation.println("You selected: " + selected.get(0));
 
             return CommandResult.SUCCESS;
         }
@@ -483,15 +472,15 @@ public class Example {
         @Override
         public void complete(CompleterInvocation completerData) {
             List<String> completeList = new ArrayList<>();
-            if(completerData.getGivenCompleteValue() == null || completerData.getGivenCompleteValue().length() == 0) {
+            if (completerData.getGivenCompleteValue() == null || completerData.getGivenCompleteValue().length() == 0) {
                 completeList.add("1");
-            }
-            else {
-                char lastChar = completerData.getGivenCompleteValue().charAt(completerData.getGivenCompleteValue().length()-1);
-                if(Character.isDigit(lastChar)) {
+            } else {
+                char lastChar = completerData.getGivenCompleteValue()
+                        .charAt(completerData.getGivenCompleteValue().length() - 1);
+                if (Character.isDigit(lastChar)) {
                     int i = (int) lastChar;
                     i++;
-                    completeList.add(completerData.getGivenCompleteValue()+i);
+                    completeList.add(completerData.getGivenCompleteValue() + i);
                 }
             }
             completerData.addAllCompleterValues(completeList);
@@ -501,7 +490,7 @@ public class Example {
     public static class DirectoryValidator implements OptionValidator<DirectoryValidatorInvocation> {
         @Override
         public void validate(DirectoryValidatorInvocation validatorInvocation) throws OptionValidatorException {
-            if(!validatorInvocation.getValue().isDirectory())
+            if (!validatorInvocation.getValue().isDirectory())
                 throw new OptionValidatorException("File validation failed, must be a directory.");
         }
     }
@@ -534,12 +523,13 @@ public class Example {
         }
     }
 
-    public static class ExampleValidatorInvocationProvider implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>> {
+    public static class ExampleValidatorInvocationProvider
+            implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>> {
 
         @Override
         public ValidatorInvocation<File, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
-            if(validatorInvocation.getValue() instanceof File)
-                return new DirectoryValidatorInvocation( (File) validatorInvocation.getValue(),
+            if (validatorInvocation.getValue() instanceof File)
+                return new DirectoryValidatorInvocation((File) validatorInvocation.getValue(),
                         (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());
             else
                 return validatorInvocation;
@@ -585,8 +575,8 @@ public class Example {
         }
     }
 
-    @GroupCommandDefinition(name = "group", description = "This is a group command",
-            groupCommands = {Base.class, Rebase.class})
+    @GroupCommandDefinition(name = "group", description = "This is a group command", groupCommands = { Base.class,
+            Rebase.class })
     public static class GroupCommand implements Command {
 
         @Option(hasValue = false, description = "display this help option")
@@ -594,7 +584,7 @@ public class Example {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            if(help)
+            if (help)
                 commandInvocation.getShell().writeln(commandInvocation.getHelpInfo());
             else
                 commandInvocation.getShell().writeln("only executed group, it doesnt do much...");
@@ -612,10 +602,10 @@ public class Example {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            if(help)
+            if (help)
                 commandInvocation.getShell().writeln(commandInvocation.getHelpInfo());
             else
-                commandInvocation.getShell().writeln("foo is set to: "+foo);
+                commandInvocation.getShell().writeln("foo is set to: " + foo);
             return CommandResult.SUCCESS;
         }
     }
@@ -627,7 +617,7 @@ public class Example {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            commandInvocation.getShell().writeln("bar is set to: "+bar);
+            commandInvocation.getShell().writeln("bar is set to: " + bar);
             return CommandResult.SUCCESS;
         }
     }

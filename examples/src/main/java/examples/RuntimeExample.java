@@ -19,6 +19,8 @@
  */
 package examples;
 
+import java.util.List;
+
 import org.aesh.AeshRuntimeRunner;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -26,8 +28,6 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.OptionList;
 import org.aesh.selector.SelectorType;
-
-import java.util.List;
 
 /**
  * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
@@ -41,13 +41,13 @@ public class RuntimeExample {
     @CommandDefinition(name = "test", description = "testing")
     public static class TestConsoleCommand implements Command {
 
-        @OptionList(defaultValue = {"one", "two", "three", "four"}, selector = SelectorType.SELECTIONS)
+        @OptionList(defaultValue = { "one", "two", "three", "four" }, selector = SelectorType.SELECTIONS)
         private List<String> bar;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
 
-            commandInvocation.println("bar is: "+ bar.toString());
+            commandInvocation.println("bar is: " + bar.toString());
 
             return CommandResult.SUCCESS;
         }

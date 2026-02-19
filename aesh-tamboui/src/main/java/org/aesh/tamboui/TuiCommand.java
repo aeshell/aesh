@@ -37,6 +37,7 @@ import dev.tamboui.tui.TuiRunner;
  * {@link #configure(TuiConfig.Builder)} to customize tick rate, mouse capture, etc.
  * <p>
  * Example:
+ *
  * <pre>
  * {@literal @}CommandDefinition(name = "dashboard", description = "Show dashboard")
  * public class DashboardCommand extends TuiCommand {

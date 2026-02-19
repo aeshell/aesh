@@ -17,6 +17,8 @@
  */
 package org.aesh.tamboui.examples;
 
+import static dev.tamboui.toolkit.Toolkit.*;
+
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -49,8 +51,6 @@ import dev.tamboui.widgets.sparkline.Sparkline;
 import dev.tamboui.widgets.table.TableState;
 import dev.tamboui.widgets.tabs.TabsState;
 
-import static dev.tamboui.toolkit.Toolkit.*;
-
 /**
  * Demo example showing TUI commands integrated with aesh.
  * Run this class and type the command names at the aesh prompt.
@@ -69,8 +69,8 @@ public class TuiDemoExample {
         @Override
         protected Element render() {
             return panel("Hello TamboUI!",
-                    text("Welcome to aesh + TamboUI integration.\n\nPress 'q' to quit.")
-            ).rounded().borderColor(Color.CYAN).fill();
+                    text("Welcome to aesh + TamboUI integration.\n\nPress 'q' to quit.")).rounded().borderColor(Color.CYAN)
+                    .fill();
         }
     }
 
@@ -81,8 +81,7 @@ public class TuiDemoExample {
     @CommandDefinition(name = "tui-gauge", description = "Animated progress bar")
     public static class GaugeCommand extends TuiCommand {
 
-        @Option(name = "speed", shortName = 's', defaultValue = {"100"},
-                description = "Tick rate in milliseconds")
+        @Option(name = "speed", shortName = 's', defaultValue = { "100" }, description = "Tick rate in milliseconds")
         private int speedMs;
 
         @Override
@@ -118,8 +117,7 @@ public class TuiDemoExample {
                                 .build();
 
                         frame.renderWidget(gauge, frame.area());
-                    }
-            );
+                    });
         }
     }
 
@@ -142,8 +140,7 @@ public class TuiDemoExample {
                                             Constraint.length(4),
                                             Constraint.percentage(25),
                                             Constraint.percentage(25),
-                                            Constraint.fill(1)
-                                    )
+                                            Constraint.fill(1))
                                     .row("1", "Alice", "Engineer", "San Francisco")
                                     .row("2", "Bob", "Designer", "New York")
                                     .row("3", "Carol", "Manager", "London")
@@ -152,10 +149,9 @@ public class TuiDemoExample {
                                     .highlightStyle(Style.EMPTY.bg(Color.DARK_GRAY))
                                     .highlightSymbol(">> ")
                                     .state(tableState)
-                                    .fill()
-                    ).rounded().borderColor(Color.BLUE).fill(),
-                    text("Navigate: Up/Down | Quit: q").dim()
-            ).fill();
+                                    .fill())
+                            .rounded().borderColor(Color.BLUE).fill(),
+                    text("Navigate: Up/Down | Quit: q").dim()).fill();
         }
 
         @Override
@@ -223,8 +219,7 @@ public class TuiDemoExample {
                                 .build();
 
                         frame.renderWidget(sparkline, frame.area());
-                    }
-            );
+                    });
         }
     }
 
@@ -242,24 +237,19 @@ public class TuiDemoExample {
                                     BarGroup.of("web-1",
                                             bar(72, "CPU", Color.RED),
                                             bar(45, "Mem", Color.GREEN),
-                                            bar(28, "IO", Color.BLUE)
-                                    ),
+                                            bar(28, "IO", Color.BLUE)),
                                     BarGroup.of("web-2",
                                             bar(55, "CPU", Color.RED),
                                             bar(68, "Mem", Color.GREEN),
-                                            bar(15, "IO", Color.BLUE)
-                                    ),
+                                            bar(15, "IO", Color.BLUE)),
                                     BarGroup.of("db-1",
                                             bar(90, "CPU", Color.RED),
                                             bar(82, "Mem", Color.GREEN),
-                                            bar(63, "IO", Color.BLUE)
-                                    ),
+                                            bar(63, "IO", Color.BLUE)),
                                     BarGroup.of("cache",
                                             bar(20, "CPU", Color.RED),
                                             bar(95, "Mem", Color.GREEN),
-                                            bar(5, "IO", Color.BLUE)
-                                    )
-                            )
+                                            bar(5, "IO", Color.BLUE)))
                             .barWidth(5)
                             .barGap(1)
                             .groupGap(3)
@@ -268,8 +258,7 @@ public class TuiDemoExample {
                             .rounded()
                             .borderColor(Color.MAGENTA)
                             .fill(),
-                    text("Press 'q' to quit").dim()
-            ).fill();
+                    text("Press 'q' to quit").dim()).fill();
         }
 
         private static Bar bar(long value, String label, Color color) {
@@ -297,13 +286,13 @@ public class TuiDemoExample {
                             spacer(1),
                             row(
                                     gauge(72).label("CPU: 72%").gaugeColor(Color.RED).title("CPU").rounded().fill(),
-                                    gauge(45).label("Mem: 45%").gaugeColor(Color.GREEN).title("Memory").rounded().fill()
-                            ).fill(),
+                                    gauge(45).label("Mem: 45%").gaugeColor(Color.GREEN).title("Memory").rounded().fill())
+                                    .fill(),
                             row(
                                     gauge(28).label("Disk: 28%").gaugeColor(Color.BLUE).title("Disk").rounded().fill(),
-                                    gauge(12).label("Net: 12%").gaugeColor(Color.YELLOW).title("Network").rounded().fill()
-                            ).fill()
-                    ).fill();
+                                    gauge(12).label("Net: 12%").gaugeColor(Color.YELLOW).title("Network").rounded().fill())
+                                    .fill())
+                            .fill();
                     break;
                 case 1:
                     content = column(
@@ -315,8 +304,8 @@ public class TuiDemoExample {
                                     .highlightColor(Color.CYAN)
                                     .title("Top Processes")
                                     .rounded()
-                                    .fill()
-                    ).fill();
+                                    .fill())
+                            .fill();
                     break;
                 case 2:
                     content = column(
@@ -333,8 +322,8 @@ public class TuiDemoExample {
                                     .rounded()
                                     .borderColor(Color.YELLOW)
                                     .displayOnly()
-                                    .fill()
-                    ).fill();
+                                    .fill())
+                            .fill();
                     break;
                 default:
                     content = text("Unknown tab");
@@ -348,8 +337,7 @@ public class TuiDemoExample {
                             .divider(" | ")
                             .rounded()
                             .borderColor(Color.WHITE),
-                    panel(content).fill()
-            ).fill();
+                    panel(content).fill()).fill();
         }
 
         @Override
@@ -379,8 +367,7 @@ public class TuiDemoExample {
     @CommandDefinition(name = "tui-calendar", description = "Calendar view")
     public static class CalendarCommand extends TuiAppCommand {
 
-        private final AtomicReference<LocalDate> currentDate =
-                new AtomicReference<>(LocalDate.now());
+        private final AtomicReference<LocalDate> currentDate = new AtomicReference<>(LocalDate.now());
 
         @Override
         protected Element render() {
@@ -394,8 +381,7 @@ public class TuiDemoExample {
                             .rounded()
                             .borderColor(Color.WHITE)
                             .fill(),
-                    text("<< Left/Right to change month | 'q' to quit >>").dim()
-            ).fill();
+                    text("<< Left/Right to change month | 'q' to quit >>").dim()).fill();
         }
 
         @Override
@@ -463,8 +449,7 @@ public class TuiDemoExample {
                                 .constraints(
                                         Constraint.length(3),
                                         Constraint.fill(1),
-                                        Constraint.length(1)
-                                )
+                                        Constraint.length(1))
                                 .split(area);
 
                         // Top row: three gauges side by side
@@ -472,8 +457,7 @@ public class TuiDemoExample {
                                 .constraints(
                                         Constraint.percentage(33),
                                         Constraint.percentage(34),
-                                        Constraint.percentage(33)
-                                )
+                                        Constraint.percentage(33))
                                 .split(rows.get(0));
 
                         Gauge cpuGauge = Gauge.builder()
@@ -510,14 +494,12 @@ public class TuiDemoExample {
                         frame.renderWidget(spark, rows.get(1));
 
                         // Bottom: status line
-                        dev.tamboui.widgets.paragraph.Paragraph status =
-                                dev.tamboui.widgets.paragraph.Paragraph.builder()
-                                        .text(dev.tamboui.text.Text.from("Press 'q' to quit"))
-                                        .style(Style.EMPTY.dim())
-                                        .build();
+                        dev.tamboui.widgets.paragraph.Paragraph status = dev.tamboui.widgets.paragraph.Paragraph.builder()
+                                .text(dev.tamboui.text.Text.from("Press 'q' to quit"))
+                                .style(Style.EMPTY.dim())
+                                .build();
                         frame.renderWidget(status, rows.get(2));
-                    }
-            );
+                    });
         }
 
         private static int clamp(int value, int min, int max) {
@@ -536,8 +518,7 @@ public class TuiDemoExample {
                         BarChartCommand.class,
                         TabsCommand.class,
                         CalendarCommand.class,
-                        DashboardCommand.class
-                )
+                        DashboardCommand.class)
                 .addExitCommand()
                 .prompt("[tui-demo]$ ")
                 .start();

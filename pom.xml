@@ -346,6 +346,12 @@
         </build>
       </profile>
       <profile>
+        <id>examples</id>
+        <modules>
+          <module>examples</module>
+        </modules>
+      </profile>
+      <profile>
         <id>tamboui</id>
         <modules>
           <module>aesh-tamboui</module>

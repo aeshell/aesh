@@ -3,7 +3,7 @@
   <parent>
     <artifactId>aesh-all</artifactId>
     <groupId>org.aesh</groupId>
-    <version>3.0-dev</version>
+    <version>3.0</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>aesh-examples</artifactId>
@@ -40,18 +40,6 @@
         <artifactId>maven-compiler-plugin</artifactId>
       </plugin>
       <plugin>
-        <artifactId>maven-source-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>jar-no-fork</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
           <execution>
@@ -64,7 +52,7 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-              <mainClass>examples.Example</mainClass>
+              <mainClass>examples.AeshGraphicsExample</mainClass>
             </manifest>
           </archive>
         </configuration>
@@ -90,25 +78,6 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>validate</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <configLocation>${project.basedir}/../config/checkstyle/checkstyle.xml</configLocation>
-              <consoleOutput>true</consoleOutput>
-              <failsOnError>true</failsOnError>
-              <linkXRef>false</linkXRef>
-              <includeTestSourceDirectory>true</includeTestSourceDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-deploy-plugin</artifactId>
         <configuration>
           <skip>true</skip>
@@ -122,5 +91,6 @@
     <version.org.slf4j>1.7.12</version.org.slf4j>
     <maven.compiler.source>1.8</maven.compiler.source>
     <jackson.version>2.6.1</jackson.version>
+    <format.skip>true</format.skip>
   </properties>
 </project>

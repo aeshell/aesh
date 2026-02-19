@@ -96,12 +96,12 @@ public class DefaultCommandInvocation implements CommandInvocation {
 
     }
 
-    // XXX JFDENISE SHOULD BE REMOVED
     @Override
     public KeyAction input() {
         try {
             return getShell().read();
         } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
         }
         return null;
     }
@@ -111,6 +111,7 @@ public class DefaultCommandInvocation implements CommandInvocation {
         try {
             return getShell().read(timeout, unit);
         } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
         }
         return null;
     }
@@ -125,6 +126,7 @@ public class DefaultCommandInvocation implements CommandInvocation {
         try {
             return getShell().readLine(prompt);
         } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
         }
         return null;
     }

@@ -19,6 +19,8 @@
  */
 package examples;
 
+import java.io.IOException;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -44,8 +46,6 @@ import org.aesh.terminal.formatting.Color;
 import org.aesh.terminal.formatting.TerminalColor;
 import org.aesh.terminal.formatting.TerminalString;
 
-import java.io.IOException;
-
 /**
  * Example demonstrating parent context access in subcommands.
  *
@@ -57,18 +57,18 @@ import java.io.IOException;
  *
  * === SUB-COMMAND MODE (recommended) ===
  * Enter sub-command mode first, then run subcommands:
- *   project --name=myapp --verbose    (enters sub-command mode, prompt changes to "project[myapp]> ")
- *   build                              (inherits --verbose via inherited=true)
- *   test --coverage                    (inherits parent options)
- *   status                             (uses inherited --verbose option)
- *   context                            (displays current context values)
- *   exit                               (returns to main prompt, or use "..")
+ * project --name=myapp --verbose (enters sub-command mode, prompt changes to "project[myapp]> ")
+ * build (inherits --verbose via inherited=true)
+ * test --coverage (inherits parent options)
+ * status (uses inherited --verbose option)
+ * context (displays current context values)
+ * exit (returns to main prompt, or use "..")
  *
  * === DIRECT INVOCATION (alternative) ===
  * When calling subcommands directly, use the --name option on the subcommand:
- *   project build --name=myapp
- *   project test --name=myapp --coverage
- *   project deploy --name=myapp --env=production
+ * project build --name=myapp
+ * project test --name=myapp --coverage
+ * project deploy --name=myapp --env=production
  *
  * @author Ståle W. Pedersen
  */
@@ -84,21 +84,20 @@ public class ParentCommandExample {
         // Configure sub-command mode settings (optional - defaults work well for most cases)
         // You can customize exit commands, prompts, messages, etc.
         SubCommandModeSettings subCommandSettings = SubCommandModeSettings.builder()
-                .exitCommand("exit")           // Primary exit command (default: "exit")
-                .alternativeExitCommand("..")   // Alternative exit command (default: "..")
-                .contextSeparator(":")          // Separator for nested contexts (default: ":")
-                .showArgumentInPrompt(true)     // Show option value in prompt (default: true)
-                .enterMessage("Entering {name} mode.")  // Message when entering (default)
-                .exitHint("Type '{exit}' or '{alt}' to return.")  // Exit hint
-                .exitOnCtrlC(true)              // Ctrl+C exits sub-command mode (default: true)
+                .exitCommand("exit") // Primary exit command (default: "exit")
+                .alternativeExitCommand("..") // Alternative exit command (default: "..")
+                .contextSeparator(":") // Separator for nested contexts (default: ":")
+                .showArgumentInPrompt(true) // Show option value in prompt (default: true)
+                .enterMessage("Entering {name} mode.") // Message when entering (default)
+                .exitHint("Type '{exit}' or '{alt}' to return.") // Exit hint
+                .exitOnCtrlC(true) // Ctrl+C exits sub-command mode (default: true)
                 .build();
 
-        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                OptionActivator, CommandActivator> builder =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .commandRegistry(registry)
-                        .subCommandModeSettings(subCommandSettings);
+        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> builder = SettingsBuilder
+                .builder()
+                .logging(true)
+                .commandRegistry(registry)
+                .subCommandModeSettings(subCommandSettings);
 
         ReadlineConsole console = new ReadlineConsole(builder.build());
         console.setPrompt(new Prompt(new TerminalString("[parent-example]$ ",
@@ -107,7 +106,7 @@ public class ParentCommandExample {
         console.start();
     }
 
-    @CommandDefinition(name = "exit", description = "Exit the application", aliases = {"quit"})
+    @CommandDefinition(name = "exit", description = "Exit the application", aliases = { "quit" })
     public static class ExitCommand implements Command<CommandInvocation> {
 
         @Override
@@ -124,8 +123,8 @@ public class ParentCommandExample {
      * When executed without a subcommand, enters sub-command mode where
      * subsequent commands have access to the project's options.
      */
-    @GroupCommandDefinition(name = "project", description = "Project management commands",
-            groupCommands = {BuildCommand.class, TestCommand.class, DeployCommand.class, StatusCommand.class})
+    @GroupCommandDefinition(name = "project", description = "Project management commands", groupCommands = { BuildCommand.class,
+            TestCommand.class, DeployCommand.class, StatusCommand.class })
     public static class ProjectCommand implements Command<CommandInvocation> {
 
         @Option(name = "name", shortName = 'n', required = true, description = "Project name")
@@ -180,11 +179,11 @@ public class ParentCommandExample {
      * The parent ProjectCommand is automatically injected when in sub-command mode.
      *
      * Usage:
-     *   1. Enter sub-command mode: project --name=myapp --verbose
-     *   2. Then run: build --target=jar
+     * 1. Enter sub-command mode: project --name=myapp --verbose
+     * 2. Then run: build --target=jar
      *
      * Or use direct invocation with local options:
-     *   project build --name=myapp --target=jar
+     * project build --name=myapp --target=jar
      */
     @CommandDefinition(name = "build", description = "Build the project")
     public static class BuildCommand implements Command<CommandInvocation> {
@@ -197,7 +196,7 @@ public class ParentCommandExample {
         @Option(name = "name", shortName = 'n', description = "Project name (use when not in sub-command mode)")
         private String name;
 
-        @Option(name = "target", shortName = 't', defaultValue = {"jar"}, description = "Build target (jar, war, native)")
+        @Option(name = "target", shortName = 't', defaultValue = { "jar" }, description = "Build target (jar, war, native)")
         private String target;
 
         @Option(name = "skip-tests", hasValue = false, description = "Skip running tests during build")
@@ -240,11 +239,11 @@ public class ParentCommandExample {
      * This is useful when you don't want a direct dependency on the parent class.
      *
      * Usage:
-     *   1. Enter sub-command mode: project --name=myapp --verbose
-     *   2. Then run: test --coverage
+     * 1. Enter sub-command mode: project --name=myapp --verbose
+     * 2. Then run: test --coverage
      *
      * Or use direct invocation with local options:
-     *   project test --name=myapp --coverage
+     * project test --name=myapp --coverage
      */
     @CommandDefinition(name = "test", description = "Run project tests")
     public static class TestCommand implements Command<CommandInvocation> {
@@ -304,11 +303,11 @@ public class ParentCommandExample {
      * Deploy subcommand - demonstrates both approaches combined.
      *
      * Usage:
-     *   1. Enter sub-command mode: project --name=myapp --verbose
-     *   2. Then run: deploy --env=production
+     * 1. Enter sub-command mode: project --name=myapp --verbose
+     * 2. Then run: deploy --env=production
      *
      * Or use direct invocation with local options:
-     *   project deploy --name=myapp --env=production
+     * project deploy --name=myapp --env=production
      */
     @CommandDefinition(name = "deploy", description = "Deploy the project")
     public static class DeployCommand implements Command<CommandInvocation> {
@@ -381,9 +380,9 @@ public class ParentCommandExample {
      * just need specific option values and want them auto-populated.
      *
      * Usage:
-     *   1. Enter sub-command mode: project --name=myapp --verbose
-     *   2. Then run: status
-     *      (verbose field is auto-populated from parent)
+     * 1. Enter sub-command mode: project --name=myapp --verbose
+     * 2. Then run: status
+     * (verbose field is auto-populated from parent)
      */
     @CommandDefinition(name = "status", description = "Show project status")
     public static class StatusCommand implements Command<CommandInvocation> {

@@ -19,6 +19,9 @@
  */
 package examples;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
@@ -32,19 +35,16 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.ValidatorInvocation;
+import org.aesh.console.ReadlineConsole;
 import org.aesh.graphics.AeshGraphicsConfiguration;
 import org.aesh.graphics.Graphics;
 import org.aesh.graphics.GraphicsConfiguration;
 import org.aesh.readline.Prompt;
-import org.aesh.console.ReadlineConsole;
+import org.aesh.terminal.Connection;
 import org.aesh.terminal.Key;
 import org.aesh.terminal.formatting.Color;
 import org.aesh.terminal.formatting.TerminalColor;
 import org.aesh.terminal.tty.TerminalConnection;
-import org.aesh.terminal.Connection;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -60,23 +60,19 @@ public class AeshGraphicsExample {
                 .command(new GraphicsCommand(connection))
                 .create();
 
-        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation,
-                               OptionActivator, CommandActivator> builder =
-                SettingsBuilder.builder()
-                        .logging(true)
-                        .enableMan(true)
-                        .commandRegistry(registry)
-                        .connection(connection);
+        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> builder = SettingsBuilder
+                .builder()
+                .logging(true)
+                .enableMan(true)
+                .commandRegistry(registry)
+                .connection(connection);
 
         ReadlineConsole console = new ReadlineConsole(builder.build());
         console.setPrompt(new Prompt("[aesh@rules]$ "));
-
-        console.read();
-
         console.start();
     }
 
-    @CommandDefinition(name="exit", description = "exit the program")
+    @CommandDefinition(name = "exit", description = "exit the program")
     public static class ExitCommand implements Command {
 
         @Override
@@ -108,12 +104,12 @@ public class AeshGraphicsExample {
 
         public void waitForInput() {
             try {
-                while(!invocation.input().equals(Key.q)) {
+                while (!invocation.input().equals(Key.q)) {
 
                 }
+            } catch (InterruptedException ignored) {
             }
-            catch (InterruptedException ignored) { }
-            if(g != null)
+            if (g != null)
                 g.clearAndShowCursor();
             invocation.getShell().enableMainBuffer();
         }
@@ -148,7 +144,6 @@ public class AeshGraphicsExample {
                 Thread.sleep(500);
                 g.flush();
 
-
                 g.setColor(new TerminalColor(Color.BLUE, Color.DEFAULT));
                 g.drawCircle(100, 10, 5);
                 g.flush();
@@ -160,21 +155,21 @@ public class AeshGraphicsExample {
                 Thread.sleep(1500);
 
                 g.setColor(new TerminalColor(Color.DEFAULT, Color.RED));
-                int j =0;
-                for(int i=0; i<100; i++) {
+                int j = 0;
+                for (int i = 0; i < 100; i++) {
                     g.clear();
-                    g.fillRect(i, 15+j, 20, 8);
+                    g.fillRect(i, 15 + j, 20, 8);
                     g.flush();
                     Thread.sleep(50);
-                    if(i > 10 && i < 20 || (i > 30 && i < 40))
+                    if (i > 10 && i < 20 || (i > 30 && i < 40))
                         j++;
-                    if(i < 10 || (i > 20 && i < 30) || (i > 40 && i < 50))
+                    if (i < 10 || (i > 20 && i < 30) || (i > 40 && i < 50))
                         j--;
                 }
 
                 waitForInput();
+            } catch (InterruptedException ignored) {
             }
-            catch (InterruptedException ignored) { }
         }
 
     }
