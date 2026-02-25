@@ -56,6 +56,7 @@ import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.registry.MutableCommandRegistry;
 import org.aesh.command.settings.Settings;
@@ -69,6 +70,7 @@ import org.aesh.io.scanner.CommandDefinitionReporter;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.Readline;
 import org.aesh.readline.ReadlineFlag;
+import org.aesh.readline.SuggestionProvider;
 import org.aesh.readline.alias.AliasCompletion;
 import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.alias.AliasPreProcessor;
@@ -108,6 +110,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private volatile boolean running = false;
     private History history;
+    private SuggestionProvider suggestionProvider;
 
     private ShellImpl shell;
     private CommandContext commandContext;
@@ -282,6 +285,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         }
         readline = new Readline(EditModeBuilder.builder(settings.mode()).create(), history,
                 completionHandler);
+        if (suggestionProvider != null) {
+            readline.setSuggestionProvider(suggestionProvider);
+        }
         running = true;
     }
 
@@ -558,6 +564,33 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
      */
     public boolean isInSubCommandMode() {
         return commandContext != null && commandContext.isInSubCommandMode();
+    }
+
+    /**
+     * Sets the suggestion provider for inline ghost text suggestions.
+     *
+     * @param provider the suggestion provider
+     */
+    public void setSuggestionProvider(SuggestionProvider provider) {
+        this.suggestionProvider = provider;
+    }
+
+    /**
+     * Gets the command history.
+     *
+     * @return the history instance
+     */
+    public History getHistory() {
+        return history;
+    }
+
+    /**
+     * Gets the command registry.
+     *
+     * @return the command registry
+     */
+    public CommandRegistry<?> getCommandRegistry() {
+        return commandResolver.getRegistry();
     }
 
 }
