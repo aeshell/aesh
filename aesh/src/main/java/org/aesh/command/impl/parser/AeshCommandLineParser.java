@@ -343,6 +343,22 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                     // Pass down the option directly to the populator.
                                     MapCommandPopulator pop = (MapCommandPopulator) processedCommand.getCommandPopulator();
                                     pop.addUnknownOption(word.word());
+                                } else if (isGroupCommand()) {
+                                    // Check if this word is a subcommand name.
+                                    // When group command options are parsed before the subcommand,
+                                    // e.g. "cli -c cliarg command -c commandarg", we need to
+                                    // recognize "command" as a subcommand and delegate parsing.
+                                    CommandLineParser<CI> clp = getChildParser(word.word());
+                                    if (clp != null) {
+                                        // Do NOT poll the word - child's parse() expects the
+                                        // command name to still be in the iterator.
+                                        // Reset parsedCommand so parsedCommand() returns the child, not us.
+                                        parsedCommand = false;
+                                        clp.parse(iter, mode);
+                                        return;
+                                    } else {
+                                        setArgStatus(word.word());
+                                    }
                                 } else {
                                     setArgStatus(word.word());
                                 }
@@ -458,8 +474,16 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                         }
                         //we're completing arguments or group command names
                         else {
-                            //only set group command if nothing else is set
-                            if (lastParsedOption == null && isGroupCommand()) {
+                            //check for group command completion even after options have been parsed
+                            if (isGroupCommand()) {
+                                // Check if this word matches a known child parser
+                                CommandLineParser<CI> clp = getChildParser(word.word());
+                                if (clp != null && !iter.isNextWordCursorWord()) {
+                                    // Fully matched subcommand, delegate to it
+                                    parsedCommand = false;
+                                    clp.parse(iter, Mode.COMPLETION);
+                                    return;
+                                }
                                 if (iter.isNextWordCursorWord())
                                     processedCommand.setCompleteStatus(
                                             new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, word.word()));

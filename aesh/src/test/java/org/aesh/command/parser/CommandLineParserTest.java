@@ -275,6 +275,65 @@ public class CommandLineParserTest {
     }
 
     @Test
+    public void testParseGroupCommandWithOptionsBeforeSubcommand() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new GroupWithOptionsCommand<>()).getParser();
+        GroupWithOptionsCommand<?> group = (GroupWithOptionsCommand<?>) parser.getCommand();
+        ChildTest1 c1 = (ChildTest1) parser.getChildParser("child1").getCommand();
+        ChildTest2 c2 = (ChildTest2) parser.getChildParser("child2").getCommand();
+
+        // Test: group options before subcommand
+        parser.populateObject("cli -c cliarg child1 --foo childarg", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertEquals("cliarg", group.config);
+        assertEquals("childarg", c1.foo);
+
+        // Test: group options before subcommand with both child options
+        parser.populateObject("cli -c cliarg child1 --foo BAR --bar FOO", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertEquals("cliarg", group.config);
+        assertEquals("BAR", c1.foo);
+        assertEquals("FOO", c1.bar);
+
+        // Test: same short option name on both group and child
+        parser.populateObject("cli -c groupval child2 --foo childval", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertEquals("groupval", group.config);
+        assertEquals("childval", c2.foo);
+
+        // Test: subcommand without group options still works
+        parser.populateObject("cli child1 --foo BAR", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertEquals("BAR", c1.foo);
+
+        // Test: boolean flag on group before subcommand
+        parser.populateObject("cli --verbose child1 --foo BAR", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertTrue(group.verbose);
+        assertEquals("BAR", c1.foo);
+
+        // Test: multiple group options before subcommand
+        parser.populateObject("cli -c myconfig --verbose child1 --foo BAR", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertEquals("myconfig", group.config);
+        assertTrue(group.verbose);
+        assertEquals("BAR", c1.foo);
+
+        // Test: long option with = value before subcommand (e.g. --config=value subcommand)
+        parser.populateObject("cli --config=myvalue child1 --foo BAR", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertEquals("myvalue", group.config);
+        assertEquals("BAR", c1.foo);
+
+        // Test: long option with = and URL value before subcommand
+        parser.populateObject("cli --config=http://127.0.0.1:11222 child1 --foo BAR", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertEquals("http://127.0.0.1:11222", group.config);
+        assertEquals("BAR", c1.foo);
+    }
+
+    @Test
     public void testParseSuperGroupCommand() throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         CommandLineParser<CommandInvocation> superParser = new AeshCommandContainerBuilder<>()
@@ -700,6 +759,17 @@ public class CommandLineParserTest {
         public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
+
+    }
+
+    @GroupCommandDefinition(name = "cli", description = "", groupCommands = { ChildTest1.class, ChildTest2.class })
+    public class GroupWithOptionsCommand<CI extends CommandInvocation> extends TestingCommand<CI> {
+
+        @Option(shortName = 'c')
+        private String config;
+
+        @Option(hasValue = false)
+        private boolean verbose;
 
     }
 
