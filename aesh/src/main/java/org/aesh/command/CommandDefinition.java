@@ -106,4 +106,12 @@ public @interface CommandDefinition {
      * @return CommandActivator
      */
     Class<? extends CommandActivator> activator() default NullCommandActivator.class;
+
+    /**
+     * Optional URL to the command's documentation.
+     * When the terminal supports hyperlinks, this is shown as a clickable link in --help output.
+     *
+     * @return documentation URL
+     */
+    String helpUrl() default "";
 }

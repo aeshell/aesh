@@ -57,6 +57,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private boolean generateHelp;
     private boolean disableParsing;
     private String version;
+    private String helpUrl;
 
     private ProcessedCommandBuilder() {
         options = new ArrayList<>();
@@ -94,6 +95,11 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
     public ProcessedCommandBuilder<C, CI> disableParsing(boolean disableParsing) {
         this.disableParsing = disableParsing;
+        return this;
+    }
+
+    public ProcessedCommandBuilder<C, CI> helpUrl(String helpUrl) {
+        this.helpUrl = helpUrl;
         return this;
     }
 
@@ -198,6 +204,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
             resultHandler = new NullResultHandler();
 
         return new ProcessedCommand<>(name, aliases, command, description, validator,
-                resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator);
+                resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator,
+                helpUrl);
     }
 }

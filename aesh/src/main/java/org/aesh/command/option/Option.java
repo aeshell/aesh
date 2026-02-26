@@ -174,4 +174,18 @@ public @interface Option {
      */
     boolean inherited() default false;
 
+    /**
+     * Optional URL for this option's documentation.
+     * When the terminal supports hyperlinks, the option description in --help output
+     * becomes a clickable link to this URL.
+     */
+    String descriptionUrl() default "";
+
+    /**
+     * When true, the option value is treated as a URL.
+     * If the terminal supports hyperlinks, the value is rendered as a clickable link
+     * when displayed in help output or via getFormattedValue().
+     */
+    boolean url() default false;
+
 }

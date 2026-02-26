@@ -112,4 +112,10 @@ public @interface Arguments {
      * Only change this if you want to specify a custom parser
      */
     Class<? extends OptionParser> parser() default AeshOptionParser.class;
+
+    /**
+     * When true, the argument values are treated as URLs.
+     * If the terminal supports hyperlinks, the values are rendered as clickable links.
+     */
+    boolean url() default false;
 }

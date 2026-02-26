@@ -78,6 +78,8 @@ public class ProcessedOptionBuilder {
     private boolean negatable = false;
     private String negationPrefix = "no-";
     private boolean inherited = false;
+    private String descriptionUrl;
+    private boolean isUrl = false;
 
     private ProcessedOptionBuilder() {
         defaultValues = new ArrayList<>();
@@ -323,6 +325,20 @@ public class ProcessedOptionBuilder {
         return apply(c -> c.inherited = inherited);
     }
 
+    /**
+     * Set the documentation URL for this option's description in help output.
+     */
+    public ProcessedOptionBuilder descriptionUrl(String descriptionUrl) {
+        return apply(c -> c.descriptionUrl = descriptionUrl);
+    }
+
+    /**
+     * Set whether this option's value should be treated as a URL.
+     */
+    public ProcessedOptionBuilder url(boolean isUrl) {
+        return apply(c -> c.isUrl = isUrl);
+    }
+
     public ProcessedOption build() throws OptionParserException {
         if (optionType == null) {
             if (!hasValue)
@@ -377,6 +393,7 @@ public class ProcessedOptionBuilder {
         return new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, askIfNotSet, acceptNameWithoutDashes, selectorType, defaultValues, type, fieldName, optionType,
                 converter,
-                completer, validator, activator, renderer, parser, overrideRequired, negatable, negationPrefix, inherited);
+                completer, validator, activator, renderer, parser, overrideRequired, negatable, negationPrefix, inherited,
+                descriptionUrl, isUrl);
     }
 }

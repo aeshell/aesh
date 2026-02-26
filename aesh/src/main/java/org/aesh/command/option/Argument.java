@@ -125,4 +125,10 @@ public @interface Argument {
      */
     boolean inherited() default false;
 
+    /**
+     * When true, the argument value is treated as a URL.
+     * If the terminal supports hyperlinks, the value is rendered as a clickable link.
+     */
+    boolean url() default false;
+
 }
