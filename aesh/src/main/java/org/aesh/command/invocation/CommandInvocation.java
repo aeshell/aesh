@@ -299,4 +299,26 @@ public interface CommandInvocation {
         return false; // Default implementation does nothing
     }
 
+    // ========== Hyperlink Methods ==========
+
+    /**
+     * Print a hyperlink to the terminal. If the terminal supports OSC 8 hyperlinks,
+     * the text will be rendered as a clickable link. Otherwise, plain text is printed.
+     *
+     * @param url the URL target of the hyperlink
+     * @param text the visible text for the hyperlink
+     */
+    default void printHyperlink(String url, String text) {
+        getShell().writeHyperlink(url, text);
+    }
+
+    /**
+     * Check if the terminal supports OSC 8 hyperlinks.
+     *
+     * @return true if hyperlinks are supported
+     */
+    default boolean supportsHyperlinks() {
+        return getShell().supportsHyperlinks();
+    }
+
 }

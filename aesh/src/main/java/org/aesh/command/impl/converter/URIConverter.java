@@ -17,26 +17,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.command.renderer;
+package org.aesh.command.impl.converter;
 
-import org.aesh.terminal.formatting.TerminalColor;
-import org.aesh.terminal.formatting.TerminalTextStyle;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import org.aesh.command.converter.Converter;
+import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.validator.OptionValidatorException;
 
 /**
  * @author Aesh team
  */
-public interface OptionRenderer {
-
-    TerminalColor getColor();
-
-    TerminalTextStyle getTextType();
-
-    /**
-     * Optional URL that wraps the option name as a hyperlink in help/completion output.
-     *
-     * @return hyperlink URL, or null if not applicable
-     */
-    default String getHyperlinkUrl() {
-        return null;
+public class URIConverter implements Converter<URI, ConverterInvocation> {
+    @Override
+    public URI convert(ConverterInvocation input) throws OptionValidatorException {
+        try {
+            return new URI(input.getInput());
+        } catch (URISyntaxException e) {
+            throw new OptionValidatorException("Invalid URI: " + input.getInput());
+        }
     }
 }

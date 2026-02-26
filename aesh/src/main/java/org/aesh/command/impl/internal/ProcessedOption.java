@@ -90,6 +90,8 @@ public final class ProcessedOption {
     private String negationPrefix = "no-";
     private boolean negatedByUser = false;
     private boolean inherited = false;
+    private String descriptionUrl;
+    private boolean isUrl = false;
 
     public ProcessedOption(char shortName, String name, String description,
             String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
@@ -101,6 +103,21 @@ public final class ProcessedOption {
             OptionRenderer renderer, OptionParser parser,
             boolean overrideRequired, boolean negatable, String negationPrefix,
             boolean inherited) throws OptionParserException {
+        this(shortName, name, description, argument, required, valueSeparator, askIfNotSet, acceptNameWithoutDashes,
+                selectorType, defaultValue, type, fieldName, optionType, converter, completer, optionValidator,
+                activator, renderer, parser, overrideRequired, negatable, negationPrefix, inherited, null, false);
+    }
+
+    public ProcessedOption(char shortName, String name, String description,
+            String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
+            SelectorType selectorType,
+            List<String> defaultValue, Class<?> type, String fieldName,
+            OptionType optionType, Converter converter, OptionCompleter completer,
+            OptionValidator optionValidator,
+            OptionActivator activator,
+            OptionRenderer renderer, OptionParser parser,
+            boolean overrideRequired, boolean negatable, String negationPrefix,
+            boolean inherited, String descriptionUrl, boolean isUrl) throws OptionParserException {
 
         if (shortName != '\u0000')
             this.shortName = String.valueOf(shortName);
@@ -135,6 +152,8 @@ public final class ProcessedOption {
         this.negatable = negatable;
         this.negationPrefix = negationPrefix != null ? negationPrefix : "no-";
         this.inherited = inherited;
+        this.descriptionUrl = descriptionUrl;
+        this.isUrl = isUrl || java.net.URL.class.isAssignableFrom(type) || java.net.URI.class.isAssignableFrom(type);
 
         properties = new HashMap<>();
         values = new ArrayList<>();
@@ -333,6 +352,34 @@ public final class ProcessedOption {
         return inherited;
     }
 
+    /**
+     * Returns the documentation URL for this option's description.
+     */
+    public String getDescriptionUrl() {
+        return descriptionUrl;
+    }
+
+    /**
+     * Returns true if this option's value should be treated as a URL.
+     */
+    public boolean isUrl() {
+        return isUrl;
+    }
+
+    /**
+     * Returns the option value formatted as a hyperlink when appropriate.
+     *
+     * @param supportsHyperlinks whether the terminal supports OSC 8 hyperlinks
+     * @return the value, optionally wrapped in hyperlink escape sequences
+     */
+    public String getFormattedValue(boolean supportsHyperlinks) {
+        String val = getValue();
+        if (val != null && isUrl && supportsHyperlinks) {
+            return ANSI.hyperlink(val, val);
+        }
+        return val;
+    }
+
     public void clear() {
         if (values != null)
             values.clear();
@@ -356,12 +403,17 @@ public final class ProcessedOption {
 
     public TerminalString getRenderedNameWithDashes() {
         String prefix = acceptNameWithoutDashes ? "" : "--";
+        String text = hasValue() ? prefix + name + "=" : prefix + name;
         if (renderer == null || !ansiMode)
             //if hasValue append a = after the name
-            return new TerminalString(hasValue() ? prefix + name + "=" : prefix + name, true);
-        else
-            return new TerminalString(hasValue() ? prefix + name + "=" : prefix + name, renderer.getColor(),
-                    renderer.getTextType());
+            return new TerminalString(text, true);
+        else {
+            String hyperlinkUrl = renderer.getHyperlinkUrl();
+            if (hyperlinkUrl != null) {
+                return new TerminalString(text, hyperlinkUrl, renderer.getColor(), renderer.getTextType());
+            }
+            return new TerminalString(text, renderer.getColor(), renderer.getTextType());
+        }
     }
 
     /**
@@ -402,6 +454,10 @@ public final class ProcessedOption {
 
     //TODO: add offset, offset for descriptionstart and break on width
     public String getFormattedOption(int offset, int descriptionStart, int width) {
+        return getFormattedOption(offset, descriptionStart, width, false);
+    }
+
+    public String getFormattedOption(int offset, int descriptionStart, int width, boolean supportsHyperlinks) {
         StringBuilder sb = new StringBuilder();
         if (required && ansiMode)
             sb.append(ANSI.BOLD);
@@ -431,7 +487,11 @@ public final class ProcessedOption {
             else
                 sb.append(" ");
 
-            sb.append(description);
+            if (supportsHyperlinks && descriptionUrl != null && descriptionUrl.length() > 0) {
+                sb.append(ANSI.hyperlink(descriptionUrl, description));
+            } else {
+                sb.append(description);
+            }
         }
 
         return sb.toString();

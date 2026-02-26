@@ -38,6 +38,7 @@ import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
 import org.aesh.selector.SelectorType;
 import org.aesh.terminal.formatting.TerminalString;
+import org.aesh.terminal.utils.ANSI;
 import org.aesh.terminal.utils.Config;
 import org.aesh.terminal.utils.Parser;
 
@@ -55,6 +56,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private CommandActivator activator;
     private final boolean generateHelp;
     private String version;
+    private String helpUrl;
 
     private List<ProcessedOption> options;
     private ProcessedOption arguments;
@@ -72,12 +74,26 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             ProcessedOption arguments, List<ProcessedOption> options,
             ProcessedOption argument,
             CommandPopulator<Object, CI> populator, CommandActivator activator) throws OptionParserException {
+        this(name, aliases, command, description, validator, resultHandler, generateHelp, disableParsing,
+                version, arguments, options, argument, populator, activator, null);
+    }
+
+    public ProcessedCommand(String name, List<String> aliases, C command,
+            String description, CommandValidator<C, CI> validator,
+            ResultHandler resultHandler,
+            boolean generateHelp, boolean disableParsing,
+            String version,
+            ProcessedOption arguments, List<ProcessedOption> options,
+            ProcessedOption argument,
+            CommandPopulator<Object, CI> populator, CommandActivator activator,
+            String helpUrl) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
         this.validator = validator;
         this.generateHelp = generateHelp;
         this.disableParsing = disableParsing;
+        this.helpUrl = helpUrl;
         if (resultHandler != null)
             this.resultHandler = resultHandler;
         else
@@ -124,7 +140,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 opt.acceptNameWithoutDashes(), opt.selectorType(),
                 opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(), opt.converter(),
                 opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(), opt.parser(), opt.doOverrideRequired(),
-                opt.isNegatable(), opt.getNegationPrefix(), opt.isInherited()));
+                opt.isNegatable(), opt.getNegationPrefix(), opt.isInherited(),
+                opt.getDescriptionUrl(), opt.isUrl()));
 
         options.get(options.size() - 1).setParent(this);
     }
@@ -136,7 +153,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                     opt.acceptNameWithoutDashes(), opt.selectorType(),
                     opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(),
                     opt.converter(), opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(),
-                    opt.parser(), opt.doOverrideRequired(), opt.isNegatable(), opt.getNegationPrefix(), opt.isInherited()));
+                    opt.parser(), opt.doOverrideRequired(), opt.isNegatable(), opt.getNegationPrefix(), opt.isInherited(),
+                    opt.getDescriptionUrl(), opt.isUrl()));
 
             this.options.get(this.options.size() - 1).setParent(this);
         }
@@ -189,6 +207,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public String version() {
         return version;
+    }
+
+    public String helpUrl() {
+        return helpUrl;
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {
@@ -565,6 +587,17 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      *
      */
     public String printHelp(String commandName) {
+        return printHelp(commandName, false);
+    }
+
+    /**
+     * Returns a description String based on the defined command and options.
+     * Useful when printing "help" info etc.
+     *
+     * @param commandName the command name to display
+     * @param supportsHyperlinks whether the terminal supports OSC 8 hyperlinks
+     */
+    public String printHelp(String commandName, boolean supportsHyperlinks) {
         int maxLength = 0;
         int width = 80;
         List<ProcessedOption> opts = getOptions();
@@ -604,14 +637,26 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (opts.size() > 0)
             sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
         for (ProcessedOption o : opts)
-            sb.append(o.getFormattedOption(2, maxLength + 4, width)).append(Config.getLineSeparator());
+            sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks)).append(Config.getLineSeparator());
         if (arguments != null) {
             sb.append(Config.getLineSeparator()).append("Arguments:").append(Config.getLineSeparator());
-            sb.append(arguments.getFormattedOption(2, maxLength + 4, width)).append(Config.getLineSeparator());
+            sb.append(arguments.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks))
+                    .append(Config.getLineSeparator());
         }
         if (argument != null) {
             sb.append(Config.getLineSeparator()).append("Argument:").append(Config.getLineSeparator());
-            sb.append(argument.getFormattedOption(2, maxLength + 4, width)).append(Config.getLineSeparator());
+            sb.append(argument.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks))
+                    .append(Config.getLineSeparator());
+        }
+        // Append documentation link if helpUrl is set
+        if (helpUrl != null && helpUrl.length() > 0) {
+            sb.append(Config.getLineSeparator());
+            if (supportsHyperlinks) {
+                sb.append("Documentation: ").append(ANSI.hyperlink(helpUrl, helpUrl));
+            } else {
+                sb.append("Documentation: ").append(helpUrl);
+            }
+            sb.append(Config.getLineSeparator());
         }
         return sb.toString();
     }

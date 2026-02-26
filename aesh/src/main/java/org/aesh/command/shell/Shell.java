@@ -26,6 +26,7 @@ import org.aesh.readline.Prompt;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.Size;
+import org.aesh.terminal.utils.ANSI;
 
 /**
  * @author Aesh team
@@ -139,5 +140,32 @@ public interface Shell {
      */
     default Connection connection() {
         return null;
+    }
+
+    /**
+     * Write a hyperlink to the terminal. If the terminal supports OSC 8 hyperlinks,
+     * the text will be rendered as a clickable link. Otherwise, plain text is written.
+     * Routes through write(String) so paging is preserved.
+     *
+     * @param url the URL target of the hyperlink
+     * @param text the visible text for the hyperlink
+     */
+    default void writeHyperlink(String url, String text) {
+        Connection conn = connection();
+        if (conn != null && conn.supportsHyperlinks()) {
+            write(ANSI.hyperlink(url, text));
+        } else {
+            write(text);
+        }
+    }
+
+    /**
+     * Check if the terminal supports OSC 8 hyperlinks.
+     *
+     * @return true if hyperlinks are supported
+     */
+    default boolean supportsHyperlinks() {
+        Connection conn = connection();
+        return conn != null && conn.supportsHyperlinks();
     }
 }

@@ -20,6 +20,8 @@
 package org.aesh.converter;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +39,8 @@ import org.aesh.command.impl.converter.IntegerConverter;
 import org.aesh.command.impl.converter.LongConverter;
 import org.aesh.command.impl.converter.ShortConverter;
 import org.aesh.command.impl.converter.StringConverter;
+import org.aesh.command.impl.converter.URIConverter;
+import org.aesh.command.impl.converter.URLConverter;
 import org.aesh.io.Resource;
 
 /**
@@ -79,6 +83,8 @@ public class CLConverterManager {
         converters.put(String.class, new StringConverter());
         converters.put(File.class, new FileConverter());
         converters.put(Resource.class, new FileResourceConverter());
+        converters.put(URL.class, new URLConverter());
+        converters.put(URI.class, new URIConverter());
     }
 
     public boolean hasConverter(Class clazz) {

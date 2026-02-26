@@ -88,6 +88,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .generateHelp(command.generateHelp())
                     .disableParsing(command.disableParsing())
                     .version(command.version())
+                    .helpUrl(command.helpUrl())
                     .create();
 
             processCommand(processedCommand, clazz);
@@ -110,6 +111,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .generateHelp(groupCommand.generateHelp())
                     .version(groupCommand.version())
                     .resultHandler(groupCommand.resultHandler())
+                    .helpUrl(groupCommand.helpUrl())
                     .create();
 
             processCommand(processedGroupCommand, clazz);
@@ -192,6 +194,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .negatable(o.negatable())
                             .negationPrefix(o.negationPrefix())
                             .inherited(o.inherited())
+                            .descriptionUrl(o.descriptionUrl())
+                            .url(o.url())
                             .build());
         } else if ((ol = field.getAnnotation(OptionList.class)) != null) {
             if (!Collection.class.isAssignableFrom(field.getType()))
@@ -279,6 +283,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .validator(a.validator())
                     .activator(a.activator())
                     .parser(a.parser())
+                    .url(a.url())
                     .build());
         } else if ((arg = field.getAnnotation(Argument.class)) != null) {
             if (processedCommand.getArgument() != null)
@@ -309,6 +314,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .parser(arg.parser())
                             .overrideRequired(arg.overrideRequired())
                             .inherited(arg.inherited())
+                            .url(arg.url())
                             .build());
         }
     }
