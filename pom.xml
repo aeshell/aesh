@@ -24,7 +24,7 @@
     <groupId>org.aesh</groupId>
     <artifactId>aesh-all</artifactId>
     <packaging>pom</packaging>
-    <version>3.3</version>
+    <version>3.4-dev</version>
     <name>Æsh All</name>
     <description>Æsh (Another Extendable SHell) All</description>
     <url>https://aeshell.github.io</url>
