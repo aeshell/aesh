@@ -329,9 +329,17 @@ public class LineParser {
     }
 
     private void handleHaveDoubleQuote() {
-        if (!ternaryQuote && prev == DOUBLE_QUOTE)
-            ternaryQuote = true;
-        else if (ternaryQuote && prev == DOUBLE_QUOTE) {
+        if (!ternaryQuote && prev == DOUBLE_QUOTE) {
+            if (builder.length() > 0) {
+                // "" is attached to existing content (e.g., --option="")
+                // Treat as closing an empty quoted string
+                textList.add(new ParsedWord(builder.toString(), index - builder.length()));
+                builder = new StringBuilder();
+                haveDoubleQuote = false;
+            } else {
+                ternaryQuote = true;
+            }
+        } else if (ternaryQuote && prev == DOUBLE_QUOTE) {
             if (builder.length() > 0) {
                 builder.deleteCharAt(builder.length() - 1);
                 textList.add(new ParsedWord(builder.toString(), index - builder.length()));

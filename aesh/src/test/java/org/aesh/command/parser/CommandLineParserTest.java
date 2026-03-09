@@ -856,4 +856,47 @@ public class CommandLineParserTest {
         }
     }
 
+    @Test
+    public void testEmptyOptionValue() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new EmptyOptionValueCommand<>())
+                .getParser();
+
+        // --myoption= hello -> myoption is empty string, arg is "hello"
+        parser.populateObject("emptyopt --myoption= hello", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        EmptyOptionValueCommand<CommandInvocation> cmd = (EmptyOptionValueCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("", cmd.myoption);
+        assertEquals("hello", cmd.arg);
+
+        // --myoption="" hello -> myoption is empty string, arg is "hello"
+        parser.populateObject("emptyopt --myoption=\"\" hello", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (EmptyOptionValueCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("", cmd.myoption);
+        assertEquals("hello", cmd.arg);
+
+        // --myoption='' hello -> myoption is empty string, arg is "hello"
+        parser.populateObject("emptyopt --myoption='' hello", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (EmptyOptionValueCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("", cmd.myoption);
+        assertEquals("hello", cmd.arg);
+    }
+
+    @CommandDefinition(name = "emptyopt", description = "test empty option values")
+    public class EmptyOptionValueCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option
+        private String myoption;
+
+        @Argument
+        private String arg;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }

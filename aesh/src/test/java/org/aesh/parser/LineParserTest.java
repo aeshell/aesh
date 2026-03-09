@@ -280,6 +280,33 @@ public class LineParserTest {
     }
 
     @Test
+    public void testEmptyQuotedStringAttachedToContent() {
+        LineParser lineParser = new LineParser();
+
+        // --myoption="" should produce a single token: --myoption=
+        ParsedLine line = lineParser.parseLine("--myoption=\"\"");
+        assertEquals(1, line.words().size());
+        assertEquals("--myoption=", line.words().get(0).word());
+
+        // --myoption="" hello should produce two tokens: --myoption= and hello
+        line = lineParser.parseLine("--myoption=\"\" hello");
+        assertEquals(2, line.words().size());
+        assertEquals("--myoption=", line.words().get(0).word());
+        assertEquals("hello", line.words().get(1).word());
+
+        // -f="" should produce a single token: -f=
+        line = lineParser.parseLine("-f=\"\"");
+        assertEquals(1, line.words().size());
+        assertEquals("-f=", line.words().get(0).word());
+
+        // -f="" hello should produce two tokens
+        line = lineParser.parseLine("-f=\"\" hello");
+        assertEquals(2, line.words().size());
+        assertEquals("-f=", line.words().get(0).word());
+        assertEquals("hello", line.words().get(1).word());
+    }
+
+    @Test
     public void testParsedLineIterator() {
         LineParser lineParser = new LineParser();
         ParsedLine line = lineParser.parseLine("foo bar");
