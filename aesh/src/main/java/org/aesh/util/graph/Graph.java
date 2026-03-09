@@ -519,8 +519,26 @@ public class Graph {
             }
         }
 
+        private int computeRoutingRowCount(List<List<LayoutNode<T>>> layers,
+                List<int[]> allEdges, int layerIdx) {
+            Map<Integer, Set<Integer>> childrenByParent = new LinkedHashMap<>();
+            for (int[] edge : allEdges) {
+                if (edge[0] == layerIdx && edge[2] == layerIdx + 1) {
+                    childrenByParent.computeIfAbsent(edge[1], k -> new HashSet<>()).add(edge[3]);
+                }
+            }
+            if (childrenByParent.size() <= 1)
+                return 1;
+
+            // If all parents share the exact same children set, one row suffices
+            Set<Set<Integer>> distinctChildSets = new HashSet<>(childrenByParent.values());
+            if (distinctChildSets.size() <= 1)
+                return 1;
+
+            return childrenByParent.size();
+        }
+
         private char[][] renderGrid(List<List<LayoutNode<T>>> layers, List<int[]> allEdges) {
-            // Calculate grid dimensions
             int gridWidth = 0;
             for (List<LayoutNode<T>> layer : layers) {
                 for (LayoutNode<T> ln : layer) {
@@ -529,8 +547,17 @@ public class Graph {
             }
             gridWidth = Math.max(gridWidth, 1);
 
-            // Each layer has a node row + routing row (except the last)
-            int gridHeight = layers.size() * 2 - 1;
+            // Compute routing row counts for each layer pair
+            int[] routingRowCounts = new int[layers.size() > 1 ? layers.size() - 1 : 0];
+            for (int l = 0; l < routingRowCounts.length; l++) {
+                routingRowCounts[l] = computeRoutingRowCount(layers, allEdges, l);
+            }
+
+            // Calculate grid height with variable routing rows
+            int gridHeight = layers.size();
+            for (int count : routingRowCounts) {
+                gridHeight += count;
+            }
             if (gridHeight < 1)
                 gridHeight = 1;
 
@@ -539,17 +566,22 @@ public class Graph {
                 java.util.Arrays.fill(row, ' ');
             }
 
+            // Compute row mapping: which grid row corresponds to each layer
+            int[] layerRow = new int[layers.size()];
+            layerRow[0] = 0;
+            for (int l = 1; l < layers.size(); l++) {
+                layerRow[l] = layerRow[l - 1] + 1 + routingRowCounts[l - 1];
+            }
+
             // Write node labels
             for (int l = 0; l < layers.size(); l++) {
-                int row = l * 2;
+                int row = layerRow[l];
                 for (LayoutNode<T> ln : layers.get(l)) {
                     if (ln.isDummy) {
-                        // Dummy nodes show as vertical line
                         if (ln.x >= 0 && ln.x < gridWidth) {
                             grid[row][ln.x] = style.vertical();
                         }
                     } else {
-                        // Write label centered at x
                         int startX = ln.x - ln.label.length() / 2;
                         for (int i = 0; i < ln.label.length(); i++) {
                             int gx = startX + i;
@@ -563,11 +595,115 @@ public class Graph {
 
             // Render edges in routing rows
             for (int l = 0; l < layers.size() - 1; l++) {
-                int routingRow = l * 2 + 1;
-                renderRoutingRow(grid, routingRow, layers, allEdges, l, gridWidth);
+                int startRoutingRow = layerRow[l] + 1;
+                int numRoutingRows = routingRowCounts[l];
+                if (numRoutingRows == 1) {
+                    renderRoutingRow(grid, startRoutingRow, layers, allEdges, l, gridWidth);
+                } else {
+                    renderMultiRowRouting(grid, startRoutingRow, numRoutingRows,
+                            layers, allEdges, l, gridWidth);
+                }
             }
 
             return grid;
+        }
+
+        private void renderMultiRowRouting(char[][] grid, int startRow, int numRows,
+                List<List<LayoutNode<T>>> layers, List<int[]> allEdges,
+                int parentLayerIdx, int gridWidth) {
+            List<LayoutNode<T>> parentLayer = layers.get(parentLayerIdx);
+            List<LayoutNode<T>> childLayer = layers.get(parentLayerIdx + 1);
+
+            // Group edges by parent index
+            Map<Integer, List<int[]>> edgesByParent = new LinkedHashMap<>();
+            for (int[] edge : allEdges) {
+                if (edge[0] == parentLayerIdx && edge[2] == parentLayerIdx + 1) {
+                    edgesByParent.computeIfAbsent(edge[1], k -> new ArrayList<>()).add(edge);
+                }
+            }
+
+            // Sort parent groups by parent x position (left to right)
+            List<Integer> parentIndices = new ArrayList<>(edgesByParent.keySet());
+            parentIndices.sort((a, b) -> parentLayer.get(a).x - parentLayer.get(b).x);
+
+            // Track child x positions connected in previous sub-rows
+            Set<Integer> connectedChildXPositions = new HashSet<>();
+
+            for (int subRow = 0; subRow < parentIndices.size(); subRow++) {
+                int gridRow = startRow + subRow;
+                int parentIdx = parentIndices.get(subRow);
+                List<int[]> parentEdges = edgesByParent.get(parentIdx);
+                LayoutNode<T> parent = parentLayer.get(parentIdx);
+
+                boolean[] up = new boolean[gridWidth];
+                boolean[] down = new boolean[gridWidth];
+                boolean[] left = new boolean[gridWidth];
+                boolean[] right = new boolean[gridWidth];
+
+                // Draw this parent's edges
+                for (int[] edge : parentEdges) {
+                    LayoutNode<T> child = childLayer.get(edge[3]);
+                    int xp = parent.x;
+                    int xc = child.x;
+
+                    if (xp == xc) {
+                        up[xp] = true;
+                        down[xp] = true;
+                    } else {
+                        int minX = Math.min(xp, xc);
+                        int maxX = Math.max(xp, xc);
+
+                        up[xp] = true;
+                        if (xc > xp)
+                            right[xp] = true;
+                        else
+                            left[xp] = true;
+
+                        down[xc] = true;
+                        if (xp > xc)
+                            right[xc] = true;
+                        else
+                            left[xc] = true;
+
+                        for (int x = minX + 1; x < maxX; x++) {
+                            if (x >= 0 && x < gridWidth) {
+                                left[x] = true;
+                                right[x] = true;
+                            }
+                        }
+                    }
+                }
+
+                // Vertical pass-throughs for parents not yet routed
+                for (int future = subRow + 1; future < parentIndices.size(); future++) {
+                    int futureIdx = parentIndices.get(future);
+                    int fx = parentLayer.get(futureIdx).x;
+                    if (fx >= 0 && fx < gridWidth) {
+                        up[fx] = true;
+                        down[fx] = true;
+                    }
+                }
+
+                // Vertical pass-throughs for child positions connected in previous sub-rows
+                for (int cx : connectedChildXPositions) {
+                    if (cx >= 0 && cx < gridWidth) {
+                        up[cx] = true;
+                        down[cx] = true;
+                    }
+                }
+
+                // Record child positions from this parent's edges
+                for (int[] edge : parentEdges) {
+                    connectedChildXPositions.add(childLayer.get(edge[3]).x);
+                }
+
+                // Write junction characters
+                for (int x = 0; x < gridWidth; x++) {
+                    if (!up[x] && !down[x] && !left[x] && !right[x])
+                        continue;
+                    grid[gridRow][x] = selectJunction(up[x], down[x], left[x], right[x]);
+                }
+            }
         }
 
         private void renderRoutingRow(char[][] grid, int routingRow,
