@@ -290,6 +290,120 @@ public class GraphTest {
         assertEquals("leaf" + NL, output);
     }
 
+    @Test
+    public void testMaxWidthWrapsChildren() {
+        // Parent with 10 children and small maxWidth — children span multiple rows
+        GraphNode root = GraphNode.of("Root");
+        for (int i = 0; i < 10; i++) {
+            root.child("N" + i);
+        }
+        String output = Graph.render(root, 20);
+
+        // All labels should be present
+        assertTrue("Should contain Root", output.contains("Root"));
+        for (int i = 0; i < 10; i++) {
+            assertTrue("Should contain N" + i, output.contains("N" + i));
+        }
+
+        // Children should be split across multiple label lines (not all on one line)
+        String[] lines = output.split(NL);
+        int linesWithChildren = 0;
+        for (String line : lines) {
+            for (int i = 0; i < 10; i++) {
+                if (line.contains("N" + i)) {
+                    linesWithChildren++;
+                    break;
+                }
+            }
+        }
+        assertTrue("Children should span multiple lines", linesWithChildren > 1);
+    }
+
+    @Test
+    public void testMaxWidthZeroNoLimit() {
+        GraphNode root = GraphNode.of("Root")
+                .child("A")
+                .child("B")
+                .child("C");
+
+        String withoutLimit = Graph.render(root);
+        String withZero = Graph.render(root, 0);
+
+        assertEquals("maxWidth=0 should match unlimited", withoutLimit, withZero);
+    }
+
+    @Test
+    public void testMaxWidthSingleNodePerRow() {
+        // Very small maxWidth forces one node per row
+        GraphNode root = GraphNode.of("Root")
+                .child("AA")
+                .child("BB")
+                .child("CC");
+
+        String output = Graph.render(root, 4);
+
+        assertTrue("Should contain Root", output.contains("Root"));
+        assertTrue("Should contain AA", output.contains("AA"));
+        assertTrue("Should contain BB", output.contains("BB"));
+        assertTrue("Should contain CC", output.contains("CC"));
+    }
+
+    @Test
+    public void testMaxWidthBuilderApi() {
+        GraphNode root = GraphNode.of("Root")
+                .child("A")
+                .child("B")
+                .child("C")
+                .child("D")
+                .child("E");
+
+        String output = Graph.<GraphNode> builder()
+                .label(GraphNode::label)
+                .children(GraphNode::children)
+                .style(GraphStyle.UNICODE)
+                .maxWidth(10)
+                .build()
+                .render(root);
+
+        assertTrue("Should contain Root", output.contains("Root"));
+        assertTrue("Should contain A", output.contains("A"));
+        assertTrue("Should contain B", output.contains("B"));
+        assertTrue("Should contain C", output.contains("C"));
+        assertTrue("Should contain D", output.contains("D"));
+        assertTrue("Should contain E", output.contains("E"));
+
+        // Children should be split across multiple label lines
+        String[] lines = output.split(NL);
+        int childLabelLines = 0;
+        for (String line : lines) {
+            if (line.matches(".*[A-E].*") && !line.contains("Root")) {
+                childLabelLines++;
+            }
+        }
+        assertTrue("Children should span multiple lines", childLabelLines > 1);
+    }
+
+    @Test
+    public void testMaxWidthWithDiamond() {
+        // maxWidth + diamond pattern (shared children) renders correctly
+        GraphNode shared = GraphNode.of("S");
+        GraphNode root = GraphNode.of("Root")
+                .child(GraphNode.of("A").child(shared))
+                .child(GraphNode.of("B").child(shared));
+
+        String output = Graph.render(root, 10);
+
+        assertEquals("Root once", 1, countOccurrences(output, "Root"));
+        assertEquals("A once", 1, countOccurrences(output, "A"));
+        assertEquals("B once", 1, countOccurrences(output, "B"));
+        assertEquals("S once", 1, countOccurrences(output, "S"));
+
+        String[] lines = output.split(NL);
+        int rootLine = findLine(lines, "Root");
+        int sLine = findLine(lines, "S");
+        assertTrue("S should be after Root", sLine > rootLine);
+    }
+
     // Helper to count non-overlapping occurrences of a substring
     private int countOccurrences(String text, String sub) {
         int count = 0;

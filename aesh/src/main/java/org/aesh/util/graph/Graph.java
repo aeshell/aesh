@@ -71,10 +71,30 @@ public class Graph {
     }
 
     /**
+     * Renders a {@link GraphNode} graph using the default UNICODE style
+     * with a maximum output width.
+     *
+     * @param maxWidth maximum character width (0 = no limit)
+     */
+    public static String render(GraphNode root, int maxWidth) {
+        return render(root, GraphStyle.UNICODE, maxWidth);
+    }
+
+    /**
      * Renders a {@link GraphNode} graph using the specified style.
      */
     public static String render(GraphNode root, GraphStyle style) {
-        return new Renderer<>(GraphNode::label, GraphNode::children, style).render(root);
+        return new Renderer<>(GraphNode::label, GraphNode::children, style, 0).render(root);
+    }
+
+    /**
+     * Renders a {@link GraphNode} graph using the specified style
+     * with a maximum output width.
+     *
+     * @param maxWidth maximum character width (0 = no limit)
+     */
+    public static String render(GraphNode root, GraphStyle style, int maxWidth) {
+        return new Renderer<>(GraphNode::label, GraphNode::children, style, maxWidth).render(root);
     }
 
     /**
@@ -125,12 +145,14 @@ public class Graph {
         private final Function<T, String> labelFn;
         private final Function<T, List<T>> childrenFn;
         private final GraphStyle style;
+        private final int maxWidth;
 
         Renderer(Function<T, String> labelFn, Function<T, List<T>> childrenFn,
-                GraphStyle style) {
+                GraphStyle style, int maxWidth) {
             this.labelFn = labelFn;
             this.childrenFn = childrenFn;
             this.style = style;
+            this.maxWidth = maxWidth;
         }
 
         /**
@@ -174,6 +196,9 @@ public class Graph {
                     }
                 }
             }
+
+            // Split wide layers before dummy insertion
+            splitWideLayers(layers);
 
             // Build edge list from the original graph
             List<int[]> edges = new ArrayList<>(); // [parentLayer, parentIdx, childLayer, childIdx]
@@ -485,6 +510,65 @@ public class Graph {
                     edge[3] = remap[edge[3]];
                 }
             }
+        }
+
+        private void splitWideLayers(List<List<LayoutNode<T>>> layers) {
+            if (maxWidth <= 0)
+                return;
+
+            for (int l = 0; l < layers.size(); l++) {
+                List<LayoutNode<T>> layer = layers.get(l);
+                int layerWidth = computeLayerWidth(layer);
+                if (layerWidth <= maxWidth)
+                    continue;
+
+                // Greedy packing: fit as many nodes as possible per sub-row
+                List<List<LayoutNode<T>>> subRows = new ArrayList<>();
+                List<LayoutNode<T>> currentRow = new ArrayList<>();
+                int currentWidth = 0;
+
+                for (LayoutNode<T> node : layer) {
+                    int addedWidth = currentRow.isEmpty()
+                            ? node.width()
+                            : node.width() + NODE_GAP;
+                    if (currentWidth + addedWidth > maxWidth && !currentRow.isEmpty()) {
+                        subRows.add(currentRow);
+                        currentRow = new ArrayList<>();
+                        currentWidth = 0;
+                        addedWidth = node.width();
+                    }
+                    currentRow.add(node);
+                    currentWidth += addedWidth;
+                }
+                if (!currentRow.isEmpty())
+                    subRows.add(currentRow);
+                if (subRows.size() <= 1)
+                    continue;
+
+                // Replace original layer with first sub-row, insert rest after it
+                layers.set(l, subRows.get(0));
+                for (int s = 1; s < subRows.size(); s++) {
+                    layers.add(l + s, subRows.get(s));
+                }
+
+                // Update LayoutNode.layer for all nodes from here onward
+                for (int k = l; k < layers.size(); k++) {
+                    for (LayoutNode<T> ln : layers.get(k)) {
+                        ln.layer = k;
+                    }
+                }
+
+                // Skip past the sub-rows we just inserted
+                l += subRows.size() - 1;
+            }
+        }
+
+        private int computeLayerWidth(List<LayoutNode<T>> layer) {
+            int w = 0;
+            for (LayoutNode<T> ln : layer) {
+                w += ln.width() + NODE_GAP;
+            }
+            return layer.isEmpty() ? 0 : w - NODE_GAP;
         }
 
         private void assignCoordinates(List<List<LayoutNode<T>>> layers) {
@@ -855,6 +939,7 @@ public class Graph {
         private Function<T, String> labelFn;
         private Function<T, List<T>> childrenFn;
         private GraphStyle style = GraphStyle.UNICODE;
+        private int maxWidth = 0;
 
         private Builder() {
         }
@@ -885,6 +970,16 @@ public class Graph {
         }
 
         /**
+         * Sets the maximum output width in characters.
+         * Layers wider than this will be split into multiple sub-rows.
+         * A value of 0 (the default) means no limit.
+         */
+        public Builder<T> maxWidth(int maxWidth) {
+            this.maxWidth = maxWidth;
+            return this;
+        }
+
+        /**
          * Builds an immutable graph renderer.
          *
          * @throws IllegalStateException if {@code label} or {@code children} is not set
@@ -896,7 +991,7 @@ public class Graph {
             if (childrenFn == null) {
                 throw new IllegalStateException("children function must be set");
             }
-            return new Renderer<>(labelFn, childrenFn, style);
+            return new Renderer<>(labelFn, childrenFn, style, maxWidth);
         }
     }
 }
