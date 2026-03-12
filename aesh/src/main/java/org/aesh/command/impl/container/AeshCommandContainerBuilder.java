@@ -88,7 +88,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         ProcessedCommand<Command<CI>, CI> processedCommand = provider.buildProcessedCommand(command);
 
         AeshCommandContainer<CI> container = new AeshCommandContainer<>(
-                CommandLineParserBuilder.<Command<CI>, CI>builder()
+                CommandLineParserBuilder.<Command<CI>, CI> builder()
                         .processedCommand(processedCommand)
                         .create());
 

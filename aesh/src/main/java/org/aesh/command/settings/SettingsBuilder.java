@@ -35,7 +35,6 @@ import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.export.ExportChangeListener;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
-import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationProvider;
 import org.aesh.command.invocation.InvocationProviders;
@@ -283,9 +282,6 @@ public class SettingsBuilder<CI extends CommandInvocation, CO extends ConverterI
     public Settings<CI, CO, COM, VI, OA, CA> build() {
         if (settings.logging())
             LoggerUtil.doLog();
-
-        if (settings.commandRegistry() == null)
-            settings.setCommandRegistry(new MutableCommandRegistryImpl<>());
 
         if (settings.commandInvocationProvider() == null)
             settings.setCommandInvocationProvider(commandInvocation -> (CI) commandInvocation);

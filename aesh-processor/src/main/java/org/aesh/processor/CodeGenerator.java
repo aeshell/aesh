@@ -142,7 +142,8 @@ final class CodeGenerator {
             sb.append("        return new Class[] {\n");
             for (int i = 0; i < groupClasses.size(); i++) {
                 sb.append("            ").append(groupClasses.get(i)).append(".class");
-                if (i < groupClasses.size() - 1) sb.append(",");
+                if (i < groupClasses.size() - 1)
+                    sb.append(",");
                 sb.append("\n");
             }
             sb.append("        };\n");
@@ -156,11 +157,10 @@ final class CodeGenerator {
             String annotationType = ((TypeElement) mirror.getAnnotationType().asElement())
                     .getQualifiedName().toString();
             if (annotationType.equals(GroupCommandDefinition.class.getCanonicalName())) {
-                for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
-                        mirror.getElementValues().entrySet()) {
+                for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
+                        .getElementValues().entrySet()) {
                     if (entry.getKey().getSimpleName().toString().equals("groupCommands")) {
-                        List<? extends AnnotationValue> values =
-                                (List<? extends AnnotationValue>) entry.getValue().getValue();
+                        List<? extends AnnotationValue> values = (List<? extends AnnotationValue>) entry.getValue().getValue();
                         for (AnnotationValue av : values) {
                             TypeMirror tm = (TypeMirror) av.getValue();
                             classNames.add(tm.toString());
@@ -282,19 +282,22 @@ final class CodeGenerator {
         sb.append("        processedCommand.addOption(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
         sb.append("                        .shortName(").append(charLiteral(o.shortName())).append(")\n");
-        sb.append("                        .name(").append(stringLiteral(o.name().length() < 1 ? fieldName : o.name())).append(")\n");
+        sb.append("                        .name(").append(stringLiteral(o.name().length() < 1 ? fieldName : o.name()))
+                .append(")\n");
         sb.append("                        .description(").append(stringLiteral(o.description())).append(")\n");
         sb.append("                        .required(").append(o.required()).append(")\n");
         sb.append("                        .valueSeparator(' ')\n");
         sb.append("                        .askIfNotSet(").append(o.askIfNotSet()).append(")\n");
         sb.append("                        .acceptNameWithoutDashes(").append(o.acceptNameWithoutDashes()).append(")\n");
         sb.append("                        .selector(").append(selectorLiteral(o.selector())).append(")\n");
-        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(o.defaultValue())).append(")\n");
+        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(o.defaultValue()))
+                .append(")\n");
         sb.append("                        .type(").append(fieldType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
         sb.append("                        .optionType(").append(optionType).append(")\n");
         generateOptionConverter(sb, field, "converter", elementUtils);
-        generateOptionCompleter(sb, field, "completer", isBooleanType, isFileOrResourceType(field.asType(), typeUtils), elementUtils);
+        generateOptionCompleter(sb, field, "completer", isBooleanType, isFileOrResourceType(field.asType(), typeUtils),
+                elementUtils);
         generateOptionValidator(sb, field, "validator", elementUtils);
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionRenderer(sb, field, "renderer", elementUtils);
@@ -316,13 +319,15 @@ final class CodeGenerator {
         sb.append("        processedCommand.addOption(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
         sb.append("                        .shortName(").append(charLiteral(ol.shortName())).append(")\n");
-        sb.append("                        .name(").append(stringLiteral(ol.name().length() < 1 ? fieldName : ol.name())).append(")\n");
+        sb.append("                        .name(").append(stringLiteral(ol.name().length() < 1 ? fieldName : ol.name()))
+                .append(")\n");
         sb.append("                        .description(").append(stringLiteral(ol.description())).append(")\n");
         sb.append("                        .required(").append(ol.required()).append(")\n");
         sb.append("                        .valueSeparator(").append(charLiteral(ol.valueSeparator())).append(")\n");
         sb.append("                        .askIfNotSet(").append(ol.askIfNotSet()).append(")\n");
         sb.append("                        .selector(").append(selectorLiteral(ol.selector())).append(")\n");
-        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(ol.defaultValue())).append(")\n");
+        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(ol.defaultValue()))
+                .append(")\n");
         sb.append("                        .type(").append(elementType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
         sb.append("                        .optionType(OptionType.LIST)\n");
@@ -344,12 +349,14 @@ final class CodeGenerator {
         sb.append("        processedCommand.addOption(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
         sb.append("                        .shortName(").append(charLiteral(og.shortName())).append(")\n");
-        sb.append("                        .name(").append(stringLiteral(og.name().length() < 1 ? fieldName : og.name())).append(")\n");
+        sb.append("                        .name(").append(stringLiteral(og.name().length() < 1 ? fieldName : og.name()))
+                .append(")\n");
         sb.append("                        .description(").append(stringLiteral(og.description())).append(")\n");
         sb.append("                        .required(").append(og.required()).append(")\n");
         sb.append("                        .valueSeparator(',')\n");
         sb.append("                        .askIfNotSet(").append(og.askIfNotSet()).append(")\n");
-        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(og.defaultValue())).append(")\n");
+        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(og.defaultValue()))
+                .append(")\n");
         sb.append("                        .type(").append(valueType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
         sb.append("                        .optionType(OptionType.GROUP)\n");
@@ -376,7 +383,8 @@ final class CodeGenerator {
         sb.append("                        .valueSeparator(").append(charLiteral(a.valueSeparator())).append(")\n");
         sb.append("                        .selector(").append(selectorLiteral(a.selector())).append(")\n");
         sb.append("                        .askIfNotSet(").append(a.askIfNotSet()).append(")\n");
-        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(a.defaultValue())).append(")\n");
+        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(a.defaultValue()))
+                .append(")\n");
         sb.append("                        .type(").append(elementType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
         sb.append("                        .optionType(OptionType.ARGUMENTS)\n");
@@ -403,7 +411,8 @@ final class CodeGenerator {
         sb.append("                        .valueSeparator(' ')\n");
         sb.append("                        .askIfNotSet(").append(arg.askIfNotSet()).append(")\n");
         sb.append("                        .selector(").append(selectorLiteral(arg.selector())).append(")\n");
-        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(arg.defaultValue())).append(")\n");
+        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(arg.defaultValue()))
+                .append(")\n");
         sb.append("                        .type(").append(fieldType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
         sb.append("                        .optionType(OptionType.ARGUMENT)\n");
@@ -428,7 +437,8 @@ final class CodeGenerator {
             sb.append("                        .converter(new ").append(className).append("())\n");
         } else {
             // Pass the Class so the builder can resolve via CLConverterManager
-            sb.append("                        .converter(").append(className != null ? className : NULL_CONVERTER).append(".class)\n");
+            sb.append("                        .converter(").append(className != null ? className : NULL_CONVERTER)
+                    .append(".class)\n");
         }
     }
 
@@ -528,8 +538,8 @@ final class CodeGenerator {
     }
 
     private static String extractClassAttribute(AnnotationMirror mirror, String attributeName) {
-        for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry :
-                mirror.getElementValues().entrySet()) {
+        for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror.getElementValues()
+                .entrySet()) {
             if (entry.getKey().getSimpleName().toString().equals(attributeName)) {
                 Object value = entry.getValue().getValue();
                 if (value instanceof TypeMirror) {
@@ -543,7 +553,8 @@ final class CodeGenerator {
     // --- Type utility methods ---
 
     private static boolean isBooleanType(TypeMirror type, Types typeUtils) {
-        if (type.getKind() == TypeKind.BOOLEAN) return true;
+        if (type.getKind() == TypeKind.BOOLEAN)
+            return true;
         String name = type.toString();
         return name.equals("java.lang.Boolean");
     }
@@ -590,25 +601,34 @@ final class CodeGenerator {
     // --- String literal helpers ---
 
     private static String stringLiteral(String value) {
-        if (value == null) return "null";
+        if (value == null)
+            return "null";
         return "\"" + escapeJavaString(value) + "\"";
     }
 
     private static String charLiteral(char value) {
-        if (value == '\u0000') return "'\\u0000'";
-        if (value == '\'') return "'\\''";
-        if (value == '\\') return "'\\\\'";
-        if (value == '\n') return "'\\n'";
-        if (value == '\r') return "'\\r'";
-        if (value == '\t') return "'\\t'";
+        if (value == '\u0000')
+            return "'\\u0000'";
+        if (value == '\'')
+            return "'\\''";
+        if (value == '\\')
+            return "'\\\\'";
+        if (value == '\n')
+            return "'\\n'";
+        if (value == '\r')
+            return "'\\r'";
+        if (value == '\t')
+            return "'\\t'";
         return "'" + value + "'";
     }
 
     private static String stringArrayLiteral(String[] values) {
-        if (values == null || values.length == 0) return "";
+        if (values == null || values.length == 0)
+            return "";
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < values.length; i++) {
-            if (i > 0) sb.append(", ");
+            if (i > 0)
+                sb.append(", ");
             sb.append(stringLiteral(values[i]));
         }
         return sb.toString();
@@ -620,7 +640,8 @@ final class CodeGenerator {
         }
         StringBuilder sb = new StringBuilder("new String[] {");
         for (int i = 0; i < values.length; i++) {
-            if (i > 0) sb.append(", ");
+            if (i > 0)
+                sb.append(", ");
             sb.append(stringLiteral(values[i]));
         }
         sb.append("}");

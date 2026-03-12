@@ -45,7 +45,6 @@ import org.aesh.command.Command;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.metadata.CommandMetadataProvider;
 import org.junit.Test;
 
@@ -57,8 +56,7 @@ public class ProcessorTest {
 
     // --- Test: Simple command with @Option and @Argument ---
 
-    private static final String SIMPLE_COMMAND_SOURCE =
-            "package test;\n" +
+    private static final String SIMPLE_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
@@ -99,8 +97,7 @@ public class ProcessorTest {
 
     // --- Test: All option types ---
 
-    private static final String ALL_OPTIONS_COMMAND_SOURCE =
-            "package test;\n" +
+    private static final String ALL_OPTIONS_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import java.util.List;\n" +
             "import java.util.Map;\n" +
@@ -148,8 +145,7 @@ public class ProcessorTest {
 
     // --- Test: Boolean option with negatable ---
 
-    private static final String BOOLEAN_COMMAND_SOURCE =
-            "package test;\n" +
+    private static final String BOOLEAN_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
@@ -185,8 +181,7 @@ public class ProcessorTest {
 
     // --- Test: Command with default values ---
 
-    private static final String DEFAULT_VALUES_SOURCE =
-            "package test;\n" +
+    private static final String DEFAULT_VALUES_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
@@ -222,8 +217,7 @@ public class ProcessorTest {
 
     // --- Test: Command with aliases and version ---
 
-    private static final String ALIASED_SOURCE =
-            "package test;\n" +
+    private static final String ALIASED_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
@@ -257,8 +251,7 @@ public class ProcessorTest {
 
     // --- Test: Class hierarchy with options in superclass ---
 
-    private static final String BASE_COMMAND_SOURCE =
-            "package test;\n" +
+    private static final String BASE_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandResult;\n" +
@@ -270,8 +263,7 @@ public class ProcessorTest {
             "    private boolean debug;\n" +
             "}\n";
 
-    private static final String CHILD_COMMAND_SOURCE =
-            "package test;\n" +
+    private static final String CHILD_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
@@ -304,8 +296,7 @@ public class ProcessorTest {
 
     // --- Test: Group command ---
 
-    private static final String SUB_COMMAND1_SOURCE =
-            "package test;\n" +
+    private static final String SUB_COMMAND1_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
@@ -324,8 +315,7 @@ public class ProcessorTest {
             "    }\n" +
             "}\n";
 
-    private static final String SUB_COMMAND2_SOURCE =
-            "package test;\n" +
+    private static final String SUB_COMMAND2_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
@@ -340,8 +330,7 @@ public class ProcessorTest {
             "    }\n" +
             "}\n";
 
-    private static final String GROUP_COMMAND_SOURCE =
-            "package test;\n" +
+    private static final String GROUP_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandResult;\n" +
@@ -382,8 +371,7 @@ public class ProcessorTest {
 
     // --- Test: Compile-time validation catches abstract class ---
 
-    private static final String ABSTRACT_COMMAND_SOURCE =
-            "package test;\n" +
+    private static final String ABSTRACT_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
@@ -405,7 +393,7 @@ public class ProcessorTest {
 
     // --- Equivalence assertion ---
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void assertEquivalence(Class<?> commandClass, Class<?> metadataClass) throws Exception {
         // Build via reflection (existing path)
         AeshCommandContainerBuilder reflectionBuilder = new AeshCommandContainerBuilder();
@@ -474,7 +462,8 @@ public class ProcessorTest {
 
     private ProcessedOption findOptionByName(List<ProcessedOption> options, String name) {
         for (ProcessedOption opt : options) {
-            if (opt.name().equals(name)) return opt;
+            if (opt.name().equals(name))
+                return opt;
         }
         return null;
     }
@@ -526,7 +515,7 @@ public class ProcessorTest {
 
             // Build classloader from output
             URLClassLoader classLoader = new URLClassLoader(
-                    new URL[]{outputDir.toUri().toURL()},
+                    new URL[] { outputDir.toUri().toURL() },
                     getClass().getClassLoader());
 
             String allDiags = diagnostics.getDiagnostics().toString() + " " + compileDiagnostics.getDiagnostics().toString();

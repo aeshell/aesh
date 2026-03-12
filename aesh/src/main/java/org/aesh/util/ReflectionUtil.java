@@ -22,35 +22,53 @@ package org.aesh.util;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Aesh team
  */
 public class ReflectionUtil {
 
+    private static final ConcurrentMap<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE = new ConcurrentHashMap<>();
+
     public static <T> T newInstance(final Class<T> clazz) {
         if (clazz.isAnonymousClass() || clazz.isInterface() || clazz.isAnnotation()) {
             throw new RuntimeException("Can not build new instance of an " + clazz.getName());
         }
 
-        T instance = null;
-        for (Constructor<?> constructor : clazz.getConstructors()) {
-            @SuppressWarnings("unchecked")
-            T result = (T) instantiateWithConstructor(constructor);
-            instance = result;
-            if (instance != null)
-                return instance;
+        @SuppressWarnings("unchecked")
+        Constructor<T> cached = (Constructor<T>) CONSTRUCTOR_CACHE.get(clazz);
+        if (cached != null) {
+            return invokeConstructor(cached);
         }
 
         for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
             @SuppressWarnings("unchecked")
             T result = (T) instantiateWithConstructor(constructor);
-            instance = result;
-            if (instance != null)
-                return instance;
+            if (result != null) {
+                CONSTRUCTOR_CACHE.putIfAbsent(clazz, constructor);
+                return result;
+            }
         }
 
         throw new RuntimeException("Could not instantiate class: " + clazz + ", no access to constructors.");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T invokeConstructor(Constructor<T> constructor) {
+        try {
+            if (constructor.getParameterTypes().length == 0) {
+                return constructor.newInstance();
+            }
+            Constructor<?> paramConstructor = getConstructorWithNoParams(constructor.getParameterTypes()[0]);
+            if (paramConstructor != null) {
+                return constructor.newInstance(paramConstructor.newInstance());
+            }
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+        throw new RuntimeException("Could not invoke cached constructor for: " + constructor.getDeclaringClass());
     }
 
     private static <T> T instantiateWithConstructor(Constructor<T> constructor) {

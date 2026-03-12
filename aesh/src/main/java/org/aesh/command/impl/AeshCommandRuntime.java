@@ -202,6 +202,8 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     private void processAfterInit() {
+        if (invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)
+            return;
         try {
             for (String commandName : registry.getAllCommandNames()) {
                 updateCommand(commandName);

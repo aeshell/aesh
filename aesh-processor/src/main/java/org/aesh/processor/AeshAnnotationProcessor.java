@@ -39,9 +39,6 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.MirroredTypeException;
-import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -139,8 +136,7 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         boolean hasNoArgConstructor = false;
         for (Element enclosed : element.getEnclosedElements()) {
             if (enclosed.getKind() == ElementKind.CONSTRUCTOR) {
-                javax.lang.model.element.ExecutableElement constructor =
-                        (javax.lang.model.element.ExecutableElement) enclosed;
+                javax.lang.model.element.ExecutableElement constructor = (javax.lang.model.element.ExecutableElement) enclosed;
                 if (constructor.getParameters().isEmpty()
                         && !constructor.getModifiers().contains(Modifier.PRIVATE)) {
                     hasNoArgConstructor = true;
