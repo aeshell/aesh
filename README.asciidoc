@@ -27,12 +27,29 @@ Aesh is a Java library for building interactive CLI applications with commands, 
 * Group commands and sub-command mode (e.g. `git rebase`, `git pull`)
 * Custom validators, activators, completers, converters, and renderers
 * Auto-generated help text from command metadata
+* Compile-time annotation processor for reflection-free command metadata (faster startup, GraalVM-friendly)
 * Add and remove commands at runtime
 * Terminal graphics utilities: progress bar, table, tree display
 * Line editing, history, undo/redo, paste buffer
 * Emacs and Vi editing modes
 * Masking, redirect, alias, pipeline support
 * Works on POSIX systems and Windows
+
+== Annotation Processor (Optional)
+
+Add the `aesh-processor` dependency to generate command metadata at compile time, eliminating runtime reflection for annotation scanning and improving startup time. This is especially useful for GraalVM native images.
+
+[source,xml]
+----
+<dependency>
+  <groupId>org.aesh</groupId>
+  <artifactId>aesh-processor</artifactId>
+  <version>3.0</version>
+  <scope>provided</scope>
+</dependency>
+----
+
+No code changes required -- if the generated metadata is on the classpath, Aesh uses it automatically. Otherwise it falls back to the existing reflection-based approach.
 
 == Quick Start
 
