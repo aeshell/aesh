@@ -47,6 +47,8 @@ import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.metadata.CommandMetadataProvider;
+import org.aesh.command.metadata.MetadataProviderRegistry;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
@@ -65,12 +67,53 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
     @Override
     public CommandContainer<CI> create(Command command) throws CommandLineParserException {
+        CommandMetadataProvider provider = MetadataProviderRegistry.getProvider(command.getClass());
+        if (provider != null) {
+            return buildFromProvider(provider, command);
+        }
         return doGenerateCommandLineParser(command);
     }
 
     @Override
     public CommandContainer<CI> create(Class<? extends Command> command) throws CommandLineParserException {
+        CommandMetadataProvider provider = MetadataProviderRegistry.getProvider(command);
+        if (provider != null) {
+            return buildFromProvider(provider, provider.newInstance());
+        }
         return doGenerateCommandLineParser(ReflectionUtil.newInstance(command));
+    }
+
+    private AeshCommandContainer<CI> buildFromProvider(CommandMetadataProvider provider, Command command)
+            throws CommandLineParserException {
+        ProcessedCommand<Command<CI>, CI> processedCommand = provider.buildProcessedCommand(command);
+
+        AeshCommandContainer<CI> container = new AeshCommandContainer<>(
+                CommandLineParserBuilder.<Command<CI>, CI>builder()
+                        .processedCommand(processedCommand)
+                        .create());
+
+        if (provider.isGroupCommand()) {
+            if (command instanceof GroupCommand) {
+                List<Command<CI>> commands = ((GroupCommand<CI>) command).getCommands();
+                if (commands != null) {
+                    for (Command<CI> sub : commands) {
+                        container.addChild(create(sub));
+                    }
+                }
+                List<CommandContainer<CI>> parsedCommands = ((GroupCommand<CI>) command).getParsedCommands();
+                if (parsedCommands != null) {
+                    for (CommandContainer<CI> sub : parsedCommands) {
+                        container.addChild(sub);
+                    }
+                }
+            } else {
+                for (Class<? extends Command> groupClazz : provider.groupCommandClasses()) {
+                    container.addChild(create(groupClazz));
+                }
+            }
+        }
+
+        return container;
     }
 
     private AeshCommandContainer<CI> doGenerateCommandLineParser(Command<CI> commandObject) throws CommandLineParserException {

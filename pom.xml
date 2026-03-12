@@ -36,6 +36,7 @@
 
     <modules>
         <module>aesh</module>
+        <module>aesh-processor</module>
     </modules>
 
     <!-- aesh-tamboui is in a profile since it requires tamboui snapshot dependencies -->
