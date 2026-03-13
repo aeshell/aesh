@@ -404,6 +404,27 @@ public class GraphTest {
         assertTrue("S should be after Root", sLine > rootLine);
     }
 
+    @Test
+    public void testMaxWidthLargeGraphVerticalCompactness() {
+        // 20 children with maxWidth=40 should produce compact output
+        GraphNode root = GraphNode.of("Root");
+        for (int i = 0; i < 20; i++) {
+            root.child("N" + i);
+        }
+        String output = Graph.render(root, 40);
+
+        // All labels should be present
+        assertTrue("Should contain Root", output.contains("Root"));
+        for (int i = 0; i < 20; i++) {
+            assertTrue("Should contain N" + i, output.contains("N" + i));
+        }
+
+        // With shared bridge dummies, output should be compact (≤ 15 lines)
+        String[] lines = output.split(NL);
+        assertTrue("Output should be ≤ 15 lines but was " + lines.length,
+                lines.length <= 15);
+    }
+
     // Helper to count non-overlapping occurrences of a substring
     private int countOccurrences(String text, String sub) {
         int count = 0;

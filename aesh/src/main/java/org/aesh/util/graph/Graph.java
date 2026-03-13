@@ -215,14 +215,14 @@ public class Graph {
 
             // Phase 3: Insert dummy nodes for long edges
             // We need to rebuild edges after inserting dummies
-            insertDummies(layers, nodeMap, layerIndexMap);
+            Map<LayoutNode<T>, Map<Integer, List<LayoutNode<T>>>> bridgeMap = insertDummies(layers, nodeMap, layerIndexMap);
 
             // Phase 4: Order within layers (barycenter heuristic)
-            List<int[]> allEdges = buildEdgeList(layers, nodeMap);
+            List<int[]> allEdges = buildEdgeList(layers, nodeMap, bridgeMap);
             minimizeCrossings(layers, allEdges);
 
             // Rebuild edges after crossing minimization to ensure correctness
-            allEdges = buildEdgeList(layers, nodeMap);
+            allEdges = buildEdgeList(layers, nodeMap, bridgeMap);
 
             // Phase 5: Coordinate assignment
             assignCoordinates(layers);
@@ -299,11 +299,11 @@ public class Graph {
             }
         }
 
-        private void insertDummies(List<List<LayoutNode<T>>> layers,
+        private Map<LayoutNode<T>, Map<Integer, List<LayoutNode<T>>>> insertDummies(
+                List<List<LayoutNode<T>>> layers,
                 IdentityHashMap<T, LayoutNode<T>> nodeMap,
                 IdentityHashMap<T, Integer> layerIndexMap) {
             // Collect edges that span multiple layers
-            // We need to process the original graph edges
             Map<LayoutNode<T>, List<LayoutNode<T>>> childEdges = new LinkedHashMap<>();
 
             for (LayoutNode<T> ln : nodeMap.values()) {
@@ -320,21 +320,54 @@ public class Graph {
                 childEdges.put(ln, childLayouts);
             }
 
-            // Insert dummies for long edges
-            for (Map.Entry<LayoutNode<T>, List<LayoutNode<T>>> entry : childEdges.entrySet()) {
-                LayoutNode<T> parent = entry.getKey();
-                for (LayoutNode<T> child : entry.getValue()) {
-                    int span = child.layer - parent.layer;
-                    if (span > 1) {
-                        LayoutNode<T> prev = parent;
-                        for (int l = parent.layer + 1; l < child.layer; l++) {
+            // Bridge map: parent → targetLayer → chain of bridge dummies
+            Map<LayoutNode<T>, Map<Integer, List<LayoutNode<T>>>> bridgeMap = new IdentityHashMap<>();
+
+            if (maxWidth > 0) {
+                // Shared bridge mode: group long-spanning edges by (parent, targetLayer)
+                // and create ONE bridge chain per group instead of per-edge dummies
+                for (Map.Entry<LayoutNode<T>, List<LayoutNode<T>>> entry : childEdges.entrySet()) {
+                    LayoutNode<T> parent = entry.getKey();
+                    Map<Integer, List<LayoutNode<T>>> childrenByTargetLayer = new LinkedHashMap<>();
+                    for (LayoutNode<T> child : entry.getValue()) {
+                        int span = child.layer - parent.layer;
+                        if (span > 1) {
+                            childrenByTargetLayer.computeIfAbsent(child.layer, k -> new ArrayList<>()).add(child);
+                        }
+                    }
+
+                    if (childrenByTargetLayer.isEmpty())
+                        continue;
+
+                    Map<Integer, List<LayoutNode<T>>> parentBridgeChains = new LinkedHashMap<>();
+                    for (int targetLayer : childrenByTargetLayer.keySet()) {
+                        List<LayoutNode<T>> chain = new ArrayList<>();
+                        for (int l = parent.layer + 1; l < targetLayer; l++) {
                             LayoutNode<T> dummy = LayoutNode.dummy(l);
-                            // Add to existing layer or extend
                             while (layers.size() <= l) {
                                 layers.add(new ArrayList<>());
                             }
                             layers.get(l).add(dummy);
-                            prev = dummy;
+                            chain.add(dummy);
+                        }
+                        parentBridgeChains.put(targetLayer, chain);
+                    }
+                    bridgeMap.put(parent, parentBridgeChains);
+                }
+            } else {
+                // Original per-edge dummy creation (maxWidth disabled)
+                for (Map.Entry<LayoutNode<T>, List<LayoutNode<T>>> entry : childEdges.entrySet()) {
+                    LayoutNode<T> parent = entry.getKey();
+                    for (LayoutNode<T> child : entry.getValue()) {
+                        int span = child.layer - parent.layer;
+                        if (span > 1) {
+                            for (int l = parent.layer + 1; l < child.layer; l++) {
+                                LayoutNode<T> dummy = LayoutNode.dummy(l);
+                                while (layers.size() <= l) {
+                                    layers.add(new ArrayList<>());
+                                }
+                                layers.get(l).add(dummy);
+                            }
                         }
                     }
                 }
@@ -346,10 +379,13 @@ public class Graph {
                     layer.get(i).indexInLayer = i;
                 }
             }
+
+            return bridgeMap;
         }
 
         private List<int[]> buildEdgeList(List<List<LayoutNode<T>>> layers,
-                IdentityHashMap<T, LayoutNode<T>> nodeMap) {
+                IdentityHashMap<T, LayoutNode<T>> nodeMap,
+                Map<LayoutNode<T>, Map<Integer, List<LayoutNode<T>>>> bridgeMap) {
             List<int[]> edges = new ArrayList<>();
 
             // Build a mapping from LayoutNode to its position
@@ -361,10 +397,9 @@ public class Graph {
                 }
             }
 
-            // For real nodes, add edges to their real children
-            // For long edges, we need to connect through dummies
-            // Simplified approach: for each real parent, find edges to children
-            // potentially going through dummies
+            // Track which bridge chains have had their internal edges added
+            Set<List<LayoutNode<T>>> connectedChains = Collections.newSetFromMap(new IdentityHashMap<>());
+
             for (LayoutNode<T> ln : nodeMap.values()) {
                 if (ln.original == null)
                     continue;
@@ -383,24 +418,49 @@ public class Graph {
                         int[] childPos = posMap.get(childLn);
                         edges.add(new int[] { parentPos[0], parentPos[1], childPos[0], childPos[1] });
                     } else if (span > 1) {
-                        // Find dummy chain: look for dummies in intermediate layers
-                        // that were inserted for this edge
-                        LayoutNode<T> prev = ln;
-                        int[] prevPos = parentPos;
-                        for (int l = ln.layer + 1; l < childLn.layer; l++) {
-                            // Find the dummy in this layer for this edge
-                            // Since dummies were appended, find one that isn't already connected
-                            List<LayoutNode<T>> layer = layers.get(l);
-                            LayoutNode<T> dummy = findUnconnectedDummy(layer, edges, l);
-                            if (dummy != null) {
-                                int[] dummyPos = posMap.get(dummy);
-                                edges.add(new int[] { prevPos[0], prevPos[1], dummyPos[0], dummyPos[1] });
-                                prev = dummy;
-                                prevPos = dummyPos;
+                        // Check bridge map first
+                        Map<Integer, List<LayoutNode<T>>> parentBridges = bridgeMap != null ? bridgeMap.get(ln) : null;
+                        List<LayoutNode<T>> chain = parentBridges != null ? parentBridges.get(childLn.layer) : null;
+
+                        if (chain != null && !chain.isEmpty()) {
+                            // Shared bridge chain: connect chain edges only once
+                            if (!connectedChains.contains(chain)) {
+                                connectedChains.add(chain);
+                                // parent → chain[0]
+                                int[] firstPos = posMap.get(chain.get(0));
+                                edges.add(new int[] { parentPos[0], parentPos[1],
+                                        firstPos[0], firstPos[1] });
+                                // chain[i] → chain[i+1]
+                                for (int i = 0; i < chain.size() - 1; i++) {
+                                    int[] from = posMap.get(chain.get(i));
+                                    int[] to = posMap.get(chain.get(i + 1));
+                                    edges.add(new int[] { from[0], from[1], to[0], to[1] });
+                                }
                             }
+                            // Fan-out: chain[last] → child
+                            int[] lastPos = posMap.get(chain.get(chain.size() - 1));
+                            int[] childPos = posMap.get(childLn);
+                            edges.add(new int[] { lastPos[0], lastPos[1],
+                                    childPos[0], childPos[1] });
+                        } else {
+                            // Fallback: find unconnected dummies (original behavior)
+                            LayoutNode<T> prev = ln;
+                            int[] prevPos = parentPos;
+                            for (int l = ln.layer + 1; l < childLn.layer; l++) {
+                                List<LayoutNode<T>> layer = layers.get(l);
+                                LayoutNode<T> dummy = findUnconnectedDummy(layer, edges, l);
+                                if (dummy != null) {
+                                    int[] dummyPos = posMap.get(dummy);
+                                    edges.add(new int[] { prevPos[0], prevPos[1],
+                                            dummyPos[0], dummyPos[1] });
+                                    prev = dummy;
+                                    prevPos = dummyPos;
+                                }
+                            }
+                            int[] childPos = posMap.get(childLn);
+                            edges.add(new int[] { prevPos[0], prevPos[1],
+                                    childPos[0], childPos[1] });
                         }
-                        int[] childPos = posMap.get(childLn);
-                        edges.add(new int[] { prevPos[0], prevPos[1], childPos[0], childPos[1] });
                     }
                 }
             }
