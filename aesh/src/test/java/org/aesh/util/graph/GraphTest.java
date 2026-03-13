@@ -326,10 +326,16 @@ public class GraphTest {
                 .child("B")
                 .child("C");
 
-        String withoutLimit = Graph.render(root);
         String withZero = Graph.render(root, 0);
+        String withZeroExplicit = Graph.render(root, GraphStyle.UNICODE, 0);
 
-        assertEquals("maxWidth=0 should match unlimited", withoutLimit, withZero);
+        assertEquals("maxWidth=0 should match explicit unlimited", withZero, withZeroExplicit);
+
+        // All labels should be present
+        assertTrue("Should contain Root", withZero.contains("Root"));
+        assertTrue("Should contain A", withZero.contains("A"));
+        assertTrue("Should contain B", withZero.contains("B"));
+        assertTrue("Should contain C", withZero.contains("C"));
     }
 
     @Test
@@ -419,10 +425,31 @@ public class GraphTest {
             assertTrue("Should contain N" + i, output.contains("N" + i));
         }
 
-        // With shared bridge dummies, output should be compact (≤ 15 lines)
+        // With compact routing rows, output should be very compact (≤ 12 lines)
         String[] lines = output.split(NL);
-        assertTrue("Output should be ≤ 15 lines but was " + lines.length,
-                lines.length <= 15);
+        assertTrue("Output should be ≤ 12 lines but was " + lines.length,
+                lines.length <= 12);
+    }
+
+    @Test
+    public void testMaxWidth110ChildrenCompactness() {
+        // 110 children with maxWidth=80 should produce compact output
+        GraphNode root = GraphNode.of("Root");
+        for (int i = 0; i < 110; i++) {
+            root.child("N" + i);
+        }
+        String output = Graph.render(root, 80);
+
+        // All labels should be present
+        assertTrue("Should contain Root", output.contains("Root"));
+        for (int i = 0; i < 110; i++) {
+            assertTrue("Should contain N" + i, output.contains("N" + i));
+        }
+
+        // With compact routing rows, output should be ≤ 18 lines
+        String[] lines = output.split(NL);
+        assertTrue("Output should be ≤ 18 lines but was " + lines.length,
+                lines.length <= 18);
     }
 
     // Helper to count non-overlapping occurrences of a substring

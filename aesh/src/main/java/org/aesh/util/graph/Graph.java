@@ -19,6 +19,8 @@
  */
 package org.aesh.util.graph;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -59,8 +61,47 @@ import java.util.function.Function;
 public class Graph {
 
     private static final int NODE_GAP = 2;
+    private static final int DEFAULT_TERMINAL_WIDTH = 80;
 
     private Graph() {
+    }
+
+    /**
+     * Detects the terminal width by checking the COLUMNS environment variable
+     * and falling back to {@code stty size}. Returns 80 if detection fails.
+     */
+    static int detectTerminalWidth() {
+        // Try COLUMNS env variable first
+        String columns = System.getenv("COLUMNS");
+        if (columns != null) {
+            try {
+                int w = Integer.parseInt(columns.trim());
+                if (w > 0)
+                    return w;
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        // Try stty size
+        try {
+            ProcessBuilder pb = new ProcessBuilder("stty", "size");
+            pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
+            Process proc = pb.start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+                String line = reader.readLine();
+                if (line != null) {
+                    String[] parts = line.trim().split("\\s+");
+                    if (parts.length >= 2) {
+                        int w = Integer.parseInt(parts[1]);
+                        if (w > 0)
+                            return w;
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        return DEFAULT_TERMINAL_WIDTH;
     }
 
     /**
@@ -82,9 +123,10 @@ public class Graph {
 
     /**
      * Renders a {@link GraphNode} graph using the specified style.
+     * Terminal width is auto-detected.
      */
     public static String render(GraphNode root, GraphStyle style) {
-        return new Renderer<>(GraphNode::label, GraphNode::children, style, 0).render(root);
+        return new Renderer<>(GraphNode::label, GraphNode::children, style, -1).render(root);
     }
 
     /**
@@ -152,7 +194,7 @@ public class Graph {
             this.labelFn = labelFn;
             this.childrenFn = childrenFn;
             this.style = style;
-            this.maxWidth = maxWidth;
+            this.maxWidth = maxWidth < 0 ? detectTerminalWidth() : maxWidth;
         }
 
         /**
@@ -679,7 +721,21 @@ public class Graph {
             if (distinctChildSets.size() <= 1)
                 return 1;
 
-            return childrenByParent.size();
+            // Count multi-child parents — those that need horizontal fan-out routing.
+            // Single-child parents share a row instead of each getting their own.
+            // When there's at most 1 multi-child parent, everything fits in one row.
+            int multiChildCount = 0;
+            boolean hasSingleChild = false;
+            for (Map.Entry<Integer, Set<Integer>> entry : childrenByParent.entrySet()) {
+                if (entry.getValue().size() > 1) {
+                    multiChildCount++;
+                } else {
+                    hasSingleChild = true;
+                }
+            }
+            if (multiChildCount <= 1)
+                return 1;
+            return multiChildCount + (hasSingleChild ? 1 : 0);
         }
 
         private char[][] renderGrid(List<List<LayoutNode<T>>> layers, List<int[]> allEdges) {
@@ -766,16 +822,29 @@ public class Graph {
                 }
             }
 
-            // Sort parent groups by parent x position (left to right)
-            List<Integer> parentIndices = new ArrayList<>(edgesByParent.keySet());
-            parentIndices.sort((a, b) -> parentLayer.get(a).x - parentLayer.get(b).x);
+            // Split parents into multi-child (need own routing row) vs single-child
+            // (all share one routing row)
+            List<Integer> multiChildParents = new ArrayList<>();
+            List<Integer> singleChildParents = new ArrayList<>();
+            for (Map.Entry<Integer, List<int[]>> entry : edgesByParent.entrySet()) {
+                int parentIdx = entry.getKey();
+                if (entry.getValue().size() > 1) {
+                    multiChildParents.add(parentIdx);
+                } else {
+                    singleChildParents.add(parentIdx);
+                }
+            }
+
+            // Sort multi-child parents by x position (left to right)
+            multiChildParents.sort((a, b) -> parentLayer.get(a).x - parentLayer.get(b).x);
 
             // Track child x positions connected in previous sub-rows
             Set<Integer> connectedChildXPositions = new HashSet<>();
 
-            for (int subRow = 0; subRow < parentIndices.size(); subRow++) {
+            // Render multi-child parents first, each in its own sub-row
+            for (int subRow = 0; subRow < multiChildParents.size(); subRow++) {
                 int gridRow = startRow + subRow;
-                int parentIdx = parentIndices.get(subRow);
+                int parentIdx = multiChildParents.get(subRow);
                 List<int[]> parentEdges = edgesByParent.get(parentIdx);
                 LayoutNode<T> parent = parentLayer.get(parentIdx);
 
@@ -818,13 +887,22 @@ public class Graph {
                     }
                 }
 
-                // Vertical pass-throughs for parents not yet routed
-                for (int future = subRow + 1; future < parentIndices.size(); future++) {
-                    int futureIdx = parentIndices.get(future);
+                // Vertical pass-throughs for multi-child parents not yet routed
+                for (int future = subRow + 1; future < multiChildParents.size(); future++) {
+                    int futureIdx = multiChildParents.get(future);
                     int fx = parentLayer.get(futureIdx).x;
                     if (fx >= 0 && fx < gridWidth) {
                         up[fx] = true;
                         down[fx] = true;
+                    }
+                }
+
+                // Vertical pass-throughs for all single-child parents (routed in shared row)
+                for (int singleIdx : singleChildParents) {
+                    int sx = parentLayer.get(singleIdx).x;
+                    if (sx >= 0 && sx < gridWidth) {
+                        up[sx] = true;
+                        down[sx] = true;
                     }
                 }
 
@@ -842,6 +920,65 @@ public class Graph {
                 }
 
                 // Write junction characters
+                for (int x = 0; x < gridWidth; x++) {
+                    if (!up[x] && !down[x] && !left[x] && !right[x])
+                        continue;
+                    grid[gridRow][x] = selectJunction(up[x], down[x], left[x], right[x]);
+                }
+            }
+
+            // Render all single-child parents in one shared routing row
+            if (!singleChildParents.isEmpty()) {
+                int gridRow = startRow + multiChildParents.size();
+
+                boolean[] up = new boolean[gridWidth];
+                boolean[] down = new boolean[gridWidth];
+                boolean[] left = new boolean[gridWidth];
+                boolean[] right = new boolean[gridWidth];
+
+                for (int parentIdx : singleChildParents) {
+                    int[] edge = edgesByParent.get(parentIdx).get(0);
+                    LayoutNode<T> parent = parentLayer.get(parentIdx);
+                    LayoutNode<T> child = childLayer.get(edge[3]);
+                    int xp = parent.x;
+                    int xc = child.x;
+
+                    if (xp == xc) {
+                        up[xp] = true;
+                        down[xp] = true;
+                    } else {
+                        int minX = Math.min(xp, xc);
+                        int maxX = Math.max(xp, xc);
+
+                        up[xp] = true;
+                        if (xc > xp)
+                            right[xp] = true;
+                        else
+                            left[xp] = true;
+
+                        down[xc] = true;
+                        if (xp > xc)
+                            right[xc] = true;
+                        else
+                            left[xc] = true;
+
+                        for (int x = minX + 1; x < maxX; x++) {
+                            if (x >= 0 && x < gridWidth) {
+                                left[x] = true;
+                                right[x] = true;
+                            }
+                        }
+                    }
+                }
+
+                // Vertical pass-throughs for child positions connected in previous sub-rows
+                for (int cx : connectedChildXPositions) {
+                    if (cx >= 0 && cx < gridWidth) {
+                        up[cx] = true;
+                        down[cx] = true;
+                    }
+                }
+
                 for (int x = 0; x < gridWidth; x++) {
                     if (!up[x] && !down[x] && !left[x] && !right[x])
                         continue;
@@ -999,7 +1136,7 @@ public class Graph {
         private Function<T, String> labelFn;
         private Function<T, List<T>> childrenFn;
         private GraphStyle style = GraphStyle.UNICODE;
-        private int maxWidth = 0;
+        private int maxWidth = -1;
 
         private Builder() {
         }
@@ -1032,7 +1169,8 @@ public class Graph {
         /**
          * Sets the maximum output width in characters.
          * Layers wider than this will be split into multiple sub-rows.
-         * A value of 0 (the default) means no limit.
+         * A value of 0 means no limit. A negative value (the default)
+         * auto-detects the terminal width.
          */
         public Builder<T> maxWidth(int maxWidth) {
             this.maxWidth = maxWidth;
