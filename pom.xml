@@ -347,6 +347,12 @@
         </build>
       </profile>
       <profile>
+        <id>benchmark</id>
+        <modules>
+          <module>benchmark</module>
+        </modules>
+      </profile>
+      <profile>
         <id>examples</id>
         <modules>
           <module>examples</module>

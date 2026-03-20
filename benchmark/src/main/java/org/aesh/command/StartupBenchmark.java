@@ -13,7 +13,6 @@ import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
-import org.junit.Test;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Model.CommandSpec;
@@ -36,11 +35,13 @@ import picocli.CommandLine.Model.PositionalParamSpec;
  * hardcoded metadata (no annotation reflection), analogous to aesh's generated path</li>
  * <li><b>Picocli (reflection)</b> — builds a CommandLine from annotated classes</li>
  * </ul>
+ * <p>
+ * Run with: {@code mvn -Pbenchmark exec:java -pl benchmark}
  *
  * @author Aesh team
  */
 @SuppressWarnings({ "unchecked", "rawtypes" })
-public class StartupBenchmarkTest {
+public class StartupBenchmark {
 
     private static final int WARMUP_ITERATIONS = 1000;
     private static final int MEASURED_ITERATIONS = 3000;
@@ -846,10 +847,16 @@ public class StartupBenchmarkTest {
             PicoGrpCmd1.class, PicoGrpCmd2.class, PicoGrpCmd3.class, PicoGrpCmd4.class, PicoGrpCmd5.class
     };
 
-    // ---- Benchmark tests ----
+    // ---- Benchmark runner ----
 
-    @Test
-    public void startupBenchmark() throws Exception {
+    public static void main(String[] args) throws Exception {
+        StartupBenchmark benchmark = new StartupBenchmark();
+        benchmark.runFlatBenchmark();
+        System.out.println();
+        benchmark.runGroupBenchmark();
+    }
+
+    public void runFlatBenchmark() throws Exception {
         System.out.println("=== Flat Command Benchmark ===");
         System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
         System.out.println();
@@ -906,8 +913,7 @@ public class StartupBenchmarkTest {
         }
     }
 
-    @Test
-    public void groupCommandBenchmark() throws Exception {
+    public void runGroupBenchmark() throws Exception {
         System.out.println("=== Group Command Benchmark ===");
         System.out.println("Each group = 1 parent + 2 child subcommands");
         System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
@@ -966,8 +972,6 @@ public class StartupBenchmarkTest {
     }
 
     // ---- Aesh: generated / annotation-processor path (flat) ----
-    // Simulates what the generated _AeshMetadata code does at runtime:
-    // builds ProcessedCommand via ProcessedCommandBuilder with hardcoded metadata (no reflection).
 
     private void buildAeshRuntimeGenerated(int commandCount) throws Exception {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
@@ -977,11 +981,6 @@ public class StartupBenchmarkTest {
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
     }
 
-    /**
-     * Creates a CommandContainer the same way generated metadata code would:
-     * using ProcessedCommandBuilder + ProcessedOptionBuilder with literal values.
-     * Each command gets 3 options (String, boolean, int) + 1 argument (String).
-     */
     private CommandContainer<CommandInvocation> createGeneratedContainer(String name, int index) throws Exception {
         Command<CommandInvocation> cmd = AESH_COMMANDS[index % AESH_COMMANDS.length]
                 .getDeclaredConstructor().newInstance();
@@ -1027,8 +1026,6 @@ public class StartupBenchmarkTest {
     }
 
     // ---- Aesh: reflection path (flat) ----
-    // Uses the actual annotation-scanning code path (doGenerateCommandLineParser)
-    // which reads @CommandDefinition, @Option, @Argument via reflection.
 
     private void buildAeshRuntimeReflection(int commandCount) throws Exception {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
@@ -1075,10 +1072,6 @@ public class StartupBenchmarkTest {
         }
     }
 
-    /**
-     * Creates a CommandSpec programmatically with 3 options + 1 positional param,
-     * mirroring the structure of the annotated PicoCmd classes.
-     */
     private CommandSpec createPicocliProgrammaticCommand(String name) {
         CommandSpec spec = CommandSpec.create();
         spec.name(name);
@@ -1112,11 +1105,6 @@ public class StartupBenchmarkTest {
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
     }
 
-    /**
-     * Creates a group CommandContainer with 2 child subcommands, all built via
-     * ProcessedCommandBuilder (no annotation reflection). Parent gets 2 options,
-     * each child gets 2 options + 1 argument.
-     */
     private CommandContainer<CommandInvocation> createGeneratedGroupContainer(String name, int index) throws Exception {
         // Create parent command
         Command<CommandInvocation> parentCmd = AESH_COMMANDS[index % AESH_COMMANDS.length]
@@ -1255,10 +1243,6 @@ public class StartupBenchmarkTest {
         }
     }
 
-    /**
-     * Creates a picocli group (parent + 2 child subcommands) programmatically.
-     * Parent gets 2 options, each child gets 2 options + 1 positional param.
-     */
     private CommandLine createPicocliProgrammaticGroup(String name) {
         // Parent
         CommandSpec parentSpec = CommandSpec.create();
