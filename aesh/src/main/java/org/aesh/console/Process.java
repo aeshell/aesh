@@ -70,8 +70,8 @@ public class Process extends Thread implements Consumer<Signal> {
     @Override
     public void run() {
         // Subscribe to events, in particular Ctrl-C
-        Consumer<Signal> prev = conn.getSignalHandler();
-        Consumer<int[]> prevIn = conn.getStdinHandler();
+        Consumer<Signal> prev = conn.signalHandler();
+        Consumer<int[]> prevIn = conn.stdinHandler();
         conn.setSignalHandler(this);
         running = true;
         pid = (int) Thread.currentThread().getId();

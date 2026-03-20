@@ -397,7 +397,7 @@ public class PagingSupport {
         this.connection = connection;
         this.readline = readline;
         this.search = search;
-        Consumer<Size> consumer = connection.getSizeHandler();
+        Consumer<Size> consumer = connection.sizeHandler();
         connection.setSizeHandler(new Consumer<Size>() {
             @Override
             public void accept(Size t) {
@@ -630,7 +630,7 @@ public class PagingSupport {
         CountDownLatch latch = new CountDownLatch(1);
         Attributes attributes = getConnection().enterRawMode();
         // We need to set the interrupt SignalHandler to interrupt the reading.
-        Consumer<Signal> prevHandler = getConnection().getSignalHandler();
+        Consumer<Signal> prevHandler = getConnection().signalHandler();
         getConnection().setSignalHandler((signal) -> {
             // Interrupting the current reading thread.
             switch (signal) {
@@ -664,7 +664,7 @@ public class PagingSupport {
         CountDownLatch latch = new CountDownLatch(1);
         String[] out = new String[1];
         // We need to set the interrupt SignalHandler to be aware of the interrupt
-        Consumer<Signal> prevHandler = getConnection().getSignalHandler();
+        Consumer<Signal> prevHandler = getConnection().signalHandler();
         getConnection().setSignalHandler((signal) -> {
             prevHandler.accept(signal);
             switch (signal) {

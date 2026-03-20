@@ -229,7 +229,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         });
         if (!settings.isEchoCtrl()) {
             // Do not display ^C
-            Attributes attr = connection.getAttributes();
+            Attributes attr = connection.attributes();
             attr.setLocalFlag(Attributes.LocalFlag.ECHOCTL, false);
             connection.setAttributes(attr);
         }

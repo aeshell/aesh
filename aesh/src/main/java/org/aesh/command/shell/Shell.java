@@ -152,7 +152,7 @@ public interface Shell {
      */
     default void writeHyperlink(String url, String text) {
         Connection conn = connection();
-        if (conn != null && conn.supportsHyperlinks()) {
+        if (conn != null && conn.terminal().supportsHyperlinks()) {
             write(ANSI.hyperlink(url, text));
         } else {
             write(text);
@@ -166,6 +166,6 @@ public interface Shell {
      */
     default boolean supportsHyperlinks() {
         Connection conn = connection();
-        return conn != null && conn.supportsHyperlinks();
+        return conn != null && conn.terminal().supportsHyperlinks();
     }
 }
