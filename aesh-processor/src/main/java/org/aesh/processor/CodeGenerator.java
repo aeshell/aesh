@@ -176,7 +176,8 @@ final class CodeGenerator {
             List<VariableElement> fields, boolean isGroup,
             Elements elementUtils, Types typeUtils) {
 
-        sb.append("        ProcessedCommand processedCommand = ProcessedCommandBuilder.builder()\n");
+        sb.append(
+                "        ProcessedCommand processedCommand = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())\n");
 
         if (isGroup) {
             GroupCommandDefinition gcd = commandElement.getAnnotation(GroupCommandDefinition.class);
