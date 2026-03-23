@@ -75,7 +75,7 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext,
                         mode == CommandLineParser.Mode.VALIDATE);
             else
-                resetField(getObject(), option.getFieldName(), option.hasValue());
+                option.resetField(getObject());
         }
         //arguments
         if (processedCommand.getArguments() != null &&
@@ -84,7 +84,7 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
             processedCommand.getArguments().injectValueIntoField(getObject(), invocationProviders, aeshContext,
                     mode == CommandLineParser.Mode.VALIDATE);
         else if (processedCommand.getArguments() != null)
-            resetField(getObject(), processedCommand.getArguments().getFieldName(), true);
+            processedCommand.getArguments().resetField(getObject());
         //argument
         if (processedCommand.getArgument() != null &&
                 (processedCommand.getArgument().getValues().size() > 0 ||
@@ -92,7 +92,7 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
             processedCommand.getArgument().injectValueIntoField(getObject(), invocationProviders, aeshContext,
                     mode == CommandLineParser.Mode.VALIDATE);
         else if (processedCommand.getArgument() != null)
-            resetField(getObject(), processedCommand.getArgument().getFieldName(), true);
+            processedCommand.getArgument().resetField(getObject());
     }
 
     @Override
