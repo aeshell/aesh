@@ -211,13 +211,21 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
 
     private void generateProvider(TypeElement commandElement) throws IOException {
         String qualifiedName = commandElement.getQualifiedName().toString();
-        String packageName = "";
-        int lastDot = qualifiedName.lastIndexOf('.');
-        if (lastDot > 0) {
-            packageName = qualifiedName.substring(0, lastDot);
+        String packageName = elementUtils.getPackageOf(commandElement).getQualifiedName().toString();
+
+        // For inner classes (e.g., Config.Set), we need:
+        // - typeRefName: "Config.Set" for use in generated code type references
+        // - metadataClassName: "Config_Set_AeshMetadata" to avoid clashing with enclosing class
+        String typeRefName;
+        String metadataClassName;
+        if (packageName.isEmpty()) {
+            typeRefName = qualifiedName;
+            metadataClassName = qualifiedName.replace('.', '_') + "_AeshMetadata";
+        } else {
+            // Strip package prefix to get e.g. "Config.Set" for inner classes or "Batch" for top-level
+            typeRefName = qualifiedName.substring(packageName.length() + 1);
+            metadataClassName = typeRefName.replace('.', '_') + "_AeshMetadata";
         }
-        String simpleName = commandElement.getSimpleName().toString();
-        String metadataClassName = simpleName + "_AeshMetadata";
         String fullMetadataName = packageName.isEmpty() ? metadataClassName : packageName + "." + metadataClassName;
 
         boolean isGroup = commandElement.getAnnotation(GroupCommandDefinition.class) != null;
@@ -225,7 +233,7 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         List<VariableElement> fields = collectFields(commandElement);
 
         String code = CodeGenerator.generate(
-                packageName, simpleName, metadataClassName, qualifiedName,
+                packageName, typeRefName, metadataClassName, qualifiedName,
                 commandElement, fields, isGroup, elementUtils, typeUtils);
 
         JavaFileObject sourceFile = filer.createSourceFile(fullMetadataName, commandElement);

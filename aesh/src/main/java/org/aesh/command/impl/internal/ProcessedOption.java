@@ -31,6 +31,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.OptionCompleter;
@@ -92,6 +94,8 @@ public final class ProcessedOption {
     private boolean inherited = false;
     private String descriptionUrl;
     private boolean isUrl = false;
+    private BiConsumer<Object, Object> fieldSetter;
+    private Consumer<Object> fieldResetter;
 
     public ProcessedOption(char shortName, String name, String description,
             String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
@@ -157,6 +161,60 @@ public final class ProcessedOption {
 
         properties = new HashMap<>();
         values = new ArrayList<>();
+    }
+
+    public void setFieldSetter(BiConsumer<Object, Object> fieldSetter) {
+        this.fieldSetter = fieldSetter;
+    }
+
+    public void setFieldResetter(Consumer<Object> fieldResetter) {
+        this.fieldResetter = fieldResetter;
+    }
+
+    public BiConsumer<Object, Object> getFieldSetter() {
+        return fieldSetter;
+    }
+
+    public Consumer<Object> getFieldResetter() {
+        return fieldResetter;
+    }
+
+    public void resetField(Object instance) {
+        if (fieldResetter != null) {
+            fieldResetter.accept(instance);
+            return;
+        }
+        // Fallback to reflection
+        try {
+            Field field = getField(instance.getClass(), fieldName);
+            if (field == null)
+                return;
+            if (!Modifier.isPublic(field.getModifiers()))
+                field.setAccessible(true);
+            if (field.getType().isPrimitive()) {
+                if (boolean.class.isAssignableFrom(field.getType()))
+                    field.set(instance, false);
+                else if (int.class.isAssignableFrom(field.getType()))
+                    field.set(instance, 0);
+                else if (short.class.isAssignableFrom(field.getType()))
+                    field.set(instance, (short) 0);
+                else if (char.class.isAssignableFrom(field.getType()))
+                    field.set(instance, '\u0000');
+                else if (byte.class.isAssignableFrom(field.getType()))
+                    field.set(instance, (byte) 0);
+                else if (long.class.isAssignableFrom(field.getType()))
+                    field.set(instance, 0L);
+                else if (float.class.isAssignableFrom(field.getType()))
+                    field.set(instance, 0.0f);
+                else if (double.class.isAssignableFrom(field.getType()))
+                    field.set(instance, 0.0d);
+            } else if (!hasValue() && field.getType().equals(Boolean.class)) {
+                field.set(instance, Boolean.FALSE);
+            } else
+                field.set(instance, null);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            // Field reset failed, continue
+        }
     }
 
     public String shortName() {
@@ -516,6 +574,49 @@ public final class ProcessedOption {
             boolean doValidation) throws OptionValidatorException {
         if (converter == null || instance == null)
             return;
+        if (fieldSetter != null) {
+            injectValueWithSetter(instance, invocationProviders, aeshContext, doValidation);
+        } else {
+            injectValueWithReflection(instance, invocationProviders, aeshContext, doValidation);
+        }
+    }
+
+    private void injectValueWithSetter(Object instance, InvocationProviders invocationProviders, AeshContext aeshContext,
+            boolean doValidation) throws OptionValidatorException {
+        if (optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN || optionType == OptionType.ARGUMENT) {
+            if (negatedByUser && optionType == OptionType.BOOLEAN) {
+                fieldSetter.accept(instance, doConvert("false", invocationProviders, instance, aeshContext, doValidation));
+            } else if (getValue() != null)
+                fieldSetter.accept(instance, doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation));
+            else if (defaultValues.size() > 0) {
+                fieldSetter.accept(instance,
+                        doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation));
+            }
+        } else if (optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
+            Collection<Object> tmpSet;
+            if (Set.class.isAssignableFrom(type))
+                tmpSet = new HashSet<>();
+            else
+                tmpSet = new ArrayList<>();
+            if (values.size() > 0) {
+                for (String in : values)
+                    tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
+            } else if (defaultValues.size() > 0) {
+                for (String in : defaultValues)
+                    tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
+            }
+            fieldSetter.accept(instance, tmpSet);
+        } else if (optionType == OptionType.GROUP) {
+            Map<String, Object> tmpMap = newHashMap();
+            for (String propertyKey : properties.keySet())
+                tmpMap.put(propertyKey, doConvert(properties.get(propertyKey), invocationProviders, instance,
+                        aeshContext, doValidation));
+            fieldSetter.accept(instance, tmpMap);
+        }
+    }
+
+    private void injectValueWithReflection(Object instance, InvocationProviders invocationProviders, AeshContext aeshContext,
+            boolean doValidation) throws OptionValidatorException {
         try {
             Field field = getField(instance.getClass(), fieldName);
             //for some options, the field might be null. eg generatedHelp

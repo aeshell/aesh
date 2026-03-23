@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.aesh.command.activator.OptionActivator;
@@ -80,6 +81,8 @@ public class ProcessedOptionBuilder {
     private boolean inherited = false;
     private String descriptionUrl;
     private boolean isUrl = false;
+    private BiConsumer<Object, Object> fieldSetter;
+    private Consumer<Object> fieldResetter;
 
     private ProcessedOptionBuilder() {
         defaultValues = new ArrayList<>();
@@ -339,6 +342,14 @@ public class ProcessedOptionBuilder {
         return apply(c -> c.isUrl = isUrl);
     }
 
+    public ProcessedOptionBuilder fieldSetter(BiConsumer<Object, Object> fieldSetter) {
+        return apply(c -> c.fieldSetter = fieldSetter);
+    }
+
+    public ProcessedOptionBuilder fieldResetter(Consumer<Object> fieldResetter) {
+        return apply(c -> c.fieldResetter = fieldResetter);
+    }
+
     public ProcessedOption build() throws OptionParserException {
         if (optionType == null) {
             if (!hasValue)
@@ -390,10 +401,15 @@ public class ProcessedOptionBuilder {
             throw new OptionParserException("Option '" + name + "' is marked as negatable but is not a boolean type");
         }
 
-        return new ProcessedOption(shortName, name, description, argument, required,
+        ProcessedOption option = new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, askIfNotSet, acceptNameWithoutDashes, selectorType, defaultValues, type, fieldName, optionType,
                 converter,
                 completer, validator, activator, renderer, parser, overrideRequired, negatable, negationPrefix, inherited,
                 descriptionUrl, isUrl);
+        if (fieldSetter != null)
+            option.setFieldSetter(fieldSetter);
+        if (fieldResetter != null)
+            option.setFieldResetter(fieldResetter);
+        return option;
     }
 }

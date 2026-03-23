@@ -73,7 +73,9 @@ final class CodeGenerator {
         }
 
         // Imports
-        sb.append("import java.util.Arrays;\n\n");
+        sb.append("import java.util.Arrays;\n");
+        sb.append("import java.util.function.BiConsumer;\n");
+        sb.append("import java.util.function.Consumer;\n\n");
         sb.append("import org.aesh.command.Command;\n");
         sb.append("import org.aesh.command.impl.internal.ProcessedCommand;\n");
         sb.append("import org.aesh.command.impl.internal.ProcessedCommandBuilder;\n");
@@ -123,7 +125,7 @@ final class CodeGenerator {
         sb.append("    @Override\n");
         sb.append("    public ProcessedCommand buildProcessedCommand(").append(simpleName).append(" instance)");
         sb.append(" throws CommandLineParserException {\n");
-        generateBuildProcessedCommand(sb, commandElement, fields, isGroup, elementUtils, typeUtils);
+        generateBuildProcessedCommand(sb, simpleName, commandElement, fields, isGroup, elementUtils, typeUtils);
         sb.append("    }\n");
 
         // End class
@@ -172,11 +174,12 @@ final class CodeGenerator {
         return classNames;
     }
 
-    private static void generateBuildProcessedCommand(StringBuilder sb, TypeElement commandElement,
+    private static void generateBuildProcessedCommand(StringBuilder sb, String simpleName, TypeElement commandElement,
             List<VariableElement> fields, boolean isGroup,
             Elements elementUtils, Types typeUtils) {
 
-        sb.append("        ProcessedCommand processedCommand = ProcessedCommandBuilder.builder()\n");
+        sb.append(
+                "        ProcessedCommand processedCommand = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())\n");
 
         if (isGroup) {
             GroupCommandDefinition gcd = commandElement.getAnnotation(GroupCommandDefinition.class);
@@ -209,7 +212,7 @@ final class CodeGenerator {
 
         // Process fields
         for (VariableElement field : fields) {
-            generateFieldProcessing(sb, field, elementUtils, typeUtils);
+            generateFieldProcessing(sb, simpleName, field, elementUtils, typeUtils);
         }
 
         sb.append("        return processedCommand;\n");
@@ -245,7 +248,7 @@ final class CodeGenerator {
         }
     }
 
-    private static void generateFieldProcessing(StringBuilder sb, VariableElement field,
+    private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
             Elements elementUtils, Types typeUtils) {
         Option o = field.getAnnotation(Option.class);
         OptionList ol = field.getAnnotation(OptionList.class);
@@ -254,19 +257,19 @@ final class CodeGenerator {
         Argument arg = field.getAnnotation(Argument.class);
 
         if (o != null) {
-            generateOption(sb, field, o, elementUtils, typeUtils);
+            generateOption(sb, simpleName, field, o, elementUtils, typeUtils);
         } else if (ol != null) {
-            generateOptionList(sb, field, ol, elementUtils, typeUtils);
+            generateOptionList(sb, simpleName, field, ol, elementUtils, typeUtils);
         } else if (og != null) {
-            generateOptionGroup(sb, field, og, elementUtils, typeUtils);
+            generateOptionGroup(sb, simpleName, field, og, elementUtils, typeUtils);
         } else if (args != null) {
-            generateArguments(sb, field, args, elementUtils, typeUtils);
+            generateArguments(sb, simpleName, field, args, elementUtils, typeUtils);
         } else if (arg != null) {
-            generateArgument(sb, field, arg, elementUtils, typeUtils);
+            generateArgument(sb, simpleName, field, arg, elementUtils, typeUtils);
         }
     }
 
-    private static void generateOption(StringBuilder sb, VariableElement field, Option o,
+    private static void generateOption(StringBuilder sb, String simpleName, VariableElement field, Option o,
             Elements elementUtils, Types typeUtils) {
         String fieldName = field.getSimpleName().toString();
         String fieldType = getBoxedTypeName(field.asType(), typeUtils);
@@ -308,10 +311,12 @@ final class CodeGenerator {
         sb.append("                        .inherited(").append(o.inherited()).append(")\n");
         sb.append("                        .descriptionUrl(").append(stringLiteral(o.descriptionUrl())).append(")\n");
         sb.append("                        .url(").append(o.url()).append(")\n");
+        generateFieldSetter(sb, simpleName, field, typeUtils);
+        generateFieldResetter(sb, simpleName, field, typeUtils);
         sb.append("                        .build());\n\n");
     }
 
-    private static void generateOptionList(StringBuilder sb, VariableElement field, OptionList ol,
+    private static void generateOptionList(StringBuilder sb, String simpleName, VariableElement field, OptionList ol,
             Elements elementUtils, Types typeUtils) {
         String fieldName = field.getSimpleName().toString();
         String elementType = getGenericTypeArgument(field.asType(), 0, typeUtils);
@@ -337,10 +342,12 @@ final class CodeGenerator {
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
+        generateFieldSetter(sb, simpleName, field, typeUtils);
+        generateFieldResetter(sb, simpleName, field, typeUtils);
         sb.append("                        .build());\n\n");
     }
 
-    private static void generateOptionGroup(StringBuilder sb, VariableElement field, OptionGroup og,
+    private static void generateOptionGroup(StringBuilder sb, String simpleName, VariableElement field, OptionGroup og,
             Elements elementUtils, Types typeUtils) {
         String fieldName = field.getSimpleName().toString();
         // For Map<K,V>, extract V (index 1)
@@ -366,10 +373,12 @@ final class CodeGenerator {
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
+        generateFieldSetter(sb, simpleName, field, typeUtils);
+        generateFieldResetter(sb, simpleName, field, typeUtils);
         sb.append("                        .build());\n\n");
     }
 
-    private static void generateArguments(StringBuilder sb, VariableElement field, Arguments a,
+    private static void generateArguments(StringBuilder sb, String simpleName, VariableElement field, Arguments a,
             Elements elementUtils, Types typeUtils) {
         String fieldName = field.getSimpleName().toString();
         String elementType = getGenericTypeArgument(field.asType(), 0, typeUtils);
@@ -394,10 +403,12 @@ final class CodeGenerator {
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
         sb.append("                        .url(").append(a.url()).append(")\n");
+        generateFieldSetter(sb, simpleName, field, typeUtils);
+        generateFieldResetter(sb, simpleName, field, typeUtils);
         sb.append("                        .build());\n\n");
     }
 
-    private static void generateArgument(StringBuilder sb, VariableElement field, Argument arg,
+    private static void generateArgument(StringBuilder sb, String simpleName, VariableElement field, Argument arg,
             Elements elementUtils, Types typeUtils) {
         String fieldName = field.getSimpleName().toString();
         String fieldType = getBoxedTypeName(field.asType(), typeUtils);
@@ -425,6 +436,8 @@ final class CodeGenerator {
         sb.append("                        .overrideRequired(").append(arg.overrideRequired()).append(")\n");
         sb.append("                        .inherited(").append(arg.inherited()).append(")\n");
         sb.append("                        .url(").append(arg.url()).append(")\n");
+        generateFieldSetter(sb, simpleName, field, typeUtils);
+        generateFieldResetter(sb, simpleName, field, typeUtils);
         sb.append("                        .build());\n\n");
     }
 
@@ -650,6 +663,64 @@ final class CodeGenerator {
 
     private static String selectorLiteral(org.aesh.selector.SelectorType selectorType) {
         return "org.aesh.selector.SelectorType." + selectorType.name();
+    }
+
+    private static boolean isAccessibleField(VariableElement field) {
+        java.util.Set<javax.lang.model.element.Modifier> modifiers = field.getModifiers();
+        return !modifiers.contains(javax.lang.model.element.Modifier.PRIVATE);
+    }
+
+    private static void generateFieldSetter(StringBuilder sb, String commandSimpleName, VariableElement field,
+            Types typeUtils) {
+        if (!isAccessibleField(field))
+            return;
+        String fieldName = field.getSimpleName().toString();
+        String fieldType = field.asType().toString();
+
+        sb.append("                        .fieldSetter((inst, val) -> ((").append(commandSimpleName).append(") inst).")
+                .append(fieldName).append(" = (").append(fieldType).append(") val)\n");
+    }
+
+    private static void generateFieldResetter(StringBuilder sb, String commandSimpleName, VariableElement field,
+            Types typeUtils) {
+        if (!isAccessibleField(field))
+            return;
+        String fieldName = field.getSimpleName().toString();
+        TypeMirror fieldType = field.asType();
+
+        sb.append("                        .fieldResetter(inst -> ((").append(commandSimpleName).append(") inst).")
+                .append(fieldName).append(" = ");
+
+        switch (fieldType.getKind()) {
+            case BOOLEAN:
+                sb.append("false");
+                break;
+            case BYTE:
+                sb.append("(byte) 0");
+                break;
+            case SHORT:
+                sb.append("(short) 0");
+                break;
+            case INT:
+                sb.append("0");
+                break;
+            case LONG:
+                sb.append("0L");
+                break;
+            case FLOAT:
+                sb.append("0.0f");
+                break;
+            case DOUBLE:
+                sb.append("0.0d");
+                break;
+            case CHAR:
+                sb.append("'\\u0000'");
+                break;
+            default:
+                sb.append("null");
+                break;
+        }
+        sb.append(")\n");
     }
 
     private static String escapeJavaString(String s) {
