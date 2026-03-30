@@ -23,14 +23,14 @@
    <parent>
         <groupId>org.aesh</groupId>
         <artifactId>aesh-all</artifactId>
-        <version>3.5-dev</version>
+        <version>3.5</version>
    </parent>
    <modelVersion>4.0.0</modelVersion>
 
    <groupId>org.aesh</groupId>
    <artifactId>aesh-processor</artifactId>
    <packaging>jar</packaging>
-   <version>3.5-dev</version>
+   <version>3.5</version>
    <name>Æsh Annotation Processor</name>
    <description>Compile-time annotation processor for Æsh commands</description>
 
