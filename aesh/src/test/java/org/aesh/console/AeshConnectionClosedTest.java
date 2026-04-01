@@ -28,14 +28,9 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.terminal.Key;
 import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
@@ -49,7 +44,7 @@ public class AeshConnectionClosedTest {
 
         ConnectionClosed closed = new ConnectionClosed();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .connection(connection)
                 .setConnectionClosedHandler(closed)

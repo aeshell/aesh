@@ -34,14 +34,12 @@ import org.aesh.command.Executable;
 import org.aesh.command.Execution;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.completer.CompleterData;
-import org.aesh.command.impl.completer.NullOptionCompleter;
 import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.operator.AndOperator;
-import org.aesh.command.impl.operator.AppendOutputRedirectionOperator;
 import org.aesh.command.impl.operator.ConfigurationOperator;
 import org.aesh.command.impl.operator.DataProvider;
 import org.aesh.command.impl.operator.EndOperator;
@@ -150,11 +148,9 @@ class Executions {
             if (cmd.validator() != null && !cmd.hasOptionWithOverrideRequired()) {
                 cmd.validator().validate(getCommand());
             }
-            if (cmd.getActivator() != null) {
-                if (!cmd.getActivator().isActivated(new ParsedCommand(cmd))) {
-                    result = CommandResult.FAILURE;
-                    throw new CommandException("The command is not available in the current context.");
-                }
+            if (!cmd.isActivated(new ParsedCommand(cmd))) {
+                result = CommandResult.FAILURE;
+                throw new CommandException("The command is not available in the current context.");
             }
 
             if (hasRedirectIn()) {
@@ -197,7 +193,7 @@ class Executions {
                 for (ProcessedOption option : cmd.getAllSelectors()) {
                     //if we do not have any default values, check if we can use the completer
                     if ((option.getDefaultValues() == null || option.getDefaultValues().size() == 0) &&
-                            (option.completer() != null && !(option.completer() instanceof NullOptionCompleter))) {
+                            option.completer() != null) {
                         //first create a mock CompleterInvocation, then get all the values
                         CompleterData completerMock = new CompleterData(null, "", null);
                         option.completer().complete(completerMock);
@@ -423,7 +419,7 @@ class Executions {
                 return new OutputRedirectionOperator(context);
             }
             case APPEND_OUT: {
-                return new AppendOutputRedirectionOperator(context);
+                return new OutputRedirectionOperator(context, true);
             }
             case PIPE: {
                 return new PipeOperator(context);

@@ -8,9 +8,6 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.completer.CommandSuggestionProvider;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -19,7 +16,6 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.CompositeSuggestionProvider;
 import org.aesh.readline.Prompt;
@@ -134,7 +130,7 @@ public class CommandSuggestionProviderTest {
                 .command(ConnectCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .enableAlias(false)

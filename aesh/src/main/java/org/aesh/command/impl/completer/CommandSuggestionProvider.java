@@ -169,7 +169,7 @@ public class CommandSuggestionProvider<CI extends CommandInvocation> implements 
     private boolean isCommandActivated(String name) {
         try {
             CommandContainer<CI> container = registry.getCommand(name, name);
-            return container.getParser().getProcessedCommand().getActivator().isActivated(null);
+            return container.getParser().getProcessedCommand().isActivated(null);
         } catch (Exception e) {
             return true; // default to activated if we can't check
         }

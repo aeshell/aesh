@@ -25,10 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
@@ -84,7 +80,7 @@ public class AeshConsoleTest {
                 .command(LsCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .commandRegistry(registry)
@@ -180,10 +176,10 @@ public class AeshConsoleTest {
     }
 
     public static class DirectoryValidatorInvocationProvider
-            implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>> {
+            implements ValidatorInvocationProvider {
 
         @Override
-        public ValidatorInvocation<File, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
+        public ValidatorInvocation enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
             if (validatorInvocation.getValue() instanceof File)
                 return new DirectoryValidatorInvocation((File) validatorInvocation.getValue(),
                         (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());

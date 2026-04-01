@@ -22,7 +22,9 @@ package org.aesh.command.converter;
 /**
  * @author Aesh team
  */
-public interface ConverterInvocationProvider<CI extends ConverterInvocation> {
+public interface ConverterInvocationProvider {
 
-    CI enhanceConverterInvocation(ConverterInvocation converterInvocation);
+    default ConverterInvocation enhanceConverterInvocation(ConverterInvocation converterInvocation) {
+        return converterInvocation;
+    }
 }

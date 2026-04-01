@@ -29,11 +29,7 @@ import java.util.Map;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.container.CommandContainer;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.container.AeshCommandContainer;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -49,7 +45,6 @@ import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.AeshContext;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.terminal.utils.Config;
@@ -72,7 +67,7 @@ public class AeshCommandCustomCommand {
                 .command(createBuilder())
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .commandRegistry(registry)
                 .connection(connection)

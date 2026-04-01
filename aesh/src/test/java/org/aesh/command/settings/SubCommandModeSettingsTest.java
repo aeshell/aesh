@@ -116,7 +116,7 @@ public class SubCommandModeSettingsTest {
                 .exitCommand("bye")
                 .build();
 
-        Settings<?, ?, ?, ?, ?, ?> settings = SettingsBuilder.builder()
+        Settings<?> settings = SettingsBuilder.builder()
                 .subCommandModeSettings(subSettings)
                 .build();
 
@@ -125,7 +125,7 @@ public class SubCommandModeSettingsTest {
 
     @Test
     public void testDefaultSettingsFromMainSettings() {
-        Settings<?, ?, ?, ?, ?, ?> settings = SettingsBuilder.builder().build();
+        Settings<?> settings = SettingsBuilder.builder().build();
 
         // Should return default settings
         assertNotNull(settings.subCommandModeSettings());

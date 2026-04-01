@@ -9,10 +9,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
@@ -24,7 +20,6 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.converter.CLConverterManager;
 import org.aesh.terminal.utils.ANSI;
@@ -178,7 +173,7 @@ public class HyperlinkTest {
                 .command(HelpUrlCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .commandRegistry(registry)
                 .enableOperatorParser(true)
@@ -219,7 +214,7 @@ public class HyperlinkTest {
                 .command(DescUrlCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .commandRegistry(registry)
                 .enableOperatorParser(true)
@@ -249,7 +244,7 @@ public class HyperlinkTest {
                 .command(HyperlinkOutputCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .commandRegistry(registry)
                 .enableOperatorParser(true)

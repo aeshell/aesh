@@ -32,7 +32,6 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ParsedOption;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
@@ -45,7 +44,6 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.Prompt;
 import org.aesh.terminal.Key;
@@ -75,7 +73,7 @@ public class AeshCommandCompletionTest {
                 .command(FooCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .enableAlias(false)
@@ -179,7 +177,7 @@ public class AeshCommandCompletionTest {
                 .command(FooFormattedCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -206,7 +204,7 @@ public class AeshCommandCompletionTest {
                 .command(TotoCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .connection(connection)
                 //.inputStream(pipedInputStream)
@@ -249,7 +247,7 @@ public class AeshCommandCompletionTest {
                 .command(GroupArgCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -329,7 +327,7 @@ public class AeshCommandCompletionTest {
                 .command(ArqCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -357,7 +355,7 @@ public class AeshCommandCompletionTest {
                 .command(GitCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -438,7 +436,7 @@ public class AeshCommandCompletionTest {
                 .command(SuperGitCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -476,7 +474,7 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest4.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -522,7 +520,7 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest4B.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -565,7 +563,7 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest4C.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -602,7 +600,7 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest5.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -631,7 +629,7 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest6.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -669,7 +667,7 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest7a.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -713,7 +711,7 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest8.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -747,7 +745,7 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest9.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -780,7 +778,7 @@ public class AeshCommandCompletionTest {
                 .command(CommandTest10.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -806,7 +804,7 @@ public class AeshCommandCompletionTest {
                 .command(GitCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .connection(connection)
@@ -846,7 +844,7 @@ public class AeshCommandCompletionTest {
                 .command(GitCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .enableAlias(false)

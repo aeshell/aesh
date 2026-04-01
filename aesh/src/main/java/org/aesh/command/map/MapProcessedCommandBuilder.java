@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.impl.validator.NullCommandValidator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
@@ -127,7 +126,7 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
         if (validator != null && !validator.equals(NullCommandValidator.class)) {
             return ReflectionUtil.newInstance(validator);
         } else {
-            return new NullCommandValidator();
+            return null;
         }
     }
 
@@ -137,10 +136,10 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
     }
 
     private ResultHandler initResultHandler(Class<? extends ResultHandler> resultHandler) {
-        if (resultHandler != null && !resultHandler.equals(NullResultHandler.class)) {
+        if (resultHandler != null && !resultHandler.equals(org.aesh.command.impl.result.NullResultHandler.class)) {
             return ReflectionUtil.newInstance(resultHandler);
         } else {
-            return new NullResultHandler();
+            return null;
         }
     }
 
@@ -191,14 +190,6 @@ public class MapProcessedCommandBuilder<CI extends CommandInvocation> {
     public MapProcessedCommand<CI> create() throws CommandLineParserException {
         if (name == null || name.length() < 1) {
             throw new CommandLineParserException("The parameter name must be defined");
-        }
-
-        if (validator == null) {
-            validator = (CommandValidator) new NullCommandValidator();
-        }
-
-        if (resultHandler == null) {
-            resultHandler = new NullResultHandler();
         }
 
         if (populator == null) {

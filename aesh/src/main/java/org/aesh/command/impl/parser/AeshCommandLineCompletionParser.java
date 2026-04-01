@@ -182,7 +182,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
     private void doProcessGroupCommand(AeshCompleteOperation completeOperation, String name, ParsedLine line) {
         if (name.length() == 0) {
             for (CommandLineParser clp : parser.getAllChildParsers()) {
-                if (clp.getProcessedCommand().getActivator().isActivated(new ParsedCommand(clp.getProcessedCommand())))
+                if (clp.getProcessedCommand().isActivated(new ParsedCommand(clp.getProcessedCommand())))
                     completeOperation.addCompletionCandidate(clp.getProcessedCommand().name());
             }
             if (completeOperation.getCompletionCandidates().size() == 1)
@@ -190,8 +190,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         } else {
             for (CommandLineParser child : parser.getAllChildParsers()) {
                 if (child.getProcessedCommand().name().startsWith(name) &&
-                        child.getProcessedCommand().getActivator()
-                                .isActivated(new ParsedCommand(child.getProcessedCommand()))) {
+                        child.getProcessedCommand().isActivated(new ParsedCommand(child.getProcessedCommand()))) {
                     completeOperation.addCompletionCandidate(child.getProcessedCommand().name());
                     completeOperation.setOffset(completeOperation.getCursor() - name.length());
                 }
@@ -207,13 +206,13 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
                 : parser.getProcessedCommand().getArgument();
         //first check if arg is argument, if so check if it already have a value, if so to an option complete
         if (arg.getOptionType() == OptionType.ARGUMENT &&
-                (arg.getValue() != null || !arg.activator().isActivated(new ParsedCommand(parser.getProcessedCommand())))) {
+                (arg.getValue() != null || !arg.isActivated(new ParsedCommand(parser.getProcessedCommand())))) {
             //list options
             doListOptions(completeOperation, "");
         }
         //if arguments, but not activated
         else if (arg.getOptionType() == OptionType.ARGUMENTS
-                && !arg.activator().isActivated(new ParsedCommand(parser.getProcessedCommand())))
+                && !arg.isActivated(new ParsedCommand(parser.getProcessedCommand())))
             //list options
             doListOptions(completeOperation, "");
         //argument(s)
@@ -299,7 +298,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             value = "";
 
         if (currentOption.completer() != null && currentOption.hasValue() &&
-                currentOption.activator().isActivated(new ParsedCommand(parser.getProcessedCommand()))) {
+                currentOption.isActivated(new ParsedCommand(parser.getProcessedCommand()))) {
             CompleterInvocation completions = invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
                     new CompleterData(completeOperation.getContext(), value, parser.getCommand()));
 

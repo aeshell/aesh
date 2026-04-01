@@ -29,7 +29,6 @@ import java.util.function.Consumer;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
-import org.aesh.command.impl.activator.NullActivator;
 import org.aesh.command.impl.completer.BooleanOptionCompleter;
 import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.command.impl.completer.NullOptionCompleter;
@@ -253,7 +252,7 @@ public class ProcessedOptionBuilder {
         if (validator != null && validator != NullValidator.class)
             return ReflectionUtil.newInstance(validator);
         else
-            return new NullValidator();
+            return null;
     }
 
     public ProcessedOptionBuilder activator(OptionActivator activator) {
@@ -265,10 +264,10 @@ public class ProcessedOptionBuilder {
     }
 
     private OptionActivator initActivator(Class<? extends OptionActivator> activator) {
-        if (activator != null && activator != NullActivator.class)
+        if (activator != null && activator != org.aesh.command.impl.activator.NullActivator.class)
             return ReflectionUtil.newInstance(activator);
         else
-            return new NullActivator();
+            return null;
     }
 
     public ProcessedOptionBuilder renderer(OptionRenderer renderer) {
@@ -381,14 +380,8 @@ public class ProcessedOptionBuilder {
             throw new OptionParserException("Either shortName or name must be set.");
         }
 
-        if (validator == null)
-            validator = new NullValidator();
-
         if (converter == null)
             converter = CLConverterManager.getInstance().getConverter(type);
-
-        if (activator == null)
-            activator = new NullActivator();
 
         if (parser == null)
             parser = new AeshOptionParser();

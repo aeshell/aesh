@@ -27,9 +27,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
@@ -37,7 +34,6 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.AeshContext;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.terminal.utils.Config;
@@ -58,8 +54,8 @@ public class AeshConverterInvocationProviderTest {
                 .command(new ConCommand())
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
-                .builder()
+        Settings<CommandInvocation> settings = SettingsBuilder
+                .<CommandInvocation> builder()
                 .commandRegistry(registry)
                 .converterInvocationProvider(new FooConverterProvider())
                 .connection(connection)
@@ -129,7 +125,7 @@ public class AeshConverterInvocationProviderTest {
         }
     }
 
-    public static class FooConverterProvider implements ConverterInvocationProvider<FooConverterInvocation> {
+    public static class FooConverterProvider implements ConverterInvocationProvider {
         @Override
         public FooConverterInvocation enhanceConverterInvocation(ConverterInvocation converterInvocation) {
             return new FooConverterInvocation(converterInvocation.getInput(), converterInvocation.getAeshContext());

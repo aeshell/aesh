@@ -40,7 +40,6 @@ import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.converter.ConverterInvocationProvider;
-import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -202,8 +201,6 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     private void processAfterInit() {
-        if (invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)
-            return;
         try {
             for (String commandName : registry.getAllCommandNames()) {
                 updateCommand(commandName);
@@ -216,12 +213,9 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     private void updateCommand(String commandName) throws CommandNotFoundException {
         ProcessedCommand<Command<CI>, CI> cmd = registry.getCommand(commandName, "").getParser().getProcessedCommand();
         List<CommandLineParser<CI>> childParsers = registry.getChildCommandParsers(commandName);
-        if (!(invocationProviders.getOptionActivatorProvider() instanceof AeshOptionActivatorProvider)) {
-            //we have a custom OptionActivatorProvider, and need to process all options
-            cmd.updateInvocationProviders(invocationProviders);
-            for (CommandLineParser<?> child : childParsers) {
-                child.getProcessedCommand().updateInvocationProviders(invocationProviders);
-            }
+        cmd.updateInvocationProviders(invocationProviders);
+        for (CommandLineParser<?> child : childParsers) {
+            child.getProcessedCommand().updateInvocationProviders(invocationProviders);
         }
     }
 

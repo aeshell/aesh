@@ -25,9 +25,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 
 import org.aesh.command.Command;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
@@ -38,7 +35,6 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.completion.Completion;
@@ -89,7 +85,7 @@ public class CompletionConsoleTest {
         };
         TestConnection con = new TestConnection();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .connection(con)
                 .logging(true)
@@ -122,7 +118,7 @@ public class CompletionConsoleTest {
         };
         TestConnection con = new TestConnection();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .connection(con)
                 .logging(true)

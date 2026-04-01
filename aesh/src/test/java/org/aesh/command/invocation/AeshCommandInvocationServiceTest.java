@@ -28,10 +28,6 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Executor;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
@@ -41,7 +37,6 @@ import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.Prompt;
 import org.aesh.terminal.KeyAction;
@@ -63,8 +58,8 @@ public class AeshCommandInvocationServiceTest {
                 .command(new BarCommand())
                 .create();
 
-        Settings<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation<Object, Command<FooCommandInvocation>>, OptionActivator, CommandActivator> settings = SettingsBuilder
-                .<FooCommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation<Object, Command<FooCommandInvocation>>, OptionActivator, CommandActivator> builder()
+        Settings<FooCommandInvocation> settings = SettingsBuilder
+                .<FooCommandInvocation> builder()
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)

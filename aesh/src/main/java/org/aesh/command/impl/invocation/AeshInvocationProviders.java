@@ -33,6 +33,17 @@ import org.aesh.command.validator.ValidatorInvocationProvider;
  */
 public class AeshInvocationProviders implements InvocationProviders {
 
+    private static final ConverterInvocationProvider DEFAULT_CONVERTER = new ConverterInvocationProvider() {
+    };
+    private static final CompleterInvocationProvider DEFAULT_COMPLETER = new CompleterInvocationProvider() {
+    };
+    private static final ValidatorInvocationProvider DEFAULT_VALIDATOR = new ValidatorInvocationProvider() {
+    };
+    private static final OptionActivatorProvider DEFAULT_OPTION_ACTIVATOR = new OptionActivatorProvider() {
+    };
+    private static final CommandActivatorProvider DEFAULT_COMMAND_ACTIVATOR = new CommandActivatorProvider() {
+    };
+
     private final ConverterInvocationProvider converterInvocationProvider;
     private final CompleterInvocationProvider completerInvocationProvider;
     private final ValidatorInvocationProvider validatorInvocationProvider;
@@ -40,11 +51,11 @@ public class AeshInvocationProviders implements InvocationProviders {
     private final CommandActivatorProvider commandActivatorProvider;
 
     public AeshInvocationProviders(Settings settings) {
-        this.converterInvocationProvider = settings.converterInvocationProvider();
-        this.completerInvocationProvider = settings.completerInvocationProvider();
-        this.validatorInvocationProvider = settings.validatorInvocationProvider();
-        this.optionActivatorProvider = settings.optionActivatorProvider();
-        this.commandActivatorProvider = settings.commandActivatorProvider();
+        this.converterInvocationProvider = defaultIfNull(settings.converterInvocationProvider(), DEFAULT_CONVERTER);
+        this.completerInvocationProvider = defaultIfNull(settings.completerInvocationProvider(), DEFAULT_COMPLETER);
+        this.validatorInvocationProvider = defaultIfNull(settings.validatorInvocationProvider(), DEFAULT_VALIDATOR);
+        this.optionActivatorProvider = defaultIfNull(settings.optionActivatorProvider(), DEFAULT_OPTION_ACTIVATOR);
+        this.commandActivatorProvider = defaultIfNull(settings.commandActivatorProvider(), DEFAULT_COMMAND_ACTIVATOR);
     }
 
     public AeshInvocationProviders(ConverterInvocationProvider converterInvocationProvider,
@@ -52,11 +63,15 @@ public class AeshInvocationProviders implements InvocationProviders {
             ValidatorInvocationProvider validatorInvocationProvider,
             OptionActivatorProvider optionActivatorProvider,
             CommandActivatorProvider commandActivatorProvider) {
-        this.converterInvocationProvider = converterInvocationProvider;
-        this.completerInvocationProvider = completerInvocationProvider;
-        this.validatorInvocationProvider = validatorInvocationProvider;
-        this.optionActivatorProvider = optionActivatorProvider;
-        this.commandActivatorProvider = commandActivatorProvider;
+        this.converterInvocationProvider = defaultIfNull(converterInvocationProvider, DEFAULT_CONVERTER);
+        this.completerInvocationProvider = defaultIfNull(completerInvocationProvider, DEFAULT_COMPLETER);
+        this.validatorInvocationProvider = defaultIfNull(validatorInvocationProvider, DEFAULT_VALIDATOR);
+        this.optionActivatorProvider = defaultIfNull(optionActivatorProvider, DEFAULT_OPTION_ACTIVATOR);
+        this.commandActivatorProvider = defaultIfNull(commandActivatorProvider, DEFAULT_COMMAND_ACTIVATOR);
+    }
+
+    private static <T> T defaultIfNull(T value, T defaultValue) {
+        return value != null ? value : defaultValue;
     }
 
     @Override

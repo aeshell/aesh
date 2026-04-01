@@ -30,11 +30,7 @@ import java.io.File;
 import java.util.Currency;
 
 import org.aesh.command.Command;
-import org.aesh.command.impl.activator.AeshCommandActivatorProvider;
-import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
-import org.aesh.command.impl.completer.AeshCompleterInvocationProvider;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
-import org.aesh.command.impl.converter.AeshConverterInvocationProvider;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -44,7 +40,6 @@ import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
-import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.CommandLineParserException;
@@ -63,12 +58,7 @@ import org.junit.rules.ExpectedException;
 public class CommandLinePopulatorTest {
 
     private final InvocationProviders invocationProviders = new AeshInvocationProviders(
-            SettingsBuilder.builder()
-                    .converterInvocationProvider(new AeshConverterInvocationProvider())
-                    .completerInvocationProvider(new AeshCompleterInvocationProvider())
-                    .validatorInvocationProvider(new AeshValidatorInvocationProvider())
-                    .optionActivatorProvider(new AeshOptionActivatorProvider())
-                    .commandActivatorProvider(new AeshCommandActivatorProvider()).build());
+            null, null, null, null, null);
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
