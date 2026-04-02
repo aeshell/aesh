@@ -43,7 +43,7 @@ import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.container.AeshCommandContainer;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.parser.CommandLineParserBuilder;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.metadata.CommandMetadataProvider;
 import org.junit.Test;
@@ -281,9 +281,7 @@ public class ProcessorBenchmarkTest {
         Command instance = (Command) commandClass.newInstance();
         ProcessedCommand pc = provider.buildProcessedCommand(instance);
         return new AeshCommandContainer(
-                CommandLineParserBuilder.builder()
-                        .processedCommand(pc)
-                        .create());
+                new AeshCommandLineParser<>(pc));
     }
 
     @FunctionalInterface

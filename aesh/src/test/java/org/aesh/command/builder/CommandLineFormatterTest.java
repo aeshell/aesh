@@ -30,8 +30,8 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
@@ -66,9 +66,7 @@ public class CommandLineFormatterTest {
                         .type(String.class)
                         .build());
 
-        CommandLineParser clp = CommandLineParserBuilder.builder()
-                .processedCommand(pb.create())
-                .create();
+        CommandLineParser clp = new AeshCommandLineParser<>(pb.create());
 
         assertEquals("Usage: man [<options>]" + getLineSeparator() + "[OPTION...]" + getLineSeparator() +
                 getLineSeparator() +
@@ -110,7 +108,7 @@ public class CommandLineFormatterTest {
                         .type(String.class)
                         .build());
 
-        CommandLineParser clp = CommandLineParserBuilder.builder().processedCommand(pb.create()).create();
+        CommandLineParser clp = new AeshCommandLineParser<>(pb.create());
 
         assertEquals("Usage: man [<options>]" + getLineSeparator() + "[OPTION...]" + getLineSeparator() +
                 getLineSeparator() +
@@ -158,12 +156,9 @@ public class CommandLineFormatterTest {
                         .type(String.class)
                         .build());
 
-        CommandLineParser<CommandInvocation> clpGit = CommandLineParserBuilder.builder().processedCommand(git.create())
-                .create();
-        CommandLineParser<CommandInvocation> clpBranch = CommandLineParserBuilder.builder().processedCommand(branch.create())
-                .create();
-        CommandLineParser<CommandInvocation> clpRebase = CommandLineParserBuilder.builder().processedCommand(rebase.create())
-                .create();
+        CommandLineParser<CommandInvocation> clpGit = new AeshCommandLineParser<>(git.create());
+        CommandLineParser<CommandInvocation> clpBranch = new AeshCommandLineParser<>(branch.create());
+        CommandLineParser<CommandInvocation> clpRebase = new AeshCommandLineParser<>(rebase.create());
 
         clpGit.updateAnsiMode(false);
         clpBranch.updateAnsiMode(false);

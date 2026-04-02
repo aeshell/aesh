@@ -28,7 +28,6 @@ import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.impl.AeshCommandRuntime;
-import org.aesh.command.impl.invocation.AeshCommandInvocationProvider;
 import org.aesh.command.impl.invocation.DefaultCommandInvocationBuilder;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
@@ -163,7 +162,8 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         }
 
         if (commandInvocationProvider == null) {
-            commandInvocationProvider = new AeshCommandInvocationProvider<>();
+            commandInvocationProvider = new CommandInvocationProvider<CI>() {
+            };
         }
 
         if (commandInvocationBuilder == null)

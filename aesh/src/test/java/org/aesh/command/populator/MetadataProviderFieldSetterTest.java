@@ -144,10 +144,8 @@ public class MetadataProviderFieldSetterTest {
 
         ProcessedCommand processedCommand = provider.buildProcessedCommand(cmd);
 
-        CommandLineParser<CommandInvocation> parser = org.aesh.command.impl.parser.CommandLineParserBuilder
-                .<Command<CommandInvocation>, CommandInvocation> builder()
-                .processedCommand(processedCommand)
-                .create();
+        CommandLineParser<CommandInvocation> parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                processedCommand);
 
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
 

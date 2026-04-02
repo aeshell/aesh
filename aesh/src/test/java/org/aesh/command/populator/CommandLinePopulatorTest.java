@@ -38,7 +38,6 @@ import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
@@ -507,7 +506,7 @@ public class CommandLinePopulatorTest {
     private void parseArgLine(ProcessedCommand<Command<CommandInvocation>, CommandInvocation> options, String argLine)
             throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
-        CommandLineParser<CommandInvocation> parser = CommandLineParserBuilder.builder().processedCommand(options).create();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandLineParser<>(options);
         parser.populateObject(argLine, invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
 
         if (options.parserExceptions().size() > 0) {

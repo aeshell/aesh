@@ -28,7 +28,7 @@ import java.util.List;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
-import org.aesh.command.impl.parser.CommandLineParserBuilder;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Arguments;
@@ -75,8 +75,7 @@ public class AeshConsoleTest {
                 .create();
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
-                .command(CommandLineParserBuilder.<FooTestCommand, CommandInvocation> builder().processedCommand(fooCommand)
-                        .create())
+                .command(new AeshCommandLineParser(fooCommand))
                 .command(LsCommand.class)
                 .create();
 

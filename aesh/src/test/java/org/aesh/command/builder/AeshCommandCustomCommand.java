@@ -35,8 +35,8 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
@@ -101,9 +101,8 @@ public class AeshCommandCustomCommand {
                         .build())
                 .create();
 
-        CommandLineParser<CommandInvocation> parser = CommandLineParserBuilder.<CustomCommand, CommandInvocation> builder()
-                .processedCommand(processedCommand)
-                .create();
+        @SuppressWarnings("unchecked")
+        CommandLineParser<CommandInvocation> parser = new AeshCommandLineParser(processedCommand);
 
         return new AeshCommandContainer<>(parser);
     }

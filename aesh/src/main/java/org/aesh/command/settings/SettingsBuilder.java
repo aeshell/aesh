@@ -278,9 +278,6 @@ public class SettingsBuilder<CI extends CommandInvocation> {
         if (settings.logging())
             LoggerUtil.doLog();
 
-        if (settings.commandInvocationProvider() == null)
-            settings.setCommandInvocationProvider(commandInvocation -> (CI) commandInvocation);
-
         if (settings.invocationProviders() == null)
             settings.setInvocationProviders(new AeshInvocationProviders(settings.converterInvocationProvider(),
                     settings.completerInvocationProvider(), settings.validatorInvocationProvider(),

@@ -38,8 +38,8 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.metadata.CommandMetadataProvider;
@@ -83,9 +83,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         ProcessedCommand<Command<CI>, CI> processedCommand = provider.buildProcessedCommand(command);
 
         AeshCommandContainer<CI> container = new AeshCommandContainer<>(
-                CommandLineParserBuilder.<Command<CI>, CI> builder()
-                        .processedCommand(processedCommand)
-                        .create());
+                new AeshCommandLineParser<>(processedCommand));
 
         if (provider.isGroupCommand()) {
             if (command instanceof GroupCommand) {
@@ -132,9 +130,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             processCommand(processedCommand, clazz);
 
             return new AeshCommandContainer<>(
-                    CommandLineParserBuilder.<Command<CI>, CI> builder()
-                            .processedCommand(processedCommand)
-                            .create());
+                    new AeshCommandLineParser<>(processedCommand));
         }
 
         GroupCommandDefinition groupCommand = clazz.getAnnotation(GroupCommandDefinition.class);
@@ -157,9 +153,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             AeshCommandContainer<CI> groupContainer;
 
             groupContainer = new AeshCommandContainer<>(
-                    CommandLineParserBuilder.<Command<CI>, CI> builder()
-                            .processedCommand(processedGroupCommand)
-                            .create());
+                    new AeshCommandLineParser<>(processedGroupCommand));
 
             if (commandObject instanceof GroupCommand) {
                 List<Command<CI>> commands = ((GroupCommand<CI>) commandObject).getCommands();

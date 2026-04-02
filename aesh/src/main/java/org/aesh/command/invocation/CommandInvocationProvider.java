@@ -23,5 +23,8 @@ package org.aesh.command.invocation;
  * @author Aesh team
  */
 public interface CommandInvocationProvider<CI extends CommandInvocation> {
-    CI enhanceCommandInvocation(CommandInvocation commandInvocation);
+    @SuppressWarnings("unchecked")
+    default CI enhanceCommandInvocation(CommandInvocation commandInvocation) {
+        return (CI) commandInvocation;
+    }
 }

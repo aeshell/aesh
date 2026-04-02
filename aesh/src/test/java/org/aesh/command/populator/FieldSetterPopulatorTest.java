@@ -19,8 +19,8 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Option;
@@ -98,9 +98,7 @@ public class FieldSetterPopulatorTest {
                         .fieldResetter(inst -> ((TestCommand) inst).count = 0)
                         .build());
 
-        return CommandLineParserBuilder.<Command<CommandInvocation>, CommandInvocation> builder()
-                .processedCommand(processedCommand)
-                .create();
+        return new AeshCommandLineParser<>(processedCommand);
     }
 
     @Test

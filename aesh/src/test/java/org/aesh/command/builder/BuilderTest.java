@@ -26,8 +26,8 @@ import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.parser.CommandLineParserBuilder;
 import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.impl.validator.NullCommandValidator;
 import org.aesh.command.invocation.CommandInvocation;
@@ -49,7 +49,7 @@ public class BuilderTest {
         pb.argument(ProcessedOptionBuilder.builder().shortName('\u0000').name("")
                 .description("argument!!").type(Integer.class).optionType(OptionType.ARGUMENT).hasValue(true).build());
 
-        CommandLineParser clp = CommandLineParserBuilder.builder().processedCommand(pb.create()).create();
+        CommandLineParser clp = new AeshCommandLineParser<>(pb.create());
 
         clp.parse("foo -f test1.txt baAar");
         assertEquals("test1.txt", clp.getProcessedCommand().findOption("f").getValue());
@@ -80,7 +80,7 @@ public class BuilderTest {
         pb.arguments(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENTS).type(String.class).build());
 
-        CommandLineParser clp = CommandLineParserBuilder.builder().processedCommand(pb.create()).create();
+        CommandLineParser clp = new AeshCommandLineParser<>(pb.create());
 
         clp.parse("less -V test1.txt");
         assertEquals("true", clp.getProcessedCommand().findOption("V").getValue());
@@ -119,7 +119,7 @@ public class BuilderTest {
         pb.arguments(ProcessedOptionBuilder.builder().shortName('\u0000').name("").hasMultipleValues(true)
                 .optionType(OptionType.ARGUMENTS).type(String.class).build());
 
-        CommandLineParser clp = CommandLineParserBuilder.builder().processedCommand(pb.create()).create();
+        CommandLineParser clp = new AeshCommandLineParser<>(pb.create());
 
         assertEquals("version", clp.getProcessedCommand().findOption("v").name());
         assertEquals("verbose", clp.getProcessedCommand().findOption("e").name());
