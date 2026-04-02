@@ -88,14 +88,14 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
             //add all
             for (CommandContainer<CI> command : registry.values()) {
                 ProcessedCommand<? extends Command<CI>, CI> com = command.getParser().getProcessedCommand();
-                if (com.getActivator().isActivated(new ParsedCommand(com)))
+                if (com.isActivated(new ParsedCommand(com)))
                     co.addCompletionCandidate(com.name());
             }
         } else {
             for (CommandContainer<CI> command : registry.values()) {
                 ProcessedCommand<? extends Command<CI>, CI> com = command.getParser().getProcessedCommand();
                 if (com.name().startsWith(parsedLine.selectedWord().word()) &&
-                        com.getActivator().isActivated(new ParsedCommand(com))) {
+                        com.isActivated(new ParsedCommand(com))) {
                     co.addCompletionCandidate(com.name());
                     co.setOffset(co.getCursor() - parsedLine.selectedWord().word().length());
                     if (parsedLine.selectedIndex() < parsedLine.size() - 1)

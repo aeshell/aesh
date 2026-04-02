@@ -19,15 +19,27 @@
  */
 package org.aesh.command.impl.converter;
 
+import java.util.function.Function;
+
 import org.aesh.command.converter.Converter;
 import org.aesh.command.converter.ConverterInvocation;
 
 /**
+ * A generic converter that delegates to a Function.
+ * Replaces the individual IntegerConverter, LongConverter, etc. classes.
+ *
  * @author Aesh team
  */
-public class FloatConverter implements Converter<Float, ConverterInvocation> {
+public class FunctionalConverter<T> implements Converter<T, ConverterInvocation> {
+
+    private final Function<ConverterInvocation, T> fn;
+
+    public FunctionalConverter(Function<ConverterInvocation, T> fn) {
+        this.fn = fn;
+    }
+
     @Override
-    public Float convert(ConverterInvocation input) {
-        return Float.parseFloat(input.getInput());
+    public T convert(ConverterInvocation input) {
+        return fn.apply(input);
     }
 }

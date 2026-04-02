@@ -24,12 +24,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.console.AeshContext;
 
 /**
- *
  * @author Aesh team
  */
 public class OutputRedirectionOperator implements ConfigurationOperator {
@@ -42,6 +42,10 @@ public class OutputRedirectionOperator implements ConfigurationOperator {
 
         @Override
         protected BufferedWriter buildWriter(File f) throws IOException {
+            if (append) {
+                return Files.newBufferedWriter(f.toPath(), StandardCharsets.UTF_8,
+                        StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+            }
             return Files.newBufferedWriter(f.toPath(), StandardCharsets.UTF_8);
         }
     }
@@ -49,9 +53,15 @@ public class OutputRedirectionOperator implements ConfigurationOperator {
     private CommandInvocationConfiguration config;
     private String argument;
     private final AeshContext context;
+    private final boolean append;
 
     public OutputRedirectionOperator(AeshContext context) {
+        this(context, false);
+    }
+
+    public OutputRedirectionOperator(AeshContext context, boolean append) {
         this.context = context;
+        this.append = append;
     }
 
     @Override

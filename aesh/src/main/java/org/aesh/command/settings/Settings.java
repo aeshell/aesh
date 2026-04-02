@@ -25,20 +25,15 @@ import java.io.PrintStream;
 import java.util.function.Consumer;
 
 import org.aesh.command.CommandNotFoundHandler;
-import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.CommandActivatorProvider;
-import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.activator.OptionActivatorProvider;
-import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.CompleterInvocationProvider;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.export.ExportChangeListener;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationProvider;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.AeshContext;
 import org.aesh.io.Resource;
@@ -51,7 +46,7 @@ import org.aesh.terminal.Connection;
  *
  * @author Aesh team
  */
-public interface Settings<CI extends CommandInvocation, CI3 extends ConverterInvocation, CI2 extends CompleterInvocation, VI extends ValidatorInvocation, OA extends OptionActivator, CA extends CommandActivator>
+public interface Settings<CI extends CommandInvocation>
         extends Cloneable {
 
     /**
@@ -264,23 +259,23 @@ public interface Settings<CI extends CommandInvocation, CI3 extends ConverterInv
     /**
      * @return CompleterInvocationProvider
      */
-    CompleterInvocationProvider<CI2> completerInvocationProvider();
+    CompleterInvocationProvider completerInvocationProvider();
 
-    ConverterInvocationProvider<CI3> converterInvocationProvider();
+    ConverterInvocationProvider converterInvocationProvider();
 
-    ValidatorInvocationProvider<VI> validatorInvocationProvider();
+    ValidatorInvocationProvider validatorInvocationProvider();
 
-    OptionActivatorProvider<OA> optionActivatorProvider();
+    OptionActivatorProvider optionActivatorProvider();
 
     ManProvider manProvider();
 
-    CommandActivatorProvider<CA> commandActivatorProvider();
+    CommandActivatorProvider commandActivatorProvider();
 
     Connection connection();
 
     Object clone();
 
-    InvocationProviders<CA, CI3, CI2, VI, OA> invocationProviders();
+    InvocationProviders invocationProviders();
 
     ExportChangeListener exportListener();
 

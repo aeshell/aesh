@@ -36,14 +36,10 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.alias.AeshAliasManager;
 import org.aesh.command.alias.AliasCommand;
 import org.aesh.command.alias.UnAliasCommand;
-import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.container.CommandContainer;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.export.ExportCommand;
 import org.aesh.command.export.ExportCompletion;
 import org.aesh.command.export.ExportManager;
@@ -63,7 +59,6 @@ import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.io.scanner.AnnotationDetector;
 import org.aesh.io.scanner.CommandDefinitionReporter;
@@ -93,7 +88,7 @@ import org.aesh.terminal.utils.LoggerUtil;
 public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private AliasManager aliasManager;
-    private Settings<? extends CommandInvocation, ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator, ? extends CommandActivator> settings;
+    private Settings<? extends CommandInvocation> settings;
     private Prompt prompt;
     private List<Completion> completions;
     private Connection connection;
@@ -117,8 +112,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private final EnumMap<ReadlineFlag, Integer> readlineFlags = new EnumMap<>(ReadlineFlag.class);
 
-    public ReadlineConsole(
-            Settings<? extends CommandInvocation, ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator, ? extends CommandActivator> givenSettings) {
+    public ReadlineConsole(Settings<? extends CommandInvocation> givenSettings) {
         if (givenSettings == null)
             settings = SettingsBuilder.builder().build();
         else

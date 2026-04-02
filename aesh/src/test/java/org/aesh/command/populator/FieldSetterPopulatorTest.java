@@ -14,10 +14,6 @@ import static org.junit.Assert.assertTrue;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
-import org.aesh.command.impl.activator.AeshCommandActivatorProvider;
-import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
-import org.aesh.command.impl.completer.AeshCompleterInvocationProvider;
-import org.aesh.command.impl.converter.AeshConverterInvocationProvider;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -25,7 +21,6 @@ import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
-import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Option;
@@ -40,12 +35,7 @@ import org.junit.Test;
 public class FieldSetterPopulatorTest {
 
     private final InvocationProviders invocationProviders = new AeshInvocationProviders(
-            SettingsBuilder.builder()
-                    .converterInvocationProvider(new AeshConverterInvocationProvider())
-                    .completerInvocationProvider(new AeshCompleterInvocationProvider())
-                    .validatorInvocationProvider(new AeshValidatorInvocationProvider())
-                    .optionActivatorProvider(new AeshOptionActivatorProvider())
-                    .commandActivatorProvider(new AeshCommandActivatorProvider()).build());
+            null, null, null, null, null);
 
     @CommandDefinition(name = "test", description = "test command")
     public static class TestCommand implements Command<CommandInvocation> {

@@ -323,6 +323,10 @@ public final class ProcessedOption {
         return activator;
     }
 
+    public boolean isActivated(ParsedCommand parsedCommand) {
+        return activator == null || activator.isActivated(parsedCommand);
+    }
+
     public OptionParser parser() {
         return parser;
     }
@@ -704,7 +708,8 @@ public final class ProcessedOption {
     }
 
     public void updateInvocationProviders(InvocationProviders invocationProviders) {
-        activator = invocationProviders.getOptionActivatorProvider().enhanceOptionActivator(activator);
+        if (activator != null)
+            activator = invocationProviders.getOptionActivatorProvider().enhanceOptionActivator(activator);
     }
 
     public void updateAnsiMode(boolean ansiMode) {

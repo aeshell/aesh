@@ -26,15 +26,10 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
-import org.aesh.command.impl.activator.AeshCommandActivatorProvider;
-import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
-import org.aesh.command.impl.completer.AeshCompleterInvocationProvider;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.context.CommandContext;
-import org.aesh.command.impl.converter.AeshConverterInvocationProvider;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Argument;
@@ -52,12 +47,7 @@ import org.junit.Test;
 public class ParentCommandTest {
 
     private final InvocationProviders invocationProviders = new AeshInvocationProviders(
-            SettingsBuilder.builder()
-                    .converterInvocationProvider(new AeshConverterInvocationProvider())
-                    .completerInvocationProvider(new AeshCompleterInvocationProvider<>())
-                    .validatorInvocationProvider(new AeshValidatorInvocationProvider())
-                    .optionActivatorProvider(new AeshOptionActivatorProvider())
-                    .commandActivatorProvider(new AeshCommandActivatorProvider()).build());
+            null, null, null, null, null);
 
     @Test
     public void testCommandContext() throws Exception {

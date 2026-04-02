@@ -32,17 +32,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
 import org.aesh.command.converter.Converter;
-import org.aesh.command.impl.converter.BooleanConverter;
-import org.aesh.command.impl.converter.ByteConverter;
-import org.aesh.command.impl.converter.CharacterConverter;
-import org.aesh.command.impl.converter.DoubleConverter;
 import org.aesh.command.impl.converter.FileConverter;
 import org.aesh.command.impl.converter.FileResourceConverter;
-import org.aesh.command.impl.converter.FloatConverter;
-import org.aesh.command.impl.converter.IntegerConverter;
-import org.aesh.command.impl.converter.LongConverter;
-import org.aesh.command.impl.converter.ShortConverter;
-import org.aesh.command.impl.converter.StringConverter;
+import org.aesh.command.impl.converter.FunctionalConverter;
 import org.aesh.command.impl.converter.URIConverter;
 import org.aesh.command.impl.converter.URLConverter;
 import org.aesh.io.Resource;
@@ -65,15 +57,17 @@ public class CLConverterManager {
 
     private CLConverterManager() {
         factories = new HashMap<>(22);
-        addFactory(Integer.class, int.class, () -> new IntegerConverter());
-        addFactory(Boolean.class, boolean.class, () -> new BooleanConverter());
-        addFactory(Character.class, char.class, () -> new CharacterConverter());
-        addFactory(Double.class, double.class, () -> new DoubleConverter());
-        addFactory(Float.class, float.class, () -> new FloatConverter());
-        addFactory(Long.class, long.class, () -> new LongConverter());
-        addFactory(Short.class, short.class, () -> new ShortConverter());
-        addFactory(Byte.class, byte.class, () -> new ByteConverter());
-        factories.put(String.class, () -> new StringConverter());
+        addFactory(Integer.class, int.class, () -> new FunctionalConverter<>(input -> Integer.parseInt(input.getInput())));
+        addFactory(Boolean.class, boolean.class,
+                () -> new FunctionalConverter<>(input -> Boolean.parseBoolean(input.getInput())));
+        addFactory(Character.class, char.class, () -> new FunctionalConverter<>(
+                input -> input != null && input.getInput().length() > 0 ? input.getInput().charAt(0) : '\u0000'));
+        addFactory(Double.class, double.class, () -> new FunctionalConverter<>(input -> Double.parseDouble(input.getInput())));
+        addFactory(Float.class, float.class, () -> new FunctionalConverter<>(input -> Float.parseFloat(input.getInput())));
+        addFactory(Long.class, long.class, () -> new FunctionalConverter<>(input -> Long.parseLong(input.getInput())));
+        addFactory(Short.class, short.class, () -> new FunctionalConverter<>(input -> Short.valueOf(input.getInput())));
+        addFactory(Byte.class, byte.class, () -> new FunctionalConverter<>(input -> Byte.valueOf(input.getInput())));
+        factories.put(String.class, () -> new FunctionalConverter<>(input -> input.getInput()));
         factories.put(File.class, () -> new FileConverter());
         factories.put(Resource.class, () -> new FileResourceConverter());
         factories.put(URL.class, () -> new URLConverter());

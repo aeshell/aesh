@@ -25,10 +25,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.impl.validator.AeshValidatorInvocation;
 import org.aesh.command.invocation.CommandInvocation;
@@ -57,7 +53,7 @@ public class AeshCommandOptionValidatorTest {
                 .command(ValCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .commandRegistry(registry)
                 .connection(connection)
@@ -85,7 +81,7 @@ public class AeshCommandOptionValidatorTest {
                 .command(IntCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .commandRegistry(registry)
                 .connection(connection)
@@ -119,7 +115,7 @@ public class AeshCommandOptionValidatorTest {
                 .command(IntCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .commandRegistry(registry)
                 .connection(connection)
@@ -154,7 +150,7 @@ public class AeshCommandOptionValidatorTest {
                 .command(ValidatorOptionCommand.class)
                 .create();
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .commandRegistry(registry)
                 .connection(connection)
@@ -278,10 +274,10 @@ public class AeshCommandOptionValidatorTest {
     }
 
     public static class TestValidatorInvocationProvider
-            implements ValidatorInvocationProvider<ValidatorInvocation<String, Command>> {
+            implements ValidatorInvocationProvider {
         @Override
         @SuppressWarnings("unchecked")
-        public ValidatorInvocation<String, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
+        public ValidatorInvocation enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
             if (validatorInvocation.getValue() instanceof String)
                 return new TestValidatorInvocation((String) validatorInvocation.getValue(),
                         (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());

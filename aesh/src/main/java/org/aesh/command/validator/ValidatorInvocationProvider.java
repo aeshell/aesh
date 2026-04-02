@@ -22,6 +22,9 @@ package org.aesh.command.validator;
 /**
  * @author Aesh team
  */
-public interface ValidatorInvocationProvider<VI extends ValidatorInvocation> {
-    VI enhanceValidatorInvocation(ValidatorInvocation validatorInvocation);
+public interface ValidatorInvocationProvider {
+
+    default ValidatorInvocation enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
+        return validatorInvocation;
+    }
 }

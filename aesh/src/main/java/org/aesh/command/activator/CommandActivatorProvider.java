@@ -22,7 +22,9 @@ package org.aesh.command.activator;
 /**
  * @author Aesh team
  */
-public interface CommandActivatorProvider<CA extends CommandActivator> {
+public interface CommandActivatorProvider {
 
-    CA enhanceCommandActivator(CommandActivator commandActivator);
+    default CommandActivator enhanceCommandActivator(CommandActivator commandActivator) {
+        return commandActivator;
+    }
 }

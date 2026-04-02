@@ -22,7 +22,9 @@ package org.aesh.command.completer;
 /**
  * @author Aesh team
  */
-public interface CompleterInvocationProvider<CI extends CompleterInvocation> {
+public interface CompleterInvocationProvider {
 
-    CI enhanceCompleterInvocation(CompleterInvocation completerInvocation);
+    default CompleterInvocation enhanceCompleterInvocation(CompleterInvocation completerInvocation) {
+        return completerInvocation;
+    }
 }

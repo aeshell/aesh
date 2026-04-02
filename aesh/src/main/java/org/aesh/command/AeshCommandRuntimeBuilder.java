@@ -23,23 +23,14 @@ package org.aesh.command;
 import java.util.EnumSet;
 import java.util.function.Consumer;
 
-import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.CommandActivatorProvider;
-import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.activator.OptionActivatorProvider;
-import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.CompleterInvocationProvider;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.impl.AeshCommandRuntime;
-import org.aesh.command.impl.activator.AeshCommandActivatorProvider;
-import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
-import org.aesh.command.impl.completer.AeshCompleterInvocationProvider;
-import org.aesh.command.impl.converter.AeshConverterInvocationProvider;
 import org.aesh.command.impl.invocation.AeshCommandInvocationProvider;
 import org.aesh.command.impl.invocation.DefaultCommandInvocationBuilder;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
-import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationProvider;
@@ -47,7 +38,6 @@ import org.aesh.command.operator.OperatorType;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.shell.Shell;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.AeshContext;
 import org.aesh.console.DefaultAeshContext;
@@ -65,11 +55,11 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     private CommandRegistry<CI> registry;
     private CommandInvocationProvider<CI> commandInvocationProvider;
     private CommandNotFoundHandler commandNotFoundHandler;
-    private CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider;
-    private ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider;
-    private ValidatorInvocationProvider<? extends ValidatorInvocation> validatorInvocationProvider;
-    private OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider;
-    private CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider;
+    private CompleterInvocationProvider completerInvocationProvider;
+    private ConverterInvocationProvider converterInvocationProvider;
+    private ValidatorInvocationProvider validatorInvocationProvider;
+    private OptionActivatorProvider optionActivatorProvider;
+    private CommandActivatorProvider commandActivatorProvider;
     private AeshContext ctx;
     private CommandInvocationBuilder<CI> commandInvocationBuilder;
     private Shell shell;
@@ -113,27 +103,27 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     }
 
     public AeshCommandRuntimeBuilder<CI> completerInvocationProvider(
-            CompleterInvocationProvider<? extends CompleterInvocation> completerInvocationProvider) {
+            CompleterInvocationProvider completerInvocationProvider) {
         return apply(c -> c.completerInvocationProvider = completerInvocationProvider);
     }
 
     public AeshCommandRuntimeBuilder<CI> converterInvocationProvider(
-            ConverterInvocationProvider<? extends ConverterInvocation> converterInvocationProvider) {
+            ConverterInvocationProvider converterInvocationProvider) {
         return apply(c -> c.converterInvocationProvider = converterInvocationProvider);
     }
 
     public AeshCommandRuntimeBuilder<CI> validatorInvocationProvider(
-            ValidatorInvocationProvider<? extends ValidatorInvocation> validatorInvocationProvider) {
+            ValidatorInvocationProvider validatorInvocationProvider) {
         return apply(c -> c.validatorInvocationProvider = validatorInvocationProvider);
     }
 
     public AeshCommandRuntimeBuilder<CI> optionActivatorProvider(
-            OptionActivatorProvider<? extends OptionActivator> optionActivatorProvider) {
+            OptionActivatorProvider optionActivatorProvider) {
         return apply(c -> c.optionActivatorProvider = optionActivatorProvider);
     }
 
     public AeshCommandRuntimeBuilder<CI> commandActivatorProvider(
-            CommandActivatorProvider<? extends CommandActivator> commandActivatorProvider) {
+            CommandActivatorProvider commandActivatorProvider) {
         return apply(c -> c.commandActivatorProvider = commandActivatorProvider);
     }
 
@@ -151,8 +141,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     }
 
     @SuppressWarnings("unchecked")
-    public AeshCommandRuntimeBuilder<CI> settings(
-            Settings<? extends CommandInvocation, ? extends ConverterInvocation, ? extends CompleterInvocation, ? extends ValidatorInvocation, ? extends OptionActivator, ? extends CommandActivator> settings) {
+    public AeshCommandRuntimeBuilder<CI> settings(Settings<? extends CommandInvocation> settings) {
         return apply(c -> {
             c.commandInvocationProvider = (CommandInvocationProvider<CI>) settings.commandInvocationProvider();
             c.commandNotFoundHandler = settings.commandNotFoundHandler();
@@ -175,26 +164,6 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
 
         if (commandInvocationProvider == null) {
             commandInvocationProvider = new AeshCommandInvocationProvider<>();
-        }
-
-        if (completerInvocationProvider == null) {
-            completerInvocationProvider = new AeshCompleterInvocationProvider();
-        }
-
-        if (converterInvocationProvider == null) {
-            converterInvocationProvider = new AeshConverterInvocationProvider();
-        }
-
-        if (validatorInvocationProvider == null) {
-            validatorInvocationProvider = new AeshValidatorInvocationProvider();
-        }
-
-        if (optionActivatorProvider == null) {
-            optionActivatorProvider = new AeshOptionActivatorProvider();
-        }
-
-        if (commandActivatorProvider == null) {
-            commandActivatorProvider = new AeshCommandActivatorProvider();
         }
 
         if (commandInvocationBuilder == null)

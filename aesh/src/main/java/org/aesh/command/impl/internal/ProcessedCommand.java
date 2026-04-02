@@ -25,10 +25,8 @@ import java.util.List;
 
 import org.aesh.command.Command;
 import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.impl.activator.NullCommandActivator;
 import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
-import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.parser.CommandLineParserException;
@@ -94,17 +92,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.generateHelp = generateHelp;
         this.disableParsing = disableParsing;
         this.helpUrl = helpUrl;
-        if (resultHandler != null)
-            this.resultHandler = resultHandler;
-        else
-            this.resultHandler = new NullResultHandler();
+        this.resultHandler = resultHandler;
         this.arguments = arguments;
         this.argument = argument;
         if (argument != null && arguments != null)
             throw new OptionParserException("Argument and Arguments cannot be defined in the same Command");
         this.options = new ArrayList<>();
         this.command = command;
-        this.activator = activator == null ? new NullCommandActivator() : activator;
+        this.activator = activator;
         if (populator == null)
             this.populator = new AeshCommandPopulator<>(this.command);
         else
@@ -128,6 +123,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public CommandActivator getActivator() {
         return activator;
+    }
+
+    public boolean isActivated(ParsedCommand parsedCommand) {
+        return activator == null || activator.isActivated(parsedCommand);
     }
 
     public List<String> getAliases() {
@@ -258,7 +257,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         for (ProcessedOption option : getOptions())
             if (option.shortName() != null &&
                     option.shortName().equals(name) &&
-                    option.activator().isActivated(new ParsedCommand(this)))
+                    option.isActivated(new ParsedCommand(this)))
                 return option;
 
         return null;
@@ -323,7 +322,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         for (ProcessedOption option : getOptions())
             if (option.name() != null &&
                     option.name().equals(name) &&
-                    option.activator().isActivated(new ParsedCommand(this)))
+                    option.isActivated(new ParsedCommand(this)))
                 return option;
 
         return null;
@@ -348,7 +347,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         for (ProcessedOption option : getOptions()) {
             if (option.isNegatable() && option.getNegatedName() != null &&
                     option.getNegatedName().equals(name) &&
-                    option.activator().isActivated(new ParsedCommand(this))) {
+                    option.isActivated(new ParsedCommand(this))) {
                 option.setNegatedByUser(true);
                 return option;
             }
@@ -395,7 +394,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public ProcessedOption startWithOption(String name) {
         for (ProcessedOption option : getOptions())
             if (option.shortName() != null && name.startsWith(option.shortName()) &&
-                    option.activator().isActivated(new ParsedCommand(this)))
+                    option.isActivated(new ParsedCommand(this)))
                 return option;
 
         return null;
@@ -404,7 +403,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public ProcessedOption startWithLongOption(String name) {
         for (ProcessedOption option : getOptions())
             if (name.startsWith(option.name()) &&
-                    option.activator().isActivated(new ParsedCommand(this)))
+                    option.isActivated(new ParsedCommand(this)))
                 return option;
 
         return null;
@@ -508,7 +507,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
             if (o.getValues().size() == 0 &&
-                    o.activator().isActivated(new ParsedCommand(this))) {
+                    o.isActivated(new ParsedCommand(this))) {
                 names.add(o.getRenderedNameWithDashes());
                 // Also add the negated form for negatable options
                 TerminalString negated = o.getRenderedNegatedNameWithDashes();
@@ -528,12 +527,12 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (((o.shortName() != null && o.shortName().equals(name) &&
                     !o.isLongNameUsed() && o.getValues().size() == 0) ||
                     (o.name().startsWith(name) && o.getValues().size() == 0)) &&
-                    o.activator().isActivated(new ParsedCommand(this)))
+                    o.isActivated(new ParsedCommand(this)))
                 names.add(o.getRenderedNameWithDashes());
             // Also check negated option names for negatable options
             if (o.isNegatable() && o.getNegatedName() != null &&
                     o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
-                    o.activator().isActivated(new ParsedCommand(this))) {
+                    o.isActivated(new ParsedCommand(this))) {
                 TerminalString negated = o.getRenderedNegatedNameWithDashes();
                 if (negated != null) {
                     names.add(negated);
@@ -552,12 +551,12 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (((o.shortName() != null && o.shortName().equals(name) &&
                     !o.isLongNameUsed() && o.getValues().size() == 0) ||
                     (o.name().startsWith(name) && o.getValues().size() == 0)) &&
-                    o.activator().isActivated(new ParsedCommand(this)))
+                    o.isActivated(new ParsedCommand(this)))
                 names.add(o.name());
             // Also check negated option names for negatable options
             if (o.isNegatable() && o.getNegatedName() != null &&
                     o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
-                    o.activator().isActivated(new ParsedCommand(this)))
+                    o.isActivated(new ParsedCommand(this)))
                 names.add(o.getNegatedName());
         }
         return names;
@@ -751,7 +750,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (arguments != null) {
             arguments.updateInvocationProviders(invocationProviders);
         }
-        activator = invocationProviders.getCommandActivatorProvider().enhanceCommandActivator(activator);
+        if (activator != null)
+            activator = invocationProviders.getCommandActivatorProvider().enhanceCommandActivator(activator);
     }
 
     protected void updateOptionsInvocationProviders(InvocationProviders invocationProviders) {

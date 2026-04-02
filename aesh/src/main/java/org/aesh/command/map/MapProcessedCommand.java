@@ -135,14 +135,14 @@ public class MapProcessedCommand<CI extends CommandInvocation> extends Processed
         for (ProcessedOption option : getOptions(false)) {
             if (option.name() != null
                     && option.name().equals(name)
-                    && option.activator().isActivated(new ParsedCommand(this))) {
+                    && option.isActivated(new ParsedCommand(this))) {
                 return option;
             }
         }
         for (ProcessedOption option : getOptions(true)) {
             if (option.name() != null
                     && option.name().equals(name)
-                    && option.activator().isActivated(new ParsedCommand(this))) {
+                    && option.isActivated(new ParsedCommand(this))) {
                 return option;
             }
         }

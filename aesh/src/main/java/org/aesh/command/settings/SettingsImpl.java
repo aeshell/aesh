@@ -27,20 +27,15 @@ import java.io.PrintStream;
 import java.util.function.Consumer;
 
 import org.aesh.command.CommandNotFoundHandler;
-import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.CommandActivatorProvider;
-import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.activator.OptionActivatorProvider;
-import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.CompleterInvocationProvider;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.export.ExportChangeListener;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationProvider;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.AeshContext;
 import org.aesh.console.DefaultAeshContext;
@@ -57,7 +52,7 @@ import org.aesh.terminal.utils.Config;
  *
  * @author Aesh team
  */
-public class SettingsImpl<CI extends CommandInvocation, CI3 extends ConverterInvocation, CI2 extends CompleterInvocation, VI extends ValidatorInvocation, OA extends OptionActivator, CA extends CommandActivator>
+public class SettingsImpl<CI extends CommandInvocation>
         implements Settings {
 
     private EditMode.Mode editMode = EditMode.Mode.EMACS;
@@ -89,17 +84,17 @@ public class SettingsImpl<CI extends CommandInvocation, CI3 extends ConverterInv
     private Resource resource;
     private String execute;
     private Resource executeFileAtStart;
-    private CommandActivatorProvider<CA> commandActivatorProvider;
-    private OptionActivatorProvider<OA> optionActivatorProvider;
+    private CommandActivatorProvider commandActivatorProvider;
+    private OptionActivatorProvider optionActivatorProvider;
     private CommandRegistry<CI> commandRegistry;
     private CommandInvocationProvider<CI> commandInvocationProvider;
     private CommandNotFoundHandler commandNotFoundHandler;
-    private CompleterInvocationProvider<CI2> completerInvocationProvider;
-    private ConverterInvocationProvider<CI3> converterInvocationProvider;
-    private ValidatorInvocationProvider<VI> validatorInvocationProvider;
+    private CompleterInvocationProvider completerInvocationProvider;
+    private ConverterInvocationProvider converterInvocationProvider;
+    private ValidatorInvocationProvider validatorInvocationProvider;
     private ManProvider manProvider;
     private Connection connection;
-    private InvocationProviders<CA, CI3, CI2, VI, OA> invocationProviders;
+    private InvocationProviders invocationProviders;
     private ExportChangeListener exportListener;
     private boolean redrawPrompt = true;
     private boolean echoCtrl = true;
@@ -113,7 +108,7 @@ public class SettingsImpl<CI extends CommandInvocation, CI3 extends ConverterInv
     SettingsImpl() {
     }
 
-    protected SettingsImpl(Settings<CI, CI3, CI2, VI, OA, CA> baseSettings) {
+    protected SettingsImpl(Settings<CI> baseSettings) {
         setMode(baseSettings.mode());
         setHistoryFile(baseSettings.historyFile());
         setHistoryFilePermission(baseSettings.historyFilePermission());
@@ -665,22 +660,22 @@ public class SettingsImpl<CI extends CommandInvocation, CI3 extends ConverterInv
     }
 
     @Override
-    public CompleterInvocationProvider<CI2> completerInvocationProvider() {
+    public CompleterInvocationProvider completerInvocationProvider() {
         return completerInvocationProvider;
     }
 
     @Override
-    public ConverterInvocationProvider<CI3> converterInvocationProvider() {
+    public ConverterInvocationProvider converterInvocationProvider() {
         return converterInvocationProvider;
     }
 
     @Override
-    public ValidatorInvocationProvider<VI> validatorInvocationProvider() {
+    public ValidatorInvocationProvider validatorInvocationProvider() {
         return validatorInvocationProvider;
     }
 
     @Override
-    public OptionActivatorProvider<OA> optionActivatorProvider() {
+    public OptionActivatorProvider optionActivatorProvider() {
         return optionActivatorProvider;
     }
 
@@ -690,7 +685,7 @@ public class SettingsImpl<CI extends CommandInvocation, CI3 extends ConverterInv
     }
 
     @Override
-    public CommandActivatorProvider<CA> commandActivatorProvider() {
+    public CommandActivatorProvider commandActivatorProvider() {
         return commandActivatorProvider;
     }
 
@@ -699,11 +694,11 @@ public class SettingsImpl<CI extends CommandInvocation, CI3 extends ConverterInv
         return connection;
     }
 
-    public void setCommandActivatorProvider(CommandActivatorProvider<CA> commandActivatorProvider) {
+    public void setCommandActivatorProvider(CommandActivatorProvider commandActivatorProvider) {
         this.commandActivatorProvider = commandActivatorProvider;
     }
 
-    public void setOptionActivatorProvider(OptionActivatorProvider<OA> optionActivatorProvider) {
+    public void setOptionActivatorProvider(OptionActivatorProvider optionActivatorProvider) {
         this.optionActivatorProvider = optionActivatorProvider;
     }
 
@@ -719,15 +714,15 @@ public class SettingsImpl<CI extends CommandInvocation, CI3 extends ConverterInv
         this.commandNotFoundHandler = commandNotFoundHandler;
     }
 
-    public void setCompleterInvocationProvider(CompleterInvocationProvider<CI2> completerInvocationProvider) {
+    public void setCompleterInvocationProvider(CompleterInvocationProvider completerInvocationProvider) {
         this.completerInvocationProvider = completerInvocationProvider;
     }
 
-    public void setConverterInvocationProvider(ConverterInvocationProvider<CI3> converterInvocationProvider) {
+    public void setConverterInvocationProvider(ConverterInvocationProvider converterInvocationProvider) {
         this.converterInvocationProvider = converterInvocationProvider;
     }
 
-    public void setValidatorInvocationProvider(ValidatorInvocationProvider<VI> validatorInvocationProvider) {
+    public void setValidatorInvocationProvider(ValidatorInvocationProvider validatorInvocationProvider) {
         this.validatorInvocationProvider = validatorInvocationProvider;
     }
 
@@ -744,7 +739,7 @@ public class SettingsImpl<CI extends CommandInvocation, CI3 extends ConverterInv
     }
 
     @Override
-    public InvocationProviders<CA, CI3, CI2, VI, OA> invocationProviders() {
+    public InvocationProviders invocationProviders() {
         return invocationProviders;
     }
 
@@ -761,7 +756,7 @@ public class SettingsImpl<CI extends CommandInvocation, CI3 extends ConverterInv
         this.connection = connection;
     }
 
-    public void setInvocationProviders(InvocationProviders<CA, CI3, CI2, VI, OA> invocationProviders) {
+    public void setInvocationProviders(InvocationProviders invocationProviders) {
         this.invocationProviders = invocationProviders;
     }
 

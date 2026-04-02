@@ -22,7 +22,9 @@ package org.aesh.command.activator;
 /**
  * @author Aesh team
  */
-public interface OptionActivatorProvider<OA extends OptionActivator> {
+public interface OptionActivatorProvider {
 
-    OA enhanceOptionActivator(OptionActivator optionActivator);
+    default OptionActivator enhanceOptionActivator(OptionActivator optionActivator) {
+        return optionActivator;
+    }
 }

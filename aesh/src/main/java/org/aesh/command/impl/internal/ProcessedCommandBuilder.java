@@ -26,7 +26,6 @@ import java.util.List;
 import org.aesh.command.Command;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.activator.NullCommandActivator;
-import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.impl.validator.NullCommandValidator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
@@ -128,7 +127,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
         if (validator != null && !validator.equals(NullCommandValidator.class))
             return ReflectionUtil.newInstance(validator);
         else
-            return (CommandValidator<C, CI>) new NullCommandValidator();
+            return null;
     }
 
     public ProcessedCommandBuilder<C, CI> resultHandler(Class<? extends ResultHandler> resultHandler) {
@@ -137,10 +136,10 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     }
 
     private ResultHandler initResultHandler(Class<? extends ResultHandler> resultHandler) {
-        if (resultHandler != null && !resultHandler.equals(NullResultHandler.class))
+        if (resultHandler != null && !resultHandler.equals(org.aesh.command.impl.result.NullResultHandler.class))
             return ReflectionUtil.newInstance(resultHandler);
         else
-            return new NullResultHandler();
+            return null;
     }
 
     public ProcessedCommandBuilder<C, CI> resultHandler(ResultHandler resultHandler) {
@@ -167,7 +166,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
         if (activator != null && activator != NullCommandActivator.class)
             return ReflectionUtil.newInstance(activator);
         else
-            return new NullCommandActivator();
+            return null;
     }
 
     public ProcessedCommandBuilder<C, CI> command(C command) {
@@ -196,12 +195,6 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     public ProcessedCommand<C, CI> create() throws CommandLineParserException {
         if (name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
-
-        if (validator == null)
-            validator = (CommandValidator<C, CI>) new NullCommandValidator();
-
-        if (resultHandler == null)
-            resultHandler = new NullResultHandler();
 
         return new ProcessedCommand<>(name, aliases, command, description, validator,
                 resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator,

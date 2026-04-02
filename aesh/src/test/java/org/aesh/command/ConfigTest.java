@@ -24,15 +24,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.settings.RuntimeSettings;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.terminal.utils.Config;
 import org.junit.Test;
@@ -53,7 +48,7 @@ public class ConfigTest {
         System.setProperty("aesh.disablecompletion", "true");
         System.setProperty("aesh.execute", "foo -f --bar");
 
-        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> builder = SettingsBuilder
+        SettingsBuilder<CommandInvocation> builder = SettingsBuilder
                 .builder();
         Settings settings = RuntimeSettings.readRuntimeProperties(builder.build());
 

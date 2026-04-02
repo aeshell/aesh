@@ -24,16 +24,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.aesh.command.activator.CommandActivator;
-import org.aesh.command.activator.OptionActivator;
-import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.container.CommandContainer;
-import org.aesh.command.converter.ConverterInvocation;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.validator.ValidatorInvocation;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
@@ -94,7 +89,7 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .commandRegistry(registry)
                 .connection(connection)
@@ -159,7 +154,7 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .connection(connection)
                 .commandRegistry(registry)
@@ -225,7 +220,7 @@ public class AeshCommandRegistryTest {
             }
         };
 
-        Settings<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> settings = SettingsBuilder
+        Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .commandRegistry(registry)
                 .connection(connection)

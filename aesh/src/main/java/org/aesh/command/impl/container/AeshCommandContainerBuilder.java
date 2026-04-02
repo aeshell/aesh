@@ -33,10 +33,6 @@ import org.aesh.command.GroupCommand;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
-import org.aesh.command.impl.activator.AeshCommandActivatorProvider;
-import org.aesh.command.impl.activator.AeshOptionActivatorProvider;
-import org.aesh.command.impl.completer.AeshCompleterInvocationProvider;
-import org.aesh.command.impl.converter.AeshConverterInvocationProvider;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -44,7 +40,6 @@ import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParserBuilder;
-import org.aesh.command.impl.validator.AeshValidatorInvocationProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.metadata.CommandMetadataProvider;
@@ -367,11 +362,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
         CommandLineParser<CommandInvocation> cl = builder.doGenerateCommandLineParser(instance).getParser();
         InvocationProviders invocationProviders = new AeshInvocationProviders(
-                new AeshConverterInvocationProvider(),
-                new AeshCompleterInvocationProvider(),
-                new AeshValidatorInvocationProvider(),
-                new AeshOptionActivatorProvider(),
-                new AeshCommandActivatorProvider());
+                null, null, null, null, null);
         cl.parse(input);
         cl.getCommandPopulator().populateObject(cl.getProcessedCommand(), invocationProviders, null,
                 CommandLineParser.Mode.VALIDATE);
