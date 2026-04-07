@@ -75,7 +75,7 @@ public class AeshConsoleTest {
                 .create();
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
-                .command(new AeshCommandLineParser(fooCommand))
+                .command(new AeshCommandLineParser<>(fooCommand))
                 .command(LsCommand.class)
                 .create();
 

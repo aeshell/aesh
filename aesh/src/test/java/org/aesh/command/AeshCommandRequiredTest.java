@@ -39,7 +39,7 @@ public class AeshCommandRequiredTest {
 
     @Test
     public void testOptionRequired() throws Exception {
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ReqCommand.class)
@@ -66,7 +66,7 @@ public class AeshCommandRequiredTest {
 
     @Test
     public void testArgumentAndOptionRequired() throws Exception {
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ReqCommand2.class)
@@ -93,7 +93,7 @@ public class AeshCommandRequiredTest {
 
     @Test
     public void testArgumentAndOptionRequiredGroupCommand() throws Exception {
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(GroupReqCommand.class)

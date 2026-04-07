@@ -67,7 +67,7 @@ public class AeshCommandCompletionTest {
 
     @Test
     public void testCompletion() throws Exception {
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
@@ -171,7 +171,7 @@ public class AeshCommandCompletionTest {
 
     @Test
     public void testCompletionWithFormatting() throws IOException, CommandRegistryException {
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooFormattedCommand.class)

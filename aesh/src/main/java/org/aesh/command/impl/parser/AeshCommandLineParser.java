@@ -65,8 +65,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private AeshCommandLineParser<CI> parent;
     private boolean ansiMode = true;
 
-    public AeshCommandLineParser(ProcessedCommand<Command<CI>, CI> processedCommand) {
-        this.processedCommand = processedCommand;
+    @SuppressWarnings("unchecked")
+    public AeshCommandLineParser(ProcessedCommand<? extends Command<CI>, CI> processedCommand) {
+        this.processedCommand = (ProcessedCommand<Command<CI>, CI>) processedCommand;
         lineParser = new LineParser();
     }
 

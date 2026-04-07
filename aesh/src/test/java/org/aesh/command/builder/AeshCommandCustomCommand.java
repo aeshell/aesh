@@ -101,8 +101,7 @@ public class AeshCommandCustomCommand {
                         .build())
                 .create();
 
-        @SuppressWarnings("unchecked")
-        CommandLineParser<CommandInvocation> parser = new AeshCommandLineParser(processedCommand);
+        CommandLineParser<CommandInvocation> parser = new AeshCommandLineParser<>(processedCommand);
 
         return new AeshCommandContainer<>(parser);
     }
