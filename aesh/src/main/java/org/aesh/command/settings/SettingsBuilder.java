@@ -46,7 +46,6 @@ import org.aesh.terminal.utils.LoggerUtil;
 /**
  * @author Aesh team
  */
-@SuppressWarnings("unchecked")
 public class SettingsBuilder<CI extends CommandInvocation> {
 
     private SettingsImpl<CI> settings;
@@ -197,12 +196,12 @@ public class SettingsBuilder<CI extends CommandInvocation> {
         return apply(c -> c.settings.setOptionActivatorProvider(optionActivatorProvider));
     }
 
-    public SettingsBuilder<CI> commandRegistry(CommandRegistry commandRegistry) {
+    public SettingsBuilder<CI> commandRegistry(CommandRegistry<CI> commandRegistry) {
         return apply(c -> c.settings.setCommandRegistry(commandRegistry));
     }
 
     public SettingsBuilder<CI> commandInvocationProvider(
-            CommandInvocationProvider commandInvocationProvider) {
+            CommandInvocationProvider<CI> commandInvocationProvider) {
         return apply(c -> c.settings.setCommandInvocationProvider(commandInvocationProvider));
     }
 
@@ -279,9 +278,7 @@ public class SettingsBuilder<CI extends CommandInvocation> {
             LoggerUtil.doLog();
 
         if (settings.invocationProviders() == null)
-            settings.setInvocationProviders(new AeshInvocationProviders(settings.converterInvocationProvider(),
-                    settings.completerInvocationProvider(), settings.validatorInvocationProvider(),
-                    settings.optionActivatorProvider(), settings.commandActivatorProvider()));
+            settings.setInvocationProviders(new AeshInvocationProviders(settings));
 
         return settings;
     }

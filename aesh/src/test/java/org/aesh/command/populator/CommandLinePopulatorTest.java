@@ -56,8 +56,7 @@ import org.junit.rules.ExpectedException;
  */
 public class CommandLinePopulatorTest {
 
-    private final InvocationProviders invocationProviders = new AeshInvocationProviders(
-            null, null, null, null, null);
+    private final InvocationProviders invocationProviders = new AeshInvocationProviders();
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();

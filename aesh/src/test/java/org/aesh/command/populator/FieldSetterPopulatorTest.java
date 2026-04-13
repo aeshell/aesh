@@ -34,8 +34,7 @@ import org.junit.Test;
  */
 public class FieldSetterPopulatorTest {
 
-    private final InvocationProviders invocationProviders = new AeshInvocationProviders(
-            null, null, null, null, null);
+    private final InvocationProviders invocationProviders = new AeshInvocationProviders();
 
     @CommandDefinition(name = "test", description = "test command")
     public static class TestCommand implements Command<CommandInvocation> {

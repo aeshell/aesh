@@ -38,8 +38,7 @@ import org.junit.Test;
  */
 public class MetadataProviderFieldSetterTest {
 
-    private final InvocationProviders invocationProviders = new AeshInvocationProviders(
-            null, null, null, null, null);
+    private final InvocationProviders invocationProviders = new AeshInvocationProviders();
 
     @CommandDefinition(name = "mytest", description = "test")
     public static class MyTestCommand implements Command<CommandInvocation> {

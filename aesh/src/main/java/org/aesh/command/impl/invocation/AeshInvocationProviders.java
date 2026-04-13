@@ -50,6 +50,10 @@ public class AeshInvocationProviders implements InvocationProviders {
     private final OptionActivatorProvider optionActivatorProvider;
     private final CommandActivatorProvider commandActivatorProvider;
 
+    public AeshInvocationProviders() {
+        this(null, null, null, null, null);
+    }
+
     public AeshInvocationProviders(Settings settings) {
         this.converterInvocationProvider = defaultIfNull(settings.converterInvocationProvider(), DEFAULT_CONVERTER);
         this.completerInvocationProvider = defaultIfNull(settings.completerInvocationProvider(), DEFAULT_COMPLETER);

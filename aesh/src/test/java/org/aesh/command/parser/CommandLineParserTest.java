@@ -51,8 +51,7 @@ import org.junit.Test;
  */
 public class CommandLineParserTest {
 
-    private final InvocationProviders invocationProviders = new AeshInvocationProviders(
-            null, null, null, null, null);
+    private final InvocationProviders invocationProviders = new AeshInvocationProviders();
 
     @Test
     public void testParseCommandLine1() throws Exception {

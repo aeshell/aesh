@@ -355,8 +355,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             throws CommandLineParserException, OptionValidatorException {
         AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
         CommandLineParser<CommandInvocation> cl = builder.doGenerateCommandLineParser(instance).getParser();
-        InvocationProviders invocationProviders = new AeshInvocationProviders(
-                null, null, null, null, null);
+        InvocationProviders invocationProviders = new AeshInvocationProviders();
         cl.parse(input);
         cl.getCommandPopulator().populateObject(cl.getProcessedCommand(), invocationProviders, null,
                 CommandLineParser.Mode.VALIDATE);

@@ -53,7 +53,7 @@ import org.aesh.terminal.utils.Config;
  * @author Aesh team
  */
 public class SettingsImpl<CI extends CommandInvocation>
-        implements Settings {
+        implements Settings<CI> {
 
     private EditMode.Mode editMode = EditMode.Mode.EMACS;
     private File historyFile;
@@ -771,8 +771,7 @@ public class SettingsImpl<CI extends CommandInvocation>
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public void setInterruptHandler(Consumer interruptHandler) {
+    public void setInterruptHandler(Consumer<Void> interruptHandler) {
         this.interruptHandler = interruptHandler;
     }
 
@@ -782,9 +781,8 @@ public class SettingsImpl<CI extends CommandInvocation>
     }
 
     @Override
-    public void setConnectionClosedHandler(Consumer handler) {
+    public void setConnectionClosedHandler(Consumer<Void> handler) {
         this.connectionClosedHandler = handler;
-
     }
 
     @Override

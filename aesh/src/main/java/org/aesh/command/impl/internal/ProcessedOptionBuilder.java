@@ -205,10 +205,8 @@ public class ProcessedOptionBuilder {
 
     private Converter initConverter(Class<? extends Converter> converterClass) {
         if (converterClass != null && !converterClass.equals(NullConverter.class)) {
-            if (CLConverterManager.getInstance().hasConverter(converterClass))
-                return CLConverterManager.getInstance().getConverter(converterClass);
-            else
-                return ReflectionUtil.newInstance(converterClass);
+            Converter converter = CLConverterManager.getInstance().getConverter(converterClass);
+            return converter != null ? converter : ReflectionUtil.newInstance(converterClass);
         } else
             return CLConverterManager.getInstance().getConverter(type);
     }

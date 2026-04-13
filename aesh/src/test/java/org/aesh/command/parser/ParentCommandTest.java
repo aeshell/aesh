@@ -46,8 +46,7 @@ import org.junit.Test;
  */
 public class ParentCommandTest {
 
-    private final InvocationProviders invocationProviders = new AeshInvocationProviders(
-            null, null, null, null, null);
+    private final InvocationProviders invocationProviders = new AeshInvocationProviders();
 
     @Test
     public void testCommandContext() throws Exception {
