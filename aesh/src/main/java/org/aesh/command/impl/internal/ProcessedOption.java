@@ -144,10 +144,7 @@ public final class ProcessedOption {
             this.selectorType = selectorType;
         else
             this.selectorType = SelectorType.NO_OP;
-        if (parser != null)
-            this.parser = parser;
-        else
-            this.parser = new AeshOptionParser();
+        this.parser = parser;
 
         if (renderer != null)
             this.renderer = renderer;
@@ -159,8 +156,8 @@ public final class ProcessedOption {
         this.descriptionUrl = descriptionUrl;
         this.isUrl = isUrl || java.net.URL.class.isAssignableFrom(type) || java.net.URI.class.isAssignableFrom(type);
 
-        properties = new HashMap<>();
-        values = new ArrayList<>();
+        properties = java.util.Collections.emptyMap();
+        values = java.util.Collections.emptyList();
     }
 
     public void setFieldSetter(BiConsumer<Object, Object> fieldSetter) {
@@ -226,10 +223,14 @@ public final class ProcessedOption {
     }
 
     public void addValue(String value) {
+        if (values.isEmpty() && !(values instanceof ArrayList))
+            values = new ArrayList<>();
         values.add(value);
     }
 
     public void addValues(List<String> values) {
+        if (this.values.isEmpty() && !(this.values instanceof ArrayList))
+            this.values = new ArrayList<>();
         this.values.addAll(values);
     }
 
@@ -292,6 +293,8 @@ public final class ProcessedOption {
     }
 
     public void addProperty(String name, String value) {
+        if (properties.isEmpty() && !(properties instanceof HashMap))
+            properties = new HashMap<>();
         properties.put(name, value);
     }
 
@@ -328,6 +331,8 @@ public final class ProcessedOption {
     }
 
     public OptionParser parser() {
+        if (parser == null)
+            parser = new AeshOptionParser();
         return parser;
     }
 
@@ -443,9 +448,9 @@ public final class ProcessedOption {
     }
 
     public void clear() {
-        if (values != null)
+        if (values instanceof ArrayList)
             values.clear();
-        if (properties != null)
+        if (properties instanceof HashMap)
             properties.clear();
         longNameUsed = true;
         endsWithSeparator = false;

@@ -134,38 +134,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public void addOption(ProcessedOption opt) throws OptionParserException {
-        ProcessedOption copy = new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
-                opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(),
-                opt.acceptNameWithoutDashes(), opt.selectorType(),
-                opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(), opt.converter(),
-                opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(), opt.parser(), opt.doOverrideRequired(),
-                opt.isNegatable(), opt.getNegationPrefix(), opt.isInherited(),
-                opt.getDescriptionUrl(), opt.isUrl());
-        if (opt.getFieldSetter() != null)
-            copy.setFieldSetter(opt.getFieldSetter());
-        if (opt.getFieldResetter() != null)
-            copy.setFieldResetter(opt.getFieldResetter());
-        this.options.add(copy);
-
-        options.get(options.size() - 1).setParent(this);
+        verifyThatNamesAreUnique(opt.shortName(), opt.name());
+        this.options.add(opt);
+        opt.setParent(this);
     }
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
         for (ProcessedOption opt : options) {
-            ProcessedOption copy = new ProcessedOption(verifyThatNamesAreUnique(opt.shortName(), opt.name()), opt.name(),
-                    opt.description(), opt.getArgument(), opt.isRequired(), opt.getValueSeparator(), opt.askIfNotSet(),
-                    opt.acceptNameWithoutDashes(), opt.selectorType(),
-                    opt.getDefaultValues(), opt.type(), opt.getFieldName(), opt.getOptionType(),
-                    opt.converter(), opt.completer(), opt.validator(), opt.activator(), opt.getRenderer(),
-                    opt.parser(), opt.doOverrideRequired(), opt.isNegatable(), opt.getNegationPrefix(), opt.isInherited(),
-                    opt.getDescriptionUrl(), opt.isUrl());
-            if (opt.getFieldSetter() != null)
-                copy.setFieldSetter(opt.getFieldSetter());
-            if (opt.getFieldResetter() != null)
-                copy.setFieldResetter(opt.getFieldResetter());
-            this.options.add(copy);
-
-            this.options.get(this.options.size() - 1).setParent(this);
+            addOption(opt);
         }
     }
 

@@ -9,6 +9,8 @@ public class PropertiesLookup {
     public static final Pattern systemProperties = Pattern.compile("^\\$\\{((env:)|(sys:))?((\\.*\\w+)+)\\}$");
 
     public static List<String> checkForSystemVariables(List<String> defaultValues) {
+        if (defaultValues.isEmpty())
+            return defaultValues;
         List<String> result = new ArrayList<>(defaultValues.size());
         for (String v : defaultValues) {
             Matcher m = systemProperties.matcher(v);
