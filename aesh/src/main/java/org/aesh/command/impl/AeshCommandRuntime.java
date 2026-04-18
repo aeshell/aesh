@@ -20,6 +20,8 @@
 package org.aesh.command.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Level;
@@ -62,6 +64,7 @@ import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
 import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
+import org.aesh.parser.ParsedWord;
 import org.aesh.parser.ParserStatus;
 
 /**
@@ -152,6 +155,57 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             }
             throw cmd;
         }
+        return runExecutor(executor);
+    }
+
+    @Override
+    public CommandResult executeCommand(String commandName, String[] args) throws CommandNotFoundException,
+            CommandLineParserException,
+            CommandValidatorException,
+            CommandException,
+            InterruptedException,
+            IOException {
+
+        // Build a display string for error messages
+        StringBuilder displayLine = new StringBuilder(commandName);
+        if (args != null) {
+            for (String arg : args) {
+                displayLine.append(' ').append(arg);
+            }
+        }
+
+        // Create ParsedLine directly from pre-tokenized args, bypassing LineParser
+        List<ParsedWord> words = new ArrayList<>();
+        words.add(new ParsedWord(commandName, 0));
+        int offset = commandName.length() + 1;
+        if (args != null) {
+            for (String arg : args) {
+                words.add(new ParsedWord(arg, offset));
+                offset += arg.length() + 1;
+            }
+        }
+        ParsedLine parsedLine = new ParsedLine(displayLine.toString(), words,
+                -1, -1, -1, ParserStatus.OK, "", OperatorType.NONE);
+
+        Executor<CI> executor;
+        try {
+            List<Execution<CI>> executions = Executions.buildExecution(
+                    Collections.singletonList(parsedLine), this);
+            executor = new Executor<>(executions);
+        } catch (CommandLineParserException e) {
+            throw e;
+        } catch (CommandNotFoundException cmd) {
+            if (commandNotFoundHandler != null) {
+                commandNotFoundHandler.handleCommandNotFound(displayLine.toString(),
+                        commandInvocationBuilder.build(this, null, null).getShell());
+            }
+            throw cmd;
+        }
+        return runExecutor(executor);
+    }
+
+    private CommandResult runExecutor(Executor<CI> executor) throws CommandException,
+            CommandValidatorException, CommandLineParserException, InterruptedException {
         Execution exec;
         CommandResult result = null;
         while ((exec = executor.getNextExecution()) != null) {

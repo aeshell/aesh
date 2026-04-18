@@ -25,6 +25,8 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Argument;
+import org.aesh.command.option.Option;
 import org.junit.Test;
 
 public class AeshRuntimeRunnerTest {
@@ -50,6 +52,125 @@ public class AeshRuntimeRunnerTest {
         assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
         assertEquals(100, bar1Cmd.getSomeVal());
 
+    }
+
+    @Test
+    public void testArgsWithEmbeddedQuotes() {
+        CaptureCommand.reset();
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("-c", "Hello \"World\"", "myarg")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals("Hello \"World\"", CaptureCommand.lastCode);
+        assertEquals("myarg", CaptureCommand.lastArg);
+    }
+
+    @Test
+    public void testArgsWithBackslashes() {
+        CaptureCommand.reset();
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("-c", "path\\to\\file", "myarg")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals("path\\to\\file", CaptureCommand.lastCode);
+        assertEquals("myarg", CaptureCommand.lastArg);
+    }
+
+    @Test
+    public void testArgsWithNewlines() {
+        CaptureCommand.reset();
+        String multiline = "line1\nline2\nline3";
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("-c", multiline, "myarg")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals(multiline, CaptureCommand.lastCode);
+        assertEquals("myarg", CaptureCommand.lastArg);
+    }
+
+    @Test
+    public void testArgsWithMixedSpecialChars() {
+        CaptureCommand.reset();
+        String javaCode = "public class Hello {\n    public static void main(String... args) {\n"
+                + "        System.out.println(\"Hello\");\n    }\n}";
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("-c", javaCode, "firstarg")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals(javaCode, CaptureCommand.lastCode);
+        assertEquals("firstarg", CaptureCommand.lastArg);
+    }
+
+    @Test
+    public void testArgsWithSpacesOnly() {
+        CaptureCommand.reset();
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("-c", "hello world", "my arg")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals("hello world", CaptureCommand.lastCode);
+        assertEquals("my arg", CaptureCommand.lastArg);
+    }
+
+    @Test
+    public void testArgsWithSingleQuotes() {
+        CaptureCommand.reset();
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("-c", "it's a test", "myarg")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals("it's a test", CaptureCommand.lastCode);
+        assertEquals("myarg", CaptureCommand.lastArg);
+    }
+
+    @Test
+    public void testArgsWithOperatorChars() {
+        CaptureCommand.reset();
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("-c", "echo hello; echo world | grep foo", "myarg")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals("echo hello; echo world | grep foo", CaptureCommand.lastCode);
+        assertEquals("myarg", CaptureCommand.lastArg);
+    }
+
+    @Test
+    public void testNullArgs() {
+        CaptureCommand.reset();
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(Bar1Command.class)
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+    }
+
+    @CommandDefinition(name = "capture", description = "captures args for testing")
+    public static class CaptureCommand implements Command<CommandInvocation> {
+        @Option(shortName = 'c', description = "Code")
+        private String code;
+        @Argument(description = "First argument")
+        private String arg;
+
+        static String lastCode;
+        static String lastArg;
+
+        static void reset() {
+            lastCode = null;
+            lastArg = null;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            lastCode = code;
+            lastArg = arg;
+            return CommandResult.SUCCESS;
+        }
     }
 
     @CommandDefinition(name = "bar1", description = "bar1")

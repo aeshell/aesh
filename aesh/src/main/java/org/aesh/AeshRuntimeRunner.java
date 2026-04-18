@@ -118,27 +118,12 @@ public class AeshRuntimeRunner {
                 throw new RuntimeException("Only one command can be added to the registry.");
 
             final String commandName = commandNames.iterator().next();
-            StringBuilder sb = new StringBuilder(commandName);
-            if (args != null && args.length > 0) {
-                sb.append(" ");
-                if (args.length == 1) {
-                    sb.append(args[0]);
-                } else {
-                    for (String arg : args) {
-                        if (arg.indexOf(' ') >= 0) {
-                            sb.append('"').append(arg).append("\" ");
-                        } else {
-                            sb.append(arg).append(' ');
-                        }
-                    }
-                }
-            }
 
             CommandResult result = null;
             try {
-                result = runtime.executeCommand(sb.toString());
+                result = runtime.executeCommand(commandName, args);
             } catch (CommandNotFoundException e) {
-                System.err.println("Command not found: " + sb.toString());
+                System.err.println("Command not found: " + commandName);
             } catch (CommandException | CommandLineParserException | CommandValidatorException | OptionValidatorException e) {
                 showHelpIfNeeded(runtime, commandName, e);
             } catch (InterruptedException | IOException e) {
