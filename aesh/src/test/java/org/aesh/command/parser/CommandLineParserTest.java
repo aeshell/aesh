@@ -1172,4 +1172,128 @@ public class CommandLineParserTest {
         }
     }
 
+    @Test
+    public void testInheritedOptionPropagation() throws Exception {
+        InvocationProviders invocationProviders = new AeshInvocationProviders();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new InheritedGroupCommand<>()).getParser();
+        InheritedGroupCommand<?> group = (InheritedGroupCommand<?>) parser.getCommand();
+        InheritedChildCommand child = (InheritedChildCommand) parser.getChildParser("sub").getCommand();
+
+        // 1. Inherited option on child: "mygroup sub --verbose --name hello"
+        parser.populateObject("mygroup sub --verbose --name hello", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        group = (InheritedGroupCommand<?>) parser.getCommand();
+        child = (InheritedChildCommand) parser.getChildParser("sub").getCommand();
+        assertTrue(group.verbose);
+        assertTrue(child.verbose);
+        assertEquals("hello", child.name);
+
+        // 2. Inherited option on parent before subcommand: "mygroup --verbose sub --name hello"
+        parser.populateObject("mygroup --verbose sub --name hello", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        group = (InheritedGroupCommand<?>) parser.getCommand();
+        child = (InheritedChildCommand) parser.getChildParser("sub").getCommand();
+        assertTrue(group.verbose);
+        assertTrue(child.verbose);
+        assertEquals("hello", child.name);
+
+        // 3. Without inherited option: "mygroup sub --name hello"
+        parser.populateObject("mygroup sub --name hello", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        group = (InheritedGroupCommand<?>) parser.getCommand();
+        child = (InheritedChildCommand) parser.getChildParser("sub").getCommand();
+        assertFalse(group.verbose);
+        assertFalse(child.verbose);
+        assertEquals("hello", child.name);
+
+        // 4. String inherited option on child: "mygroup sub --config myconf --name hello"
+        parser.populateObject("mygroup sub --config myconf --name hello", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        group = (InheritedGroupCommand<?>) parser.getCommand();
+        child = (InheritedChildCommand) parser.getChildParser("sub").getCommand();
+        assertEquals("myconf", group.config);
+        assertEquals("myconf", child.config);
+        assertEquals("hello", child.name);
+
+        // 5. String inherited option on parent: "mygroup --config myconf sub --name hello"
+        parser.populateObject("mygroup --config myconf sub --name hello", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        group = (InheritedGroupCommand<?>) parser.getCommand();
+        child = (InheritedChildCommand) parser.getChildParser("sub").getCommand();
+        assertEquals("myconf", group.config);
+        assertEquals("myconf", child.config);
+        assertEquals("hello", child.name);
+
+        // 6. Child without matching field still parses inherited option
+        CommandLineParser<CommandInvocation> parser2 = new AeshCommandContainerBuilder<>()
+                .create(new InheritedGroupCommand2<>()).getParser();
+        InheritedGroupCommand2<?> group2 = (InheritedGroupCommand2<?>) parser2.getCommand();
+        parser2.populateObject("mygroup2 sub2 --verbose --name hello", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        group2 = (InheritedGroupCommand2<?>) parser2.getCommand();
+        InheritedChildNoFieldCommand child2 = (InheritedChildNoFieldCommand) parser2.getChildParser("sub2").getCommand();
+        assertTrue(group2.verbose);
+        assertEquals("hello", child2.name);
+    }
+
+    @GroupCommandDefinition(name = "mygroup", description = "", groupCommands = { InheritedChildCommand.class })
+    public class InheritedGroupCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(inherited = true, hasValue = false)
+        private boolean verbose;
+
+        @Option(inherited = true)
+        private String config;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sub", description = "")
+    public class InheritedChildCommand implements Command<CommandInvocation> {
+
+        // These fields match the parent's inherited options and should receive values
+        private boolean verbose;
+        private String config;
+
+        @Option
+        private String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "mygroup2", description = "", groupCommands = { InheritedChildNoFieldCommand.class })
+    public class InheritedGroupCommand2<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(inherited = true, hasValue = false)
+        private boolean verbose;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sub2", description = "")
+    public class InheritedChildNoFieldCommand implements Command<CommandInvocation> {
+
+        // No 'verbose' field — inherited option is parsed but not injected here
+
+        @Option
+        private String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }

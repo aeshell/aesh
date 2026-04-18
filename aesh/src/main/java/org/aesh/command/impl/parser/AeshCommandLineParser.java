@@ -19,6 +19,8 @@
  */
 package org.aesh.command.impl.parser;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -206,6 +208,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             for (CommandLineParser<CI> parser : getChildParsers()) {
                 parser.doPopulate(parser.getProcessedCommand(), invocationProviders, aeshContext, mode);
             }
+            propagateInheritedOptions();
         }
     }
 
@@ -316,6 +319,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                         iter.pollParsedWord();
                     } else {
                         lastParsedOption = processedCommand.searchAllOptions(word.word());
+                        if (lastParsedOption == null && parent != null) {
+                            lastParsedOption = searchParentInheritedOption(word.word());
+                        }
                         if (lastParsedOption != null) {
                             lastParsedOption.parser().parse(iter, lastParsedOption);
                         } else {
@@ -441,6 +447,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                         iter.pollParsedWord();
                     } else {
                         lastParsedOption = processedCommand.searchAllOptions(word.word());
+                        if (lastParsedOption == null && parent != null) {
+                            lastParsedOption = searchParentInheritedOption(word.word());
+                        }
                         if (lastParsedOption != null) {
                             //if current word is cursor word, we need to check if the current option name
                             //might be part of another option name: eg: list and listFolders
@@ -650,6 +659,63 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         ansiBuilder.append(getProcessedCommand().description());
 
         return ansiBuilder.toString();
+    }
+
+    /**
+     * Search parent parsers for an inherited option matching the given input.
+     */
+    private ProcessedOption searchParentInheritedOption(String word) {
+        AeshCommandLineParser<CI> p = parent;
+        while (p != null) {
+            ProcessedOption option = p.getProcessedCommand().searchAllOptions(word);
+            if (option != null && option.isInherited())
+                return option;
+            p = p.parent;
+        }
+        return null;
+    }
+
+    /**
+     * After populating parent and children, propagate inherited option values
+     * from this (parent) command into parsed child commands that have matching fields.
+     */
+    private void propagateInheritedOptions() {
+        for (ProcessedOption parentOpt : processedCommand.getOptions()) {
+            if (!parentOpt.isInherited())
+                continue;
+            for (CommandLineParser<CI> child : getChildParsers()) {
+                if (child.parsedCommand() == null)
+                    continue;
+                Command<CI> childCmd = child.getCommand();
+                try {
+                    Field childField = findField(childCmd.getClass(), parentOpt.getFieldName());
+                    if (childField == null)
+                        continue;
+                    Field parentField = findField(getCommand().getClass(), parentOpt.getFieldName());
+                    if (parentField == null)
+                        continue;
+                    if (!Modifier.isPublic(parentField.getModifiers()))
+                        parentField.setAccessible(true);
+                    Object value = parentField.get(getCommand());
+                    if (!Modifier.isPublic(childField.getModifiers()))
+                        childField.setAccessible(true);
+                    childField.set(childCmd, value);
+                } catch (Exception e) {
+                    // inherited value propagation is best-effort
+                }
+            }
+        }
+    }
+
+    private Field findField(Class<?> clazz, String fieldName) {
+        while (clazz != null) {
+            try {
+                return clazz.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
+        return null;
     }
 
     @Override
