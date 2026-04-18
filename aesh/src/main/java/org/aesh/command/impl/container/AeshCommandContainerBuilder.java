@@ -123,6 +123,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .resultHandler(command.resultHandler())
                     .generateHelp(command.generateHelp())
                     .disableParsing(command.disableParsing())
+                    .stopAtFirstPositional(command.stopAtFirstPositional())
                     .version(command.version())
                     .helpUrl(command.helpUrl())
                     .create();
@@ -143,6 +144,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .validator((Class<? extends CommandValidator<Command<CI>, CI>>) groupCommand.validator())
                     .command(commandObject)
                     .generateHelp(groupCommand.generateHelp())
+                    .stopAtFirstPositional(groupCommand.stopAtFirstPositional())
                     .version(groupCommand.version())
                     .resultHandler(groupCommand.resultHandler())
                     .helpUrl(groupCommand.helpUrl())

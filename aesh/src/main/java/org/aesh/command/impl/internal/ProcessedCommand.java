@@ -51,6 +51,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final ResultHandler resultHandler;
     private final CommandPopulator<Object, CI> populator;
     private final boolean disableParsing;
+    private final boolean stopAtFirstPositional;
     private CommandActivator activator;
     private final boolean generateHelp;
     private String version;
@@ -85,12 +86,26 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             ProcessedOption argument,
             CommandPopulator<Object, CI> populator, CommandActivator activator,
             String helpUrl) throws OptionParserException {
+        this(name, aliases, command, description, validator, resultHandler, generateHelp, disableParsing,
+                version, arguments, options, argument, populator, activator, helpUrl, false);
+    }
+
+    public ProcessedCommand(String name, List<String> aliases, C command,
+            String description, CommandValidator<C, CI> validator,
+            ResultHandler resultHandler,
+            boolean generateHelp, boolean disableParsing,
+            String version,
+            ProcessedOption arguments, List<ProcessedOption> options,
+            ProcessedOption argument,
+            CommandPopulator<Object, CI> populator, CommandActivator activator,
+            String helpUrl, boolean stopAtFirstPositional) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
         this.validator = validator;
         this.generateHelp = generateHelp;
         this.disableParsing = disableParsing;
+        this.stopAtFirstPositional = stopAtFirstPositional;
         this.helpUrl = helpUrl;
         this.resultHandler = resultHandler;
         this.arguments = arguments;
@@ -189,6 +204,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean disableParsing() {
         return disableParsing;
+    }
+
+    public boolean stopAtFirstPositional() {
+        return stopAtFirstPositional;
     }
 
     public String version() {

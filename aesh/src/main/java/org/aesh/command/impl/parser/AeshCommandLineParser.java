@@ -328,7 +328,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                 // In this case we shouldn't validate the option and pass it down to
                                 // the populator for Map injection.
                                 boolean unknown = false;
-                                if (word.word().startsWith("-")) {
+                                if (!processedCommand.stopAtFirstPositional() && word.word().startsWith("-")) {
                                     if (word.word().startsWith("--") || word.word().length() == 2) {
                                         // invalid short names and long names should be rejected.
                                         if (!(processedCommand.getCommand() instanceof MapCommand)) {
@@ -359,9 +359,13 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                         return;
                                     } else {
                                         setArgStatus(word.word());
+                                        if (processedCommand.stopAtFirstPositional())
+                                            argumentMarker = true;
                                     }
                                 } else {
                                     setArgStatus(word.word());
+                                    if (processedCommand.stopAtFirstPositional())
+                                        argumentMarker = true;
                                 }
                             }
                             iter.pollParsedWord();
@@ -491,6 +495,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                 else if (iter.baseLine().cursorAtEnd() && iter.baseLine().spaceAtEnd())
                                     processedCommand
                                             .setCompleteStatus(new CompleteStatus(CompleteStatus.Status.GROUP_COMMAND, ""));
+                                else if (processedCommand.stopAtFirstPositional())
+                                    argumentMarker = true;
                             } else if (iter.isNextWordCursorWord()) {
                                 if (processedCommand.getArguments() != null ||
                                         (processedCommand.getArgument() != null
@@ -503,6 +509,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                 }
                             } else {
                                 setCompletionArgStatus(word.word());
+                                if (processedCommand.stopAtFirstPositional())
+                                    argumentMarker = true;
                             }
                             iter.pollParsedWord();
                         }

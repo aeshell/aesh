@@ -55,6 +55,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private CommandActivator activator;
     private boolean generateHelp;
     private boolean disableParsing;
+    private boolean stopAtFirstPositional;
     private String version;
     private String helpUrl;
 
@@ -94,6 +95,11 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
     public ProcessedCommandBuilder<C, CI> disableParsing(boolean disableParsing) {
         this.disableParsing = disableParsing;
+        return this;
+    }
+
+    public ProcessedCommandBuilder<C, CI> stopAtFirstPositional(boolean stopAtFirstPositional) {
+        this.stopAtFirstPositional = stopAtFirstPositional;
         return this;
     }
 
@@ -198,6 +204,6 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
         return new ProcessedCommand<>(name, aliases, command, description, validator,
                 resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator,
-                helpUrl);
+                helpUrl, stopAtFirstPositional);
     }
 }

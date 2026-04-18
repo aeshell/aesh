@@ -114,4 +114,18 @@ public @interface CommandDefinition {
      * @return documentation URL
      */
     String helpUrl() default "";
+
+    /**
+     * When set to true, option parsing stops after the first positional argument is consumed.
+     * All remaining tokens are treated as positional arguments, even if they look like options.
+     *
+     * <p>
+     * This is useful for commands that pass arguments through to another process.
+     * For example: {@code run --verbose myscript.java -Dfoo=bar --help}
+     * With stopAtFirstPositional=true, {@code -Dfoo=bar} and {@code --help} are treated as
+     * positional arguments rather than being parsed as options of this command.
+     *
+     * @return true if option parsing should stop at the first positional argument
+     */
+    boolean stopAtFirstPositional() default false;
 }

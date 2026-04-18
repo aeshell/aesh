@@ -978,4 +978,125 @@ public class CommandLineParserTest {
         }
     }
 
+    @Test
+    public void testStopAtFirstPositional() throws Exception {
+        InvocationProviders invocationProviders = new AeshInvocationProviders();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        // 1. Options before the first positional are parsed normally
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new StopAtPositionalCommand<>()).getParser();
+        parser.populateObject("run --verbose myscript.java", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        StopAtPositionalCommand<CommandInvocation> cmd = (StopAtPositionalCommand<CommandInvocation>) parser.getCommand();
+        assertTrue(cmd.verbose);
+        assertEquals(1, cmd.args.size());
+        assertEquals("myscript.java", cmd.args.get(0));
+
+        // 2. Option-like tokens after the first positional are treated as arguments
+        parser.populateObject("run --verbose myscript.java -Dfoo=bar --help --verbose",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (StopAtPositionalCommand<CommandInvocation>) parser.getCommand();
+        assertTrue(cmd.verbose);
+        assertEquals(4, cmd.args.size());
+        assertEquals("myscript.java", cmd.args.get(0));
+        assertEquals("-Dfoo=bar", cmd.args.get(1));
+        assertEquals("--help", cmd.args.get(2));
+        assertEquals("--verbose", cmd.args.get(3));
+
+        // 3. No options, just positional arguments
+        parser.populateObject("run myscript.java arg1 arg2", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (StopAtPositionalCommand<CommandInvocation>) parser.getCommand();
+        assertFalse(cmd.verbose);
+        assertEquals(3, cmd.args.size());
+        assertEquals("myscript.java", cmd.args.get(0));
+        assertEquals("arg1", cmd.args.get(1));
+        assertEquals("arg2", cmd.args.get(2));
+
+        // 4. All options, no positional arguments
+        parser.populateObject("run --verbose", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (StopAtPositionalCommand<CommandInvocation>) parser.getCommand();
+        assertTrue(cmd.verbose);
+        assertNull(cmd.args);
+
+        // 5. Single Argument variant: option-like tokens after the first positional are treated as arguments
+        parser = new AeshCommandContainerBuilder<>().create(new StopAtPositionalSingleArgCommand<>()).getParser();
+        parser.populateObject("exec --verbose myscript.java", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        StopAtPositionalSingleArgCommand<CommandInvocation> cmd2 = (StopAtPositionalSingleArgCommand<CommandInvocation>) parser
+                .getCommand();
+        assertTrue(cmd2.verbose);
+        assertEquals("myscript.java", cmd2.script);
+    }
+
+    @Test
+    public void testStopAtFirstPositionalWithGenerateHelp() throws Exception {
+        InvocationProviders invocationProviders = new AeshInvocationProviders();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        // --help after the first positional should be a passthrough argument, not trigger help
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new StopAtPositionalWithHelpCommand<>()).getParser();
+        parser.populateObject("run --verbose myscript.java --help --version",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        StopAtPositionalWithHelpCommand<CommandInvocation> cmd = (StopAtPositionalWithHelpCommand<CommandInvocation>) parser
+                .getCommand();
+        assertTrue(cmd.verbose);
+        assertFalse(parser.getProcessedCommand().isGenerateHelpOptionSet());
+        assertEquals(3, cmd.args.size());
+        assertEquals("myscript.java", cmd.args.get(0));
+        assertEquals("--help", cmd.args.get(1));
+        assertEquals("--version", cmd.args.get(2));
+
+        // --help before the first positional should still work as help
+        parser.parse("run --help");
+        assertTrue(parser.getProcessedCommand().isGenerateHelpOptionSet());
+    }
+
+    @CommandDefinition(name = "run", description = "test stopAtFirstPositional with generateHelp", stopAtFirstPositional = true, generateHelp = true)
+    public class StopAtPositionalWithHelpCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(hasValue = false)
+        private boolean verbose;
+
+        @Arguments
+        private List<String> args;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "run", description = "test stopAtFirstPositional", stopAtFirstPositional = true)
+    public class StopAtPositionalCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(hasValue = false)
+        private boolean verbose;
+
+        @Arguments
+        private List<String> args;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "exec", description = "test stopAtFirstPositional with single Argument", stopAtFirstPositional = true)
+    public class StopAtPositionalSingleArgCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(hasValue = false)
+        private boolean verbose;
+
+        @Argument
+        private String script;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }

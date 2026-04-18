@@ -113,4 +113,12 @@ public @interface GroupCommandDefinition {
      * @return documentation URL
      */
     String helpUrl() default "";
+
+    /**
+     * When set to true, option parsing stops after the first positional argument is consumed.
+     * All remaining tokens are treated as positional arguments, even if they look like options.
+     *
+     * @return true if option parsing should stop at the first positional argument
+     */
+    boolean stopAtFirstPositional() default false;
 }
