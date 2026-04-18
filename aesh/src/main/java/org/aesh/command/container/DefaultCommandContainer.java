@@ -39,25 +39,31 @@ import org.aesh.parser.ParsedLine;
  */
 public abstract class DefaultCommandContainer<CI extends CommandInvocation> implements CommandContainer<CI> {
 
-    private final ConcurrentLinkedQueue<ParsedLine> lines;
+    private ConcurrentLinkedQueue<ParsedLine> lines;
 
     public DefaultCommandContainer() {
-        lines = new ConcurrentLinkedQueue<>();
+    }
+
+    private ConcurrentLinkedQueue<ParsedLine> lines() {
+        if (lines == null)
+            lines = new ConcurrentLinkedQueue<>();
+        return lines;
     }
 
     @Override
     public void addLine(ParsedLine aeshLine) {
-        lines.add(aeshLine);
+        lines().add(aeshLine);
     }
 
     @Override
     public ParsedLine pollLine() {
-        return lines.poll();
+        return lines != null ? lines.poll() : null;
     }
 
     @Override
     public void emptyLine() {
-        lines.clear();
+        if (lines != null)
+            lines.clear();
     }
 
     @Override
@@ -72,7 +78,7 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
             AeshContext aeshContext,
             org.aesh.command.impl.context.CommandContext commandContext)
             throws CommandLineParserException, OptionValidatorException {
-        if (lines.isEmpty())
+        if (lines == null || lines.isEmpty())
             return null;
         ParsedLine aeshLine = lines.poll();
         getParser().parse(aeshLine.iterator(), CommandLineParser.Mode.STRICT);

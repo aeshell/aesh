@@ -72,6 +72,10 @@ public class CLConverterManager {
         factories.put(Resource.class, () -> new FileResourceConverter());
         factories.put(URL.class, () -> new URLConverter());
         factories.put(URI.class, () -> new URIConverter());
+        // Pre-populate cache so getConverter() is a single ConcurrentHashMap.get()
+        for (Map.Entry<Class, Supplier<Converter>> entry : factories.entrySet()) {
+            cache.put(entry.getKey(), entry.getValue().get());
+        }
     }
 
     private void addFactory(Class<?> boxed, Class<?> primitive, Supplier<Converter> factory) {

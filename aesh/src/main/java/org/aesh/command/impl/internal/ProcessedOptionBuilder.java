@@ -19,7 +19,6 @@
  */
 package org.aesh.command.impl.internal;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,10 +29,8 @@ import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
 import org.aesh.command.impl.completer.BooleanOptionCompleter;
-import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.command.impl.completer.NullOptionCompleter;
 import org.aesh.command.impl.converter.NullConverter;
-import org.aesh.command.impl.parser.AeshOptionParser;
 import org.aesh.command.impl.renderer.NullOptionRenderer;
 import org.aesh.command.impl.validator.NullValidator;
 import org.aesh.command.parser.OptionParser;
@@ -41,7 +38,6 @@ import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.converter.CLConverterManager;
-import org.aesh.io.Resource;
 import org.aesh.selector.SelectorType;
 import org.aesh.util.ReflectionUtil;
 
@@ -66,7 +62,7 @@ public class ProcessedOptionBuilder {
     private Converter converter;
     private String fieldName;
     private OptionCompleter completer;
-    private final List<String> defaultValues;
+    private List<String> defaultValues;
     private OptionValidator validator;
     private OptionActivator activator;
     private OptionRenderer renderer;
@@ -84,7 +80,7 @@ public class ProcessedOptionBuilder {
     private Consumer<Object> fieldResetter;
 
     private ProcessedOptionBuilder() {
-        defaultValues = new ArrayList<>();
+        defaultValues = java.util.Collections.emptyList();
     }
 
     public static ProcessedOptionBuilder builder() {
@@ -176,15 +172,33 @@ public class ProcessedOptionBuilder {
     }
 
     public ProcessedOptionBuilder addDefaultValue(String defaultValue) {
-        return apply(c -> c.defaultValues.add(defaultValue));
+        return apply(c -> {
+            if (!(c.defaultValues instanceof ArrayList))
+                c.defaultValues = new ArrayList<>();
+            c.defaultValues.add(defaultValue);
+        });
     }
 
     public ProcessedOptionBuilder addAllDefaultValues(List<String> defaultValues) {
-        return apply(c -> c.defaultValues.addAll(defaultValues));
+        if (defaultValues != null && !defaultValues.isEmpty()) {
+            return apply(c -> {
+                if (!(c.defaultValues instanceof ArrayList))
+                    c.defaultValues = new ArrayList<>(defaultValues.size());
+                c.defaultValues.addAll(defaultValues);
+            });
+        }
+        return this;
     }
 
     public ProcessedOptionBuilder addAllDefaultValues(String[] defaultValues) {
-        return apply(c -> c.defaultValues.addAll(Arrays.asList(defaultValues)));
+        if (defaultValues != null && defaultValues.length > 0) {
+            return apply(c -> {
+                if (!(c.defaultValues instanceof ArrayList))
+                    c.defaultValues = new ArrayList<>(defaultValues.length);
+                c.defaultValues.addAll(Arrays.asList(defaultValues));
+            });
+        }
+        return this;
     }
 
     public ProcessedOptionBuilder valueSeparator(char valueSeparator) {
@@ -224,17 +238,11 @@ public class ProcessedOptionBuilder {
         if (completerClass != null && !completerClass.equals(NullOptionCompleter.class)) {
             return ReflectionUtil.newInstance(completerClass);
         } else {
-            try {
-                if (type == Boolean.class || type == boolean.class)
-                    return BooleanOptionCompleter.class.newInstance();
-                else if (type == File.class || type == Resource.class)
-                    return FileOptionCompleter.class.newInstance();
-                else
-                    return null;
-
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new RuntimeException("Failed to create completer instance", e);
-            }
+            // File/Resource completers are deferred — ProcessedOption.completer() lazy-creates them
+            if (type == Boolean.class || type == boolean.class)
+                return new BooleanOptionCompleter();
+            else
+                return null;
         }
     }
 
@@ -381,8 +389,7 @@ public class ProcessedOptionBuilder {
         if (converter == null)
             converter = CLConverterManager.getInstance().getConverter(type);
 
-        if (parser == null)
-            parser = new AeshOptionParser();
+        // parser left null here — ProcessedOption.parser() lazy-creates AeshOptionParser
 
         //if(renderer == null)
         //    renderer = new NullOptionRenderer();

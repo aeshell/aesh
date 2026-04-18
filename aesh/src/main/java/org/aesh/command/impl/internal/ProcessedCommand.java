@@ -97,7 +97,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.argument = argument;
         if (argument != null && arguments != null)
             throw new OptionParserException("Argument and Arguments cannot be defined in the same Command");
-        this.options = new ArrayList<>();
+        this.options = new ArrayList<>(
+                options.size() + (generateHelp ? 1 : 0) + (version != null && version.length() > 0 ? 1 : 0));
         this.command = command;
         this.activator = activator;
         if (populator == null)
@@ -114,7 +115,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             doGenerateVersion();
         }
 
-        parserExceptions = new ArrayList<>();
+        parserExceptions = Collections.emptyList();
     }
 
     public List<ProcessedOption> getOptions() {
@@ -406,7 +407,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (argument != null)
             argument.clear();
 
-        parserExceptions.clear();
+        if (parserExceptions instanceof ArrayList)
+            parserExceptions.clear();
+        else
+            parserExceptions = Collections.emptyList();
         completeStatus = null;
     }
 
@@ -737,6 +741,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public void addParserException(CommandLineParserException exception) {
+        if (!(parserExceptions instanceof ArrayList))
+            parserExceptions = new ArrayList<>();
         parserExceptions.add(exception);
     }
 

@@ -11,24 +11,39 @@ public class PropertiesLookup {
     public static List<String> checkForSystemVariables(List<String> defaultValues) {
         if (defaultValues.isEmpty())
             return defaultValues;
+        // Fast path: skip regex if no values look like system variable references
+        boolean hasCandidate = false;
+        for (String v : defaultValues) {
+            if (v.length() > 3 && v.charAt(0) == '$' && v.charAt(1) == '{') {
+                hasCandidate = true;
+                break;
+            }
+        }
+        if (!hasCandidate)
+            return defaultValues;
+
         List<String> result = new ArrayList<>(defaultValues.size());
         for (String v : defaultValues) {
-            Matcher m = systemProperties.matcher(v);
-            if (m.matches()) {
-                //handle env:
-                if (m.group(2) != null) {
-                    result.add(findEnvironmentVariable(m.group(4)));
-                }
-                // handle sys:
-                else if (m.group(3) != null) {
-                    result.add(findSystemProperty(m.group(4)));
-                }
-                // try to search for all
-                else if (m.group(4) != null) {
-                    String value = findSystemProperty(m.group(4));
-                    if (value == null)
-                        value = findEnvironmentVariable(m.group(4));
-                    result.add(value);
+            if (v.length() > 3 && v.charAt(0) == '$' && v.charAt(1) == '{') {
+                Matcher m = systemProperties.matcher(v);
+                if (m.matches()) {
+                    //handle env:
+                    if (m.group(2) != null) {
+                        result.add(findEnvironmentVariable(m.group(4)));
+                    }
+                    // handle sys:
+                    else if (m.group(3) != null) {
+                        result.add(findSystemProperty(m.group(4)));
+                    }
+                    // try to search for all
+                    else if (m.group(4) != null) {
+                        String value = findSystemProperty(m.group(4));
+                        if (value == null)
+                            value = findEnvironmentVariable(m.group(4));
+                        result.add(value);
+                    }
+                } else {
+                    result.add(v);
                 }
             } else {
                 result.add(v);
