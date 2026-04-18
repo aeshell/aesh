@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.aesh.command.Command;
+import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
@@ -52,6 +53,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final CommandPopulator<Object, CI> populator;
     private final boolean disableParsing;
     private final boolean stopAtFirstPositional;
+    private final DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
     private final boolean generateHelp;
     private String version;
@@ -99,6 +101,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             ProcessedOption argument,
             CommandPopulator<Object, CI> populator, CommandActivator activator,
             String helpUrl, boolean stopAtFirstPositional) throws OptionParserException {
+        this(name, aliases, command, description, validator, resultHandler, generateHelp, disableParsing,
+                version, arguments, options, argument, populator, activator, helpUrl, stopAtFirstPositional, null);
+    }
+
+    public ProcessedCommand(String name, List<String> aliases, C command,
+            String description, CommandValidator<C, CI> validator,
+            ResultHandler resultHandler,
+            boolean generateHelp, boolean disableParsing,
+            String version,
+            ProcessedOption arguments, List<ProcessedOption> options,
+            ProcessedOption argument,
+            CommandPopulator<Object, CI> populator, CommandActivator activator,
+            String helpUrl, boolean stopAtFirstPositional,
+            DefaultValueProvider defaultValueProvider) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
@@ -106,6 +122,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.generateHelp = generateHelp;
         this.disableParsing = disableParsing;
         this.stopAtFirstPositional = stopAtFirstPositional;
+        this.defaultValueProvider = defaultValueProvider;
         this.helpUrl = helpUrl;
         this.resultHandler = resultHandler;
         this.arguments = arguments;
@@ -208,6 +225,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean stopAtFirstPositional() {
         return stopAtFirstPositional;
+    }
+
+    public DefaultValueProvider getDefaultValueProvider() {
+        return defaultValueProvider;
     }
 
     public String version() {

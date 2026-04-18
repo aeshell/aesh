@@ -124,6 +124,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .generateHelp(command.generateHelp())
                     .disableParsing(command.disableParsing())
                     .stopAtFirstPositional(command.stopAtFirstPositional())
+                    .defaultValueProvider(command.defaultValueProvider())
                     .version(command.version())
                     .helpUrl(command.helpUrl())
                     .create();
@@ -145,6 +146,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .command(commandObject)
                     .generateHelp(groupCommand.generateHelp())
                     .stopAtFirstPositional(groupCommand.stopAtFirstPositional())
+                    .defaultValueProvider(groupCommand.defaultValueProvider())
                     .version(groupCommand.version())
                     .resultHandler(groupCommand.resultHandler())
                     .helpUrl(groupCommand.helpUrl())

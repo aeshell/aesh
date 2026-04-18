@@ -31,8 +31,10 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
+import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
@@ -1092,6 +1094,77 @@ public class CommandLineParserTest {
 
         @Argument
         private String script;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testDefaultValueProvider() throws Exception {
+        InvocationProviders invocationProviders = new AeshInvocationProviders();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        // 1. Dynamic default applied when option not provided by user
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DynamicDefaultCommand<>()).getParser();
+        parser.populateObject("dyndefault", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        DynamicDefaultCommand<CommandInvocation> cmd = (DynamicDefaultCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("from-config", cmd.template);
+
+        // 2. User-provided value takes precedence over dynamic default
+        parser.populateObject("dyndefault --template custom", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (DynamicDefaultCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("custom", cmd.template);
+
+        // 3. Dynamic default overrides static annotation default
+        parser.populateObject("dyndefault", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (DynamicDefaultCommand<CommandInvocation>) parser.getCommand();
+        // editor has static default "vi" but provider returns "codium"
+        assertEquals("codium", cmd.editor);
+
+        // 4. Provider returns null -> falls back to static default
+        parser.populateObject("dyndefault", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (DynamicDefaultCommand<CommandInvocation>) parser.getCommand();
+        // fallback has static default "hello" and provider returns null for it
+        assertEquals("hello", cmd.fallback);
+
+        // 5. Provider returns null and no static default -> field is null
+        parser.populateObject("dyndefault", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (DynamicDefaultCommand<CommandInvocation>) parser.getCommand();
+        assertNull(cmd.noDefault);
+    }
+
+    public static class TestDefaultValueProvider implements DefaultValueProvider {
+        @Override
+        public String defaultValue(ProcessedOption option) {
+            switch (option.name()) {
+                case "template":
+                    return "from-config";
+                case "editor":
+                    return "codium";
+                default:
+                    return null;
+            }
+        }
+    }
+
+    @CommandDefinition(name = "dyndefault", description = "test dynamic defaults", defaultValueProvider = TestDefaultValueProvider.class)
+    public class DynamicDefaultCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option
+        private String template;
+
+        @Option(defaultValue = "vi")
+        private String editor;
+
+        @Option(defaultValue = "hello")
+        private String fallback;
+
+        @Option
+        private String noDefault;
 
         @Override
         public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {

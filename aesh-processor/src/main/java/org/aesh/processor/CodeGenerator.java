@@ -55,6 +55,7 @@ final class CodeGenerator {
     private static final String NULL_ACTIVATOR = "org.aesh.command.impl.activator.NullActivator";
     private static final String NULL_OPTION_RENDERER = "org.aesh.command.impl.renderer.NullOptionRenderer";
     private static final String AESH_OPTION_PARSER = "org.aesh.command.impl.parser.AeshOptionParser";
+    private static final String NULL_DEFAULT_VALUE_PROVIDER = "org.aesh.command.impl.provider.NullDefaultValueProvider";
 
     private CodeGenerator() {
     }
@@ -190,6 +191,8 @@ final class CodeGenerator {
             generateCommandValidator(sb, commandElement, isGroup, elementUtils);
             sb.append("                .command(instance)\n");
             sb.append("                .generateHelp(").append(gcd.generateHelp()).append(")\n");
+            sb.append("                .stopAtFirstPositional(").append(gcd.stopAtFirstPositional()).append(")\n");
+            generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
             sb.append("                .version(").append(stringLiteral(gcd.version())).append(")\n");
             generateResultHandler(sb, commandElement, isGroup, elementUtils);
             sb.append("                .helpUrl(").append(stringLiteral(gcd.helpUrl())).append(")\n");
@@ -204,6 +207,8 @@ final class CodeGenerator {
             generateResultHandler(sb, commandElement, isGroup, elementUtils);
             sb.append("                .generateHelp(").append(cd.generateHelp()).append(")\n");
             sb.append("                .disableParsing(").append(cd.disableParsing()).append(")\n");
+            sb.append("                .stopAtFirstPositional(").append(cd.stopAtFirstPositional()).append(")\n");
+            generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
             sb.append("                .version(").append(stringLiteral(cd.version())).append(")\n");
             sb.append("                .helpUrl(").append(stringLiteral(cd.helpUrl())).append(")\n");
         }
@@ -235,6 +240,16 @@ final class CodeGenerator {
                 "resultHandler", elementUtils);
         if (handlerClass != null && !handlerClass.equals(NULL_RESULT_HANDLER)) {
             sb.append("                .resultHandler(new ").append(handlerClass).append("())\n");
+        }
+    }
+
+    private static void generateDefaultValueProvider(StringBuilder sb, TypeElement element, boolean isGroup,
+            Elements elementUtils) {
+        String providerClass = getAnnotationClassValue(element,
+                isGroup ? GroupCommandDefinition.class.getCanonicalName() : CommandDefinition.class.getCanonicalName(),
+                "defaultValueProvider", elementUtils);
+        if (providerClass != null && !providerClass.equals(NULL_DEFAULT_VALUE_PROVIDER)) {
+            sb.append("                .defaultValueProvider(new ").append(providerClass).append("())\n");
         }
     }
 
@@ -306,6 +321,7 @@ final class CodeGenerator {
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
         sb.append("                        .overrideRequired(").append(o.overrideRequired()).append(")\n");
+        sb.append("                        .optionalValue(").append(o.optionalValue()).append(")\n");
         sb.append("                        .negatable(").append(o.negatable()).append(")\n");
         sb.append("                        .negationPrefix(").append(stringLiteral(o.negationPrefix())).append(")\n");
         sb.append("                        .inherited(").append(o.inherited()).append(")\n");

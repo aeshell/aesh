@@ -24,8 +24,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.aesh.command.Command;
+import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.activator.NullCommandActivator;
+import org.aesh.command.impl.provider.NullDefaultValueProvider;
 import org.aesh.command.impl.validator.NullCommandValidator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
@@ -56,6 +58,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private boolean generateHelp;
     private boolean disableParsing;
     private boolean stopAtFirstPositional;
+    private DefaultValueProvider defaultValueProvider;
     private String version;
     private String helpUrl;
 
@@ -101,6 +104,23 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     public ProcessedCommandBuilder<C, CI> stopAtFirstPositional(boolean stopAtFirstPositional) {
         this.stopAtFirstPositional = stopAtFirstPositional;
         return this;
+    }
+
+    public ProcessedCommandBuilder<C, CI> defaultValueProvider(DefaultValueProvider defaultValueProvider) {
+        this.defaultValueProvider = defaultValueProvider;
+        return this;
+    }
+
+    public ProcessedCommandBuilder<C, CI> defaultValueProvider(Class<? extends DefaultValueProvider> defaultValueProvider) {
+        this.defaultValueProvider = initDefaultValueProvider(defaultValueProvider);
+        return this;
+    }
+
+    private DefaultValueProvider initDefaultValueProvider(Class<? extends DefaultValueProvider> defaultValueProvider) {
+        if (defaultValueProvider != null && defaultValueProvider != NullDefaultValueProvider.class)
+            return ReflectionUtil.newInstance(defaultValueProvider);
+        else
+            return null;
     }
 
     public ProcessedCommandBuilder<C, CI> helpUrl(String helpUrl) {
@@ -204,6 +224,6 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
         return new ProcessedCommand<>(name, aliases, command, description, validator,
                 resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator,
-                helpUrl, stopAtFirstPositional);
+                helpUrl, stopAtFirstPositional, defaultValueProvider);
     }
 }

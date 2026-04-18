@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.aesh.command.Command;
+import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -64,16 +65,17 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
             throws CommandLineParserException, OptionValidatorException {
         if (processedCommand.parserExceptions().size() > 0 && mode == CommandLineParser.Mode.VALIDATE)
             throw processedCommand.parserExceptions().get(0);
+        DefaultValueProvider dvp = processedCommand.getDefaultValueProvider();
+        boolean doValidate = mode == CommandLineParser.Mode.VALIDATE;
         for (ProcessedOption option : processedCommand.getOptions()) {
             if (option.getValues() != null && option.getValues().size() > 0)
-                option.injectValueIntoField(getObject(), invocationProviders, aeshContext,
-                        mode == CommandLineParser.Mode.VALIDATE);
-            else if (option.getDefaultValues().size() > 0 && option.selectorType() == SelectorType.NO_OP) {
-                option.injectValueIntoField(getObject(), invocationProviders, aeshContext,
-                        mode == CommandLineParser.Mode.VALIDATE);
+                option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);
+            else if (applyDynamicDefault(dvp, option, invocationProviders, aeshContext, doValidate)) {
+                // dynamic default applied
+            } else if (option.getDefaultValues().size() > 0 && option.selectorType() == SelectorType.NO_OP) {
+                option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);
             } else if (option.getOptionType().equals(OptionType.GROUP) && option.getProperties().size() > 0)
-                option.injectValueIntoField(getObject(), invocationProviders, aeshContext,
-                        mode == CommandLineParser.Mode.VALIDATE);
+                option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);
             else
                 option.resetField(getObject());
         }
@@ -82,17 +84,43 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
                 (processedCommand.getArguments().getValues().size() > 0 ||
                         processedCommand.getArguments().getDefaultValues().size() > 0))
             processedCommand.getArguments().injectValueIntoField(getObject(), invocationProviders, aeshContext,
-                    mode == CommandLineParser.Mode.VALIDATE);
-        else if (processedCommand.getArguments() != null)
-            processedCommand.getArguments().resetField(getObject());
+                    doValidate);
+        else if (processedCommand.getArguments() != null) {
+            if (!applyDynamicDefault(dvp, processedCommand.getArguments(), invocationProviders, aeshContext, doValidate))
+                processedCommand.getArguments().resetField(getObject());
+        }
         //argument
         if (processedCommand.getArgument() != null &&
                 (processedCommand.getArgument().getValues().size() > 0 ||
                         processedCommand.getArgument().getDefaultValues().size() > 0))
             processedCommand.getArgument().injectValueIntoField(getObject(), invocationProviders, aeshContext,
-                    mode == CommandLineParser.Mode.VALIDATE);
-        else if (processedCommand.getArgument() != null)
-            processedCommand.getArgument().resetField(getObject());
+                    doValidate);
+        else if (processedCommand.getArgument() != null) {
+            if (!applyDynamicDefault(dvp, processedCommand.getArgument(), invocationProviders, aeshContext, doValidate))
+                processedCommand.getArgument().resetField(getObject());
+        }
+    }
+
+    /**
+     * Query the dynamic default value provider for this option. If a non-null value is returned,
+     * add it as the option value and inject it. Returns true if a dynamic default was applied.
+     */
+    private boolean applyDynamicDefault(DefaultValueProvider dvp, ProcessedOption option,
+            InvocationProviders invocationProviders, AeshContext aeshContext,
+            boolean doValidate) throws CommandLineParserException, OptionValidatorException {
+        if (dvp == null)
+            return false;
+        try {
+            String dynamicDefault = dvp.defaultValue(option);
+            if (dynamicDefault != null) {
+                option.addValue(dynamicDefault);
+                option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);
+                return true;
+            }
+        } catch (Exception e) {
+            throw new CommandLineParserException("DefaultValueProvider failed for option " + option.name(), e);
+        }
+        return false;
     }
 
     @Override

@@ -28,6 +28,7 @@ import java.lang.annotation.Target;
 
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.activator.NullCommandActivator;
+import org.aesh.command.impl.provider.NullDefaultValueProvider;
 import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.impl.validator.NullCommandValidator;
 import org.aesh.command.result.ResultHandler;
@@ -114,6 +115,15 @@ public @interface CommandDefinition {
      * @return documentation URL
      */
     String helpUrl() default "";
+
+    /**
+     * Specify a DefaultValueProvider that resolves option defaults at runtime.
+     * Called during command population for options not explicitly set by the user.
+     * If the provider returns non-null, it takes precedence over static defaultValue.
+     *
+     * @return DefaultValueProvider class
+     */
+    Class<? extends DefaultValueProvider> defaultValueProvider() default NullDefaultValueProvider.class;
 
     /**
      * When set to true, option parsing stops after the first positional argument is consumed.
