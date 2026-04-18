@@ -1,6 +1,8 @@
 package org.aesh.command;
 
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
 
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.container.AeshCommandContainer;
@@ -8,11 +10,15 @@ import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionGroup;
+import org.aesh.command.option.OptionList;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Model.CommandSpec;
@@ -64,11 +70,19 @@ public class StartupBenchmark {
 
     // ---- Flat Aesh command classes (10 distinct commands) ----
 
-    @CommandDefinition(name = "file-ops", description = "File operations")
+    // DefaultValueProvider used by some benchmark commands
+    public static class BenchmarkDefaultValueProvider implements DefaultValueProvider {
+        @Override
+        public String defaultValue(ProcessedOption option) {
+            return null; // no dynamic defaults — just tests provider registration overhead
+        }
+    }
+
+    @CommandDefinition(name = "file-ops", description = "File operations", stopAtFirstPositional = true)
     public static class AeshCmd1 implements Command<CommandInvocation> {
-        @Option(shortName = 'o', description = "Output path")
+        @Option(shortName = 'o', optionalValue = true, defaultValue = "/tmp/out", description = "Output path")
         private String output;
-        @Option(shortName = 'r', hasValue = false, description = "Recursive")
+        @Option(shortName = 'r', hasValue = false, negatable = true, description = "Recursive")
         private boolean recursive;
         @Option(description = "Buffer size", defaultValue = "4096")
         private int bufferSize;
@@ -81,11 +95,11 @@ public class StartupBenchmark {
         }
     }
 
-    @CommandDefinition(name = "net-fetch", description = "Network fetch")
+    @CommandDefinition(name = "net-fetch", description = "Network fetch", defaultValueProvider = BenchmarkDefaultValueProvider.class)
     public static class AeshCmd2 implements Command<CommandInvocation> {
         @Option(shortName = 'u', description = "URL")
         private String url;
-        @Option(shortName = 'v', hasValue = false, description = "Verbose")
+        @Option(shortName = 'v', hasValue = false, negatable = true, description = "Verbose")
         private boolean verbose;
         @Option(description = "Timeout", defaultValue = "30")
         private int timeout;
@@ -102,9 +116,9 @@ public class StartupBenchmark {
     public static class AeshCmd3 implements Command<CommandInvocation> {
         @Option(shortName = 'h', description = "Host")
         private String host;
-        @Option(shortName = 'p', description = "Port", defaultValue = "5432")
-        private int port;
-        @Option(shortName = 'q', hasValue = false, description = "Quiet")
+        @Option(shortName = 'p', optionalValue = true, defaultValue = "5432", description = "Port")
+        private String port;
+        @Option(shortName = 'q', hasValue = false, negatable = true, description = "Quiet")
         private boolean quiet;
         @Argument(description = "Query string")
         private String query;
@@ -115,11 +129,11 @@ public class StartupBenchmark {
         }
     }
 
-    @CommandDefinition(name = "build-proj", description = "Build project")
+    @CommandDefinition(name = "build-proj", description = "Build project", stopAtFirstPositional = true)
     public static class AeshCmd4 implements Command<CommandInvocation> {
         @Option(shortName = 't', description = "Target")
         private String target;
-        @Option(hasValue = false, description = "Clean first")
+        @Option(hasValue = false, negatable = true, description = "Clean first")
         private boolean clean;
         @Option(description = "Parallelism", defaultValue = "4")
         private int jobs;
@@ -132,11 +146,11 @@ public class StartupBenchmark {
         }
     }
 
-    @CommandDefinition(name = "deploy-app", description = "Deploy application")
+    @CommandDefinition(name = "deploy-app", description = "Deploy application", defaultValueProvider = BenchmarkDefaultValueProvider.class)
     public static class AeshCmd5 implements Command<CommandInvocation> {
         @Option(shortName = 'e', description = "Environment")
         private String env;
-        @Option(shortName = 'd', hasValue = false, description = "Dry run")
+        @Option(shortName = 'd', hasValue = false, negatable = true, description = "Dry run")
         private boolean dryRun;
         @Option(description = "Replicas", defaultValue = "1")
         private int replicas;
@@ -153,10 +167,10 @@ public class StartupBenchmark {
     public static class AeshCmd6 implements Command<CommandInvocation> {
         @Option(shortName = 'f', description = "Filter pattern")
         private String filter;
-        @Option(shortName = 'i', hasValue = false, description = "Case insensitive")
+        @Option(shortName = 'i', hasValue = false, negatable = true, description = "Case insensitive")
         private boolean ignoreCase;
-        @Option(description = "Max results", defaultValue = "100")
-        private int maxResults;
+        @Option(optionalValue = true, defaultValue = "100", description = "Max results")
+        private String maxResults;
         @Argument(description = "Log file")
         private String logFile;
 
@@ -408,9 +422,9 @@ public class StartupBenchmark {
     @GroupCommandDefinition(name = "grp-1", description = "Group 1", groupCommands = { AeshGrpChild1a.class,
             AeshGrpChild1b.class })
     public static class AeshGrpCmd1 implements Command<CommandInvocation> {
-        @Option(shortName = 'f', description = "Format")
+        @Option(shortName = 'f', inherited = true, description = "Format")
         private String format;
-        @Option(shortName = 'v', hasValue = false, description = "Verbose")
+        @Option(shortName = 'v', hasValue = false, inherited = true, negatable = true, description = "Verbose")
         private boolean verbose;
 
         @Override
@@ -450,11 +464,11 @@ public class StartupBenchmark {
     }
 
     @GroupCommandDefinition(name = "grp-2", description = "Group 2", groupCommands = { AeshGrpChild2a.class,
-            AeshGrpChild2b.class })
+            AeshGrpChild2b.class }, defaultValueProvider = BenchmarkDefaultValueProvider.class)
     public static class AeshGrpCmd2 implements Command<CommandInvocation> {
-        @Option(shortName = 'e', description = "Environment")
+        @Option(shortName = 'e', inherited = true, description = "Environment")
         private String env;
-        @Option(shortName = 'q', hasValue = false, description = "Quiet")
+        @Option(shortName = 'q', hasValue = false, inherited = true, description = "Quiet")
         private boolean quiet;
 
         @Override
@@ -494,11 +508,11 @@ public class StartupBenchmark {
     }
 
     @GroupCommandDefinition(name = "grp-3", description = "Group 3", groupCommands = { AeshGrpChild3a.class,
-            AeshGrpChild3b.class })
+            AeshGrpChild3b.class }, stopAtFirstPositional = true)
     public static class AeshGrpCmd3 implements Command<CommandInvocation> {
-        @Option(shortName = 'l', description = "Level")
+        @Option(shortName = 'l', inherited = true, description = "Level")
         private String level;
-        @Option(shortName = 'd', hasValue = false, description = "Dry run")
+        @Option(shortName = 'd', hasValue = false, negatable = true, description = "Dry run")
         private boolean dryRun;
 
         @Override
@@ -827,6 +841,211 @@ public class StartupBenchmark {
         }
     }
 
+    // ---- Aesh OptionList / OptionGroup commands ----
+
+    @CommandDefinition(name = "list-group-cmd", description = "Command with list and group options")
+    public static class AeshListGroupCmd implements Command<CommandInvocation> {
+        @OptionList(shortName = 'i', name = "items", valueSeparator = ',')
+        private List<String> items;
+        @OptionGroup(shortName = 'D', description = "Properties")
+        private Map<String, String> properties;
+        @Option(shortName = 'v', hasValue = false, description = "Verbose")
+        private boolean verbose;
+        @Argument(description = "Target")
+        private String target;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // ---- Aesh generateHelp / version commands ----
+
+    @CommandDefinition(name = "help-cmd", description = "Command with generated help", generateHelp = true)
+    public static class AeshHelpCmd implements Command<CommandInvocation> {
+        @Option(shortName = 'n', description = "Name")
+        private String name;
+        @Option(shortName = 'c', description = "Count", defaultValue = "5")
+        private int count;
+        @Argument(description = "Target")
+        private String target;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "ver-cmd", description = "Versioned command", version = "2.1.0")
+    public static class AeshVersionCmd implements Command<CommandInvocation> {
+        @Option(shortName = 'o', description = "Output")
+        private String output;
+        @Option(shortName = 'q', hasValue = false, description = "Quiet")
+        private boolean quiet;
+        @Argument(description = "Input file")
+        private String input;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // ---- Aesh 3-level nested group commands ----
+
+    @GroupCommandDefinition(name = "top", description = "Top level", groupCommands = { AeshMidGroup.class })
+    public static class AeshTopGroup implements Command<CommandInvocation> {
+        @Option(shortName = 'g', hasValue = false, description = "Global flag")
+        private boolean global;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "mid", description = "Mid level", groupCommands = { AeshLeafCmd1.class,
+            AeshLeafCmd2.class })
+    public static class AeshMidGroup implements Command<CommandInvocation> {
+        @Option(shortName = 'r', description = "Region")
+        private String region;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "leaf1", description = "Leaf command 1")
+    public static class AeshLeafCmd1 implements Command<CommandInvocation> {
+        @Option(shortName = 'n', description = "Name")
+        private String name;
+        @Option(hasValue = false, description = "Force")
+        private boolean force;
+        @Argument(description = "Value")
+        private String value;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "leaf2", description = "Leaf command 2")
+    public static class AeshLeafCmd2 implements Command<CommandInvocation> {
+        @Option(shortName = 'f', description = "File path")
+        private String file;
+        @Option(description = "Encoding", defaultValue = "UTF-8")
+        private String encoding;
+        @Argument(description = "Data")
+        private String data;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // ---- Picocli OptionList / OptionGroup equivalents ----
+
+    @CommandLine.Command(name = "list-group-cmd", description = "Command with lists and maps")
+    public static class PicoListGroupCmd implements Runnable {
+        @CommandLine.Option(names = { "-i", "--items" }, split = ",", description = "Items")
+        private List<String> items;
+        @CommandLine.Option(names = "-D", description = "Properties")
+        private Map<String, String> properties;
+        @CommandLine.Option(names = { "-v", "--verbose" }, description = "Verbose")
+        private boolean verbose;
+        @CommandLine.Parameters(index = "0", description = "Target", arity = "0..1")
+        private String target;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    // ---- Picocli generateHelp / version equivalents ----
+
+    @CommandLine.Command(name = "help-cmd", description = "With help", mixinStandardHelpOptions = true)
+    public static class PicoHelpCmd implements Runnable {
+        @CommandLine.Option(names = { "-n", "--name" }, description = "Name")
+        private String name;
+        @CommandLine.Option(names = { "-c", "--count" }, description = "Count", defaultValue = "5")
+        private int count;
+        @CommandLine.Parameters(index = "0", description = "Target", arity = "0..1")
+        private String target;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "ver-cmd", description = "Versioned", version = "2.1.0", mixinStandardHelpOptions = true)
+    public static class PicoVersionCmd implements Runnable {
+        @CommandLine.Option(names = { "-o", "--output" }, description = "Output")
+        private String output;
+        @CommandLine.Option(names = { "-q", "--quiet" }, description = "Quiet")
+        private boolean quiet;
+        @CommandLine.Parameters(index = "0", description = "Input file", arity = "0..1")
+        private String input;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    // ---- Picocli 3-level nested group ----
+
+    @CommandLine.Command(name = "top", description = "Top level", subcommands = { PicoMidGroup.class })
+    public static class PicoTopGroup implements Runnable {
+        @CommandLine.Option(names = { "-g", "--global" }, description = "Global flag")
+        private boolean global;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "mid", description = "Mid level", subcommands = { PicoLeafCmd1.class,
+            PicoLeafCmd2.class })
+    public static class PicoMidGroup implements Runnable {
+        @CommandLine.Option(names = { "-r", "--region" }, description = "Region")
+        private String region;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "leaf1", description = "Leaf 1")
+    public static class PicoLeafCmd1 implements Runnable {
+        @CommandLine.Option(names = { "-n", "--name" }, description = "Name")
+        private String name;
+        @CommandLine.Option(names = "--force", description = "Force")
+        private boolean force;
+        @CommandLine.Parameters(index = "0", description = "Value", arity = "0..1")
+        private String value;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "leaf2", description = "Leaf 2")
+    public static class PicoLeafCmd2 implements Runnable {
+        @CommandLine.Option(names = { "-f", "--file" }, description = "File path")
+        private String file;
+        @CommandLine.Option(names = "--encoding", description = "Encoding", defaultValue = "UTF-8")
+        private String encoding;
+        @CommandLine.Parameters(index = "0", description = "Data", arity = "0..1")
+        private String data;
+
+        @Override
+        public void run() {
+        }
+    }
+
     // ---- Command class arrays for easy indexing ----
 
     private static final Class<? extends Command<CommandInvocation>>[] AESH_COMMANDS = new Class[] {
@@ -847,6 +1066,14 @@ public class StartupBenchmark {
             PicoGrpCmd1.class, PicoGrpCmd2.class, PicoGrpCmd3.class, PicoGrpCmd4.class, PicoGrpCmd5.class
     };
 
+    private static final Class<? extends Command<CommandInvocation>>[] AESH_VARIETY_COMMANDS = new Class[] {
+            AeshListGroupCmd.class, AeshHelpCmd.class, AeshVersionCmd.class
+    };
+
+    private static final Class<? extends Runnable>[] PICO_VARIETY_COMMANDS = new Class[] {
+            PicoListGroupCmd.class, PicoHelpCmd.class, PicoVersionCmd.class
+    };
+
     // ---- Benchmark runner ----
 
     public static void main(String[] args) throws Exception {
@@ -854,6 +1081,14 @@ public class StartupBenchmark {
         benchmark.runFlatBenchmark();
         System.out.println();
         benchmark.runGroupBenchmark();
+        System.out.println();
+        benchmark.runNestedGroupBenchmark();
+        System.out.println();
+        benchmark.runOptionVarietyBenchmark();
+        System.out.println();
+        benchmark.runParsingBenchmark();
+        System.out.println();
+        benchmark.runCompletionBenchmark();
     }
 
     public void runFlatBenchmark() throws Exception {
@@ -984,11 +1219,14 @@ public class StartupBenchmark {
     private CommandContainer<CommandInvocation> createGeneratedContainer(String name, int index) throws Exception {
         Command<CommandInvocation> cmd = AESH_COMMANDS[index % AESH_COMMANDS.length]
                 .getDeclaredConstructor().newInstance();
-        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = ProcessedCommandBuilder
+        boolean useStopAtFirst = (index % 3 == 0);
+        boolean useDefaultValueProvider = (index % 5 == 0);
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> builder = ProcessedCommandBuilder
                 .<Command<CommandInvocation>, CommandInvocation> builder()
                 .name(name)
                 .description("Command " + name)
                 .command(cmd)
+                .stopAtFirstPositional(useStopAtFirst)
                 .addOption(ProcessedOptionBuilder.builder()
                         .shortName('o')
                         .name("output")
@@ -996,6 +1234,8 @@ public class StartupBenchmark {
                         .type(String.class)
                         .fieldName("output")
                         .optionType(OptionType.NORMAL)
+                        .optionalValue(true)
+                        .addDefaultValue("/tmp/out")
                         .build())
                 .addOption(ProcessedOptionBuilder.builder()
                         .shortName('r')
@@ -1004,6 +1244,7 @@ public class StartupBenchmark {
                         .type(boolean.class)
                         .fieldName("recursive")
                         .optionType(OptionType.BOOLEAN)
+                        .negatable(true)
                         .build())
                 .addOption(ProcessedOptionBuilder.builder()
                         .name("bufferSize")
@@ -1012,8 +1253,11 @@ public class StartupBenchmark {
                         .fieldName("bufferSize")
                         .optionType(OptionType.NORMAL)
                         .addDefaultValue("4096")
-                        .build())
-                .create();
+                        .build());
+        if (useDefaultValueProvider) {
+            builder.defaultValueProvider(new BenchmarkDefaultValueProvider());
+        }
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = builder.create();
         pc.setArgument(ProcessedOptionBuilder.builder()
                 .shortName('\u0000')
                 .name("")
@@ -1121,6 +1365,7 @@ public class StartupBenchmark {
                         .type(String.class)
                         .fieldName("output")
                         .optionType(OptionType.NORMAL)
+                        .inherited(true)
                         .build())
                 .addOption(ProcessedOptionBuilder.builder()
                         .shortName('v')
@@ -1129,6 +1374,8 @@ public class StartupBenchmark {
                         .type(boolean.class)
                         .fieldName("recursive")
                         .optionType(OptionType.BOOLEAN)
+                        .inherited(true)
+                        .negatable(true)
                         .build())
                 .create();
         AeshCommandContainer<CommandInvocation> parentContainer = new AeshCommandContainer<>(parentPc);
@@ -1306,6 +1553,576 @@ public class StartupBenchmark {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    // ---- Nested group benchmark (3-level hierarchy) ----
+
+    public void runNestedGroupBenchmark() throws Exception {
+        System.out.println("=== Nested Group Benchmark (3-level: top > mid > 2 leaves) ===");
+        System.out.println("Each nested group = 1 top + 1 mid + 2 leaf commands");
+        System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
+        System.out.println();
+
+        double[] genResults = new double[COMMAND_COUNTS.length];
+        double[] reflResults = new double[COMMAND_COUNTS.length];
+        double[] picoProgResults = new double[COMMAND_COUNTS.length];
+        double[] picoReflResults = new double[COMMAND_COUNTS.length];
+
+        for (int c = 0; c < COMMAND_COUNTS.length; c++) {
+            int count = COMMAND_COUNTS[c];
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildAeshNestedGenerated(count);
+            }
+            long genNs = timeIterations(() -> buildAeshNestedGenerated(count));
+            genResults[c] = (genNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildAeshNestedReflection(count);
+            }
+            long reflNs = timeIterations(() -> buildAeshNestedReflection(count));
+            reflResults[c] = (reflNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildPicocliNestedProgrammatic(count);
+            }
+            long picoProgNs = timeIterations(() -> buildPicocliNestedProgrammatic(count));
+            picoProgResults[c] = (picoProgNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildPicocliNestedReflection(count);
+            }
+            long picoReflNs = timeIterations(() -> buildPicocliNestedReflection(count));
+            picoReflResults[c] = (picoReflNs / (double) MEASURED_ITERATIONS) / 1000.0;
+        }
+
+        System.out.printf("Nested   | %14s | %14s | %14s | %14s | Refl/Gen | PicoR/Gen%n",
+                "Aesh gen (us)", "Aesh refl (us)", "Pico prog (us)", "Pico refl (us)");
+        System.out.println("---------|-" + "-".repeat(14) + "-|-" + "-".repeat(14) + "-|-"
+                + "-".repeat(14) + "-|-" + "-".repeat(14) + "-|----------|----------");
+        for (int c = 0; c < COMMAND_COUNTS.length; c++) {
+            double reflGenRatio = genResults[c] != 0 ? reflResults[c] / genResults[c] : 0;
+            double picoReflGenRatio = genResults[c] != 0 ? picoReflResults[c] / genResults[c] : 0;
+            System.out.printf("%8d | %14.1f | %14.1f | %14.1f | %14.1f | %7.2fx | %8.2fx%n",
+                    COMMAND_COUNTS[c], genResults[c], reflResults[c],
+                    picoProgResults[c], picoReflResults[c],
+                    reflGenRatio, picoReflGenRatio);
+        }
+    }
+
+    private void buildAeshNestedGenerated(int count) throws Exception {
+        MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+        for (int i = 0; i < count; i++) {
+            registry.addCommand(createGeneratedNestedGroupContainer("nested-" + i, i));
+        }
+        AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
+    }
+
+    private CommandContainer<CommandInvocation> createGeneratedNestedGroupContainer(String name, int index)
+            throws Exception {
+        // Top-level group
+        Command<CommandInvocation> topCmd = AESH_COMMANDS[index % AESH_COMMANDS.length]
+                .getDeclaredConstructor().newInstance();
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> topPc = ProcessedCommandBuilder
+                .<Command<CommandInvocation>, CommandInvocation> builder()
+                .name(name)
+                .description("Top " + name)
+                .command(topCmd)
+                .addOption(ProcessedOptionBuilder.builder()
+                        .shortName('g')
+                        .name("global")
+                        .description("Global flag")
+                        .type(boolean.class)
+                        .fieldName("recursive")
+                        .optionType(OptionType.BOOLEAN)
+                        .build())
+                .create();
+        AeshCommandContainer<CommandInvocation> topContainer = new AeshCommandContainer<>(topPc);
+
+        // Mid-level group
+        Command<CommandInvocation> midCmd = AESH_COMMANDS[(index + 1) % AESH_COMMANDS.length]
+                .getDeclaredConstructor().newInstance();
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> midPc = ProcessedCommandBuilder
+                .<Command<CommandInvocation>, CommandInvocation> builder()
+                .name(name + "-mid")
+                .description("Mid " + name)
+                .command(midCmd)
+                .addOption(ProcessedOptionBuilder.builder()
+                        .shortName('r')
+                        .name("region")
+                        .description("Region")
+                        .type(String.class)
+                        .fieldName("output")
+                        .optionType(OptionType.NORMAL)
+                        .build())
+                .create();
+        AeshCommandContainer<CommandInvocation> midContainer = new AeshCommandContainer<>(midPc);
+
+        // Leaf 1
+        Command<CommandInvocation> leaf1Cmd = AESH_COMMANDS[(index + 2) % AESH_COMMANDS.length]
+                .getDeclaredConstructor().newInstance();
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> leaf1Pc = ProcessedCommandBuilder
+                .<Command<CommandInvocation>, CommandInvocation> builder()
+                .name(name + "-leaf1")
+                .description("Leaf 1 of " + name)
+                .command(leaf1Cmd)
+                .addOption(ProcessedOptionBuilder.builder()
+                        .shortName('n')
+                        .name("name")
+                        .description("Name")
+                        .type(String.class)
+                        .fieldName("output")
+                        .optionType(OptionType.NORMAL)
+                        .build())
+                .addOption(ProcessedOptionBuilder.builder()
+                        .name("force")
+                        .description("Force")
+                        .type(boolean.class)
+                        .fieldName("recursive")
+                        .optionType(OptionType.BOOLEAN)
+                        .build())
+                .create();
+        leaf1Pc.setArgument(ProcessedOptionBuilder.builder()
+                .shortName('\u0000')
+                .name("")
+                .description("Value")
+                .type(String.class)
+                .fieldName("source")
+                .optionType(OptionType.ARGUMENT)
+                .build());
+        AeshCommandContainer<CommandInvocation> leaf1Container = new AeshCommandContainer<>(leaf1Pc);
+
+        // Leaf 2
+        Command<CommandInvocation> leaf2Cmd = AESH_COMMANDS[(index + 3) % AESH_COMMANDS.length]
+                .getDeclaredConstructor().newInstance();
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> leaf2Pc = ProcessedCommandBuilder
+                .<Command<CommandInvocation>, CommandInvocation> builder()
+                .name(name + "-leaf2")
+                .description("Leaf 2 of " + name)
+                .command(leaf2Cmd)
+                .addOption(ProcessedOptionBuilder.builder()
+                        .shortName('f')
+                        .name("file")
+                        .description("File path")
+                        .type(String.class)
+                        .fieldName("output")
+                        .optionType(OptionType.NORMAL)
+                        .build())
+                .addOption(ProcessedOptionBuilder.builder()
+                        .name("encoding")
+                        .description("Encoding")
+                        .type(String.class)
+                        .fieldName("source")
+                        .optionType(OptionType.NORMAL)
+                        .addDefaultValue("UTF-8")
+                        .build())
+                .create();
+        leaf2Pc.setArgument(ProcessedOptionBuilder.builder()
+                .shortName('\u0000')
+                .name("")
+                .description("Data")
+                .type(String.class)
+                .fieldName("source")
+                .optionType(OptionType.ARGUMENT)
+                .build());
+        AeshCommandContainer<CommandInvocation> leaf2Container = new AeshCommandContainer<>(leaf2Pc);
+
+        // Wire: leaves -> mid -> top
+        midContainer.addChild(leaf1Container);
+        midContainer.addChild(leaf2Container);
+        topContainer.addChild(midContainer);
+
+        return topContainer;
+    }
+
+    private void buildAeshNestedReflection(int count) throws Exception {
+        MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
+
+        // Use the single AeshTopGroup class (contains 3-level hierarchy via annotations)
+        for (int i = 0; i < count; i++) {
+            if (i == 0) {
+                Command<CommandInvocation> cmd = (Command<CommandInvocation>) new AeshTopGroup();
+                CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) REFLECTION_CREATE
+                        .invoke(containerBuilder, cmd);
+                registry.addCommand(container);
+            } else {
+                registry.addCommand(createGeneratedNestedGroupContainer("nested-" + i, i));
+            }
+        }
+
+        AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
+    }
+
+    private void buildPicocliNestedProgrammatic(int count) {
+        CommandSpec mainSpec = CommandSpec.create();
+        mainSpec.name("main");
+        CommandLine cmd = new CommandLine(mainSpec);
+        for (int i = 0; i < count; i++) {
+            cmd.addSubcommand("nested-" + i, createPicocliProgrammaticNestedGroup("nested-" + i));
+        }
+    }
+
+    private CommandLine createPicocliProgrammaticNestedGroup(String name) {
+        // Top
+        CommandSpec topSpec = CommandSpec.create();
+        topSpec.name(name);
+        topSpec.addOption(OptionSpec.builder("-g", "--global")
+                .type(boolean.class)
+                .description("Global flag")
+                .build());
+        CommandLine top = new CommandLine(topSpec);
+
+        // Mid
+        CommandSpec midSpec = CommandSpec.create();
+        midSpec.name(name + "-mid");
+        midSpec.addOption(OptionSpec.builder("-r", "--region")
+                .type(String.class)
+                .description("Region")
+                .build());
+        CommandLine mid = new CommandLine(midSpec);
+
+        // Leaf 1
+        CommandSpec leaf1Spec = CommandSpec.create();
+        leaf1Spec.name(name + "-leaf1");
+        leaf1Spec.addOption(OptionSpec.builder("-n", "--name")
+                .type(String.class)
+                .description("Name")
+                .build());
+        leaf1Spec.addOption(OptionSpec.builder("--force")
+                .type(boolean.class)
+                .description("Force")
+                .build());
+        leaf1Spec.addPositional(PositionalParamSpec.builder()
+                .type(String.class)
+                .description("Value")
+                .build());
+        mid.addSubcommand(name + "-leaf1", new CommandLine(leaf1Spec));
+
+        // Leaf 2
+        CommandSpec leaf2Spec = CommandSpec.create();
+        leaf2Spec.name(name + "-leaf2");
+        leaf2Spec.addOption(OptionSpec.builder("-f", "--file")
+                .type(String.class)
+                .description("File path")
+                .build());
+        leaf2Spec.addOption(OptionSpec.builder("--encoding")
+                .type(String.class)
+                .description("Encoding")
+                .defaultValue("UTF-8")
+                .build());
+        leaf2Spec.addPositional(PositionalParamSpec.builder()
+                .type(String.class)
+                .description("Data")
+                .build());
+        mid.addSubcommand(name + "-leaf2", new CommandLine(leaf2Spec));
+
+        top.addSubcommand(name + "-mid", mid);
+        return top;
+    }
+
+    private void buildPicocliNestedReflection(int count) {
+        CommandLine cmd = new CommandLine(new PicocliMain());
+        for (int i = 0; i < count; i++) {
+            try {
+                cmd.addSubcommand("nested-" + i, new PicoTopGroup());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    // ---- Option variety benchmark (OptionList, OptionGroup, generateHelp, version) ----
+
+    public void runOptionVarietyBenchmark() throws Exception {
+        System.out.println("=== Option Variety Benchmark (OptionList, OptionGroup, generateHelp, version) ===");
+        System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
+        System.out.println();
+
+        double[] genResults = new double[COMMAND_COUNTS.length];
+        double[] reflResults = new double[COMMAND_COUNTS.length];
+        double[] picoProgResults = new double[COMMAND_COUNTS.length];
+        double[] picoReflResults = new double[COMMAND_COUNTS.length];
+
+        for (int c = 0; c < COMMAND_COUNTS.length; c++) {
+            int count = COMMAND_COUNTS[c];
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildAeshVarietyGenerated(count);
+            }
+            long genNs = timeIterations(() -> buildAeshVarietyGenerated(count));
+            genResults[c] = (genNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildAeshVarietyReflection(count);
+            }
+            long reflNs = timeIterations(() -> buildAeshVarietyReflection(count));
+            reflResults[c] = (reflNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildPicocliVarietyProgrammatic(count);
+            }
+            long picoProgNs = timeIterations(() -> buildPicocliVarietyProgrammatic(count));
+            picoProgResults[c] = (picoProgNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildPicocliVarietyReflection(count);
+            }
+            long picoReflNs = timeIterations(() -> buildPicocliVarietyReflection(count));
+            picoReflResults[c] = (picoReflNs / (double) MEASURED_ITERATIONS) / 1000.0;
+        }
+
+        System.out.printf("Commands | %14s | %14s | %14s | %14s | Refl/Gen | PicoR/Gen%n",
+                "Aesh gen (us)", "Aesh refl (us)", "Pico prog (us)", "Pico refl (us)");
+        System.out.println("---------|-" + "-".repeat(14) + "-|-" + "-".repeat(14) + "-|-"
+                + "-".repeat(14) + "-|-" + "-".repeat(14) + "-|----------|----------");
+        for (int c = 0; c < COMMAND_COUNTS.length; c++) {
+            double reflGenRatio = genResults[c] != 0 ? reflResults[c] / genResults[c] : 0;
+            double picoReflGenRatio = genResults[c] != 0 ? picoReflResults[c] / genResults[c] : 0;
+            System.out.printf("%8d | %14.1f | %14.1f | %14.1f | %14.1f | %7.2fx | %8.2fx%n",
+                    COMMAND_COUNTS[c], genResults[c], reflResults[c],
+                    picoProgResults[c], picoReflResults[c],
+                    reflGenRatio, picoReflGenRatio);
+        }
+    }
+
+    private void buildAeshVarietyGenerated(int commandCount) throws Exception {
+        MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+        for (int i = 0; i < commandCount; i++) {
+            registry.addCommand(createGeneratedVarietyContainer("vcmd-" + i, i));
+        }
+        AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
+    }
+
+    private CommandContainer<CommandInvocation> createGeneratedVarietyContainer(String name, int index)
+            throws Exception {
+        Command<CommandInvocation> cmd = AESH_COMMANDS[index % AESH_COMMANDS.length]
+                .getDeclaredConstructor().newInstance();
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> builder = ProcessedCommandBuilder
+                .<Command<CommandInvocation>, CommandInvocation> builder()
+                .name(name)
+                .description("Variety " + name)
+                .command(cmd)
+                .generateHelp(index % 2 == 0)
+                .version(index % 3 == 0 ? "1.0.0" : "")
+                .addOption(ProcessedOptionBuilder.builder()
+                        .shortName('i')
+                        .name("items")
+                        .description("Items list")
+                        .type(String.class)
+                        .fieldName("output")
+                        .optionType(OptionType.LIST)
+                        .valueSeparator(',')
+                        .build())
+                .addOption(ProcessedOptionBuilder.builder()
+                        .shortName('D')
+                        .name("properties")
+                        .description("Properties")
+                        .type(String.class)
+                        .fieldName("source")
+                        .optionType(OptionType.GROUP)
+                        .build())
+                .addOption(ProcessedOptionBuilder.builder()
+                        .shortName('v')
+                        .name("verbose")
+                        .description("Verbose")
+                        .type(boolean.class)
+                        .fieldName("recursive")
+                        .optionType(OptionType.BOOLEAN)
+                        .build());
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = builder.create();
+        pc.setArgument(ProcessedOptionBuilder.builder()
+                .shortName('\u0000')
+                .name("")
+                .description("Target")
+                .type(String.class)
+                .fieldName("source")
+                .optionType(OptionType.ARGUMENT)
+                .build());
+        return new AeshCommandContainer<>(pc);
+    }
+
+    private void buildAeshVarietyReflection(int commandCount) throws Exception {
+        MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
+
+        int annotatedCount = Math.min(commandCount, AESH_VARIETY_COMMANDS.length);
+        for (int i = 0; i < annotatedCount; i++) {
+            Command<CommandInvocation> cmd = AESH_VARIETY_COMMANDS[i].getDeclaredConstructor().newInstance();
+            CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) REFLECTION_CREATE
+                    .invoke(containerBuilder, cmd);
+            registry.addCommand(container);
+        }
+
+        for (int i = AESH_VARIETY_COMMANDS.length; i < commandCount; i++) {
+            registry.addCommand(createGeneratedVarietyContainer("vcmd-" + i, i));
+        }
+
+        AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
+    }
+
+    private void buildPicocliVarietyProgrammatic(int commandCount) {
+        CommandSpec mainSpec = CommandSpec.create();
+        mainSpec.name("main");
+        CommandLine cmd = new CommandLine(mainSpec);
+        for (int i = 0; i < commandCount; i++) {
+            cmd.addSubcommand("vcmd-" + i, new CommandLine(createPicocliProgrammaticVariety("vcmd-" + i, i)));
+        }
+    }
+
+    private CommandSpec createPicocliProgrammaticVariety(String name, int index) {
+        CommandSpec spec = CommandSpec.create();
+        spec.name(name);
+        if (index % 2 == 0) {
+            spec.mixinStandardHelpOptions(true);
+        }
+        if (index % 3 == 0) {
+            spec.version("1.0.0");
+        }
+        spec.addOption(OptionSpec.builder("-i", "--items")
+                .type(List.class)
+                .splitRegex(",")
+                .description("Items list")
+                .build());
+        spec.addOption(OptionSpec.builder("-D")
+                .type(Map.class)
+                .description("Properties")
+                .build());
+        spec.addOption(OptionSpec.builder("-v", "--verbose")
+                .type(boolean.class)
+                .description("Verbose")
+                .build());
+        spec.addPositional(PositionalParamSpec.builder()
+                .type(String.class)
+                .description("Target")
+                .build());
+        return spec;
+    }
+
+    private void buildPicocliVarietyReflection(int commandCount) {
+        CommandLine cmd = new CommandLine(new PicocliMain());
+        for (int i = 0; i < commandCount; i++) {
+            Class<? extends Runnable> picoClass = PICO_VARIETY_COMMANDS[i % PICO_VARIETY_COMMANDS.length];
+            try {
+                cmd.addSubcommand("vcmd-" + i, picoClass.getDeclaredConstructor().newInstance());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    // ---- Parsing benchmark ----
+
+    public void runParsingBenchmark() throws Exception {
+        System.out.println("=== Parsing Benchmark ===");
+        System.out.println("Measuring time to parse a command line (containers pre-built)");
+        System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
+        System.out.println();
+
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
+
+        // Test cases: {label, aesh parse line, picocli args...}
+        String[] labels = { "Flat (4 opts)", "List+Group opts", "Subcommand" };
+
+        // Aesh parsers and parse lines
+        CommandLineParser<CommandInvocation> aeshFlatParser = containerBuilder
+                .create(new AeshCmd1()).getParser();
+        CommandLineParser<CommandInvocation> aeshListParser = containerBuilder
+                .create(new AeshListGroupCmd()).getParser();
+        CommandLineParser<CommandInvocation> aeshGroupParser = containerBuilder
+                .create(new AeshGrpCmd1()).getParser();
+        CommandLineParser<CommandInvocation>[] aeshParsers = new CommandLineParser[] {
+                aeshFlatParser, aeshListParser, aeshGroupParser
+        };
+        String[] aeshLines = {
+                "file-ops -o /tmp/out -r --bufferSize 8192 source.txt",
+                "list-group-cmd -i a,b,c,d,e -Dfoo=bar -Dbaz=qux -v target",
+                "grp-1 child-1a -i input.txt src"
+        };
+
+        // Picocli instances and args
+        String[][] picoArgs = {
+                { "-o", "/tmp/out", "-r", "--buffer-size", "8192", "source.txt" },
+                { "-i", "a,b,c,d,e", "-Dfoo=bar", "-Dbaz=qux", "-v", "target" },
+                { "child-1a", "-i", "input.txt", "src" }
+        };
+        Class<?>[] picoClasses = { PicoCmd1.class, PicoListGroupCmd.class, PicoGrpCmd1.class };
+
+        System.out.printf("%-18s | %14s | %14s | %s%n", "Pattern", "Aesh (us)", "Picocli (us)", "Ratio");
+        System.out.println("-".repeat(18) + "-|-" + "-".repeat(14) + "-|-" + "-".repeat(14) + "-|--------");
+
+        for (int t = 0; t < labels.length; t++) {
+            final CommandLineParser<CommandInvocation> ap = aeshParsers[t];
+            final String al = aeshLines[t];
+
+            // Warmup + measure aesh parsing
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                ap.parse(al, CommandLineParser.Mode.STRICT);
+            }
+            long aeshNs = timeIterations(() -> ap.parse(al, CommandLineParser.Mode.STRICT));
+            double aeshUs = (aeshNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            // Picocli: reuse CommandLine instance, parseArgs overwrites previous results
+            final CommandLine picoCmd = new CommandLine(picoClasses[t].getDeclaredConstructor().newInstance());
+            final String[] pa = picoArgs[t];
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                picoCmd.parseArgs(pa);
+            }
+            long picoNs = timeIterations(() -> picoCmd.parseArgs(pa));
+            double picoUs = (picoNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            double ratio = aeshUs != 0 ? picoUs / aeshUs : 0;
+            System.out.printf("%-18s | %14.2f | %14.2f | %5.2fx%n", labels[t], aeshUs, picoUs, ratio);
+        }
+    }
+
+    // ---- Completion parsing benchmark (aesh only) ----
+
+    public void runCompletionBenchmark() throws Exception {
+        System.out.println("=== Completion Parsing Benchmark (Aesh only) ===");
+        System.out.println("Measuring time to parse in COMPLETION mode");
+        System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
+        System.out.println();
+
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
+
+        String[] labels = {
+                "Option name",
+                "Option value",
+                "Mid-command",
+                "Subcommand"
+        };
+
+        CommandLineParser<CommandInvocation> flatParser = containerBuilder
+                .create(new AeshCmd1()).getParser();
+        CommandLineParser<CommandInvocation> groupParser = containerBuilder
+                .create(new AeshGrpCmd1()).getParser();
+
+        CommandLineParser<CommandInvocation>[] parsers = new CommandLineParser[] {
+                flatParser, flatParser, flatParser, groupParser
+        };
+        String[] lines = {
+                "file-ops --ou",
+                "file-ops -o /tmp/",
+                "file-ops -o /tmp/out -r --buffer",
+                "grp-1 child-1a -i inp"
+        };
+
+        System.out.printf("%-18s | %14s%n", "Pattern", "Aesh (us)");
+        System.out.println("-".repeat(18) + "-|-" + "-".repeat(14));
+
+        for (int t = 0; t < labels.length; t++) {
+            final CommandLineParser<CommandInvocation> parser = parsers[t];
+            final String line = lines[t];
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                parser.parse(line, CommandLineParser.Mode.COMPLETION);
+            }
+            long ns = timeIterations(() -> parser.parse(line, CommandLineParser.Mode.COMPLETION));
+            double us = (ns / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            System.out.printf("%-18s | %14.2f%n", labels[t], us);
         }
     }
 
