@@ -888,4 +888,94 @@ public class CommandLineParserTest {
         }
     }
 
+    @Test
+    public void testOptionalValueOption() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalValueCommand<>())
+                .getParser();
+
+        // --debug without value -> uses defaultValue "4004"
+        parser.populateObject("optval --debug", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalValueCommand<CommandInvocation> cmd = (OptionalValueCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("4004", cmd.debug);
+
+        // --debug 5005 -> uses provided value
+        parser.populateObject("optval --debug 5005", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionalValueCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("5005", cmd.debug);
+
+        // --debug=6006 -> uses provided value via equals
+        parser.populateObject("optval --debug=6006", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionalValueCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("6006", cmd.debug);
+
+        // --debug --name foo -> debug uses default, name gets "foo"
+        parser.populateObject("optval --debug --name foo", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionalValueCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("4004", cmd.debug);
+        assertEquals("foo", cmd.name);
+
+        // --name foo --debug -> debug at end with no value uses default
+        parser.populateObject("optval --name foo --debug", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionalValueCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("4004", cmd.debug);
+        assertEquals("foo", cmd.name);
+
+        // -d without value -> uses defaultValue via short name
+        parser.populateObject("optval -d", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionalValueCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("4004", cmd.debug);
+
+        // -d8080 -> uses provided value appended to short name
+        parser.populateObject("optval -d8080", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionalValueCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("8080", cmd.debug);
+
+        // not provided at all -> defaultValue still applies (aesh always applies defaults)
+        parser.populateObject("optval --name bar", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionalValueCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("4004", cmd.debug);
+        assertEquals("bar", cmd.name);
+
+        // option without defaultValue: not provided -> null; provided without value -> null
+        parser = new AeshCommandContainerBuilder<>().create(new OptionalValueNoDefaultCommand<>()).getParser();
+        parser.populateObject("optval2 --open", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalValueNoDefaultCommand<CommandInvocation> cmd2 = (OptionalValueNoDefaultCommand<CommandInvocation>) parser
+                .getCommand();
+        assertNull(cmd2.open);
+
+        // option without defaultValue: provided with value -> uses value
+        parser.populateObject("optval2 --open=codium", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        cmd2 = (OptionalValueNoDefaultCommand<CommandInvocation>) parser.getCommand();
+        assertEquals("codium", cmd2.open);
+    }
+
+    @CommandDefinition(name = "optval", description = "test optional-value options")
+    public class OptionalValueCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(shortName = 'd', optionalValue = true, defaultValue = "4004")
+        private String debug;
+
+        @Option
+        private String name;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "optval2", description = "test optional-value without default")
+    public class OptionalValueNoDefaultCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(optionalValue = true)
+        private String open;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }

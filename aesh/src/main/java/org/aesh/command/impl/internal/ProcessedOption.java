@@ -91,6 +91,7 @@ public final class ProcessedOption {
     private boolean negatable = false;
     private String negationPrefix = "no-";
     private boolean negatedByUser = false;
+    private boolean optionalValue = false;
     private boolean inherited = false;
     private String descriptionUrl;
     private boolean isUrl = false;
@@ -109,7 +110,7 @@ public final class ProcessedOption {
             boolean inherited) throws OptionParserException {
         this(shortName, name, description, argument, required, valueSeparator, askIfNotSet, acceptNameWithoutDashes,
                 selectorType, defaultValue, type, fieldName, optionType, converter, completer, optionValidator,
-                activator, renderer, parser, overrideRequired, negatable, negationPrefix, inherited, null, false);
+                activator, renderer, parser, overrideRequired, negatable, negationPrefix, inherited, null, false, false);
     }
 
     public ProcessedOption(char shortName, String name, String description,
@@ -122,6 +123,22 @@ public final class ProcessedOption {
             OptionRenderer renderer, OptionParser parser,
             boolean overrideRequired, boolean negatable, String negationPrefix,
             boolean inherited, String descriptionUrl, boolean isUrl) throws OptionParserException {
+        this(shortName, name, description, argument, required, valueSeparator, askIfNotSet, acceptNameWithoutDashes,
+                selectorType, defaultValue, type, fieldName, optionType, converter, completer, optionValidator,
+                activator, renderer, parser, overrideRequired, negatable, negationPrefix, inherited, descriptionUrl, isUrl,
+                false);
+    }
+
+    public ProcessedOption(char shortName, String name, String description,
+            String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
+            SelectorType selectorType,
+            List<String> defaultValue, Class<?> type, String fieldName,
+            OptionType optionType, Converter converter, OptionCompleter completer,
+            OptionValidator optionValidator,
+            OptionActivator activator,
+            OptionRenderer renderer, OptionParser parser,
+            boolean overrideRequired, boolean negatable, String negationPrefix,
+            boolean inherited, String descriptionUrl, boolean isUrl, boolean optionalValue) throws OptionParserException {
 
         if (shortName != '\u0000')
             this.shortName = String.valueOf(shortName);
@@ -155,6 +172,7 @@ public final class ProcessedOption {
         this.inherited = inherited;
         this.descriptionUrl = descriptionUrl;
         this.isUrl = isUrl || java.net.URL.class.isAssignableFrom(type) || java.net.URI.class.isAssignableFrom(type);
+        this.optionalValue = optionalValue;
 
         properties = java.util.Collections.emptyMap();
         values = java.util.Collections.emptyList();
@@ -254,6 +272,10 @@ public final class ProcessedOption {
 
     public boolean hasValue() {
         return optionType != OptionType.BOOLEAN;
+    }
+
+    public boolean isOptionalValue() {
+        return optionalValue;
     }
 
     public boolean hasMultipleValues() {

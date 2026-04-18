@@ -71,6 +71,7 @@ public class ProcessedOptionBuilder {
     private boolean askIfNotSet = false;
     private boolean acceptNameWithoutDashes = false;
     private SelectorType selectorType;
+    private boolean optionalValue = false;
     private boolean negatable = false;
     private String negationPrefix = "no-";
     private boolean inherited = false;
@@ -311,6 +312,14 @@ public class ProcessedOptionBuilder {
     }
 
     /**
+     * Set whether this option accepts an optional value (arity 0..1).
+     * When used without a value, the defaultValue is applied.
+     */
+    public ProcessedOptionBuilder optionalValue(boolean optionalValue) {
+        return apply(c -> c.optionalValue = optionalValue);
+    }
+
+    /**
      * Set whether this option is negatable (supports --no-{name} form).
      * Only valid for boolean options.
      */
@@ -399,11 +408,16 @@ public class ProcessedOptionBuilder {
             throw new OptionParserException("Option '" + name + "' is marked as negatable but is not a boolean type");
         }
 
+        // Validate that optionalValue requires hasValue (NORMAL type)
+        if (optionalValue && optionType != OptionType.NORMAL) {
+            throw new OptionParserException("Option '" + name + "' is marked as optionalValue but does not accept values");
+        }
+
         ProcessedOption option = new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, askIfNotSet, acceptNameWithoutDashes, selectorType, defaultValues, type, fieldName, optionType,
                 converter,
                 completer, validator, activator, renderer, parser, overrideRequired, negatable, negationPrefix, inherited,
-                descriptionUrl, isUrl);
+                descriptionUrl, isUrl, optionalValue);
         if (fieldSetter != null)
             option.setFieldSetter(fieldSetter);
         if (fieldResetter != null)

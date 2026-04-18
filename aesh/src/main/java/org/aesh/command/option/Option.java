@@ -98,6 +98,17 @@ public @interface Option {
     boolean hasValue() default true;
 
     /**
+     * When true, the option may be used without a value (arity 0..1).
+     * If used without a value, the defaultValue is applied.
+     * If used with a value (via space or =), that value is used.
+     * Only valid when hasValue=true.
+     *
+     * Example: {@code @Option(hasValue=true, optionalValue=true, defaultValue="4004")}
+     * allows both {@code --debug} (uses "4004") and {@code --debug 5005} (uses "5005").
+     */
+    boolean optionalValue() default false;
+
+    /**
      * When this is set to true and used it will override missing Options that are
      * required by the Command.
      */

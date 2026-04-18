@@ -52,14 +52,13 @@ public class AeshOptionParser implements OptionParser {
                 }
                 //we have something like: --foo --bar eg, two options after another
                 else {
-                    //TODO: we need to do something better here
-                    if (option.hasValue() && option.getValue() == null) {
+                    if (option.hasValue() && option.getValue() == null && !option.isOptionalValue()) {
                         throw new OptionParserException("Option " + option.name() + " was specified, but no value was given.");
                     }
                     return;
                 }
             }
-            if (option.hasValue() && option.getValue() == null)
+            if (option.hasValue() && option.getValue() == null && !option.isOptionalValue())
                 throw new OptionParserException("Option " + option.name() + " was specified, but no value was given.");
         }
     }
