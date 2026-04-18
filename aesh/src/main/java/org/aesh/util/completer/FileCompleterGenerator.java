@@ -29,13 +29,13 @@ import org.aesh.terminal.utils.Config;
 /**
  * @author Aesh team
  */
-class FileCompleterGenerator {
+public class FileCompleterGenerator {
 
     /**
      * @param command the command we generate a completion file for
      * @return completion file content
      */
-    String generateCompleterFile(CommandLineParser<CommandInvocation> command) {
+    public String generateCompleterFile(CommandLineParser<CommandInvocation> command) {
         StringBuilder out = new StringBuilder();
 
         out.append(generateHeader(command.getProcessedCommand().name()));
