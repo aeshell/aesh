@@ -126,6 +126,37 @@ public interface CommandRuntime<CI extends CommandInvocation> {
     }
 
     /**
+     * Build an Executor from a command name and pre-tokenized arguments.
+     * <p>
+     * This bypasses string reconstruction and re-parsing, making it safe for
+     * arguments containing special characters (embedded quotes, backslashes,
+     * newlines, operator characters). The returned Executor can be used to
+     * inspect or populate the parsed command without executing it.
+     *
+     * @param commandName the command to build
+     * @param args the pre-tokenized arguments (may be null or empty)
+     * @return The executor.
+     * @throws CommandNotFoundException
+     * @throws CommandLineParserException
+     * @throws java.io.IOException
+     */
+    default Executor<CI> buildExecutor(String commandName, String[] args) throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException,
+            IOException {
+        // Default fallback: reconstruct a command string and delegate.
+        // Implementations should override for proper pre-tokenized support.
+        StringBuilder sb = new StringBuilder(commandName);
+        if (args != null) {
+            for (String arg : args) {
+                sb.append(' ').append(arg);
+            }
+        }
+        return buildExecutor(sb.toString());
+    }
+
+    /**
      * Execute a command with pre-tokenized arguments.
      * <p>
      * This bypasses string reconstruction and re-parsing, making it safe for

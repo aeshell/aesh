@@ -159,13 +159,24 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     @Override
+    public Executor<CI> buildExecutor(String commandName, String[] args) throws CommandNotFoundException,
+            CommandLineParserException,
+            IOException {
+        return buildExecutorFromArgs(commandName, args);
+    }
+
+    @Override
     public CommandResult executeCommand(String commandName, String[] args) throws CommandNotFoundException,
             CommandLineParserException,
             CommandValidatorException,
             CommandException,
             InterruptedException,
             IOException {
+        return runExecutor(buildExecutorFromArgs(commandName, args));
+    }
 
+    private Executor<CI> buildExecutorFromArgs(String commandName, String[] args)
+            throws CommandNotFoundException, CommandLineParserException, IOException {
         // Build a display string for error messages
         StringBuilder displayLine = new StringBuilder(commandName);
         if (args != null) {
@@ -187,11 +198,10 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         ParsedLine parsedLine = new ParsedLine(displayLine.toString(), words,
                 -1, -1, -1, ParserStatus.OK, "", OperatorType.NONE);
 
-        Executor<CI> executor;
         try {
             List<Execution<CI>> executions = Executions.buildExecution(
                     Collections.singletonList(parsedLine), this);
-            executor = new Executor<>(executions);
+            return new Executor<>(executions);
         } catch (CommandLineParserException e) {
             throw e;
         } catch (CommandNotFoundException cmd) {
@@ -201,7 +211,6 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             }
             throw cmd;
         }
-        return runExecutor(executor);
     }
 
     private CommandResult runExecutor(Executor<CI> executor) throws CommandException,
