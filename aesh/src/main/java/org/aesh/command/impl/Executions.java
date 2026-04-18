@@ -171,7 +171,7 @@ class Executions {
 
             //When we check for askIfNotSet, we also need to make sure we do not have help generated
             if (cmd.hasAskIfNotSet() &&
-                    !(cmd.generateHelp() && (cmd.isGenerateHelpOptionSet() || !cmd.anyOptionsSet()))) {
+                    !(cmd.generateHelp() && cmd.isGenerateHelpOptionSet())) {
                 for (ProcessedOption option : cmd.getAllAskIfNotSet()) {
                     try {
                         if (option.getOptionType().equals(OptionType.ARGUMENT) ||
@@ -213,7 +213,7 @@ class Executions {
 
             try {
                 //if the generated help option is set, we "execute" it instead of normal execution
-                if (cmd.generateHelp() && (cmd.isGenerateHelpOptionSet() || !cmd.anyOptionsSet())) {
+                if (cmd.generateHelp() && cmd.isGenerateHelpOptionSet()) {
                     T invocation = getCommandInvocation();
                     invocation.println(invocation.getHelpInfo());
                     result = CommandResult.SUCCESS;
