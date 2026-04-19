@@ -19,6 +19,7 @@
  */
 package org.aesh.command.registry;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -98,6 +99,28 @@ public interface CommandRegistry<CI extends CommandInvocation> {
      * @return all specified command names
      */
     Set<String> getAllCommandNames();
+
+    /**
+     * Returns the names of all subcommands registered under a group command.
+     * Returns an empty set if the command is not a group command or not found.
+     *
+     * @param parentCommandName the name of the parent group command
+     * @return set of subcommand names
+     */
+    default Set<String> getSubcommandNames(String parentCommandName) {
+        Set<String> names = new LinkedHashSet<>();
+        try {
+            List<CommandLineParser<CI>> children = getChildCommandParsers(parentCommandName);
+            if (children != null) {
+                for (CommandLineParser<CI> child : children) {
+                    names.add(child.getProcessedCommand().name());
+                }
+            }
+        } catch (CommandNotFoundException e) {
+            // Command not found, return empty set
+        }
+        return names;
+    }
 
     default boolean contains(String commandName) {
         if (getAllCommandNames().contains(commandName))

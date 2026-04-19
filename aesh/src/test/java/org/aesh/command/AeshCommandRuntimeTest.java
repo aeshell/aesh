@@ -7,10 +7,14 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
+import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
@@ -467,5 +471,119 @@ public class AeshCommandRuntimeTest {
         public CommandResult execute(CommandInvocation commandInvocation) {
             return CommandResult.SUCCESS;
         }
+    }
+
+    // --- #393: Inherited options via buildExecutor/populateCommand ---
+
+    @Test
+    public void testInheritedOptionsViaBuildExecutor() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(ParentGroupCmd.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        Executor<?> executor = runtime.buildExecutor("parent",
+                new String[] { "--verbose", "child", "--target", "prod" });
+        Execution<?> execution = executor.getExecutions().get(0);
+        execution.populateCommand();
+
+        ChildCmd child = (ChildCmd) execution.getCommand();
+        assertTrue("inherited verbose should be propagated to child", child.verbose);
+        assertEquals("prod", child.target);
+    }
+
+    @GroupCommandDefinition(name = "parent", description = "", groupCommands = { ChildCmd.class }, generateHelp = true)
+    public static class ParentGroupCmd implements Command<CommandInvocation> {
+        @Option(name = "verbose", shortName = 'v', hasValue = false, inherited = true)
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "child", description = "", generateHelp = true)
+    public static class ChildCmd implements Command<CommandInvocation> {
+        boolean verbose;
+
+        @Option(description = "Target environment")
+        String target;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // --- #394: afterParse() called on parent group commands ---
+
+    @Test
+    public void testAfterParseCalledOnParentGroupCommand() throws Exception {
+        ParentLifecycleCmd.afterParseCalled = false;
+        ChildLifecycleCmd.afterParseCalled = false;
+
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(ParentLifecycleCmd.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        Executor<?> executor = runtime.buildExecutor("plc",
+                new String[] { "--stacktrace", "clc", "--name", "test" });
+        executor.getExecutions().get(0).populateCommand();
+
+        assertTrue("parent afterParse() should have been called", ParentLifecycleCmd.afterParseCalled);
+        assertTrue("parent stacktrace should be set", ParentLifecycleCmd.stacktraceValue);
+        assertTrue("child afterParse() should have been called", ChildLifecycleCmd.afterParseCalled);
+    }
+
+    @GroupCommandDefinition(name = "plc", description = "", groupCommands = { ChildLifecycleCmd.class }, generateHelp = true)
+    public static class ParentLifecycleCmd implements Command<CommandInvocation>, CommandLifecycle {
+        static boolean afterParseCalled;
+        static boolean stacktraceValue;
+
+        @Option(name = "stacktrace", shortName = 'x', hasValue = false)
+        boolean stacktrace;
+
+        @Override
+        public void afterParse() {
+            afterParseCalled = true;
+            stacktraceValue = stacktrace;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "clc", description = "", generateHelp = true)
+    public static class ChildLifecycleCmd implements Command<CommandInvocation>, CommandLifecycle {
+        static boolean afterParseCalled;
+
+        @Option(description = "Name")
+        String name;
+
+        @Override
+        public void afterParse() {
+            afterParseCalled = true;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // --- #395: Expose subcommand names ---
+
+    @Test
+    public void testGetSubcommandNames() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(ParentGroupCmd.class).create();
+
+        Set<String> subNames = registry.getSubcommandNames("parent");
+        assertNotNull(subNames);
+        assertTrue("should contain 'child'", subNames.contains("child"));
     }
 }

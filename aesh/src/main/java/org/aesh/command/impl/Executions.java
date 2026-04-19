@@ -51,6 +51,7 @@ import org.aesh.command.impl.operator.Operator;
 import org.aesh.command.impl.operator.OrOperator;
 import org.aesh.command.impl.operator.OutputRedirectionOperator;
 import org.aesh.command.impl.operator.PipeOperator;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.operator.OperatorType;
@@ -123,8 +124,29 @@ class Executions {
                 CommandContext cmdContext = getCommandInvocation().getCommandContext();
                 cmd = commandContainer.parseAndPopulate(runtime.invocationProviders(), runtime.getAeshContext(), cmdContext);
                 populated = true;
+                // Call afterParse() on parent group commands first, then on the parsed child
+                callAfterParseOnParents(commandContainer.getParser());
                 if (cmd.getCommand() instanceof CommandLifecycle) {
                     ((CommandLifecycle) cmd.getCommand()).afterParse();
+                }
+            }
+        }
+
+        /**
+         * Walk the parser tree and call afterParse() on parent group commands
+         * whose child was actually parsed. Skips the final parsed command
+         * (that's handled separately).
+         */
+        private void callAfterParseOnParents(CommandLineParser<?> rootParser) {
+            if (!rootParser.isGroupCommand())
+                return;
+            // If the root parser itself is a group and has a parsed child,
+            // the root is a parent — call its afterParse() first
+            CommandLineParser<?> parsed = rootParser.parsedCommand();
+            if (parsed != null && parsed != rootParser) {
+                Command<?> parentCmd = rootParser.getProcessedCommand().getCommand();
+                if (parentCmd instanceof CommandLifecycle) {
+                    ((CommandLifecycle) parentCmd).afterParse();
                 }
             }
         }
