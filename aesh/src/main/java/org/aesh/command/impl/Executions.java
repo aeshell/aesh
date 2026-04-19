@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
+import org.aesh.command.CommandLifecycle;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Executable;
@@ -122,6 +123,9 @@ class Executions {
                 CommandContext cmdContext = getCommandInvocation().getCommandContext();
                 cmd = commandContainer.parseAndPopulate(runtime.invocationProviders(), runtime.getAeshContext(), cmdContext);
                 populated = true;
+                if (cmd.getCommand() instanceof CommandLifecycle) {
+                    ((CommandLifecycle) cmd.getCommand()).afterParse();
+                }
             }
         }
 

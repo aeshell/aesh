@@ -145,6 +145,45 @@ public class AeshCommandRuntimeTest {
     }
 
     @Test
+    public void testAfterParseLifecycle() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(AfterParseCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        Executor<?> executor = runtime.buildExecutor("afterparse",
+                new String[] { "script.java", "arg1", "arg2" });
+        executor.getExecutions().get(0).populateCommand();
+        AfterParseCommand cmd = (AfterParseCommand) executor.getExecutions().get(0).getCommand();
+
+        // afterParse() should have split: first arg -> scriptFile, rest stays in params
+        assertEquals("script.java", cmd.scriptFile);
+        assertEquals(2, cmd.params.size());
+        assertEquals("arg1", cmd.params.get(0));
+        assertEquals("arg2", cmd.params.get(1));
+    }
+
+    @CommandDefinition(name = "afterparse", description = "")
+    public static class AfterParseCommand implements Command<CommandInvocation>, CommandLifecycle {
+        @org.aesh.command.option.Arguments
+        java.util.List<String> params;
+
+        String scriptFile;
+
+        @Override
+        public void afterParse() {
+            if (params != null && !params.isEmpty()) {
+                scriptFile = params.remove(0);
+            }
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
     public void testBooleanWrapperResetsToNull() throws Exception {
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
                 .command(BooleanWrapperCommand.class).create();

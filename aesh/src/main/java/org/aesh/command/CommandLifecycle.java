@@ -20,16 +20,18 @@
 package org.aesh.command;
 
 /**
- * Optional lifecycle interface for commands that need to reset state
- * between re-entrant parse/execution cycles.
+ * Optional lifecycle interface for commands that need hooks around
+ * the parse/execution cycle.
  * <p>
  * When a command is reused across multiple invocations (e.g., in test suites
- * or long-running applications), global state set during {@code execute()}
- * persists between calls. Implementing this interface allows commands to
- * reset that state before each parse cycle.
+ * or long-running applications), this interface provides hooks for:
+ * <ul>
+ * <li>{@code beforeParse()} — resetting external state before parsing</li>
+ * <li>{@code afterParse()} — post-processing after field population, before execution</li>
+ * </ul>
  * <p>
  * Note: Æsh already resets option fields to their default values between
- * parse cycles. This interface is for resetting <em>external</em> state
+ * parse cycles. {@code beforeParse()} is for resetting <em>external</em> state
  * that is not managed by Æsh (e.g., static flags, shared configuration).
  *
  * @author Aesh team
@@ -44,5 +46,16 @@ public interface CommandLifecycle {
      * but before the new command line is parsed.
      */
     default void beforeParse() {
+    }
+
+    /**
+     * Called after the command has been parsed and option fields populated,
+     * but before {@code execute()} runs.
+     * <p>
+     * Use this for post-processing that depends on parsed option values,
+     * such as splitting argument lists, resolving derived state, or
+     * validating cross-option constraints.
+     */
+    default void afterParse() {
     }
 }
