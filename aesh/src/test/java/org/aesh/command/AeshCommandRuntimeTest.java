@@ -1,7 +1,9 @@
 package org.aesh.command;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
@@ -80,6 +82,65 @@ public class AeshCommandRuntimeTest {
         Executor<?> executor = runtime.buildExecutor("opt", null);
         assertNotNull(executor);
         assertEquals(1, executor.getExecutions().size());
+    }
+
+    @Test
+    public void testBeforeParseLifecycle() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(LifecycleCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // First execution: set verbose
+        runtime.executeCommand("lifecycle --verbose");
+        assertTrue(LifecycleCommand.globalVerbose);
+
+        // Second execution: no --verbose, but beforeParse should have reset it
+        runtime.executeCommand("lifecycle");
+        assertFalse(LifecycleCommand.globalVerbose);
+    }
+
+    @Test
+    public void testBeforeParseWithBuildExecutor() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(LifecycleCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // First call: set verbose via pre-tokenized args
+        Executor<?> executor1 = runtime.buildExecutor("lifecycle", new String[] { "--verbose" });
+        executor1.getExecutions().get(0).populateCommand();
+        LifecycleCommand cmd1 = (LifecycleCommand) executor1.getExecutions().get(0).getCommand();
+        assertTrue(cmd1.verbose);
+        // buildExecutor doesn't run execute(), so set global state manually
+        LifecycleCommand.globalVerbose = cmd1.verbose;
+        assertTrue(LifecycleCommand.globalVerbose);
+
+        // Second call: no --verbose, beforeParse should reset global state
+        Executor<?> executor2 = runtime.buildExecutor("lifecycle", new String[] {});
+        executor2.getExecutions().get(0).populateCommand();
+        LifecycleCommand cmd2 = (LifecycleCommand) executor2.getExecutions().get(0).getCommand();
+        assertFalse(cmd2.verbose);
+        assertFalse(LifecycleCommand.globalVerbose);
+    }
+
+    @CommandDefinition(name = "lifecycle", description = "")
+    public static class LifecycleCommand implements Command<CommandInvocation>, CommandLifecycle {
+        @Option(hasValue = false)
+        boolean verbose;
+
+        static boolean globalVerbose = false;
+
+        @Override
+        public void beforeParse() {
+            globalVerbose = false;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            globalVerbose = verbose;
+            return CommandResult.SUCCESS;
+        }
     }
 
     @CommandDefinition(name = "opt", description = "")

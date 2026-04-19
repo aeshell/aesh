@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.aesh.command.Command;
+import org.aesh.command.CommandLifecycle;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.invocation.CommandInvocation;
@@ -270,6 +271,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public void parse(ParsedLineIterator iterator, Mode mode) {
         clear();
+        Command<CI> cmd = processedCommand.getCommand();
+        if (mode != Mode.COMPLETION && cmd instanceof CommandLifecycle) {
+            ((CommandLifecycle) cmd).beforeParse();
+        }
         if (iterator.hasNextWord()) {
             String command = iterator.pollWord();
             if (processedCommand.name().equals(command)
