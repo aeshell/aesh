@@ -97,6 +97,8 @@ public final class ProcessedOption {
     private boolean isUrl = false;
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
+    private Object initialValue;
+    private boolean initialValueCaptured;
 
     public ProcessedOption(char shortName, String name, String description,
             String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
@@ -194,7 +196,35 @@ public final class ProcessedOption {
         return fieldResetter;
     }
 
+    /**
+     * Captures the current field value from the command instance so it can be
+     * restored on reset. Call once after the command is fully constructed.
+     * Only captures non-null reference-type values.
+     */
+    public void captureInitialValue(Object instance) {
+        if (initialValueCaptured || instance == null || fieldName == null)
+            return;
+        try {
+            Field field = getField(instance.getClass(), fieldName);
+            if (field == null)
+                return;
+            if (field.getType().isPrimitive())
+                return;
+            if (!Modifier.isPublic(field.getModifiers()))
+                field.setAccessible(true);
+            initialValue = field.get(instance);
+            initialValueCaptured = true;
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            // Capture failed, will fall back to null on reset
+        }
+    }
+
     public void resetField(Object instance) {
+        // If we captured a non-null initial value, restore it
+        if (initialValueCaptured && initialValue != null) {
+            restoreInitialValue(instance);
+            return;
+        }
         if (fieldResetter != null) {
             fieldResetter.accept(instance);
             return;
@@ -227,6 +257,29 @@ public final class ProcessedOption {
                 field.set(instance, null);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             // Field reset failed, continue
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void restoreInitialValue(Object instance) {
+        try {
+            Field field = getField(instance.getClass(), fieldName);
+            if (field == null)
+                return;
+            if (!Modifier.isPublic(field.getModifiers()))
+                field.setAccessible(true);
+            if (initialValue instanceof Collection) {
+                field.set(instance, initialValue.getClass().getDeclaredConstructor().newInstance());
+            } else if (initialValue instanceof Map) {
+                field.set(instance, initialValue.getClass().getDeclaredConstructor().newInstance());
+            } else {
+                field.set(instance, initialValue);
+            }
+        } catch (ReflectiveOperationException e) {
+            // Fall back to existing reset behavior
+            if (fieldResetter != null) {
+                fieldResetter.accept(instance);
+            }
         }
     }
 

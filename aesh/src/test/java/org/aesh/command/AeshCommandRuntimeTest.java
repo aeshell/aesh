@@ -214,6 +214,69 @@ public class AeshCommandRuntimeTest {
         }
     }
 
+    @Test
+    public void testInitializedListResetsToEmptyNotNull() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(InitializedListCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // First: provide arguments
+        Executor<?> executor1 = runtime.buildExecutor("initlist", new String[] { "a", "b" });
+        executor1.getExecutions().get(0).populateCommand();
+        InitializedListCommand cmd1 = (InitializedListCommand) executor1.getExecutions().get(0).getCommand();
+        assertEquals(2, cmd1.params.size());
+
+        // Second: no arguments — should reset to empty list, not null
+        Executor<?> executor2 = runtime.buildExecutor("initlist", new String[] {});
+        executor2.getExecutions().get(0).populateCommand();
+        InitializedListCommand cmd2 = (InitializedListCommand) executor2.getExecutions().get(0).getCommand();
+        assertNotNull(cmd2.params);
+        assertEquals(0, cmd2.params.size());
+    }
+
+    @Test
+    public void testInitializedStringResetsToInitialValue() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(InitializedStringCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // First: override the default
+        Executor<?> executor1 = runtime.buildExecutor("initstr", new String[] { "--name", "override" });
+        executor1.getExecutions().get(0).populateCommand();
+        InitializedStringCommand cmd1 = (InitializedStringCommand) executor1.getExecutions().get(0).getCommand();
+        assertEquals("override", cmd1.name);
+
+        // Second: no --name — should restore to "default", not null
+        Executor<?> executor2 = runtime.buildExecutor("initstr", new String[] {});
+        executor2.getExecutions().get(0).populateCommand();
+        InitializedStringCommand cmd2 = (InitializedStringCommand) executor2.getExecutions().get(0).getCommand();
+        assertEquals("default", cmd2.name);
+    }
+
+    @CommandDefinition(name = "initlist", description = "")
+    public static class InitializedListCommand implements Command<CommandInvocation> {
+        @org.aesh.command.option.Arguments
+        java.util.List<String> params = new java.util.ArrayList<>();
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "initstr", description = "")
+    public static class InitializedStringCommand implements Command<CommandInvocation> {
+        @Option
+        String name = "default";
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     @CommandDefinition(name = "opt", description = "")
     public static class OptCommand implements Command<CommandInvocation> {
         @Option(shortName = 'n')

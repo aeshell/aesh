@@ -148,6 +148,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
 
         parserExceptions = Collections.emptyList();
+
+        // Capture initial field values for arguments/argument set before command
+        if (command != null) {
+            if (this.arguments != null)
+                this.arguments.captureInitialValue(command);
+            if (this.argument != null)
+                this.argument.captureInitialValue(command);
+        }
     }
 
     public List<ProcessedOption> getOptions() {
@@ -170,6 +178,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         verifyThatNamesAreUnique(opt.shortName(), opt.name());
         this.options.add(opt);
         opt.setParent(this);
+        if (command != null)
+            opt.captureInitialValue(command);
     }
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
@@ -205,6 +215,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public void setArguments(ProcessedOption arguments) {
         this.arguments = arguments;
         this.arguments.setParent(this);
+        if (command != null)
+            arguments.captureInitialValue(command);
     }
 
     public CommandPopulator<Object, CI> getCommandPopulator() {
@@ -816,6 +828,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public void setArgument(ProcessedOption arg) {
         this.argument = arg;
         this.argument.setParent(this);
+        if (command != null)
+            arg.captureInitialValue(command);
     }
 
     public ProcessedOption getArgument() {
