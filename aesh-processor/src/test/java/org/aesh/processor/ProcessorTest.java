@@ -423,6 +423,37 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    // --- Test: @Option with generic type (List<String>) should erase generics (#397) ---
+
+    private static final String GENERIC_OPTION_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"generic\", description = \"Generic option test\")\n" +
+            "public class GenericOptionCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"docs\", description = \"Documentation reference\")\n" +
+            "    List<String> docs;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testOptionWithGenericType() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.GenericOptionCommand", GENERIC_OPTION_SOURCE));
+        assertTrue("Compilation should succeed (generic type should be erased): " + result.diagnostics,
+                result.success);
+    }
+
     // --- Test: Compile-time validation catches abstract class ---
 
     private static final String ABSTRACT_COMMAND_SOURCE = "package test;\n" +

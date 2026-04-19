@@ -653,7 +653,7 @@ final class CodeGenerator {
             case CHAR:
                 return "char";
             default:
-                return type.toString();
+                return typeUtils.erasure(type).toString();
         }
     }
 
