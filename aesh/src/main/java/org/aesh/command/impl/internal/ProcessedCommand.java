@@ -127,8 +127,6 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.resultHandler = resultHandler;
         this.arguments = arguments;
         this.argument = argument;
-        if (argument != null && arguments != null)
-            throw new OptionParserException("Argument and Arguments cannot be defined in the same Command");
         this.options = new ArrayList<>(
                 options.size() + (generateHelp ? 1 : 0) + (version != null && version.length() > 0 ? 1 : 0));
         this.command = command;

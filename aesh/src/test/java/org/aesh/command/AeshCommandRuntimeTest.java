@@ -277,6 +277,70 @@ public class AeshCommandRuntimeTest {
         }
     }
 
+    @Test
+    public void testArgumentAndArgumentsCoexist() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(SplitArgsCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // First positional goes to @Argument, rest go to @Arguments
+        Executor<?> executor = runtime.buildExecutor("splitargs",
+                new String[] { "script.java", "arg1", "arg2" });
+        executor.getExecutions().get(0).populateCommand();
+        SplitArgsCommand cmd = (SplitArgsCommand) executor.getExecutions().get(0).getCommand();
+        assertEquals("script.java", cmd.scriptFile);
+        assertNotNull(cmd.params);
+        assertEquals(2, cmd.params.size());
+        assertEquals("arg1", cmd.params.get(0));
+        assertEquals("arg2", cmd.params.get(1));
+    }
+
+    @Test
+    public void testArgumentAndArgumentsOnlyFirst() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(SplitArgsCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // Only one positional — goes to @Argument, @Arguments stays empty
+        Executor<?> executor = runtime.buildExecutor("splitargs",
+                new String[] { "script.java" });
+        executor.getExecutions().get(0).populateCommand();
+        SplitArgsCommand cmd = (SplitArgsCommand) executor.getExecutions().get(0).getCommand();
+        assertEquals("script.java", cmd.scriptFile);
+        assertNotNull(cmd.params);
+        assertEquals(0, cmd.params.size());
+    }
+
+    @Test
+    public void testArgumentAndArgumentsNone() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(SplitArgsCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // No positionals — both empty/null
+        Executor<?> executor = runtime.buildExecutor("splitargs", new String[] {});
+        executor.getExecutions().get(0).populateCommand();
+        SplitArgsCommand cmd = (SplitArgsCommand) executor.getExecutions().get(0).getCommand();
+        assertNull(cmd.scriptFile);
+    }
+
+    @CommandDefinition(name = "splitargs", description = "")
+    public static class SplitArgsCommand implements Command<CommandInvocation> {
+        @Argument(description = "Script file")
+        String scriptFile;
+
+        @org.aesh.command.option.Arguments(description = "Script arguments")
+        java.util.List<String> params = new java.util.ArrayList<>();
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     @CommandDefinition(name = "opt", description = "")
     public static class OptCommand implements Command<CommandInvocation> {
         @Option(shortName = 'n')

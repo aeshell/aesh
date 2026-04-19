@@ -296,8 +296,6 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         else if ((a = field.getAnnotation(Arguments.class)) != null) {
             if (!Collection.class.isAssignableFrom(field.getType()))
                 throw new CommandLineParserException("Arguments field must be instance of Collection");
-            if (processedCommand.getArgument() != null)
-                throw new CommandLineParserException("Arguments can not be defined with an Argument type");
             Class type = Object.class;
             if (field.getGenericType() != null) {
                 ParameterizedType listType = (ParameterizedType) field.getGenericType();
@@ -325,8 +323,6 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         } else if ((arg = field.getAnnotation(Argument.class)) != null) {
             if (processedCommand.getArgument() != null)
                 throw new CommandLineParserException("Argument can not be defined more than once pr class");
-            if (processedCommand.getArguments() != null)
-                throw new CommandLineParserException("Argument can not be defined with an Arguments type");
             if (Collection.class.isAssignableFrom(field.getType()))
                 throw new CommandLineParserException("Argument field can not be an instance of Collection");
             OptionType optionType = OptionType.ARGUMENT;

@@ -402,10 +402,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     }
 
     private void setArgStatus(String word) {
-        if (processedCommand.hasArguments()) {
-            processedCommand.getArguments().addValue(word);
-        } else if (processedCommand.hasArgumentWithNoValue()) {
+        if (processedCommand.hasArgumentWithNoValue()) {
             processedCommand.getArgument().addValue(word);
+        } else if (processedCommand.hasArguments()) {
+            processedCommand.getArguments().addValue(word);
         } else {
             processedCommand.addParserException(
                     new OptionParserException(
@@ -542,17 +542,15 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     private void setCompletionArgStatus(String word) {
         //add the value to argument/arguments
-        if (processedCommand.hasArguments()) {
+        if (processedCommand.hasArgumentWithNoValue()) {
+            processedCommand.getArgument().addValue(word);
+            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
+        } else if (processedCommand.hasArguments()) {
             processedCommand.getArguments().addValue(word);
             processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
         } else if (processedCommand.hasArgument()) {
-            if (processedCommand.getArgument().getValue() == null) {
-                processedCommand.getArgument().addValue(word);
-                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
-            }
-            //if we add more than one value to argument we set error status
-            else
-                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT_ERROR, null));
+            //singular argument already filled and no @Arguments to overflow into
+            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT_ERROR, null));
         }
     }
 
@@ -564,9 +562,11 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         if (command.getArgument() != null) {
             if (doCheckForMissingRequiredOption(command.getArgument()))
                 return generateRequiredExceptionFor(command.getArgument(), false);
-        } else if (command.getArguments() != null)
+        }
+        if (command.getArguments() != null) {
             if (doCheckForMissingRequiredOption(command.getArguments()))
                 return generateRequiredExceptionFor(command.getArguments(), true);
+        }
 
         return null;
     }
