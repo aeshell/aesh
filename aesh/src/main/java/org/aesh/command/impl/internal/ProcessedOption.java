@@ -97,6 +97,7 @@ public final class ProcessedOption {
     private boolean isUrl = false;
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
+    private java.util.function.Function<Object, Object> fieldGetter;
     private Object initialValue;
     private boolean initialValueCaptured;
     private String mixinFieldName;
@@ -197,6 +198,14 @@ public final class ProcessedOption {
         return fieldResetter;
     }
 
+    public void setFieldGetter(java.util.function.Function<Object, Object> fieldGetter) {
+        this.fieldGetter = fieldGetter;
+    }
+
+    public java.util.function.Function<Object, Object> getFieldGetter() {
+        return fieldGetter;
+    }
+
     public void setMixinFieldName(String mixinFieldName) {
         this.mixinFieldName = mixinFieldName;
     }
@@ -239,6 +248,14 @@ public final class ProcessedOption {
     public void captureInitialValue(Object instance) {
         if (initialValueCaptured || instance == null || fieldName == null)
             return;
+        if (fieldGetter != null) {
+            Object value = fieldGetter.apply(instance);
+            if (value != null) {
+                initialValue = value;
+            }
+            initialValueCaptured = true;
+            return;
+        }
         try {
             Object target = resolveMixinInstance(instance);
             Field field = getField(target.getClass(), fieldName);
@@ -261,7 +278,7 @@ public final class ProcessedOption {
             restoreInitialValue(instance);
             return;
         }
-        if (fieldResetter != null && !isMixinOption()) {
+        if (fieldResetter != null) {
             fieldResetter.accept(instance);
             return;
         }
@@ -299,6 +316,24 @@ public final class ProcessedOption {
 
     @SuppressWarnings("unchecked")
     private void restoreInitialValue(Object instance) {
+        if (fieldSetter != null) {
+            if (initialValue instanceof Collection) {
+                try {
+                    fieldSetter.accept(instance, initialValue.getClass().getDeclaredConstructor().newInstance());
+                } catch (ReflectiveOperationException e) {
+                    fieldSetter.accept(instance, new ArrayList<>());
+                }
+            } else if (initialValue instanceof Map) {
+                try {
+                    fieldSetter.accept(instance, initialValue.getClass().getDeclaredConstructor().newInstance());
+                } catch (ReflectiveOperationException e) {
+                    fieldSetter.accept(instance, new HashMap<>());
+                }
+            } else {
+                fieldSetter.accept(instance, initialValue);
+            }
+            return;
+        }
         try {
             Object target = resolveMixinInstance(instance);
             Field field = getField(target.getClass(), fieldName);
@@ -314,7 +349,6 @@ public final class ProcessedOption {
                 field.set(target, initialValue);
             }
         } catch (ReflectiveOperationException e) {
-            // Fall back to existing reset behavior
             if (fieldResetter != null) {
                 fieldResetter.accept(instance);
             }
@@ -697,7 +731,7 @@ public final class ProcessedOption {
             boolean doValidation) throws OptionValidatorException {
         if (converter == null || instance == null)
             return;
-        if (fieldSetter != null && !isMixinOption()) {
+        if (fieldSetter != null) {
             injectValueWithSetter(instance, invocationProviders, aeshContext, doValidation);
         } else {
             injectValueWithReflection(resolveMixinInstance(instance), invocationProviders, aeshContext, doValidation);

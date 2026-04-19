@@ -299,6 +299,15 @@ final class CodeGenerator {
         if (!(mixinType instanceof DeclaredType))
             return;
         TypeElement mixinElement = (TypeElement) ((DeclaredType) mixinType).asElement();
+        String mixinTypeName = mixinType.toString();
+
+        if (isAccessibleField(mixinField)) {
+            sb.append("        if (instance.").append(mixinFieldName).append(" == null) {\n");
+            sb.append("            instance.").append(mixinFieldName).append(" = new ").append(mixinTypeName)
+                    .append("();\n");
+            sb.append("        }\n\n");
+        }
+
         generateMixinFields(sb, simpleName, mixinFieldName, mixinElement, elementUtils, typeUtils);
     }
 
@@ -492,9 +501,13 @@ final class CodeGenerator {
             String mixinFieldName, Types typeUtils) {
         if (mixinFieldName != null) {
             sb.append("                        .mixinFieldName(").append(stringLiteral(mixinFieldName)).append(")\n");
+            generateMixinFieldSetter(sb, simpleName, field, mixinFieldName, typeUtils);
+            generateMixinFieldResetter(sb, simpleName, field, mixinFieldName, typeUtils);
+            generateMixinFieldGetter(sb, simpleName, field, mixinFieldName);
         } else {
             generateFieldSetter(sb, simpleName, field, typeUtils);
             generateFieldResetter(sb, simpleName, field, typeUtils);
+            generateFieldGetter(sb, simpleName, field);
         }
     }
 
@@ -725,6 +738,82 @@ final class CodeGenerator {
     private static boolean isAccessibleField(VariableElement field) {
         java.util.Set<javax.lang.model.element.Modifier> modifiers = field.getModifiers();
         return !modifiers.contains(javax.lang.model.element.Modifier.PRIVATE);
+    }
+
+    private static void generateMixinFieldSetter(StringBuilder sb, String commandSimpleName, VariableElement field,
+            String mixinFieldName, Types typeUtils) {
+        if (!isAccessibleField(field))
+            return;
+        String fieldName = field.getSimpleName().toString();
+        String fieldType = field.asType().toString();
+
+        sb.append("                        .fieldSetter((inst, val) -> { if (((").append(commandSimpleName)
+                .append(") inst).").append(mixinFieldName).append(" != null) ((").append(commandSimpleName)
+                .append(") inst).").append(mixinFieldName).append(".").append(fieldName)
+                .append(" = (").append(fieldType).append(") val; })\n");
+    }
+
+    private static void generateMixinFieldResetter(StringBuilder sb, String commandSimpleName, VariableElement field,
+            String mixinFieldName, Types typeUtils) {
+        if (!isAccessibleField(field))
+            return;
+        String fieldName = field.getSimpleName().toString();
+        TypeMirror fieldType = field.asType();
+
+        sb.append("                        .fieldResetter(inst -> { if (((").append(commandSimpleName)
+                .append(") inst).").append(mixinFieldName).append(" != null) ((")
+                .append(commandSimpleName).append(") inst).")
+                .append(mixinFieldName).append(".").append(fieldName).append(" = ");
+
+        switch (fieldType.getKind()) {
+            case BOOLEAN:
+                sb.append("false");
+                break;
+            case BYTE:
+                sb.append("(byte) 0");
+                break;
+            case SHORT:
+                sb.append("(short) 0");
+                break;
+            case INT:
+                sb.append("0");
+                break;
+            case LONG:
+                sb.append("0L");
+                break;
+            case FLOAT:
+                sb.append("0.0f");
+                break;
+            case DOUBLE:
+                sb.append("0.0d");
+                break;
+            case CHAR:
+                sb.append("'\\u0000'");
+                break;
+            default:
+                sb.append("null");
+                break;
+        }
+        sb.append("; })\n");
+    }
+
+    private static void generateFieldGetter(StringBuilder sb, String commandSimpleName, VariableElement field) {
+        if (!isAccessibleField(field))
+            return;
+        String fieldName = field.getSimpleName().toString();
+        sb.append("                        .fieldGetter(inst -> ((").append(commandSimpleName).append(") inst).")
+                .append(fieldName).append(")\n");
+    }
+
+    private static void generateMixinFieldGetter(StringBuilder sb, String commandSimpleName, VariableElement field,
+            String mixinFieldName) {
+        if (!isAccessibleField(field))
+            return;
+        String fieldName = field.getSimpleName().toString();
+        sb.append("                        .fieldGetter(inst -> ((").append(commandSimpleName)
+                .append(") inst).").append(mixinFieldName)
+                .append(" != null ? ((").append(commandSimpleName).append(") inst).")
+                .append(mixinFieldName).append(".").append(fieldName).append(" : null)\n");
     }
 
     private static void generateFieldSetter(StringBuilder sb, String commandSimpleName, VariableElement field,
